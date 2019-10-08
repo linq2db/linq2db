@@ -55,7 +55,7 @@
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs" />
 		<Compile Remove="Configuration\DataProviderElementCollection.cs" />
@@ -63,12 +63,18 @@
 		<Compile Remove="Configuration\ElementCollectionBase.cs" />
 		<Compile Remove="Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
 
 		<PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.6.0" />
+		<PackageReference Include="System.Data.Odbc" Version="4.6.0" />
+		<PackageReference Include="System.Data.OleDb" Version="4.6.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<Compile Remove="DataProvider\SapHana\SapHanaDataProvider.cs" />
+		<Compile Remove="DataProvider\SapHana\SapHanaBulkCopy.cs" />
 	</ItemGroup>
 </Project>

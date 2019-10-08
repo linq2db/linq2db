@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -14,6 +12,6 @@ namespace LinqToDB.DataProvider.SapHana
 			IsProviderSpecific = true;
 		}
 
-		public List<ParameterSchema> Parameters { get; set; }
+		public List<ParameterSchema>? Parameters { get; set; }
 	}
 }

@@ -362,7 +362,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -375,7 +375,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -389,7 +389,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -473,7 +473,7 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

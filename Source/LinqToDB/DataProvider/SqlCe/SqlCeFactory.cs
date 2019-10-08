@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

@@ -46,7 +46,7 @@ namespace Tests.UserTests
 			TestProvName.AllOracle,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
-			ProviderName.SapHana)]
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			var harnessIds = new int[2];

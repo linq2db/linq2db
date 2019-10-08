@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
 		protected override string DataReaderTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2DataReader, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "IBM.Data.Informix";
 #endif
 

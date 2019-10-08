@@ -17,7 +17,7 @@ namespace LinqToDB.Metadata
 			new AttributeReader()
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
 			, new SystemDataSqlServerAttributeReader()
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 			, new SystemDataLinqAttributeReader()
 #endif
 		);

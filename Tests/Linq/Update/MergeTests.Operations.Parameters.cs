@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -245,9 +245,10 @@ namespace Tests.xUpdate
 		{
 			switch (context)
 			{
+				case ProviderName.SapHanaOdbc:
 				case ProviderName.Informix:
 					return '?';
-				case ProviderName.SapHana:
+				case ProviderName.SapHanaNative:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
 					return ':';
@@ -259,7 +260,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInUpdateCondition([MergeDataContextSource(
 			false,
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -286,7 +287,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInInsertCondition([MergeDataContextSource(
 			false,
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -315,7 +316,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -396,7 +397,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Informix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -437,7 +438,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Informix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -246,7 +246,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeString([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -1,5 +1,4 @@
-﻿#if !NETCOREAPP2_1
-using System;
+﻿using System;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -26,4 +25,3 @@ namespace Tests.UserTests
 		}
 	}
 }
-#endif

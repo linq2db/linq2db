@@ -109,7 +109,8 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
-				case ProviderName.SapHana:
+				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaOdbc:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -131,12 +132,14 @@ namespace Tests
 
 				bool loadCheck(ProcedureSchema p)
 				{
-					return p.ProcedureName != "SERIES_GENERATE_TIME"
-						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
-						// just too slow
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
-						&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
+					// TODO: actualize list for SPS04
+					return false;
+					//return p.ProcedureName != "SERIES_GENERATE_TIME"
+					//	&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
+					//	// just too slow
+					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
+					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
+					//	&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
 				}
 
 				return options;
@@ -161,12 +164,12 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
-				case ProviderName.Oracle:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
 				case ProviderName.Informix:
 					return db.Select(() => ServerName());
-				case ProviderName.SapHana:
+				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaOdbc:
 					/* SAP HANA should be configured for linked server queries
 					 This will help to configure (especially second link):
 					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan

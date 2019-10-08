@@ -5,17 +5,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Configuration;
 	using Common;
+	using Configuration;
 	using Data;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 	using Tools;
@@ -70,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Type _oracleXmlType;
 		Type _oracleXmlStream;
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)

@@ -219,7 +219,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test, Parallelizable(ParallelScope.None)]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -915,7 +915,7 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
-					ProviderName.SapHana)]
+					TestProvName.AllSapHana)]
 				string context)
 		{
 			using (var db = new TestDataConnection(context))
