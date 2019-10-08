@@ -15,12 +15,14 @@
 				<dependency id="Microsoft.CSharp"                     version="4.6.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.6.0" />
 				<dependency id="System.Data.Odbc"                     version="4.6.0" />
+				<dependency id="System.Data.OleDb"                    version="4.6.0" />
 				<dependency id="System.Data.SqlClient"                version="4.7.0" />
 				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="System.ComponentModel.Annotations"    version="4.6.0" />
 				<dependency id="System.Data.Odbc"                     version="4.6.0" />
+				<dependency id="System.Data.OleDb"                    version="4.6.0" />
 				<dependency id="System.Data.SqlClient"                version="4.7.0" />
 				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
 			</group>

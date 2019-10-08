@@ -5,10 +5,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
-#if !NETCOREAPP2_1
 using LinqToDB.DataProvider.Access;
-#endif
 
 using NUnit.Framework;
 
@@ -270,19 +267,17 @@ namespace Tests._Create
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.SapHanaNative : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.SapHanaOdbc   : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
-#if !NETCOREAPP2_1
-				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
-				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
-				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
+				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
+				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
+#if !NETCOREAPP2_1
+				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.OracleNative  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default: throw new InvalidOperationException(context);
 			}
 		}
-
-#if !NETCOREAPP2_1
 
 		static void AccessAction(IDbConnection connection)
 		{
@@ -319,8 +314,6 @@ namespace Tests._Create
 					});
 			}
 		}
-
-#endif
 
 		void FirebirdAction(IDbConnection connection)
 		{
