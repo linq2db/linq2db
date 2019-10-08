@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer,
 			ProviderName.Informix,
-			ProviderName.SapHana)]
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

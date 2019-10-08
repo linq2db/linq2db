@@ -6,12 +6,11 @@ using System.Data.SqlTypes;
 using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Data;
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -48,7 +47,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0
 		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
 #endif
 

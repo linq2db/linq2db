@@ -59,7 +59,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -79,7 +79,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -99,7 +99,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))

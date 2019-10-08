@@ -167,7 +167,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -206,7 +206,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -254,7 +254,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			var ids = new[] { 1001 };
@@ -302,7 +302,7 @@ namespace Tests.xUpdate
 				TestProvName.AllMySql,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

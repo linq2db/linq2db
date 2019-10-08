@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public class TableFunctionTests : TestBase
 	{
 		[Test]
-		public void Func1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void Func1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -27,7 +27,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Func2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void Func2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -58,7 +58,7 @@ namespace Tests.Linq
 			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -71,7 +71,7 @@ namespace Tests.Linq
 			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

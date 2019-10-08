@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.SapHana
 	public class SapHanaOdbcDataProvider : DataProviderBase
 	{
 		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHana, new SapHanaMappingSchema())
+			: this(ProviderName.SapHanaOdbc, new SapHanaMappingSchema())
 		{
 		}
 
@@ -25,17 +25,19 @@ namespace LinqToDB.DataProvider.SapHana
 			: base(name, mappingSchema)
 		{
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported = true;
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
+			//supported flags
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//then replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported = true;
-			SqlProviderFlags.IsTakeSupported           = true;
-
-			//testing
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
+			SqlProviderFlags.IsTakeSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported     = false;
@@ -120,6 +122,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
+		public override IDisposable ExecuteScope()
+		{
+			// shame!
+			return new InvariantCultureRegion();
+		}
+
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
@@ -127,13 +135,19 @@ namespace LinqToDB.DataProvider.SapHana
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
-					parameter.DbType = DbType.Byte;
+					parameter.DbType                    = DbType.Byte;
 					return;
 				case DataType.Date:
 					((OdbcParameter)parameter).OdbcType = OdbcType.Date;
 					return;
-				case DataType.DateTime2: ((OdbcParameter)parameter).OdbcType = OdbcType.DateTime;
+				case DataType.DateTime2:
+					((OdbcParameter)parameter).OdbcType = OdbcType.DateTime;
 					return;
+				case DataType.Decimal:
+					parameter.DbType                    = DbType.Decimal;
+					((OdbcParameter)parameter).OdbcType = OdbcType.Decimal;
+					return;
+
 			}
 			base.SetParameterType(parameter, dataType);
 		}

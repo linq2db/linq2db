@@ -34,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterName([DataSources(ProviderName.SapHana)] string context)
+		public void ParameterName([DataSources(TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

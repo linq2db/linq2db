@@ -206,7 +206,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -364,7 +364,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -395,7 +395,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -429,7 +429,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

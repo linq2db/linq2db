@@ -42,8 +42,12 @@ namespace Tests.SchemaProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var sp         = conn.DataProvider.GetSchemaProvider();
+				var schemaName = TestUtils.GetSchemaName(conn);
+				var dbSchema   = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
+				}));
 
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
@@ -325,7 +329,11 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schemaName = TestUtils.GetSchemaName(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				}));
 
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);

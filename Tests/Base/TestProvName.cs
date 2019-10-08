@@ -1,6 +1,4 @@
-﻿using LinqToDB;
-
-namespace Tests
+﻿namespace Tests
 {
 	public static class TestProvName
 	{
@@ -51,5 +49,6 @@ namespace Tests
 		public const string AllSqlServer2016Plus  = "SqlServer.2017,SqlAzure.2012";
 		public const string AllSqlServer2017Plus  = "SqlServer.2017";
 		public const string AllSQLiteNorthwind    = "Northwind.SQLite,Northwind.SQLite.MS";
+		public const string AllSapHana            = "SapHana.Native,SapHana.Odbc";
 	}
 }

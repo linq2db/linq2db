@@ -12,6 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<PackageReference Include="Npgsql" Version="4.0.10" />
 		<PackageReference Include="Humanizer.Core" Version="2.7.2" />
 		
@@ -268,15 +269,9 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" >
-			<SetTargetFramework>TargetFramework=net46</SetTargetFramework>
-		</ProjectReference>
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="WPF\ViewModel.cs" />
 		<Compile Remove="WPF\ViewModel.generated.cs" />
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" >
-			<SetTargetFramework>TargetFramework=netcoreapp2.0</SetTargetFramework>
-		</ProjectReference>
 	</ItemGroup>
 </Project>

@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string ConnectionTypeName  => DB2Tools.AssemblyName + ".DB2Connection, " + DB2Tools.AssemblyName;
 		protected override string DataReaderTypeName  => DB2Tools.AssemblyName + ".DB2DataReader, " + DB2Tools.AssemblyName;
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "IBM.Data.DB2";
 #endif
 

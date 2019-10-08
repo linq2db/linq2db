@@ -439,7 +439,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if NETSTANDARD2_0 || NETCOREAPP2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_1
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;

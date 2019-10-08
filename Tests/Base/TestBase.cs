@@ -154,7 +154,7 @@ namespace Tests
 				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
-					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
+					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
 			}
 #else
 			foreach (var provider in testSettings.Connections)
@@ -271,12 +271,11 @@ namespace Tests
 		public static readonly List<string> Providers = new List<string>
 		{
 #if !NETCOREAPP2_1
-			ProviderName.Access,
 			ProviderName.Sybase,
-			ProviderName.SapHana,
 			ProviderName.OracleNative,
-			ProviderName.SqlCe,
 #endif
+			ProviderName.SqlCe,
+			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.SQLiteClassic,
@@ -301,7 +300,9 @@ namespace Tests
 			ProviderName.MySqlConnector,
 			TestProvName.MySql55,
 			TestProvName.MariaDB,
-			ProviderName.SQLiteMS
+			ProviderName.SQLiteMS,
+			ProviderName.SapHanaNative,
+			ProviderName.SapHanaOdbc
 		};
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
