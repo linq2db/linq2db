@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
 			new MergeContextParser         (),
-			new ArrayBuilder               (),
+			new ValuesTableBuilder               (),
 			new AsSubQueryBuilder          (),
 			new HasUniqueKeyBuilder        (),
 		};

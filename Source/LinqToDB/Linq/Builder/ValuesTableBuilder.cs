@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 
-	class ArrayBuilder : ISequenceBuilder
+	class ValuesTableBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var sequence = Find(builder, buildInfo, (index, type) =>
+			ArrayContext BuildFound(int index, Type type)
 			{
 				var query      = buildInfo.SelectQuery;
 				var innerQuery = new SelectQuery { ParentSelect = query };
@@ -125,9 +125,9 @@ namespace LinqToDB.Linq.Builder
 				query.Select.Columns.Add(new SqlColumn(query, innerQuery.Select.Columns[0], "Item"));
 
 				return array;
-			});
+			}
 
-			return sequence;
+			return Find(builder, buildInfo, BuildFound);
 		}
 
 

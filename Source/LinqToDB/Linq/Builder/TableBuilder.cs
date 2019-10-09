@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
 								return BuildContextType.CteConstant;
 
-							// Avoid collision with ArrayBuilder
+							// Avoid collision with ValuesTableBuilder
 							var elementType = queryable.ElementType;
 							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
 								break;
