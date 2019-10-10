@@ -106,7 +106,7 @@ namespace Tests.Playground
 
 			oracleMapper.SetValue<OracleParameter>(instance, p => p.OracleDbType, OracleDbType.Date);
 
-			var action = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>(OracleDbType.Byte);
+			var action = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>(OracleDbType.Single);
 			action(instance);
 
 			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>();

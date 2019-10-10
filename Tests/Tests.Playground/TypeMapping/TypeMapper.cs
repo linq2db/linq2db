@@ -73,35 +73,26 @@ namespace Tests.Playground.TypeMapping
 		private static MethodInfo _getNameMethodInfo = MemberHelper.MethodOf(() => Enum.GetName(null, null));
 		private static MethodInfo _parseMethodInfo = MemberHelper.MethodOf(() => Enum.Parse(null, null));
 
-		private void BuildValueMapper(Expression expression, out BlockExpression block)
+		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
 		{
 			var valueType = expression.Type;
-			block = null;
 			if (!TryMapType(valueType, out var replacementType))
-				return;
+				return expression;
 
-			if (replacementType.IsEnum)
-			{
-				var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
-					Expression.Convert(expression, typeof(object)));
-				var nameVar = Expression.Variable(typeof(string), "enumName");
-				var valueVar = Expression.Variable(replacementType, "converted");
+			if (!replacementType.IsEnum) 
+				throw new LinqToDBException("Only enums converted automatically.");
 
-				block = Expression.Block(
-					new[] { nameVar, valueVar },
-					Expression.Assign(nameVar, nameExpr),
-					Expression.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
-						Throw(() => new LinqToDBException("Can not convert Enum value."))),
-					Expression.Assign(valueVar,
-						Expression.Convert(
-							Expression.Call(_parseMethodInfo, Expression.Constant(replacementType), nameVar),
-							replacementType))
-				);
+			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
+				Expression.Convert(expression, typeof(object)));
+			var nameVar  = generator.DeclareVariable(typeof(string), "enumName");
 
-				return;
-			}
+			generator.AssingVariable(nameVar, nameExpr);
+			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
+				Throw(() => new LinqToDBException("Can not convert Enum value.")));
 
-			throw new LinqToDBException("Only enums converted automatically.");
+			var result = generator.MapExpression((string n) => Enum.Parse(replacementType, n), nameVar);
+
+			return result;
 
 		}
 
@@ -274,7 +265,7 @@ namespace Tests.Playground.TypeMapping
 				throw new LinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
 
 			var lambda = MapLambdaInternal(lambdaExpression);
-			var expr = lambda.Body.Transform(e =>
+			var expr   = lambda.Body.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
 				{
@@ -383,18 +374,19 @@ namespace Tests.Playground.TypeMapping
 			{
 				var setterExpression = _mapper.MapSetterValue(_memberExpression, value);
 
+				var generator = new ExpressionGenerator(_mapper);
+
 				var convertedType = setterExpression.Parameters[0].Type;
 
 				var newParameter = Expression.Parameter(typeof(TBase), setterExpression.Parameters[0].Name);
-				var requiredVariable = Expression.Variable(convertedType, "v");
+				var requiredVariable = generator.DeclareVariable(convertedType, "v");
 
 				var replacedBody = setterExpression.GetBody(requiredVariable).Unwrap();
 
-				var block = Expression.Block(
-					new[] { requiredVariable },
-					Expression.Assign(requiredVariable, Expression.Convert(newParameter, convertedType)),
-					replacedBody
-				);
+				generator.AssingVariable(requiredVariable, newParameter);
+				generator.AddExpression(replacedBody);
+
+				var block = generator.Build();
 
 				var resultExpression = Expression.Lambda<Action<TBase>>(block, newParameter);
 				return resultExpression;
@@ -409,39 +401,25 @@ namespace Tests.Playground.TypeMapping
 
 			public Expression<Action<TBase, TV>> BuildSetterExpression<TBase>()
 			{
-				var propLambda  = _mapper.MapLambdaInternal(_memberExpression);
+				var generator = new ExpressionGenerator(_mapper);
 
+				var propLambda    = _mapper.MapLambdaInternal(_memberExpression);
 				var convertedType = propLambda.Parameters[0].Type;
 
 				var newParameter     = Expression.Parameter(typeof(TBase), propLambda.Parameters[0].Name);
-				var requiredVariable = Expression.Variable(convertedType, "v");
 				var valueParameter   = Expression.Parameter(typeof(TV), "value");
-				_mapper.BuildValueMapper(valueParameter, out var conversionBlock);
+				var requiredVariable = generator.DeclareVariable(convertedType, "v");
+
+				generator.Assing(requiredVariable, newParameter);
 
 				var left  = propLambda.GetBody(requiredVariable).Unwrap();
-				var right = conversionBlock != null ? (Expression)conversionBlock.Variables.Last() : valueParameter;
+				var right = _mapper.BuildValueMapper(generator, valueParameter);
 
-				if (right.Type != left.Type)
-					right = Expression.Convert(right, left.Type);
+				generator.Assing(left, right);
 
-				var assign = Expression.Assign(left, right);
+				var generated = generator.Build();
 
-				var block = Expression.Block(
-					new[] { requiredVariable }.Concat(conversionBlock?.Variables ??
-					                                  Enumerable.Empty<ParameterExpression>()),
-					(conversionBlock?.Expressions ?? Enumerable.Empty<Expression>()).Concat(
-						new[]
-						{
-							Expression.Assign(requiredVariable,
-								Expression.Convert(
-									newParameter,
-									convertedType)),
-							assign
-						}
-					)
-				);
-
-				var resultLambda = Expression.Lambda<Action<TBase, TV>>(block, newParameter, valueParameter);
+				var resultLambda = Expression.Lambda<Action<TBase, TV>>(generated, newParameter, valueParameter);
 
 				return resultLambda;
 			}
@@ -462,7 +440,7 @@ namespace Tests.Playground.TypeMapping
 
 		public class TypeBuilder<T>
 		{
-			private TypeMapper _mapper;
+			private readonly TypeMapper _mapper;
 
 			public TypeBuilder(TypeMapper mapper)
 			{
