@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
+#pragma warning disable 618
 #nullable enable
 
 using System;

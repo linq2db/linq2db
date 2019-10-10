@@ -116,12 +116,10 @@ namespace LinqToDB.Common
 
 			var converters = mappingSchema == null ? _converters : mappingSchema.Converters;
 
-			Func<object,object> l;
-
-			if (!converters.TryGetValue(key, out l))
+			if (!converters.TryGetValue(key, out var l))
 			{
 				var li = mappingSchema != null
-					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true)
+					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true)!
 					: (ConvertInfo.Default.Get    (from, to) ??
 						ConvertInfo.Default.Create(mappingSchema, from, to));
 
@@ -134,7 +132,7 @@ namespace LinqToDB.Common
 						b.Transform(e =>
 							e == ps[0] ?
 								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ? 
+							IsDefaultValuePlaceHolder(e) ?
 								new DefaultValueExpression(mappingSchema, e.Type) :
 								e),
 						typeof(object)),

@@ -1,11 +1,11 @@
-﻿namespace LinqToDB.DataProvider.SapHana
-{
-	using System;
-	using System.Data;
-	using System.Reflection;
+﻿using System;
+using System.Data;
+using System.Reflection;
 
+namespace LinqToDB.DataProvider.SapHana
+{
 	using Data;
-	using LinqToDB.Configuration;
+	using Configuration;
 
 	public static class SapHanaTools
 	{
@@ -75,7 +75,7 @@
 
 #endregion
 
-		static string _detectedProviderName;
+		static string? _detectedProviderName;
 
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());

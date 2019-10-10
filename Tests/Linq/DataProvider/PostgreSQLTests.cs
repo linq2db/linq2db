@@ -27,6 +27,8 @@ using NUnit.Framework.Internal.Builders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#pragma warning disable 618
+
 namespace Tests.DataProvider
 {
 	using Model;

@@ -77,7 +77,9 @@ namespace DataModels
 			public int Rank;
 		}
 
+#pragma warning disable 618
 		[FreeTextTableExpression]
+#pragma warning restore 618
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
@@ -87,7 +89,9 @@ namespace DataModels
 				text);
 		}
 
+#pragma warning disable 618
 		[FreeTextTableExpression]
+#pragma warning restore 618
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
