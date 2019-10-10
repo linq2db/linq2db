@@ -104,9 +104,9 @@ namespace Issues
 	{
 		// Implementation of this tried to copy QueryRunnerBase
 
-		private readonly Query query;
+		private readonly Query Query;
 
-		public RemoteQueryRunner(Query query) { this.query = query; }
+		public RemoteQueryRunner(Query query) { this.Query = query; }
 
 		// Part of IQueryRunner, implict so can be set
 		public Expression Expression { get; set; }
@@ -130,8 +130,8 @@ namespace Issues
 
 		IDataReader IQueryRunner.ExecuteReader()
 		{
-			// this is what the remote version does but internal
-			var q = DataContext.GetSqlOptimizer().OptimizeStatement(queryContext().Statement, DataContext.MappingSchema);
+			// this is what the remote version does fails to compile because of internal access
+			var q = DataContext.GetSqlOptimizer().OptimizeStatement(queryContextByReflection().Statement, DataContext.MappingSchema);
 			return null;
 		}
 
@@ -151,10 +151,10 @@ namespace Issues
 		}
 
 		// Work around because The Query.Queries which is a List<QueryInfo> is internal
-		private IQueryContext queryContext()
+		private IQueryContext queryContextByReflection()
 		{
-			var fields = query.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-			var l = fields.Single(a => a.Name == "Queries").GetValue(query);
+			var fields = Query.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+			var l = fields.Single(a => a.Name == "Queries").GetValue(Query);
 			var casted = l as System.Collections.IList;
 			return casted[QueryNumber] as IQueryContext;
 		}
@@ -163,7 +163,11 @@ namespace Issues
 
 		protected string GetSql(bool EmbedParams)
 		{
+			// Example code is this, but it requires internal access
+			var query = Query.Queries[QueryNumber];
+			/* Workaround using reflection:
 			var query = queryContext();
+			*/
 			var sqlBuilder = DataContext.CreateSqlProvider();
 			var sb = new System.Text.StringBuilder();
 
