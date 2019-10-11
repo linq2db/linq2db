@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Tests\Base\DataProvider\RemoteData.cs">
-      <Link>RemoteData.cs</Link>
+    <Compile Include="..\Tests\Base\DataProvider\ApiTestDataContext.cs">
+      <Link>ApiTestDataContext.cs</Link>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

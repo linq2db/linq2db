@@ -24,16 +24,16 @@ namespace Issues
 	 */
 
 	// Implement IDataContext so we can provide our own GetQueryRunner implemetation
-	public class RemoteDataContext : IDataContext, IEntityServices
+	public class ApiTestDataContext : IDataContext, IEntityServices
 	{
 		// Implementation of most of this copied from RemoteDataContextBase
 		private LinqToDB.DataProvider.SQLite.SQLiteDataProvider prov = new LinqToDB.DataProvider.SQLite.SQLiteDataProvider();
 		private List<string> queryHints;
 		private List<string> nextQueryHints;
 
-		public RemoteDataContext() { }
+		public ApiTestDataContext() { }
 
-		public RemoteDataContext(string name) {  }
+		public ApiTestDataContext(string name) {  }
 
 		string IDataContext.ContextID => prov.Name;
 
@@ -59,7 +59,7 @@ namespace Issues
 
 		public event EventHandler OnClosing;
 
-		IDataContext IDataContext.Clone(bool forNestedQuery) => new RemoteDataContext();
+		IDataContext IDataContext.Clone(bool forNestedQuery) => new ApiTestDataContext();
 
 		void IDataContext.Close() { }
 
@@ -73,7 +73,7 @@ namespace Issues
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
 			// Return out implementation of IQueryRunner
-			return new RemoteQueryRunner(query)
+			return new ApiTestQueryRunner(query)
 			{
 				DataContext = this,
 				Expression = expression,
@@ -89,14 +89,14 @@ namespace Issues
 	// - 2. Parameters are coming through as null
 	// - 3. Copying the actual code to generate the Optimum SQL uses internal APIs
 
-	public class RemoteQueryRunner : IQueryRunner
+	public class ApiTestQueryRunner : IQueryRunner
 	{
 		// Implementation of this tried to copy QueryRunnerBase
 
 		private readonly Query Query;
 		protected List<string> QueryHints = new List<string>();
 
-		public RemoteQueryRunner(Query query) { this.Query = query; }
+		public ApiTestQueryRunner(Query query) { this.Query = query; }
 
 		// Part of IQueryRunner, implict so can be set
 		public Expression Expression { get; set; }
