@@ -1,8 +1,10 @@
 ﻿using LinqToDB;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -16,7 +18,7 @@ using System.Threading.Tasks;
 namespace Issues
 {
 	/* Requirement: implement a data context that handles the implementation of IQueryRunner, so can do things like
-	 * - Can delegate to a webservice call like REST
+	 * - Delegate to a webservice call like REST
 	 * - Implement connection/command handling ourselves so we can cache data
 	 * etc.
 	 */
@@ -25,20 +27,13 @@ namespace Issues
 	public class RemoteDataContext : IDataContext, IEntityServices
 	{
 		// Implementation of most of this copied from RemoteDataContextBase
-
 		private LinqToDB.DataProvider.SQLite.SQLiteDataProvider prov = new LinqToDB.DataProvider.SQLite.SQLiteDataProvider();
 		private List<string> queryHints;
 		private List<string> nextQueryHints;
 
-		public RemoteDataContext()
-		{
+		public RemoteDataContext() { }
 
-		}
-
-		public RemoteDataContext(string name)
-		{
-
-		}
+		public RemoteDataContext(string name) {  }
 
 		string IDataContext.ContextID => prov.Name;
 
@@ -66,15 +61,9 @@ namespace Issues
 
 		IDataContext IDataContext.Clone(bool forNestedQuery) => new RemoteDataContext();
 
-		void IDataContext.Close()
-		{
-			// Nothing to do
-		}
+		void IDataContext.Close() { }
 
-		void IDisposable.Dispose()
-		{
-			//throw new NotImplementedException();
-		}
+		void IDisposable.Dispose() { }
 
 		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType) =>
 			prov.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
@@ -105,6 +94,7 @@ namespace Issues
 		// Implementation of this tried to copy QueryRunnerBase
 
 		private readonly Query Query;
+		protected List<string> QueryHints = new List<string>();
 
 		public RemoteQueryRunner(Query query) { this.Query = query; }
 
@@ -118,39 +108,120 @@ namespace Issues
 
 		void IDisposable.Dispose() { }
 
+		// Copied from QueryRunnerBase
+		protected virtual void SetCommand(bool clearQueryHints)
+		{
+			// TODO: can we refactory query to be thread-safe to remove this lock?
+			lock (Query)
+			{
+				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
+				{
+					var queryContext = Query.Queries[QueryNumber];
+
+					queryContext.QueryHints = new List<string>(DataContext.QueryHints);
+					queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+
+					QueryHints.AddRange(DataContext.QueryHints);
+					QueryHints.AddRange(DataContext.NextQueryHints);
+
+					if (clearQueryHints)
+						DataContext.NextQueryHints.Clear();
+				}
+
+				QueryRunner.SetParameters(Query, DataContext, Expression, Parameters, QueryNumber);
+				SetQuery();
+			}
+		}
+
+		// coped from QueryRunner
+		protected void SetQuery() { }
+
+		// Copied from QueryRunner
+		internal static void SetParameters(Query query, IDataContext dataContext, Expression expression, object[] parameters, int queryNumber)
+		{
+			var queryContext = query.Queries[queryNumber];
+
+			foreach (var p in queryContext.Parameters)
+			{
+				var value = p.Accessor(expression, parameters);
+
+				if (value is IEnumerable vs)
+				{
+					var type = vs.GetType();
+					var etype = type.GetItemType();
+
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						etype.GetGenericArgumentsEx()[0].IsEnumEx())
+					{
+						var values = new List<object>();
+
+						foreach (var v in vs)
+						{
+							value = v;
+
+							if (v != null)
+							{
+								var valueType = v.GetType();
+
+								if (valueType.ToNullableUnderlying().IsEnumEx())
+									value = query.GetConvertedEnum(valueType, value);
+							}
+
+							values.Add(value);
+						}
+
+						value = values;
+					}
+				}
+
+				p.SqlParameter.Value = value;
+
+				//				if (value != null && dataContext.InlineParameters && p.SqlParameter.IsQueryParameter)
+				//				{
+				//					var type = value.GetType();
+				//
+				//					if (type != typeof(byte[]) && dataContext.MappingSchema.IsScalarType(type))
+				//						p.SqlParameter.IsQueryParameter = false;
+				//				}
+
+				var dataType = p.DataTypeAccessor(expression, parameters);
+
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
+
+				var dbType = p.DbTypeAccessor(expression, parameters);
+
+				if (!string.IsNullOrEmpty(dbType))
+					p.SqlParameter.DbType = dbType;
+
+				var size = p.SizeAccessor(expression, parameters);
+
+				if (size != null)
+					p.SqlParameter.DbSize = size;
+
+			}
+		}
+
+		// Copied from QueryRunner
 		int IQueryRunner.ExecuteNonQuery()
 		{
-			throw new NotImplementedException();
+			SetCommand(true);
+			var queryContext = Query.Queries[QueryNumber];
+			var q = DataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, DataContext.MappingSchema);
+			// Get SQL text
+			var sql = "";
+			// Get parameters
+			var parameters = q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters();
+
+			// Run our command and return result - for the moment just log and return 0 records changed
+			Console.WriteLine($"Running SQL: {sql}");
+			foreach (var p in parameters)
+				Console.WriteLine($"{p.Name} = {p.Value}");
+			return 0;
 		}
 
-		Task<int> IQueryRunner.ExecuteNonQueryAsync(CancellationToken cancellationToken)
-		{
-			throw new NotImplementedException();
-		}
-
-		IDataReader IQueryRunner.ExecuteReader()
-		{
-			// this is what the remote version does fails to compile because of internal access
-			var q = DataContext.GetSqlOptimizer().OptimizeStatement(queryContextByReflection().Statement, DataContext.MappingSchema);
-			return null;
-		}
-
-		Task<IDataReaderAsync> IQueryRunner.ExecuteReaderAsync(CancellationToken cancellationToken)
-		{
-			throw new NotImplementedException();
-		}
-
-		object IQueryRunner.ExecuteScalar()
-		{
-			throw new NotImplementedException();
-		}
-
-		Task<object> IQueryRunner.ExecuteScalarAsync(CancellationToken cancellationToken)
-		{
-			throw new NotImplementedException();
-		}
-
-		// Work around because The Query.Queries which is a List<QueryInfo> is internal
+		// Work around because The Query.Queries which is a List<QueryInfo> is internal, so use refelection
 		private IQueryContext queryContextByReflection()
 		{
 			var fields = Query.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
@@ -161,6 +232,7 @@ namespace Issues
 
 		string IQueryRunner.GetSqlText() => GetSql(true);
 
+		// Copied from QueryRunner
 		protected string GetSql(bool EmbedParams)
 		{
 			// Example code is this, but it requires internal access
@@ -195,5 +267,18 @@ namespace Issues
 			}
 			return sb.ToString();
 		}
+
+		#region Unimplemented
+		Task<int> IQueryRunner.ExecuteNonQueryAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
+		IDataReader IQueryRunner.ExecuteReader() => throw new NotImplementedException();
+
+		Task<IDataReaderAsync> IQueryRunner.ExecuteReaderAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
+		object IQueryRunner.ExecuteScalar() => throw new NotImplementedException();
+
+		Task<object> IQueryRunner.ExecuteScalarAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
+		#endregion
 	}
 }
