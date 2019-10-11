@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
 using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Common;
@@ -71,7 +70,6 @@ namespace Tests.Playground.TypeMapping
 		}
 
 		private static MethodInfo _getNameMethodInfo = MemberHelper.MethodOf(() => Enum.GetName(null, null));
-		private static MethodInfo _parseMethodInfo = MemberHelper.MethodOf(() => Enum.Parse(null, null));
 
 		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
 		{
@@ -86,7 +84,7 @@ namespace Tests.Playground.TypeMapping
 				Expression.Convert(expression, typeof(object)));
 			var nameVar  = generator.DeclareVariable(typeof(string), "enumName");
 
-			generator.AssingVariable(nameVar, nameExpr);
+			generator.Assign(nameVar, nameExpr);
 			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
 				Throw(() => new LinqToDBException("Can not convert Enum value.")));
 
@@ -312,6 +310,16 @@ namespace Tests.Playground.TypeMapping
 
 		#endregion
 
+		#region MemberAccess
+
+		public MemberExpression MemberAccess<T>(Expression<Func<T, object>> memberExpression, Expression obj)
+		{
+			var expr = MapExpression(memberExpression, obj).Unwrap();
+			return (MemberExpression)expr;
+		}
+
+		#endregion
+
 		#region Setters
 
 		public LambdaExpression MapSetter<T>(Expression<Func<T, object>> propExpression,
@@ -383,7 +391,7 @@ namespace Tests.Playground.TypeMapping
 
 				var replacedBody = setterExpression.GetBody(requiredVariable).Unwrap();
 
-				generator.AssingVariable(requiredVariable, newParameter);
+				generator.Assign(requiredVariable, newParameter);
 				generator.AddExpression(replacedBody);
 
 				var block = generator.Build();
@@ -410,12 +418,12 @@ namespace Tests.Playground.TypeMapping
 				var valueParameter   = Expression.Parameter(typeof(TV), "value");
 				var requiredVariable = generator.DeclareVariable(convertedType, "v");
 
-				generator.Assing(requiredVariable, newParameter);
+				generator.Assign(requiredVariable, newParameter);
 
 				var left  = propLambda.GetBody(requiredVariable).Unwrap();
 				var right = _mapper.BuildValueMapper(generator, valueParameter);
 
-				generator.Assing(left, right);
+				generator.Assign(left, right);
 
 				var generated = generator.Build();
 

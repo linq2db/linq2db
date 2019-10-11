@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
+using LinqToDB.Expressions;
 
 namespace Tests.Playground.TypeMapping
 {
@@ -22,14 +23,7 @@ namespace Tests.Playground.TypeMapping
 
 		public Expression ResultExpression => Build();
 
-		public ParameterExpression DeclareVariable(Type type)
-		{
-			var variable = Expression.Variable(type);
-			_variables.Add(variable);
-			return variable;
-		}
-
-		public ParameterExpression DeclareVariable(Type type, string name)
+		public ParameterExpression DeclareVariable(Type type, string name = default)
 		{
 			var variable = Expression.Variable(type, name);
 			_variables.Add(variable);
@@ -51,18 +45,18 @@ namespace Tests.Playground.TypeMapping
 			return block;
 		}
 
-		public Expression Assing(Expression left, Expression right)
+		public Expression Assign(Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 				right = Expression.Convert(right, left.Type);
 			return AddExpression(Expression.Assign(left, right));
 		}
 
-		public Expression AssingVariable(ParameterExpression variable, Expression value)
+		public ParameterExpression AssignToVariable(Expression expression, string name = default)
 		{
-			if (variable.Type != value.Type)
-				value = Expression.Convert(value, variable.Type);
-			return AddExpression(Expression.Assign(variable, value));
+			var variable = DeclareVariable(expression.Type, name);
+			Assign(variable, expression);
+			return variable;
 		}
 
 		public Expression Throw(Expression expression)
@@ -83,6 +77,12 @@ namespace Tests.Playground.TypeMapping
 		public Expression TryCatch(Expression body, CatchBlock[] catchBlocks)
 		{
 			return AddExpression(Expression.TryCatch(body, catchBlocks));
+		}
+
+		public MemberExpression MemberAccess<T>(Expression<Func<T, object>> memberExpression, Expression obj)
+		{
+			var expr = _mapper.MapExpression(memberExpression, obj).Unwrap();
+			return (MemberExpression)expr;
 		}
 
 		#region MapExpression
