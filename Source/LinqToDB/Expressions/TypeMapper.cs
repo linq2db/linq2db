@@ -4,13 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
-using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 
-namespace Tests.Playground.TypeMapping
+namespace LinqToDB.Expressions
 {
+	using Common;
+	using LinqToDB.Extensions;
+
 	public sealed class TypeMapper
 	{
 		public Type[] Types { get; }
@@ -33,7 +32,7 @@ namespace Tests.Playground.TypeMapping
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
-			if (typeof(TypeWrapper).IsSameOrParentOf(type) || type.GetCustomAttributes(typeof(WrapperAttribute), true).Any())
+			if (typeof(TypeWrapper).IsSameOrParentOf(type) || type.GetCustomAttributesEx(typeof(WrapperAttribute), true).Any())
 			{
 				replacement = FindReplacement(type);
 				if (replacement == null)
@@ -54,7 +53,7 @@ namespace Tests.Playground.TypeMapping
 			var valueType = value.GetType();
 			if (TryMapType(valueType, out var replacementType))
 			{
-				if (replacementType.IsEnum)
+				if (replacementType.IsEnumEx())
 				{
 					var enumName = Enum.GetName(valueType, value);
 					if (enumName.IsNullOrEmpty())
@@ -77,7 +76,7 @@ namespace Tests.Playground.TypeMapping
 			if (!TryMapType(valueType, out var replacementType))
 				return expression;
 
-			if (!replacementType.IsEnum) 
+			if (!replacementType.IsEnumEx()) 
 				throw new LinqToDBException("Only enums converted automatically.");
 
 			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
@@ -489,7 +488,7 @@ namespace Tests.Playground.TypeMapping
 		public TR Wrap<T, TR>(T instance, Expression<Func<T, TR>> func)
 			where T: TypeWrapper
 		{
-			var expr = MapExpressionInternal(func, Expression.Constant(instance.__Instance));
+			var expr = MapExpressionInternal(func, Expression.Constant(instance.instance_));
 
 			var result = expr.EvaluateExpression();
 
@@ -498,7 +497,7 @@ namespace Tests.Playground.TypeMapping
 
 			if (typeof(TypeWrapper).IsSameOrParentOf(typeof(TR)))
 			{
-				var wrapper = (TR)Activator.CreateInstance(typeof(TR), result, instance.__Mapper);
+				var wrapper = (TR)Activator.CreateInstance(typeof(TR), result, instance.mapper_);
 				return wrapper;
 			}
 			return (TR)result;
@@ -523,7 +522,7 @@ namespace Tests.Playground.TypeMapping
 		public object Evaluate<T>(T instance, Expression<Func<T, object>> func)
 			where T: TypeWrapper
 		{
-			var expr = MapExpressionInternal(func, Expression.Constant(instance.__Instance));
+			var expr = MapExpressionInternal(func, Expression.Constant(instance.instance_));
 			return expr.EvaluateExpression();
 		}
 

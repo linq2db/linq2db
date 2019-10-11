@@ -1,13 +1,15 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace Tests.Playground.TypeMapping
+namespace LinqToDB.Expressions
 {
+
 	public class TypeWrapper
 	{
 		// ReSharper disable InconsistentNaming
-		public object __Instance { get; }
-		public TypeMapper __Mapper { get; }
+		// Names mangled to do not create collision with Wrapped class
+		public object     instance_ { get; }
+		public TypeMapper mapper_   { get; }
 		// ReSharper restore InconsistentNaming
 
 		public TypeWrapper()
@@ -16,8 +18,8 @@ namespace Tests.Playground.TypeMapping
 
 		public TypeWrapper(object instance, [NotNull] TypeMapper mapper)
 		{
-			__Instance = instance;
-			__Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			instance_ = instance;
+			mapper_   = mapper ?? throw new ArgumentNullException(nameof(mapper));
 		}
 	}
 }

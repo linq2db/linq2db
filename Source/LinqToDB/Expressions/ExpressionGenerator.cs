@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
 
-namespace Tests.Playground.TypeMapping
+namespace LinqToDB.Expressions
 {
 	public class ExpressionGenerator
 	{

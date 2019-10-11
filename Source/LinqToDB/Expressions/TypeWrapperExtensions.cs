@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Tests.Playground.TypeMapping
+namespace LinqToDB.Expressions
 {
 	public static class TypeWrapperExtensions
 	{
@@ -15,7 +15,7 @@ namespace Tests.Playground.TypeMapping
 		public static object Evaluate<T>(this T instance, Expression<Func<T, object>> func)
 			where T: TypeWrapper
 		{
-			var result = instance.__Mapper.Evaluate(instance, func);
+			var result = instance.mapper_.Evaluate(instance, func);
 			return result;
 		}
 
@@ -26,11 +26,11 @@ namespace Tests.Playground.TypeMapping
 		/// <typeparam name="TR">Result type.</typeparam>
 		/// <param name="instance">Wrapper value</param>
 		/// <param name="func">Expression for evaluation and wrapping.</param>
-		/// <returns>Wrapped value, if type mapping for <see cref="TR"/> is defined. Otherwise returns unchanged value.</returns>
+		/// <returns>Wrapped value, if type mapping for <typeparamref name="TR"/> is defined. Otherwise returns unchanged value.</returns>
 		public static TR Wrap<T, TR>(this T instance, Expression<Func<T, TR>> func)
 			where T: TypeWrapper
 		{
-			var result = instance.__Mapper.Wrap(instance, func);
+			var result = instance.mapper_.Wrap(instance, func);
 			return result;
 		}
 
@@ -39,7 +39,7 @@ namespace Tests.Playground.TypeMapping
 			TV value)
 			where T: TypeWrapper
 		{
-			instance.__Mapper.SetValue(instance.__Instance, propExpression, value);
+			instance.mapper_.SetValue(instance.instance_, propExpression, value);
 		}
 	}
 }

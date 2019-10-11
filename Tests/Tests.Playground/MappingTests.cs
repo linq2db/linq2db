@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Expressions;
 using NUnit.Framework;
-using Tests.Playground.TypeMapping;
 
 namespace Tests.Playground
 {

@@ -2,7 +2,6 @@
 using System.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Playground.TypeMapping;
 
 namespace Tests.Playground
 {

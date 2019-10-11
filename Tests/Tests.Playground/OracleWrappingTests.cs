@@ -5,11 +5,11 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Types;
 using Tests.Playground.OracleWrappers;
-using Tests.Playground.TypeMapping;
 
 namespace Tests.Playground
 {
