@@ -7,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -18,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using SqlProvider;
 
 	partial class ExpressionBuilder
 	{
@@ -234,7 +234,7 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
 
-			if (ctx.SelectQuery.Select.Columns.Count == 0) 
+			if (ctx.SelectQuery.Select.Columns.Count == 0)
 			{
 				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
@@ -711,7 +711,7 @@ namespace LinqToDB.Linq.Builder
 				Expression preparedExpression;
 				if (expression.NodeType == ExpressionType.Call)
 					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
-				else 
+				else
 					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression);
 			}
