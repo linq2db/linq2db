@@ -1153,7 +1153,7 @@ namespace Tests.DataProvider
 		{
 			try
 			{
-				var value = ((SqlDataReader)rd).GetSqlDecimal(idx);
+				SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
 
 				if (value.Precision > ClrPrecision)
 				{

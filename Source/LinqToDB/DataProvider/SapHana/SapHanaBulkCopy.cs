@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var connection = dataConnection.Connection;
 
-			if (connection == null )
+			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
 			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))

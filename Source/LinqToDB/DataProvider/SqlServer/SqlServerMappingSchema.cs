@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

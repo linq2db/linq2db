@@ -370,17 +370,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string GetTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
+			return ((dynamic)parameter).TypeName;
 		}
 
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
+			return ((dynamic)parameter).UdtTypeName;
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
+			return ((dynamic)parameter).SqlDbType.ToString();
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

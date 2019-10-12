@@ -574,6 +574,19 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
+		public static bool IsEnumerableTType(this Type type, Type elementType)
+		{
+			foreach (var interfaceType in type.GetInterfaces())
+			{
+				if (interfaceType.IsGenericType
+						&& interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+						&& interfaceType.GetGenericArguments()[0] == elementType)
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool IsGenericEnumerableType(this Type type)
 		{
 			if (type.IsGenericType)
