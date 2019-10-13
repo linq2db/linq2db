@@ -23,6 +23,7 @@ del *.nupkg
 ..\Redist\NuGet Pack linq2db.SQLite.nuspec
 ..\Redist\NuGet Pack linq2db.SQLite.MS.nuspec
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec
+..\Redist\NuGet Pack linq2db.SqlServer.MS.nuspec
 ..\Redist\NuGet Pack linq2db.Sybase.nuspec
 ..\Redist\NuGet Pack linq2db.Sybase.DataAction.nuspec
 ..\Redist\NuGet Pack linq2db.t4models.nuspec

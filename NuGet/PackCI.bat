@@ -21,6 +21,7 @@ md built
 ..\Redist\NuGet Pack linq2db.SQLite.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.SQLite.MS.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec -OutputDirectory built
+..\Redist\NuGet Pack linq2db.SqlServer.MS.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.Sybase.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.Sybase.DataAction.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.t4models.nuspec -OutputDirectory built

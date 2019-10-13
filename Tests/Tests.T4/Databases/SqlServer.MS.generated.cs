@@ -21,7 +21,7 @@ using LinqToDB.Mapping;
 
 using Microsoft.SqlServer.Types;
 
-namespace DataModel
+namespace DataContextMS
 {
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{

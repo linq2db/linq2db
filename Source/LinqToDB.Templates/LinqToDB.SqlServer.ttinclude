@@ -1,4 +1,5 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude"                  #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer" #>
 <#
 	{
 		GenerateProcedureDbType = p => p.DataType == "Structured" && p.SchemaType != null;
@@ -110,36 +111,51 @@ void DoGenerateSqlServerFreeText()
 	);
 }
 
-LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString)
+LinqToDB.Data.DataConnection GetSqlServerConnection(
+	string connectionString,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, provider);
 }
 
-LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database)
+LinqToDB.Data.DataConnection GetSqlServerConnection(
+	string server,
+	string database,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
+	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database, version, provider));
 }
 
-LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password)
+LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password));
+	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password), version, provider);
 }
 
-void LoadSqlServerMetadata(string connectionString)
+void LoadSqlServerMetadata(string connectionString,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	using (var dataConnection = GetSqlServerConnection(connectionString))
+	using (var dataConnection = GetSqlServerConnection(connectionString, version, provider))
 		LoadMetadata(dataConnection);
 }
 
-void LoadSqlServerMetadata(string server, string database)
+void LoadSqlServerMetadata(string server, string database,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	using (var dataConnection = GetSqlServerConnection(server, database))
+	using (var dataConnection = GetSqlServerConnection(server, database, version, provider))
 		LoadMetadata(dataConnection);
 }
 
-void LoadSqlServerMetadata(string server, string database, string user, string password)
+void LoadSqlServerMetadata(string server, string database, string user, string password,
+	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	using (var dataConnection = GetSqlServerConnection(server, database, user, password))
+	using (var dataConnection = GetSqlServerConnection(server, database, user, password, version, provider))
 		LoadMetadata(dataConnection);
 }
 #>
