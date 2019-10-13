@@ -269,7 +269,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case DataType.Udt        :
 					{
-						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
+						if (parameter.GetType() == _parameterType
+							&& value != null
+							&& _udtTypes.TryGetValue(value.GetType(), out var s))
 							_setUdtTypeName(parameter, s);
 					}
 
