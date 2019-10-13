@@ -6,6 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 using Microsoft.SqlServer.Types;
@@ -45,6 +46,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestHierarchyId([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+#if NETCOREAPP2_1
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+#endif
+
 			using (var conn = GetDataContext(context))
 			{
 				conn.GetTable<AllTypes2>()
@@ -82,6 +88,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+#if NETCOREAPP2_1
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+#endif
 			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
@@ -141,6 +151,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -156,6 +169,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -171,6 +187,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -186,6 +205,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where4([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -201,6 +223,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where5([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -216,6 +241,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where6([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -239,6 +267,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where7([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -254,6 +285,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where8([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -282,10 +316,18 @@ namespace Tests.DataProvider
 			};
 		}
 
+		private bool IsMsProvider(string context)
+		{
+			return ((SqlServerDataProvider)DataConnection.GetDataProvider(GetProviderName(context, out var _))).Provider == SqlServerProvider.MicrosoftDataSqlClient;
+		}
+
 		// https://github.com/linq2db/linq2db/issues/1836
 		[Test]
 		public void SelectSqlGeography([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = GetDataContext(context))
 			using (var t  = db.CreateLocalTable(Issue1836.Data))
 			{

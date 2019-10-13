@@ -107,9 +107,12 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>      (conn, "datetime2DataType",      DataType.DateTime2,      "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>      (conn, "timeDataType",           DataType.Time,           "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
 
-				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
-				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
-				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+				if (!IsMsProvider(context))
+				{
+					Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
+					Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
+					Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+				}
 			}
 		}
 
@@ -584,6 +587,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestHierarchyID([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
@@ -600,6 +606,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeometry([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
@@ -619,6 +628,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
@@ -998,6 +1010,9 @@ namespace Tests.DataProvider
 
 		void BulkCopyAllTypes2(string context, BulkCopyType bulkCopyType)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = new DataConnection(context))
 			{
 				db.CommandTimeout = 60;
@@ -1026,6 +1041,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyAllTypes2MultipleRows([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			BulkCopyAllTypes2(context, BulkCopyType.MultipleRows);
 		}
 
@@ -1391,6 +1409,11 @@ namespace Tests.DataProvider
 				Assert.AreEqual(-1, rows);
 				Assert.AreEqual(4, result);
 			}
+		}
+
+		private bool IsMsProvider(string context)
+		{
+			return ((SqlServerDataProvider)DataConnection.GetDataProvider(GetProviderName(context, out var _))).Provider == SqlServerProvider.MicrosoftDataSqlClient;
 		}
 	}
 }
