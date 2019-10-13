@@ -305,14 +305,12 @@ stages:
         Access_JET:
           title: 'Access Jet'
           config: 'access'
+          buildPlatform: 'x86'
         Access_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
-        SqlCE:
-          title: 'SQL CE'
-          config: 'sqlce'
-          psscript: 'sqlce.ps1'
+          buildPlatform: 'x86'
     steps:
     - checkout: none
 
