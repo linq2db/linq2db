@@ -283,6 +283,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 		Build\Azure\net46\sqlite.json = Build\Azure\net46\sqlite.json
 		Build\Azure\net46\sqlite.ms.json = Build\Azure\net46\sqlite.ms.json
 		Build\Azure\net46\sqlserver.2017.json = Build\Azure\net46\sqlserver.2017.json
+		Build\Azure\net46\sqlserver.2017.ms.json = Build\Azure\net46\sqlserver.2017.ms.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp21", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
@@ -307,6 +308,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp2
 		Build\Azure\netcoreapp21\sqlite.json = Build\Azure\netcoreapp21\sqlite.json
 		Build\Azure\netcoreapp21\sqlite.ms.json = Build\Azure\netcoreapp21\sqlite.ms.json
 		Build\Azure\netcoreapp21\sqlserver.2017.json = Build\Azure\netcoreapp21\sqlserver.2017.json
+		Build\Azure\netcoreapp21\sqlserver.2017.ms.json = Build\Azure\netcoreapp21\sqlserver.2017.ms.json
 		Build\Azure\netcoreapp21\sybase.json = Build\Azure\netcoreapp21\sybase.json
 	EndProjectSection
 EndProject
