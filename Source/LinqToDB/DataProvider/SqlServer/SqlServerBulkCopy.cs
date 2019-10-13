@@ -17,7 +17,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServerBulkCopy(SqlServerDataProvider dataProvider, Type connectionType)
 		{
-			_dataProvider = dataProvider;
+			_dataProvider   = dataProvider;
+			_connectionType = connectionType;
 		}
 
 		readonly SqlServerDataProvider                                       _dataProvider;
