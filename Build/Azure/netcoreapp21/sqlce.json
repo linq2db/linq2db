@@ -1,5 +1,5 @@
 ﻿{
-	"NET46.Azure": {
+	"CORE21.Azure": {
 		"Providers": [
 			// SQL CE
 			"SqlCe"
