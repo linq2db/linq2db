@@ -17,19 +17,12 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		public static SqlServerProvider Provider = SqlServerProvider.Default;
+		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
 
 		private static readonly Func<string, string> _quoteIdentifier;
 
-#if NET45 || NET46
 		// System.Data
-		static readonly SqlServerDataProvider _sqlServerDataProvider2000sd = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.SystemData);
-		static readonly SqlServerDataProvider _sqlServerDataProvider2005sd = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemData);
-		static readonly SqlServerDataProvider _sqlServerDataProvider2008sd = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemData);
-		static readonly SqlServerDataProvider _sqlServerDataProvider2012sd = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemData);
-		static readonly SqlServerDataProvider _sqlServerDataProvider2017sd = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemData);
-#endif
-
+		// and/or
 		// System.Data.SqlClient
 		static readonly SqlServerDataProvider _sqlServerDataProvider2000sdc = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.SystemDataSqlClient);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005sdc = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient);
@@ -52,17 +45,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (Provider)
 			{
-#if NET45 || NET46
-				case SqlServerProvider.SystemData:
-					DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008sd);
-					DataConnection.AddDataProvider(ProviderName.SqlServer2014, _sqlServerDataProvider2012sd);
-					DataConnection.AddDataProvider(_sqlServerDataProvider2017sd);
-					DataConnection.AddDataProvider(_sqlServerDataProvider2012sd);
-					DataConnection.AddDataProvider(_sqlServerDataProvider2008sd);
-					DataConnection.AddDataProvider(_sqlServerDataProvider2005sd);
-					DataConnection.AddDataProvider(_sqlServerDataProvider2000sd);
-					break;
-#endif
 				case SqlServerProvider.SystemDataSqlClient:
 					DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008sdc);
 					DataConnection.AddDataProvider(ProviderName.SqlServer2014, _sqlServerDataProvider2012sdc);
@@ -101,11 +83,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		// also check https://github.com/linq2db/linq2db/issues/1487
 		private static Func<string, string> TryToUseCommandBuilder()
 		{
+#if NET45 || NET46
+			return new System.Data.SqlClient.SqlCommandBuilder().QuoteIdentifier;
+#else
 			var type = Type.GetType("System.Data.SqlClient.SqlCommandBuilder, System.Data.SqlClient", false);
 			type = type ?? Type.GetType("System.Data.SqlClient.SqlCommandBuilder, Microsoft.Data.SqlClient", false);
-#if NET45 || NET46
-			type = type ?? Type.GetType("System.Data.SqlClient.SqlCommandBuilder, System.Data", false);
-#endif
 
 			if (type != null)
 			{
@@ -115,6 +97,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return null;
+#endif
 		}
 
 		internal static string QuoteIdentifier(string identifier)
@@ -240,13 +223,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type type;
 			switch (provider)
 			{
-#if NET45 || NET46
-				case SqlServerProvider.SystemData:
-					type = typeof(System.Data.SqlClient.SqlConnection);
-					break;
-#endif
 				case SqlServerProvider.SystemDataSqlClient:
+#if NET45 || NET46
+					type = typeof(System.Data.SqlClient.SqlConnection);
+#else
 					type = Type.GetType("System.Data.SqlClient.SqlConnection, System.Data.SqlClient");
+#endif
 					break;
 				case SqlServerProvider.MicrosoftDataSqlClient:
 					type = Type.GetType("Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient");
@@ -264,21 +246,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion version   = SqlServerVersion.v2008,
-			SqlServerProvider provider = SqlServerProvider.Default)
+			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			switch (provider)
 			{
-#if NET45 || NET46
-				case SqlServerProvider.SystemData:
-					switch (version)
-					{
-						case SqlServerVersion.v2000: return _sqlServerDataProvider2000sd;
-						case SqlServerVersion.v2005: return _sqlServerDataProvider2005sd;
-						case SqlServerVersion.v2012: return _sqlServerDataProvider2012sd;
-						case SqlServerVersion.v2017: return _sqlServerDataProvider2017sd;
-						default: return _sqlServerDataProvider2008sd;
-					}
-#endif
 				case SqlServerProvider.SystemDataSqlClient:
 					switch (version)
 					{
@@ -297,12 +268,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						case SqlServerVersion.v2017: return _sqlServerDataProvider2017mdc;
 						default: return _sqlServerDataProvider2008mdc;
 					}
-				default:
-#if NET45 || NET46
-					return _sqlServerDataProvider2008sd;
-#else
-					return _sqlServerDataProvider2008sdc;
-#endif
+				default: return _sqlServerDataProvider2008sdc;
 			}
 		}
 
@@ -310,14 +276,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get
 			{
-#if NET45 || NET46
-				yield return _sqlServerDataProvider2000sd;
-				yield return _sqlServerDataProvider2005sd;
-				yield return _sqlServerDataProvider2008sd;
-				yield return _sqlServerDataProvider2012sd;
-				yield return _sqlServerDataProvider2017sd;
-#endif
-
 				yield return _sqlServerDataProvider2000sdc;
 				yield return _sqlServerDataProvider2005sdc;
 				yield return _sqlServerDataProvider2008sdc;
@@ -387,7 +345,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			string            connectionString,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
-			SqlServerProvider provider = SqlServerProvider.Default)
+			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			return new DataConnection(GetDataProvider(version, provider), connectionString);
 		}
@@ -395,7 +353,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			IDbConnection     connection,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
-			SqlServerProvider provider = SqlServerProvider.Default)
+			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			return new DataConnection(GetDataProvider(version, provider), connection);
 		}
@@ -403,7 +361,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			IDbTransaction    transaction,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
-			SqlServerProvider provider = SqlServerProvider.Default)
+			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}

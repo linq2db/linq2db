@@ -21,12 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: this(name, version,
-#if NET45 || NET46
-			SqlServerProvider.SystemData)
-#else
-			SqlServerProvider.SystemDataSqlClient)
-#endif
+			: this(name, version, SqlServerProvider.SystemDataSqlClient)
 		{
 		}
 
@@ -124,7 +119,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (_dataReaderType != null)
 					return _dataReaderType;
 
-				if (Provider == SqlServerProvider.SystemData)
+				if (Provider == SqlServerProvider.SystemDataSqlClient)
 				{
 					_dataReaderType = typeof(System.Data.SqlClient.SqlDataReader);
 					return _dataReaderType;
@@ -140,7 +135,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (_connectionType != null)
 				return _connectionType;
 
-			if (Provider == SqlServerProvider.SystemData)
+			if (Provider == SqlServerProvider.SystemDataSqlClient)
 			{
 				_connectionType = typeof(System.Data.SqlClient.SqlConnection);
 				OnConnectionTypeCreated(_connectionType);
@@ -155,12 +150,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Public Properties
 
-		public string AssemblyName          => Provider == SqlServerProvider.SystemDataSqlClient
-			? "System.Data.SqlClient"
-#if NET45 || NET46
-			: Provider == SqlServerProvider.SystemData ? "System.Data"
-#endif
-			: "Microsoft.Data.SqlClient";
+		public             string AssemblyName          => Provider == SqlServerProvider.SystemDataSqlClient    ? "System.Data.SqlClient" : "Microsoft.Data.SqlClient";
 		public    override string ConnectionNamespace   => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
 		protected override string ConnectionTypeName    => $"{ConnectionNamespace}.SqlConnection, {AssemblyName}";
 		protected override string DataReaderTypeName    => $"{ConnectionNamespace}.SqlDataReader, {AssemblyName}";

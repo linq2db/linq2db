@@ -10,30 +10,15 @@ namespace LinqToDB.DataProvider.SqlServer
 	[UsedImplicitly]
 	class SqlServerFactory : IDataProviderFactory
 	{
-		#region IDataProviderFactory Implementation
-
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-#if NET45 || NET46
-			var provider = SqlServerProvider.SystemData;
-#else
 			var provider     = SqlServerProvider.SystemDataSqlClient;
-#endif
-
 			var version      = attributes.FirstOrDefault(_ => _.Name == "version");
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
 
-			if (assemblyName != null)
+			if (assemblyName == "Microsoft.Data.SqlClient")
 			{
-				switch (assemblyName)
-				{
-					case "System.Data.SqlClient":
-						provider = SqlServerProvider.SystemDataSqlClient;
-						break;
-					case "Microsoft.Data.SqlClient":
-						provider = SqlServerProvider.MicrosoftDataSqlClient;
-						break;
-				}
+				provider = SqlServerProvider.MicrosoftDataSqlClient;
 			}
 
 			SqlServerTools.Provider = provider;
@@ -52,7 +37,5 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, provider);
 		}
-
-#endregion
 	}
 }

@@ -199,6 +199,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{949EA01F-64E8-4AB4-8120-699D79A51F6E}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlServer\CopyMe.SqlServer.tt.txt = NuGet\SqlServer\CopyMe.SqlServer.tt.txt
+		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\SqlServer\linq2db.SqlServer.props = NuGet\SqlServer\linq2db.SqlServer.props
 		NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude

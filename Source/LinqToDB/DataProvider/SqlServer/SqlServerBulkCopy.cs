@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						TraceAction(
 							dataConnection,
-							() => "INSERT BULK " + tableName + "("+ string.Join(", ", ((IEnumerable<dynamic>)dbc.ColumnMappings).Select(x => x.DestinationColumn)) + Environment.NewLine,
+							() => "INSERT BULK " + tableName + "("+ string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 
