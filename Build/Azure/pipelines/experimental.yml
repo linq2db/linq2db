@@ -305,12 +305,12 @@ stages:
         Access_JET:
           title: 'Access Jet'
           config: 'access'
-          buildPlatform: 'x86'
+          platform: 'x86'
         Access_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
-          buildPlatform: 'x86'
+          platform: 'x86'
     steps:
     - checkout: none
 
@@ -342,7 +342,7 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: linq2db.Tests.dll
-        platform: '$(buildPlatform)'
+        platform: '$(platform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
