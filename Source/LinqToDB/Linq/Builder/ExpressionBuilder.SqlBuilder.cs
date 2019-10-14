@@ -1418,7 +1418,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
 				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
+					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
 						p = accessor.Value;
 
 			if (p == null)

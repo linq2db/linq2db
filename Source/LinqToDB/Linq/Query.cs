@@ -64,11 +64,12 @@ namespace LinqToDB.Linq
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
 				ContextType            == dataContext.GetType()        &&
-				Expression.EqualsTo(expr, _queryableAccessorDic);
+				Expression.EqualsTo(expr, _queryableAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new List<QueryableAccessor>();
+		readonly Dictionary<Expression,object>            _queryDependedObjects  = new Dictionary<Expression,object>();
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -82,6 +83,15 @@ namespace LinqToDB.Linq
 			_queryableAccessorList.Add(e);
 
 			return _queryableAccessorList.Count - 1;
+		}
+
+		internal void AddQueryDependedObject(Expression expr)
+		{
+			if (_queryDependedObjects.ContainsKey(expr))
+				return;
+
+			var value = expr.EvaluateExpression();
+			_queryDependedObjects.Add(expr, value);
 		}
 
 		internal Expression GetIQueryable(int n, Expression expr)
@@ -181,6 +191,12 @@ namespace LinqToDB.Linq
 		/// Not changed when cache reordered.
 		/// </summary>
 		static int _cacheVersion;
+
+		/// <summary>
+		/// Count of queries which has not been found in cache.
+		/// </summary>
+		static long _cacheMissCount;
+
 		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
@@ -213,6 +229,8 @@ namespace LinqToDB.Linq
 					_orderedCache.Clear();
 				}
 		}
+
+		public static long CacheMissCount => _cacheMissCount;
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
@@ -318,6 +336,8 @@ namespace LinqToDB.Linq
 					return query;
 				}
 			}
+
+			Interlocked.Increment(ref _cacheMissCount);
 
 			return null;
 		}

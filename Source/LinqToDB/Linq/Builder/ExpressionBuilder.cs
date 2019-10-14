@@ -719,6 +719,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var call = (MethodCallExpression)expr;
 
+						var parameters = call.Method.GetParameters();
+						for (int i = 0; i < parameters.Length; i++)
+						{
+							if (parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+								_query.AddQueryDependedObject(call.Arguments[i]);
+						}
+
 						if (call.IsQueryable() || call.IsAsyncExtension())
 						{
 							switch (call.Method.Name)

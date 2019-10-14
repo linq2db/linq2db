@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -26,6 +29,32 @@ namespace Tests.Linq
 			[Identity]
 			public int Id        { get; set; }
 			public string Value  { get; set; }
+		}
+
+		[Table]
+		class ManyFields
+		{
+			[PrimaryKey]
+			public int  Id     { get; set; }
+			[Column] public int? Field1 { get; set; }
+			[Column] public int? Field2 { get; set; }
+			[Column] public int? Field3 { get; set; }
+			[Column] public int? Field4 { get; set; }
+			[Column] public int? Field5 { get; set; }
+		}
+
+		static class Helper
+		{
+			[ExpressionMethod(nameof(GetFieldImpl))]
+			public static int? GetField(ManyFields entity, [SqlQueryDependent] int i)
+			{
+				throw new InvalidOperationException();
+			}
+
+			private static Expression<Func<ManyFields, int, int?>> GetFieldImpl()
+			{
+				return (entity, i) => Sql.Property<int?>(entity, $"Field{i}");
+			}
 		}
 
 		[Test]
@@ -125,6 +154,44 @@ namespace Tests.Linq
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
 			return ms;
+		}
+
+		[Test]
+		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ManyFields>())
+			{
+				Query<ManyFields>.ClearCache();
+
+				var currentMiss = Query<ManyFields>.CacheMissCount;
+
+				int i;
+				for (i = 1; i <= 5; i++)
+				{
+					var test = db
+						.GetTable<ManyFields>()
+						.Where(x => Helper.GetField(x, i) == i);
+
+					var sqlStr = test.ToString();
+					Console.WriteLine(sqlStr);
+				}	
+				
+				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
+
+				currentMiss = Query<ManyFields>.CacheMissCount;
+
+				for (i = 1; i <= 5; i++)
+				{
+					var test = db
+						.GetTable<ManyFields>()
+						.Where(x => Helper.GetField(x, i) == i);
+
+					var sqlStr = test.ToString();
+				}	
+
+				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));
+			}
 		}
 
 	}
