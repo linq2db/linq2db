@@ -261,7 +261,7 @@ namespace LinqToDB.Data
 					dataType = dataConnection.MappingSchema.GetDataType(
 						parm.SystemType == typeof(object) && paramValue != null ?
 							paramValue.GetType() :
-							systemType).DataType;
+							systemType!).DataType;
 				}
 
 				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, dbType, dbSize), paramValue);

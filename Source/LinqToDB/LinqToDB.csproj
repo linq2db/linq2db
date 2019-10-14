@@ -49,6 +49,8 @@
 		<Reference Include="System.ServiceModel" />
 		<Reference Include="System.Web.Services" />
 		<Reference Include="System.ComponentModel.DataAnnotations" />
+
+		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
@@ -63,7 +65,9 @@
 		<Compile Remove="Configuration\ElementCollectionBase.cs" />
 		<Compile Remove="Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
+
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
 
 		<PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.7.0" />

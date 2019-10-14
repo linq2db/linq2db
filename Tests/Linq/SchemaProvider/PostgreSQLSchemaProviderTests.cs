@@ -12,6 +12,8 @@ using NpgsqlTypes;
 
 using NUnit.Framework;
 
+#pragma warning disable 618
+
 namespace Tests.SchemaProvider
 {
 	using Model;

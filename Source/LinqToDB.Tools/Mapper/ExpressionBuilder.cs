@@ -1,7 +1,6 @@
 ﻿#nullable disable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -509,7 +508,6 @@ namespace LinqToDB.Tools.Mapper
 				}
 			}
 
-			[SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
 			Expression BuildClassMapper(Expression getValue, MemberAccessor toMember)
 			{
 				var key   = Tuple.Create(_fromExpression.Type, toMember.Type);

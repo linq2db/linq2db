@@ -508,7 +508,7 @@ namespace LinqToDB
 			if (string.IsNullOrEmpty(str))
 				return str;
 
-			var chars = str.ToCharArray();
+			var chars = str!.ToCharArray();
 			Array.Reverse(chars);
 			return new string(chars);
 		}

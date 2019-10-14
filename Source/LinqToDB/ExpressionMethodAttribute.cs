@@ -59,10 +59,8 @@ namespace LinqToDB
 		/// <param name="methodName">Name of method in the same class that returns substitution expression.</param>
 		public ExpressionMethodAttribute(string? configuration, string methodName)
 		{
-			if (methodName == null) throw new ArgumentNullException(nameof(methodName));
-
 			Configuration = configuration;
-			MethodName    = methodName;
+			MethodName    = methodName ?? throw new ArgumentNullException(nameof(methodName));
 		}
 
 		/// <summary>
@@ -94,7 +92,7 @@ namespace LinqToDB
 		/// Note that alias can be overriden by projection member name.
 		/// </remarks>
 		/// </summary>
-		public string Alias { get; set; }
+		public string? Alias { get; set; }
 
 	}
 }

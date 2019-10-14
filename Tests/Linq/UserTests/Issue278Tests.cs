@@ -64,7 +64,7 @@ namespace Tests.UserTests
 							new { Name = "MixedAll",                 Action = new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete, InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject } },
 						})
 						{
-							var baseName = $"TestPerformance_set={set.Name}_threads={cnt:00}_cache={mode}";
+							var baseName = $"TestPerformance_set-{set.Name}_threads-{cnt:00}_cache-{mode}";
 							yield return new TestCaseData(provider, cnt, set.Action, baseName) { TestName = baseName };
 						}
 			}

@@ -710,7 +710,7 @@ namespace Tests.T4.Model
 		public string? Field22_____;
 		public string? PField121    { get; set; }
 		public string  PField122    { get { return "not null"; } }
-		public string? PField221    { get { var a = 1; return null; } }
+		public string? PField221    { get { _ = 1; return null; } }
 		public string? PField222    { get { return null; } }                            // Field3 comment
 		public string? PField23     { get { return null; } set { value?.ToString(); } } // Fieomment
 
