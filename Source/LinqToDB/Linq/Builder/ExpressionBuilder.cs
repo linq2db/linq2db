@@ -104,6 +104,8 @@ namespace LinqToDB.Linq.Builder
 
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
+			CollectQueryDepended(expression);
+
 			CompiledParameters   = compiledParameters;
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
@@ -718,13 +720,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call :
 					{
 						var call = (MethodCallExpression)expr;
-
-						var parameters = call.Method.GetParameters();
-						for (int i = 0; i < parameters.Length; i++)
-						{
-							if (parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
-								_query.AddQueryDependedObject(call.Arguments[i]);
-						}
 
 						if (call.IsQueryable() || call.IsAsyncExtension())
 						{
@@ -1651,6 +1646,29 @@ namespace LinqToDB.Linq.Builder
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
 			return Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+		}
+
+		#endregion
+
+		#region SqQueryDepended support
+
+		void CollectQueryDepended(Expression expr)
+		{
+			expr.Visit(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var call = (MethodCallExpression)e;
+					var parameters = call.Method.GetParameters();
+					for (int i = 0; i < parameters.Length; i++)
+					{
+						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
+							.FirstOrDefault();
+						if (attr != null)
+							_query.AddQueryDependedObject(call.Arguments[i], attr);
+					}
+				}
+			});
 		}
 
 		#endregion

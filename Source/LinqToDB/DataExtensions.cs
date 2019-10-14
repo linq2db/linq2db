@@ -793,6 +793,20 @@ namespace LinqToDB
 
 				return base.ExpressionsEqual(expr1, expr2, comparer);
 			}
+
+			public override Expression PrepareForCache(Expression expression)
+			{
+				if (expression.NodeType != ExpressionType.Call)
+					return base.PrepareForCache(expression);
+
+				var mc = (MethodCallExpression)expression;
+				var newArguments = new List<Expression>();
+				newArguments.Add(Expression.Constant(mc.Arguments[0].EvaluateExpression()));
+				newArguments.AddRange(mc.Arguments.Skip(1));
+
+				mc = mc.Update(mc.Object, newArguments);
+				return mc;
+			}
 		}
 
 		/// <summary>

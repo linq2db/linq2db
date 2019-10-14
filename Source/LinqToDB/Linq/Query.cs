@@ -69,7 +69,7 @@ namespace LinqToDB.Linq
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new List<QueryableAccessor>();
-		readonly Dictionary<Expression,object>            _queryDependedObjects  = new Dictionary<Expression,object>();
+		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new Dictionary<Expression,Expression>();
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -85,13 +85,13 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		internal void AddQueryDependedObject(Expression expr)
+		internal void AddQueryDependedObject(Expression expr, SqlQueryDependentAttribute attr)
 		{
 			if (_queryDependedObjects.ContainsKey(expr))
 				return;
 
-			var value = expr.EvaluateExpression();
-			_queryDependedObjects.Add(expr, value);
+			var prepared = attr.PrepareForCache(expr);
+			_queryDependedObjects.Add(expr, prepared);
 		}
 
 		internal Expression GetIQueryable(int n, Expression expr)
