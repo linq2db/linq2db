@@ -305,17 +305,8 @@ stages:
 
     strategy:
       matrix:
-        Access_JET:
-          title: 'Access Jet'
-          config: 'access'
-          extraParams: '/Platform:x86'
-        Access_ACE_x86:
-          title: 'Access ACE (32)'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
-          extraParams: '/Platform:x86'
-        Access_ACE_x64:
-          title: 'Access ACE (64)'
+        Access_ACE:
+          title: 'Access ACE (x64)'
           config: 'access.ace'
           script: 'access.ace.x64.cmd'
     steps:
@@ -352,7 +343,7 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 $(extraParams)'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
       displayName: '$(title)'
 
     - task: PublishTestResults@2
