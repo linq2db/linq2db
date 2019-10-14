@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Data;
-using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using NUnit.Framework;
+using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
-using Tests.Playground.OracleWrappers;
 
-namespace Tests.Playground
+namespace Tests.TypeMapping
 {
 	namespace OracleWrappers
 	{
