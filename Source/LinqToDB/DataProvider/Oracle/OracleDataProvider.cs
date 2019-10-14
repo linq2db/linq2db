@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -246,6 +247,20 @@ namespace LinqToDB.DataProvider.Oracle
 				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = GetDecimal(typeof(int),     true);
 				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = GetDecimal(typeof(long),    true);
 				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = GetDecimal(typeof(decimal), false);
+
+				ReaderExpressions[new ReaderInfo { ToType = typeof(string), FieldType  = typeof(byte[]), DataTypeName = "LongRaw" }] =
+					Expression.Lambda(
+						Expression.Call(Expression.Constant(Encoding.UTF8),
+							MemberHelper.MethodOf(() => Encoding.UTF8.GetString(null)),
+							Expression.Convert(
+								Expression.Call(
+									dataReaderParameter,
+									"GetValue",
+									null,
+									indexParameter), 
+								typeof(byte[]))),
+						dataReaderParameter,
+						indexParameter);
 			}
 
 			{
@@ -347,6 +362,8 @@ namespace LinqToDB.DataProvider.Oracle
 			_setCursor         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "RefCursor");
 			_setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
 			_setVarchar2       = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Varchar2");
+			_setLong           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Long");
+			_setLongRaw        = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "LongRaw");
 
 			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
@@ -457,6 +474,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
+			dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
+
+			// For LONG data type fetching initialization
+			command.InitialLONGFetchSize = -1;
+
 			if (parameters != null)
 				foreach (var parameter in parameters)
 				{
@@ -466,8 +488,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value.Length != 0)
 						{
-							dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
-
 							command.ArrayBindCount = value.Length;
 
 							break;
@@ -519,6 +539,13 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
+				case DataType.LongRaw:
+					{
+						//LONG RAW accepts only arrays and Guid
+						if (value is string str) 
+							value = Encoding.UTF8.GetBytes(str);
+						break;
+					}
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
@@ -559,6 +586,8 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setCursor;
 		Action<IDbDataParameter> _setNVarchar2;
 		Action<IDbDataParameter> _setVarchar2;
+		Action<IDbDataParameter> _setLong;
+		Action<IDbDataParameter> _setLongRaw;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -588,6 +617,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Cursor         : _setCursor           (parameter);           break;
 				case DataType.NVarChar       : _setNVarchar2        (parameter);           break;
 				case DataType.VarChar        : _setVarchar2         (parameter);           break;
+				case DataType.Long           : _setLong             (parameter);           break;
+				case DataType.LongRaw        : _setLongRaw          (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
 			}
 		}
