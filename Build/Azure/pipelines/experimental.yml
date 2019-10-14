@@ -130,6 +130,7 @@ stages:
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -204,7 +205,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -299,18 +301,19 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
         Access_JET:
           title: 'Access Jet'
           config: 'access'
-          platform: 'x86'
+          extraParams: '/Platform:x86'
         Access_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
-          platform: 'x86'
+          extraParams: '/Platform:x86'
     steps:
     - checkout: none
 
@@ -342,10 +345,10 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: linq2db.Tests.dll
-        platform: '$(platform)'
+        platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 $(extraParams)'
       displayName: '$(title)'
 
     - task: PublishTestResults@2
