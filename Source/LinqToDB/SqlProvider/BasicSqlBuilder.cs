@@ -2204,7 +2204,15 @@ namespace LinqToDB.SqlProvider
 						var sql = Statement.SqlText;
 #endif
 
-						var table = Statement.GetTableSource(column.Parent);
+						ISqlTableSource table;
+						var currentStatement = Statement;
+						do
+						{
+							table = currentStatement.GetTableSource(column.Parent);
+							if (table != null)
+								break;
+							currentStatement = currentStatement.ParentStatement;
+						} while (currentStatement != null);
 
 						if (table == null)
 						{

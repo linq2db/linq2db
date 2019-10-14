@@ -783,6 +783,7 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
