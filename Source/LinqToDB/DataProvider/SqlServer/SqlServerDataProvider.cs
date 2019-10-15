@@ -7,7 +7,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-
 using Microsoft.SqlServer.Server;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -29,9 +28,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			Version = version;
 
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported      = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
-			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2008SqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
 			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 

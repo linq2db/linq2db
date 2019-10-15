@@ -1224,6 +1224,34 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlUpdateClause)element).Keys );
 					}
 
+				case QueryElementType.SelectStatement:
+					{
+						return Find(((SqlSelectStatement)element).SelectQuery) ??
+						       Find(((SqlSelectStatement)element).With       );
+					}
+
+				case QueryElementType.InsertStatement:
+					{
+						return Find(((SqlInsertStatement)element).SelectQuery) ??
+						       Find(((SqlInsertStatement)element).Insert     ) ??
+						       Find(((SqlInsertStatement)element).With       );
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						return Find(((SqlUpdateStatement)element).SelectQuery) ??
+						       Find(((SqlUpdateStatement)element).Update     ) ??
+						       Find(((SqlUpdateStatement)element).With       );
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						return Find(((SqlInsertOrUpdateStatement)element).SelectQuery) ??
+						       Find(((SqlInsertOrUpdateStatement)element).Insert     ) ??
+						       Find(((SqlInsertOrUpdateStatement)element).Update     ) ??
+						       Find(((SqlInsertOrUpdateStatement)element).With       );
+					}
+
 				case QueryElementType.DeleteStatement:
 					{
 						return
@@ -1241,7 +1269,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.DropTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table);
+							Find(((SqlDropTableStatement)element).Table);
 					}
 
 				case QueryElementType.SelectClause:
@@ -1264,11 +1292,55 @@ namespace LinqToDB.SqlQuery
 							(((SelectQuery)element).HasSetOperators ? Find(((SelectQuery)element).SetOperators) : null);
 					}
 
+				case QueryElementType.TruncateTableStatement:
+					{
+						return
+							Find(((SqlTruncateTableStatement)element).Table);
+					}
+
 				case QueryElementType.CteClause:
 					{
 						return
 							Find(((CteClause)element).Fields) ??
 							Find(((CteClause)element).Body  );
+					}
+
+				case QueryElementType.WithClause:
+					{
+						return Find(((SqlWithClause)element).Clauses);
+					}
+
+				case QueryElementType.MergeStatement:
+					{
+						return
+							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Source    ) ??
+							Find(((SqlMergeStatement)element).On        ) ??
+							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Operations);
+					}
+
+				case QueryElementType.MergeSourceTable:
+					{
+						return
+							Find(((SqlMergeSourceTable)element).SourceEnumerable) ??
+							Find(((SqlMergeSourceTable)element).SourceQuery     ) ??
+							Find(((SqlMergeSourceTable)element).SourceFields    );
+					}
+
+				case QueryElementType.MergeOperationClause:
+					{
+						return
+							Find(((SqlMergeOperationClause)element).Where      ) ??
+							Find(((SqlMergeOperationClause)element).WhereDelete) ??
+							Find(((SqlMergeOperationClause)element).Items      );
+					}
+
+				case QueryElementType.SqlValuesTable:
+					{
+						return 
+							Find(((SqlValuesTable)element).Fields.Values          ) ??
+							Find(((SqlValuesTable)element).Rows.SelectMany(r => r));
 					}
 
 				case QueryElementType.SqlField:
@@ -2467,7 +2539,20 @@ namespace LinqToDB.SqlQuery
 					{
 						var table    = (SqlTable)element;
 						var newTable = (SqlTable)_convert(table);
-						if (!ReferenceEquals(newTable, table))
+
+						if (ReferenceEquals(newTable, table))
+						{
+							var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
+								null : ConvertImmutable(table.TableArguments);
+
+							if (targs != null && !ReferenceEquals(table.TableArguments, targs))
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlTable(table, newFields, targs);
+							}
+						}
+
+						if (!ReferenceEquals(table, newTable))
 						{
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields.Values)
@@ -2475,41 +2560,31 @@ namespace LinqToDB.SqlQuery
 								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
 									AddVisited(prevField, newField);
 							}
-
-							newElement = newTable;
 						}
+
+						newElement = newTable;
 
 						break;
 					}
 
 				case QueryElementType.SqlCteTable:
 					{
-						var table = (SqlCteTable)element;
-						var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
-							null : ConvertImmutable(table.TableArguments);
-						var cte = (CteClause)ConvertImmutableInternal(table.Cte);
+						var table    = (SqlCteTable)element;
+						var newTable = (SqlCteTable)_convert(table);
 
-						var ta = targs != null && !ReferenceEquals(table.TableArguments, targs);
-						var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
-
-						if (ta || ce)
+						if (ReferenceEquals(newTable, table))
 						{
-							var newFields = new List<SqlField>();
-							foreach (var field in table.Fields.Values)
-							{
-								var newField = new SqlField(field);
-								newFields.Add(newField);
-								AddVisited(field, newField);
-							}
+							var cte   = (CteClause)ConvertImmutableInternal(table.Cte);
+							var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
 
-							newElement = table = new SqlCteTable(table, newFields, cte);
-							((SqlCteTable)newElement).TableArguments = targs;
-							
-							AddVisited(((SqlCteTable)newElement).All, table.All);
+							if (ce)
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlCteTable(table, newFields, cte);
+							}
 						}
 
-						var newTable = (SqlCteTable)_convert(table);
-						if (!ReferenceEquals(newTable, table))
+						if (!ReferenceEquals(table, newTable))
 						{
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields.Values)
@@ -2517,9 +2592,9 @@ namespace LinqToDB.SqlQuery
 								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
 									AddVisited(prevField, newField);
 							}
-
-							newElement = newTable;
 						}
+
+						newElement = newTable;
 
 						break;
 					}
@@ -3056,6 +3131,8 @@ namespace LinqToDB.SqlQuery
 								hc = new SqlWhereClause  (nq, hc, objTree, e => false);
 							if (ReferenceEquals(oc, q.OrderBy))
 								oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+							if (us == null || ReferenceEquals(us, q.SetOperators))
+								us = new List<SqlSetOperator>(us ?? q.SetOperators);
 
 							AddVisited(q.All, nq.All);
 
@@ -3241,6 +3318,62 @@ namespace LinqToDB.SqlQuery
 
 							_visitedElements[((SqlRawSqlTable)newElement).All] = table.All;
 						}
+
+						break;
+					}
+
+				case QueryElementType.CteClause:
+					{
+						var cte = (CteClause)element;
+
+						if (new QueryVisitor().Find(cte.Body, e => e == cte) == null)
+						{
+							// non-recursive
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							if (body   != null && !ReferenceEquals(cte.Body, body) ||
+								fields != null && !ReferenceEquals(cte.Fields, fields))
+							{
+								newElement = new CteClause(
+									body ?? cte.Body,
+									fields ?? cte.Fields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+							}
+						}
+						else
+						{
+							var newCte = new CteClause(cte.ObjectType, cte.IsRecursive, cte.Name);
+
+							_visitedElements.Add(cte, newCte);
+
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							newCte.Init(body ?? cte.Body, fields ?? cte.Fields);
+
+							var elem = _convert(newCte) ?? newCte;
+							_visitedElements[cte] = elem;
+
+							return elem;
+						}
+
+						break;
+					}
+
+				case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
+
+						var clauses = ConvertImmutableSafe(with.Clauses);
+
+						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
+							newElement = new SqlWithClause()
+							{
+								Clauses = clauses
+							};
 
 						break;
 					}

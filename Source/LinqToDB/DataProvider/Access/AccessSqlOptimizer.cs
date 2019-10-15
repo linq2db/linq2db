@@ -12,15 +12,27 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
+				case QueryType.Update : return CorrectAccessUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
+		}
+
+		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)
+		{
+			if (statement.SelectQuery.Select.HasModifier)
+				throw new LinqToDBException("Access does not support update query limitation");
+
+			statement = CorrectUpdateTable(statement);
+
+			if (!statement.SelectQuery.OrderBy.IsEmpty)
+				statement.SelectQuery.OrderBy.Items.Clear();
+
+			return statement;
 		}
 
 		public override bool ConvertCountSubQuery(SelectQuery subQuery)

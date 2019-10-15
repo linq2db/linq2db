@@ -28,8 +28,11 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			new QueryVisitor().Visit(statement, SetQueryParameter);
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);

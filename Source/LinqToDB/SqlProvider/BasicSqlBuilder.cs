@@ -117,7 +117,9 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, new SqlSelectStatement(union.SelectQuery), sb, indent, skipAlias);
+						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, indent,
+							skipAlias);
 					}
 				}
 			}
@@ -144,7 +146,8 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, indent, skipAlias);
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0,
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, indent, skipAlias);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -219,7 +222,8 @@ namespace LinqToDB.SqlProvider
 
 			++Indent;
 
-			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery) { With = deleteStatement.GetWithClause() };
+			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
+				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
 			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
 
@@ -233,7 +237,10 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
-			BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);
+
+			if (SqlProviderFlags.IsUpdateFromSupported)
+				{BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);}
+
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
 			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);
@@ -528,7 +535,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 			{
 				BuildPhysicalTable(updateClause.Table, null);
 			}
@@ -1239,7 +1246,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0 || selectQuery.From.Tables[0].Alias == "$F")
 				return;
 
 			AppendIndent();
@@ -2134,8 +2141,17 @@ namespace LinqToDB.SqlProvider
 						{
 							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
-							if (ts == null && throwExceptionIfTableNotFound)
-								ts = Statement.GetTableSource(field.Table);
+							if (ts == null)
+							{
+								var current = Statement;
+								do
+								{
+									ts = current.GetTableSource(field.Table);
+									if (ts != null)
+										break;
+									current = current.ParentStatement;
+								} while (current != null);
+							}
 
 							if (ts == null)
 							{
@@ -2188,7 +2204,15 @@ namespace LinqToDB.SqlProvider
 						var sql = Statement.SqlText;
 #endif
 
-						var table = Statement.GetTableSource(column.Parent);
+						ISqlTableSource table;
+						var currentStatement = Statement;
+						do
+						{
+							table = currentStatement.GetTableSource(column.Parent);
+							if (table != null)
+								break;
+							currentStatement = currentStatement.ParentStatement;
+						} while (currentStatement != null);
 
 						if (table == null)
 						{
@@ -2935,13 +2959,18 @@ namespace LinqToDB.SqlProvider
 			switch (table.ElementType)
 			{
 				case QueryElementType.TableSource:
-					var ts    = (SqlTableSource)table;
-					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
-					return alias != "$" ? alias : null;
-
+					{
+						var ts    = (SqlTableSource)table;
+						var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+						return alias != "$" && alias != "$F" ? alias : null;
+					}
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
-					return ((SqlTable)table).Alias;
+				case QueryElementType.SqlRawSqlTable  :
+					{
+						var alias = ((SqlTable)table).Alias;
+						return alias != "$" && alias != "$F" ? alias : null;
+					}	
 				case QueryElementType.MergeSourceTable:
 					return null;
 
@@ -3046,6 +3075,7 @@ namespace LinqToDB.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
 				case QueryElementType.SqlCteTable:
+				case QueryElementType.SqlRawSqlTable:
 					return GetTablePhysicalName((SqlTable)table);
 
 				case QueryElementType.MergeSourceTable:

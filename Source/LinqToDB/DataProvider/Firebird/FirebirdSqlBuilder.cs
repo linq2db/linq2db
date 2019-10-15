@@ -158,12 +158,6 @@ namespace LinqToDB.DataProvider.Firebird
 //			base.BuildDataType(type, createDbType);
 //		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
 		protected sealed override bool IsReserved(string word)
 		{
 			return ReservedWords.IsReserved(word, ProviderName.Firebird);
@@ -353,7 +347,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			// should we introduce new converstion types like NameToGeneratorName/NameToTriggerName?
+			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:

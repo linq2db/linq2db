@@ -33,6 +33,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));

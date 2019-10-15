@@ -1,5 +1,7 @@
 ﻿#nullable disable
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -17,12 +19,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdateFrom((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

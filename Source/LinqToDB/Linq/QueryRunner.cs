@@ -107,11 +107,14 @@ namespace LinqToDB.Linq
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 
+				sql.Statement.UpdateIsParameterDepended();
+				sql.Statement.SetAliases();
+
 				// normalize parameters
 				if (query.SqlProviderFlags.IsParameterOrderDependent)
 					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
-
-				sql.Statement.SetAliases();
+				else
+					sql.Statement.CollectParameters();
 
 				var parameters =
 					sql.Parameters

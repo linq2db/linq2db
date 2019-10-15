@@ -38,6 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -145,12 +146,12 @@ namespace LinqToDB.DataProvider.SQLite
 						var method         = connectionType.GetMethodEx("CreateFile");
 						if (method != null)
 						{
-							var p = Expression.Parameter(typeof(string));
-							var l = Expression.Lambda<Action<string>>(
+						var p = Expression.Parameter(typeof(string));
+						var l = Expression.Lambda<Action<string>>(
 								Expression.Call(method, p),
-								p);
-							_createDatabase = l.Compile();
-						}
+							p);
+						_createDatabase = l.Compile();
+					}
 						else
 						{
 							// emulate for Microsoft.Data.SQLite

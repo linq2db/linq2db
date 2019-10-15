@@ -36,8 +36,11 @@ namespace LinqToDB.DataProvider.Informix
 
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
