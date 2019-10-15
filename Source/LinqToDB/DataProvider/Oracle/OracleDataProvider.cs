@@ -464,6 +464,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			// For LONG data type fetching initialization
 			command.InitialLONGFetchSize = -1;
+			// For LOB data type fetching initialization
+			command.InitialLOBFetchSize  = -1;
 
 			if (parameters != null)
 				foreach (var parameter in parameters)
