@@ -28,12 +28,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(name, null)
 		{
-			Version  = version;
+			Version = version;
 			Provider = provider;
 
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported            = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -55,7 +56,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
-			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2008SqlOptimizer = new SqlServer2008SqlOptimizer    (SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
 			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 
@@ -98,7 +99,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString(i));
+				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
 			}
 
 			_parameterType     = connectionType.Assembly.GetType(ParameterTypeName,     true);
@@ -161,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override string DbFactoryProviderName => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
 #endif
 
-		public SqlServerVersion Version   { get; }
+		public SqlServerVersion Version { get; }
 
 		public SqlServerProvider Provider { get; }
 
@@ -301,7 +302,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Undefined:
 					if (value != null
 						&& (value is DataTable
-							|| value is DbDataReader
+						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
 							|| value.GetType().IsEnumerableTType(_sqlDataRecordType)))
 					{
@@ -402,7 +403,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Timestamp     : _setSqlDbType(parameter, SqlDbType.Timestamp);     break;
 				case DataType.Xml           : _setSqlDbType(parameter, SqlDbType.Xml);           break;
 				case DataType.Structured    : _setSqlDbType(parameter, SqlDbType.Structured);    break;
-				default                     : base.SetParameterType(parameter, dataType);        break;
+				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
 

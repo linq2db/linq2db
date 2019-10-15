@@ -36,7 +36,7 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(options, func);
+			Table = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;;
 
 			return null;
 		}

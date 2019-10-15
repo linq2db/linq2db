@@ -136,7 +136,9 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			Table.Clone(objectTree, doClone);
+			var table = Table.Clone(objectTree, doClone);
+			if (table == Table)
+				return this;
 
 			return objectTree[this];
 		}

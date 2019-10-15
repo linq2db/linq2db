@@ -41,9 +41,10 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported     = false;
-			SqlProviderFlags.IsApplyJoinSupported        = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			SqlProviderFlags.IsApplyJoinSupported      = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsUpdateFromSupported     = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}

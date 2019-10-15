@@ -330,7 +330,7 @@ namespace LinqToDB.SqlQuery
 			if (Server   != null) sb.Append($"[{Server}].");
 			if (Database != null) sb.Append($"[{Database}].");
 			if (Schema   != null) sb.Append($"[{Schema}].");
-			return sb.Append($"[{Name}]");
+			return sb.Append($"[{Name}({SourceID})]");
 		}
 
 		#endregion

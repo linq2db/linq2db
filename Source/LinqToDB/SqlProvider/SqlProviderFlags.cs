@@ -66,6 +66,16 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
+		/// <summary>
+		/// Provider supports
+		/// <code>
+		/// UPDATE A
+		/// SET ...
+		/// FROM B
+		/// </code> syntax
+		/// </summary>
+		public bool IsUpdateFromSupported                 { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;

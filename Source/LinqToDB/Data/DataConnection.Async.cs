@@ -75,6 +75,8 @@ namespace LinqToDB.Data
 		/// <returns>Async operation task.</returns>
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (_connection == null)
 			{
 				IDbConnection connection;
