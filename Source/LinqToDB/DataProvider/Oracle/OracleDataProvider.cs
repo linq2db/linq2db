@@ -247,20 +247,6 @@ namespace LinqToDB.DataProvider.Oracle
 				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = GetDecimal(typeof(int),     true);
 				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = GetDecimal(typeof(long),    true);
 				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = GetDecimal(typeof(decimal), false);
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(string), FieldType  = typeof(byte[]), DataTypeName = "LongRaw" }] =
-					Expression.Lambda(
-						Expression.Call(Expression.Constant(Encoding.UTF8),
-							MemberHelper.MethodOf(() => Encoding.UTF8.GetString(null)),
-							Expression.Convert(
-								Expression.Call(
-									dataReaderParameter,
-									"GetValue",
-									null,
-									indexParameter), 
-								typeof(byte[]))),
-						dataReaderParameter,
-						indexParameter);
 			}
 
 			{
@@ -539,13 +525,6 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
-				case DataType.LongRaw:
-					{
-						//LONG RAW accepts only arrays and Guid
-						if (value is string str) 
-							value = Encoding.UTF8.GetBytes(str);
-						break;
-					}
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)

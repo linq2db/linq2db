@@ -2421,8 +2421,7 @@ namespace Tests.DataProvider
 		class LongRawTable
 		{
 			[Column(Name =  "ID")] public int Id { get; set; }
-			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[] LONGRAWDATATYPEByte { get; set; } // LONG RAW
-			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public string LONGRAWDATATYPEString { get; set; } // LONG RAW
+			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[] LONGRAWDATATYPE { get; set; } // LONG RAW
 		}
 
 		[Test]
@@ -2435,39 +2434,37 @@ namespace Tests.DataProvider
 					.Delete();
 
 				var items = db.GetTable<LongRawTable>()
-					.Select(t => new { t.Id, t.LONGRAWDATATYPEByte, t.LONGRAWDATATYPEString })
+					.Select(t => new { t.LONGRAWDATATYPE })
 					.ToArray();
 
 				Assert.That(items.Length, Is.EqualTo(2));
-				Assert.That(items[0].LONGRAWDATATYPEByte, Is.Null);
-				Assert.That(items[0].LONGRAWDATATYPEString, Is.Null);
-				Assert.That(items[1].LONGRAWDATATYPEByte, Is.Not.Null);
-				Assert.That(items[1].LONGRAWDATATYPEString, Is.EqualTo("LONG RAW"));
+				Assert.That(items[0].LONGRAWDATATYPE, Is.Null);
+				Assert.That(items[1].LONGRAWDATATYPE, Is.Not.Null);
 					
-				var str1 = new string('A', 10000);
+				var bytes1 = Encoding.UTF8.GetBytes(new string('A', 10000));
 
 				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
 				{
 					Id = 3,
-					LONGRAWDATATYPEString = str1, 
+					LONGRAWDATATYPE = bytes1, 
 				});
 
-				var str2 = new string('B', 10000);
+				var bytes2 = Encoding.UTF8.GetBytes(new string('B', 10000));
 
 				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
 				{
 					Id = 4,
-					LONGRAWDATATYPEString = str2, 
+					LONGRAWDATATYPE = bytes2, 
 				});
 
 				var insertedItems = db.GetTable<LongRawTable>()
 					.Where(t => t.Id.In(3, 4))
-					.Select(t => new { t.LONGRAWDATATYPEString })
+					.Select(t => new { t.LONGRAWDATATYPE })
 					.ToArray();
 
 				Assert.That(insertedItems.Length, Is.EqualTo(2));
-				Assert.That(insertedItems[0].LONGRAWDATATYPEString, Is.EqualTo(str1));
-				Assert.That(insertedItems[1].LONGRAWDATATYPEString, Is.EqualTo(str2));
+				Assert.That(insertedItems[0].LONGRAWDATATYPE, Is.EqualTo(bytes1));
+				Assert.That(insertedItems[1].LONGRAWDATATYPE, Is.EqualTo(bytes2));
 			}
 		}
 
