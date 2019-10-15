@@ -142,5 +142,66 @@ namespace Tests.Playground
 
 			return mainEntities;
 		}
+
+
+		public class ExpressionTransformationInfo
+		{
+			public Expression Original { get; set; }
+			public Dictionary<MemberExpression, Expression> Transformation { get; } = new Dictionary<MemberExpression, Expression>();
+		}
+
+		public static void ProcessTransformation(Expression expr, Expression objExpression, Dictionary<Expression, ExpressionTransformationInfo> transformations)
+		{
+			var ti = new ExpressionTransformationInfo();
+			transformations.Add(expr, ti);
+			switch (expr.NodeType)
+			{
+				case ExpressionType.New:
+					{
+						var newExpression = (NewExpression)expr;
+						for (int i = 0; i < newExpression.Members.Count; i++)
+						{
+							var argument = newExpression.Arguments[i];
+							var memberExpression = Expression.MakeMemberAccess(objExpression, )
+							ProcessTransformation(argument, transformations);
+							ti.Transformation.Add(newExpression.Members[i], argument);
+						}
+						break;
+					}
+			}
+		}
+
+		public static void RegisterTransformation(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expr;
+						if (mc.IsQueryable("SelectMany"))
+						{
+							var source     = mc.Arguments[0];
+							var details    = mc.Arguments[1].Unwrap();
+							var projection = mc.Arguments[2].Unwrap();
+
+							//   
+							// q1 = GetTable<A>().SelectMany(
+							//	details		a => GetTable<B>().Where(b => b.ParentId == a.Id).Select(b => new { BId = b.Id, Children = GetTable<C>().Where(c => c.Id == b.Id || c.Id == a.Id) }),
+							//	projection	(a, b) => new { a, b })
+							//
+							// q2 = q1.Where (c => c.a.Id == 10)
+
+							// q1 = GetTable<A>().SelectMany(
+							//	details		a => GetTable<B>().Where(b => b.ParentId == a.Id).Select(b => new { BId = b.Id, Children = GetTable<C>().Where(c => c.Id == b.Id || c.Id == b.Id2 || c.Id == a.Id) }),
+							//	projection	(a, b) => Tuple.Create(a, b, a.Id, b.Id) })
+
+							// q2 = q1.Where (c => c.Item1.Id == 10)
+						}
+
+						break;
+					}
+			}
+		}
+
 	}
 }
