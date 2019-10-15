@@ -200,7 +200,7 @@ stages:
         command: 'push'
         packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
         nuGetFeedType: 'external'
-        publishFeedCredentials: 'linq2db nuget.org feed (allows update of linq2db and linq2db.EF nugets)'
+        publishFeedCredentials: 'linq2db nuget.org feed'
       displayName: Publish to Nuget.org
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
