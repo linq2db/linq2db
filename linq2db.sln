@@ -100,6 +100,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\linq2db.SQLite.MS.nuspec = NuGet\linq2db.SQLite.MS.nuspec
 		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
@@ -198,6 +199,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{949EA01F-64E8-4AB4-8120-699D79A51F6E}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlServer\CopyMe.SqlServer.tt.txt = NuGet\SqlServer\CopyMe.SqlServer.tt.txt
+		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\SqlServer\linq2db.SqlServer.props = NuGet\SqlServer\linq2db.SqlServer.props
 		NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude
@@ -281,10 +283,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 		Build\Azure\net46\sqlite.json = Build\Azure\net46\sqlite.json
 		Build\Azure\net46\sqlite.ms.json = Build\Azure\net46\sqlite.ms.json
 		Build\Azure\net46\sqlserver.2017.json = Build\Azure\net46\sqlserver.2017.json
+		Build\Azure\net46\sqlserver.2017.ms.json = Build\Azure\net46\sqlserver.2017.ms.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp21", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
+		Build\Azure\netcoreapp21\access.ace.json = Build\Azure\netcoreapp21\access.ace.json
 		Build\Azure\netcoreapp21\db2.json = Build\Azure\netcoreapp21\db2.json
 		Build\Azure\netcoreapp21\firebird25.json = Build\Azure\netcoreapp21\firebird25.json
 		Build\Azure\netcoreapp21\firebird3.json = Build\Azure\netcoreapp21\firebird3.json
@@ -302,15 +306,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp2
 		Build\Azure\netcoreapp21\pgsql92.json = Build\Azure\netcoreapp21\pgsql92.json
 		Build\Azure\netcoreapp21\pgsql93.json = Build\Azure\netcoreapp21\pgsql93.json
 		Build\Azure\netcoreapp21\pgsql95.json = Build\Azure\netcoreapp21\pgsql95.json
+		Build\Azure\netcoreapp21\sqlce.json = Build\Azure\netcoreapp21\sqlce.json
 		Build\Azure\netcoreapp21\sqlite.json = Build\Azure\netcoreapp21\sqlite.json
 		Build\Azure\netcoreapp21\sqlite.ms.json = Build\Azure\netcoreapp21\sqlite.ms.json
 		Build\Azure\netcoreapp21\sqlserver.2017.json = Build\Azure\netcoreapp21\sqlserver.2017.json
+		Build\Azure\netcoreapp21\sqlserver.2017.ms.json = Build\Azure\netcoreapp21\sqlserver.2017.ms.json
 		Build\Azure\netcoreapp21\sybase.json = Build\Azure\netcoreapp21\sybase.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\scripts\access.ace.cmd = Build\Azure\scripts\access.ace.cmd
+		Build\Azure\scripts\access.ace.x64.cmd = Build\Azure\scripts\access.ace.x64.cmd
 		Build\Azure\scripts\db2.sh = Build\Azure\scripts\db2.sh
 		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
 		Build\Azure\scripts\firebird3.sh = Build\Azure\scripts\firebird3.sh

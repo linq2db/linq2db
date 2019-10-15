@@ -44,8 +44,12 @@
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadInformixMetadata("MyServer", "9088", "ol_informix1170", "MyDatabase", "informix", "TestPassword");
 //	LoadInformixMetadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

@@ -43,8 +43,12 @@
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadDB2Metadata("MyServer", "50000", "MyDatabase", "MyUser", "TestPassword");
 //	LoadDB2Metadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

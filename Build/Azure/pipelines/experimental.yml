@@ -42,7 +42,7 @@ stages:
     - task: UseDotNet@2
       displayName: Install .NET Core 3.0
       inputs:
-        version: 3.0.100
+        version: 3.0.x
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -129,15 +129,16 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: ne(variables['Build.SourceBranchName'], 'release')
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Informix12:
-          title: 'Informix 12.10'
-          config: 'informix'
-          script: 'informix12.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+#        Informix12:
+#          title: 'Informix 12.10'
+#          config: 'informix'
+#          script: 'informix12.sh'
+#          nuget: 'IBM.Data.DB2.Core-lnx'
         SAPHANA2:
           title: 'SAP HANA 2 SPS 04r40'
           config: 'hana2'
@@ -204,16 +205,17 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Informix12:
-          title: 'Informix 12.10'
-          config: 'informix'
-          script: 'mac.informix12.sh'
-          docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+#        Informix12:
+#          title: 'Informix 12.10'
+#          config: 'informix'
+#          script: 'mac.informix12.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx'
         SAPHANA2:
           title: 'SAP HANA 2 SPS 04r40'
           config: 'hana2'
@@ -288,3 +290,65 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
         testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'
+
+###################################
+#  Tests: Windows (NETCOREAPP2_1) #
+#  Windows 2016                   #
+###################################
+  - job: test_win2016_netcoreapp21_job
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'Tests: Win / NETCOREAPP2.1 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+        Access_ACE:
+          title: 'Access ACE (x64)'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFilterCriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'

@@ -70,6 +70,10 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
 		</None>
+		<None Update="Databases\SqlServer.MS.tt">
+		  <LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Databases\SqlServerAzure.tt">
 			<LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -217,6 +221,11 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.MS.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.MS.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
 			<DesignTime>True</DesignTime>

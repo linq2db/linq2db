@@ -144,16 +144,33 @@ namespace LinqToDB.DataProvider
 			string parameterTypeName, string propertyName, Type dbType)
 		{
 			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			return GetSetParameter<TResult>(pType, propertyName, dbType);
+		}
 
+		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
+			Type parameterType, string propertyName, Type dbType)
+		{
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var v = Expression.Parameter(typeof(TResult));
 			var l = Expression.Lambda<Action<IDbDataParameter, TResult>>(
 				Expression.Assign(
 					Expression.PropertyOrField(
-						Expression.Convert(p, pType),
+						Expression.Convert(p, parameterType),
 						propertyName),
 					Expression.Convert(v, dbType)),
 				p, v);
+
+			return l.Compile();
+		}
+
+		protected Func<IDbDataParameter, TResult> GetGetParameter<TResult>(Type parameterType, string propertyName)
+		{
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var l = Expression.Lambda<Func<IDbDataParameter, TResult>>(
+					Expression.PropertyOrField(
+						Expression.Convert(p, parameterType),
+						propertyName),
+				p);
 
 			return l.Compile();
 		}
@@ -242,12 +259,11 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
-		//
-		// protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
-		// {
-		//     ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
-		// }
+		protected void SetProviderField<TField>(string methodName)
+		{
+			SetProviderField(typeof(TField), methodName);
+		}
+
 		protected void SetProviderField(Type fieldType, string methodName)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
@@ -284,6 +300,12 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		// }
+
+		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true)
+		{
+			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException);
+		}
+
 		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");

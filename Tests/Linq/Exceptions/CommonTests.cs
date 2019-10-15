@@ -85,8 +85,8 @@ namespace Tests.Exceptions
 
 				var n = 555;
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				var ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -94,9 +94,10 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -104,6 +105,7 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
 				db.Parent.Delete(p => p.ParentID == n);
 			}

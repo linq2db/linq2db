@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
 
-				SetProviderField(_ifxDecimal , typeof(decimal) , InformixTools.IsCore ? "GetDB2Decimal" : "GetIfxDecimal");
+				SetProviderField(_ifxDecimal , typeof(decimal) , InformixTools.IsCore ? "GetDB2Decimal"  : "GetIfxDecimal");
 				SetProviderField(_ifxDateTime, typeof(DateTime), InformixTools.IsCore ? "GetDB2DateTime" : "GetIfxDateTime");
 				if (_ifxTimeSpan != null)
 					SetProviderField(_ifxTimeSpan, typeof(TimeSpan), InformixTools.IsCore ? "GetDB2TimeSpan" : "GetIfxTimeSpan", false);

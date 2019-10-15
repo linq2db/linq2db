@@ -6,12 +6,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using System.Linq;
 	using Common;
 	using Data.RetryPolicy;
 
@@ -56,10 +56,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (_additionalErrorNumbers != null)
 			{
-				var sqlException = exception as SqlException;
-
-				if (sqlException != null)
-					foreach (SqlError err in sqlException.Errors)
+				if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
+					foreach (dynamic err in ((dynamic)exception).Errors)
 						if (_additionalErrorNumbers.Contains(err.Number))
 							return true;
 			}
@@ -82,10 +80,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static bool IsMemoryOptimizedError(Exception exception)
 		{
-			var sqlException = exception as SqlException;
-
-			if (sqlException != null)
-				foreach (SqlError err in sqlException.Errors)
+			if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
+				foreach (dynamic err in ((dynamic)exception).Errors)
 					switch (err.Number)
 					{
 						case 41301:

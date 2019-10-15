@@ -844,7 +844,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
-		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
+		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
 		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
 		/// </summary>
 #endif

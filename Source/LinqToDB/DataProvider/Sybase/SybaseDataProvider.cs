@@ -8,7 +8,6 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
-	using LinqToDB.Linq;
 	using Mapping;
 	using Common;
 	using SchemaProvider;
