@@ -70,7 +70,12 @@ namespace LinqToDB.SqlProvider
 
 //statement.EnsureFindTables();
 			if (Configuration.Linq.OptimizeJoins)
+			{
 				OptimizeJoins(statement);
+
+				// Do it again after JOIN Optimization
+				FinalizeCte(statement);
+			}
 
 //statement.EnsureFindTables();
 			statement.SetAliases();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -8,7 +9,6 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Extensions;
-	using Mapping;
 	using SqlQuery;
 
 	partial class Sql
@@ -58,8 +58,8 @@ namespace LinqToDB
 			public bool           IsAggregate      { get; set; }
 			public IsNullableType IsNullable       { get; set; }
 
-			private bool? _canBeNull;
-			public  bool   CanBeNull
+			internal  bool? _canBeNull;
+			public    bool   CanBeNull
 			{
 				get => _canBeNull ?? true;
 				set => _canBeNull = value;
@@ -70,26 +70,37 @@ namespace LinqToDB
 				if (_canBeNull != null)
 					return _canBeNull.Value;
 
-				switch (IsNullable)
+				return CalcCanBeNull(IsNullable, parameters.Select(p => p.CanBeNull)) ?? true;
+			}
+
+			public static bool? CalcCanBeNull(IsNullableType isNullable, IEnumerable<bool> nullInfo)
+			{
+				switch (isNullable)
 				{
-					case IsNullableType.Undefined              :
+					case IsNullableType.Undefined              : return null;
 					case IsNullableType.Nullable               : return true;
 					case IsNullableType.NotNullable            : return false;
+				}
+
+				var parameters = nullInfo.ToArray();
+
+				switch (isNullable)
+				{
 					case IsNullableType.SameAsFirstParameter   : return SameAs(0);
 					case IsNullableType.SameAsSecondParameter  : return SameAs(1);
 					case IsNullableType.SameAsThirdParameter   : return SameAs(2);
 					case IsNullableType.SameAsLastParameter    : return SameAs(parameters.Length - 1);
-					case IsNullableType.IfAnyParameterNullable : return parameters.Any(p => p.CanBeNull);
+					case IsNullableType.IfAnyParameterNullable : return parameters.Any(p => p);
 				}
 
 				bool SameAs(int parameterNumber)
 				{
 					if (parameterNumber >= 0 && parameters.Length > parameterNumber)
-						return parameters[parameterNumber].CanBeNull;
+						return parameters[parameterNumber];
 					return true;
 				}
 
-				return true;
+				return null;
 			}
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)

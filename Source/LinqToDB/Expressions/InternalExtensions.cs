@@ -1040,6 +1040,11 @@ namespace LinqToDB.Expressions
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
 		}
 
+		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
+		{
+			return method.IsQueryable("AsCte", "GetCte");
+		}
+
 		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
 		{
 			switch (expression.NodeType)
@@ -1150,6 +1155,13 @@ namespace LinqToDB.Expressions
 							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
 
 						break;
+					}
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expr;
+						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
+						var instance  = mc.Object.EvaluateExpression();
+						return mc.Method.Invoke(instance, arguments);
 					}
 			}
 

@@ -12,6 +12,11 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public bool     GetTables             = true;
 		/// <summary>
+		/// Enable or disable read of foreign keys. Default - enabled (<c>true</c>).
+		/// Disabe could be useful at least for Access, as it could <a href="https://github.com/linq2db/linq2db.LINQPad/issues/23">crash</a> on some database files.
+		/// </summary>
+		public bool     GetForeignKeys        = true;
+		/// <summary>
 		/// Enable or disable read of procedures and functions metadata. Default - enabled (<c>true</c>).
 		/// </summary>
 		public bool     GetProcedures         = true;

@@ -476,7 +476,11 @@ namespace LinqToDB.Linq.Builder
 			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
 			{
 				if (IsList == false)
+				{
+					if (_innerContext != null)
+						return _innerContext.BuildExpression(null, 0, false);
 					return base.BuildQuery(tableType, tableContext, parentObject);
+				}
 
 				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association);
 
