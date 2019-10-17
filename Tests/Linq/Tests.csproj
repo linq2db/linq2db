@@ -73,6 +73,7 @@
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
+		<Compile Remove="TypeMapping\OracleWrappingTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
