@@ -566,6 +566,8 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setCursor;
 		Action<IDbDataParameter> _setNVarchar2;
 		Action<IDbDataParameter> _setVarchar2;
+		Action<IDbDataParameter> _setLong;
+		Action<IDbDataParameter> _setLongRaw;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
