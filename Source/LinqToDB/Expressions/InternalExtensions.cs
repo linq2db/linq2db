@@ -65,11 +65,13 @@ namespace LinqToDB.Expressions
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2,
 			Dictionary<Expression,QueryableAccessor> queryableAccessorDic,
+			Dictionary<Expression,Expression>        queryDependedObjects,
 			bool compareConstantValues = false)
 		{
 			return EqualsTo(expr1, expr2, new EqualsToInfo
 			{
 				QueryableAccessorDic  = queryableAccessorDic,
+				QueryDependedObjects  = queryDependedObjects,
 				CompareConstantValues = compareConstantValues
 			});
 		}
@@ -78,6 +80,7 @@ namespace LinqToDB.Expressions
 		{
 			public HashSet<Expression>                      Visited = new HashSet<Expression>();
 			public Dictionary<Expression,QueryableAccessor> QueryableAccessorDic;
+			public Dictionary<Expression,Expression>        QueryDependedObjects;
 			public bool                                     CompareConstantValues;
 		}
 
@@ -470,7 +473,10 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						if (!dependentAttribute.ExpressionsEqual(expr1.Arguments[i], expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
+						var prevArg = expr1.Arguments[i];
+						if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(expr1.Arguments[i], out var nevValue))
+							prevArg = nevValue;
+						if (!dependentAttribute.ExpressionsEqual(prevArg, expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
 							return false;
 					}
 					else
