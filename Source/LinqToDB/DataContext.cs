@@ -223,6 +223,9 @@ namespace LinqToDB
 
 				if (OnTraceConnection != null)
 					_dataConnection.OnTraceConnection = OnTraceConnection;
+
+				if (MappingSchema != null && MappingSchema != _dataConnection.MappingSchema)
+					_dataConnection.AddMappingSchema(MappingSchema);
 			}
 
 			return _dataConnection;

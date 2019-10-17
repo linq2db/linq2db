@@ -5,6 +5,9 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -347,6 +350,8 @@ namespace LinqToDB.DataProvider.Oracle
 			_setCursor         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "RefCursor");
 			_setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
 			_setVarchar2       = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Varchar2");
+			_setLong           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Long");
+			_setLongRaw        = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "LongRaw");
 
 			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
@@ -455,6 +460,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
+			dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
+
+			// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
+			// For LONG data type fetching initialization
+			command.InitialLONGFetchSize = -1;
+
 			if (parameters != null)
 				foreach (var parameter in parameters)
 				{
@@ -464,8 +475,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value.Length != 0)
 						{
-							dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
-
 							command.ArrayBindCount = value.Length;
 
 							break;
@@ -586,6 +595,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Cursor         : _setCursor           (parameter);           break;
 				case DataType.NVarChar       : _setNVarchar2        (parameter);           break;
 				case DataType.VarChar        : _setVarchar2         (parameter);           break;
+				case DataType.Long           : _setLong             (parameter);           break;
+				case DataType.LongRaw        : _setLongRaw          (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
 			}
 		}
