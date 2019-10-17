@@ -462,10 +462,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 			dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
 
+			// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
 			// For LONG data type fetching initialization
 			command.InitialLONGFetchSize = -1;
-			// For LOB data type fetching initialization
-			command.InitialLOBFetchSize  = -1;
 
 			if (parameters != null)
 				foreach (var parameter in parameters)
