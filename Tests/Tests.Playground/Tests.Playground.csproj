@@ -27,6 +27,10 @@
 		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="TypeMapping\" />
+	</ItemGroup>
+
 	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">
 		<PropertyGroup>
 			<AliasPackageReference>@(PackageReference->'%(Identity)')</AliasPackageReference>

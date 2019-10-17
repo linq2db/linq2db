@@ -59,5 +59,15 @@ namespace LinqToDB.Expressions
 		{
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
 		}
+
+		/// <summary>
+		/// Used for preparation method argument to cached expression value.
+		/// </summary>
+		/// <param name="expression">Expression for caching.</param>
+		/// <returns>Ready to cache expression.</returns>
+		public virtual Expression PrepareForCache(Expression expression)
+		{
+			return Expression.Constant(expression.EvaluateExpression());
+		}
 	}
 }
