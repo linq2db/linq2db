@@ -83,7 +83,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Test]
-		public void Test()
+		public void Test([IncludeDataSources(false, ProviderName.OracleManaged)] string context)
 		{
 			var prov = DataConnection.GetDataProvider(ProviderName.OracleManaged);
 
