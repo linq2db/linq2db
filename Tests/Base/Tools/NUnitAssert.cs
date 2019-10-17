@@ -6,7 +6,7 @@ namespace Tests.Tools
 {
 	public static class NUnitAssert
 	{
-		public static void AreEqual(object expected, object actual)
+		public static void AreEqual(object? expected, object? actual)
 		{
 			Assert.AreEqual(expected, actual);
 		}
@@ -21,12 +21,12 @@ namespace Tests.Tools
 			Assert.IsTrue(condition);
 		}
 
-		public static void IsNull(object anObject)
+		public static void IsNull(object? anObject)
 		{
 			Assert.IsNull(anObject);
 		}
 
-		public static void IsNotNull(object anObject)
+		public static void IsNotNull(object? anObject)
 		{
 			Assert.IsNotNull(anObject);
 		}

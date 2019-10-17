@@ -185,7 +185,6 @@ INSERT INTO AllTypes
 	ncharDataType,
 	nvarcharDataType,
 	lvarcharDataType,
-	textDataType,
 
 	dateDataType,
 	datetimeDataType,
@@ -209,7 +208,6 @@ VALUES
 	'55645',
 	'6687',
 	'AAAAA',
-	'BBBBB',
 
 	datetime(2012-12-12) year to day,
 	datetime(2012-12-12 12:12:12) year to second,

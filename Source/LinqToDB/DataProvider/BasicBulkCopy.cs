@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -47,7 +48,7 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName);
+				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName);
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -64,12 +65,14 @@ namespace LinqToDB.DataProvider
 
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table)
 		{
+			var serverName   = options.ServerName   ?? table.ServerName;
 			var databaseName = options.DatabaseName ?? table.DatabaseName;
 			var schemaName   = options.SchemaName   ?? table.SchemaName;
 			var tableName    = options.TableName    ?? table.TableName;
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
+				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer).    ToString(),
 				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
 				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema).    ToString(),
 				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())
@@ -86,7 +89,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
 				Expression.Convert(
 					Expression.New(
-						bulkCopyType.GetConstructorEx(new[] { connectionType, bulkCopyOptionType }),
+						bulkCopyType.GetConstructor(new[] { connectionType, bulkCopyOptionType }),
 						Expression.Convert(p1, connectionType),
 						Expression.Convert(p2, bulkCopyOptionType)),
 					typeof(IDisposable)),
@@ -102,7 +105,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<int,string,object>>(
 				Expression.Convert(
 					Expression.New(
-						columnMappingType.GetConstructorEx(new[] { typeof(int), typeof(string) }),
+						columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
 						new Expression[] { p1, p2 }),
 					typeof(object)),
 				p1, p2);
@@ -127,10 +130,6 @@ namespace LinqToDB.DataProvider
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
-#if NETSTANDARD1_6
-			throw new NotImplementedException("This is not implemented for .Net Core");
-#else
-
 			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object) null, "", false));
 
 			var lambda = Expression.Lambda<Func<Action<object>,Delegate>>(
@@ -153,7 +152,6 @@ namespace LinqToDB.DataProvider
 			var dgt = lambda.Compile();
 
 			return (obj,action) => eventInfo.AddEventHandler(obj, dgt(action));
-#endif
 		}
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)

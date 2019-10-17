@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Xml.Schema;
 
@@ -12,6 +13,28 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Update : return CorrectMySqlUpdate((SqlUpdateStatement)statement);
+				default               : return statement;
+			}
+		}
+
+		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
+		{
+			if (statement.SelectQuery.Select.SkipValue != null)
+				throw new LinqToDBException("MySql does not support Skip in update query");
+
+			statement = CorrectUpdateTable(statement);
+
+			if (!statement.SelectQuery.OrderBy.IsEmpty)
+				statement.SelectQuery.OrderBy.Items.Clear();
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

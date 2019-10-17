@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿#nullable disable
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using SqlProvider;
@@ -66,9 +67,21 @@
 				foreach (var key in insertOrUpdate.Update.Keys)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
+			else if (statement.QueryType == QueryType.Update)
+			{
+				var update = (SqlUpdateStatement)statement;
+				foreach (var key in update.Update.Items)
+					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-			statement = base.Finalize(statement);
+				foreach (var key in update.Update.Keys)
+					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+			}
 
+			return base.Finalize(statement);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);

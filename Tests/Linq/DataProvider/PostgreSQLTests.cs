@@ -27,6 +27,8 @@ using NUnit.Framework.Internal.Builders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#pragma warning disable 618
+
 namespace Tests.DataProvider
 {
 	using Model;
@@ -121,15 +123,6 @@ namespace Tests.DataProvider
 						new TypeTestData("doubleDataType",      (n,t,c) => t.TestTypeEx<double?>           (c, n, DataType.Double),  20.31d),
 						new TypeTestData("realDataType",        (n,t,c) => t.TestTypeEx<float?>            (c, n, DataType.Single),  16.2f),
 
-#if NPG2
-						new TypeTestData("timestampDataType",   (n,t,c) => t.TestTypeEx<NpgsqlTimeStamp?>  (c, n), new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)),
-						new TypeTestData("timestampTZDataType", (n,t,c) => t.TestTypeEx<NpgsqlTimeStampTZ?>(c, n), new NpgsqlTimeStampTZ(2012, 12, 12, 11, 12, 12, new NpgsqlTimeZone(-5, 0))),
-						new TypeTestData("timeDataType",        (n,t,c) => t.TestTypeEx<NpgsqlTime?>       (c, n), new NpgsqlTime(12, 12, 12)),
-						new TypeTestData("timeTZDataType",      (n,t,c) => t.TestTypeEx<NpgsqlTimeTZ?>     (c, n), new NpgsqlTimeTZ(12, 12, 12)),
-						new TypeTestData("intervalDataType",    (n,t,c) => t.TestTypeEx<NpgsqlInterval?>   (c, n), new NpgsqlInterval(1, 3, 5, 20)),
-						new TypeTestData("bitDataType",         (n,t,c) => t.TestTypeEx<BitString?>        (c, n), new BitString(new[] { true, false, true })),
-						new TypeTestData("macaddrDataType",     (n,t,c) => t.TestTypeEx<NpgsqlMacAddress?> (c, n), new NpgsqlMacAddress("01:02:03:04:05:06")),
-#else
 //						new TypeTestData("timestampDataType",   (n,t,c) => t.TestTypeEx<NpgsqlTimeStamp?>  (c, n),                       new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)),
 //						new TypeTestData("timestampTZDataType", (n,t,c) => t.TestTypeEx<NpgsqlTimeStampTZ?>(c, n),                       new NpgsqlTimeStampTZ(2012, 12, 12, 11, 12, 12, new NpgsqlTimeZone(-5, 0))),
 						new TypeTestData("timeDataType",        (n,t,c) => t.TestTypeEx<TimeSpan?>         (c, n),                       new TimeSpan(12, 12, 12)),
@@ -138,7 +131,6 @@ namespace Tests.DataProvider
 						new TypeTestData("bitDataType",         (n,t,c) => t.TestTypeEx<BitArray>          (c, n),                       new BitArray(new[] { true, false, true })),
 						new TypeTestData("varBitDataType",      (n,t,c) => t.TestTypeEx<BitArray>          (c, n),                       new BitArray(new[] { true, false, true, true })),
 						new TypeTestData("macaddrDataType",     (n,t,c) => t.TestTypeEx<PhysicalAddress>   (c, n, skipDefaultNull:true), new PhysicalAddress(new byte[] { 1, 2, 3, 4, 5, 6 })),
-#endif
 
 						new TypeTestData("timestampDataType",   (n,t,c) => t.TestTypeEx<DateTime?>         (c, n, DataType.DateTime2),      new DateTime(2012, 12, 12, 12, 12, 12)),
 						new TypeTestData("timestampTZDataType", (n,t,c) => t.TestTypeEx<DateTimeOffset?>   (c, n, DataType.DateTimeOffset), new DateTimeOffset(2012, 12, 12, 11, 12, 12, new TimeSpan(-5, 0, 0))),
@@ -163,10 +155,8 @@ namespace Tests.DataProvider
 						new TypeTestData("pointDataType",       (n,t,c) => t.TestTypeEx<NpgsqlPoint?>      (c, n, skipNull:true, skipNotNull:true), new NpgsqlPoint(1, 2)),
 						new TypeTestData("lsegDataType",        (n,t,c) => t.TestTypeEx<NpgsqlLSeg?>       (c, n, skipDefaultNull:true),            new NpgsqlLSeg   (new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
 						new TypeTestData("boxDataType",         (n,t,c) => t.TestTypeEx<NpgsqlBox?>        (c, n, skipDefaultNull:true).ToString(), new NpgsqlBox    (new NpgsqlPoint(3, 4), new NpgsqlPoint(1, 2)).ToString()),
-#if !NPGSQL226
 						new TypeTestData("pathDataType",        (n,t,c) => t.TestTypeEx<NpgsqlPath?>       (c, n, skipDefaultNull:true),            new NpgsqlPath   (new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
 						new TypeTestData("polygonDataType",     (n,t,c) => t.TestTypeEx<NpgsqlPolygon?>    (c, n, skipNull:true, skipNotNull:true), new NpgsqlPolygon(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
-#endif
 						new TypeTestData("circleDataType",      (n,t,c) => t.TestTypeEx<NpgsqlCircle?>     (c, n, skipDefaultNull:true),            new NpgsqlCircle (new NpgsqlPoint(1, 2), 3)),
 
 						new TypeTestData("inetDataType",        (n,t,c) => t.TestTypeEx<NpgsqlInet?>       (c, n, skipDefaultNull:true),            new NpgsqlInet(new IPAddress(new byte[] { 192, 168, 1, 1 }))),
@@ -785,7 +775,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NPGSQL226
 		[Test]
 		public void NpgsqlDateTimeTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -802,7 +791,6 @@ namespace Tests.DataProvider
 			Assert.AreEqual(o, c1.Compile()(d));
 			Assert.AreEqual(o, c2.Compile()(d).Value);
 		}
-#endif
 
 		[Table]
 		public class AllTypes
@@ -853,7 +841,6 @@ namespace Tests.DataProvider
 			// PGSQL10+
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
-			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQLLatest)]
 			                                           public PhysicalAddress macaddr8DataType          { get; set; }
 			// json
 			[Column]                                   public string jsonDataType                       { get; set; }
@@ -875,7 +862,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
+			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -897,8 +884,8 @@ namespace Tests.DataProvider
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
-					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part
-					timeTZDataType      = new DateTimeOffset(1, 1, !context.Contains(TestProvName.PostgreSQLLatest) ? 1 : 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
+					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					intervalDataType    = TimeSpan.FromTicks(-123456780),
 
 					charDataType        = 'ы',
@@ -1014,7 +1001,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void TestVoidFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1578,6 +1564,5 @@ namespace Tests.DataProvider
 
 			public int? param3 { get; set; }
 		}
-#endif
 	}
 }

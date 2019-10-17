@@ -1,11 +1,12 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlServer2008SqlBuilder : SqlServerSqlBuilder
+	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
 		public SqlServer2008SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -40,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException();
 			}
 
-			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArgumentsEx()[0], isRecursive, name));
+			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
 
 			var cte = builder.BuildCte(bodyExpr,
 				cteClause =>
@@ -49,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 					var sequence  = builder.BuildSequence(info);
 
 					if (cteClause == null)
-						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArgumentsEx()[0], isRecursive, name);
+						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name);
 					else
 					{
 						cteClause.Body = sequence.SelectQuery;

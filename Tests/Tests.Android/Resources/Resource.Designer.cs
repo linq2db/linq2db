@@ -50,8 +50,8 @@ namespace Tests.Android
 		public partial class Drawable
 		{
 			
-			// aapt resource value: 0x7f020000
-			public const int icon = 2130837504;
+			// aapt resource value: 0x7F010000
+			public const int icon = 2130771968;
 			
 			static Drawable()
 			{
@@ -66,11 +66,11 @@ namespace Tests.Android
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f030001
-			public const int ApplicationName = 2130903041;
+			// aapt resource value: 0x7F020000
+			public const int ApplicationName = 2130837504;
 			
-			// aapt resource value: 0x7f030000
-			public const int Hello = 2130903040;
+			// aapt resource value: 0x7F020001
+			public const int Hello = 2130837505;
 			
 			static String()
 			{

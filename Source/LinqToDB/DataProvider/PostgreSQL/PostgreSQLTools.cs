@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			//if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 			//	return null;
@@ -177,10 +177,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int                         maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(

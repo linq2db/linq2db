@@ -62,8 +62,6 @@ namespace Tests.UserTests
 			NonLinqDelete,
 		};
 
-#if !MONO && !NETSTANDARD1_6
-
 		[Test, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
 		public void SimpleTest(
@@ -81,8 +79,6 @@ namespace Tests.UserTests
 		{
 			Test(context, action, 3);
 		}
-
-#endif
 
 		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{

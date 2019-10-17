@@ -28,10 +28,7 @@ namespace LinqToDB.Async
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
 
-		// disable warning from .net core 2.1 tools (compiler bug)
-#pragma warning disable 4014
-		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default)).GetGenericMethodDefinition();
-#pragma warning restore 4014
+		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Register or replace custom <see cref="IAsyncDbConnection"/> for <typeparamref name="TConnection"/> type.
@@ -125,6 +122,7 @@ namespace LinqToDB.Async
 			return connection => new AsyncDbConnection(connection);
 		}
 
+		//[return: MaybeNull]
 		private static TDelegate CreateDelegate<TDelegate, TInstance>(
 			Type   instanceType,
 			string methodName,
@@ -135,7 +133,7 @@ namespace LinqToDB.Async
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
 			if (mi == null || mi.ReturnType != returnType)
-				return default;
+				return default!;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -147,6 +145,7 @@ namespace LinqToDB.Async
 				.Compile();
 		}
 
+		//[return: MaybeNull]
 		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
@@ -157,10 +156,10 @@ namespace LinqToDB.Async
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
 			if (mi == null
-				|| !mi.ReturnType.IsGenericTypeEx()
+				|| !mi.ReturnType.IsGenericType
 				|| mi.ReturnType.GetGenericTypeDefinition() != typeof(Task<>)
-				|| mi.ReturnType.GetGenericArgumentsEx()[0].IsSubclassOfEx(typeof(TTask)))
-				return default;
+				|| mi.ReturnType.GetGenericArguments()[0].IsSubclassOf(typeof(TTask)))
+				return default!;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -168,7 +167,7 @@ namespace LinqToDB.Async
 			return Expression
 				.Lambda<TDelegate>(
 					Expression.Call(
-						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArgumentsEx()[0]),
+						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArguments()[0]),
 						Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters)),
 					new[] { pInstance }.Concat(parameters))
 				.Compile();

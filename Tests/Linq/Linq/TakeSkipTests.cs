@@ -93,6 +93,7 @@ namespace Tests.Linq
 					db.Child.Take(5).Count());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip1([DataSources] string context)
 		{
@@ -100,6 +101,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(3), db.Child.Skip(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip2([DataSources] string context)
 		{
@@ -109,6 +111,7 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip3([DataSources] string context)
 		{
@@ -118,6 +121,7 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip4([DataSources] string context)
 		{
@@ -129,6 +133,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip5([DataSources] string context)
 		{
@@ -138,6 +143,7 @@ namespace Tests.Linq
 					db.Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip6([DataSources] string context)
 		{
@@ -145,6 +151,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(3), db.Child.Skip(() => 3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Skip7([DataSources] string context)
 		{
@@ -167,6 +174,7 @@ namespace Tests.Linq
 					db.Child.Skip(2).Count());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void SkipTake1([DataSources] string context)
 		{
@@ -178,6 +186,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void SkipTake2([DataSources] string context)
 		{
@@ -189,6 +198,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void SkipTake3([DataSources] string context)
 		{
@@ -200,6 +210,16 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.DB2,
+				TestProvName.AllOracle,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
@@ -216,6 +236,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void SkipTake5([DataSources] string context)
 		{
@@ -284,6 +305,7 @@ namespace Tests.Linq
 					db.Child.Skip(2).Take(5).Count());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void SkipFirst([DataSources] string context)
 		{
@@ -298,6 +320,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAt1([DataSources] string context)
 		{
@@ -307,6 +330,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAt2([DataSources] string context)
 		{
@@ -317,6 +341,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public async Task ElementAt2Async([DataSources] string context)
 		{
@@ -327,6 +352,7 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAtDefault1([DataSources] string context)
 		{
@@ -336,6 +362,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(3));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAtDefault2([DataSources] string context)
 		{
@@ -343,6 +370,7 @@ namespace Tests.Linq
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAtDefault3([DataSources] string context)
 		{
@@ -353,6 +381,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public async Task ElementAtDefault3Async([DataSources] string context)
 		{
@@ -363,6 +392,7 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAtDefault4([DataSources] string context)
 		{
@@ -371,6 +401,7 @@ namespace Tests.Linq
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void ElementAtDefault5([DataSources] string context)
 		{

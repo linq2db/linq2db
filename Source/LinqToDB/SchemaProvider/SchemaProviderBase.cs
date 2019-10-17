@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -284,9 +285,10 @@ namespace LinqToDB.SchemaProvider
 							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
 								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-									 procedure.CatalogName,
-									 procedure.SchemaName,
-									 procedure.ProcedureName).ToString();
+									null,
+									procedure.CatalogName,
+									procedure.SchemaName,
+									procedure.ProcedureName).ToString();
 
 								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
 							}
@@ -465,7 +467,6 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
-#if !NETSTANDARD
 			return
 			(
 				from r in resultTable.AsEnumerable()
@@ -496,9 +497,6 @@ namespace LinqToDB.SchemaProvider
 					IsIdentity           = r.Field<bool>("IsIdentity"),
 				}
 			).ToList();
-#else
-			return new List<ColumnSchema>();
-#endif
 		}
 
 		protected virtual string GetDataSourceName(DbConnection dbConnection)
@@ -522,7 +520,6 @@ namespace LinqToDB.SchemaProvider
 		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
 			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
@@ -535,9 +532,6 @@ namespace LinqToDB.SchemaProvider
 					ProviderDbType   = t.Field<int>   ("ProviderDbType"),
 				})
 				.ToList();
-#else
-			return new List<DataTypeInfo>();
-#endif
 		}
 
 		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
@@ -633,7 +627,7 @@ namespace LinqToDB.SchemaProvider
 				case "Object"  : memberType = "object";  break;
 			}
 
-			if (!type.IsClassEx() && isNullable)
+			if (!type.IsClass && isNullable)
 				memberType += "?";
 
 			return memberType;

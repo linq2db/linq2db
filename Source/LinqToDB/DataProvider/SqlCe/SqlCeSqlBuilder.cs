@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -46,7 +47,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" ALTER COLUMN ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -70,17 +71,17 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length), createDbType); return;
-				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length), createDbType); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                             return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Length), forCreateTable); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Length), forCreateTable); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                                           return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                  return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                return;
 				case DataType.NVarChar:
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 					{
@@ -93,13 +94,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
-		}
-
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -175,7 +170,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}
@@ -184,6 +179,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			dynamic p = parameter;
 			return p.SqlDbType.ToString();
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

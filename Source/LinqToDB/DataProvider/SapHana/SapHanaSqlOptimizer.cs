@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -13,20 +14,27 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		static void SetQueryParameter(IQueryElement element)
 		{
-			statement = base.Finalize(statement);
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				var p = (SqlParameter)element;
+
+				// enforce timespan as parameter
+				if (p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+					p.IsQueryParameter = true;
+			}
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete:
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					break;
-				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
-					break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
-
 			return statement;
 		}
 

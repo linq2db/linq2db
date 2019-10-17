@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -85,6 +86,7 @@ namespace Tests.Model
 			//provider.SqlQuery = sql;
 
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
+			statement.SetAliases();
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();

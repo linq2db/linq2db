@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedTypeEx(),
+			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType,
 				methodCall.Method,
 				f => f.Configuration);
 			return functions.FirstOrDefault(f => f.IsAggregate);
@@ -92,9 +93,9 @@ namespace LinqToDB.Linq.Builder
 				_returnType = methodCall.Method.ReturnType;
 				_methodName = methodCall.Method.Name;
 
-				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
-					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_returnType = _returnType.GetGenericArguments()[0];
 					_methodName = _methodName.Replace("Async", "");
 				}
 			}
@@ -134,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClassEx() || _methodName == "Sum" || _returnType.IsNullable())
+				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}

@@ -28,7 +28,7 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			TransactionAsync = await _connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			_closeTransaction = true;
 
@@ -56,7 +56,7 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			TransactionAsync = await _connection.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			TransactionAsync = await _connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			_closeTransaction = true;
 
@@ -75,6 +75,8 @@ namespace LinqToDB.Data
 		/// <returns>Async operation task.</returns>
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (_connection == null)
 			{
 				IDbConnection connection;
@@ -109,7 +111,7 @@ namespace LinqToDB.Data
 				{
 					if (TraceSwitch.TraceError)
 					{
-						OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+						OnTraceConnection?.Invoke(new TraceInfo(TraceInfoStep.Error)
 						{
 							TraceLevel     = TraceLevel.Error,
 							DataConnection = this,
@@ -282,12 +284,12 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalarAsync
 
-		protected virtual Task<object> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
+		protected virtual Task<object?> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
 		{
 			return ((DbCommand)Command).ExecuteScalarExtAsync(cancellationToken);
 		}
 
-		internal async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

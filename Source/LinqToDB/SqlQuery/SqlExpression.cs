@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -102,6 +103,19 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+
+		public override int GetHashCode()
+		{
+			var hashCode = Expr.GetHashCode();
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			return hashCode;
+		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

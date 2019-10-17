@@ -1,0 +1,11 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			// add it here, as we don't want separate job for it
+			"TestNoopProvider",
+			// System.Data.SQLite
+			"SQLite.Classic",
+			"Northwind.SQLite"
+		]
+	}
+}

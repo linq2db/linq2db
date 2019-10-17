@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -11,7 +12,7 @@ namespace LinqToDB.Expressions
 		public GetItemExpression(Expression expression)
 		{
 			_expression = expression;
-			_type       = expression.Type.GetGenericArgumentsEx()[0];
+			_type       = expression.Type.GetGenericArguments()[0];
 		}
 
 		readonly Expression _expression;

@@ -7,10 +7,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Data.SQLite;
-#endif
 
 namespace Tests.Samples
 {
@@ -92,7 +89,7 @@ namespace Tests.Samples
 			public int ID { get; set; }
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void StandardExceptionExecuteReader([IncludeDataSources(ProviderName.SQLiteClassic)]
 			string context)

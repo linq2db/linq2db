@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -161,6 +162,11 @@ namespace LinqToDB.SqlQuery
 
 			Columns.Add(new SqlColumn(SelectQuery, expr));
 			return Columns.Count - 1;
+		}
+
+		public SqlColumn AddNewColumn(ISqlExpression expr)
+		{
+			return Columns[AddNew(expr)];
 		}
 
 		public int Add(ISqlExpression expr, string alias)

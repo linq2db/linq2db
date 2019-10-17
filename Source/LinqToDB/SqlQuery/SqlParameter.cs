@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,6 +14,11 @@ namespace LinqToDB.SqlQuery
 			SystemType       = systemType;
 			Value            = value;
 			DataType         = DataType.Undefined;
+
+#if DEBUG
+			_paramNumber = ++_paramCounter;
+#endif
+
 		}
 
 		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
@@ -20,6 +26,11 @@ namespace LinqToDB.SqlQuery
 		{
 			_valueConverter = valueConverter;
 		}
+
+#if DEBUG
+		readonly int _paramNumber;
+		static   int _paramCounter;
+#endif
 
 		public string   Name             { get; set; }
 		public Type     SystemType       { get; set; }
@@ -30,6 +41,8 @@ namespace LinqToDB.SqlQuery
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
 		public bool     ReplaceLike      { get; set; }
+
+		internal int?   AccessorId       { get; set; }
 
 		private object _value;
 		public  object  Value
@@ -166,6 +179,16 @@ namespace LinqToDB.SqlQuery
 			return (object)p != null && Name != null && p.Name != null && Name == p.Name && SystemType == p.SystemType;
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = SystemType.GetHashCode();
+
+			if (Name != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+
+			return hashCode;
+		}
+
 		#endregion
 
 		#region ISqlExpression Members
@@ -205,7 +228,8 @@ namespace LinqToDB.SqlQuery
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike
+					ReplaceLike      = ReplaceLike,
+					AccessorId       = AccessorId
 				};
 
 				objectTree.Add(this, clone = p);
@@ -222,9 +246,14 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb
+			sb
 				.Append('@')
-				.Append(Name ?? "parameter")
+				.Append(Name ?? "parameter");
+
+#if DEBUG
+			sb.Append('(').Append(_paramNumber).Append(')');
+#endif
+			return sb
 				.Append('[')
 				.Append(Value ?? "NULL")
 				.Append(']');

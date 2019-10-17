@@ -12,7 +12,7 @@ namespace LinqToDB.Expressions
 		/// <param name="instance">Wrapper instance.</param>
 		/// <param name="func">Expression for evaluation</param>
 		/// <returns>Real value.</returns>
-		public static object Evaluate<T>(this T instance, Expression<Func<T, object>> func)
+		public static object? Evaluate<T>(this T instance, Expression<Func<T, object?>> func)
 			where T: TypeWrapper
 		{
 			var result = instance.mapper_.Evaluate(instance, func);

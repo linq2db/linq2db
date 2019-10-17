@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider
 		private         Type _dataReaderType;
 
 		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0
 		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
 
 		protected internal virtual Type GetConnectionType()
@@ -130,7 +131,7 @@ namespace LinqToDB.DataProvider
 		{
 			var p = Expression.Parameter(typeof(string));
 			var l = Expression.Lambda<Func<string,IDbConnection>>(
-				Expression.New(connectionType.GetConstructorEx(new[] { typeof(string) }), p),
+				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
 				p);
 
 			return l;
@@ -142,17 +143,34 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, Type dbType)
 		{
-			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			return GetSetParameter<TResult>(pType, propertyName, dbType);
+		}
 
+		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
+			Type parameterType, string propertyName, Type dbType)
+		{
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var v = Expression.Parameter(typeof(TResult));
 			var l = Expression.Lambda<Action<IDbDataParameter, TResult>>(
 				Expression.Assign(
 					Expression.PropertyOrField(
-						Expression.Convert(p, pType),
+						Expression.Convert(p, parameterType),
 						propertyName),
 					Expression.Convert(v, dbType)),
 				p, v);
+
+			return l.Compile();
+		}
+
+		protected Func<IDbDataParameter, TResult> GetGetParameter<TResult>(Type parameterType, string propertyName)
+		{
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var l = Expression.Lambda<Func<IDbDataParameter, TResult>>(
+					Expression.PropertyOrField(
+						Expression.Convert(p, parameterType),
+						propertyName),
+				p);
 
 			return l.Compile();
 		}
@@ -161,7 +179,7 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, Type dbType, string valueName)
 		{
-			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
 			var value = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
@@ -180,7 +198,7 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
 			return GetSetParameter(connectionType, parameterTypeName, propertyName, dbType, valueName);
 		}
 
@@ -189,8 +207,8 @@ namespace LinqToDB.DataProvider
 			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var pType  = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
+			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
 			var value  = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
@@ -224,7 +242,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
 
 				if (methodInfo == null)
 					return false;
@@ -241,12 +259,11 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
-		//
-		// protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
-		// {
-		//     ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
-		// }
+		protected void SetProviderField<TField>(string methodName)
+		{
+			SetProviderField(typeof(TField), methodName);
+		}
+
 		protected void SetProviderField(Type fieldType, string methodName)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
@@ -283,6 +300,12 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		// }
+
+		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true)
+		{
+			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException);
+		}
+
 		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
@@ -296,7 +319,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
 
 				if (methodInfo == null)
 					return false;

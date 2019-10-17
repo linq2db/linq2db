@@ -110,7 +110,8 @@ namespace Tests.UserTests
 				return db.GetTable<Person>().Where(_ => _.ID == 1);
 		}
 
-		[Test]
+		// no u can't
+		//[Test]
 		public void CanDisposeDataContext([IssueContextSource(false)] string context)
 		{
 			AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed2(context));
