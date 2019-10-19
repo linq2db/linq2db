@@ -568,7 +568,7 @@ namespace Tests.DataProvider
 #if NET46
 					expectedVersion = "3.13.0";
 #else
-					expectedVersion = "3.26.0";
+					expectedVersion = "3.28.0";
 #endif
 					break;
 				default:

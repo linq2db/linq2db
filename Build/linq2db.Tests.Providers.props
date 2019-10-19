@@ -68,7 +68,14 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" />
-		<PackageReference Include="Microsoft.Data.SQLite" Version="2.2.6" />
+		<PackageReference Include="Microsoft.Data.SQLite" Version="3.0.0" />
+		<!--
+		TEMPORARY EXPLICIT TRANSIENT DEPENDENCY FROM Microsoft.Data.SQLite 3.0.0
+		REMOVE WHEN dependency updated to 2.0.1+ (expected in 3.1.0)
+		Needed because 2.0.0 has this bug which fails TestBinary test
+		https://github.com/aspnet/EntityFrameworkCore/issues/17494
+		-->
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.1" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.1.0" />
 
 		<!--magic-->
