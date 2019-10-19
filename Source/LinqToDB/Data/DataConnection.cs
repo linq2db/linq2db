@@ -1213,7 +1213,8 @@ namespace LinqToDB.Data
 		object? ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteScalar(Command);
+				using (DataProvider.ExecuteScope(this))
+					return ExecuteScalar(Command);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1231,7 +1232,9 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteScalar(Command);
+				object? ret;
+				using (DataProvider.ExecuteScope(this))
+					ret = ExecuteScalar(Command);
 
 				if (TraceSwitch.TraceInfo)
 				{
