@@ -54,7 +54,7 @@
 		</Reference>
 
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.1" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.5.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
@@ -67,7 +67,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.50" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="3.0.0" />
 		<!--
 		TEMPORARY EXPLICIT TRANSIENT DEPENDENCY FROM Microsoft.Data.SQLite 3.0.0
