@@ -9,9 +9,8 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
-
 using StackExchange.Profiling;
-
+using StackExchange.Profiling.Data;
 using Tests.Model;
 
 namespace Tests.Data
@@ -33,7 +32,7 @@ namespace Tests.Data
 			{
 				LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
-				return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}
 		}
 
