@@ -1144,7 +1144,7 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				using (DataProvider.ExecuteScope())
+				using (DataProvider.ExecuteScope(this))
 					return ExecuteNonQuery(Command);
 
 			var now = DateTime.UtcNow;
@@ -1164,7 +1164,7 @@ namespace LinqToDB.Data
 			try
 			{
 				int ret;
-				using (DataProvider.ExecuteScope())
+				using (DataProvider.ExecuteScope(this))
 					ret = ExecuteNonQuery(Command);
 
 				if (TraceSwitch.TraceInfo)
@@ -1283,7 +1283,7 @@ namespace LinqToDB.Data
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				using (DataProvider.ExecuteScope())
+				using (DataProvider.ExecuteScope(this))
 					return ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
@@ -1304,7 +1304,7 @@ namespace LinqToDB.Data
 			{
 				IDataReader ret;
 
-				using (DataProvider.ExecuteScope())
+				using (DataProvider.ExecuteScope(this))
 					ret = ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)

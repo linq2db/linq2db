@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override IDisposable ExecuteScope()
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
 		{
 			// shame!
 			return new InvariantCultureRegion();
