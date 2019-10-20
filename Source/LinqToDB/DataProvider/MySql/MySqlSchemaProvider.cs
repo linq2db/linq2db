@@ -283,7 +283,7 @@ SELECT
 			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/StoredProcedure.cs#L42
 			// UPDATE:
 			// now we have similar issue with MySqlConnector
-			/// https://github.com/mysql-net/MySqlConnector/issues/722
+			// https://github.com/mysql-net/MySqlConnector/issues/722
 			if (rv != null && rv.AsEnumerable()
 					.Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")
 						||    r.Field<string>("ColumnName") == "\ue001\b\v"))

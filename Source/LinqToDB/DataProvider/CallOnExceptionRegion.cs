@@ -22,7 +22,7 @@ namespace LinqToDB
 				// https://github.com/dotnet/corefx/pull/31169
 				Marshal.GetExceptionPointers() != IntPtr.Zero ||
 #endif
-#pragma warning disable CS618
+#pragma warning disable CS0618
 				Marshal.GetExceptionCode() != 0)
 #pragma warning restore CS0618
 				_action();

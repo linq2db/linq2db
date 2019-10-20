@@ -14,15 +14,18 @@ namespace LinqToDB.Async
 	{
 		private Func<IDbTransaction, CancellationToken, Task>? _commitAsync;
 		private Func<IDbTransaction, CancellationToken, Task>? _rollbackAsync;
+		private Func<IDbConnection, Task>?                     _disposeAsync;
 
 		public ReflectedAsyncDbTransaction(
 			IDbTransaction                                 transaction,
 			Func<IDbTransaction, CancellationToken, Task>? commitAsync,
-			Func<IDbTransaction, CancellationToken, Task>? rollbackAsync)
+			Func<IDbTransaction, CancellationToken, Task>? rollbackAsync,
+			Func<IDbConnection, Task>?                     disposeAsync)
 			: base(transaction)
 		{
 			_commitAsync   = commitAsync;
 			_rollbackAsync = rollbackAsync;
+			_disposeAsync  = disposeAsync;
 		}
 
 		public override Task CommitAsync(CancellationToken cancellationToken = default)
@@ -33,6 +36,11 @@ namespace LinqToDB.Async
 		public override Task RollbackAsync(CancellationToken cancellationToken = default)
 		{
 			return _rollbackAsync?.Invoke(Transaction, cancellationToken) ?? base.RollbackAsync(cancellationToken);
+		}
+
+		public override Task DisposeAsync()
+		{
+			return _disposeAsync?.Invoke(Connection) ?? base.DisposeAsync();
 		}
 	}
 }

@@ -193,7 +193,7 @@ namespace LinqToDB.Data
 			{
 				if (_disposeConnection)
 				{
-					_connection.Dispose();
+					await _connection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					_connection = null;
 				}
 				else if (_closeConnection)
