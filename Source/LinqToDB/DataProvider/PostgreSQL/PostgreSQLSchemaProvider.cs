@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using SchemaProvider;
 	using System.Data;
+	using System.Net;
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
@@ -67,18 +68,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName });
-			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName });
-			if (provider.NpgsqlPointType      != null) list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.NpgsqlPointType.   AssemblyQualifiedName });
-			if (provider.NpgsqlLineType       != null) list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.NpgsqlLineType.    AssemblyQualifiedName });
-			if (provider.NpgsqlLSegType       != null) list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.NpgsqlLSegType.    AssemblyQualifiedName });
-			if (provider.NpgsqlBoxType        != null) list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.NpgsqlBoxType.     AssemblyQualifiedName });
-			if (provider.NpgsqlPathType       != null) list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.NpgsqlPathType.    AssemblyQualifiedName });
-			if (provider.NpgsqlPolygonType    != null) list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.NpgsqlPolygonType. AssemblyQualifiedName });
-			if (provider.NpgsqlCircleType     != null) list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.NpgsqlCircleType.  AssemblyQualifiedName });
-			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.    AssemblyQualifiedName });
+			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlPointType      != null) list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlLineType       != null) list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlLSegType       != null) list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlBoxType        != null) list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlPathType       != null) list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlPolygonType    != null) list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlCircleType     != null) list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
+			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
 
-			//list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName });
+			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).AssemblyQualifiedName       });
+			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName });
 			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
 			list.Add(new DataTypeInfo { TypeName = "time"                   , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
@@ -142,7 +145,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var sql = @"
 					SELECT
@@ -529,7 +532,7 @@ SELECT	r.ROUTINE_CATALOG,
 			return commandText;
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 				(
@@ -537,7 +540,7 @@ SELECT	r.ROUTINE_CATALOG,
 
 					let columnName   = r.Field<string>("ColumnName")
 					let columnType   = Converter.ChangeTypeTo<string>(r["DataTypeName"])
-					let dataType     = DataTypes.FirstOrDefault(t => t.TypeName == columnType)
+					let dataType     = GetDataType(columnType, options)
 					// AllowDBNull not set even with KeyInfo behavior suggested here:
 					// https://github.com/npgsql/npgsql/issues/1693
 					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")
@@ -551,7 +554,7 @@ SELECT	r.ROUTINE_CATALOG,
 					select new ColumnSchema
 					{
 						ColumnName           = columnName,
-						ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+						ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 						IsNullable           = isNullable,
 						MemberName           = ToValidName(columnName),
 						MemberType           = ToTypeName(systemType, isNullable),

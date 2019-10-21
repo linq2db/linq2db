@@ -1501,6 +1501,66 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("AllTypes")]
+		public class DateProviderSpecific
+		{
+			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+			[Column]                       public NpgsqlDate? dateDataType { get; set; }
+		}
+
+		[Table("AllTypes")]
+		public class DateCommon
+		{
+			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+			[Column]                       public DateTime?   dateDataType { get; set; }
+		}
+
+		[Test]
+		public void DateMappingNativeAndDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var maxId = db.GetTable<DateProviderSpecific>().Select(_ => _.ID).Max();
+				try
+				{
+					var date1 = DateTime.Now.Date;
+					var date2 = DateTime.Now.Date.AddDays(5);
+					db.GetTable<DateProviderSpecific>().Insert(() => new DateProviderSpecific()
+					{
+						dateDataType = (NpgsqlDate)date1
+					});
+
+					db.GetTable<DateCommon>().Insert(() => new DateCommon()
+					{
+						dateDataType = date2
+					});
+
+					var values1 = db.GetTable<DateProviderSpecific>()
+						.Where(_ => _.ID > maxId)
+						.OrderBy(_ => _.ID)
+						.Select(_ => _.dateDataType)
+						.ToArray();
+
+					var values2 = db.GetTable<DateCommon>()
+						.Where(_ => _.ID > maxId)
+						.OrderBy(_ => _.ID)
+						.Select(_ => _.dateDataType)
+						.ToArray();
+
+					Assert.AreEqual(2, values1.Length);
+					Assert.AreEqual(2, values2.Length);
+					Assert.AreEqual(date1, (DateTime)values1[0]);
+					Assert.AreEqual(date2, (DateTime)values1[1]);
+					Assert.AreEqual(date1, values2[0]);
+					Assert.AreEqual(date2, values2[1]);
+				}
+				finally
+				{
+					db.GetTable<Issue1429Table>().Delete(_ => _.ID > maxId);
+				}
+			}
+		}
+
 	}
 
 	public static class TestPgAggregates

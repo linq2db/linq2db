@@ -96,7 +96,7 @@ SELECT
 			.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/columns-table.html
 			// nullable columns:
@@ -292,29 +292,27 @@ SELECT
 			return rv;
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 			(
 				from r in resultTable.AsEnumerable()
 
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType == null ? null : dataType.TypeName
-
-				let columnName = r.Field<string>("ColumnName")
-				let isNullable = r.Field<bool>("AllowDBNull")
-
-				let length    = r.Field<int>("ColumnSize")
-				let precision = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
-				let scale     = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let columnName   = r.Field<string>("ColumnName")
+				let isNullable   = r.Field<bool>("AllowDBNull")
+				let length       = r.Field<int>("ColumnSize")
+				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
 				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
 
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),

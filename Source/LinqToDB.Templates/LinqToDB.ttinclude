@@ -1,7 +1,7 @@
 <#@ assembly name="System.Data"        #>
 <#@ import namespace="System.Data"     #>
 <#@ import namespace="LinqToDB.Data"   #>
-<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text"     #>
 <#@ include file="DataModel.ttinclude" #>
 <#
 	if (BaseDataContextClass == null)

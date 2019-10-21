@@ -107,7 +107,7 @@ WHERE
 
 		List<ColumnInfo> _columns;
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var sql = @"
 SELECT
@@ -242,9 +242,9 @@ WHERE
 				.ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
-			var type = DataTypes.FirstOrDefault(dt => dt.TypeName == columnType);
+			var type = GetDataType(columnType, options);
 
 			if (type != null)
 			{
@@ -277,7 +277,7 @@ WHERE
 				}
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
