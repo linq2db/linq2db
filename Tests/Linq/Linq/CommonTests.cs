@@ -195,6 +195,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * generated for query, which doesn't use any column data")]
 		[Test]
 		public void ClosureTest([DataSources] string context)
 		{

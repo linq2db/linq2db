@@ -81,7 +81,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar1([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -93,7 +93,7 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -126,6 +126,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{
@@ -147,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, ProviderName.SapHana)]
+		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -162,8 +163,8 @@ namespace Tests.Linq
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault(),
-					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault());
+					from p in    Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault(),
+					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault());
 		}
 
 		[Test]

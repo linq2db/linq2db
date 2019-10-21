@@ -7,93 +7,117 @@ uid: contributing
 
 Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Development.rules.and.regulations.docx)
 
-## Project structure description
+## Project structure
 
-Solution and folder structure
+#### Solution and folder structure
 
-| Folder                     | Description                                     |
-|--------------------------- |-------------------------------------------------|
-|.\                          | Root folder |
-|.\Build                     | Various files for AppVeyor builds and common project settings |
-|.\Data                      | Contains test databases creation scripts and database files |
-|.\Doc                       | DocFX documentation files |
-|.\NuGet                     | LINQ to DB NuGet packages build files, readme.txt |
-|.\Redist                    | Redistributable binaries for providers unavailable officially at NuGet |
-|.\Source\LinqToDB           | LINQ to DB source code |
-|.\Source\LinqToDB.Templates | LINQ to DB t4models source code |
-|.\Tests                     | Unit tests |
-|.\Tests\Base                | LINQ to DB testing framework |
-|.\Tests\FSharp              | F# models and tests |
-|.\Tests\IBM.Core            | Tests for IBM.Data.DB2.Core provider |
-|.\Tests\Linq                | Main project for LINQ to DB unit tests |
-|.\Tests\Model               | Model classes for tests |
-|.\Tests\T4.Linq             | Models for test databases, generated using t4models |
-|.\Tests\T4.Model            | T4Models tests |
-|.\Tests\T4.Wpf              | T4Models NotifyPropertyChanged template test project |
-|.\Tests\TestApp             | SQL Server spatial types test application |
-|.\Tests\Tests.Benchmark     | Benchmark tests |
-|.\Tests\VisualBasic         | Visual Basic models and tests |
+| Folder                     | Description                                                                                                                      |
+|--------------------------- |----------------------------------------------------------------------------------------------------------------------------------|
+|.\Build                     | Build and CI files, check readme.md in that folder                                                                               |
+|.\Data                      | Databases and database creation scripts for tests                                                                                |
+|.\NuGet                     | LINQ to DB NuGet packages build files                                                                                            |
+|.\Redist                    | Binaries,unavailable officially at NuGet, used by tests and nugets                                                               |
+|.\Source\LinqToDB           | LINQ to DB source code                                                                                                           |
+|.\Source\LinqToDB.Tools     | LINQ to DB Tools source code                                                                                                     |
+|.\Source\LinqToDB.Templates | LINQ to DB t4models source code                                                                                                  |
+|.\Tests                     | Unit test projects folder                                                                                                        |
+|.\Tests\Base                | LINQ to DB testing framework                                                                                                     |
+|.\Tests\FSharp              | F# models and tests                                                                                                              |
+|.\Tests\IBM.Core            | Tests for IBM.Data.DB2.Core provider                                                                                             |
+|.\Tests\Linq                | Main project for LINQ to DB unit tests                                                                                           |
+|.\Tests\Model               | Model classes for tests                                                                                                          |
+|.\Tests\Tests.T4            | T4 templates test project                                                                                                        |
+|.\Tests\Tests.Android       | Xamarin Forms for Android test project                                                                                           |
+|.\Tests\Tests.Benchmark     | Benchmark tests                                                                                                                  |
+|.\Tests\Tests.PLayground    | Test project for use with linq2db.playground.sln lite test solution<br>Used for work on specific test without full solution load |
+|.\Tests\VisualBasic         | Visual Basic models and tests support                                                                                            |
 
 Solutions:
 
-* `.\linq2db.sln` - VS2017 solution
+* `.\linq2db.sln` - full linq2db VS2019 solution
+* `.\linq2db.playground.sln` - ligthweight linq2db VS2019 test solution. Used to work on specific test without loading of all payload of full solution
 
-Projects:
+#### Source projects
 
-| Project                                          |.NET 4.5 | .NET 4.5.2 | .NET 4.6 | .NET 4.6.2 | .NET Standard 1.6 | .NET Standard 2.0 | .NET Core 1.0 | .NET Core 2.0 |
-|-------------------------------------------------:|:-------:|:----------:|:--------:|:----------:|:-----------------:|:-----------------:|:-------------:|:-------------:|
-| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |            |          |            |         √         |         √         |               |       √       |
-| `.\Tests\Linq\Tests.Base.csproj`                 |         |     √      |          |            |                   |                   |       √       |       √       |
-| `.\Tests\IBM.Core\Tests.IBM.Core.csproj`         |         |            |          |     √      |                   |                   |               |       √       |
-| `.\Tests\Linq\Tests.csproj`                      |         |            |    √     |            |                   |                   |       √       |       √       |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`             |         |     √      |          |            |                   |                   |       √       |       √       |
-| `.\Tests\Model\Tests.Model.csproj`               |    √    |            |          |            |         √         |                   |               |               |
-| `.\Tests\T4.Linq\Tests.T4.Linq.csproj`           |         |            |    √     |            |                   |                   |               |       √       |
-| `.\Tests\T4.Model\Tests.T4.Model.csproj`         |    √    |            |          |            |                   |                   |               |               |
-| `.\Tests\T4.Wpf\Tests.T4.Wpf.csproj`             |         |     √      |          |            |                   |                   |               |               |
-| `.\Tests\TestApp\TestApp.csproj`                 |         |     √      |          |            |                   |                   |               |               |
-| `.\Tests\Tests.Benchmark\Tests.Benchmark.csproj` |         |            |    √     |            |                   |                   |               |               |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`   |    √    |            |          |            |         √         |                   |               |               |
+| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 |
+|-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|
+| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |
+| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |
+
+Allowed target defines:
+- `NETSTANDARD2_0` - `netstandard2.0` target ifdef
+- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
+- `NET45` - `net45` target ifdef
+- `NET46` - `net46` target ifdef
+
+Allowed debugging defines:
+- `TRACK_BUILD`
+- `DEBUG` - for debug code in debug build. To disable debug code use `DEBUG1` rename
+- `OVERRIDETOSTRING` - enables ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
+
+#### Test projects
+
+| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | Xamarin.Forms Android v8.1 |
+|---------------------------------------------------:|:-------:|:---------:|:-------------:|:--------------------------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |                            |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |                            |
+| `.\Tests\IBM.Core\Tests.IBM.Core.csproj`           |         |     √     |       √       |                            |
+| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |                            |
+| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |                            |
+| `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |              √             |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |                            |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |                            |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |                            |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |                            |
+
+
+Allowed target defines:
+- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
+- `NET46` - `net46` target ifdef
+- `AZURE` - for Azure Pipelines CI builds
 
 
 ## Building
 
 You can use the solution to build and run tests. Also you can build whole solution or library using the following batch files:
 
-* run `.\Build.cmd` - builds all the projects in the solution for Debug, Release, and AppVeyor configurations
-* run `.\Source\LinqToDB\Compile.cmd` - builds LinqToDB projects for Debug and Release configurations
+* `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
+* `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
+* `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net46` and `netcoreapp2.1` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net46`) or third (for `netcoreapp2.1`) parameter and format (default:html) as 4th parameter.
+
+Example of running Release build tests for `netcoreapp2.1` only with trx as output:
+```
+test.cmd Release 0 1 trx
+```
 
 ### Different platforms support
 
 Because of compiling for different platforms we do use:
 
-* Conditional compilation. Different projects and configurations define compilation symbols:
-  * NET45 - .NET 4.5 compatibility level
-  * NETSTANDARD1_6 - .NET Standard 1.6 compatibility level
-  * NETSTANDARD2_0 - .NET Standard 2.0 compatibility level
-* Implementing missing classes and enums. There are some under `.\Source\LinqToDB\Compatibility` folder.
+* Conditional compilation. See supported defines above
+* Implementing missing classes and enums. There are some under `.\Source\LinqToDB\Compatibility` folder
 
 ## Branches
 
-* `master` - current stable branch
+* `master` - current development branch for next release
 * `release` - branch with the latest release
-* `release1` - branch for critical fixes for version 1.xx.yy
-* `version1` - stable branch for version 1.xx.yy
 
 ## Run tests
 
-NUnit3 is used as unit testing framework. Most tests are run for all supported databases, and written in same pattern:
+NUnit3 is used as unit testing framework. Most of tests are run for all supported databases, and written in same pattern:
 
 ```cs
 [TestFixture]
 public class Test: TestBase // TestBase - base class, provides base methods and object data sources
 {
-    // DataContextSourceAttribute - implements NUnit ITestBuilder and provides context values to test
-    // TestAttribute - not required for nunit test runner, but needed for Resharper test runner
-    [Test, DataContextSource]
-    public void Test(string context)
+    // DataSourcesAttribute - implements NUnit IParameterDataSource to provide testcases for enabled database providers
+    [Test]
+    public void Test([DataSources] string context)
     {
-        // TestBase.GetDataContext - creates new IDataContext, supports creating WCF client and server
+        // TestBase.GetDataContext - creates new IDataContext
+        // also supports creation of remote client and server
+        // for remote contexts
         using(var db = GetDataContext(context))
         {
             // Here is the most interesting
@@ -109,10 +133,11 @@ public class Test: TestBase // TestBase - base class, provides base methods and 
 
 ### Configure data providers for tests
 
-`DataContextSourceAttribute` generates tests for each configured data provider, configuration is taken
-from `.\Tests\Linq\DataProviders.json` and `.\Tests\Linq\UserDataProviders.json` if it exists.
-`Linq\UserDataProviders.json` is used to specify user-specific settings such as connections strings to test databases and
-list of tested providers.
+`DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
+from `.\Tests\Linq\DataProviders.json` and `.\Tests\Linq\UserDataProviders.json` (used first, if exists).
+
+Configuration file is used to specify user-specific settings such as connection strings to test databases and
+list of providers to test.
 
 The `[User]DataProviders.json` is a regular JSON file:
 
@@ -120,24 +145,24 @@ The `[User]DataProviders.json` is a regular JSON file:
 
 ```js
 {
-    // .net framework 4.5 test configuration
-    "NET45" :
+    // .net framework 4.6 test configuration
+    "NET46" :
     {
         // base configuration to inherit settings from
         // Inheritance rules:
         // - DefaultConfiguration, TraceLevel, Providers - use value from base configuration only if it is not defined in current configuration
         // - Connections - merge current and base connection strings
         "BasedOn"              : "LocalConnectionStrings",
-								
+                                
         // default provider, used as a source of reference data
         // LINQ to DB uses SQLite for it and you hardly need to change it
         "DefaultConfiguration" : "SQLite.Classic",
-								
+                                
         // logging level
         // Supported values: Off, Error, Warning, Info, Verbose
         // Default level: Info
         "TraceLevel"           : "Error",
-								
+                                
         // list of database providers, enabled for current test configuration
         "Providers"            :
         [
@@ -167,39 +192,16 @@ The `[User]DataProviders.json` is a regular JSON file:
         ],
 
         // list of test skip categories, disabled for current test configuration
-	// to set test skip category, use SkipCategoryAttribute on test method, class or whole assembly
+    // to set test skip category, use SkipCategoryAttribute on test method, class or whole assembly
         "Skip"                 :
-	[
-	    "Access.12"
-	]
+    [
+        "Access.12"
+    ]
 
     },
 
-    // .net core 1.0 test configuration
-    "CORE1" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer",
-            "SqlServer.2014",
-            "SqlServer.2012", "SqlServer.2012.1",
-            "SqlServer.2008", "SqlServer.2008.1",
-            "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure.2012",
-            "Firebird",
-            "MySql",
-            "MariaDB",
-            "PostgreSQL",
-            "Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
-    // .net core 2.0 test configuration
-    "CORE2" :
+    // .net core 2.1 test configuration
+    "CORE21" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
@@ -242,7 +244,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
 To define your own configurations **DO NOT EDIT** `DataProviders.json` - create `.\Tests\Linq\UserDataProviders.json` and define needed configurations.
 
-Right now tests execution depends on `_CreateData.*` tests executed first. Those tests recreate test databases and populate them with test data, so if you are going to run one test be sure to run `_CreateData` before it manually.
+Tests execution depends on `_CreateData.*` tests executed first. Those tests recreate test databases and populate them with test data, so if you are going to run one test be sure to run `_CreateData` before it manually.
 
 Also - if your test changes database data, be sure to revert those changes (!) to avoid side effects for other tests.
 
@@ -250,29 +252,25 @@ Also - if your test changes database data, be sure to revert those changes (!) t
 
 We do run builds and tests with:
 
-* [AppVeyor](https://ci.appveyor.com/project/igor-tkachev/linq2db) (Windows) [appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml). Makes build and runs tests for:
-  * .Net 4.5.2: [NET45.AppVeyor configuration](https://github.com/linq2db/linq2db/blob/master/Tests/Linq/DataProviders.json). Full set of tests are done.
-  * .Net Core 1.0: [CORE1.AppVeyor configuration](https://github.com/linq2db/linq2db/blob/master/Tests/Linq/DataProviders.json). Only `_Create` tests are done (smoke testing).
-  * .Net Core 2.0: [CORE2.AppVeyor configuration](https://github.com/linq2db/linq2db/blob/master/Tests/Linq/DataProviders.json). Only `_Create` tests are done (smoke testing).
-  * DocFx - to build [documentation](https://linq2db.github.io). Deploy is done only for `release` branch.
-* [Travis](https://travis-ci.org/linq2db/linq2db) (Linux) [.travis.yml](https://github.com/linq2db/linq2db/blob/master/.travis.yml). Makes build and runs tests for:
-  * .Net Core 2.0: [CORE2.Travis configuration](https://github.com/linq2db/linq2db/blob/master/Tests/Linq/DataProviders.json). Full set of tests are done.
+* [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=1) [azure-pipelines.yml](https://github.com/linq2db/linq2db/blob/master/azure-pipelines.yml).
+It builds solution, generate and publish nugets and runs tests for:
+  * .Net 4.6
+  * .Net Core 2.1 (Windows/Linux and MacOS)
+For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
-CI builds are done only for next branches:
-
-* `master`
-* `/version.*/` (regex)
-* `/release.*/` (regex)
-* `/dev.*/` (regex)
+CI builds are done for all branches and PRs.
+- Tests run for all branches and PRs except `release` branch
+- Nugets publishing to [Azure feeds](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db) enabled only for `branch`
+- Nugets publishing to [Nuget.org](https://www.nuget.org/profiles/LinqToDB) enabled only for `release` branch
 
 ### Skip CI build
 
-If you want to skip building commit by CI (for example you have changed *.md files only) begin commit comment with `[ci skip]`.
+If you want to skip building commit by CI (for example you have changed *.md files only) check this [message](https://developercommunity.visualstudio.com/comments/503497/view.html).
 
 ### Publishing packages
 
-* **Release candidate** packages are published by AppVeyor to [MyGet.org](https://github.com/linq2db/linq2db#feeds) for each successful build of **master** branch.
-* **Release** packages are published by AppVeyor to [NuGet.org](https://github.com/linq2db/linq2db#feeds) for each successful build of **release** and **release1** branch.
+* **"Nightly" builds** packages are published to [Azure feeds](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db) for each successful build of **master** branch.
+* **Release** packages are published to [Nuget.org](https://www.nuget.org/profiles/LinqToDB) for each successful build of **release** branch.
 
 ## Building releases
 
@@ -282,9 +280,7 @@ If you want to skip building commit by CI (for example you have changed *.md fil
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases)
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
-   * in [.\appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml) set `assemblyVersion` and `packageVersion` parameters to next version
-   * in NuGet\PackLocal.cmd file update linq2db version to next version
-   * in issue template update default linq2db version to released version
+   * in [.\azure-pipelines.yml](https://github.com/linq2db/linq2db/blob/master/azure-pipelines.yml) set `assemblyVersion` and `nugetVersion` parameters to next version. Always use next minor version and change it to major only before release, if it should be new major version release
 
 ## Process
 
@@ -293,11 +289,8 @@ In general you should follow simple rules:
 * Development rules and regulations, code style
 * Do not add new features without tests
 * Avoid direct pushes to `master` and `release` branches
-* To fix some issue or implement new feature create new branch and make pull request after you are ready to merge. Merge your PR only after contributor's review.
-* If you are going to implement any big feature you may want other contributors to participate (coding, code review, feature discuss and so on), so to do it:
-  * Create new PR with **[WIP]** prefix (Work In Process)
-  * After you are ready to merge remove the prefix & assign contributors as reviewers
-* If you do have write access, it is recommended to use central repository (not forks). Why - simple, it would allow other teammates to help you in developing (if needed). Certainly you are free to use fork if it is more convenient to you
-* Please avoid adding new public classes, properties, methods without XML doc
+* To fix some issue or implement new feature create new branch and make pull request after you are ready to merge or create pull request as `work-in-progress` pull request. Merge your PR only after contributors' review.
+* If you do have repository write access, it is recommended to use central repository instead of fork
+* Do not add new public classes, properties, methods without XML documentation on them
 * Read issues and help users
 * Do not EF :)

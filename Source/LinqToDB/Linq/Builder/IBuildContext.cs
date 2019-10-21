@@ -1,4 +1,7 @@
-﻿using System;
+﻿#nullable disable
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 #if DEBUG
@@ -11,10 +14,45 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
+#if DEBUG
+	internal static class BuildContextDebuggingHelper
+	{
+		static string GetContextInfo(IBuildContext context)
+		{
+			if (context.SelectQuery == null)
+				return $"{context.GetType()}(<none>)";
+			return $"{context.GetType()}({context.SelectQuery.SourceID.ToString()})";
+		}
+
+		public static string GetPath(this IBuildContext context)
+		{
+			var str = $"this({GetContextInfo(context)})";
+			var alreadyProcessed = new HashSet<IBuildContext>();
+			alreadyProcessed.Add(context);
+
+			while (true)
+			{
+				context = context.Parent;
+				if (context == null) 
+					break;
+				str = $"{GetContextInfo(context)} <- {str}";
+				if (!alreadyProcessed.Add(context))
+				{
+					str = $"recursion: {str}";
+					break;
+				}
+			}
+
+			return str;
+		}
+	}
+#endif
+
 	interface IBuildContext
 	{
 #if DEBUG
 		string _sqlQueryText { get; }
+		string Path { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }

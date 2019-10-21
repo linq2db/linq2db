@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NETCOREAPP2_1
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -1719,6 +1722,8 @@ namespace Tests.Linq
 		[Test]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1729,6 +1734,17 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
+#if !NETCOREAPP2_1
+					if (isLinqService)
+					{
+						Assert.Throws<FaultException<ExceptionDetail>>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
+					}
+					else
+#endif
 					Assert.Throws<LinqToDBConvertException>(() =>
 						db.GetTable<UndefinedValueTest>()
 							.Select(r => new { r.Id, r.TestField })
@@ -1755,9 +1771,10 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
 		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Fails due to default mapping schema on remote server. Fixed in 3.0")]
-		[Test]
-		public void Issue1622Test([DataSources] string context)
+		// Sybase disabled due to https://github.com/nunit/nunit/issues/3296
+		// because it breaks test run, which is very annoying
+		[Test, ActiveIssue(1622)]
+		public void Issue1622Test([DataSources(ProviderName.Sybase)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{

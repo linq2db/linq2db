@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -90,7 +91,9 @@ namespace LinqToDB.Linq.Builder
 								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 								//
 								var body      = expression.Body;
-								var level     = body.GetLevel();
+								var level = body.GetLevel();
+
+
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 								if (tableInfo.Result == false)
@@ -170,6 +173,19 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		internal static void BuildSetter(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			LambdaExpression setter,
+			IBuildContext into,
+			List<SqlSetExpression> items,
+			IBuildContext sequence)
+		{
+			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
+
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, ctx);
+		}
+
+		internal static void BuildSetterWithContext(
 			ExpressionBuilder      builder,
 			BuildInfo              buildInfo,
 			LambdaExpression       setter,
@@ -186,10 +202,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (expr.ElementType == QueryElementType.SqlParameter)
 				{
-					var parm = (SqlParameter)expr;
-					var field = column[0].Sql is SqlField sqlField
-						? sqlField
-						: (SqlField)((SqlColumn)column[0].Sql).Expression;
+					var parm  = (SqlParameter)expr;
+					var field = QueryHelper.GetUnderlyingField(column[0].Sql);
 
 					if (parm.DataType == DataType.Undefined)
 						parm.DataType = field.DataType;
@@ -457,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 
 			var memberType = member.GetMemberType().ToNullableUnderlying();
 			var updateType = update.Type.ToNullableUnderlying();
-			if (memberType.IsEnumEx() && updateType != memberType)
+			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
@@ -526,8 +540,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-					sequence = new SubQueryContext(sequence);
+				//if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+				//	sequence = new SubQueryContext(sequence);
 
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();

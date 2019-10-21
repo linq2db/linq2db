@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using SqlProvider;
 
 	partial class ExpressionBuilder
 	{
@@ -233,11 +234,12 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
 
-			if (ctx.SelectQuery.Select.Columns.Count == 0 &&
-				(ctx.IsExpression(null, 0, RequestFor.Expression).Result ||
-				 ctx.IsExpression(null, 0, RequestFor.Field).     Result))
+			if (ctx.SelectQuery.Select.Columns.Count == 0)
 			{
-				ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
+				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
+					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
+				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result)
+					ctx.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
 
 			return ctx;
@@ -265,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (subQuery.Select.Columns.Count == 1 &&
 							subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
+							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasSetOperators &&
 							subQuery.Where.SearchCondition.Conditions.Count == 1)
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[0];
@@ -311,6 +313,7 @@ namespace LinqToDB.Linq.Builder
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
 				arg = arg.SkipPathThrough();
+				arg = arg.SkipMethodChain(MappingSchema);
 
 				var mc = arg as MethodCallExpression;
 
@@ -708,7 +711,7 @@ namespace LinqToDB.Linq.Builder
 				Expression preparedExpression;
 				if (expression.NodeType == ExpressionType.Call)
 					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
-				else 
+				else
 					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression);
 			}
@@ -876,8 +879,8 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (e.Type == t ||
-							t.IsEnumEx()      && Enum.GetUnderlyingType(t)      == e.Type ||
-							e.Type.IsEnumEx() && Enum.GetUnderlyingType(e.Type) == t)
+							t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
+							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 							return o;
 
 						return Convert(
@@ -1033,7 +1036,7 @@ namespace LinqToDB.Linq.Builder
 
 									var p = pis[i];
 
-									if (p.GetCustomAttributesEx(true).OfType<ParamArrayAttribute>().Any())
+									if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
 									{
 										parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
 									}
@@ -1375,9 +1378,9 @@ namespace LinqToDB.Linq.Builder
 				value = new SqlValue(v);
 			else
 			{
-				if (v != null && v.GetType().IsEnumEx())
+				if (v != null && v.GetType().IsEnum)
 				{
-					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+					var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 					if (attrs.Length == 0)
 						v = MappingSchema.EnumToValue((Enum)v);
@@ -1414,10 +1417,9 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
-				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
-						p = accessor.Value;
+			foreach (var accessor in _parameters)
+					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
+					p = accessor.Value;
 
 			if (p == null)
 			{
@@ -1599,7 +1601,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1882,7 +1884,7 @@ namespace LinqToDB.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnumEx())
+			if (!type.ToNullableUnderlying().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object>();
@@ -2163,8 +2165,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
 
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedType, member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedType, member);
 
 			var dataType = ca?.DataType ?? dta?.DataType;
 
@@ -2188,7 +2190,7 @@ namespace LinqToDB.Linq.Builder
 			var dbType     = baseType.DbType;
 			var length     = baseType.Length;
 
-			QueryVisitor.Find(expr, e =>
+			new QueryVisitor().Find(expr, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -2862,8 +2864,8 @@ namespace LinqToDB.Linq.Builder
 					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
 					var expr2 = exprExpr?.Expr2;
 
-					var nullValue1 =                 QueryVisitor.Find(expr1, _ => _ is IValueContainer);
-					var nullValue2 = expr2 != null ? QueryVisitor.Find(expr2, _ => _ is IValueContainer) : null;
+					var nullValue1 =                 new QueryVisitor().Find(expr1, _ => _ is IValueContainer);
+					var nullValue2 = expr2 != null ? new QueryVisitor().Find(expr2, _ => _ is IValueContainer) : null;
 
 					var hasNullValue =
 						   nullValue1 != null && ((IValueContainer) nullValue1).Value == null
@@ -2871,8 +2873,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (!hasNullValue)
 					{
-						var expr1IsField =                  expr1.CanBeNull && QueryVisitor.Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
-						var expr2IsField = expr2 != null && expr2.CanBeNull && QueryVisitor.Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr1IsField =                  expr1.CanBeNull && new QueryVisitor().Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr2IsField = expr2 != null && expr2.CanBeNull && new QueryVisitor().Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
 
 						var nullableField = expr1IsField
 							? expr1
@@ -3050,12 +3052,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

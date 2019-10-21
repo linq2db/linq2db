@@ -39,12 +39,13 @@ namespace LinqToDB.SqlQuery
 			GroupByClause,
 			OrderByClause,
 				OrderByItem,
-			Union,
+			SetOperator,
 
 		WithClause,
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
 
 		OutputClause,
 
@@ -53,9 +54,13 @@ namespace LinqToDB.SqlQuery
 		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
+		MergeStatement,
 
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
+
+		MergeSourceTable,
+		MergeOperationClause,
 	}
 }

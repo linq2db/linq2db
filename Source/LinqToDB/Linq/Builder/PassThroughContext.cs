@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -18,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		string IBuildContext._sqlQueryText => Context._sqlQueryText;
+		public string Path => this.GetPath();
 #endif
 
 		public virtual ExpressionBuilder Builder     => Context.Builder;

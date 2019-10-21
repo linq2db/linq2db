@@ -12,13 +12,21 @@
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<group targetFramework="net40">
-				<dependency id="linq2db"                  version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+			<group targetFramework=".NETFramework4.5">
+				<dependency id="linq2db"                  version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.3.1"/>
 			</group>
-			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"                       version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
+			<group targetFramework=".NETFramework4.6">
+				<dependency id="linq2db"                  version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.3.1"/>
+			</group>
+			<group targetFramework=".NETStandard2.0">
+				<dependency id="linq2db"                       version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.31"/>
+			</group>
+			<group targetFramework=".NETCoreApp2.1">
+				<dependency id="linq2db"                       version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.31"/>
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -26,8 +34,13 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"               target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"     target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
+
+		<file src="_._"                                                            target="lib\net45" />
+		<file src="_._"                                                            target="lib\net46" />
+		<file src="_._"                                                            target="lib\netstandard2.0" />
+		<file src="_._"                                                            target="lib\netcoreapp2.1" />
 		
 		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />
 		

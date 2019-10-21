@@ -3,14 +3,11 @@ GO
 
 DROP DATABASE {DBNAME}
 GO
-
-CREATE DATABASE {DBNAME}
-	ON master = '102400K'
+CREATE DATABASE {DBNAME} ON default = '102400K'
 GO
 
 USE {DBNAME}
 GO
-
 sp_configure 'enable unicode normalization', 0
 GO
 CREATE TABLE InheritanceParent

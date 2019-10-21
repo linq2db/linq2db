@@ -59,7 +59,7 @@ namespace Tests.Linq
 				db.Update(t1);
 			}
 		}
-#if !NETSTANDARD1_6
+
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
@@ -81,7 +81,7 @@ namespace Tests.Linq
 				Assert.That(column, Is.Null);
 			}
 		}
-#endif
+
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test]
@@ -192,6 +192,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
@@ -204,6 +205,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{

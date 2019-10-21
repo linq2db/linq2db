@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.Mapping
+﻿#nullable disable
+namespace LinqToDB.Mapping
 {
 	internal interface IConfigurationProvider
 	{

@@ -12,6 +12,7 @@ namespace LinqToDB
 {
 	using Async;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
 
@@ -23,7 +24,7 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		internal static readonly MethodInfo TableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo TableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Overrides table or view name with new name for current query.
@@ -43,7 +44,7 @@ namespace LinqToDB
 			return result;
 		}
 
-		internal static readonly MethodInfo DatabaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo DatabaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Overrides database name with new name for current query. This call will have effect only for databases that support
@@ -67,11 +68,33 @@ namespace LinqToDB
 			return result;
 		}
 
+		internal static readonly MethodInfo ServerNameMethodInfo = MemberHelper.MethodOf(() => ServerName<int>(null!, null!)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Overrides linked server name with new name for current query. This call will have effect only for databases that support
+		/// linked server name in fully-qualified table name.
+		/// <para>Supported by: SQL Server, Informix, Oracle, SAP HANA2.</para>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="name">Name of linked server.</param>
+		/// <returns>Table-like query source with new linked server name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> ServerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (name  == null) throw new ArgumentNullException(nameof(name));
+
+			var result = ((ITableMutable<T>)table).ChangeServerName(name);
+			return result;
+		}
+
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
 		/// <see cref="SchemaName{T}(ITable{T}, string)"/> method is a synonym of this method.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
@@ -85,12 +108,12 @@ namespace LinqToDB
 			return SchemaName(table, name);
 		}
 
-		internal static readonly MethodInfo SchemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo SchemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
@@ -104,7 +127,7 @@ namespace LinqToDB
 			return result;
 		}
 
-		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Replaces access to a table in generated query with SQL expression.
@@ -134,7 +157,7 @@ namespace LinqToDB
 			return table;
 		}
 
-		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds table hints to a table in generated query.
@@ -166,7 +189,7 @@ namespace LinqToDB
 
 		#region LoadWith
 
-		static readonly MethodInfo _loadWithMethodInfo = MemberHelper.MethodOf(() => LoadWith<int>(null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _loadWithMethodInfo = MemberHelper.MethodOf(() => LoadWith<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Specifies associations, that should be loaded for each loaded record from current table.
@@ -202,7 +225,8 @@ namespace LinqToDB
 			[NotNull]                this ITable<T> table,
 			[NotNull, InstantHandle] Expression<Func<T,object>> selector)
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table    == null) throw new ArgumentNullException(nameof(table));
+			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
 			table.Expression = Expression.Call(
 				null,
@@ -259,7 +283,7 @@ namespace LinqToDB
 			var q = new Table<T>(dataContext, selector);
 
 			var read = false;
-			var item = default(T);
+			var item = default(T)!; // this is fine, as we never return it
 
 			await q.ForEachUntilAsync(r =>
 			{
@@ -278,7 +302,7 @@ namespace LinqToDB
 
 		#region Delete
 
-		static readonly MethodInfo _deleteMethodInfo = MemberHelper.MethodOf(() => Delete<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _deleteMethodInfo = MemberHelper.MethodOf(() => Delete<int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes delete operation, using source query as filter for records, that should be deleted.
@@ -323,7 +347,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes delete operation, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.
@@ -382,7 +406,7 @@ namespace LinqToDB
 		#region Update
 
 		internal static readonly MethodInfo UpdateMethodInfo =
-			MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Update<int,int>(null!, (ITable<int>)null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes update-from-source operation against target table.
@@ -444,7 +468,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		internal static readonly MethodInfo UpdateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes update operation using source query as record filter.
@@ -496,7 +520,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null!, null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes update operation using source query as record filter with additional filter expression.
@@ -556,7 +580,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes update operation for already configured update query.
@@ -606,7 +630,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(()
-			=> Update(null, (Expression<Func<int,int>>)null, null)).GetGenericMethodDefinition();
+			=> Update(null!, (Expression<Func<int,int>>)null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes update-from-source operation against target table.
@@ -672,10 +696,15 @@ namespace LinqToDB
 
 		class Updatable<T> : IUpdatable<T>
 		{
+			public Updatable(IQueryable<T> query)
+			{
+				Query = query;
+			}
+
 			public IQueryable<T> Query;
 		}
 
-		static readonly MethodInfo _asUpdatableMethodInfo = MemberHelper.MethodOf(() => AsUpdatable<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _asUpdatableMethodInfo = MemberHelper.MethodOf(() => AsUpdatable<int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Casts <see cref="IQueryable{T}"/> query to <see cref="IUpdatable{T}"/> query.
@@ -697,11 +726,11 @@ namespace LinqToDB
 					_asUpdatableMethodInfo.MakeGenericMethod(typeof(T)),
 					currentSource.Expression));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
 		static readonly MethodInfo _setMethodInfo = MemberHelper.MethodOf(() =>
-			Set<int,int>((IQueryable<int>)null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
+			Set<int,int>((IQueryable<int>)null!,null!,(Expression<Func<int,int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -731,11 +760,11 @@ namespace LinqToDB
 					_setMethodInfo.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { currentSource.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
 		static readonly MethodInfo _setMethodInfo2 = MemberHelper.MethodOf(() =>
-			Set<int,int>((IUpdatable<int>)null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
+			Set<int,int>((IUpdatable<int>)null!,null!,(Expression<Func<int,int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -765,11 +794,11 @@ namespace LinqToDB
 					_setMethodInfo2.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
 		static readonly MethodInfo _setMethodInfo3 = MemberHelper.MethodOf(() =>
-			Set<int,int>((IQueryable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
+			Set<int,int>((IQueryable<int>)null!,null!,(Expression<Func<int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -797,11 +826,11 @@ namespace LinqToDB
 					_setMethodInfo3.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { source.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
 		static readonly MethodInfo _setMethodInfo4 = MemberHelper.MethodOf(() =>
-			Set<int,int>((IUpdatable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
+			Set<int,int>((IUpdatable<int>)null!,null!,(Expression<Func<int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -815,7 +844,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]                this IUpdatable<T>    source,
+			[NotNull]                this IUpdatable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			[NotNull, InstantHandle] Expression<Func<TV>>   update)
 		{
@@ -831,10 +860,10 @@ namespace LinqToDB
 					_setMethodInfo4.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
-		static readonly MethodInfo _setMethodInfo5 = MemberHelper.MethodOf(() => Set((IQueryable<int>)null,null,0)).GetGenericMethodDefinition();
+		static readonly MethodInfo _setMethodInfo5 = MemberHelper.MethodOf(() => Set((IQueryable<int>)null!,null!,0)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -861,12 +890,12 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_setMethodInfo5.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
+					new[] { currentSource.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
-		static readonly MethodInfo _setMethodInfo6 = MemberHelper.MethodOf(() => Set((IUpdatable<int>)null,null,0)).GetGenericMethodDefinition();
+		static readonly MethodInfo _setMethodInfo6 = MemberHelper.MethodOf(() => Set((IUpdatable<int>)null!,null!,0)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds update field expression to query.
@@ -893,16 +922,16 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_setMethodInfo6.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
 
-			return new Updatable<T> { Query = query };
+			return new Updatable<T>(query);
 		}
 
 		#endregion
 
 		#region Insert
 
-		static readonly MethodInfo _insertMethodInfo = MemberHelper.MethodOf(() => Insert<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertMethodInfo = MemberHelper.MethodOf(() => Insert<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts single record into target table.
@@ -960,7 +989,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts single record into target table and returns identity value of inserted record.
@@ -1112,10 +1141,15 @@ namespace LinqToDB
 
 		class ValueInsertable<T> : IValueInsertable<T>
 		{
+			public ValueInsertable(IQueryable<T> query)
+			{
+				Query = query;
+			}
+
 			public IQueryable<T> Query;
 		}
 
-		static readonly MethodInfo _intoMethodInfo = MemberHelper.MethodOf(() => Into<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _intoMethodInfo = MemberHelper.MethodOf(() => Into<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Starts insert operation LINQ query definition.
@@ -1138,11 +1172,11 @@ namespace LinqToDB
 					_intoMethodInfo.MakeGenericMethod(typeof(T)),
 					new[] { Expression.Constant(null, typeof(IDataContext)), query.Expression }));
 
-			return new ValueInsertable<T> { Query = q };
+			return new ValueInsertable<T>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo =
-			MemberHelper.MethodOf(() => Value<int,int>((ITable<int>)null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value<int,int>((ITable<int>)null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Starts insert operation LINQ query definition from field setter expression.
@@ -1172,11 +1206,11 @@ namespace LinqToDB
 					_valueMethodInfo.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
-			return new ValueInsertable<T> { Query = q };
+			return new ValueInsertable<T>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo2 =
-			MemberHelper.MethodOf(() => Value((ITable<int>)null,null,0)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value((ITable<int>)null!,null!,0)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Starts insert operation LINQ query definition from field setter expression.
@@ -1203,13 +1237,13 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo2.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
-			return new ValueInsertable<T> { Query = q };
+			return new ValueInsertable<T>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo3 =
-			MemberHelper.MethodOf(() => Value<int,int>((IValueInsertable<int>)null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value<int,int>((IValueInsertable<int>)null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Add field setter to insert operation LINQ query.
@@ -1239,11 +1273,11 @@ namespace LinqToDB
 					_valueMethodInfo3.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
-			return new ValueInsertable<T> { Query = q };
+			return new ValueInsertable<T>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo4 =
-			MemberHelper.MethodOf(() => Value((IValueInsertable<int>)null,null,0)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value((IValueInsertable<int>)null!,null!,0)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Add field setter to insert operation LINQ query.
@@ -1270,12 +1304,12 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo4.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
-			return new ValueInsertable<T> { Query = q };
+			return new ValueInsertable<T>(q);
 		}
 
-		static readonly MethodInfo _insertMethodInfo2 = MemberHelper.MethodOf(() => Insert<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertMethodInfo2 = MemberHelper.MethodOf(() => Insert<int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes insert query.
@@ -1323,7 +1357,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentQueryable.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes insert query and returns identity value of inserted record.
@@ -1355,6 +1389,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static int? InsertWithInt32Identity<T>([NotNull] this IValueInsertable<T> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(InsertWithIdentity(source));
 		}
 
@@ -1366,6 +1402,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static long? InsertWithInt64Identity<T>([NotNull] this IValueInsertable<T> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(InsertWithIdentity(source));
 		}
 
@@ -1377,6 +1415,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static decimal? InsertWithDecimalIdentity<T>([NotNull] this IValueInsertable<T> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(InsertWithIdentity(source));
 		}
 
@@ -1417,6 +1457,8 @@ namespace LinqToDB
 		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1431,6 +1473,8 @@ namespace LinqToDB
 		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1445,6 +1489,8 @@ namespace LinqToDB
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1454,7 +1500,7 @@ namespace LinqToDB
 		#region SelectInsertable
 
 		internal static readonly MethodInfo InsertMethodInfo3 =
-			MemberHelper.MethodOf(() => Insert<int,int>(null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Insert<int,int>(null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts records from source query into target table.
@@ -1519,7 +1565,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo3 =
-			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts records from source query into target table and returns identity value of last inserted record.
@@ -1564,6 +1610,10 @@ namespace LinqToDB
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<int?>(
@@ -1585,6 +1635,10 @@ namespace LinqToDB
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<long?>(
@@ -1606,6 +1660,10 @@ namespace LinqToDB
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
@@ -1664,6 +1722,10 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                          token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<int?>(
@@ -1687,6 +1749,10 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                          token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<long?>(
@@ -1710,6 +1776,10 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                          token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
 			return ((ExpressionQuery<TSource>)currentSource).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
@@ -1718,11 +1788,25 @@ namespace LinqToDB
 
 		class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
+			public SelectInsertable(IQueryable<T> query)
+			{
+				Query = query;
+			}
+
 			public IQueryable<T> Query;
 		}
 
+		static Expression WrapConstant<TV>(Expression body, TV value)
+		{
+			var valueType = ReferenceEquals(null, value) ? body.Unwrap().Type : value!.GetType();
+			var result    = (Expression)Expression.Constant(value, valueType);
+			if (result.Type != typeof(TV))
+				result = Expression.Convert(result, typeof(TV));
+			return result;
+		}
+
 		static readonly MethodInfo _intoMethodInfo2 =
-			MemberHelper.MethodOf(() => Into<int,int>(null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Into<int,int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Converts LINQ query into insert query with source query data as data to insert.
@@ -1738,6 +1822,7 @@ namespace LinqToDB
 			[NotNull] this IQueryable<TSource> source,
 			[NotNull] ITable<TTarget>          target)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -1748,11 +1833,11 @@ namespace LinqToDB
 					_intoMethodInfo2.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression }));
 
-			return new SelectInsertable<TSource,TTarget> { Query = q };
+			return new SelectInsertable<TSource,TTarget>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo5 =
-			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value<int,int,int>(null!,null!,(Expression<Func<int,int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Add field setter to insert operation LINQ query.
@@ -1783,11 +1868,11 @@ namespace LinqToDB
 					_valueMethodInfo5.MakeGenericMethod(typeof(TSource), typeof(TTarget), typeof(TValue)),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
-			return new SelectInsertable<TSource,TTarget> { Query = q };
+			return new SelectInsertable<TSource,TTarget>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo6 =
-			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value<int,int,int>(null!,null!,(Expression<Func<int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Add field setter to insert operation LINQ query.
@@ -1818,11 +1903,11 @@ namespace LinqToDB
 					_valueMethodInfo6.MakeGenericMethod(typeof(TSource), typeof(TTarget), typeof(TValue)),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
-			return new SelectInsertable<TSource,TTarget> { Query = q };
+			return new SelectInsertable<TSource,TTarget>(q);
 		}
 
 		static readonly MethodInfo _valueMethodInfo7 =
-			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,0)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Value<int,int,int>(null!,null!,0)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Add field setter to insert operation LINQ query.
@@ -1850,13 +1935,13 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo7.MakeGenericMethod(typeof(TSource), typeof(TTarget), typeof(TValue)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TValue)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
-			return new SelectInsertable<TSource,TTarget> { Query = q };
+			return new SelectInsertable<TSource,TTarget>(q);
 		}
 
 		static readonly MethodInfo _insertMethodInfo4 =
-			MemberHelper.MethodOf(() => Insert<int,int>(null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Insert<int,int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes configured insert query.
@@ -1908,7 +1993,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo4 =
-			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Executes configured insert query and returns identity value of last inserted record.
@@ -1941,6 +2026,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int? InsertWithInt32Identity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				InsertWithIdentity(source));
 		}
@@ -1954,6 +2041,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static long? InsertWithInt64Identity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				InsertWithIdentity(source));
 		}
@@ -1967,6 +2056,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static decimal? InsertWithDecimalIdentity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				InsertWithIdentity(source));
 		}
@@ -2010,6 +2101,8 @@ namespace LinqToDB
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -2025,6 +2118,8 @@ namespace LinqToDB
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -2040,6 +2135,8 @@ namespace LinqToDB
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -2051,7 +2148,7 @@ namespace LinqToDB
 		#region InsertOrUpdate
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo =
-			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
@@ -2122,7 +2219,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
-			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null,null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null!,null!,null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same key value already exists in target table.
@@ -2210,7 +2307,7 @@ namespace LinqToDB
 
 		#region Drop
 
-		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null, true)).GetGenericMethodDefinition();
+		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null!, true)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Drops database table.
@@ -2306,7 +2403,7 @@ namespace LinqToDB
 
 		#region Truncate
 
-		static readonly MethodInfo _truncateMethodInfo = MemberHelper.MethodOf(() => Truncate<int>(null, true)).GetGenericMethodDefinition();
+		static readonly MethodInfo _truncateMethodInfo = MemberHelper.MethodOf(() => Truncate<int>(null!, true)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Truncates database table.
@@ -2342,7 +2439,7 @@ namespace LinqToDB
 		public static async Task<int> TruncateAsync<T>(
 			[NotNull] this ITable<T> target,
 			bool                     resetIdentity = true,
-			CancellationToken        token = default)
+			CancellationToken        token         = default)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2365,7 +2462,7 @@ namespace LinqToDB
 
 		#region Take / Skip / ElementAt
 
-		static readonly MethodInfo _takeMethodInfo = MemberHelper.MethodOf(() => Take<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _takeMethodInfo = MemberHelper.MethodOf(() => Take<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Limits number of records, returned from query.
@@ -2392,7 +2489,7 @@ namespace LinqToDB
 					new[] { currentSource.Expression, Expression.Quote(count) }));
 		}
 
-		static readonly MethodInfo _takeMethodInfo2 = MemberHelper.MethodOf(() => Take<int>(null,null,TakeHints.Percent)).GetGenericMethodDefinition();
+		static readonly MethodInfo _takeMethodInfo2 = MemberHelper.MethodOf(() => Take<int>(null!,null!,TakeHints.Percent)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Limits number of records, returned from query. Allows to specify TAKE clause hints.
@@ -2422,7 +2519,7 @@ namespace LinqToDB
 					new[] { currentSource.Expression, Expression.Quote(count), Expression.Constant(hints) }));
 		}
 
-		static readonly MethodInfo _takeMethodInfo3 = MemberHelper.MethodOf(() => Take<int>(null,0,TakeHints.Percent)).GetGenericMethodDefinition();
+		static readonly MethodInfo _takeMethodInfo3 = MemberHelper.MethodOf(() => Take<int>(null!,0,TakeHints.Percent)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Limits number of records, returned from query. Allows to specify TAKE clause hints.
@@ -2451,7 +2548,7 @@ namespace LinqToDB
 					new[] { currentSource.Expression, Expression.Constant(count), Expression.Constant(hints) }));
 		}
 
-		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Ignores first N records from source query.
@@ -2478,7 +2575,7 @@ namespace LinqToDB
 					new[] { currentSource.Expression, Expression.Quote(count) }));
 		}
 
-		static readonly MethodInfo _elementAtMethodInfo = MemberHelper.MethodOf(() => ElementAt<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _elementAtMethodInfo = MemberHelper.MethodOf(() => ElementAt<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Selects record at specified position from source query.
@@ -2539,7 +2636,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<TSource>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Selects record at specified position from source query.
@@ -2600,7 +2697,7 @@ namespace LinqToDB
 
 		#region Having
 
-		static readonly MethodInfo _setMethodInfo7 = MemberHelper.MethodOf(() => Having((IQueryable<int>)null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _setMethodInfo7 = MemberHelper.MethodOf(() => Having((IQueryable<int>)null!,null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Filters source query using HAVING SQL clause.
@@ -2636,7 +2733,7 @@ namespace LinqToDB
 		#region IOrderedQueryable
 
 		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() =>
-			ThenOrBy(null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
+			ThenOrBy(null!,(Expression<Func<int, int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds ascending sort expression to a query.
@@ -2666,7 +2763,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() =>
-			ThenOrByDescending(null, (Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
+			ThenOrByDescending(null!, (Expression<Func<int, int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds descending sort expression to a query.
@@ -2699,7 +2796,7 @@ namespace LinqToDB
 
 		#region GetContext
 
-		internal static readonly MethodInfo SetMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo SetMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Converts query to <see cref="ContextParser.Context"/> object, used by merge operation generator.
@@ -2751,8 +2848,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> Join<TSource>(
-			[NotNull]           this IQueryable<TSource>        source,
-			[SqlQueryDependent] SqlJoinType                     joinType,
+			[NotNull]           this IQueryable<TSource>             source,
+			[SqlQueryDependent] SqlJoinType                          joinType,
 			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
@@ -2787,9 +2884,9 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
-			[NotNull]           this IQueryable<TOuter>                   outer,
-			[NotNull]           IQueryable<TInner>                        inner,
-			[SqlQueryDependent] SqlJoinType                               joinType,
+			[NotNull]           this IQueryable<TOuter>                        outer,
+			[NotNull]           IQueryable<TInner>                             inner,
+			[SqlQueryDependent] SqlJoinType                                    joinType,
 			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
 			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
@@ -3006,7 +3103,7 @@ namespace LinqToDB
 
 		#region CTE
 
-		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string tableName)
+		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string? tableName)
 		{
 			throw new NotImplementedException();
 		}
@@ -3043,7 +3140,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(
 			[NotNull]   this IQueryable<TSource> source,
-			[CanBeNull] string                   name)
+			[CanBeNull] string?                  name)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -3094,6 +3191,127 @@ namespace LinqToDB
 
 		#endregion
 
+		#region AsSubQuery
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsSubQuery<TSource>([NotNull] this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, source), source.Expression));
+		}
+
+		#endregion
+
+		#region HasUniqueKey
+
+		/// <summary>
+		/// Records unique key for IQueryable. It allows sub-query to be optimized out in LEFT JOIN if columns from sub-query are not used in final projection and predicate.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Key type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="keySelector">A function to specify which fields are unique.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(
+			[NotNull] this IQueryable<TSource>             source,
+			[NotNull]      Expression<Func<TSource, TKey>> keySelector)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(HasUniqueKey, source, keySelector),
+					source.Expression,
+					Expression.Quote(keySelector) 
+				));
+		}		
+
+		#endregion
+
+		#region Set operators
+
+		static Expression GetSourceExpression<TSource>(IEnumerable<TSource> source)
+		{
+			if (source is IQueryable<TSource> queryable)
+				return queryable.Expression;
+			return Expression.Constant(source, typeof (IEnumerable<TSource>));
+		}
+
+		/// <summary>Concatenates two sequences, similar to <see cref="Queryable.Concat{TSource}"/>.</summary>
+		/// <param name="source1">The first sequence to concatenate.</param>
+		/// <param name="source2">The sequence to concatenate to the first sequence.</param>
+		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
+		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the concatenated elements of the two input sequences.</returns>
+		/// <exception cref="T:System.ArgumentNullException">
+		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		public static IQueryable<TSource> UnionAll<TSource>(
+			[NotNull] this IQueryable<TSource>  source1,
+			[NotNull]      IEnumerable<TSource> source2)
+		{
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
+
+			return source1.Concat(source2);
+		}
+
+		/// <summary>Produces the set difference of two sequences.</summary>
+		/// <param name="source1">An <see cref="T:System.Linq.IQueryable`1" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
+		/// <param name="source2">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
+		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
+		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the set difference of the two sequences.</returns>
+		/// <exception cref="T:System.ArgumentNullException">
+		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		public static IQueryable<TSource> ExceptAll<TSource>(
+			[NotNull] this IQueryable<TSource>  source1,
+			[NotNull]      IEnumerable<TSource> source2)
+		{
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
+
+			return source1.Provider.CreateQuery<TSource>(
+				Expression.Call(null, MethodHelper.GetMethodInfo(ExceptAll, source1, source2),
+					source1.Expression,
+					GetSourceExpression(source2)
+				));
+		}
+
+		/// <summary>Produces the set intersection of two sequences.</summary>
+		/// <param name="source1">A sequence whose elements that also appear in <paramref name="source2" /> are returned.</param>
+		/// <param name="source2">A sequence whose elements that also appear in the first sequence are returned.</param>
+		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
+		/// <returns>A sequence that contains the set intersection of the two sequences.</returns>
+		/// <exception cref="T:System.ArgumentNullException">
+		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		public static IQueryable<TSource> IntersectAll<TSource>(
+			[NotNull] this IQueryable<TSource>  source1,
+			[NotNull]      IEnumerable<TSource> source2)
+		{
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
+
+			return source1.Provider.CreateQuery<TSource>(
+				Expression.Call(null, MethodHelper.GetMethodInfo(IntersectAll, source1, source2),
+					source1.Expression,
+					GetSourceExpression(source2)
+				));
+		}
+
+		#endregion
 
 		#region Tests
 
@@ -3117,9 +3335,9 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; }
+		public static Func<IQueryable, IQueryable>? ProcessSourceQueryable { get; set; }
 
-		public static IExtensionsAdapter ExtensionsAdapter { get; set; }
+		public static IExtensionsAdapter? ExtensionsAdapter { get; set; }
 
 		#endregion
 	}

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			var ctx = new DataContext(context);
 
@@ -40,7 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -96,6 +96,50 @@ namespace Tests.Linq
 				AreEqual(
 					db .GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
 					db1.GetTable<Child>().OrderBy(_ => _.ChildID).ToList());
+			}
+		}
+
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public void LoopTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var db = new DataContext(context);
+			for (int i = 0; i < 1000; i++)
+			{
+				var items1 = db.GetTable<Child>().ToArray();
+			}
+		}
+
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public async Task LoopTestAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var db = new DataContext(context);
+			for (int i = 0; i < 1000; i++)
+			{
+				var items1 = await db.GetTable<Child>().ToArrayAsync();
+			}
+		}
+
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public void LoopTestMultipleContexts([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				var db     = new DataContext(context);
+				var items1 = db.GetTable<Child>().ToArray();
+			}
+		}
+
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public async Task LoopTestMultipleContextsAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				var db     = new DataContext(context);
+				var items1 = await db.GetTable<Child>().ToArrayAsync();
 			}
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,12 +16,10 @@ namespace LinqToDB.Metadata
 	{
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-#if !NETSTANDARD1_6
 		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
 		{
 		}
-#endif
 
 		public XmlAttributeReader([NotNull] string xmlFile, [NotNull] Assembly assembly)
 		{
@@ -31,7 +30,6 @@ namespace LinqToDB.Metadata
 
 			try
 			{
-#if !NETSTANDARD1_6
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);
@@ -43,7 +41,6 @@ namespace LinqToDB.Metadata
 					if (File.Exists(combinePath))
 						streamReader = File.OpenText(combinePath);
 				}
-#endif
 
 				var embedded = streamReader == null;
 				var stream   = embedded ? assembly.GetManifestResourceStream(xmlFile) : streamReader.BaseStream;

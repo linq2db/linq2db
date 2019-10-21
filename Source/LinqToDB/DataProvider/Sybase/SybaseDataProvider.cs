@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Xml;
@@ -24,15 +25,16 @@ namespace LinqToDB.DataProvider.Sybase
 		public SybaseDataProvider(string name)
 			: base(name, null)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter     = false;
-			SqlProviderFlags.IsSkipSupported            = false;
-			SqlProviderFlags.IsSubQueryTakeSupported    = false;
-			//SqlProviderFlags.IsCountSubQuerySupported  = false;
-			SqlProviderFlags.CanCombineParameters       = false;
-			SqlProviderFlags.IsSybaseBuggyGroupBy       = true;
-			SqlProviderFlags.IsCrossJoinSupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported = false;
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.AcceptsTakeAsParameter           = false;
+			SqlProviderFlags.IsSkipSupported                  = false;
+			SqlProviderFlags.IsSubQueryTakeSupported          = false;
+			//SqlProviderFlags.IsCountSubQuerySupported       = false;
+			SqlProviderFlags.CanCombineParameters             = false;
+			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
+			SqlProviderFlags.IsCrossJoinSupported             = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -50,7 +52,7 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
 #endif
 
@@ -123,12 +125,10 @@ namespace LinqToDB.DataProvider.Sybase
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SybaseSchemaProvider(Name);
 		}
-#endif
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
@@ -208,15 +208,6 @@ namespace LinqToDB.DataProvider.Sybase
 				source);
 		}
 
-		#endregion
-
-		#region Merge
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget,TSource> merge)
-		{
-			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
-		}
 		#endregion
 	}
 }

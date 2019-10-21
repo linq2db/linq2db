@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -38,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
-				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
 		}
 

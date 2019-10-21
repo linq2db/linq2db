@@ -97,7 +97,7 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
-		public virtual IAsyncDbConnection TryClone()
+		public virtual IAsyncDbConnection? TryClone()
 		{
 			return Connection is ICloneable cloneable
 				? AsyncFactory.Create((IDbConnection)cloneable.Clone())

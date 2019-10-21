@@ -11,17 +11,17 @@
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                version="2.6.0"/>
-			<dependency id="Microsoft.Data.Sqlite"  version="2.1.0"/>
+			<dependency id="linq2db"                version="3.0.0"/>
+			<dependency id="Microsoft.Data.Sqlite"  version="2.2.6"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Data.SQLite.dll"  target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\x86\SQLite.Interop.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"         target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\System.Data.SQLite.dll"     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\x86\SQLite.Interop.dll"     target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"         target="tools" />
 		
 		<file src="SQLite\linq2db.SQLite.props"                              target="build\linq2db.SQLite.MS.props" />
 		

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -12,6 +13,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.IO;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase
 	{
@@ -35,6 +37,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -91,12 +95,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
@@ -140,11 +142,25 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (_createDatabase == null)
 					{
+						var connectionType = GetConnectionType();
+						var method         = connectionType.GetMethodEx("CreateFile");
+						if (method != null)
+						{
 						var p = Expression.Parameter(typeof(string));
 						var l = Expression.Lambda<Action<string>>(
-							Expression.Call(GetConnectionType(), "CreateFile", null, p),
+								Expression.Call(method, p),
 							p);
 						_createDatabase = l.Compile();
+					}
+						else
+						{
+							// emulate for Microsoft.Data.SQLite
+							// that's actually what System.Data.SQLite does
+							_createDatabase = name =>
+							{
+								using (File.Create(name)) { };
+							};
+						}
 					}
 
 					_createDatabase(dbName);

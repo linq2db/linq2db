@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -34,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.AppendLine("SELECT SCOPE_IDENTITY()");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -69,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFunction(SqlFunction func)

@@ -1,5 +1,4 @@
-﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-using System;
+﻿using System;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -20,10 +19,9 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-
+				
 				Assert.IsNotNull(schema);
 			}
 		}
 	}
 }
-#endif

@@ -1546,7 +1546,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerQuery([DataSources(ProviderName.SqlCe, ProviderName.SapHana)] string context)
+		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

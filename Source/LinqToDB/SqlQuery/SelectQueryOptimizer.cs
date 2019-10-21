@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -323,11 +324,11 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = QueryVisitor.Find(_selectQuery,
-				ne => ne is SqlUnion nu && nu.IsAll);
+			var isAllUnion = new QueryVisitor().Find(_selectQuery,
+				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
-			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
-				ne => ne is SqlUnion nu && !nu.IsAll);
+			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
+				ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
@@ -346,7 +347,7 @@ namespace LinqToDB.SqlQuery
 
 				var union = (SelectQuery)table.Source;
 
-				if (!union.HasUnion || sql.Select.Columns.Count != union.Select.Columns.Count)
+				if (!union.HasSetOperators || sql.Select.Columns.Count != union.Select.Columns.Count)
 					return;
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
@@ -368,6 +369,7 @@ namespace LinqToDB.SqlQuery
 					scol.Expression = ucol.Expression;
 					scol.RawAlias   = ucol.RawAlias;
 
+					if (!exprs.ContainsKey(ucol))
 					exprs.Add(ucol, scol);
 				}
 
@@ -381,7 +383,7 @@ namespace LinqToDB.SqlQuery
 				sql.Having. SearchCondition.Conditions.AddRange(union.Having.SearchCondition.Conditions);
 				sql.GroupBy.Items.                     AddRange(union.GroupBy.Items);
 				sql.OrderBy.Items.                     AddRange(union.OrderBy.Items);
-				sql.Unions.InsertRange(0, union.Unions);
+				sql.SetOperators.InsertRange(0, union.SetOperators);
 			});
 
 			if (exprs.Count > 0)
@@ -837,7 +839,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				QueryVisitor.Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
+				new QueryVisitor().Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -860,10 +862,10 @@ namespace LinqToDB.SqlQuery
 		{
 			var query = (SelectQuery)childSource.Source;
 
-			var isQueryOK = query.From.Tables.Count == 1;
+			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
 
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
-			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (isQueryOK && parentJoin != JoinType.Inner)
@@ -887,6 +889,14 @@ namespace LinqToDB.SqlQuery
 				if (c.RawAlias != null && c.Expression is SqlColumn clmn && clmn.RawAlias == null)
 					clmn.RawAlias = c.RawAlias;
 			}
+
+			List<ISqlExpression[]> uniqueKeys = null;
+			if (parentJoin == JoinType.Inner && query.HasUniqueKeys)
+				uniqueKeys = query.UniqueKeys;
+
+			uniqueKeys = uniqueKeys?
+				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
+				.ToList();
 
 			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 
@@ -921,7 +931,12 @@ namespace LinqToDB.SqlQuery
 				return expr;
 			});
 
-			return query.From.Tables[0];
+			var result = query.From.Tables[0];
+
+			if (uniqueKeys != null)
+				result.UniqueKeys.AddRange(uniqueKeys);
+
+			return result;
 		}
 
 		static bool IsAggregationFunction(IQueryElement expr)
@@ -948,7 +963,7 @@ namespace LinqToDB.SqlQuery
 
 			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
 			{
-				return null != QueryVisitor.Find(qe, e =>
+				return null != new QueryVisitor().Find(qe, e =>
 					e == table ||
 					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
 					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
@@ -996,6 +1011,22 @@ namespace LinqToDB.SqlQuery
 								conditions.RemoveAt(i);
 							}
 						}
+					}
+				}
+
+				// correct conditions
+				if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+				{
+					var map = sql.Select.Columns.ToDictionary(c => c.Expression);
+					foreach (var condition in searchCondition)
+					{
+						condition.Predicate.Walk(new WalkOptions(), e =>
+						{
+							if (map.TryGetValue(e, out var newExpr))
+								return newExpr;
+
+							return e;
+						});
 					}
 				}
 

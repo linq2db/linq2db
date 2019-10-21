@@ -88,13 +88,8 @@ namespace Tests.Mapping
 
 			Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
 
-#if !NETSTANDARD1_6
 			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
 			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss",  System.Globalization.CultureInfo.InvariantCulture));
-#else
-			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss"));
-			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss"));
-#endif
 
 			{
 				var c0 = Convert<DateTime,string>.Lambda;
@@ -108,13 +103,8 @@ namespace Tests.Mapping
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
 
-#if !NETSTANDARD1_6
 			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
 			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
-#else
-			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US").DateTimeFormat));
-			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU").DateTimeFormat));
-#endif
 
 			{
 				var c0 = Convert<string,DateTime>.Lambda;
@@ -189,11 +179,8 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-#if !NETSTANDARD1_6
 			var ci = (CultureInfo)new CultureInfo("ru-RU", false).Clone();
-#else
-			var ci = (CultureInfo)new CultureInfo("ru-RU").Clone();
-#endif
+
 			ci.DateTimeFormat.FullDateTimePattern = "dd.MM.yyyy HH:mm:ss";
 			ci.DateTimeFormat.LongDatePattern = "dd.MM.yyyy";
 			ci.DateTimeFormat.ShortDatePattern = "dd.MM.yyyy";

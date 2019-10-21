@@ -434,7 +434,6 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD1_6
 		public override DataRowVersion SourceVersion
 		{
 			get
@@ -447,7 +446,6 @@ namespace Tests
 				throw new NotImplementedException();
 			}
 		}
-#endif
 
 		public override object Value { get; set; }
 
@@ -515,11 +513,9 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD1_6
 		public override void Close()
 		{
 		}
-#endif
 
 		public override bool GetBoolean(int ordinal)
 		{
@@ -611,12 +607,10 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
-#if !NETSTANDARD1_6
 		public override DataTable GetSchemaTable()
 		{
 			throw new NotImplementedException();
 		}
-#endif
 
 		public override string GetString(int ordinal)
 		{
@@ -661,7 +655,6 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD1_6
 		public override bool IsFixedSize
 		{
 			get
@@ -685,7 +678,6 @@ namespace Tests
 				throw new NotImplementedException();
 			}
 		}
-#endif
 
 		public override object SyncRoot
 		{
@@ -806,7 +798,7 @@ namespace Tests
 		{
 			get
 			{
-				return "Tests.TestNoopConnection, " + GetType().AssemblyEx().FullName;
+				return "Tests.TestNoopConnection, " + GetType().Assembly.FullName;
 			}
 		}
 
@@ -814,7 +806,7 @@ namespace Tests
 		{
 			get
 			{
-				return "Tests.TestNoopDataReader, " + GetType().AssemblyEx().FullName;
+				return "Tests.TestNoopDataReader, " + GetType().Assembly.FullName;
 			}
 		}
 
@@ -825,15 +817,13 @@ namespace Tests
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new TestNoopSqlBuilder();
+			return new TestNoopSqlBuilder(MappingSchema.ValueToSqlConverter);
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			throw new NotImplementedException();
 		}
-#endif
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -852,8 +842,8 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder()
-			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), new ValueToSqlConverter())
+		public TestNoopSqlBuilder(ValueToSqlConverter valueToSqlConverter)
+			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), valueToSqlConverter)
 		{
 		}
 

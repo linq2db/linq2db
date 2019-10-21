@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Constant:
 					{
 						var c = (ConstantExpression)expression;
+
+						if (c.Value == null)
+							break;
 
 						var type = c.Value.GetType();
 
@@ -144,6 +148,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string _sqlQueryText { get; }
+			public string Path => this.GetPath();
 #endif
 			public ExpressionBuilder Builder     { get; }
 			public Expression        Expression  { get; }

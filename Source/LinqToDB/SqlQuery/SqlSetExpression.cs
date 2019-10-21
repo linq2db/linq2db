@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -68,8 +69,8 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Column     = Column.    Walk(options, func);
-			Expression = Expression.Walk(options, func);
+			Column     = Column.     Walk(options, func);
+			Expression = Expression?.Walk(options, func);
 			return null;
 		}
 
@@ -83,7 +84,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Column.ToString(sb, dic);
 			sb.Append(" = ");
-			Expression.ToString(sb, dic);
+			Expression?.ToString(sb, dic);
 
 			return sb;
 		}

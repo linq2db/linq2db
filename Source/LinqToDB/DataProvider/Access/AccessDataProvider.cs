@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -35,6 +36,9 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsCrossJoinSupported        = false;
 			SqlProviderFlags.IsInnerJoinAsCrossSupported = false;
 			SqlProviderFlags.IsDistinctOrderBySupported  = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsParameterOrderDependent   = true;
+			SqlProviderFlags.IsUpdateFromSupported       = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", (r, i) => DataTools.GetChar(r, i));

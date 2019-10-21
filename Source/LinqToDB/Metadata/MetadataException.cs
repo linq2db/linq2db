@@ -64,8 +64,6 @@ namespace LinqToDB.Metadata
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MetadataException"/> class
 		/// with serialized data.
@@ -79,7 +77,5 @@ namespace LinqToDB.Metadata
 			: base(info, context)
 		{
 		}
-
-#endif
 	}
 }

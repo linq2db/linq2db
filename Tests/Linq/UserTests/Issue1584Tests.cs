@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -12,6 +11,14 @@ namespace Tests.Playground
 	[TestFixture]
 	public class Issue1584Tests : TestBase
 	{
+		public enum TransportType
+		{
+			Udp                = 1,
+			Connectionless     = 1,
+			Tcp                = 2,
+			ConnectionOriented = 2,
+			All                = 3
+		}
 		private class RateCharges
 		{
 		    public RateEntry RateEntry { get; set; }

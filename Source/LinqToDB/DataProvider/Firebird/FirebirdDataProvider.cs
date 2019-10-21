@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -9,6 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -30,6 +32,8 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
@@ -74,12 +78,10 @@ namespace LinqToDB.DataProvider.Firebird
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new FirebirdSchemaProvider();
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
@@ -123,35 +125,6 @@ namespace LinqToDB.DataProvider.Firebird
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
-
-			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
-
-			return new FirebirdMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.ServiceModel;
 
 namespace LinqToDB.ServiceModel.Async

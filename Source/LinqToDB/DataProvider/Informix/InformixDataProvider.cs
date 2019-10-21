@@ -1,16 +1,14 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Security;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -32,7 +30,7 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -84,36 +82,46 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_ifxBlob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxBlob",     true);
-			_ifxClob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxClob",     true);
-			_ifxDecimal  = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDecimal",  true);
-			_ifxDateTime = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDateTime", true);
-			_ifxTimeSpan = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxTimeSpan", true);
+			_ifxBlob     = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Blob"     : "IBM.Data.Informix.IfxBlob", true);
+			_ifxClob     = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Clob"     : "IBM.Data.Informix.IfxClob", true);
+			_ifxDecimal  = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Decimal"  : "IBM.Data.Informix.IfxDecimal", true);
+			_ifxDateTime = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2DateTime" : "IBM.Data.Informix.IfxDateTime", true);
+			// type not implemented by core provider (but exists for source compatibility and to punish those who don't use tests)
+			_ifxTimeSpan = InformixTools.IsCore ? null : connectionType.Assembly.GetType("IBM.Data.Informix.IfxTimeSpan", true);
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
 				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
 
-				SetProviderField(_ifxDecimal,  typeof(decimal),  "GetIfxDecimal");
-				SetProviderField(_ifxDateTime, typeof(DateTime), "GetIfxDateTime");
-				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
+				SetProviderField(_ifxDecimal , typeof(decimal) , InformixTools.IsCore ? "GetDB2Decimal"  : "GetIfxDecimal");
+				SetProviderField(_ifxDateTime, typeof(DateTime), InformixTools.IsCore ? "GetDB2DateTime" : "GetIfxDateTime");
+				if (_ifxTimeSpan != null)
+					SetProviderField(_ifxTimeSpan, typeof(TimeSpan), InformixTools.IsCore ? "GetDB2TimeSpan" : "GetIfxTimeSpan", false);
 			}
 
 			var p = Expression.Parameter(typeof(TimeSpan));
+			if (_ifxTimeSpan != null)
+			{
+				_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan, object>>(
+					Expression.Convert(
+						Expression.New(_ifxTimeSpan.GetConstructor(new[] { typeof(TimeSpan) }), p),
+						typeof(object)),
+					p).Compile();
+			}
 
-			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
-				Expression.Convert(
-					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
-					typeof(object)),
-				p).Compile();
-
-			_setText = GetSetParameter(connectionType, "IfxParameter", "IfxType", "IfxType", "Clob");
+			_setText = GetSetParameter(
+				connectionType,
+				InformixTools.IsCore ? "DB2Parameter" : "IfxParameter",
+				InformixTools.IsCore ? "DB2Type"      : "IfxType",
+				InformixTools.IsCore ? "DB2Type"      : "IfxType",
+				"Clob");
 
 			MappingSchema.AddScalarType(_ifxBlob,     GetNullValue(_ifxBlob),     true, DataType.VarBinary);
 			MappingSchema.AddScalarType(_ifxClob,     GetNullValue(_ifxClob),     true, DataType.Text);
 			MappingSchema.AddScalarType(_ifxDateTime, GetNullValue(_ifxDateTime), true, DataType.DateTime2);
 			MappingSchema.AddScalarType(_ifxDecimal,  GetNullValue(_ifxDecimal),  true, DataType.Decimal);
-			MappingSchema.AddScalarType(_ifxTimeSpan, GetNullValue(_ifxTimeSpan), true, DataType.Time);
+			if (_ifxTimeSpan != null)
+				MappingSchema.AddScalarType(_ifxTimeSpan, GetNullValue(_ifxTimeSpan), true, DataType.Time);
 			//AddScalarType(typeof(IfxMonthSpan),   IfxMonthSpan.  Null, DataType.Time);
 		}
 
@@ -130,11 +138,11 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		public    override string ConnectionNamespace => "IBM.Data.Informix";
-		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
-		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
+		public    override string ConnectionNamespace => InformixTools.IsCore ? "IBM.Data.DB2.Core"                                  : "IBM.Data.Informix";
+		protected override string ConnectionTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
+		protected override string DataReaderTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2DataReader, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "IBM.Data.Informix";
 #endif
 
@@ -150,18 +158,16 @@ namespace LinqToDB.DataProvider.Informix
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new InformixSchemaProvider();
 		}
-#endif
 
 		Func<TimeSpan,object> _newIfxTimeSpan;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is TimeSpan ts)
+			if (value is TimeSpan ts && _newIfxTimeSpan != null)
 			{
 				if (dataType.DataType != DataType.Int64)
 					value = _newIfxTimeSpan(ts);
@@ -208,35 +214,6 @@ namespace LinqToDB.DataProvider.Informix
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

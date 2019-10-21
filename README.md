@@ -2,7 +2,6 @@
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
 [![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
-
 [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
@@ -38,23 +37,18 @@ No, this is not the donate link. We do need something really more valuable - you
 
 ## Project Build Status
 
---------------------
-| |Appveyor|Travis
------|-------|--------
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
-|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
+[![Build Status](https://dev.azure.com/linq2db/linq2db/_apis/build/status/linq2db.linq2db?branchName=master)](https://dev.azure.com/linq2db/linq2db/_build/latest?definitionId=1&branchName=master)
 
 ## Feeds
 
 * NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
-* MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
-  * V2 `https://www.myget.org/F/linq2db/api/v2`
-  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
+* Nightly [![Azure DevOps](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+  * feed `https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json` ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db` - .NET & .NET Core
+* `Install-Package linq2db`
 
 ## Configuring connection strings
 
@@ -556,3 +550,6 @@ private static IDataProvider GetDataProvider()
   return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
 ```
+
+# More
+Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)

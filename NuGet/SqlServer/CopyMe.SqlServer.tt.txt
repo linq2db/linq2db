@@ -48,9 +48,13 @@
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadSqlServerMetadata("MyServer", "MyDatabase", "User", "Password");
 //	LoadSqlServerMetadata(".", "MyDatabase"); // Integrated Security
 //	LoadSqlServerMetadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Common;
@@ -70,6 +71,18 @@ namespace LinqToDB.SqlQuery
 				other is SqlValue value        &&
 				SystemType == value.SystemType &&
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = 17;
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			if (Value != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
+
+			return hashCode;
 		}
 
 		#endregion

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -48,6 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+			public string Path => this.GetPath();
 #endif
 
 			public ExpressionBuilder Builder     { get; }

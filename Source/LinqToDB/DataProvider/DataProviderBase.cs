@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -6,8 +7,6 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.IO;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using System.Xml;
 using System.Xml.Linq;
@@ -48,6 +47,9 @@ namespace LinqToDB.DataProvider
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
 				IsOrderByAggregateFunctionsSupported = true,
+				IsAllSetOperationsSupported          = false,
+				IsDistinctSetOperationsSupported     = true,
+				IsUpdateFromSupported                = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -261,12 +263,8 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-#if !NETSTANDARD1_6
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
-#else
-			return true;
-#endif
 		}
 
 		#endregion
@@ -356,9 +354,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD1_6
 		public abstract ISchemaProvider GetSchemaProvider     ();
-#endif
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -453,78 +449,5 @@ namespace LinqToDB.DataProvider
 		}
 
 		#endregion
-
-		#region Merge
-
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-			where T : class
-		{
-			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-			where T : class
-		{
-			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return dataConnection.Execute(cmd, builder.Parameters);
-		}
-
-		public async Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-		}
-
-		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
-		#endregion
-
-		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
-		//{
-		//	return
-		//		retryCount <= MaxRetryCount && exception is TimeoutException
-		//			? baseDelay
-		//			: (TimeSpan?)null;
-		//}
 	}
 }

@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.SqlQuery
+﻿#nullable disable
+namespace LinqToDB.SqlQuery
 {
 	public abstract class ClauseBase
 	{

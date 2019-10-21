@@ -311,11 +311,10 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -352,11 +351,10 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -408,9 +406,8 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -433,9 +430,8 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -458,9 +454,8 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -758,21 +753,25 @@ namespace Tests.xUpdate
 		[Table("LinqDataTypes")]
 		class Table1
 		{
+#pragma warning disable 649
 			[Column] public int  ID;
 			[Column] public bool BoolValue;
 
 			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
 			public List<Table2> Tables2;
+#pragma warning restore 649
 		}
 
 		[Table("Parent")]
 		class Table2
 		{
+#pragma warning disable 649
 			[Column] public int  ParentID;
-			[Column] public bool Value1;
+			[Column] public int? Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1;
+#pragma warning restore 649
 		}
 
 		[Test]
@@ -783,10 +782,10 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				ProviderName.Informix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -797,7 +796,7 @@ namespace Tests.xUpdate
 					.Where (x => ids.Contains(x.ParentID))
 					.Select(x => x.Table1)
 					.Distinct()
-					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1))
+					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
 				var idx = db.LastQuery.IndexOf("INNER JOIN");
@@ -913,9 +912,8 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
@@ -960,9 +958,8 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
@@ -1009,11 +1006,10 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				ProviderName.Informix,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1077,11 +1073,10 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.Informix,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1295,6 +1290,7 @@ namespace Tests.xUpdate
 		[Table("gt_s_one")]
 		class UpdateFromJoin
 		{
+			[PrimaryKey] public int id  { get; set; }
 			[Column] public string col1 { get; set; }
 			[Column] public string col2 { get; set; }
 			[Column] public string col3 { get; set; }
@@ -1323,19 +1319,10 @@ namespace Tests.xUpdate
 
 		// https://stackoverflow.com/questions/57115728/
 		[Test]
-		[ActiveIssue(Configurations = new[]
-		{
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.SapHana,
+		public void TestUpdateFromJoin([DataSources(
+			ProviderName.Access, // access doesn't have Replace mapping
 			ProviderName.SqlCe,
-			TestProvName.AllFirebird,
-			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite,
-		})]
-		public void TestUpdateFromJoin([DataSources] string context)
+			ProviderName.Informix)] string context)
 		{
 			using (var db          = GetDataContext(context))
 			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
@@ -1369,6 +1356,214 @@ namespace Tests.xUpdate
 							col5 = s.gt.col3 == "empty" ? "1" : "0",
 							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
 						});
+			}
+		}
+		enum UpdateSetEnum
+		{
+			Value1 = 6,
+			Value2 = 7,
+			Value3 = 8
+		}
+		[Table]
+		class UpdateSetTest
+		{
+			[PrimaryKey] public int            Id     { get; set; }
+			[Column]     public Guid           Value1 { get; set; }
+			[Column]     public int            Value2 { get; set; }
+			[Column]     public UpdateSetEnum  Value3 { get; set; }
+			[Column]     public Guid?          Value4 { get; set; }
+			[Column]     public int?           Value5 { get; set; }
+			[Column]     public UpdateSetEnum? Value6 { get; set; }
+
+			public static UpdateSetTest[] Data = new UpdateSetTest[]
+			{
+				new UpdateSetTest() { Id = 1, Value1 = Guid.NewGuid(), Value2 = 10, Value3 = UpdateSetEnum.Value1 }
+			};
+		}
+
+		[Test]
+		public void TestSetValueCaching1(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = Guid.NewGuid();
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value1, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value1).Single());
+
+				value = Guid.NewGuid();
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value1, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value1).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching2(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = 11;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value2, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value2).Single());
+
+				value = 12;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value2, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value2).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching3(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = UpdateSetEnum.Value2;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value3, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value3).Single());
+
+				value = UpdateSetEnum.Value3;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value3, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value3).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching4(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = Guid.NewGuid();
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value4, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value4).Single());
+
+				value = Guid.NewGuid();
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value4, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value4).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching5(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = 11;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value5, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value5).Single());
+
+				value = 12;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value5, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value5).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching6(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = UpdateSetEnum.Value2;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value6, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value6).Single());
+
+				value = UpdateSetEnum.Value3;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value6, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value6).Single());
 			}
 		}
 	}

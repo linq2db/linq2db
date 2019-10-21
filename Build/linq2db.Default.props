@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<Version>2.8.0.0</Version>
+		<Version>3.0.0.0</Version>
 
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
@@ -10,17 +10,17 @@
 		<RepositoryType>git</RepositoryType>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<LangVersion>latest</LangVersion>
+		<!--C# version, test VB/F# projects should redefine it-->
+		<LangVersion>8.0</LangVersion>
+		<Nullable>enable</Nullable>
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
-		<NoWarn>1701;1702;1705;1591</NoWarn>
+		<NoWarn>1701;1591</NoWarn>
 
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
-		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-		<AssemblyOriginatorKeyFile Condition="Exists('..\Build\linq2db.snk')">..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
-		<AssemblyOriginatorKeyFile Condition="Exists('..\..\Build\linq2db.snk')">..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>False</DelaySign>
 
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>

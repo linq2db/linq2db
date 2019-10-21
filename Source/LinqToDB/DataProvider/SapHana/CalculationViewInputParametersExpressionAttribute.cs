@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.Mapping;
@@ -22,14 +23,15 @@ namespace LinqToDB.DataProvider.SapHana
 		// b) we don't have dataprovider here ether
 		private static String ValueToString(object value)
 		{
-			if (value is String)
-				return value as String;
-			if (value is decimal)
-				return ((decimal)value).ToString(new NumberFormatInfo());
-			if (value is double)
-				return ((double)value).ToString(new NumberFormatInfo());
-			if (value is float)
-				return ((float)value).ToString(new NumberFormatInfo());
+			if (value is string stringValue)
+				return stringValue;
+			if (value is decimal decimalValue)
+				return decimalValue.ToString(new NumberFormatInfo());
+			if (value is double doubleValue)
+				return doubleValue.ToString(new NumberFormatInfo());
+			if (value is float floatValue)
+				return floatValue.ToString(new NumberFormatInfo());
+
 			return value.ToString();
 		}
 
@@ -61,7 +63,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var arg = new ISqlExpression[1];
 
 			arg[0] = new SqlExpression(
-				String.Join(", ",
+				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
 						.Select(x => "{" + x + "}")),
 				sqlValues.ToArray());

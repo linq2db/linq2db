@@ -1,4 +1,7 @@
-﻿namespace Tests.Linq
+﻿using System;
+using System.Diagnostics;
+
+namespace Tests.Linq
 {
 	using System;
 	using System.Linq;
@@ -124,10 +127,6 @@
 			}
 		}
 
-		[ActiveIssue(
-			Configuration         = TestProvName.AllOracle,
-			Details               = "Specified cast is not valid.",
-			SkipForNonLinqService = true)]
 		[Test]
 		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
@@ -156,7 +155,7 @@
 		}
 
 		[Test]
-		public void TestAvgOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -236,7 +235,7 @@
 		}
 
 		[Test]
-		public void TestCorrOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -337,7 +336,7 @@
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -374,7 +373,7 @@
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -411,7 +410,7 @@
 		}
 
 		[Test]
-		public void TestCumeDistOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCumeDistOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -827,7 +826,7 @@
 		}
 
 		[Test]
-		public void TestPercentRankOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -854,7 +853,7 @@
 		}
 
 		[Test]
-		public void TestPercentRatioToReportOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRatioToReportOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -891,7 +890,7 @@
 
 		[Test]
 		public void TestRankOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -920,7 +919,7 @@
 
 		[Test]
 		public void TestRegrOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -947,7 +946,7 @@
 		}
 
 		[Test]
-		public void TestStdDevOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -976,7 +975,7 @@
 		}
 
 		[Test]
-		public void TestStdDev([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1003,7 +1002,7 @@
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1039,7 +1038,7 @@
 		}
 
 		[Test]
-		public void TestStdDevSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1076,7 +1075,7 @@
 
 		[Test]
 		public void TestSumOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1107,7 +1106,7 @@
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1143,7 +1142,7 @@
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1180,7 +1179,7 @@
 
 
 		[Test]
-		public void TestVarianceOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1263,6 +1262,34 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+			}
+		}
+
+		[Test]
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent.Where(p => p.ParentID > 0).AsSubQuery()
+					select new
+					{
+						p.ParentID,
+						MaxValue = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.ParentID).ToValue(),
+					};
+
+				var q2 = from q in q1.AsSubQuery()
+					select new
+					{
+						q.ParentID,
+						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+					};
+
+				Console.WriteLine(q1.ToString());
+				Console.WriteLine(q2.ToString());
+
+				Assert.AreEqual(2, q1.EnumQueries().Count());
+				Assert.AreEqual(3, q2.EnumQueries().Count());
 			}
 		}
 
@@ -1447,7 +1474,7 @@
 		}
 
 		// TODO: pgsql/SAP HANA doesn't support FROM clause
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.SapHana })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana })]
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,

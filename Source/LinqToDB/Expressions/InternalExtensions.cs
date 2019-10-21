@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsConstantable(this Type type)
 		{
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 				return true;
 
 			switch (type.GetTypeCodeEx())
@@ -41,7 +42,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (type.IsNullable())
-				return type.GetGenericArgumentsEx()[0].IsConstantable();
+				return type.GetGenericArguments()[0].IsConstantable();
 
 			return false;
 		}
@@ -64,11 +65,13 @@ namespace LinqToDB.Expressions
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2,
 			Dictionary<Expression,QueryableAccessor> queryableAccessorDic,
+			Dictionary<Expression,Expression>        queryDependedObjects,
 			bool compareConstantValues = false)
 		{
 			return EqualsTo(expr1, expr2, new EqualsToInfo
 			{
 				QueryableAccessorDic  = queryableAccessorDic,
+				QueryDependedObjects  = queryDependedObjects,
 				CompareConstantValues = compareConstantValues
 			});
 		}
@@ -77,6 +80,7 @@ namespace LinqToDB.Expressions
 		{
 			public HashSet<Expression>                      Visited = new HashSet<Expression>();
 			public Dictionary<Expression,QueryableAccessor> QueryableAccessorDic;
+			public Dictionary<Expression,Expression>        QueryDependedObjects;
 			public bool                                     CompareConstantValues;
 		}
 
@@ -469,7 +473,10 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						if (!dependentAttribute.ExpressionsEqual(expr1.Arguments[i], expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
+						var prevArg = expr1.Arguments[i];
+						if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(expr1.Arguments[i], out var nevValue))
+							prevArg = nevValue;
+						if (!dependentAttribute.ExpressionsEqual(prevArg, expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
 							return false;
 					}
 					else
@@ -811,14 +818,6 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.Constant       :
-					{
-						var c = (ConstantExpression)ex;
-
-						if (c.Value != null && c.Type != c.Value.GetType())
-							return Expression.Constant(c.Value, c.Value.GetType());
-						break;
-					}
 			}
 
 			return ex;
@@ -843,6 +842,12 @@ namespace LinqToDB.Expressions
 			while (expr is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
 				expr = mce.Arguments[0];
 			return expr;
+		}
+
+		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
+		{
+			var result = Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
+			return result;
 		}
 
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
@@ -894,6 +899,8 @@ namespace LinqToDB.Expressions
 		{
 			if (expr == null)
 				return null;
+
+			expr = expr.SkipMethodChain(mapping);
 
 			switch (expr.NodeType)
 			{
@@ -995,6 +1002,14 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
+		{
+			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType,
+				methodCall.Method,
+				f => f.Configuration);
+			return functions.Any();
+		}
+
 		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
@@ -1020,9 +1035,21 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
+		{
+			if (!method.Method.IsGenericMethod)
+				return false;
+			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+		}
+
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
+		}
+
+		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
+		{
+			return method.IsQueryable("AsCte", "GetCte");
 		}
 
 		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
@@ -1034,7 +1061,7 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsExtensionMethod(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)
@@ -1135,6 +1162,13 @@ namespace LinqToDB.Expressions
 							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
 
 						break;
+					}
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expr;
+						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
+						var instance  = mc.Object.EvaluateExpression();
+						return mc.Method.Invoke(instance, arguments);
 					}
 			}
 

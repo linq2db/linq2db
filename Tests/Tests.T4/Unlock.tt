@@ -1,0 +1,7 @@
+﻿<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                    #>
+<#@ output extension=".generated.cs"                                           #>
+<#
+	// run this template to shutdown t4 host to unlock loaded assemblies
+	// https://docs.microsoft.com/en-us/visualstudio/modeling/t4-cleanupbehavior-directive?view=vs-2019
+#>

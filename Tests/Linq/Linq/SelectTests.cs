@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using System.Windows.Forms;
 #endif
 
@@ -219,7 +219,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test, Parallelizable(ParallelScope.None)]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -457,7 +457,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
@@ -549,6 +549,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -914,7 +915,7 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
-					ProviderName.SapHana)]
+					TestProvName.AllSapHana)]
 				string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -963,7 +964,7 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
 			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
@@ -1016,6 +1017,7 @@ namespace Tests.Linq
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(new []
 			{
 				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
@@ -1026,15 +1028,20 @@ namespace Tests.Linq
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						Child1 = c,
-						Child2 = c == null ? null : new ChildEntityObject{Id = c.Id, Value = c.Value},
-						Child3 = c != null ? c    : new ChildEntityObject{Id = 4, Value = "Generated"},
+						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
+						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
 						Child4 = c.Value != "Value 1" ? c : null,
+						SubChild = c == null
+							? db.GetTable<ChildEntityObject>()
+								.Select(sc => new ChildEntityObject
+									{ Id = sc.Id, Value = sc != null ? sc.Value : "NeverHappen" }).FirstOrDefault()
+							: c
 					};
 
 				var result = query.ToArray();
@@ -1090,7 +1097,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void TestConditionalRecursive([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c in db.Child.Take(1).DefaultIfEmpty()
+					select new
+					{
+						a = p.ParentID == 1 ? c != null ? "1" : "2" : "3"
+					};
+
+				_ = query.ToList();
+			}
+		}
+
+
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.DB2 })]
+		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1101,8 +1128,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.DB2 })]
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))

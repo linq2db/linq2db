@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -16,37 +17,23 @@ namespace LinqToDB.Linq.Builder
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
-			return functions.Any(f => f.ChainPrecedence >= 0);
+			return functions.Any();
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
-			var chain = Sql.ExtensionAttribute.BuildFunctionsChain(builder.MappingSchema, methodCall);
-			IBuildContext sequence = null;
+			var root = methodCall.SkipMethodChain(builder.MappingSchema);
 
-			foreach (var expression in chain)
+			// evaluating IQueryableContainer
+			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				if (expression is MethodCallExpression mc)
-				{
-					if (mc.Arguments.Count > 0)
-					{
-						if (typeof(IEnumerable<>).IsSameOrParentOf(mc.Arguments[0].Type))
-							sequence = builder.BuildSequence(new BuildInfo(buildInfo, mc.Arguments[0]) {IsChain = true});
-						else if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(mc.Arguments[0].Type))
-							sequence = builder.BuildSequence(new BuildInfo(buildInfo,
-								((Sql.IQueryableContainer)mc.Arguments[0].EvaluateExpression()).Query.Expression) {IsChain = true});
-					}
-				}
+				root = ((Sql.IQueryableContainer)root.EvaluateExpression()).Query.Expression;
+				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
-			if (sequence == null)
-				throw new LinqToDBException($"{methodCall} can not be converted to SQL.");
-
-			if (buildInfo.IsChain)
-				// it means that function is just sequence provider
-				return sequence;
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 
 			var finalFunction = functions.First();
 				
@@ -74,9 +61,9 @@ namespace LinqToDB.Linq.Builder
 				_returnType = methodCall.Method.ReturnType;
 				_methodName = methodCall.Method.Name;
 
-				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
-					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_returnType = _returnType.GetGenericArguments()[0];
 					_methodName = _methodName.Replace("Async", "");
 				}
 			}
@@ -116,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClassEx() || _returnType.IsNullable())
+				if (_returnType.IsClass || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}

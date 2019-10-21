@@ -1,16 +1,17 @@
-﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/SqlServerRetryingExecutionStrategy.cs
+﻿#nullable disable
+// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/SqlServerRetryingExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using System.Linq;
 	using Common;
 	using Data.RetryPolicy;
 
@@ -55,10 +56,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (_additionalErrorNumbers != null)
 			{
-				var sqlException = exception as SqlException;
-
-				if (sqlException != null)
-					foreach (SqlError err in sqlException.Errors)
+				if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
+					foreach (dynamic err in ((dynamic)exception).Errors)
 						if (_additionalErrorNumbers.Contains(err.Number))
 							return true;
 			}
@@ -81,10 +80,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static bool IsMemoryOptimizedError(Exception exception)
 		{
-			var sqlException = exception as SqlException;
-
-			if (sqlException != null)
-				foreach (SqlError err in sqlException.Errors)
+			if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
+				foreach (dynamic err in ((dynamic)exception).Errors)
 					switch (err.Number)
 					{
 						case 41301:

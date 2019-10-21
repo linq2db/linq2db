@@ -20,102 +20,6 @@ namespace LinqToDB.Extensions
 	public static class ReflectionExtensions
 	{
 		#region Type extensions
-
-		public static bool IsGenericTypeEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsGenericType;
-#else
-			return type.IsGenericType;
-#endif
-		}
-
-		public static bool IsValueTypeEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsValueType;
-#else
-			return type.IsValueType;
-#endif
-		}
-
-		public static bool IsAbstractEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsAbstract;
-#else
-			return type.IsAbstract;
-#endif
-		}
-
-		public static bool IsPublicEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsPublic;
-#else
-			return type.IsPublic;
-#endif
-		}
-
-		public static bool IsClassEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsClass;
-#else
-			return type.IsClass;
-#endif
-		}
-
-		public static bool IsEnumEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsEnum;
-#else
-			return type.IsEnum;
-#endif
-		}
-
-		public static bool IsPrimitiveEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsPrimitive;
-#else
-			return type.IsPrimitive;
-#endif
-		}
-
-		public static bool IsInterfaceEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsInterface;
-#else
-			return type.IsInterface;
-#endif
-		}
-
-		public static Type BaseTypeEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().BaseType;
-#else
-			return type.BaseType;
-#endif
-		}
-
-		public static Type[] GetInterfacesEx(this Type type)
-		{
-			return type.GetInterfaces();
-		}
-
-		public static object[] GetCustomAttributesEx(this Type type, Type attributeType, bool inherit)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
-#else
-			return type.GetCustomAttributes(attributeType, inherit);
-#endif
-		}
-
 		public static MemberInfo[] GetPublicInstanceMembersEx(this Type type)
 		{
 			return type.GetMembers(BindingFlags.Instance | BindingFlags.Public);
@@ -127,13 +31,13 @@ namespace LinqToDB.Extensions
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0)
 				.ToArray();
 
-			var baseType = type.BaseTypeEx();
+			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
 				return members;
 
 			var results = new LinkedList<MemberInfo>();
 			var names = new HashSet<string>();
-			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseTypeEx())
+			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType)
 			{
 				foreach (var m in members.Where(_ => _.DeclaringType == t))
 				{
@@ -154,166 +58,53 @@ namespace LinqToDB.Extensions
 
 		/// <summary>
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
-		/// It us useful when member's declared and reflected types are not the same
+		/// It us useful when member's declared and reflected types are not the same.
 		/// </summary>
 		/// <remarks>This method searches only properties, fields and methods</remarks>
 		/// <param name="type"><see cref="Type"/> to find member info</param>
 		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
 		/// <returns><see cref="MemberInfo"/> or null</returns>
-		public static MemberInfo GetMemberEx(this Type type, MemberInfo memberInfo)
+		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
 			if (memberInfo.IsPropertyEx())
-				return type.GetPropertyEx(memberInfo.Name);
+				return type.GetProperty(memberInfo.Name);
 
 			if (memberInfo.IsFieldEx())
-				return type.GetFieldEx   (memberInfo.Name);
+				return type.GetField   (memberInfo.Name);
 
 			if (memberInfo.IsMethodEx())
-				return type.GetMethodEx  (memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
+				return type.GetMethodEx(memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
 
 			return null;
-		}
-
-		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
-		{
-#if NETSTANDARD1_6
-			// https://github.com/dotnet/corefx/issues/12921
-			return type.GetMethodsEx().FirstOrDefault(mi =>
-			{
-				var res = mi.IsPublic && mi.Name == name;
-				if (!res)
-					return res;
-
-				var pars = mi.GetParameters().Select(_ => _.ParameterType).ToArray();
-
-				if (types.Length == 0 && pars.Length == 0)
-					return true;
-
-				if (pars.Length != types.Length)
-					return false;
-
-				for (var i = 0; i < types.Length; i++)
-				{
-					if (types[i] != pars[i])
-						return false;
-				}
-
-				return true;
-			});
-#else
-			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
-#endif
-		}
-
-		public static MethodInfo GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
-		{
-#if NETSTANDARD1_6
-			// https://github.com/dotnet/corefx/issues/12921
-			return type.GetMethodsEx().FirstOrDefault(mi =>
-			{
-				var res = !mi.IsStatic && mi.IsPublic && mi.Name == name;
-				if (!res)
-					return res;
-
-				var pars = mi.GetParameters().Select(_ => _.ParameterType).ToArray();
-
-				if (types.Length == 0 && pars.Length == 0)
-					return true;
-
-				if (pars.Length != types.Length)
-					return false;
-
-				for (var i = 0; i < types.Length; i++)
-				{
-					if (types[i] != pars[i])
-						return false;
-				}
-
-				return true;
-			});
-#else
-			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
-#endif
 		}
 
 		public static MethodInfo GetMethodEx(this Type type, string name)
 		{
 			return type.GetMethod(name);
 		}
+
+		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
+		{
+			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
+		}
+
+		public static MethodInfo GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
+		{
+			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
+		}
+
 		public static ConstructorInfo GetDefaultConstructorEx(this Type type)
 		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(p => p.GetParameters().Length == 0);
-#else
 			return type.GetConstructor(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
 				null,
 				Type.EmptyTypes,
 				null);
-#endif
 		}
 
 		public static TypeCode GetTypeCodeEx(this Type type)
 		{
-#if NETSTANDARD1_6
-			if (type == typeof(DBNull))
-				return (TypeCode)2;
-#endif
-
 			return Type.GetTypeCode(type);
-		}
-
-		public static bool IsAssignableFromEx(this Type type, Type c)
-		{
-			return type.IsAssignableFrom(c);
-		}
-
-		public static FieldInfo[] GetFieldsEx(this Type type)
-		{
-			return type.GetFields();
-		}
-
-		public static Type[] GetGenericArgumentsEx(this Type type)
-		{
-			return type.GetGenericArguments();
-		}
-
-		public static MethodInfo GetGetMethodEx(this PropertyInfo propertyInfo, bool nonPublic)
-		{
-			return propertyInfo.GetGetMethod(nonPublic);
-		}
-
-		public static MethodInfo GetGetMethodEx(this PropertyInfo propertyInfo)
-		{
-			return propertyInfo.GetGetMethod();
-		}
-
-		public static MethodInfo GetSetMethodEx(this PropertyInfo propertyInfo, bool nonPublic)
-		{
-			return propertyInfo.GetSetMethod(nonPublic);
-		}
-
-		public static MethodInfo GetSetMethodEx(this PropertyInfo propertyInfo)
-		{
-			return propertyInfo.GetSetMethod();
-		}
-
-		public static object[] GetCustomAttributesEx(this Type type, bool inherit)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().GetCustomAttributes(inherit).Cast<object>().ToArray();
-#else
-			return type.GetCustomAttributes(inherit);
-#endif
-		}
-
-		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().GetRuntimeInterfaceMap(interfaceType);
-#else
-			return type.GetInterfaceMap(interfaceType);
-#endif
 		}
 
 		public static bool IsPropertyEx(this MemberInfo memberInfo)
@@ -331,7 +122,7 @@ namespace LinqToDB.Extensions
 			return memberInfo.MemberType == MemberTypes.Method;
 		}
 
-		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null, null)).GetGenericMethodDefinition();
+		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Determines whether member info represent a Sql.Property method.
@@ -355,38 +146,7 @@ namespace LinqToDB.Extensions
 		/// </returns>
 		public static bool IsDynamicColumnPropertyEx(this MemberInfo memberInfo)
 		{
-#if !NETSTANDARD1_6
 			return memberInfo.MemberType == MemberTypes.Property && memberInfo is Mapping.DynamicColumnInfo;
-#else
-			return false;
-#endif
-		}
-
-		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
-		{
-#if NETSTANDARD1_6
-			return memberInfo.GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
-#else
-			return memberInfo.GetCustomAttributes(attributeType, inherit);
-#endif
-		}
-
-		public static bool IsSubclassOfEx(this Type type, Type c)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsSubclassOf(c);
-#else
-			return type.IsSubclassOf(c);
-#endif
-		}
-
-		public static bool IsGenericTypeDefinitionEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().IsGenericTypeDefinition;
-#else
-			return type.IsGenericTypeDefinition;
-#endif
 		}
 
 		public static PropertyInfo[] GetPropertiesEx(this Type type)
@@ -394,57 +154,9 @@ namespace LinqToDB.Extensions
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
 		}
 
-		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
-		{
-			return type.GetProperties(flags);
-		}
-
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
-		}
-
-		public static MethodInfo[] GetMethodsEx(this Type type)
-		{
-			return type.GetMethods();
-		}
-
-		public static Assembly AssemblyEx(this Type type)
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo().Assembly;
-#else
-			return type.Assembly;
-#endif
-		}
-
-		public static ConstructorInfo[] GetConstructorsEx(this Type type)
-		{
-			return type.GetConstructors();
-		}
-
-		public static ConstructorInfo GetConstructorEx(this Type type, Type[] parameterTypes)
-		{
-			return type.GetConstructor(parameterTypes);
-		}
-
-		public static PropertyInfo GetPropertyEx(this Type type, string propertyName)
-		{
-			return type.GetProperty(propertyName);
-		}
-
-		public static FieldInfo GetFieldEx(this Type type, string propertyName)
-		{
-			return type.GetField(propertyName);
-		}
-
-		public static Type ReflectedTypeEx(this MemberInfo memberInfo)
-		{
-#if NETSTANDARD1_6
-			return memberInfo.DeclaringType;
-#else
-			return memberInfo.ReflectedType;
-#endif
 		}
 
 		public static MemberInfo[] GetInstanceMemberEx(this Type type, string name)
@@ -455,24 +167,6 @@ namespace LinqToDB.Extensions
 		public static MemberInfo[] GetPublicMemberEx(this Type type, string name)
 		{
 			return type.GetMember(name);
-		}
-
-		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, bool inherit)
-		{
-#if NETSTANDARD1_6
-			return memberInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
-#else
-			return memberInfo.GetCustomAttributes(inherit);
-#endif
-		}
-
-		public static object[] GetCustomAttributesEx(this ParameterInfo parameterInfo, bool inherit)
-		{
-#if NETSTANDARD1_6
-			return parameterInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
-#else
-			return parameterInfo.GetCustomAttributes(inherit);
-#endif
 		}
 
 		static class CacheHelper<T>
@@ -503,18 +197,18 @@ namespace LinqToDB.Extensions
 
 		static void GetAttributesTreeInternal(List<object> list, Type type)
 		{
-			var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributesEx(false));
+			var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
 
 			list.AddRange(attrs);
 
-			if (type.IsInterfaceEx())
+			if (type.IsInterface)
 				return;
 
 			// Reflection returns interfaces for the whole inheritance chain.
 			// So, we are going to get some hemorrhoid here to restore the inheritance sequence.
 			//
-			var interfaces      = type.GetInterfacesEx();
-			var nBaseInterfaces = type.BaseTypeEx() != null? type.BaseTypeEx().GetInterfacesEx().Length: 0;
+			var interfaces      = type.GetInterfaces();
+			var nBaseInterfaces = type.BaseType != null? type.BaseType.GetInterfaces().Length: 0;
 
 			for (var i = 0; i < interfaces.Length; i++)
 			{
@@ -524,7 +218,7 @@ namespace LinqToDB.Extensions
 				{
 					var getAttr = false;
 
-					foreach (var mi in type.GetInterfaceMapEx(intf).TargetMethods)
+					foreach (var mi in type.GetInterfaceMap(intf).TargetMethods)
 					{
 						// Check if the interface is reimplemented.
 						//
@@ -542,8 +236,8 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, intf);
 			}
 
-			if (type.BaseTypeEx() != null && type.BaseTypeEx() != typeof(object))
-				GetAttributesTreeInternal(list, type.BaseTypeEx());
+			if (type.BaseType != null && type.BaseType != typeof(object))
+				GetAttributesTreeInternal(list, type.BaseType);
 		}
 
 		#endregion
@@ -587,7 +281,7 @@ namespace LinqToDB.Extensions
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type);
-			return attrs.Length > 0 ? attrs[0] : null;
+			return attrs.Length > 0 ? attrs[0] : null!;
 		}
 
 		/// <summary>
@@ -599,7 +293,7 @@ namespace LinqToDB.Extensions
 		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
 		public static bool IsNullable([NotNull] this Type type)
 		{
-			return type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
 		/// <summary>
@@ -617,8 +311,8 @@ namespace LinqToDB.Extensions
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
-			if (type.IsNullable()) type = type.GetGenericArgumentsEx()[0];
-			if (type.IsEnumEx  ()) type = Enum.GetUnderlyingType(type);
+			if (type.IsNullable()) type = type.GetGenericArguments()[0];
+			if (type.IsEnum      ) type = Enum.GetUnderlyingType(type);
 
 			return type;
 		}
@@ -626,7 +320,7 @@ namespace LinqToDB.Extensions
 		public static Type ToNullableUnderlying([NotNull] this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
-			//return type.IsNullable() ? type.GetGenericArgumentsEx()[0] : type;
+			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
 			return Nullable.GetUnderlyingType(type) ?? type;
 		}
 
@@ -638,7 +332,7 @@ namespace LinqToDB.Extensions
 		public static Type AsNullable([NotNull] this Type type)
 		{
 			if (type == null)          throw new ArgumentNullException("type");
-			if (!type.IsValueTypeEx()) throw new ArgumentException($"{type} is not a value type");
+			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
 
 			return typeof(Nullable<>).MakeGenericType(type);
 		}
@@ -648,12 +342,12 @@ namespace LinqToDB.Extensions
 			if (member.IsPropertyEx())
 			{
 				var prop = (PropertyInfo)member;
-				member = prop.GetGetMethodEx();
+				member = prop.GetGetMethod();
 			}
 
-			foreach (var inf in child.GetInterfacesEx())
+			foreach (var inf in child.GetInterfaces())
 			{
-				var pm = child.GetInterfaceMapEx(inf);
+				var pm = child.GetInterfaceMap(inf);
 
 				for (var i = 0; i < pm.TargetMethods.Length; i++)
 				{
@@ -683,26 +377,26 @@ namespace LinqToDB.Extensions
 			if (child  == null) throw new ArgumentNullException(nameof(child));
 
 			if (parent == child ||
-				child.IsEnumEx() && Enum.GetUnderlyingType(child) == parent ||
-				child.IsSubclassOfEx(parent))
+				child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
+				child.IsSubclassOf(parent))
 			{
 				return true;
 			}
 
-			if (parent.IsGenericTypeDefinitionEx())
-				for (var t = child; t != typeof(object) && t != null; t = t.BaseTypeEx())
-					if (t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == parent)
+			if (parent.IsGenericTypeDefinition)
+				for (var t = child; t != typeof(object) && t != null; t = t.BaseType)
+					if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
 						return true;
 
-			if (parent.IsInterfaceEx())
+			if (parent.IsInterface)
 			{
-				var interfaces = child.GetInterfacesEx();
+				var interfaces = child.GetInterfaces();
 
 				foreach (var t in interfaces)
 				{
-					if (parent.IsGenericTypeDefinitionEx())
+					if (parent.IsGenericTypeDefinition)
 					{
-						if (t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == parent)
+						if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
 							return true;
 					}
 					else if (t == parent)
@@ -735,20 +429,20 @@ namespace LinqToDB.Extensions
 
 			while (true)
 			{
-				if (check.IsInterfaceEx())
+				if (check.IsInterface)
 					// ReSharper disable once LoopCanBeConvertedToQuery
 					foreach (var interfaceType in type.GetInterfaces())
 						if (interfaceType == check || interfaceType.IsSubClassOf(check))
 							return true;
 
-				if (type.IsGenericTypeEx() && !type.IsGenericTypeDefinitionEx())
+				if (type.IsGenericType && !type.IsGenericTypeDefinition)
 				{
 					var definition = type.GetGenericTypeDefinition();
 					if (definition == check || definition.IsSubClassOf(check))
 						return true;
 				}
 
-				type = type.BaseTypeEx();
+				type = type.BaseType;
 
 				if (type == null)
 					return false;
@@ -758,18 +452,18 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		public static Type GetGenericType([NotNull] this Type genericType, Type type)
+		public static Type? GetGenericType([NotNull] this Type genericType, Type type)
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
 			while (type != null && type != typeof(object))
 			{
-				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == genericType)
+				if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
 					return type;
 
-				if (genericType.IsInterfaceEx())
+				if (genericType.IsInterface)
 				{
-					foreach (var interfaceType in type.GetInterfacesEx())
+					foreach (var interfaceType in type.GetInterfaces())
 					{
 						var gType = GetGenericType(genericType, interfaceType);
 
@@ -778,7 +472,7 @@ namespace LinqToDB.Extensions
 					}
 				}
 
-				type = type.BaseTypeEx();
+				type = type.BaseType;
 			}
 
 			return null;
@@ -789,7 +483,7 @@ namespace LinqToDB.Extensions
 		///</summary>
 		/// <param name="list">A <see cref="System.Object"/> instance. </param>
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
-		public static Type GetListItemType(this IEnumerable list)
+		public static Type GetListItemType(this IEnumerable? list)
 		{
 			var typeOfObject = typeof(object);
 
@@ -803,7 +497,7 @@ namespace LinqToDB.Extensions
 
 			if (list is IList || list is ITypedList || list is IListSource)
 			{
-				PropertyInfo last = null;
+				PropertyInfo? last = null;
 
 				foreach (var pi in type.GetPropertiesEx())
 				{
@@ -843,7 +537,7 @@ namespace LinqToDB.Extensions
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
 		public static Type GetListItemType(this Type listType)
 		{
-			if (listType.IsGenericTypeEx())
+			if (listType.IsGenericType)
 			{
 				var elementTypes = listType.GetGenericArguments(typeof(IList<>));
 
@@ -860,7 +554,7 @@ namespace LinqToDB.Extensions
 				if (elementType != null)
 					return elementType;
 
-				PropertyInfo last = null;
+				PropertyInfo? last = null;
 
 				foreach (var pi in listType.GetPropertiesEx())
 				{
@@ -880,7 +574,28 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
-		public static Type GetItemType(this Type type)
+		public static bool IsEnumerableTType(this Type type, Type elementType)
+		{
+			foreach (var interfaceType in type.GetInterfaces())
+			{
+				if (interfaceType.IsGenericType
+						&& interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+						&& interfaceType.GetGenericArguments()[0] == elementType)
+					return true;
+			}
+
+			return false;
+		}
+
+		public static bool IsGenericEnumerableType(this Type type)
+		{
+			if (type.IsGenericType)
+				if (typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+			return false;
+		}
+
+		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
@@ -891,12 +606,12 @@ namespace LinqToDB.Extensions
 			if (type.IsArray)
 				return type.GetElementType();
 
-			if (type.IsGenericTypeEx())
-				foreach (var aType in type.GetGenericArgumentsEx())
-					if (typeof(IEnumerable<>).MakeGenericType(new[] { aType }).IsAssignableFromEx(type))
+			if (type.IsGenericType)
+				foreach (var aType in type.GetGenericArguments())
+					if (typeof(IEnumerable<>).MakeGenericType(new[] { aType }).IsAssignableFrom(type))
 						return aType;
 
-			var interfaces = type.GetInterfacesEx();
+			var interfaces = type.GetInterfaces();
 
 			if (interfaces != null && interfaces.Length > 0)
 			{
@@ -909,7 +624,7 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			return type.BaseTypeEx().GetItemType();
+			return type.BaseType.GetItemType();
 		}
 
 		/// <summary>
@@ -929,7 +644,7 @@ namespace LinqToDB.Extensions
 			while (checkArrayElementType && type.IsArray)
 				type = type.GetElementType();
 
-			return type.IsValueTypeEx()
+			return type.IsValueType
 				|| type == typeof(string)
 				|| type == typeof(Binary)
 				|| type == typeof(Stream)
@@ -946,38 +661,38 @@ namespace LinqToDB.Extensions
 		///<param name="baseType">Non generic base type.</param>
 		///<returns>An array of Type objects that represent the type arguments
 		/// of a generic type. Returns an empty array if the current type is not a generic type.</returns>
-		public static Type[] GetGenericArguments(this Type type, Type baseType)
+		public static Type[]? GetGenericArguments(this Type type, Type baseType)
 		{
 			var baseTypeName = baseType.Name;
 
-			for (var t = type; t != typeof(object) && t != null; t = t.BaseTypeEx())
+			for (var t = type; t != typeof(object) && t != null; t = t.BaseType)
 			{
-				if (t.IsGenericTypeEx())
+				if (t.IsGenericType)
 				{
-					if (baseType.IsGenericTypeDefinitionEx())
+					if (baseType.IsGenericTypeDefinition)
 					{
 						if (t.GetGenericTypeDefinition() == baseType)
-							return t.GetGenericArgumentsEx();
+							return t.GetGenericArguments();
 					}
 					else if (baseTypeName == null || t.Name.Split('`')[0] == baseTypeName)
 					{
-						return t.GetGenericArgumentsEx();
+						return t.GetGenericArguments();
 					}
 				}
 			}
 
-			foreach (var t in type.GetInterfacesEx())
+			foreach (var t in type.GetInterfaces())
 			{
-				if (t.IsGenericTypeEx())
+				if (t.IsGenericType)
 				{
-					if (baseType.IsGenericTypeDefinitionEx())
+					if (baseType.IsGenericTypeDefinition)
 					{
 						if (t.GetGenericTypeDefinition() == baseType)
-							return t.GetGenericArgumentsEx();
+							return t.GetGenericArguments();
 					}
 					else if (baseTypeName == null || t.Name.Split('`')[0] == baseTypeName)
 					{
-						return t.GetGenericArgumentsEx();
+						return t.GetGenericArguments();
 					}
 				}
 			}
@@ -988,7 +703,7 @@ namespace LinqToDB.Extensions
 		public static bool IsFloatType(this Type type)
 		{
 			if (type.IsNullable())
-				type = type.GetGenericArgumentsEx()[0];
+				type = type.GetGenericArguments()[0];
 
 			switch (type.GetTypeCodeEx())
 			{
@@ -1003,7 +718,7 @@ namespace LinqToDB.Extensions
 		public static bool IsIntegerType(this Type type)
 		{
 			if (type.IsNullable())
-				type = type.GetGenericArgumentsEx()[0];
+				type = type.GetGenericArguments()[0];
 
 			switch (type.GetTypeCodeEx())
 			{
@@ -1022,18 +737,18 @@ namespace LinqToDB.Extensions
 
 		interface IGetDefaultValueHelper
 		{
-			object GetDefaultValue();
+			object? GetDefaultValue();
 		}
 
 		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
 		{
-			public object GetDefaultValue()
+			public object? GetDefaultValue()
 			{
-				return default(T);
+				return default(T)!;
 			}
 		}
 
-		public static object GetDefaultValue(this Type type)
+		public static object? GetDefaultValue(this Type type)
 		{
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
@@ -1050,7 +765,7 @@ namespace LinqToDB.Extensions
 
 		#region MethodInfo extensions
 
-		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
+		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
 		{
 			if (method != null)
 			{
@@ -1058,10 +773,10 @@ namespace LinqToDB.Extensions
 
 				foreach (var info in type.GetPropertiesEx())
 				{
-					if (info.CanRead && method == info.GetGetMethodEx(true))
+					if (info.CanRead && method == info.GetGetMethod(true))
 						return info;
 
-					if (info.CanWrite && method == info.GetSetMethodEx(true))
+					if (info.CanWrite && method == info.GetSetMethod(true))
 						return info;
 				}
 			}
@@ -1090,7 +805,7 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "Value" &&
-				member.DeclaringType.IsGenericTypeEx() &&
+				member.DeclaringType.IsGenericType &&
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
@@ -1098,7 +813,7 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "HasValue" &&
-				member.DeclaringType.IsGenericTypeEx() &&
+				member.DeclaringType.IsGenericType &&
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
@@ -1136,14 +851,14 @@ namespace LinqToDB.Extensions
 			if (tc.CanConvertFrom(fromType))
 				return true;
 
-			if (fromType.GetMethodsEx()
+			if (fromType.GetMethods()
 				.Any(m => m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit")))
 				return true;
 
 			return false;
 		}
 
-		public static bool EqualsTo(this MemberInfo member1, MemberInfo member2, Type declaringType = null)
+		public static bool EqualsTo(this MemberInfo? member1, MemberInfo? member2, Type? declaringType = null)
 		{
 			if (ReferenceEquals(member1, member2))
 				return true;
@@ -1165,12 +880,12 @@ namespace LinqToDB.Extensions
 					if (isSubclass)
 						return true;
 
-					if (declaringType != null && member2.DeclaringType.IsInterfaceEx())
+					if (declaringType != null && member2.DeclaringType.IsInterface)
 					{
-						var getter1 = ((PropertyInfo)member1).GetGetMethodEx();
-						var getter2 = ((PropertyInfo)member2).GetGetMethodEx();
+						var getter1 = ((PropertyInfo)member1).GetGetMethod();
+						var getter2 = ((PropertyInfo)member2).GetGetMethod();
 
-						var map = declaringType.GetInterfaceMapEx(member2.DeclaringType);
+						var map = declaringType.GetInterfaceMap(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 							if (getter2.Name == map.InterfaceMethods[i].Name && getter2.DeclaringType == map.InterfaceMethods[i].DeclaringType &&
@@ -1180,18 +895,18 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			if (member2.DeclaringType.IsInterfaceEx() && !member1.DeclaringType.IsInterfaceEx() && member1.Name.EndsWith(member2.Name))
+			if (member2.DeclaringType.IsInterface && !member1.DeclaringType.IsInterface && member1.Name.EndsWith(member2.Name))
 			{
 				if (member1 is PropertyInfo)
 				{
-					var isSubclass = member2.DeclaringType.IsAssignableFromEx(member1.DeclaringType);
+					var isSubclass = member2.DeclaringType.IsAssignableFrom(member1.DeclaringType);
 
 					if (isSubclass)
 					{
-						var getter1 = ((PropertyInfo)member1).GetGetMethodEx();
-						var getter2 = ((PropertyInfo)member2).GetGetMethodEx();
+						var getter1 = ((PropertyInfo)member1).GetGetMethod();
+						var getter2 = ((PropertyInfo)member2).GetGetMethod();
 
-						var map = member1.DeclaringType.GetInterfaceMapEx(member2.DeclaringType);
+						var map = member1.DeclaringType.GetInterfaceMap(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 						{
@@ -1218,11 +933,11 @@ namespace LinqToDB.Extensions
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			return
-				!type.IsPublicEx() &&
-				 type.IsGenericTypeEx() &&
+				!type.IsPublic &&
+				 type.IsGenericType &&
 				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
-				type.GetCustomAttributesEx(typeof(CompilerGeneratedAttribute), true).Any();
+				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Any();
 		}
 	}
 }

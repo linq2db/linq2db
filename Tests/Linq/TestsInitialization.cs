@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.IO;
 using System.Reflection;
 
 using NUnit.Framework;
@@ -16,7 +17,28 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS
+#if NET46
+		// recent SAP HANA provider uses Assembly.GetEntryAssembly() calls during native dlls discovery, which
+		// leads to NRE as it returns null under NETFX, so we need to fake this method result to unblock HANA testing
+		// https://github.com/microsoft/vstest/issues/1834
+		// https://dejanstojanovic.net/aspnet/2015/january/set-entry-assembly-in-unit-testing-methods/
+		var assembly = Assembly.GetCallingAssembly();
+
+		var manager = new AppDomainManager();
+		var entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
+		entryAssemblyfield.SetValue(manager, assembly);
+
+		var domain = AppDomain.CurrentDomain;
+		var domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
+		domainManagerField.SetValue(domain, manager);
+#endif
+
+		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
+		// this code allows to load assembly using factory without adding explicit reference to project
+		RegisterSapHanaFactory();
+		RegisterSqlCEFactory();
+
+#if !NETCOREAPP2_1 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -36,11 +58,42 @@ public class TestsInitialization
 
 		// register test providers
 		TestNoopProvider.Init();
+	}
 
-		// disabled for core, as default loader doesn't allow multiple assemblies with same name
-		// https://github.com/dotnet/coreclr/blob/master/Documentation/design-docs/assemblyloadcontext.md
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		Npgsql4PostgreSQLDataProvider.Init();
+	private void RegisterSapHanaFactory()
+	{
+#if NETCOREAPP2_1
+		try
+		{
+			// woo-hoo, hardcoded pathes! default install location on x64 system
+			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
+			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcPath));
+			if (File.Exists(srcPath))
+			{
+				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
+				// if you run tests from path with spaces - it will not help you
+				File.Copy(srcPath, targetPath, true);
+				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
+				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
+			}
+		}
+		catch { }
+#endif
+	}
+
+	private void RegisterSqlCEFactory()
+	{
+#if NETCOREAPP2_1
+		try
+		{
+			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future
+			var pathx64 = @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
+			var pathx86 = @"c:\Program Files (x86)\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
+			var path = IntPtr.Size == 4 ? pathx86 : pathx64;
+			var assembly = Assembly.LoadFrom(path);
+			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory"));
+		}
+		catch { }
 #endif
 	}
 

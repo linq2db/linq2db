@@ -1056,3 +1056,74 @@ BEGIN
 	SELECT 1
 END
 GO
+
+
+-- PersonSearch
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'PersonSearch')
+BEGIN DROP Procedure PersonSearch END
+GO
+CREATE PROCEDURE PersonSearch
+	@nameFilter	nvarchar(512)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+	Create Table #PeopleIds (
+		PersonID int
+	);
+	INSERT INTO #PeopleIds 
+	SELECT Person.PersonID 
+	FROM Person
+	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
+	OR LOWER(LastName) like '%' + @nameFilter + '%';
+	
+	-- 0: List of matching person ids.
+	SELECT PersonID FROM #PeopleIds;
+
+	-- 1: List of matching persons.
+	SELECT * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+
+	-- 2: List of matching patients.
+	SELECT * FROM Patient WHERE Patient.PersonID
+	IN (SELECT PersonID FROM #PeopleIds);
+
+	-- 3: Is doctor in the results.
+	SELECT 
+	CASE WHEN COUNT(*) >= 1 THEN
+		CAST (1 as BIT)
+	ELSE
+		CAST (0 as BIT)
+	END
+	FROM Doctor 
+	WHERE Doctor.PersonID
+	IN (SELECT PersonID FROM #PeopleIds);
+	
+	-- 4: List of matching persons again.
+	SELECT * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+	
+	-- 5: Number of matched people.
+	SELECT COUNT(*) FROM #PeopleIds;
+
+	-- 6: First matched person.
+	SELECT TOP 1 * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+
+	Drop Table #PeopleIds;
+END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Issue1897')
+BEGIN DROP Procedure Issue1897 END
+GO
+
+CREATE PROCEDURE dbo.Issue1897
+AS
+BEGIN
+	RETURN 4
+END
+
+GO

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -18,18 +19,14 @@ namespace LinqToDB.DataProvider.Informix
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
-					p.IsQueryParameter = false;
-			}
-		}
 
-		static void EnforceBinaryParameters(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
+				// enforce binary and timespan as parameters
+				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
+					|| p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
 					p.IsQueryParameter = true;
+				else
+					// TODO: Ifx doesn't like parameters for some reason
+					p.IsQueryParameter = false;
 			}
 		}
 
@@ -37,16 +34,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
-			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
+			return base.Finalize(statement);
+		}
 
-			statement = base.Finalize(statement);
-
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:

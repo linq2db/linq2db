@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
@@ -5,7 +6,6 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -53,6 +53,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
+			AddScalarType(typeof(DateTime),  DataType.DateTime);
+			AddScalarType(typeof(DateTime?), DataType.DateTime);
+
 			try
 			{
 				foreach (var typeInfo in new[]
@@ -67,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (type == null)
 						continue;
 
-					var p = type.GetPropertyEx("Null");
+					var p = type.GetProperty("Null");
 					var l = Expression.Lambda<Func<object>>(
 						Expression.Convert(Expression.Property(null, p), typeof(object)));
 

@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="LinqToDB.Sql.TableFunctionAttribute"/>.</param>
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
-		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
+		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object?[] parameters)
 			where T : class
 		{
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);

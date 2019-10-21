@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -97,6 +98,17 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = Parent.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
+			if (UnderlyingColumn != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
+
+			return hashCode;
+		}
+
 		public bool Equals(SqlColumn other)
 		{
 			if (other == null)
@@ -162,7 +174,7 @@ namespace LinqToDB.SqlQuery
 			if (Parent != otherColumn.Parent)
 				return false;
 
-			if (Parent.HasUnion)
+			if (Parent.HasSetOperators)
 				return false;
 
 			return
@@ -190,7 +202,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var parent = (SelectQuery)Parent.Clone(objectTree, doClone);
+			var parent = (SelectQuery)Parent?.Clone(objectTree, doClone);
 
 			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlColumn(
