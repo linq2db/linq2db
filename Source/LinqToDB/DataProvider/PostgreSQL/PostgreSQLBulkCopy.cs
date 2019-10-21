@@ -71,7 +71,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var writer       = dc.BeginBinaryImport(copyCommand);
 
 			// https://github.com/npgsql/npgsql/issues/1646
-			// npgsql 4.0 will revert logic by removing explicit Cancel() and add explicit Complete()
+			// Cancel: npgsql 3.x
+			// Complete: npgsql 4+
 			var hasCancel   = writer.GetType().GetMethod("Cancel")   != null;
 			var hasComplete = writer.GetType().GetMethod("Complete") != null;
 			try
@@ -145,7 +146,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var npgsqlType = _dataProvider.GetNativeType(columns[i].DbType);
 				if (npgsqlType == null)
 				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i].DataType, columns[i].MemberType) : null;
+					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i]) : null;
 
 					if (columnType == null || columnType.DataType == DataType.Undefined)
 						columnType = mappingSchema.GetDataType(columns[i].StorageType);

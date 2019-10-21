@@ -94,6 +94,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Length > 1) // this is correct condition
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
+					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
 					if (type.Type != null)
 					{
@@ -106,7 +107,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						else if (udtType == _provider.NpgsqlCircleType)   StringBuilder.Append("circle");
 						else if (udtType == _provider.NpgsqlPolygonType)  StringBuilder.Append("polygon");
 						else if (udtType == _provider.NpgsqlPathType)     StringBuilder.Append("path");
-						else if (udtType == _provider.NpgsqlIntervalType) StringBuilder.Append("interval");
 						else if (udtType == _provider.NpgsqlDateType)     StringBuilder.Append("date");
 						else if (udtType == _provider.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
 						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
