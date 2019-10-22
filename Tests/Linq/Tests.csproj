@@ -27,4 +27,5 @@
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
 	</ItemGroup>
+
 </Project>
