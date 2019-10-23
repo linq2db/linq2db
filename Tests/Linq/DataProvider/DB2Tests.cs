@@ -120,12 +120,12 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-//			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-//			Debug.WriteLine("{0} -> auto", typeof(T));
-//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-//			Debug.WriteLine("{0} -> new",  typeof(T));
-//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
+			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> auto", typeof(T));
+			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> new",  typeof(T));
+			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -247,6 +247,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 
+				Assert.That(conn.Execute<char> ("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1)) FROM SYSIBM.SYSDUMMY1", DataParameter.Char("p", '1')), Is.EqualTo('1'));

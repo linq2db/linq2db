@@ -546,6 +546,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
 				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
 				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);     break;
+				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);      break;
 			}
 
 			return base.ConvertParameterType(type, dataType);

@@ -23,7 +23,6 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Tests                     | Unit test projects folder                                                                                                        |
 |.\Tests\Base                | LINQ to DB testing framework                                                                                                     |
 |.\Tests\FSharp              | F# models and tests                                                                                                              |
-|.\Tests\IBM.Core            | Tests for IBM.Data.DB2.Core provider                                                                                             |
 |.\Tests\Linq                | Main project for LINQ to DB unit tests                                                                                           |
 |.\Tests\Model               | Model classes for tests                                                                                                          |
 |.\Tests\Tests.T4            | T4 templates test project                                                                                                        |
@@ -61,7 +60,6 @@ Allowed debugging defines:
 |---------------------------------------------------:|:-------:|:---------:|:-------------:|:--------------------------:|
 | `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |                            |
 | `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |                            |
-| `.\Tests\IBM.Core\Tests.IBM.Core.csproj`           |         |     √     |       √       |                            |
 | `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |                            |
 | `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |                            |
 | `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |              √             |

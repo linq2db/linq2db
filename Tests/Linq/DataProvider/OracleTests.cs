@@ -890,7 +890,7 @@ namespace Tests.DataProvider
 
 		#region BulkCopy
 
-		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
+		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -903,6 +903,15 @@ namespace Tests.DataProvider
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						;
+
+					if (GetProviderName(context, out var _) == ProviderName.OracleNative)
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.BoolValue)
+									.HasDataType(DataType.Int16)
+							;
+					}
 
 					db.AddMappingSchema(ms);
 				}
