@@ -138,7 +138,10 @@ namespace Tests.DataProvider
 				TestType(conn, "ntextDataType",          "111");
 
 				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
+#if !AZURE
+				// TODO: configure test file in docker image
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
+#endif
 
 				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
 				{
