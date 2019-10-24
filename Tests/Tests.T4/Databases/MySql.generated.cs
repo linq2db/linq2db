@@ -20,7 +20,7 @@ using LinqToDB.Mapping;
 
 namespace MySqlDataContext
 {
-	public partial class Testdb55DB : LinqToDB.Data.DataConnection
+	public partial class TestdbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
@@ -38,19 +38,18 @@ namespace MySqlDataContext
 		/// VIEW
 		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
-		public ITable<Test>              Tests              { get { return this.GetTable<Test>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
 
-		public Testdb55DB()
+		public TestdbDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Testdb55DB(string configuration)
+		public TestdbDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -79,7 +78,7 @@ namespace MySqlDataContext
 		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"),        Nullable            ] public int?      YearDataType        { get; set; } // year(4)
-		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(2)
+		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(4)
 		[Column("year4DataType"),       Nullable            ] public int?      Year4DataType       { get; set; } // year(4)
 		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"),      Nullable            ] public string?   Char20DataType      { get; set; } // char(20)
@@ -189,7 +188,7 @@ namespace MySqlDataContext
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // int(11)
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
+		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime(3)
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime
 		[Column, Nullable] public bool?     BoolValue      { get; set; } // tinyint(1)
 		[Column, Nullable] public string?   GuidValue      { get; set; } // char(36)
@@ -268,13 +267,6 @@ namespace MySqlDataContext
 		[Column, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	[Table("test")]
-	public partial class Test
-	{
-		[Column, NotNull    ] public int  Id           { get; set; } // int(11)
-		[Column,    Nullable] public int? TestAnimalId { get; set; } // int(11)
-	}
-
 	[Table("testidentity")]
 	public partial class Testidentity
 	{
@@ -341,11 +333,11 @@ namespace MySqlDataContext
 		[PrimaryKey, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	public static partial class Testdb55DBStoredProcedures
+	public static partial class TestdbDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this Testdb55DB dataConnection)
+		public static int AddIssue792Record(this TestdbDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("`AddIssue792Record`");
 		}
@@ -354,7 +346,7 @@ namespace MySqlDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this Testdb55DB dataConnection, string? aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this TestdbDB dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -369,7 +361,7 @@ namespace MySqlDataContext
 
 		#region TestProcedure
 
-		public static IEnumerable<Person> TestProcedure(this Testdb55DB dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this TestdbDB dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
@@ -378,21 +370,6 @@ namespace MySqlDataContext
 
 			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
 			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TestProc
-
-		public static int TestProc(this Testdb55DB dataConnection, string? aInParam, out sbyte? aOutParam)
-		{
-			var ret = dataConnection.ExecuteProc("`test_proc`",
-				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
-
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
 			return ret;
 		}

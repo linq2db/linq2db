@@ -32,6 +32,7 @@ using Newtonsoft.Json.Linq;
 namespace Tests.DataProvider
 {
 	using Model;
+	using Npgsql;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -811,6 +812,7 @@ namespace Tests.DataProvider
 			[Column]                                   public TimeSpan?       timeDataType              { get; set; }
 			[Column  (DbType = "time with time zone")] public DateTimeOffset? timeTZDataType            { get; set; }
 			[Column]                                   public NpgsqlTimeSpan? intervalDataType          { get; set; }
+			[Column(DataType = DataType.Interval)]     public TimeSpan?       intervalDataType2         { get; set; }
 			// text
 			[Column]                                   public char?  charDataType                       { get; set; }
 			[Column]                                   public string char20DataType                     { get; set; }
@@ -887,6 +889,7 @@ namespace Tests.DataProvider
 					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
 					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					intervalDataType    = TimeSpan.FromTicks(-123456780),
+					intervalDataType2   = TimeSpan.FromTicks(-123456780),
 
 					charDataType        = 'ы',
 					char20DataType      = "тест1",
@@ -1452,6 +1455,109 @@ namespace Tests.DataProvider
 				var result = db.FromSql<ScalarResult<int>>($"SELECT issue_1742_tstz({new DataParameter { Name = "p1", Value = value, DataType = type.dataType, DbType = type.dbType }}) as \"Value\"").Single();
 
 				Assert.AreEqual(43, result.Value);
+			}
+		}
+
+		[Table("AllTypes")]
+		public class Issue1429Table
+		{
+			[Column, PrimaryKey, Identity]         public int             ID                { get; set; }
+			[Column]                               public TimeSpan?       timeDataType      { get; set; }
+			[Column]                               public NpgsqlTimeSpan? intervalDataType  { get; set; }
+			[Column(DataType = DataType.Interval)] public TimeSpan?       intervalDataType2 { get; set; }
+		}
+
+		[Test]
+		public void Issue1429_Interval([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var maxId = db.GetTable<Issue1429Table>().Select(_ => _.ID).Max();
+				try
+				{
+					db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+					{
+						timeDataType      = TimeSpan.FromMinutes(1),
+						intervalDataType  = TimeSpan.FromMinutes(1),
+						intervalDataType2 = TimeSpan.FromMinutes(1),
+					});
+
+					db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+					{
+						intervalDataType  = TimeSpan.FromDays(3),
+						intervalDataType2 = TimeSpan.FromDays(3),
+					});
+
+					Assert.Throws<PostgresException>(
+						() => db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+						{
+							timeDataType = TimeSpan.FromDays(3)
+						}));
+				}
+				finally
+				{
+					db.GetTable<Issue1429Table>().Delete(_ => _.ID > maxId);
+				}
+			}
+		}
+
+		[Table("AllTypes")]
+		public class DateProviderSpecific
+		{
+			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+			[Column]                       public NpgsqlDate? dateDataType { get; set; }
+		}
+
+		[Table("AllTypes")]
+		public class DateCommon
+		{
+			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+			[Column]                       public DateTime?   dateDataType { get; set; }
+		}
+
+		[Test]
+		public void DateMappingNativeAndDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var maxId = db.GetTable<DateProviderSpecific>().Select(_ => _.ID).Max();
+				try
+				{
+					var date1 = DateTime.Now.Date;
+					var date2 = DateTime.Now.Date.AddDays(5);
+					db.GetTable<DateProviderSpecific>().Insert(() => new DateProviderSpecific()
+					{
+						dateDataType = (NpgsqlDate)date1
+					});
+
+					db.GetTable<DateCommon>().Insert(() => new DateCommon()
+					{
+						dateDataType = date2
+					});
+
+					var values1 = db.GetTable<DateProviderSpecific>()
+						.Where(_ => _.ID > maxId)
+						.OrderBy(_ => _.ID)
+						.Select(_ => _.dateDataType)
+						.ToArray();
+
+					var values2 = db.GetTable<DateCommon>()
+						.Where(_ => _.ID > maxId)
+						.OrderBy(_ => _.ID)
+						.Select(_ => _.dateDataType)
+						.ToArray();
+
+					Assert.AreEqual(2, values1.Length);
+					Assert.AreEqual(2, values2.Length);
+					Assert.AreEqual(date1, (DateTime)values1[0]);
+					Assert.AreEqual(date2, (DateTime)values1[1]);
+					Assert.AreEqual(date1, values2[0]);
+					Assert.AreEqual(date2, values2[1]);
+				}
+				finally
+				{
+					db.GetTable<Issue1429Table>().Delete(_ => _.ID > maxId);
+				}
 			}
 		}
 

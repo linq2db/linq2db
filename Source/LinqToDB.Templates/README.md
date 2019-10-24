@@ -45,14 +45,17 @@ All loaded schema information is used for mappings generation, so if you want to
 
 ```cs
 // Enables loading of tables and views information
-GetSchemaOptions.GetTables             = true;
+GetSchemaOptions.GetTables                   = true;
 // Enables loading of foreign key relations for associations
-GetSchemaOptions.GetForeignKeys        = true;
+GetSchemaOptions.GetForeignKeys              = true;
 // Enables loading of functions and procedures information
-GetSchemaOptions.GetProcedures         = true;
+GetSchemaOptions.GetProcedures               = true;
 // Enables use of System.Char type in generated model for text types
 // with length 1 instead of System.String
-GetSchemaOptions.GenerateChar1AsString = false;
+GetSchemaOptions.GenerateChar1AsString       = false;
+// Enables generation of provider-specific type for column or parameter mapping
+// when both common .net type and provider-specific type supported.
+GetSchemaOptions.PreferProviderSpecificTypes = false;
 
 // (string[]) List of schemas to select.
 // Option applied only if is is not empty

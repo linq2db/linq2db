@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable ExecuteScope()
+		public virtual IDisposable ExecuteScope(DataConnection dataConnection)
 		{
 			return null;
 		}

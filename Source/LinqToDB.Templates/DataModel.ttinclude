@@ -361,6 +361,11 @@ string CheckType(Type type, string typeName)
 {
 	if (!Model.Usings.Contains(type.Namespace))
 		Model.Usings.Add(type.Namespace);
+
+	if (type.IsGenericType)
+		foreach (var argType in type.GetGenericArguments())
+			CheckType(argType, null);
+
 	return typeName;
 }
 

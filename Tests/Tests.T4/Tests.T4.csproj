@@ -13,7 +13,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
-		<PackageReference Include="Npgsql" Version="4.0.10" />
 		<PackageReference Include="Humanizer.Core" Version="2.7.2" />
 		
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -118,6 +117,7 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
+		<PackageReference Include="Npgsql" Version="4.0.10" />
 
 		<None Update="Databases\SqlServer.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -126,6 +126,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+		<PackageReference Include="Npgsql" Version="4.1.1" />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />-->
 		<Reference Include="Microsoft.SqlServer.Types">

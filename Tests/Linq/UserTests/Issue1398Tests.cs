@@ -55,7 +55,6 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		//[Category("SkipCI")] // not enough mysql connections on AppVeyor
 		[Test]
 		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, ProviderName.Informix)] string context)
 		{

@@ -226,7 +226,7 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-			IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+			LinqToDB.Async.IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
 			{
 				throw new NotImplementedException();
 			}

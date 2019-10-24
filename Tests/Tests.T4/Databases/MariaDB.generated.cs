@@ -79,7 +79,7 @@ namespace MariaDBDataContext
 		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"),        Nullable            ] public int?      YearDataType        { get; set; } // year(4)
-		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(2)
+		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(4)
 		[Column("year4DataType"),       Nullable            ] public int?      Year4DataType       { get; set; } // year(4)
 		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"),      Nullable            ] public string?   Char20DataType      { get; set; } // char(20)

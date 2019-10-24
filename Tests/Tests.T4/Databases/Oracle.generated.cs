@@ -33,6 +33,7 @@ namespace OracleDataContext
 		public ITable<INHERITANCECHILD>      Inheritancechilds      { get { return this.GetTable<INHERITANCECHILD>(); } }
 		public ITable<INHERITANCEPARENT>     Inheritanceparents     { get { return this.GetTable<INHERITANCEPARENT>(); } }
 		public ITable<LINQDATATYPE>          LINQDATATYPES          { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<LONGRAWTABLE>          Longrawtables          { get { return this.GetTable<LONGRAWTABLE>(); } }
 		public ITable<PARENT>                Parents                { get { return this.GetTable<PARENT>(); } }
 		public ITable<PATIENT>               Patients               { get { return this.GetTable<PATIENT>(); } }
 		public ITable<PERSON>                People                 { get { return this.GetTable<PERSON>(); } }
@@ -92,6 +93,7 @@ namespace OracleDataContext
 		[Column(DbType="BLOB",                              DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
 		[Column(DbType="BFILE",                             DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
 		[Column(DbType="RAW(16)",                           DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GUIDDATATYPE           { get; set; } // RAW(16)
+		[Column(DbType="LONG",                              DataType=DataType.Text,           Length=0),                            Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
 		[Column(DbType="URITYPE",                           DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         URIDATATYPE            { get; set; } // URITYPE
 		[Column(DbType="XMLTYPE",                           DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         XMLDATATYPE            { get; set; } // XMLTYPE
 	}
@@ -222,6 +224,13 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  INTVALUE       { get; set; } // NUMBER
 		[Column(DbType="NUMBER (20,0)", DataType=DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER (20,0)
 		[Column(DbType="VARCHAR2(50)",  DataType=DataType.VarChar,   Length=50),                        Nullable] public string?   STRINGVALUE    { get; set; } // VARCHAR2(50)
+	}
+
+	[Table(Schema="MANAGED", Name="LONGRAWTABLE")]
+	public partial class LONGRAWTABLE
+	{
+		[Column(DbType="NUMBER",   DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
+		[Column(DbType="LONG RAW", DataType=DataType.Binary,  Length=0),     Nullable         ] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
 	}
 
 	[Table(Schema="MANAGED", Name="PARENT")]
@@ -392,7 +401,7 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00298816_BackReference
+		/// SYS_C00327863_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; }
@@ -416,9 +425,9 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00298816
+		/// SYS_C00327863
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00298816", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00327863", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; }
 
 		#nullable enable
@@ -534,6 +543,12 @@ namespace OracleDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.INHERITANCEPARENTID == INHERITANCEPARENTID);
+		}
+
+		public static LONGRAWTABLE Find(this ITable<LONGRAWTABLE> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
 
 		public static PATIENT Find(this ITable<PATIENT> table, decimal PERSONID)

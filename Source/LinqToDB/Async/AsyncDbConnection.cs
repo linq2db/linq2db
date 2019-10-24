@@ -47,7 +47,7 @@ namespace LinqToDB.Async
 			return Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
 		}
 
-		public virtual Task CloseAsync(CancellationToken cancellationToken = default)
+		public virtual Task CloseAsync()
 		{
 			Close();
 
@@ -95,6 +95,13 @@ namespace LinqToDB.Async
 		public virtual void Dispose()
 		{
 			Connection.Dispose();
+		}
+
+		public virtual Task DisposeAsync()
+		{
+			Dispose();
+
+			return TaskEx.CompletedTask;
 		}
 
 		public virtual IAsyncDbConnection? TryClone()

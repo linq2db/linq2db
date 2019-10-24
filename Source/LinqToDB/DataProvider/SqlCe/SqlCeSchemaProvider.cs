@@ -78,7 +78,7 @@ WHERE PRIMARY_KEY = 1");
 			return data.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 

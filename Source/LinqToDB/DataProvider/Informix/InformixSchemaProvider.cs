@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query<ColumnInfo>(@"

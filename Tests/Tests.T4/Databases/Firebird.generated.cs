@@ -22,25 +22,24 @@ namespace FirebirdDataContext
 {
 	public partial class TESTDB25DB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>               ALLTYPES               { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<BillingDevreadingtype> BillingDevreadingtypes { get { return this.GetTable<BillingDevreadingtype>(); } }
-		public ITable<CamelCaseName>         CamelCaseNames         { get { return this.GetTable<CamelCaseName>(); } }
-		public ITable<CHILD>                 Children               { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST>          Datatypetests          { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DOCTOR>                Doctors                { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<DUAL>                  Duals                  { get { return this.GetTable<DUAL>(); } }
-		public ITable<GRANDCHILD>            Grandchilds            { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<INHERITANCECHILD>      Inheritancechilds      { get { return this.GetTable<INHERITANCECHILD>(); } }
-		public ITable<INHERITANCEPARENT>     Inheritanceparents     { get { return this.GetTable<INHERITANCEPARENT>(); } }
-		public ITable<LINQDATATYPE>          LINQDATATYPES          { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<PARENT>                Parents                { get { return this.GetTable<PARENT>(); } }
-		public ITable<PATIENT>               Patients               { get { return this.GetTable<PATIENT>(); } }
-		public ITable<PERSON>                People                 { get { return this.GetTable<PERSON>(); } }
-		public ITable<PERSONVIEW>            Personviews            { get { return this.GetTable<PERSONVIEW>(); } }
-		public ITable<SEQUENCETEST>          Sequencetests          { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<TESTIDENTITY>          Testidentities         { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTMERGE1>            TESTMERGE1             { get { return this.GetTable<TESTMERGE1>(); } }
-		public ITable<TESTMERGE2>            TESTMERGE2             { get { return this.GetTable<TESTMERGE2>(); } }
+		public ITable<ALLTYPE>           ALLTYPES           { get { return this.GetTable<ALLTYPE>(); } }
+		public ITable<CamelCaseName>     CamelCaseNames     { get { return this.GetTable<CamelCaseName>(); } }
+		public ITable<CHILD>             Children           { get { return this.GetTable<CHILD>(); } }
+		public ITable<DATATYPETEST>      Datatypetests      { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DOCTOR>            Doctors            { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<DUAL>              Duals              { get { return this.GetTable<DUAL>(); } }
+		public ITable<GRANDCHILD>        Grandchilds        { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<INHERITANCECHILD>  Inheritancechilds  { get { return this.GetTable<INHERITANCECHILD>(); } }
+		public ITable<INHERITANCEPARENT> Inheritanceparents { get { return this.GetTable<INHERITANCEPARENT>(); } }
+		public ITable<LINQDATATYPE>      LINQDATATYPES      { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<PARENT>            Parents            { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>           Patients           { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PERSON>            People             { get { return this.GetTable<PERSON>(); } }
+		public ITable<PERSONVIEW>        Personviews        { get { return this.GetTable<PERSONVIEW>(); } }
+		public ITable<SEQUENCETEST>      Sequencetests      { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<TESTIDENTITY>      Testidentities     { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTMERGE1>        TESTMERGE1         { get { return this.GetTable<TESTMERGE1>(); } }
+		public ITable<TESTMERGE2>        TESTMERGE2         { get { return this.GetTable<TESTMERGE2>(); } }
 
 		public TESTDB25DB()
 		{
@@ -77,17 +76,6 @@ namespace FirebirdDataContext
 		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string?   NCHARDATATYPE     { get; set; } // char(20)
 		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   NVARCHARDATATYPE  { get; set; } // varchar(20)
 		[Column(DbType="blob",            DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   BLOBDATATYPE      { get; set; } // blob
-	}
-
-	[Table("BILLING_DEVREADINGTYPE")]
-	public partial class BillingDevreadingtype
-	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID             { get; set; } // integer
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),              NotNull] public int    DEVTYPEID      { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string NAME           { get; set; } // varchar(50)
-		#nullable enable
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),              NotNull] public int    RESPONSIBILITY { get; set; } // integer
 	}
 
 	[Table("\"CamelCaseName\"")]
@@ -223,9 +211,9 @@ namespace FirebirdDataContext
 
 		#nullable disable
 		/// <summary>
-		/// INTEG_19608
+		/// INTEG_4513
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_19608", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_4513", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#nullable enable
@@ -255,7 +243,7 @@ namespace FirebirdDataContext
 		public DOCTOR? DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_19608_BackReference
+		/// INTEG_4513_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT? INTEG { get; set; }
@@ -706,12 +694,6 @@ namespace FirebirdDataContext
 	public static partial class TableExtensions
 	{
 		public static ALLTYPE Find(this ITable<ALLTYPE> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static BillingDevreadingtype Find(this ITable<BillingDevreadingtype> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
