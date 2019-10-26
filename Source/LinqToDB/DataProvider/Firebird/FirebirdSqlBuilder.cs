@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Linq;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlProvider;
 	using System.Text;
 
-	public class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -84,12 +85,12 @@ namespace LinqToDB.DataProvider.Firebird
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type, createDbType);
+					base.BuildDataTypeFromDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale, type.DbType) : type, forCreateTable);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -101,9 +102,11 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 
-					// 10921 is implementation  limit for UNICODE_FSS encoding
-					if (type.Length == null || type.Length > 10921 || type.Length < 1)
-						StringBuilder.Append("(10921)");
+					// 10921 is implementation limit for UNICODE_FSS encoding
+					// use 255 as default length, because FB have 64k row-size limits
+					// also it is not good to depend on implementation limits
+					if (type.Length == null || type.Length < 1)
+						StringBuilder.Append("(255)");
 					else
 						StringBuilder.Append($"({type.Length})");
 
@@ -113,7 +116,7 @@ namespace LinqToDB.DataProvider.Firebird
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");            break;
-				default: base.BuildDataType(type, createDbType); break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);         break;
 			}
 		}
 
@@ -154,12 +157,6 @@ namespace LinqToDB.DataProvider.Firebird
 //
 //			base.BuildDataType(type, createDbType);
 //		}
-
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
 
 		protected sealed override bool IsReserved(string word)
 		{
@@ -350,7 +347,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			// should we introduce new converstion types like NameToGeneratorName/NameToTriggerName?
+			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
@@ -393,7 +390,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

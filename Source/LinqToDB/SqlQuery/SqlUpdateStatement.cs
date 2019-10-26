@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,14 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			sb.AppendLine("UPDATE");
+
 			((IQueryElement)Update).ToString(sb, dic);
+
+			sb.AppendLine();
+
+			SelectQuery.ToString(sb, dic);
+
 			return sb;
 		}
 
@@ -63,10 +71,47 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
-			if (_update?.Table == table)
-				return table;
+			var result = SelectQuery.GetTableSource(table);
 
-			return SelectQuery.GetTableSource(table);
+			if (result != null)
+				return result;
+
+			if (table == _update?.Table)
+				return _update?.Table;
+
+			if (Update != null)
+			{
+				foreach (var item in Update.Items)
+				{
+					if (item.Expression is SelectQuery q)
+					{
+						result = q.GetTableSource(table);
+						if (result != null)
+							return result;
+					}
+
+				}
+			}
+
+			return result;
+		}
+
+		public override bool IsDependedOn(SqlTable table)
+		{
+			// do not allow to optimize out Update table
+			if (Update == null)
+				return false;
+
+			return null != new QueryVisitor().Find(Update, e =>
+			{
+				switch (e)
+				{
+					case SqlTable t: return QueryHelper.IsEqualTables(t, table);
+					case SqlField f: return QueryHelper.IsEqualTables(f.Table as SqlTable, table);
+				}
+
+				return false;
+			});
 		}
 
 	}

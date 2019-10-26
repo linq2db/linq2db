@@ -27,12 +27,17 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		string SchemaName { get; set; }
+		string? SchemaName { get; set; }
 
 		/// <summary>
 		/// Gets or sets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		string DatabaseName { get; set; }
+		string? DatabaseName { get; set; }
+
+		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		string? ServerName { get; set; }
 
 		/// <summary>
 		/// Gets list of change interfaces for column descriptors for current entity.

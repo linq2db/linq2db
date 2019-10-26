@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-
+using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -138,7 +138,10 @@ namespace Tests.DataProvider
 				TestType(conn, "ntextDataType",          "111");
 
 				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
+#if !AZURE
+				// TODO: configure test file in docker image
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
+#endif
 
 				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
 				{
@@ -618,6 +621,7 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
 			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
 			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]          GUIDDATATYPE           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Long),                                                Nullable         ] public string          LONGDATATYPE           { get; set; } // LONG
 			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object          URIDATATYPE            { get; set; } // URITYPE
 			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
 		}
@@ -889,7 +893,7 @@ namespace Tests.DataProvider
 
 		#region BulkCopy
 
-		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
+		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -902,6 +906,15 @@ namespace Tests.DataProvider
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						;
+
+					if (GetProviderName(context, out var _) == ProviderName.OracleNative)
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.BoolValue)
+									.HasDataType(DataType.Int16)
+							;
+					}
 
 					db.AddMappingSchema(ms);
 				}
@@ -2359,5 +2372,113 @@ namespace Tests.DataProvider
 				_ = db.Person.ToList();
 			}
 		}
+
+
+		[Test]
+		public void LongDataTypeTest([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<ALLTYPE>()
+					.Where(t => t.ID > 2)
+					.Delete();
+
+				try
+				{
+					var items = db.GetTable<ALLTYPE>()
+						.Select(t => new { t.LONGDATATYPE })
+						.ToArray();
+
+					Assert.That(items.Length, Is.GreaterThanOrEqualTo(2));
+					Assert.That(items[0].LONGDATATYPE, Is.Null);
+					Assert.That(items[1].LONGDATATYPE, Is.EqualTo("LONG"));
+
+					var str = new string('A', 10000);
+
+					var id = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
+					{
+						LONGDATATYPE = str, 
+					});
+
+					var insertedItems = db.GetTable<ALLTYPE>()
+						.Where(t => t.ID == id)
+						.Select(t => new { t.LONGDATATYPE })
+						.ToArray();
+
+					Assert.That(insertedItems[0].LONGDATATYPE, Is.EqualTo(str));
+
+					var str2 = new string('B', 4000);
+
+					var id2 = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
+					{
+						LONGDATATYPE = Sql.ToSql(str2), 
+					});
+
+					var insertedItems2 = db.GetTable<ALLTYPE>()
+						.Where(t => t.ID == id2)
+						.Select(t => new { t.LONGDATATYPE })
+						.ToArray();
+
+					Assert.That(insertedItems2[0].LONGDATATYPE, Is.EqualTo(str2));
+				}
+				finally
+				{
+					db.GetTable<ALLTYPE>()
+						.Where(t => t.ID > 2)
+						.Delete();
+				}
+			}
+		}
+
+		class LongRawTable
+		{
+			[Column(Name =  "ID")] public int Id { get; set; }
+			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[] LONGRAWDATATYPE { get; set; } // LONG RAW
+		}
+
+		[Test]
+		public void LongRawDataTypeTest([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<LongRawTable>()
+					.Where(t => t.Id > 2)
+					.Delete();
+
+				var items = db.GetTable<LongRawTable>()
+					.Select(t => new { t.LONGRAWDATATYPE })
+					.ToArray();
+
+				Assert.That(items.Length, Is.EqualTo(2));
+				Assert.That(items[0].LONGRAWDATATYPE, Is.Null);
+				Assert.That(items[1].LONGRAWDATATYPE, Is.Not.Null);
+					
+				var bytes1 = Encoding.UTF8.GetBytes(new string('A', 10000));
+
+				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
+				{
+					Id = 3,
+					LONGRAWDATATYPE = bytes1, 
+				});
+
+				var bytes2 = Encoding.UTF8.GetBytes(new string('B', 10000));
+
+				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
+				{
+					Id = 4,
+					LONGRAWDATATYPE = bytes2, 
+				});
+
+				var insertedItems = db.GetTable<LongRawTable>()
+					.Where(t => t.Id.In(3, 4))
+					.Select(t => new { t.LONGRAWDATATYPE })
+					.ToArray();
+
+				Assert.That(insertedItems.Length, Is.EqualTo(2));
+				Assert.That(insertedItems[0].LONGRAWDATATYPE, Is.EqualTo(bytes1));
+				Assert.That(insertedItems[1].LONGRAWDATATYPE, Is.EqualTo(bytes2));
+			}
+		}
+
 	}
 }

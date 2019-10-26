@@ -541,7 +541,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -927,6 +927,48 @@ namespace Tests.Linq
 				var cte4 = cte3.Distinct().AsCte("CTE_3");
 
 				var qCte = db.Child.Where(w => w.ChildID.NotIn(cte4)).ToList();
+			}
+		}
+
+		[Test]
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var children = db.Child.Where(c => c.ChildID > 1).AsCte().HasUniqueKey(ct => ct.ChildID);
+
+				var query =
+					from c in db.Child
+					from ct in children.LeftJoin(ct => c.ChildID == ct.ChildID)
+					select c;
+
+				var sql = query.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Is.Not.Contains("WITH"));
+			}
+		}
+
+		[ActiveIssue("Scalar recursive CTE are not working")]
+		[Test]
+		public void TestRecursiveScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cteRecursive = db.GetCte<int>(cte =>
+						(
+							from c in db.Child.Take(1)
+							select c.ChildID
+						)
+						.Concat
+						(
+							from c in db.Child
+							from ct in cte.InnerJoin(ct => ct == c.ChildID + 1)
+							select c.ChildID + 1
+						)
+					, "MY_CTE");
+
+				var result = cteRecursive.ToArray();
 			}
 		}
 

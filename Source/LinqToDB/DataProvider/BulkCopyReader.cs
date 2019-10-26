@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -129,14 +130,11 @@ namespace LinqToDB.DataProvider
 
 		#region Implementation of IDataReader
 
-#if !NETSTANDARD1_6
 		public override void Close()
 		{
 			//do nothing
 		}
-#endif
 
-#if !NETSTANDARD1_6
 		public override DataTable GetSchemaTable()
 		{
 			var table = new DataTable("SchemaTable")
@@ -192,7 +190,6 @@ namespace LinqToDB.DataProvider
 
 			return table;
 		}
-#endif
 
 		public override bool NextResult()
 		{

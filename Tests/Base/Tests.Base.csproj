@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
 	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
@@ -8,13 +7,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+
+		<PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
 	</ItemGroup>
-
-
-	<!-- .NET Framework -->
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
 		<None Update="SqlServerTypes\x64\msvcr120.dll">

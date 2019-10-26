@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -20,7 +21,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using LinqToDB.ServiceModel;
 #endif
 
@@ -29,41 +30,43 @@ using NUnit.Framework;
 namespace Tests
 {
 	using Model;
+	using NUnit.Framework.Internal;
 	using Tools;
 
 //	[Order(1000)]
 	public class TestBase
 	{
+		private const int TRACES_LIMIT = 100000;
+
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD1_6
-				System.IO.Directory.GetCurrentDirectory()
-#else
-				Environment.CurrentDirectory
-#endif
-				);
+			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			Console.WriteLine("CLR Version: {0}...",
-#if NETSTANDARD1_6
-				System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
-#else
-				Environment.Version
-#endif
-				);
+			Console.WriteLine("CLR Version: {0}...", Environment.Version);
 
 			var traceCount = 0;
 
-			DataConnection.WriteTraceLine = (s1,s2) =>
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
+			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				if (traceCount < 10000)
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace == null)
 				{
-					Console.WriteLine("{0}: {1}", s2, s1);
-					Debug.WriteLine(s1, s2);
+					trace = new StringBuilder();
+					ctx.Set(CustomTestContext.TRACE, trace);
 				}
 
-				if (traceCount++ > 10000)
-					DataConnection.TurnTraceSwitchOn(TraceLevel.Error);
+				trace.AppendLine($"{name}: {message}");
+
+				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+				{
+					ctx.Set(CustomTestContext.LIMITED, true);
+					Console.WriteLine("{0}: {1}", name, message);
+					Debug.WriteLine(message, name);
+				}
+
+				traceCount++;
 			};
 
 //			Configuration.RetryPolicy.Factory = db => new Retry();
@@ -71,9 +74,9 @@ namespace Tests
 //			Configuration.AvoidSpecificDataProviderAPI = true;
 			Configuration.Linq.TraceMapperExpression   = false;
 //			Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
+			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -82,11 +85,7 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD1_6
-			System.IO.Directory.SetCurrentDirectory(assemblyPath);
-#else
 			Environment.CurrentDirectory = assemblyPath;
-#endif
 
 			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
 			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
@@ -95,32 +94,20 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETSTANDARD1_6
-			var configName = "CORE1";
-#elif NETSTANDARD2_0
-			var configName = "CORE2";
+#if NETCOREAPP2_1
+			var configName = "CORE21";
 #elif NET46
-			var configName = "NET45";
-#elif NETCOREAPP2_0
-			var configName = "CORE1";
-#elif NETCOREAPP1_0
-			var configName = "CORE2";
+			var configName = "NET46";
 #else
 			var configName = "";
 #error Unknown framework
 #endif
 
-#if APPVEYOR
-#warning "AppVeyor configuration detected."
+#if AZURE
+#warning "Azure configuration detected."
 
-			Console.WriteLine("AppVeyor configuration detected.");
-			configName += ".AppVeyor";
-#endif
-#if TRAVIS
-#warning "Travis configuration detected."
-
-			Console.WriteLine("Travis configuration detected.");
-			configName += ".Travis";
+			Console.WriteLine("Azure configuration detected.");
+			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var databasePath = Path.GetFullPath(Path.Combine("Database"));
@@ -155,7 +142,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETCOREAPP2_1
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -167,7 +154,7 @@ namespace Tests
 				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
-					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
+					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
 			}
 #else
 			foreach (var provider in testSettings.Connections)
@@ -186,17 +173,17 @@ namespace Tests
 			foreach (var userProvider in UserProviders)
 				Console.WriteLine($"\t{userProvider}");
 
-			var defaultConfiguration = testSettings.DefaultConfiguration;
+			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(defaultConfiguration))
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
-				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD1_6 || NETSTANDARD2_0
-				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+				DataConnection.DefaultConfiguration       = DefaultProvider;
+#if NETCOREAPP2_1
+				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -230,20 +217,34 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETCOREAPP2_1
 		const int IP = 22654;
 		static bool _isHostOpen;
+		static LinqService _service;
+		static object _syncRoot = new object();
 #endif
 
-		static void OpenHost()
+		static void OpenHost(MappingSchema ms)
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETCOREAPP2_1
 			if (_isHostOpen)
+			{
+				_service.MappingSchema = ms;
 				return;
+			}
 
-			_isHostOpen = true;
+			ServiceHost host;
+			lock (_syncRoot)
+			{
+				if (_isHostOpen)
+				{
+					_service.MappingSchema = ms;
+					return;
+				}
 
-			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				_isHostOpen = true;
+			}
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
@@ -274,24 +275,22 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
+		public static readonly string          DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
+			ProviderName.Sybase,
+			ProviderName.OracleNative,
+#endif
+			ProviderName.SqlCe,
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
-			ProviderName.Sybase,
-			ProviderName.SapHana,
-			ProviderName.OracleNative,
-			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
-#endif
-#if !NETSTANDARD1_6
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
-#endif
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
@@ -307,20 +306,21 @@ namespace Tests
 			ProviderName.PostgreSQL95,
 			TestProvName.PostgreSQL10,
 			TestProvName.PostgreSQL11,
-			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
-			TestProvName.MySql57,
+			TestProvName.MySql55,
 			TestProvName.MariaDB,
-			ProviderName.SQLiteMS
+			ProviderName.SQLiteMS,
+			ProviderName.SapHanaNative,
+			ProviderName.SapHanaOdbc
 		};
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				OpenHost();
+#if !NETCOREAPP2_1
+				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
@@ -1034,18 +1034,45 @@ namespace Tests
 
 		protected void CompareSql(string result, string expected)
 		{
-			var ss = expected.Trim('\r', '\n').Split('\n');
+			var ss = expected.Replace("\r", "").Trim('\r', '\n').Split('\n');
 
 			while (ss.All(_ => _.Length > 0 && _[0] == '\t'))
 				for (var i = 0; i < ss.Length; i++)
 					ss[i] = ss[i].Substring(1);
 
-			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
+			Assert.AreEqual(string.Join("\n", ss), result.Replace("\r", "").Trim('\r', '\n'));
 		}
 
 		protected List<LinqDataTypes> GetTypes(string context)
 		{
 			return DataCache<LinqDataTypes>.Get(context);
+		}
+
+		protected string GetProviderName(string context, out bool isLinqService)
+		{
+			isLinqService = context.EndsWith(".LinqService");
+			return context.Replace(".LinqService", "");
+		}
+
+		[TearDown]
+		public virtual void OnAfterTest()
+		{
+			if (TestContext.CurrentContext.Result.FailCount > 0)
+			{
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
+				{
+					// we need to set ErrorInfo.Message element text
+					// because Azure displays only ErrorInfo node data
+					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
+						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
+				}
+			}
+
+			CustomTestContext.Release();
 		}
 	}
 

@@ -1,0 +1,15 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
+<#@ output extension=".generated.cs"                                            #>
+<#@ include file="..\Shared.ttinclude"                                          #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" #>
+<#
+	NamespaceName = "AccessDataContext";
+
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.mdb");
+
+	GenerateModel();
+#>

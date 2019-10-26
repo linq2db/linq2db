@@ -19,8 +19,6 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.DB2)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.Firebird)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.Oracle)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.OracleManaged)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.OracleNative)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
 			[Column(                          Configuration = ProviderName.Informix,   DbType = "byte")]
 			public byte[] BlobValue;

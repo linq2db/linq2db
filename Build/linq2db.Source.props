@@ -1,15 +1,9 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;net46;netcoreapp1.0;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
-
-		<PackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL;SqlServer;Access;SqlCe;SqlServerCe;MySql;Firebird;SQLite;Sybase;Oracle;ODP;PostgreSQL;DB2;Informix;SapHana</PackageTags>
-		<PackageIconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</PackageIconUrl>
-		<PackageProjectUrl>http://linq2db.com</PackageProjectUrl>
-		<PackageLicenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</PackageLicenseUrl>
-
+		<TargetFrameworks>net45;net46;netstandard2.0;netcoreapp2.1</TargetFrameworks>
 		<Configurations>Debug;Release</Configurations>
-		<EnableSourceLink Condition="'$(TRAVIS)' == true">false</EnableSourceLink>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -18,44 +12,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-
 	</ItemGroup>
 
-
-	<!-- .NET Framework -->
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-	</ItemGroup>
-
-
-	<!-- .NET Core -->
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp1.0'">
-		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
-		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-	</PropertyGroup>
-
-	
 </Project>

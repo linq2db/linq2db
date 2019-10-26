@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.Mapping
 {
@@ -50,6 +51,11 @@ namespace LinqToDB.Mapping
 		/// Gets or sets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string Database                  { get; set; }
+
+		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		public string Server                    { get; set; }
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.

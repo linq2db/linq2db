@@ -61,10 +61,10 @@ CREATE TABLE StringTest
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
 /
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
-/
+
 
 -- Inheritance Parent/Child
-
+/
 DROP TABLE InheritanceParent
 /
 
@@ -75,7 +75,6 @@ CREATE TABLE InheritanceParent
 	Name                NVARCHAR2(50)     NULL
 )
 /
-
 DROP TABLE InheritanceChild
 /
 
@@ -684,7 +683,6 @@ create sequence sq_test_user
 create sequence sq_test_user_contract
 /
 
-
 DROP SEQUENCE TestIdentitySeq
 /
 DROP TABLE TestIdentity
@@ -748,6 +746,7 @@ CREATE TABLE AllTypes
 	binaryDataType           blob                           NULL,
 	bfileDataType            bfile                          NULL,
 	guidDataType             raw(16)                        NULL,
+	longDataType             long                           NULL,
 
 	uriDataType              UriType                        NULL,
 	xmlDataType              XmlType                        NULL
@@ -800,6 +799,7 @@ INSERT INTO AllTypes
 	binaryDataType,
 	bfileDataType,
 	guidDataType,
+	longDataType,
 
 	uriDataType,
 	xmlDataType
@@ -832,6 +832,7 @@ SELECT
 	NULL binaryDataType,
 	NULL bfileDataType,
 	NULL guidDataType,
+	NULL longDataType,
 
 	NULL uriDataType,
 	NULL xmlDataType
@@ -865,6 +866,7 @@ SELECT
 	to_blob('00AA'),
 	bfilename('DATA_DIR', 'bfile.txt'),
 	sys_guid(),
+	'LONG',
 
 	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')
@@ -877,6 +879,21 @@ create table t_entity
 	time      date,
 	duration  interval day(3) to second(2)
 )
+/
+
+DROP TABLE LongRawTable
+/
+
+CREATE TABLE LongRawTable
+(
+	ID              NUMBER        NOT NULL PRIMARY KEY,
+	longRawDataType long raw      NULL
+)
+/
+
+INSERT INTO LongRawTable
+SELECT 1, NULL                        FROM dual UNION ALL
+SELECT 2, to_blob('4c4f4e4720524157') FROM dual -- "LONG RAW"
 /
 
 DROP TABLE DecimalOverflow
@@ -902,8 +919,9 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
 
-/
+
 -- merge test tables
+/
 DROP TABLE TestMerge1
 /
 DROP TABLE TestMerge2

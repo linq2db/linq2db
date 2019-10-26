@@ -66,7 +66,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>					(conn, "timestampDataType", DataType.Timestamp),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>					(conn, "timeDataType",      DataType.Time),                Is.EqualTo(new TimeSpan(12, 12, 12)));
 				Assert.That(TestType<int?>						(conn, "yearDataType",      DataType.Int32),               Is.EqualTo(1998));
-				Assert.That(TestType<int?>						(conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context == TestProvName.MySql57 || context == ProviderName.MySqlConnector ? 1997 : 97));
+				Assert.That(TestType<int?>						(conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context != TestProvName.MySql55 ? 1997 : 97));
 				Assert.That(TestType<int?>						(conn, "year4DataType",     DataType.Int32),               Is.EqualTo(2012));
 
 				Assert.That(TestType<char?>						(conn, "charDataType",      DataType.Char),                Is.EqualTo('1'));
@@ -453,7 +453,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
@@ -671,9 +670,19 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
 				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
 				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
-				Assert.AreEqual(expectedProc.IsLoaded,              procedure.IsLoaded);
 
-				Assert.IsNull(procedure.ResultException);
+				if (GetProviderName(context, out var _) == ProviderName.MySqlConnector
+					&& procedure.ResultException != null)
+				{
+					Assert.False       (procedure.IsLoaded);
+					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
+					Assert.AreEqual    ("There is no current result set.", procedure.ResultException.Message);
+				}
+				else
+				{
+					Assert.AreEqual(expectedProc.IsLoaded, procedure.IsLoaded);
+					Assert.IsNull(procedure.ResultException);
+				}
 
 				Assert.AreEqual(expectedProc.Parameters.Count, procedure.Parameters.Count);
 
@@ -777,8 +786,6 @@ namespace Tests.DataProvider
 				Assert.AreNotEqual(null, res);
 			}
 		}
-
-#endif
 
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
 		static int IncrementIndex()

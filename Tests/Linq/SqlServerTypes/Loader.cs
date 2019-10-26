@@ -9,11 +9,7 @@ namespace SqlServerTypes
 	/// </summary>
 	public class Utilities
 	{
-#if NETSTANDARD1_6
-		[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-#else
 		[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-#endif
 		private static extern IntPtr LoadLibrary(string libname);
 
 		/// <summary>

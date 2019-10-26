@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -71,7 +72,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
 		{
-			if (to.IsEnumEx() && from == typeof(decimal))
+			if (to.IsEnum && from == typeof(decimal))
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(this, to);
 

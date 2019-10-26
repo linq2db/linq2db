@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -20,7 +21,7 @@ namespace LinqToDB.Linq
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), "", "", TableName)
+				.ConvertTableName(new StringBuilder(), null, null, null, TableName)
 				.ToString();
 
 		#region Overrides

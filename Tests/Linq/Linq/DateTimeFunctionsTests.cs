@@ -138,6 +138,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Now([DataSources] string context)
 		{
@@ -392,7 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -496,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -524,7 +525,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlData57Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -533,7 +534,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlData57Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -700,7 +701,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -950,7 +951,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var part1 = 200;
 			var part2 = 26;
@@ -1035,7 +1036,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			var part1 = 150;
@@ -1447,6 +1448,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{

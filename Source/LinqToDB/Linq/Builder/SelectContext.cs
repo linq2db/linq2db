@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,6 +36,8 @@ namespace LinqToDB.Linq.Builder
 		public SqlStatement      Statement   { [DebuggerStepThrough] get; set; }
 		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
 		public bool              IsScalar    { [DebuggerStepThrough] get; }
+
+		public bool              AllowAddDefault { [DebuggerStepThrough] get; set; } = true;
 
 		Expression IBuildContext.Expression => Lambda;
 
@@ -712,7 +715,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterfaceEx())
+											if (nm != null && member.DeclaringType.IsInterface)
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
 													memberExpression = Members[nm];
@@ -1169,7 +1172,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (add)
+					if (add && AllowAddDefault)
 					{
 						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
 						Members.Add(member, memberExpression);

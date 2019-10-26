@@ -1,0 +1,354 @@
+variables:
+  solution: 'linq2db.sln'
+  build_configuration: 'Azure'
+  assemblyVersion: 3.0.0
+  artifact_linq2db_binaries: 'linq2db_binaries'
+  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  netfx46_tests: 'netfx46_tests'
+  netcore21_tests: 'netcoreapp21_tests'
+
+trigger: none
+
+stages:
+
+########################################
+#  Build and publish testable binaries #
+########################################
+- stage: ''
+  displayName: ''
+  jobs:
+  - job: build_job
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Build'
+
+    steps:
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        workingDirectory: '$(Build.SourcesDirectory)'
+        arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      displayName: Update assembly version
+
+    - task: MSBuild@1
+      inputs:
+        solution: '$(solution)'
+        configuration: '$(build_configuration)'
+        msbuildArguments: '/t:Restore;Rebuild -m'
+      displayName: Build Solution
+
+# need it for DotNetCoreCLI task be able to build C#8 project
+    - task: UseDotNet@2
+      displayName: Install .NET Core 3.0
+      inputs:
+        version: 3.0.x
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp2.1 -c $(build_configuration)
+        nobuild: true
+      displayName: Publish Test Project
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETFX46
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETCOREAPP2.1
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
+      displayName: Copy test configs for NETFX46
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
+      displayName: Copy test configs for NETCOREAPP2.1
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
+      displayName: Copy northwind.sql to scripts
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETCOREAPP2.1
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETFX46
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        artifact: '$(netfx46_tests)'
+      displayName: Publish test artifacts for NETFX46
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+        artifact: '$(netcore21_tests)'
+      displayName: Publish test artifacts for NETCOREAPP2.1
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+        artifact: '$(artifact_linq2db_binaries)'
+      displayName: Publish linq2db build results
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+        artifact: '$(artifact_linq2db_tools_binaries)'
+      displayName: Publish linq2db.Tools build results
+
+#################################################
+#### delete it
+
+  - job: test_linux_netcoreapp21_job
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'Tests: Lin / NETCOREAPP2.1 / '
+    dependsOn: build_job
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+#        Informix12:
+#          title: 'Informix 12.10'
+#          config: 'informix'
+#          script: 'informix12.sh'
+#          nuget: 'IBM.Data.DB2.Core-lnx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['script']
+      displayName: Mark script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Linux / NETCOREAPP2.1 / $(title)'
+
+  - job: test_macos_netcoreapp21_job
+    pool:
+      vmImage: 'macOS-10.14'
+    displayName: 'Tests: Mac / NETCOREAPP2.1 / '
+    dependsOn: build_job
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+#        Informix12:
+#          title: 'Informix 12.10'
+#          config: 'informix'
+#          script: 'mac.informix12.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x mac.docker.sh'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: eq(variables['docker'], 'true')
+      displayName: Mark docker install script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/mac.docker.sh'
+      condition: eq(variables['docker'], 'true')
+      displayName: Install Docker
+
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+      
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: and(succeeded(), variables['script'])
+      displayName: Mark script as executable
+      
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: and(succeeded(), variables['script'])
+      displayName: Setup tests
+
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
+      condition: succeeded()
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'
+
+###################################
+#  Tests: Windows (NETCOREAPP2_1) #
+#  Windows 2016                   #
+###################################
+  - job: test_win2016_netcoreapp21_job
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'Tests: Win / NETCOREAPP2.1 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+        Access_ACE:
+          title: 'Access ACE (x64)'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFilterCriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'

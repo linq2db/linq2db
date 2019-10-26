@@ -1,6 +1,4 @@
-﻿#if !MONO && !TRAVIS
-
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -36,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterName([DataSources(ProviderName.SapHana)] string context)
+		public void ParameterName([DataSources(TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -110,5 +108,3 @@ namespace Tests.Linq
 		}
 	}
 }
-
-#endif

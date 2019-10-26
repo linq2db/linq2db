@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -20,11 +21,7 @@ namespace LinqToDB.Common
 		{
 			try
 			{
-				return Convert.ChangeType(value, conversionType
-#if !NETSTANDARD1_6
-					, Thread.CurrentThread.CurrentCulture
-#endif
-					);
+				return Convert.ChangeType(value, conversionType, Thread.CurrentThread.CurrentCulture);
 			}
 			catch (Exception ex)
 			{
@@ -34,7 +31,7 @@ namespace LinqToDB.Common
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
-			var ctor = to.GetConstructorEx(new[] { from });
+			var ctor = to.GetConstructor(new[] { from });
 
 			if (ctor == null)
 				return null;
@@ -49,11 +46,11 @@ namespace LinqToDB.Common
 
 		static Expression GetValue(Type from, Type to, Expression p)
 		{
-			var pi = from.GetPropertyEx("Value");
+			var pi = from.GetProperty("Value");
 
 			if (pi == null)
 			{
-				var fi = from.GetFieldEx("Value");
+				var fi = from.GetField("Value");
 
 				if (fi != null && fi.FieldType == to)
 					return Expression.Field(p, fi);
@@ -75,7 +72,7 @@ namespace LinqToDB.Common
 
 		static bool IsConvertible(Type type)
 		{
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 				return false;
 
 			switch (type.GetTypeCodeEx())
@@ -100,7 +97,7 @@ namespace LinqToDB.Common
 		static Expression GetConvertion(Type from, Type to, Expression p)
 		{
 			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) ||
-				from.IsAssignableFromEx(to) && to.IsAssignableFromEx(from))
+				from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
 				return Expression.ConvertChecked(p, to);
 
 		 	return null;
@@ -144,7 +141,7 @@ namespace LinqToDB.Common
 
 		static Expression GetParseEnum(Type from, Type to, Expression p)
 		{
-			if (from == typeof(string) && to.IsEnumEx())
+			if (from == typeof(string) && to.IsEnum)
 			{
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
@@ -154,11 +151,7 @@ namespace LinqToDB.Common
 				for (var i = 0; i < values.Length; i++)
 				{
 					var val = values.GetValue(i);
-					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETSTANDARD1_6
-						, Thread.CurrentThread.CurrentCulture
-#endif
-						);
+					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture);
 
 					dic[lv.ToString()] = val;
 
@@ -204,7 +197,7 @@ namespace LinqToDB.Common
 
 		static Expression GetToEnum(Type from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
-			if (to.IsEnumEx())
+			if (to.IsEnum)
 			{
 				var toFields = mappingSchema.GetMapValues(to);
 
@@ -294,9 +287,9 @@ namespace LinqToDB.Common
 
 		static Expression GetFromEnum(Type from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
-			if (from.IsEnumEx())
+			if (from.IsEnum)
 			{
-				var fromFields = from.GetFieldsEx()
+				var fromFields = from.GetFields()
 					.Where (f => (f.Attributes & EnumField) == EnumField)
 					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f, a => a.Configuration) })
 					.ToList();
@@ -352,9 +345,9 @@ namespace LinqToDB.Common
 					}
 				}
 
-				if (to.IsEnumEx())
+				if (to.IsEnum)
 				{
-					var toFields = to.GetFieldsEx()
+					var toFields = to.GetFields()
 						.Where (f => (f.Attributes & EnumField) == EnumField)
 						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f, a => a.Configuration) })
 						.ToList();
@@ -540,7 +533,7 @@ namespace LinqToDB.Common
 					ex = Tuple.Create(
 						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
-				else if (from.IsClassEx())
+				else if (from.IsClass)
 					ex = Tuple.Create(
 						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
@@ -583,12 +576,12 @@ namespace LinqToDB.Common
 		{
 			var type = enumType.ToNullableUnderlying();
 
-			if (!type.IsEnumEx())
+			if (!type.IsEnum)
 				return null;
 
 			var fields =
 			(
-				from f in type.GetFieldsEx()
+				from f in type.GetFields()
 				where (f.Attributes & EnumField) == EnumField
 				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, f, a => a.Configuration)
 				select
@@ -621,7 +614,7 @@ namespace LinqToDB.Common
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || fields.Any(attrs => attrs.Count != 0 && attrs[0].Value == null)) && !defaultType.IsClassEx() && !defaultType.IsNullable())
+			if ((enumType.IsNullable() || fields.Any(attrs => attrs.Count != 0 && attrs[0].Value == null)) && !defaultType.IsClass && !defaultType.IsNullable())
 				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
 
 			return defaultType;

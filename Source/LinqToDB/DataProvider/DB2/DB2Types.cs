@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -15,7 +16,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected Func<T,object> GetCreator<T>()
 		{
-			var ctor = Type.GetConstructorEx(new[] { typeof(T) });
+			var ctor = Type.GetConstructor(new[] { typeof(T) });
 			var parm = Expression.Parameter(typeof(T));
 			var expr = Expression.Lambda<Func<T,object>>(
 				Expression.Convert(Expression.New(ctor, parm), typeof(object)),
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected Func<T,object> GetCreator<T>(Type paramType)
 		{
-			var ctor = Type.GetConstructorEx(new[] { paramType });
+			var ctor = Type.GetConstructor(new[] { paramType });
 			var parm = Expression.Parameter(typeof(T));
 			var expr = Expression.Lambda<Func<T,object>>(
 				Expression.Convert(Expression.New(ctor, Expression.Convert(parm, paramType)), typeof(object)),

@@ -4,7 +4,9 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -19,8 +21,10 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public static class AsyncFactory
 	{
-		private static readonly Type[] _tokenParams            = new[] { typeof(CancellationToken) };
-		private static readonly Type[] _beginTransactionParams = new[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
+		private static readonly Type?[] _noTokenParams         = new Type?[] { null };
+
+		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
+		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
 
 		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories
 			= new ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>>();
@@ -28,10 +32,7 @@ namespace LinqToDB.Async
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
 
-		// disable warning from .net core 2.1 tools (compiler bug)
-#pragma warning disable 4014
-		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default)).GetGenericMethodDefinition();
-#pragma warning restore 4014
+		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Register or replace custom <see cref="IAsyncDbConnection"/> for <typeparamref name="TConnection"/> type.
@@ -97,13 +98,34 @@ namespace LinqToDB.Async
 
 		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
-			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , typeof(Task));
-			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , typeof(Task));
+			// Task CommitAsync(CancellationToken)
+			// Availability:
+			// - DbTransaction (netstandard2.1, netcoreapp3.0)
+			// - MySqlConnector
+			// - npgsql
+			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false);
+
+			// Task RollbackAsync(CancellationToken)
+			// Availability:
+			// - DbTransaction (netstandard2.1, netcoreapp3.0)
+			// - MySqlConnector
+			// - npgsql
+			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false);
+
+			// ValueTask DisposeAsync()
+			// Availability:
+			// - DbTransaction (netstandard2.1, netcoreapp3.0)
+			var disposeAsync  = CreateDelegate<Func<IDbConnection                    , Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
+			// Task DisposeAsync()
+			// Availability:
+			// - MySqlConnector 0.57+
+							 ?? CreateDelegate<Func<IDbConnection                    , Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false);
 
 			if (commitAsync      != null
-				|| rollbackAsync != null)
+				|| rollbackAsync != null
+				|| disposeAsync  != null)
 				// if at least one async method found on current type - use found methods for async calls
-				return tr => new ReflectedAsyncDbTransaction(tr, commitAsync, rollbackAsync);
+				return tr => new ReflectedAsyncDbTransaction(tr, commitAsync, rollbackAsync, disposeAsync);
 
 			// no async methods detected, use default fallback-to-sync implementation
 			return tr => new AsyncDbTransaction(tr);
@@ -111,65 +133,145 @@ namespace LinqToDB.Async
 
 		private static Func<IDbConnection, IAsyncDbConnection> ConnectionFactory(Type type)
 		{
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap);
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap);
-			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , Task>                     , IDbConnection                >(type, "CloseAsync"           , _tokenParams           , typeof(Task));
+			// ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken)
+			// Availability:
+			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
+			// - MySqlConnector 0.57+
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true)
+			// Task<IDbTransaction> BeginTransactionAsync(CancellationToken)
+			// Availability:
+			// - MySql.Data
+			// - MySqlConnector < 0.57
+									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false);
+
+			// ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
+			// Availability:
+			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
+			// - MySqlConnector 0.57+
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true)
+			// Task<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
+			// Availability:
+			// - MySql.Data
+			// - MySqlConnector < 0.57
+									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false);
+
+			// Task OpenAsync(CancellationToken)
+			// Availability:
+			// - (stub) DbConnection
+			var openAsync               = CreateDelegate<Func<IDbConnection, CancellationToken, Task>, IDbConnection>(type, "OpenAsync", _tokenParams, _tokenParams, _tokenParams, false);
+
+			// ValueTask CloseAsync()
+			// Availability:
+			var closeAsync              = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false)
+			// Task CloseAsync()
+			// Availability:
+			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
+			// - MySql.Data
+			// - MySqlConnector 0.57+
+			// - npgsql 4.1.0+
+									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false);
+
+			// ValueTask DisposeAsync()
+			// Availability:
+			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
+			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
+			// Task DisposeAsync()
+			// Availability:
+			// - MySqlConnector 0.57+
+									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false);
+
 
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
-				|| closeAsync              != null)
+				|| openAsync               != null
+				|| closeAsync              != null
+				|| disposeAsync            != null)
 				// if at least one async method found on current type - use found methods for async calls
-				return cn => new ReflectedAsyncDbConnection(cn, beginTransactionAsync, beginTransactionIlAsync, closeAsync);
+				return cn => new ReflectedAsyncDbConnection(
+					cn,
+					beginTransactionAsync,
+					beginTransactionIlAsync,
+					openAsync,
+					closeAsync,
+					disposeAsync);
 
 			// default sync implementation
 			return connection => new AsyncDbConnection(connection);
 		}
 
+		[return: MaybeNull]
 		private static TDelegate CreateDelegate<TDelegate, TInstance>(
-			Type   instanceType,
-			string methodName,
-			Type[] parametersTypes,
-			Type   returnType)
+			Type    instanceType,
+			string  methodName,
+			Type[]  delegateParameterTypes,
+			Type[]  methodParameterTypes,
+			Type?[] mappedParameterTypes,
+			bool    returnsValueTask)
 			where TDelegate : Delegate
 		{
-			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
+			var mi = instanceType.GetPublicInstanceMethodEx(methodName, methodParameterTypes);
 
-			if (mi == null || mi.ReturnType != returnType)
-				return default;
+			if (mi == null
+				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
+				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
+				return default!;
 
-			var pInstance  = Expression.Parameter(typeof(TInstance));
-			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var pInstance      = Expression.Parameter(typeof(TInstance));
+			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
+
+			var callParameters = new List<Expression>();
+			for (var i = 0; i < methodParameterTypes.Length; i++)
+				if (mappedParameterTypes[i] != null)
+					callParameters.Add(parameters[i]);
+				else
+					callParameters.Add(Expression.Default(methodParameterTypes[i]));
+
+			var body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, callParameters);
+			if (returnsValueTask)
+				body = ToTask(body);
 
 			return Expression
 				.Lambda<TDelegate>(
-					Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters),
+					body,
 					new[] { pInstance }.Concat(parameters))
 				.Compile();
 		}
 
+		private static MethodCallExpression ToTask(MethodCallExpression body)
+		{
+			return Expression.Call(body, "AsTask", Array<Type>.Empty);
+		}
+
+		[return: MaybeNull]
 		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
 			Type[]     parametersTypes,
-			MethodInfo taskConverter)
+			MethodInfo taskConverter,
+			bool       returnsValueTask)
 			where TDelegate : Delegate
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
 			if (mi == null
-				|| !mi.ReturnType.IsGenericTypeEx()
-				|| mi.ReturnType.GetGenericTypeDefinition() != typeof(Task<>)
-				|| mi.ReturnType.GetGenericArgumentsEx()[0].IsSubclassOfEx(typeof(TTask)))
-				return default;
+				|| !mi.ReturnType.IsGenericType
+				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
+				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
+				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
+				return default!;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
 
+			var body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
+			if (returnsValueTask)
+				body = ToTask(body);
+
 			return Expression
 				.Lambda<TDelegate>(
 					Expression.Call(
-						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArgumentsEx()[0]),
-						Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters)),
+						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArguments()[0]),
+						body),
 					new[] { pInstance }.Concat(parameters))
 				.Compile();
 		}

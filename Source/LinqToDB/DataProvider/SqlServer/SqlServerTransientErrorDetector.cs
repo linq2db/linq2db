@@ -1,10 +1,11 @@
-﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
+﻿#nullable disable
+// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Data.SqlClient;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -15,13 +16,25 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// </summary>
 	public class SqlServerTransientExceptionDetector
 	{
+		internal static readonly Type[] ExceptionTypes;
+
+		static SqlServerTransientExceptionDetector()
+		{
+			ExceptionTypes = new[]
+			{
+#if NET45 || NET46
+				typeof(System.Data.SqlClient.SqlException),
+#endif
+				Type.GetType("System.Data.SqlClient.SqlException, System.Data.SqlClient", false),
+				Type.GetType("Microsoft.Data.SqlClient.SqlException, Microsoft.Data.SqlClient", false)
+			}.Where(_ => _ != null).Distinct().ToArray();
+		}
+
 		public static bool ShouldRetryOn([NotNull] Exception ex)
 		{
-			var sqlException = ex as SqlException;
-
-			if (sqlException != null)
+			if (ExceptionTypes.Any(e => e == ex.GetType()))
 			{
-				foreach (SqlError err in sqlException.Errors)
+				foreach (dynamic err in ((dynamic)ex).Errors)
 					switch (err.Number)
 					{
 						// SQL Error Code: 49920

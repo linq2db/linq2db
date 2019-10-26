@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-
+using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -322,7 +324,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance([DataSources] string context)
+		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -347,7 +349,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance2([DataSources] string context)
+		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -389,7 +391,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritanceExpression([DataSources] string context)
+		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -539,7 +541,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test2Attr([DataSources] string context)
+		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -581,7 +583,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test1Attr([DataSources] string context)
+		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -611,6 +613,98 @@ namespace Tests.Mapping
 					Assert.AreEqual(item.MyCol1, res.MyCol1);
 					Assert.AreNotEqual(item.NotACol, res.NotACol);
 					Assert.AreEqual(2, count);
+				}
+			}
+		}
+
+		[Table("PERSON")]
+		public class PersonCustom
+		{
+			[Column("FIRST_NAME")]
+			public string Name { get; set; }
+
+			[ExpressionMethod(nameof(AgeExpr), IsColumn = true, Alias = "AGE")]
+			public int Age{ get; set; }
+
+			public static Expression<Func<PersonCustom, int>> AgeExpr()
+			{
+				return p => Sql.AsSql(5);
+			}
+
+			public int Money { get; set; }
+
+		}
+
+		[Test]
+		public void ExpressionAlias([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Configuration.Sql.GenerateFinalAliases = finalAliases;
+				try
+				{
+					Query.ClearCaches();
+
+					var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
+					var sql1 = query.ToString();
+					Console.WriteLine(sql1);
+
+					if (finalAliases)
+						Assert.That(sql1, Does.Contain("[AGE]"));
+					else
+						Assert.That(sql1, Does.Not.Contain("[AGE]"));
+
+					var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
+					Console.WriteLine(sql2);
+
+					if (finalAliases)
+						Assert.That(sql2, Does.Contain("[Age]"));
+					else
+						Assert.That(sql2, Does.Not.Contain("[Age]"));
+				}
+				finally
+				{
+					Configuration.Sql.GenerateFinalAliases = false;
+				}
+			}
+		}
+
+		[Test]
+		public void ExpressionAliasFluent([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<PersonCustom>()
+				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY");
+
+			using (var db = GetDataContext(context, ms))
+			{
+				Configuration.Sql.GenerateFinalAliases = finalAliases;
+				try
+				{
+					Query.ClearCaches();
+
+					var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
+					var sql1 = query.ToString();
+					Console.WriteLine(sql1);
+
+					if (finalAliases)
+						Assert.That(sql1, Does.Contain("[MONEY]"));
+					else
+						Assert.That(sql1, Does.Not.Contain("[MONEY]"));
+
+					var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
+					Console.WriteLine(sql2);
+
+					if (finalAliases)
+						Assert.That(sql2, Does.Contain("[Money]"));
+					else
+						Assert.That(sql2, Does.Not.Contain("[Money]"));
+				}
+				finally
+				{
+					Configuration.Sql.GenerateFinalAliases = false;
 				}
 			}
 		}

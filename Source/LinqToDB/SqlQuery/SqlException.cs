@@ -31,14 +31,10 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		protected SqlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 		}
-
-#endif
 	}
 }
 

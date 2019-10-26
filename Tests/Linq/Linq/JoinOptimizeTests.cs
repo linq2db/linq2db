@@ -275,8 +275,9 @@ namespace Tests.Linq
 					join o1 in db.Order on e.OrderID equals o1.OrderID
 					select e;
 
+				Console.WriteLine(q2.ToString());
 				var ts = q2.GetTableSource();
-				Assert.AreEqual(1, ((SelectQuery)ts.Source).From.Tables.Single().Joins.Count);
+				Assert.AreEqual(1, ts.Joins.Count);
 			}
 		}
 
@@ -498,10 +499,12 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
+				Console.WriteLine(q.ToString());
+
 				Assert.AreEqual(1, q.GetTableSource().Joins.Count, "Join not optimized");
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(1, ((SelectQuery)ts.Source).From.Tables.Single().Joins.Count, "Join should be optimized");
+				Assert.AreEqual(1, ts.Joins.Count, "Join should be optimized");
 
 #pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 				var qw = q.Where(v => v.OrderID1 != null);

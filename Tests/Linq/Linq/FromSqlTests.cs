@@ -69,9 +69,8 @@ namespace Tests.Linq
 			return new ToTableName<T>(table);
 		}
 
-#if !NET45
 		[Test]
-		public void TestFormattable([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestFormattable([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -95,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFormattable2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestFormattable2([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -120,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFormattableSameParam([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestFormattableSameParam([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -146,7 +145,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFormattableInExpr([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestFormattableInExpr([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -174,7 +173,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFormattableInExpr2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestFormattableInExpr2([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -201,10 +200,8 @@ namespace Tests.Linq
 			}
 		}
 
-#endif
-
 		[Test]
-		public void TestParameters([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -229,7 +226,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestParametersInExpr([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestParametersInExpr([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -258,7 +255,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestParametersInExpr2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
+		public void TestParametersInExpr2([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))

@@ -24,7 +24,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,        IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql55,        IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string String;
 
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , Configuration = TestProvName.MySql55)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,		 IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql55,		 IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
 
@@ -63,7 +63,7 @@ namespace Tests.Linq
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql55)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
@@ -97,9 +97,10 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
-		// TODO: MySql57 disabled due to encoding issues on CI
+		// need to configure sybase docker image to use utf8 character set
+		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
-		public void StringTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
+		public void StringTrimming([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -157,8 +158,7 @@ namespace Tests.Linq
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe      + ".LinqService"
-				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana    + ".LinqService")
+				|| context.StartsWith(ProviderName.SapHana))
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
@@ -188,8 +188,7 @@ namespace Tests.Linq
 				|| context == ProviderName.SQLiteMS      + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe         + ".LinqService"
-				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana       + ".LinqService")
+				|| context.StartsWith(ProviderName.SapHana))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
@@ -233,9 +232,10 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
-		// TODO: MySql57 disabled due to encoding issues on CI
+		// need to configure sybase docker image to use utf8 character set
+		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
-		public void CharTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
+		public void CharTrimming([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -266,9 +266,9 @@ namespace Tests.Linq
 
 					for (var i = 0; i < records.Length; i++)
 					{
-						if (context == ProviderName.SapHana || context == ProviderName.SapHana + ".LinqService")
+						if (context.StartsWith(ProviderName.SapHana))
 						{
-							// for some reason, SAP returns \0 for space character
+							// SAP or provider trims space and we return default value, which is \0 for char
 							// or we insert it incorrectly?
 							if (testData[i].Char == ' ')
 								Assert.AreEqual('\0', records[i].Char);
@@ -290,8 +290,8 @@ namespace Tests.Linq
 							  || context == ProviderName.MySql + ".LinqService"
 							  || context == ProviderName.MySqlConnector
 							  || context == ProviderName.MySqlConnector + ".LinqService"
-							  || context == TestProvName.MySql57
-							  || context == TestProvName.MySql57 + ".LinqService"
+							  || context == TestProvName.MySql55
+							  || context == TestProvName.MySql55 + ".LinqService"
 							  || context == TestProvName.MariaDB
 							  || context == TestProvName.MariaDB + ".LinqService")
 							// for some reason mysql doesn't insert space
@@ -321,8 +321,8 @@ namespace Tests.Linq
 				|| context == ProviderName.MySql + ".LinqService"
 				|| context == ProviderName.MySqlConnector
 				|| context == ProviderName.MySqlConnector + ".LinqService"
-				|| context == TestProvName.MySql57
-				|| context == TestProvName.MySql57    + ".LinqService"
+				|| context == TestProvName.MySql55
+				|| context == TestProvName.MySql55 + ".LinqService"
 				|| context == TestProvName.MariaDB
 				|| context == TestProvName.MariaDB    + ".LinqService";
 		}

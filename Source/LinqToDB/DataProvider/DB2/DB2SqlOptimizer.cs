@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -17,21 +18,21 @@ namespace LinqToDB.DataProvider.DB2
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
-					p.IsQueryParameter = false;
+
+				if (p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+					p.IsQueryParameter = true;
 			}
 		}
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
+			new QueryVisitor().Visit(statement, SetQueryParameter);
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);

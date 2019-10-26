@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -59,19 +60,19 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
 				from c in tcs.AsEnumerable()
-				join dt in DataTypes on c.Field<string>("COLUMN_DATA_TYPE") equals dt.TypeName
+				let dt = GetDataType(c.Field<string>("COLUMN_DATA_TYPE"), options)
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
-					DataType     = dt.TypeName,
+					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					Length       = Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
@@ -153,7 +154,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 			(
@@ -162,7 +163,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let systemType   = r.Field<Type>("DataType")
 				let columnName   = r.Field<string>("ColumnName")
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType == null ? null : dataType.TypeName
 				let length       = r.Field<int> ("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int> (r["NumericPrecision"])
@@ -171,7 +172,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				select new ColumnSchema
 				{
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 					ColumnName           = columnName,
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),

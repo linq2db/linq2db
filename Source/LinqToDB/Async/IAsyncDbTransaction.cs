@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,5 +30,11 @@ namespace LinqToDB.Async
 		/// Gets underlying transaction instance.
 		/// </summary>
 		IDbTransaction Transaction { get; }
+
+		/// <summary>
+		/// Disposes transaciton asynchronously.
+		/// </summary>
+		/// <returns>Asynchronous operation completion task.</returns>
+		Task DisposeAsync();
 	}
 }

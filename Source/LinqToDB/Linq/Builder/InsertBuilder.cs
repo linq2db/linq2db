@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -104,6 +105,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);

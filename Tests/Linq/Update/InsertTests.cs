@@ -24,6 +24,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
@@ -62,6 +63,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
@@ -1462,7 +1464,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
+			ProviderName.Informix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

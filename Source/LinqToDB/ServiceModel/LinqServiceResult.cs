@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
@@ -10,7 +11,6 @@ namespace LinqToDB.ServiceModel
 		public Guid           QueryID      { get; set; }
 		public string[]       FieldNames   { get; set; }
 		public Type[]         FieldTypes   { get; set; }
-		public Type[]         VaryingTypes { get; set; }
 		public List<string[]> Data         { get; set; }
 	}
 }

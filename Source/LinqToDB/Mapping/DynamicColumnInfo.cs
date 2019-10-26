@@ -1,11 +1,10 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Globalization;
 using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-#if !NETSTANDARD1_6
-
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
@@ -47,7 +46,8 @@ namespace LinqToDB.Mapping
 		public DynamicColumnInfo(Type declaringType, Type columnType, string memberName)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException(nameof(declaringType));
-			PropertyType = columnType ?? throw new ArgumentNullException(nameof(columnType));
+			PropertyType  = columnType    ?? throw new ArgumentNullException(nameof(columnType));
+
 			Name = !string.IsNullOrEmpty(memberName) ? memberName : throw new ArgumentNullException(nameof(memberName));
 
 			_typedDummyGetter = _dummyGetter.MakeGenericMethod(declaringType);
@@ -142,6 +142,4 @@ namespace LinqToDB.Mapping
 		private void DummySetter<T>(T value)
 			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
 	}
-	
-#endif
 }

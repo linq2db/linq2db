@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -110,16 +111,14 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
 
 			return
 			(
 				from c in cs.AsEnumerable()
-				join dt in DataTypes on c.Field<int>("DATA_TYPE") equals dt.ProviderDbType
-				//into gdt
-				//from dt in gdt.DefaultIfEmpty()
+				let dt = GetDataTypeByProviderDbType(c.Field<int>("DATA_TYPE"), options)
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
@@ -137,8 +136,10 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
+			// this line (GetOleDbSchemaTable) could crash application hard with AV:
+			// https://github.com/linq2db/linq2db.LINQPad/issues/23
 			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
-				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] { null, null });
+				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo

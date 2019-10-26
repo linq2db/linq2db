@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -9,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	struct IsExpressionResult
 	{
 		/// <summary>
-		/// Indicates when test or request was successfull.
+		/// Indicates when test or request was successful.
 		/// </summary>
 		public readonly bool          Result;
 

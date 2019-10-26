@@ -56,14 +56,9 @@ namespace Tests.UserTests
 		public void TestConnectionStringCopy(
 			[DataSources(
 				false,
-#if NETSTANDARD1_6
-				TestProvName.AllMySqlData,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSqlServer,
-#endif
 				ProviderName.MySqlConnector,
 				TestProvName.AllOracle,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 					string context,
 			[Values]
 					bool providerSpecific)

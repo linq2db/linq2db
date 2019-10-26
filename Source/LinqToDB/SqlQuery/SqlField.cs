@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -33,6 +34,7 @@ namespace LinqToDB.SqlQuery
 			CreateFormat     = field.CreateFormat;
 			CreateOrder      = field.CreateOrder;
 			ColumnDescriptor = field.ColumnDescriptor;
+			IsDynamic        = field.IsDynamic;
 		}
 
 		public SqlField(ColumnDescriptor column)
@@ -64,6 +66,7 @@ namespace LinqToDB.SqlQuery
 		public bool             IsIdentity       { get; set; }
 		public bool             IsInsertable     { get; set; }
 		public bool             IsUpdatable      { get; set; }
+		public bool             IsDynamic        { get; set; }
 		public DataType         DataType         { get; set; }
 		public string           DbType           { get; set; }
 		public int?             Length           { get; set; }
@@ -133,7 +136,9 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			Table.Clone(objectTree, doClone);
+			var table = Table.Clone(objectTree, doClone);
+			if (table == Table)
+				return this;
 
 			return objectTree[this];
 		}

@@ -257,5 +257,20 @@ namespace LinqToDB
 		/// SQL Server 2008+ table-valued parameter type (TVP).
 		/// </summary>
 		Structured,
+
+		/// <summary>
+		/// Oracle data type for storing character data of variable length up to 2 Gigabytes in length (bigger version of the VARCHAR2 datatype).
+		/// </summary>
+		Long,
+
+		/// <summary>
+		/// Oracle data type for storing binary data of variable length up to 2 Gigabytes in length.
+		/// </summary>
+		LongRaw,
+
+		/// <summary>
+		/// PostgreSQL interval type.
+		/// </summary>
+		Interval
 	}
 }

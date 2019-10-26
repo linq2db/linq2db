@@ -64,8 +64,6 @@ namespace LinqToDB.Linq
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqException"/> class
 		/// with serialized data.
@@ -80,8 +78,6 @@ namespace LinqToDB.Linq
 			: base(info, context)
 		{
 		}
-
-#endif
 	}
 }
 

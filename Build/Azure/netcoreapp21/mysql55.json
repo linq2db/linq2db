@@ -1,0 +1,8 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			// MySql 5.5
+			"MySql55"
+		]
+	}
+}

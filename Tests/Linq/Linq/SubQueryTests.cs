@@ -214,7 +214,7 @@ namespace Tests.Linq
 		public void Contains1([DataSources(
 			ProviderName.Informix,
 			TestProvName.AllSybase,
-			ProviderName.SapHana,
+			TestProvName.AllSapHana,
 			ProviderName.Access,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
@@ -236,7 +236,7 @@ namespace Tests.Linq
 			ProviderName.Informix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
-			ProviderName.SapHana,
+			TestProvName.AllSapHana,
 			ProviderName.Access,
 			TestProvName.AllOracle,
 			ProviderName.DB2)]
@@ -297,7 +297,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Informix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -527,7 +527,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle, ProviderName.SapHana)]
+			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

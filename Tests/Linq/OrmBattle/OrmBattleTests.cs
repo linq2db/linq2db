@@ -1324,7 +1324,6 @@ namespace Tests.OrmBattle
 		}
 
 		[Test, Category("Join")]
-		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void LeftJoinTest([NorthwindDataContext] string context)
 		{
 			Setup(context);

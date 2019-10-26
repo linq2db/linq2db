@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Linq;
 
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 
-	class OracleSqlBuilder : BasicSqlBuilder
+	partial class OracleSqlBuilder : BasicSqlBuilder
 	{
 		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -90,8 +91,6 @@ namespace LinqToDB.DataProvider.Oracle
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
-		string _rowNumberAlias;
-
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
@@ -107,119 +106,13 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildSql()
-		{
-			var selectQuery = Statement.SelectQuery;
-
-			if (selectQuery == null)
-			{
-				base.BuildSql();
-				return;
-			}
-
-			if (NeedSkip(selectQuery))
-			{
-				SkipAlias = false;
-
-				var aliases = GetTempAliases(2, "t");
-
-				if (_rowNumberAlias == null)
-					_rowNumberAlias = GetTempAliases(1, "rn")[0];
-
-				AppendIndent().AppendFormat("SELECT {0}.*", aliases[1]).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				AppendIndent().AppendFormat("SELECT {0}.*, ROWNUM as {1}", aliases[0], _rowNumberAlias).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				base.BuildSql();
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
-
-				if (NeedTake(selectQuery))
-				{
-					AppendIndent().AppendLine("WHERE");
-					AppendIndent().Append("\tROWNUM <= ");
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue, selectQuery.Select.TakeValue));
-					StringBuilder.AppendLine();
-				}
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[1]).AppendLine();
-				AppendIndent().Append("WHERE").AppendLine();
-
-				Indent++;
-
-				AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-				BuildExpression(selectQuery.Select.SkipValue);
-
-				StringBuilder.AppendLine();
-				Indent--;
-			}
-			else if (NeedTake(selectQuery) && (!selectQuery.OrderBy.IsEmpty || !selectQuery.Having.IsEmpty))
-			{
-				SkipAlias = false;
-
-				var aliases = GetTempAliases(1, "t");
-
-				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				base.BuildSql();
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
-				AppendIndent().Append("WHERE").AppendLine();
-
-				Indent++;
-
-				AppendIndent().Append("ROWNUM <= ");
-				BuildExpression(selectQuery.Select.TakeValue);
-
-				StringBuilder.AppendLine();
-				Indent--;
-			}
-			else
-			{
-				base.BuildSql();
-			}
-		}
-
-		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
-		{
-			if (NeedTake(selectQuery) && !NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty)
-			{
-				BuildPredicate(
-					Precedence.LogicalConjunction,
-					new SqlPredicate.ExprExpr(
-						new SqlExpression(null, "ROWNUM", Precedence.Primary),
-						SqlPredicate.Operator.LessOrEqual,
-						selectQuery.Select.TakeValue));
-
-				if (base.BuildWhere(selectQuery))
-				{
-					StringBuilder.Append(" AND ");
-					BuildSearchCondition(Precedence.LogicalConjunction, condition);
-				}
-			}
-			else
-				BuildSearchCondition(Precedence.Unknown, condition);
-		}
-
 		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -232,6 +125,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.VarChar        :
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+						StringBuilder.Append("VarChar(4000)");
+					else
+						StringBuilder.Append($"VarChar({type.Length})");
+					break;
 				case DataType.NVarChar       :
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
@@ -249,7 +148,7 @@ namespace LinqToDB.DataProvider.Oracle
 					else
 						StringBuilder.Append("Raw(").Append(type.Length).Append(")");
 					break;
-				default: base.BuildDataType(type, createDbType);                                  break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
 		}
 
@@ -275,12 +174,6 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				base.BuildInsertQuery(statement, insertClause, addAlias);
 			}
-		}
-
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)
@@ -585,14 +478,20 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
 				sb.Append(schema).Append(".");
 
-			return sb.Append(table);
+			sb.Append(table);
+
+			if (server != null)
+				sb.Append("@").Append(server);
+
+			return sb;
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -31,7 +32,7 @@ namespace LinqToDB.Mapping
 			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
-			if (_memberInfo.ReflectedTypeEx() != typeof(T))
+			if (_memberInfo.ReflectedType != typeof(T))
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 
@@ -287,7 +288,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="format">
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable, string)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;
@@ -323,7 +324,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
+		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnInsert">If <c>true</c> - column will be ignored for implicit insert operations.</param>
@@ -336,7 +337,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnUpdate">If <c>true</c> - column will be ignored for implicit update operations.</param>
@@ -453,12 +454,13 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="expression">Expression for mapping member during read.</param>
 		/// <param name="isColumn">Indicates whether a property value should be filled during entity materialization (calculated property).</param>
+		/// <param name="alias">Optional alias for specific member expression. By default Member Name is used.</param>
 		/// <returns>Returns current column mapping builder.</returns>
-		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false)
+		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false, string alias = null)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			return HasAttribute(new ExpressionMethodAttribute(expression) {  IsColumn = isColumn }).IsNotColumn();
+			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}
 
 	}
