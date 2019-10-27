@@ -597,8 +597,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var fld = (SqlField)e;
 
-							if (fld != fld.Table?.All)
-								GetType(fld.SystemType);
+							// All could have type for scalar subqueries
+							//if (fld != fld.Table?.All)
+							GetType(fld.SystemType);
 
 							break;
 						}

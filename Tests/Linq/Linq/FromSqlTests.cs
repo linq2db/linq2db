@@ -349,25 +349,26 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestScalar(
-			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			[IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSqlServer)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.FromSql<int>("select 1").ToArray();
+				var result = db.FromSql<int>($"select 1 as x").ToArray();
 			}
 		}
 
 		[Test]
 		public void TestScalarSubquery(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL)]
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
+				// ::text hint needed for pgsql < 10
 				var query =
 					from c in db.SelectQuery(() => "hello world")
-					from s in db.FromSql<string>($"regexp_split_to_table({c}, E'\\\\s+') {Sql.AliasExpr()}")
+					from s in db.FromSql<string>($"regexp_split_to_table({c}::text, E'\\\\s+') {Sql.AliasExpr()}")
 					select s;
 				var result = query.ToArray();
 				var expected = new[] { "hello", "world" };
@@ -399,7 +400,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestUnnest(
-			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			// `with ordinality` added to pgsql 9.4
+			[IncludeDataSources(TestProvName.AllPostgreSQL95Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -416,7 +418,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestUnnestFunction(
-			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			// `with ordinality` added to pgsql 9.4
+			[IncludeDataSources(TestProvName.AllPostgreSQL95Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
