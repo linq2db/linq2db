@@ -762,12 +762,16 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									// for scalar we have single column without known name but with type
-									var field        = SqlTable.All;
-									field.SystemType = OriginalType;
+									ISqlExpression sql = SqlTable;
+									if (SqlTable is SqlRawSqlTable)
+									{
+										sql                        = SqlTable.All;
+										((SqlField)sql).SystemType = OriginalType;
+									}
+
 									result = new[]
 									{
-										new SqlInfo(Enumerable.Empty<MemberInfo>()) { Sql = field }
+										new SqlInfo(Enumerable.Empty<MemberInfo>()) { Sql = sql }
 									};
 								}
 
