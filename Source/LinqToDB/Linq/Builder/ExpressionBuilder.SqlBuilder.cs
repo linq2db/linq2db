@@ -3181,8 +3181,9 @@ namespace LinqToDB.Linq.Builder
 									members.Add(info.GetPropertyInfo(), converted);
 							}
 						}
-						
-						CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
+
+						if (!MappingSchema.IsScalarType(expr.Type))
+							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
 
 						return members.Count > 0;
 					}
@@ -3216,7 +3217,8 @@ namespace LinqToDB.Linq.Builder
 
 						// process fabric methods
 
-						CollectParameters(mc.Type, mc.Method, mc.Arguments);
+						if (!MappingSchema.IsScalarType(mc.Type))
+							CollectParameters(mc.Type, mc.Method, mc.Arguments);
 
 						return members.Count > 0;
 					}
