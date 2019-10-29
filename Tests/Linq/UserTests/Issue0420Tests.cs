@@ -6,7 +6,6 @@ namespace Tests.UserTests
 {
 	public class Issue0420Tests : TestBase
 	{
-		[ActiveIssue(420)]
 		[Test]
 		public void Test([DataSources] string context)
 		{
