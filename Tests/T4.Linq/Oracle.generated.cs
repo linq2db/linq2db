@@ -21,29 +21,30 @@ namespace OracleDataContext
 {
 	public partial class XEDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>             ALLTYPES            { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
-		public ITable<CHILD>               Children            { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST>        Datatypetests       { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DECIMALOVERFLOW>     Decimaloverflows    { get { return this.GetTable<DECIMALOVERFLOW>(); } }
-		public ITable<DOCTOR>              Doctors             { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<GRANDCHILD>          Grandchilds         { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<INHERITANCECHILD>    Inheritancechilds   { get { return this.GetTable<INHERITANCECHILD>(); } }
-		public ITable<INHERITANCEPARENT>   Inheritanceparents  { get { return this.GetTable<INHERITANCEPARENT>(); } }
-		public ITable<LINQDATATYPE>        LINQDATATYPES       { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<PARENT>              Parents             { get { return this.GetTable<PARENT>(); } }
-		public ITable<PATIENT>             Patients            { get { return this.GetTable<PATIENT>(); } }
-		public ITable<PERSON>              People              { get { return this.GetTable<PERSON>(); } }
-		public ITable<SEQUENCETEST>        Sequencetests       { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<StgTradeInformation> StgTradeInformation { get { return this.GetTable<StgTradeInformation>(); } }
-		public ITable<STRINGTEST>          Stringtests         { get { return this.GetTable<STRINGTEST>(); } }
-		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
-		public ITable<TESTIDENTITY>        Testidentities      { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTIDTRUN>          Testidtruns         { get { return this.GetTable<TESTIDTRUN>(); } }
-		public ITable<TESTMERGE1>          TESTMERGE1          { get { return this.GetTable<TESTMERGE1>(); } }
-		public ITable<TESTMERGE2>          TESTMERGE2          { get { return this.GetTable<TESTMERGE2>(); } }
-		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
-		public ITable<TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TTestUserContract>(); } }
+		public ITable<ALLTYPE>               ALLTYPES               { get { return this.GetTable<ALLTYPE>(); } }
+		public ITable<BillingDevreadingtype> BillingDevreadingtypes { get { return this.GetTable<BillingDevreadingtype>(); } }
+		public ITable<BINARYDATA>            Binarydatas            { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<CHILD>                 Children               { get { return this.GetTable<CHILD>(); } }
+		public ITable<DATATYPETEST>          Datatypetests          { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DECIMALOVERFLOW>       Decimaloverflows       { get { return this.GetTable<DECIMALOVERFLOW>(); } }
+		public ITable<DOCTOR>                Doctors                { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<GRANDCHILD>            Grandchilds            { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<INHERITANCECHILD>      Inheritancechilds      { get { return this.GetTable<INHERITANCECHILD>(); } }
+		public ITable<INHERITANCEPARENT>     Inheritanceparents     { get { return this.GetTable<INHERITANCEPARENT>(); } }
+		public ITable<LINQDATATYPE>          LINQDATATYPES          { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<LONGRAWTABLE>          Longrawtables          { get { return this.GetTable<LONGRAWTABLE>(); } }
+		public ITable<PARENT>                Parents                { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>               Patients               { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PERSON>                People                 { get { return this.GetTable<PERSON>(); } }
+		public ITable<SEQUENCETEST>          Sequencetests          { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<StgTradeInformation>   StgTradeInformation    { get { return this.GetTable<StgTradeInformation>(); } }
+		public ITable<STRINGTEST>            Stringtests            { get { return this.GetTable<STRINGTEST>(); } }
+		public ITable<TEntity>               TEntities              { get { return this.GetTable<TEntity>(); } }
+		public ITable<TESTIDENTITY>          Testidentities         { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTMERGE1>            TESTMERGE1             { get { return this.GetTable<TESTMERGE1>(); } }
+		public ITable<TESTMERGE2>            TESTMERGE2             { get { return this.GetTable<TESTMERGE2>(); } }
+		public ITable<TTestUser>             TTestUsers             { get { return this.GetTable<TTestUser>(); } }
+		public ITable<TTestUserContract>     TTestUserContracts     { get { return this.GetTable<TTestUserContract>(); } }
 
 		public XEDB()
 		{
@@ -91,8 +92,18 @@ namespace OracleDataContext
 		[Column(DbType="BLOB",                              DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
 		[Column(DbType="BFILE",                             DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
 		[Column(DbType="RAW(16)",                           DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]          GUIDDATATYPE           { get; set; } // RAW(16)
+		[Column(DbType="LONG",                              DataType=DataType.Long,           Length=0),                            Nullable         ] public string          LONGDATATYPE           { get; set; } // LONG
 		[Column(DbType="URITYPE",                           DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object          URIDATATYPE            { get; set; } // URITYPE
 		[Column(DbType="XMLTYPE",                           DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
+	}
+
+	[Table(Schema="MANAGED", Name="BILLING_DEVREADINGTYPE")]
+	public partial class BillingDevreadingtype
+	{
+		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID             { get; set; } // NUMBER
+		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal DEVTYPEID      { get; set; } // NUMBER
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME           { get; set; } // VARCHAR2(50)
+		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal RESPONSIBILITY { get; set; } // NUMBER
 	}
 
 	[Table(Schema="MANAGED", Name="BINARYDATA")]
@@ -205,6 +216,13 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)",  DataType=DataType.VarChar,   Length=50),                        Nullable] public string    STRINGVALUE    { get; set; } // VARCHAR2(50)
 	}
 
+	[Table(Schema="MANAGED", Name="LONGRAWTABLE")]
+	public partial class LONGRAWTABLE
+	{
+		[Column(DbType="NUMBER",   DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
+		[Column(DbType="LONG RAW", DataType=DataType.LongRaw, Length=0),     Nullable         ] public byte[]  LONGRAWDATATYPE { get; set; } // LONG RAW
+	}
+
 	[Table(Schema="MANAGED", Name="PARENT")]
 	public partial class PARENT
 	{
@@ -296,13 +314,6 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="TESTIDTRUN")]
-	public partial class TESTIDTRUN
-	{
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID     { get; set; } // NUMBER
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal FIELD1 { get; set; } // NUMBER
-	}
-
 	[Table(Schema="MANAGED", Name="TESTMERGE1")]
 	public partial class TESTMERGE1
 	{
@@ -364,7 +375,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00203119_BackReference
+		/// SYS_C00357868_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; }
@@ -383,9 +394,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00203119
+		/// SYS_C00357868
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00203119", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00357868", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; }
 
 		#endregion
@@ -395,7 +406,7 @@ namespace OracleDataContext
 	{
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, decimal? PPERSONID, string PFIRSTNAME, string PLASTNAME, string PMIDDLENAME, string PGENDER)
+		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string PFIRSTNAME, string PLASTNAME, string PMIDDLENAME, string PGENDER)
 		{
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
 				new DataParameter("PPERSONID",   PPERSONID,   DataType.Decimal),
@@ -409,7 +420,7 @@ namespace OracleDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this DataConnection dataConnection, decimal? PPERSONID)
+		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
 		{
 			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE",
 				new DataParameter("PPERSONID", PPERSONID, DataType.Decimal));
@@ -419,7 +430,7 @@ namespace OracleDataContext
 
 		#region OUTREFTEST
 
-		public static int OUTREFTEST(this DataConnection dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
+		public static int OUTREFTEST(this XEDB dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
 				new DataParameter("PID",             PID,             DataType.Decimal),
@@ -441,7 +452,7 @@ namespace OracleDataContext
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this DataConnection dataConnection, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
+		public static int OUTREFENUMTEST(this XEDB dataConnection, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
 				new DataParameter("PSTR",            PSTR,            DataType.NVarChar),
@@ -460,6 +471,12 @@ namespace OracleDataContext
 	public static partial class TableExtensions
 	{
 		public static ALLTYPE Find(this ITable<ALLTYPE> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static BillingDevreadingtype Find(this ITable<BillingDevreadingtype> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -495,6 +512,12 @@ namespace OracleDataContext
 				t.INHERITANCEPARENTID == INHERITANCEPARENTID);
 		}
 
+		public static LONGRAWTABLE Find(this ITable<LONGRAWTABLE> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
 		public static PATIENT Find(this ITable<PATIENT> table, decimal PERSONID)
 		{
 			return table.FirstOrDefault(t =>
@@ -520,12 +543,6 @@ namespace OracleDataContext
 		}
 
 		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, decimal ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static TESTIDTRUN Find(this ITable<TESTIDTRUN> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
