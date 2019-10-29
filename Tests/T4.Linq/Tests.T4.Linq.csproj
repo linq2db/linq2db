@@ -211,8 +211,10 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net46'">
 		<None Remove="SqlServer.tt" />
+		<None Remove="SqlServer.2017.tt" />
 		<None Remove="SqlServerAzure.tt" />
 		<Compile Remove="SqlServer.generated.cs" />
+		<Compile Remove="SqlServer.2017.generated.cs" />
 		<Compile Remove="SqlServerAzure.generated.cs" />
 	</ItemGroup>
 
