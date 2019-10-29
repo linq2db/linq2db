@@ -101,6 +101,12 @@
 		  <DependentUpon>SQLite.tt</DependentUpon>
 		</Compile>
 
+		<Compile Update="SqlServer.2017.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.2017.tt</DependentUpon>
+		</Compile>
+
 		<Compile Update="SqlServer.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
@@ -180,6 +186,10 @@
 		<None Update="SQLite.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		</None>
+		<None Update="SqlServer.2017.tt">
+		  <LastGenOutput>SqlServer.2017.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="SqlServerAzure.tt">
 		  <LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>

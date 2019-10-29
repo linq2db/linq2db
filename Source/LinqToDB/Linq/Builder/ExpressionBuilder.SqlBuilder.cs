@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -1785,7 +1786,7 @@ namespace LinqToDB.Linq.Builder
 				default: throw new InvalidOperationException();
 			}
 
-			if (left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert)
+			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context, left, op, right);
 				if (p != null)

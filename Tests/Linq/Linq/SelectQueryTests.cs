@@ -164,5 +164,16 @@ namespace Tests.Linq
 				}).First();
 			}
 		}
+
+		[Test]
+		public void TestAliasesCollision([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Child.Where(child => child.ChildID == -1).ToString();
+				Assert.That(sql, Does.Contain("child_1"));
+			}
+		}
+
 	}
 }
