@@ -48,7 +48,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(1084)]
 		[Test]
-		public void TestConstructorWithParameters([DataSources] string context)
+		public void TestTupleFactoryWithConstructorWithParameters([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Person>())
@@ -69,8 +69,31 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(1084)]
 		[Test]
-		public void TestDefaultConstructor([DataSources] string context)
+		public void TestTupleConstructorWithConstructorWithParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1084Person>())
+			using (db.CreateLocalTable<Issue1084Student>())
+			{
+				var result = from k in db.GetTable<Issue1084Person>()
+							 join ks in db.GetTable<Issue1084Student>() on
+								new Tuple<int, string>(k.Id, k.Number.ToString()) equals new Tuple<int, string>(ks.Id, ks.Number)
+								into joinedTable
+							 from g in joinedTable.DefaultIfEmpty()
+							 select new Issue1084Person(k)
+							 {
+								 IsBlocked = (k.StatusBitmask & 0x80) != 0,
+								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
+							 };
+
+				result.ToList();
+			}
+		}
+
+		[Test]
+		public void TestTupleFactoryWithDefaultConstructor([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Personv2>())
@@ -84,6 +107,28 @@ namespace Tests.UserTests
 							 select new Issue1084Personv2()
 							 {
 								 IsBlocked        = (k.StatusBitmask & 0x80) != 0,
+								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
+							 };
+
+				result.ToList();
+			}
+		}
+
+		[Test]
+		public void TestTupleConstructorWithDefaultConstructor([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1084Personv2>())
+			using (db.CreateLocalTable<Issue1084Student>())
+			{
+				var result = from k in db.GetTable<Issue1084Person>()
+							 join ks in db.GetTable<Issue1084Student>() on
+								Tuple.Create(k.Id, k.Number.ToString()) equals Tuple.Create(ks.Id, ks.Number)
+								into joinedTable
+							 from g in joinedTable.DefaultIfEmpty()
+							 select new Issue1084Personv2()
+							 {
+								 IsBlocked = (k.StatusBitmask & 0x80) != 0,
 								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
 							 };
 
