@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -1784,7 +1786,7 @@ namespace LinqToDB.Linq.Builder
 				default: throw new InvalidOperationException();
 			}
 
-			if (left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert)
+			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context, left, op, right);
 				if (p != null)
@@ -3131,6 +3133,34 @@ namespace LinqToDB.Linq.Builder
 
 		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
+			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
+			{
+				var pms = method.GetParameters();
+
+				var typeMembers = TypeAccessor.GetAccessor(forType).Members;
+
+				for (var i = 0; i < pms.Length; i++)
+				{
+					var param = pms[i];
+					var foundMember = typeMembers.Find(tm => tm.Name == param.Name);
+					if (foundMember == null)
+						foundMember = typeMembers.Find(tm =>
+							tm.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+					if (foundMember == null)
+						continue;
+
+					if (members.ContainsKey(foundMember.MemberInfo))
+						continue;
+
+					var converted = arguments[i].Transform(e => RemoveNullPropagation(e));
+
+					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
+						continue;
+
+					members.Add(foundMember.MemberInfo, converted);
+				}
+			}
+
 			switch (expression.NodeType)
 			{
 				// new { ... }
@@ -3139,25 +3169,24 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = (NewExpression)expression;
 
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-						if (expr.Members == null)
-							return false;
-// ReSharper restore HeuristicUnreachableCode
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-						for (var i = 0; i < expr.Members.Count; i++)
+						if (expr.Members != null)
 						{
-							var member = expr.Members[i];
+							for (var i = 0; i < expr.Members.Count; i++)
+							{
+								var member = expr.Members[i];
 
-							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
-							members.Add(member, converted);
+								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+								members.Add(member, converted);
 
-							if (member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), converted);
+								if (member is MethodInfo info)
+									members.Add(info.GetPropertyInfo(), converted);
+							}
 						}
 
-						return true;
+						if (!MappingSchema.IsScalarType(expr.Type))
+							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
+
+						return members.Count > 0;
 					}
 
 				// new MyObject { ... }
@@ -3165,7 +3194,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberInit :
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
+						var typeMembers = TypeAccessor.GetAccessor(expr.Type).Members;
+
+						var dic  = typeMembers
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
@@ -3179,6 +3210,18 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return true;
+					}
+
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expression;
+
+						// process fabric methods
+
+						if (!MappingSchema.IsScalarType(mc.Type))
+							CollectParameters(mc.Type, mc.Method, mc.Arguments);
+
+						return members.Count > 0;
 					}
 
 				// .Select(p => everything else)
