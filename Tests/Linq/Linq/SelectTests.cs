@@ -10,7 +10,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1110,6 +1110,68 @@ namespace Tests.Linq
 					};
 
 				_ = query.ToList();
+			}
+		}
+
+		class ParentResult
+		{
+			public ParentResult(int parentID, int? value1)
+			{
+				ParentID = parentID;
+				Value1 = value1;
+			}
+
+			public int? Value1 { get; }
+			public int ParentID { get; }
+		}
+
+		[Test]
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Value1 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Value1 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery, ComparerBuilder.GetEqualityComparer<ParentResult>());
+			}
+		}
+
+		[Test]
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Item2 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Item2 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery);
 			}
 		}
 

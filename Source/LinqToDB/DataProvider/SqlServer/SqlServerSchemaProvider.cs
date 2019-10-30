@@ -12,12 +12,14 @@ namespace LinqToDB.DataProvider.SqlServer
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		bool _isAzure;
+		int _compatibilityLevel;
 
 		protected override void InitProvider(DataConnection dataConnection)
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			_isAzure = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			_isAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			_compatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -455,6 +457,18 @@ namespace LinqToDB.DataProvider.SqlServer
 				};
 
 			return base.BuildProcedureParameter(p);
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			var sql = base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
+
+			// TODO: v3.0: refactor method to use query as parameter instead of manual escaping...
+			// https://github.com/linq2db/linq2db/issues/1921
+			if (_compatibilityLevel >= 140)
+				sql = $"EXEC('{sql.Replace("'", "''")}')";
+
+			return sql;
 		}
 	}
 }
