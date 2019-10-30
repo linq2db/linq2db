@@ -36,7 +36,7 @@ build_script:
 
 before_build:
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release2")
     {
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }
