@@ -138,7 +138,10 @@ namespace Tests.DataProvider
 				TestType(conn, "ntextDataType",          "111");
 
 				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
+#if !AZURE
+				// TODO: configure test file in docker image
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
+#endif
 
 				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
 				{
@@ -890,7 +893,7 @@ namespace Tests.DataProvider
 
 		#region BulkCopy
 
-		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
+		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -903,6 +906,15 @@ namespace Tests.DataProvider
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						;
+
+					if (GetProviderName(context, out var _) == ProviderName.OracleNative)
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.BoolValue)
+									.HasDataType(DataType.Int16)
+							;
+					}
 
 					db.AddMappingSchema(ms);
 				}
@@ -2465,6 +2477,24 @@ namespace Tests.DataProvider
 				Assert.That(insertedItems.Length, Is.EqualTo(2));
 				Assert.That(insertedItems[0].LONGRAWDATATYPE, Is.EqualTo(bytes1));
 				Assert.That(insertedItems[1].LONGRAWDATATYPE, Is.EqualTo(bytes2));
+			}
+		}
+
+		[Test]
+		public void TestUpdateAliases([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from child in db.Child
+					from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID && parent.ParentID < 5)
+					select child;
+
+				var countRecords = query.Count();
+
+				var recordsAffected = query.Set(child => child.ParentID, child => child.ParentID)
+					.Update();
+				
+				Assert.That(recordsAffected, Is.EqualTo(countRecords));
 			}
 		}
 

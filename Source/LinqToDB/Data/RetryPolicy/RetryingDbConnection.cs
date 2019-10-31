@@ -123,9 +123,14 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public Task CloseAsync(CancellationToken cancellationToken = default)
+		public Task CloseAsync()
 		{
-			return _connection.CloseAsync(cancellationToken);
+			return _connection.CloseAsync();
+		}
+
+		public Task DisposeAsync()
+		{
+			return _connection.DisposeAsync();
 		}
 
 		public IAsyncDbConnection TryClone()

@@ -670,9 +670,19 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
 				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
 				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
-				Assert.AreEqual(expectedProc.IsLoaded,              procedure.IsLoaded);
 
-				Assert.IsNull(procedure.ResultException);
+				if (GetProviderName(context, out var _) == ProviderName.MySqlConnector
+					&& procedure.ResultException != null)
+				{
+					Assert.False       (procedure.IsLoaded);
+					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
+					Assert.AreEqual    ("There is no current result set.", procedure.ResultException.Message);
+				}
+				else
+				{
+					Assert.AreEqual(expectedProc.IsLoaded, procedure.IsLoaded);
+					Assert.IsNull(procedure.ResultException);
+				}
 
 				Assert.AreEqual(expectedProc.Parameters.Count, procedure.Parameters.Count);
 

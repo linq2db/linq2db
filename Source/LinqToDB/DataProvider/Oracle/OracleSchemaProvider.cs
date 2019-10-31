@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			switch (columnType)
 			{
@@ -287,7 +287,7 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
@@ -321,8 +321,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case "FLOAT"                  : return DataType.Decimal;
 				case "INTERVAL DAY TO SECOND" : return DataType.Time;
 				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
-				case "LONG"                   : return DataType.Text;
-				case "LONG RAW"               : return DataType.Binary;
+				case "LONG"                   : return DataType.Long;
+				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
 				case "NCLOB"                  : return DataType.NText;
 				case "NUMBER"                 : return DataType.Decimal;

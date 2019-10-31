@@ -676,6 +676,15 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region Issue1897
+
+		public static int Issue1897(this Issue1733DB dataConnection)
+		{
+			return dataConnection.ExecuteProc("[dbo].[Issue1897]");
+		}
+
+		#endregion
+
 		#region OutRefEnumTest
 
 		public static int OutRefEnumTest(this Issue1733DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)

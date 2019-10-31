@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SQLite
 				from c in cs.AsEnumerable()
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE")
+				let dataType = c.Field<string>("DATA_TYPE").Trim()
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),

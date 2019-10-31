@@ -72,8 +72,21 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
+		// workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
+		// needed only for Microsoft.Data.Sqlite 3.0.0
+		private bool _needsCommandDisposeOnError;
+
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
+			_needsCommandDisposeOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
+		}
+
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
+		{
+			if (_needsCommandDisposeOnError)
+				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
+
+			return base.ExecuteScope(dataConnection);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
@@ -110,9 +123,20 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
+			// handles situation, when char values were serialized as character hex value for some
+			// versions of Microsoft.Data.Sqlite
 			if (Name == ProviderName.SQLiteMS && value is char)
 			{
 				value = value.ToString();
+			}
+
+			// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
+			// https://github.com/aspnet/EntityFrameworkCore/issues/15078
+			// pre-3.0 and System.Data.Sqlite uses binary type for Guid values, there is no reason to replace it with string value
+			// we can allow strings later if there will be request for it
+			if (Name == ProviderName.SQLiteMS && value is Guid guid)
+			{
+				value = guid.ToByteArray();
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);

@@ -108,7 +108,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
@@ -135,7 +135,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
@@ -162,7 +162,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
@@ -254,7 +254,7 @@ namespace LinqToDB.ServiceModel
 					ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					db.BeginTransaction();
 

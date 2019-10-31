@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Informix
 		Type _ifxDateTime;
 		Type _ifxTimeSpan;
 
-		public override IDisposable ExecuteScope()
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
 		{
 			return new InvariantCultureRegion();
 		}

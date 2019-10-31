@@ -6,10 +6,14 @@
 <#
 	NamespaceName = "PostreSQLDataContext";
 
+	GetSchemaOptions.PreferProviderSpecificTypes = true;
+
 	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL"));
 
 	GetTable("testsamename").TypeName = "_testsamename";
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
+	GenerateDataTypes                            = true;
 
 	GenerateModel();
 

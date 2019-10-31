@@ -16,6 +16,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 using Microsoft.SqlServer.Types;
 using SqlServerTypes;
@@ -1414,6 +1415,32 @@ namespace Tests.DataProvider
 		private bool IsMsProvider(string context)
 		{
 			return ((SqlServerDataProvider)DataConnection.GetDataProvider(GetProviderName(context, out var _))).Provider == SqlServerProvider.MicrosoftDataSqlClient;
+		}
+
+		[Test]
+		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue1921");
+				Assert.NotNull(proc);
+				Assert.AreEqual("Issue1921", proc.ProcedureName);
+				Assert.AreEqual(true       , proc.IsTableFunction);
+				Assert.NotNull(proc.ResultTable);
+				Assert.AreEqual(2          , proc.ResultTable.Columns.Count);
+				Assert.AreEqual("name"     , proc.ResultTable.Columns[0].ColumnName);
+				Assert.AreEqual("string"   , proc.ResultTable.Columns[0].MemberType);
+				Assert.AreEqual("objid"    , proc.ResultTable.Columns[1].ColumnName);
+				Assert.AreEqual("int?"     , proc.ResultTable.Columns[1].MemberType);
+
+			}
 		}
 	}
 }

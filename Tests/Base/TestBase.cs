@@ -221,6 +221,7 @@ namespace Tests
 		const int IP = 22654;
 		static bool _isHostOpen;
 		static LinqService _service;
+		static object _syncRoot = new object();
 #endif
 
 		static void OpenHost(MappingSchema ms)
@@ -232,9 +233,18 @@ namespace Tests
 				return;
 			}
 
-			_isHostOpen = true;
+			ServiceHost host;
+			lock (_syncRoot)
+			{
+				if (_isHostOpen)
+				{
+					_service.MappingSchema = ms;
+					return;
+				}
 
-			var host = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				_isHostOpen = true;
+			}
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
