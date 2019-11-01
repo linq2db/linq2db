@@ -33,11 +33,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			return query.Provider.Execute<TTarget>(
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
 					new[] { query.Expression, Expression.Quote(setter) }));
+
+			return items.AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -58,16 +60,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			var expr =
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
-					new[] { query.Expression, Expression.Quote(setter) });
+					new[] { query.Expression, Expression.Quote(setter) }));
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<TTarget>(expr, token);
-
-			return TaskEx.Run(() => query.Provider.Execute<TTarget>(expr), token);
+			return items.AsAsyncEnumerable(token).FirstAsync(token);
 
 		}
 
@@ -87,11 +86,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			return query.Provider.Execute<TTarget>(
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
 					new[] { query.Expression, Expression.Constant(obj) }));
+
+			return items.AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -112,16 +113,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			var expr =
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					new[] { query.Expression, Expression.Constant(obj) });
+					new[] { query.Expression, Expression.Constant(obj) }));
 
-			if (query.Provider is IQueryProviderAsync provider)
-				return provider.ExecuteAsync<TTarget>(expr, token);
-
-			return TaskEx.Run(() => query.Provider.Execute<TTarget>(expr), token);
+			return items.AsAsyncEnumerable(token).FirstOrDefaultAsync(token);
 		}
 
 		/// <summary>
@@ -145,12 +143,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			return query.Provider.Execute<TOutput>(
+			var items = query.Provider.CreateQuery<TOutput>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
 					new[] { query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression) }));
 
+			return items.AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -177,16 +176,13 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			var expr =
+			var items = query.Provider.CreateQuery<TOutput>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					new[] { query.Expression, Expression.Quote(setter) });
+					new[] { query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression) }));
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<TOutput>(expr, token);
-
-			return TaskEx.Run(() => query.Provider.Execute<TOutput>(expr), token);
+			return items.AsAsyncEnumerable(token).FirstAsync(token);
 		}
 
 		/// <summary>
@@ -320,7 +316,7 @@ namespace LinqToDB
 		}
 
 
-		#region SelectInsertable
+		#region Many records
 
 		/// <summary>
 		/// Inserts records from source query into target table and returns newly created records.
@@ -588,11 +584,13 @@ namespace LinqToDB
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			return query.Provider.Execute<TTarget>(
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, source),
 					query.Expression));
+
+			return items.AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -611,16 +609,13 @@ namespace LinqToDB
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			var expr =
+			var items = query.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, source),
-					query.Expression);
+					query.Expression));
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<TTarget>(expr, token);
-
-			return TaskEx.Run(() => query.Provider.Execute<TTarget>(expr), token);
+			return items.AsAsyncEnumerable(token).FirstAsync(token);
 		}
 
 		/// <summary>

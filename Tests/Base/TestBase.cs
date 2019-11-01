@@ -1064,6 +1064,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 					{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;

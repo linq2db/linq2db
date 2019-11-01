@@ -163,12 +163,18 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
+			var getElement = GetQuery(ref expression, false).GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+			return (TResult)getElement(DataContext, expression, Parameters);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
+			var getElement = GetQuery(ref expression, false).GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+			return getElement(DataContext, expression, Parameters);
 		}
 
 		#endregion

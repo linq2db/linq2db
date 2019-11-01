@@ -180,9 +180,7 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			IBuildContext sequence)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
-
-			BuildSetterWithContext(builder, buildInfo, setter, into, items, ctx);
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
 		}
 
 		internal static void BuildSetterWithContext(
