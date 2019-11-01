@@ -182,7 +182,10 @@ namespace LinqToDB.SqlProvider
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
-				StringBuilder.Append(" (");
+				StringBuilder.AppendLine();
+				StringBuilder.AppendLine("(");
+
+				++Indent;
 
 				var first = true;
 				foreach (var field in mergeSource.SourceFields)
@@ -194,6 +197,10 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 				}
+
+				--Indent;
+
+				StringBuilder.AppendLine();
 
 				StringBuilder.Append(")");
 			}
