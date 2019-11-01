@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 						setterExpression,
 						mergeContext.TargetContext,
 						operation.Items,
-						new ExpressionContext(buildInfo.Parent, new[] { mergeContext.SourceContext }, setterExpression));
+						mergeContext.SourceContext);
 				}
 				else
 				{
