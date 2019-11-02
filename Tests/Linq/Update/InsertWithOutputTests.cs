@@ -37,7 +37,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -72,7 +72,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -102,7 +102,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -141,7 +141,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest4([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -176,7 +176,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputObjTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputObjTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -197,7 +197,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -218,7 +218,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -240,7 +240,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -262,7 +262,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -285,7 +285,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputIntoTest1([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,7 +341,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputIntoTest2([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -182,6 +182,19 @@ namespace LinqToDB.ServiceModel
 
 						var names = new HashSet<string>();
 
+						SelectQuery select;
+						switch (query.Statement.QueryType)
+						{
+							case QueryType.Select:
+								select = query.Statement.SelectQuery;
+								break;
+							case QueryType.Insert:
+								select = ((SqlInsertStatement)query.Statement).Output.OutputQuery;
+								break;
+							default:
+								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
+						}
+
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
 							var name = rd.GetName(i);
@@ -199,7 +212,7 @@ namespace LinqToDB.ServiceModel
 							ret.FieldNames[i] = name;
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
-							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
+							ret.FieldTypes[i] = select.Select.Columns[i].SystemType;
 
 							// async compiled query support
 							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))

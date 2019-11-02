@@ -1047,11 +1047,11 @@ namespace LinqToDB.SqlQuery
 				return;
 
 			Visit2X(outputClause.SourceTable);
-			Visit2X(outputClause.DeletedTable);
-			Visit2X(outputClause.InsertedTable);
+			Visit2(outputClause.DeletedTable);
+			Visit2(outputClause.InsertedTable);
 			Visit2X(outputClause.OutputTable);
 			if (outputClause.OutputQuery != null)
-				Visit2X(outputClause.OutputQuery);
+				Visit2(outputClause.OutputQuery);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)

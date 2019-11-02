@@ -1119,6 +1119,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
+							Append(elem.Output);
 							Append(elem.Parameters);
 
 							break;
@@ -1277,6 +1278,26 @@ namespace LinqToDB.ServiceModel
 
 							foreach (var row in elem.Rows)
 								Append(row);
+
+							break;
+						}
+
+					case QueryElementType.OutputClause:
+						{
+							var elem = (SqlOutputClause)e;
+
+							// actually only InsertedTable implemented now
+							Append(elem.SourceTable);
+							Append(elem.DeletedTable);
+							Append(elem.InsertedTable);
+							Append(elem.OutputTable);
+
+							if (elem.HasOutputItems)
+								Append(elem.OutputItems);
+							else
+								Builder.Append(" -");
+
+							Append(elem.OutputQuery);
 
 							break;
 						}
@@ -1884,9 +1905,10 @@ namespace LinqToDB.ServiceModel
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>();
 							var selectQuery = Read<SelectQuery>();
+							var output      = Read<SqlOutputClause>();
 							var parameters  = ReadArray<SqlParameter>();
 
-							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert};
+							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert, Output = output };
 							_statement.Parameters.AddRange(parameters);
 							((SqlInsertStatement)_statement).With = with;
 
@@ -2067,6 +2089,34 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.OutputClause:
+						{
+
+							var source   = Read<SqlTable>();
+							var deleted  = Read<SqlTable>();
+							var inserted = Read<SqlTable>();
+							var output   = Read<SqlTable>();
+							var items    = ReadArray<SqlSetExpression>();
+							var query    = Read<SelectQuery>();
+
+							var c = new SqlOutputClause()
+							{
+								SourceTable   = source,
+								DeletedTable  = deleted,
+								InsertedTable = inserted,
+								OutputTable   = output,
+								OutputQuery   = query
+							};
+
+							if (items.Length > 0)
+								c.OutputItems.AddRange(items);
+
+							obj = c;
+
+							break;
+						}
+
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
