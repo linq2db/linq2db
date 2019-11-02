@@ -2155,7 +2155,6 @@ namespace LinqToDB.SqlProvider
 
 						if (buildTableName && field.Table != null)
 						{
-							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = field.Table.SqlTableType == SqlTableType.SystemTable
 								? field.Table
 								: Statement.SelectQuery?.GetTableSource(field.Table);

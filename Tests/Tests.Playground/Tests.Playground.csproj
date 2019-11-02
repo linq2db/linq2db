@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
+		<Compile Include="..\Linq\Update\InsertWithOutputTests.cs" Link="InsertWithOutputTests.cs" />
 	</ItemGroup>
 
 </Project>

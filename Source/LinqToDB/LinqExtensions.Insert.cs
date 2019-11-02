@@ -167,7 +167,7 @@ namespace LinqToDB
 			[NotNull]                this ITable<TTarget>              target,
 			[NotNull, InstantHandle] Expression<Func<TTarget>>         setter,
 			[NotNull]                Expression<Func<TTarget,TOutput>> outputExpression,
-			                         CancellationToken                 token = default)
+									 CancellationToken                 token = default)
 
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -224,7 +224,7 @@ namespace LinqToDB
 			[NotNull]                this ITable<TTarget>      target,
 			[NotNull, InstantHandle] Expression<Func<TTarget>> setter,
 			[NotNull]                ITable<TTarget>           outputTable,
-			                         CancellationToken         token = default)
+									 CancellationToken         token = default)
 		{
 			if (target      == null) throw new ArgumentNullException(nameof(target));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -293,7 +293,7 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<TTarget>>         setter,
 			[NotNull]                ITable<TOutput>                   outputTable,
 			[NotNull]                Expression<Func<TTarget,TOutput>> outputExpression,
-			                         CancellationToken                 token = default)
+									 CancellationToken                 token = default)
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -361,7 +361,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Enumeration of records.</returns>
 		[Pure]
- 		public static IEnumerable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
+		public static IEnumerable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -402,7 +402,7 @@ namespace LinqToDB
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			[NotNull]                Expression<Func<TTarget,TOutput>> outputExpression,
-			                         CancellationToken                 token = default)
+									 CancellationToken                 token = default)
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -469,7 +469,7 @@ namespace LinqToDB
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			[NotNull]                ITable<TTarget>                   outputTable,
-			                         CancellationToken                 token = default)
+									 CancellationToken                 token = default)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (target      == null) throw new ArgumentNullException(nameof(target));
@@ -548,7 +548,7 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			[NotNull]                ITable<TOutput>                   outputTable,
 			[NotNull]                Expression<Func<TTarget,TOutput>> outputExpression,
-			                         CancellationToken                 token = default)
+									 CancellationToken                 token = default)
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -603,7 +603,7 @@ namespace LinqToDB
 		/// <returns>Inserted record.</returns>
 		public static Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			               CancellationToken                  token = default)
+						   CancellationToken                  token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -654,7 +654,7 @@ namespace LinqToDB
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source,
 			[NotNull]      ITable<TTarget>                    outputTable,
-			               CancellationToken                  token = default)
+						   CancellationToken                  token = default)
 
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));

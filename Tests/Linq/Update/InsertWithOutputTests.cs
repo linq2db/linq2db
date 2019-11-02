@@ -16,16 +16,16 @@ namespace Tests.Playground
 		[Table]
 		class TableWithData
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column]              public int    Id       { get; set; }
+			[Column]              public int    Value    { get; set; }
 			[Column(Length = 50)] public string ValueStr { get; set; }
 		}
 
 		[Table]
 		class DestinationTable
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column]              public int    Id       { get; set; }
+			[Column]              public int    Value    { get; set; }
 			[Column(Length = 50)] public string ValueStr { get; set; }
 		}
 
@@ -39,8 +39,8 @@ namespace Tests.Playground
 		[Test]
 		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
-			var sourceData = GetSourceData();
-			using (var db = GetDataContext(context))
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
@@ -50,13 +50,13 @@ namespace Tests.Playground
 						target,
 						s => new DestinationTable
 						{
-							Id = s.Id + 100 + param,
-							Value = s.Value + 100,
+							Id       = s.Id + 100 + param,
+							Value    = s.Value + 100,
 							ValueStr = s.ValueStr + 100
 						},
 						inserted => new
 						{
-							Id = Sql.AsSql(inserted.Id + 1),
+							Id       = Sql.AsSql(inserted.Id + 1),
 							ValueStr = Sql.AsSql(inserted.ValueStr + 1),
 						}).ToArray();
 
@@ -64,7 +64,7 @@ namespace Tests.Playground
 
 				AreEqual(target.Select(t => new
 					{
-						Id = t.Id + 1,
+						Id       = t.Id + 1,
 						ValueStr = t.ValueStr + 1,
 					}),
 					output);
@@ -74,8 +74,8 @@ namespace Tests.Playground
 		[Test]
 		public void InsertWithOutputFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
-			var sourceData = GetSourceData();
-			using (var db = GetDataContext(context))
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
@@ -85,16 +85,16 @@ namespace Tests.Playground
 						target,
 						s => new DestinationTable
 						{
-							Id = s.Id + param,
-							Value = s.Value + param,
+							Id       = s.Id + param,
+							Value    = s.Value + param,
 							ValueStr = s.ValueStr + param
 						})
 					.ToArray();
 
 				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
 					{
-						Id = s.Id + param,
-						Value = s.Value + param,
+						Id       = s.Id + param,
+						Value    = s.Value + param,
 						ValueStr = s.ValueStr + param,
 					}),
 					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
@@ -178,13 +178,13 @@ namespace Tests.Playground
 		[Test]
 		public void InsertWithOutputObjTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
+			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
 			{
 				var data = new TableWithData
 				{
-					Value = value * 100,
-					Id = value,
+					Value    = value * 100,
+					Id       = value,
 					ValueStr = "SomeStr" + value
 				};
 
@@ -199,13 +199,13 @@ namespace Tests.Playground
 		[Test]
 		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
+			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
 			{
 				var data = new TableWithData
 				{
-					Value = value * 100,
-					Id = value,
+					Value    = value * 100,
+					Id       = value,
 					ValueStr = "SomeStr" + value
 				};
 
@@ -225,13 +225,13 @@ namespace Tests.Playground
 			{
 				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 				{
-					Value = value * 100,
-					Id = value,
+					Value    = value * 100,
+					Id       = value,
 					ValueStr = "SomeStr" + value
 				};
 
 				var output = source.InsertWithOutput(dataFunc);
-				var data = dataFunc.Compile()();
+				var data   = dataFunc.Compile()();
 
 				Assert.AreEqual(data.Id,       output.Id);
 				Assert.AreEqual(data.Value,    output.Value);
@@ -247,8 +247,8 @@ namespace Tests.Playground
 			{
 				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 				{
-					Value = value * 100,
-					Id = value,
+					Value    = value * 100,
+					Id       = value,
 					ValueStr = "SomeStr" + value
 				};
 
@@ -269,8 +269,8 @@ namespace Tests.Playground
 			{
 				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 				{
-					Value = value * 100,
-					Id = value,
+					Value    = value * 100,
+					Id       = value,
 					ValueStr = "SomeStr" + value
 				};
 
@@ -305,13 +305,13 @@ namespace Tests.Playground
 								.InsertWithOutputInto(db.Child, c => new Child
 									{
 										ParentID = c.ParentID,
-										ChildID = id
+										ChildID  = id
 									},
 									t.Table,
 									inserted =>
 										new Child
 										{
-											ChildID = inserted.ChildID,
+											ChildID  = inserted.ChildID,
 											ParentID = inserted.ParentID + param
 										}
 								);
@@ -321,12 +321,12 @@ namespace Tests.Playground
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
 								ParentID = c.ParentID,
-								ChildID = c.ChildID
+								ChildID  = c.ChildID
 							}),
 							t.Table.Select(c => new Child
 								{
 									ParentID = c.ParentID - param,
-									ChildID = c.ChildID
+									ChildID  = c.ChildID
 								}
 							)
 						);
@@ -362,7 +362,7 @@ namespace Tests.Playground
 								.InsertWithOutputInto(db.Child, c => new Child
 									{
 										ParentID = c.ParentID,
-										ChildID = id + Sql.AsSql(param)
+										ChildID  = id + Sql.AsSql(param)
 									},
 									t.Table);
 
@@ -371,12 +371,12 @@ namespace Tests.Playground
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
 								ParentID = c.ParentID,
-								ChildID = c.ChildID
+								ChildID  = c.ChildID
 							}),
 							t.Table.Select(c => new Child
 								{
 									ParentID = c.ParentID,
-									ChildID = c.ChildID
+									ChildID  = c.ChildID
 								}
 							)
 						);

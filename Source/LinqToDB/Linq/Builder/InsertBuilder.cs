@@ -80,6 +80,30 @@ namespace LinqToDB.Linq.Builder
 					foreach (var item in insertStatement.Insert.Items)
 						sequence.SelectQuery.Select.Expr(item.Expression);
 				}
+				else if (methodCall.Arguments.Count > 1                  &&
+					typeof(IQueryable<>).IsSameOrParentOf(argument.Type) &&
+					typeof(ITable<>).IsSameOrParentOf(methodCall.Arguments[1].Type))
+				{
+					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
+
+					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var setter = (LambdaExpression)GetArgumentByName("setter").Unwrap();
+
+					UpdateBuilder.BuildSetter(
+						builder,
+						buildInfo,
+						setter,
+						into,
+						insertStatement.Insert.Items,
+						sequence);
+
+					sequence.SelectQuery.Select.Columns.Clear();
+
+					foreach (var item in insertStatement.Insert.Items)
+						sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression));
+
+					insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
+				}
 				else if (typeof(ITable<>).IsSameOrParentOf(argument.Type))
 				{
 					// static int Insert<T>(this Table<T> target, Expression<Func<T>> setter)
@@ -129,12 +153,7 @@ namespace LinqToDB.Linq.Builder
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
 
-								var insertedTable = new SqlTable(methodCall.Method.GetGenericArguments()[0])
-								{
-									Name         = "INSERTED",
-									PhysicalName = "INSERTED",
-									SqlTableType = SqlTableType.SystemTable,
-								};
+								var insertedTable = SqlTable.Inserted(methodCall.Method.GetGenericArguments()[0]);
 
 								break;
 							}
@@ -143,28 +162,6 @@ namespace LinqToDB.Linq.Builder
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
 					sequence.SelectQuery.From.Tables.Clear();
 				}
-				else if (typeof(IQueryable<>).IsSameOrParentOf(argument.Type))
-				{
-					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
-
-					var into   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-					var setter = (LambdaExpression)GetArgumentByName("setter").Unwrap();
-
-					UpdateBuilder.BuildSetter(
-						builder,
-						buildInfo,
-						setter,
-						into,
-						insertStatement.Insert.Items,
-						sequence);
-
-					sequence.SelectQuery.Select.Columns.Clear();
-
-					foreach (var item in insertStatement.Insert.Items)
-						sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression));
-
-					insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
-				}
 
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
@@ -172,12 +169,7 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var insertedTable = new SqlTable(outputExpression.Parameters[0].Type)
-					{
-						Name         = "INSERTED",
-						PhysicalName = "INSERTED",
-						SqlTableType = SqlTableType.SystemTable,
-					};
+					var insertedTable = SqlTable.Inserted(outputExpression.Parameters[0].Type);
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 

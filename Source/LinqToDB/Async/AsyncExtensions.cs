@@ -149,13 +149,13 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-	        using (var enumerator = source.GetEnumerator())
-	        {
-		        if (await enumerator.MoveNext(token))
-			        return enumerator.Current;
-	        }
+			using (var enumerator = source.GetEnumerator())
+			{
+				if (await enumerator.MoveNext(token))
+					return enumerator.Current;
+			}
 
-	        throw new InvalidOperationException("The source sequence is empty.");
+			throw new InvalidOperationException("The source sequence is empty.");
 		}
 
 	}

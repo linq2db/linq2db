@@ -104,8 +104,6 @@ namespace Tests
 #endif
 
 #if AZURE
-#warning "Azure configuration detected."
-
 			Console.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
@@ -1056,7 +1054,7 @@ namespace Tests
 		public static string GetTempTableName(string tableName, string context)
 		{
 			var finalTableName = tableName;
-			switch (context)
+			switch (GetProviderName(context, out var _))
 			{
 				case ProviderName.SqlServer:
 				case ProviderName.SqlServer2000:
@@ -1077,7 +1075,7 @@ namespace Tests
 			return finalTableName;
 		}
 
-		protected string GetProviderName(string context, out bool isLinqService)
+		protected static string GetProviderName(string context, out bool isLinqService)
 		{
 			isLinqService = context.EndsWith(".LinqService");
 			return context.Replace(".LinqService", "");
