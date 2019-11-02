@@ -10,11 +10,11 @@
 		<PackageReference Include="System.Memory" Version="4.5.3" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
 
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
 		<PackageReference Include="MySql.Data" Version="8.0.18" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.60.2" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.60.3" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.1.1" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.15.0" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.16.0" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
@@ -79,7 +79,7 @@
 		Needed because 2.0.0 has this bug which fails TestBinary test
 		https://github.com/aspnet/EntityFrameworkCore/issues/17494
 		-->
-		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.1" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.2" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.1.0" />
 
 		<!--magic-->
