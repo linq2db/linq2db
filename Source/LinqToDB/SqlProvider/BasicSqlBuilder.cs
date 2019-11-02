@@ -315,9 +315,10 @@ namespace LinqToDB.SqlProvider
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-			{
 				BuildReturningSubclause(statement);
-			}
+
+			--Indent;
+			AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildUnknownQuery()
