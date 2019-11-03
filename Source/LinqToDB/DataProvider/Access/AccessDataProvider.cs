@@ -15,8 +15,6 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessDataProvider : DynamicDataProviderBase
 	{
-		private readonly OleDbType _decimalType = OleDbType.Decimal;
-
 		public AccessDataProvider()
 			: this(ProviderName.Access, new AccessMappingSchema())
 		{
@@ -44,9 +42,6 @@ namespace LinqToDB.DataProvider.Access
 			SetProviderField<IDataReader, DateTime, DateTime>((r, i) => GetDateTime(r, i));
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
-
-			if (System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != ".")
-				_decimalType = OleDbType.VarChar;
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -59,13 +54,25 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-#if !NET45 && !NET46
-		public string AssemblyName => "System.Data.OleDb";
-#else
-		public string AssemblyName => "System.Data";
+#if NET45 || NET46
+		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient
+		public             override Type DataReaderType      => typeof(System.Data.OleDb.OleDbDataReader);
+
+		Type? _connectionType;
+		protected internal override Type GetConnectionType()
+		{
+			if (_connectionType != null)
+				return _connectionType;
+
+			_connectionType = typeof(System.Data.OleDb.OleDbConnection);
+			OnConnectionTypeCreated(_connectionType);
+			return _connectionType;
+		}
 #endif
 
-		public override string ConnectionNamespace   => "System.Data.OleDb";
+		public string AssemblyName => "System.Data.OleDb";
+
+		public    override string ConnectionNamespace   => "System.Data.OleDb";
 		protected override string ConnectionTypeName => $"{ConnectionNamespace}.OleDbConnection, {AssemblyName}";
 		protected override string DataReaderTypeName => $"{ConnectionNamespace}.OleDbDataReader, {AssemblyName}";
 
@@ -94,18 +101,18 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSchemaProvider(this);
 		}
 
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
+		{
+			// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
+			return new InvariantCultureRegion();
+		}
+
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			OleDbType? type = null;
-			// Do some magic to workaround 'Data type mismatch in criteria expression' error
-			// in JET for some european locales.
-			//
-			// OleDbType.Decimal is locale aware, OleDbType.Currency is locale neutral.
-			// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
 			switch (dataType.DataType)
 			{
-				case DataType.Decimal   :
-				case DataType.VarNumeric: type = _decimalType          ; break;
+				case DataType.VarNumeric: parameter.DbType = DbType.Decimal; return;
 				case DataType.DateTime  :
 				case DataType.DateTime2 : type = OleDbType.Date        ; break;
 				case DataType.Text      : type = OleDbType.LongVarChar ; break;

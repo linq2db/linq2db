@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Wrappers
 							TypeSetter             = dbTypeBuilder.BuildSetter<IDbDataParameter>();
 							TypeGetter             = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 
-							OleDbSchemaTableGetter = (Func<IDbConnection, Guid, object[]?, DataTable>)_oleDbTypeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)).Compile();
+							//OleDbSchemaTableGetter = (Func<IDbConnection, Guid, object[]?, DataTable>)_oleDbTypeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)).Compile();
 						}
 					}
 				}
@@ -106,60 +106,45 @@ namespace LinqToDB.DataProvider.Wrappers
 			}
 			#endregion
 		}
-
-		//private static Type GetDynamicType(string typeName, Assembly assemly)
-		//{
-		//	return assemly.GetType(typeName, true);
-		//}
-
-
-		//internal static Action<IDbDataParameter, OdbcType> GetODbcTypeSetter(Assembly fromAssembly)
-		//{
-		//	var parameterType = GetDynamicType("System.Data.Odbc.OdbcParameter", fromAssembly);
-		//	var dbType = GetDynamicType("System.Data.Odbc.OdbcType", fromAssembly);
-
-		//	var mapper = new TypeMapper(parameterType, dbType);
-
-		//	return mapper.Type<OdbcParameter>().Member(p => p.OdbcType).BuildSetter<IDbDataParameter>();
-		//}
 	}
 
-	#region ODBC wrappers
-	[Wrapper]
-	public enum OdbcType
-	{
-		BigInt,
-		Binary,
-		Bit,
-		Char,
-		Date,
-		DateTime,
-		Decimal,
-		Double,
-		Image,
-		Int,
-		NChar,
-		NText,
-		Numeric,
-		NVarChar,
-		Real,
-		SmallDateTime,
-		SmallInt,
-		Text,
-		Time,
-		Timestamp,
-		TinyInt,
-		UniqueIdentifier,
-		VarBinary,
-		VarChar
-	}
+	// current ODBC provider doesn't need any ODBC types
+	//#region ODBC wrappers
+	//[Wrapper]
+	//public enum OdbcType
+	//{
+	//	BigInt,
+	//	Binary,
+	//	Bit,
+	//	Char,
+	//	Date,
+	//	DateTime,
+	//	Decimal,
+	//	Double,
+	//	Image,
+	//	Int,
+	//	NChar,
+	//	NText,
+	//	Numeric,
+	//	NVarChar,
+	//	Real,
+	//	SmallDateTime,
+	//	SmallInt,
+	//	Text,
+	//	Time,
+	//	Timestamp,
+	//	TinyInt,
+	//	UniqueIdentifier,
+	//	VarBinary,
+	//	VarChar
+	//}
 
-	[Wrapper]
-	internal class OdbcParameter
-	{
-		public OdbcType OdbcType { get; set; }
-	}
+	//[Wrapper]
+	//internal class OdbcParameter
+	//{
+	//	public OdbcType OdbcType { get; set; }
+	//}
 
-	#endregion
+	//#endregion
 
 }

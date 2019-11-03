@@ -12,16 +12,25 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		private readonly AccessDataProvider _provider;
+		private readonly AccessDataProvider? _provider;
 
 		public AccessSqlBuilder(
-			AccessDataProvider  provider,
+			AccessDataProvider? provider,
 			ISqlOptimizer       sqlOptimizer,
 			SqlProviderFlags    sqlProviderFlags,
 			ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 			_provider = provider;
+		}
+
+		// for remote context
+		public AccessSqlBuilder(
+			ISqlOptimizer sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags,
+			ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		{
 		}
 
 		public override int CommandCount(SqlStatement statement)
@@ -426,7 +435,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Wrappers.Mappers.OleDb.TypeGetter != null)
+			if (_provider != null && Wrappers.Mappers.OleDb.TypeGetter != null)
 			{
 				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter);
 				if (param != null)
