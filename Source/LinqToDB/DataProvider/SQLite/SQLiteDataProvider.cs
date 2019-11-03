@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SQLiteSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
@@ -139,10 +139,10 @@ namespace LinqToDB.DataProvider.SQLite
 				value = guid.ToByteArray();
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -151,51 +151,7 @@ namespace LinqToDB.DataProvider.SQLite
 				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
 			}
 
-			base.SetParameterType(parameter, dataType);
-		}
-
-		Action<string> _createDatabase;
-
-		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			CreateFileDatabase(
-				databaseName, deleteIfExists, ".sqlite",
-				dbName =>
-				{
-					if (_createDatabase == null)
-					{
-						var connectionType = GetConnectionType();
-						var method         = connectionType.GetMethodEx("CreateFile");
-						if (method != null)
-						{
-						var p = Expression.Parameter(typeof(string));
-						var l = Expression.Lambda<Action<string>>(
-								Expression.Call(method, p),
-							p);
-						_createDatabase = l.Compile();
-					}
-						else
-						{
-							// emulate for Microsoft.Data.SQLite
-							// that's actually what System.Data.SQLite does
-							_createDatabase = name =>
-							{
-								using (File.Create(name)) { };
-							};
-						}
-					}
-
-					_createDatabase(dbName);
-				});
-		}
-
-		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			DropFileDatabase(databaseName, ".sqlite");
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)

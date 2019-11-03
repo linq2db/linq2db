@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Access
 			if (Wrappers.Mappers.OleDb.OleDbSchemaTableGetter == null)
 				return Array<ForeignKeyInfo>.Empty;
 
-			var connection = _provider.TryConvertConnection(Wrappers.Mappers.OleDb.ConnectionType, dataConnection.Connection);
+			var connection = _provider.TryConvertConnection(Wrappers.Mappers.OleDb.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
 				return Array<ForeignKeyInfo>.Empty;
 

@@ -91,7 +91,27 @@ namespace LinqToDB.Expressions
 			var result = generator.MapExpression((string n) => Enum.Parse(replacementType, n), nameVar);
 
 			return result;
+		}
 
+		private Expression BuildValueMapperToType<TTarget>(ExpressionGenerator generator, Expression expression)
+		{
+			var valueType = expression.Type;
+			var toType    = typeof(TTarget);
+
+			if (!toType.IsEnum)
+				throw new LinqToDBException("Only enums converted automatically.");
+
+			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
+				Expression.Convert(expression, typeof(object)));
+			var nameVar = generator.DeclareVariable(typeof(string), "enumName");
+
+			generator.Assign(nameVar, nameExpr);
+			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
+				Throw(() => new LinqToDBException("Can not convert Enum value.")));
+
+			var result = generator.MapExpression((string n) => (TTarget)Enum.Parse(toType, n), nameVar);
+
+			return result;
 		}
 
 		private Type MakeReplacement(Type type)
@@ -348,22 +368,22 @@ namespace LinqToDB.Expressions
 			return Expression.Lambda(newBody, parameters);
 		}
 
-		public Func<TR> MapFunc<TR>(LambdaExpression lambda) => 
+		public Func<TR> CompileFunc<TR>(LambdaExpression lambda) => 
 			(Func<TR>)MapFuncInternal(lambda, typeof(TR)).Compile();
 
-		public Func<T, TR> MapFunc<T, TR>(LambdaExpression lambda) =>
+		public Func<T, TR> CompileFunc<T, TR>(LambdaExpression lambda) =>
 			(Func<T, TR>)MapFuncInternal(lambda, typeof(T), typeof(TR)).Compile();
 
-		public Func<T1, T2, TR> MapFunc<T1, T2, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, TR> CompileFunc<T1, T2, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(TR)).Compile();
 
-		public Func<T1, T2, T3, TR> MapFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, TR> CompileFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(TR)).Compile();
 
-		public Func<T1, T2, T3, T4, TR> MapFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, TR> CompileFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, T4, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(TR)).Compile();
 
-		public Func<T1, T2, T3, T4, T5, TR> MapFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, T5, TR> CompileFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, T4, T5, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(TR)).Compile();
 
 		#endregion
@@ -504,7 +524,10 @@ namespace LinqToDB.Expressions
 
 				var left  = propLambda.GetBody(requiredVariable).Unwrap();
 
-				generator.Read(left, typeof(TV));
+				if (left.Type != typeof(TV))
+					left = _mapper.BuildValueMapperToType<TV>(generator, left);
+
+				generator.AddExpression(left);
 
 				var generated = generator.Build();
 

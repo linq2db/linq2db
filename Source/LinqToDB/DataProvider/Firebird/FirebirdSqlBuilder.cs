@@ -14,17 +14,18 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
+	using LinqToDB.Mapping;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public FirebirdSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new FirebirdSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)

@@ -5,6 +5,8 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.IO;
+	using System.Runtime.InteropServices;
 	using Data;
 
 	public static class AccessTools
@@ -40,14 +42,49 @@ namespace LinqToDB.DataProvider.Access
 
 		#endregion
 
+		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
+		class CatalogClass
+		{
+		}
+
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_accessDataProvider.CreateDatabase(databaseName, deleteIfExists);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(".mdb"))
+				databaseName += ".mdb";
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			var connectionString = string.Format(
+				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
+				databaseName);
+
+			DataTools.CreateFileDatabase(
+				databaseName, deleteIfExists, ".mdb",
+				dbName =>
+				{
+					dynamic catalog = new CatalogClass();
+
+					var conn = catalog.Create(connectionString);
+
+					if (conn != null)
+						conn.Close();
+				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			_accessDataProvider.DropDatabase(databaseName);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.DropFileDatabase(databaseName, ".mdb");
 		}
 
 		#region BulkCopy

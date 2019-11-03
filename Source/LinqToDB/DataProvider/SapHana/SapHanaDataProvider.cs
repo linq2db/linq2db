@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SapHanaSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -125,10 +125,10 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -140,13 +140,13 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NText : _setNText(parameter);     break;
 				case DataType.Binary: _setVarBinary(parameter); break;
 			}
-			base.SetParameterType(parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
+			return new SapHanaBulkCopy(GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,

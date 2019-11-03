@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider
 			}
 
 			parameter.ParameterName = name;
-			SetParameterType(parameter, dataType);
+			SetParameterType(dataConnection, parameter, dataType);
 			parameter.Value = value ?? DBNull.Value;
 		}
 
@@ -356,7 +356,7 @@ namespace LinqToDB.DataProvider
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
 		public abstract ISchemaProvider GetSchemaProvider     ();
 
-		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected virtual void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
@@ -392,51 +392,6 @@ namespace LinqToDB.DataProvider
 			}
 
 			parameter.DbType = dbType;
-		}
-
-		#endregion
-
-		#region Create/Drop Database
-
-		internal static void CreateFileDatabase(
-			string databaseName,
-			bool   deleteIfExists,
-			string extension,
-			Action<string> createDatabase)
-		{
-			databaseName = databaseName.Trim();
-
-			if (!databaseName.ToLower().EndsWith(extension))
-				databaseName += extension;
-
-			if (File.Exists(databaseName))
-			{
-				if (!deleteIfExists)
-					return;
-				File.Delete(databaseName);
-			}
-
-			createDatabase(databaseName);
-		}
-
-		internal static void DropFileDatabase(string databaseName, string extension)
-		{
-			databaseName = databaseName.Trim();
-
-			if (File.Exists(databaseName))
-			{
-				File.Delete(databaseName);
-			}
-			else
-			{
-				if (!databaseName.ToLower().EndsWith(extension))
-				{
-					databaseName += extension;
-
-					if (File.Exists(databaseName))
-						File.Delete(databaseName);
-				}
-			}
 		}
 
 		#endregion

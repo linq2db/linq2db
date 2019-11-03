@@ -10,29 +10,28 @@ using System.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using LinqToDB.Data;
 	using Mapping;
 
 	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
 	{
-		public BulkCopyReader(IDataProvider dataProvider, MappingSchema mappingSchema, List<ColumnDescriptor> columns, IEnumerable collection)
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable collection)
 		{
-			_dataProvider  = dataProvider;
-			_columns       = columns;
-			_enumerator    = collection.GetEnumerator();
-			_mappingSchema = mappingSchema;
-			_columnTypes   = _columns
-				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType, c.DbType, c.Length))
+			_dataConnection = dataConnection;
+			_columns        = columns;
+			_enumerator     = collection.GetEnumerator();
+			_columnTypes    = _columns
+				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? _dataConnection.DataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType, c.DbType, c.Length))
 				.ToArray();
 		}
 
 		public int Count;
 
+		readonly DataConnection         _dataConnection;
 		readonly DbDataType[]           _columnTypes;
-		readonly IDataProvider          _dataProvider;
 		readonly List<ColumnDescriptor> _columns;
 		readonly IEnumerator            _enumerator;
 		readonly Parameter              _valueConverter = new Parameter();
-		readonly MappingSchema          _mappingSchema;
 
 		public class Parameter : IDbDataParameter
 		{
@@ -57,14 +56,14 @@ namespace LinqToDB.DataProvider
 
 		public override Type GetFieldType(int i)
 		{
-			return _dataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
+			return _dataConnection.DataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
 		}
 
 		public override object GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_mappingSchema, _enumerator.Current);
+			var value = _columns[i].GetValue(_dataConnection.MappingSchema, _enumerator.Current);
 
-			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
+			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
 			return _valueConverter.Value;
 		}
@@ -76,8 +75,8 @@ namespace LinqToDB.DataProvider
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(_mappingSchema, obj);
-				_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value);
+				var value = _columns[it].GetValue(_dataConnection.MappingSchema, obj);
+				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}
 
@@ -172,7 +171,7 @@ namespace LinqToDB.DataProvider
 				var columnDescriptor = _columns[i];
 				var row = table.NewRow();
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
-				row[SchemaTableColumn.DataType]                = _dataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
+				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;

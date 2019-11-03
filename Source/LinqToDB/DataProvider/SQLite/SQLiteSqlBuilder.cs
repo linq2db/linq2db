@@ -8,11 +8,12 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SQLiteSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -41,7 +42,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

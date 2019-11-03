@@ -9,11 +9,12 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
+	using LinqToDB.Mapping;
 
 	partial class OracleSqlBuilder : BasicSqlBuilder
 	{
-		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public OracleSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -93,7 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new OracleSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)

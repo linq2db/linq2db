@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new FirebirdSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is bool)
 			{
@@ -96,10 +96,10 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.DateTime2  : _setTimeStamp(parameter);    return;
 			}
 
-			base.SetParameterType(parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy

@@ -9,11 +9,12 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public MySqlSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -47,7 +48,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

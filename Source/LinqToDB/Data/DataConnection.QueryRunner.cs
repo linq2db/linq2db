@@ -30,8 +30,10 @@ namespace LinqToDB.Data
 				: base(query, queryNumber, dataConnection, expression, parameters)
 			{
 				_dataConnection = dataConnection;
+				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
+			readonly IDisposable?   _executionScope;
 			readonly DataConnection _dataConnection;
 			readonly DateTime       _startedOn = DateTime.UtcNow;
 			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
@@ -116,6 +118,9 @@ namespace LinqToDB.Data
 
 			public override void Dispose()
 			{
+				if (_executionScope != null)
+					_executionScope.Dispose();
+
 				if (TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
 				{
 					_dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
@@ -264,7 +269,7 @@ namespace LinqToDB.Data
 							systemType!).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, dbType, dbSize), paramValue);
+				dataConnection.DataProvider.SetParameter(dataConnection, p, name, new DbDataType(systemType, dataType, dbType, dbSize), paramValue);
 
 				parms.Add(p);
 			}

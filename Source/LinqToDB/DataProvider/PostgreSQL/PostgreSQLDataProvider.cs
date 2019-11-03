@@ -364,7 +364,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -398,17 +398,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		Action<IDbDataParameter, object> _setNativeParameterType;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -420,18 +420,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.DateTimeOffset : parameter.DbType = DbType.DateTimeOffset;   break;
 				case DataType.VarNumeric     : parameter.DbType = DbType.Decimal;          break;
 				case DataType.Decimal        : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Money          : if (_setMoney     != null) _setMoney(parameter);     else base.SetParameterType(parameter, dataType); break;
+				case DataType.Money          : if (_setMoney     != null) _setMoney(parameter);     else base.SetParameterType(dataConnection, parameter, dataType); break;
 				case DataType.Image          :
 				case DataType.Binary         :
-				case DataType.VarBinary      : if (_setVarBinary != null) _setVarBinary(parameter); else base.SetParameterType(parameter, dataType); break;
-				case DataType.Boolean        : if (_setBoolean   != null) _setBoolean(parameter);   else base.SetParameterType(parameter, dataType); break;
-				case DataType.Xml            : if (_setXml       != null) _setXml(parameter);       else base.SetParameterType(parameter, dataType); break;
+				case DataType.VarBinary      : if (_setVarBinary != null) _setVarBinary(parameter); else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.Boolean        : if (_setBoolean   != null) _setBoolean(parameter);   else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.Xml            : if (_setXml       != null) _setXml(parameter);       else base.SetParameterType(dataConnection, parameter, dataType); break;
 				case DataType.Text           :
-				case DataType.NText          : if (_setText      != null) _setText(parameter);      else base.SetParameterType(parameter, dataType); break;
-				case DataType.BitArray       : if (_setBit       != null) _setBit(parameter);       else base.SetParameterType(parameter, dataType); break;
-				case DataType.Dictionary     : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(parameter, dataType); break;
-				case DataType.Json           : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(parameter, dataType); break;
-				case DataType.BinaryJson     : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
+				case DataType.NText          : if (_setText      != null) _setText(parameter);      else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.BitArray       : if (_setBit       != null) _setBit(parameter);       else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.Dictionary     : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.Json           : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(dataConnection, parameter, dataType); break;
+				case DataType.BinaryJson     : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(dataConnection, parameter, dataType); break;
 				default :
 				{
 					if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))
@@ -444,7 +444,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						}
 					}
 
-					base.SetParameterType(parameter, dataType); break;
+					base.SetParameterType(dataConnection, parameter, dataType); break;
 				}
 			}
 		}

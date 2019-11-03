@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new MySqlSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -133,14 +133,14 @@ namespace LinqToDB.DataProvider.MySql
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (Name == ProviderName.MySqlConnector)
 			{
-				base.SetParameterType(parameter, dataType);
+				base.SetParameterType(dataConnection, parameter, dataType);
 			}
 		}
 

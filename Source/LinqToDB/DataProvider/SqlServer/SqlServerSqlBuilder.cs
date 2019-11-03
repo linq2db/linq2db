@@ -9,11 +9,12 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		protected SqlServerSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

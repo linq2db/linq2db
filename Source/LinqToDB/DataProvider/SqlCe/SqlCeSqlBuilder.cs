@@ -8,11 +8,12 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlCeSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -62,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlCeSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildFunction(SqlFunction func)

@@ -53,12 +53,28 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_sqlCeDataProvider.CreateDatabase(databaseName, deleteIfExists);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.CreateFileDatabase(
+				databaseName, deleteIfExists, ".sdf",
+				dbName =>
+				{
+					dynamic eng = Activator.CreateInstance(
+						_sqlCeDataProvider.GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
+						"Data Source=" + dbName);
+
+					eng.CreateDatabase();
+
+					if (eng is IDisposable disp)
+						disp.Dispose();
+				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			_sqlCeDataProvider.DropDatabase(databaseName);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}
 
 		#region BulkCopy

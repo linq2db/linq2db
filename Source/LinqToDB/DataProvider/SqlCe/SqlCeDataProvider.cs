@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SqlCeSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -129,10 +129,10 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -157,38 +157,12 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Money      : _setMoney    (parameter); break;
 				case DataType.Boolean    : _setBoolean  (parameter); break;
 				default                  :
-					base.SetParameterType(parameter, dataType);
+					base.SetParameterType(dataConnection, parameter, dataType);
 					break;
 			}
 		}
 
 #endregion
-
-		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			CreateFileDatabase(
-				databaseName, deleteIfExists, ".sdf",
-				dbName =>
-				{
-					dynamic eng = Activator.CreateInstance(
-						GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
-						"Data Source=" + dbName);
-
-					eng.CreateDatabase();
-
-					if (eng is IDisposable disp)
-						disp.Dispose();
-				});
-		}
-
-		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			DropFileDatabase(databaseName, ".sdf");
-		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{

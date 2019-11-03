@@ -166,8 +166,8 @@ namespace LinqToDB.DataProvider.DB2
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter) as ISqlBuilder:
-				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				new DB2zOSSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
+				new DB2LUWSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		Action<IDbDataParameter> _setBlob;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is sbyte sb)
 			{
@@ -248,12 +248,12 @@ namespace LinqToDB.DataProvider.DB2
 						break;
 					}
 				case DataType.Blob       :
-					base.SetParameter(parameter, "@" + name, dataType, value);
+					base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
 					_setBlob(parameter);
 					return;
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
 		}
 
 		#region BulkCopy

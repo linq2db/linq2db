@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Runtime.InteropServices;
 using OleDbType = LinqToDB.DataProvider.Wrappers.Mappers.OleDb.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
@@ -55,7 +53,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 #if NET45 || NET46
-		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient
+		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient (netfx only)
 		public             override Type DataReaderType      => typeof(System.Data.OleDb.OleDbDataReader);
 
 		Type? _connectionType;
@@ -86,7 +84,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new AccessSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new AccessSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -101,18 +99,16 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSchemaProvider(this);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
-			return new InvariantCultureRegion();
-		}
-
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			OleDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.VarNumeric: parameter.DbType = DbType.Decimal; return;
+				// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
+				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
+				// doesn't work for all situations
+				case DataType.Decimal   :
+				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
 				case DataType.DateTime  :
 				case DataType.DateTime2 : type = OleDbType.Date        ; break;
 				case DataType.Text      : type = OleDbType.LongVarChar ; break;
@@ -121,7 +117,7 @@ namespace LinqToDB.DataProvider.Access
 
 			if (type != null && Wrappers.Mappers.OleDb.TypeSetter != null)
 			{
-				var param = TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter);
+				var param = TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
 					Wrappers.Mappers.OleDb.TypeSetter(param, type.Value);
@@ -129,52 +125,7 @@ namespace LinqToDB.DataProvider.Access
 				}
 			}
 
-			base.SetParameterType(parameter, dataType);
-		}
-
-		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
-		class CatalogClass
-		{
-		}
-
-		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool   deleteIfExists = false)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			databaseName = databaseName.Trim();
-
-			if (!databaseName.ToLower().EndsWith(".mdb"))
-				databaseName += ".mdb";
-
-			if (File.Exists(databaseName))
-			{
-				if (!deleteIfExists)
-					return;
-				File.Delete(databaseName);
-			}
-
-			var connectionString = string.Format(
-				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
-				databaseName);
-
-			CreateFileDatabase(
-				databaseName, deleteIfExists, ".mdb",
-				dbName =>
-				{
-					dynamic catalog = new CatalogClass();
-
-					var conn = catalog.Create(connectionString);
-
-					if (conn != null)
-						conn.Close();
-				});
-		}
-
-		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			DropFileDatabase(databaseName, ".mdb");
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 #region BulkCopy

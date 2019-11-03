@@ -5,17 +5,18 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlServer2005SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2005SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlServer2005SqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

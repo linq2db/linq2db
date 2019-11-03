@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Access
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
@@ -16,20 +17,20 @@ namespace LinqToDB.DataProvider.Access
 
 		public AccessSqlBuilder(
 			AccessDataProvider? provider,
+			MappingSchema       mappingSchema,
 			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags,
-			ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+			SqlProviderFlags    sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
 		// for remote context
 		public AccessSqlBuilder(
+			MappingSchema mappingSchema,
 			ISqlOptimizer sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags,
-			ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -172,7 +173,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new AccessSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
@@ -437,7 +438,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (_provider != null && Wrappers.Mappers.OleDb.TypeGetter != null)
 			{
-				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter);
+				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, MappingSchema);
 				if (param != null)
 					return Wrappers.Mappers.OleDb.TypeGetter(param).ToString();
 			}

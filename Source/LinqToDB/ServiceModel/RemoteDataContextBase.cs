@@ -215,15 +215,15 @@ namespace LinqToDB.ServiceModel
 										Expression.New(
 											type.GetConstructor(new[]
 											{
+												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
-												typeof(SqlProviderFlags),
-												typeof(ValueToSqlConverter)
+												typeof(SqlProviderFlags)
 											}),
 											new Expression[]
 											{
+												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
-												Expression.Constant(((IDataContext)this).SqlProviderFlags),
-												Expression.Constant(((IDataContext)this).MappingSchema.ValueToSqlConverter)
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)
 											})).Compile());
 				}
 

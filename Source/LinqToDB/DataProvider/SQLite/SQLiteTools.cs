@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using System.Linq.Expressions;
 	using Common;
 	using Configuration;
 	using Data;
@@ -130,14 +131,48 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#endregion
 
+		static Action<string> _createDatabase;
+
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			DetectedProvider.CreateDatabase(databaseName, deleteIfExists);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.CreateFileDatabase(
+				databaseName, deleteIfExists, ".sqlite",
+				dbName =>
+				{
+					if (_createDatabase == null)
+					{
+						var connectionType = DetectedProvider.GetConnectionType();
+						var method = connectionType.GetMethodEx("CreateFile");
+						if (method != null)
+						{
+							var p = Expression.Parameter(typeof(string));
+							var l = Expression.Lambda<Action<string>>(
+									Expression.Call(method, p),
+								p);
+							_createDatabase = l.Compile();
+						}
+						else
+						{
+							// emulate for Microsoft.Data.SQLite
+							// that's actually what System.Data.SQLite does
+							_createDatabase = name =>
+							{
+								using (File.Create(name)) { };
+							};
+						}
+					}
+
+					_createDatabase(dbName);
+				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			DetectedProvider.DropDatabase(databaseName);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.DropFileDatabase(databaseName, ".sqlite");
 		}
 
 		#region BulkCopy

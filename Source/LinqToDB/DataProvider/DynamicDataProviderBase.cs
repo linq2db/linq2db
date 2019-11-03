@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider
 	using Configuration;
 	using Extensions;
 	using Mapping;
+	using Expressions;
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
 	{
@@ -345,9 +346,8 @@ namespace LinqToDB.DataProvider
 		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters  = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
 		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
 
-		internal virtual IDbDataParameter? TryConvertParameter(Type? expectedType, IDbDataParameter parameter)
+		internal virtual IDbDataParameter? TryConvertParameter(Type? expectedType, IDbDataParameter parameter, MappingSchema ms)
 		{
-			var param = parameter;
 			var parameterType = parameter.GetType();
 
 			if (expectedType != null && expectedType == parameterType)
@@ -355,11 +355,13 @@ namespace LinqToDB.DataProvider
 
 			if (!_parameterConverters.TryGetValue(parameterType, out var converter))
 			{
-				var converterExpr = MappingSchema.TryGetConvertExpression(parameterType, typeof(IDbDataParameter));
+				var converterExpr = ms.GetConvertExpression(parameterType, typeof(IDbDataParameter), false, false);
 				if (converterExpr != null)
 				{
+					var param = Expression.Parameter(typeof(IDbDataParameter));
+					converter = (Func<IDbDataParameter, IDbDataParameter>)Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, parameterType)), param).Compile();
+
 					// TODO: does it makes sense to lock on create here?
-					converter                           = (Func<IDbDataParameter, IDbDataParameter>)converterExpr.Compile();
 					_parameterConverters[parameterType] = converter;
 				}
 			}
@@ -370,9 +372,8 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 
-		internal virtual IDbConnection? TryConvertConnection(Type? expectedType, IDbConnection connection)
+		internal virtual IDbConnection? TryConvertConnection(Type? expectedType, IDbConnection connection, MappingSchema ms)
 		{
-			var conn = connection;
 			var connType = connection.GetType();
 
 			if (expectedType != null && expectedType == connType)
@@ -380,10 +381,12 @@ namespace LinqToDB.DataProvider
 
 			if (!_connectionConverters.TryGetValue(connType, out var converter))
 			{
-				var converterExpr = MappingSchema.TryGetConvertExpression(connType, typeof(IDbDataParameter));
+				var converterExpr = ms.GetConvertExpression(connType, typeof(IDbConnection), false, false);
 				if (converterExpr != null)
 				{
-					converter                       = (Func<IDbConnection, IDbConnection>)converterExpr.Compile();
+					var param = Expression.Parameter(typeof(IDbConnection));
+					converter = (Func<IDbConnection, IDbConnection>)Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, connType)), param).Compile();
+
 					_connectionConverters[connType] = converter;
 				}
 			}

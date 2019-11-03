@@ -188,10 +188,6 @@ namespace LinqToDB.Data
 
 				var baseConnection = connection is IAsyncDbConnection asyncConnection ? asyncConnection.Connection : connection;
 
-				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(baseConnection))
-					throw new LinqToDBException(
-						$"DataProvider '{DataProvider}' and connection '{baseConnection}' are not compatible.");
-
 				return connection;
 			};
 		}

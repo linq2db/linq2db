@@ -18,21 +18,22 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+		protected BasicSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
+			MappingSchema       = mappingSchema;
 			SqlOptimizer        = sqlOptimizer;
 			SqlProviderFlags    = sqlProviderFlags;
-			ValueToSqlConverter = valueToSqlConverter;
 		}
 
-		protected SqlStatement        Statement;
-		protected int                 Indent;
-		protected Step                BuildStep;
-		protected ISqlOptimizer       SqlOptimizer;
-		protected SqlProviderFlags    SqlProviderFlags;
-		protected ValueToSqlConverter ValueToSqlConverter;
-		protected StringBuilder       StringBuilder;
-		protected bool                SkipAlias;
+		protected SqlStatement           Statement;
+		protected readonly MappingSchema MappingSchema;
+		protected int                    Indent;
+		protected Step                   BuildStep;
+		protected ISqlOptimizer          SqlOptimizer;
+		protected SqlProviderFlags       SqlProviderFlags;
+		protected ValueToSqlConverter    ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
+		protected StringBuilder          StringBuilder;
+		protected bool                   SkipAlias;
 
 		#endregion
 

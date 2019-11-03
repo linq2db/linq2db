@@ -8,11 +8,12 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SybaseSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -37,8 +38,8 @@ namespace LinqToDB.DataProvider.Sybase
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlBuilder(bool skipAliases, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		SybaseSqlBuilder(bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_skipAliases = skipAliases;
 		}
@@ -71,7 +72,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SybaseSqlBuilder(_isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

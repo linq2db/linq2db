@@ -200,11 +200,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 			}
 
 			throw new InvalidOperationException();
@@ -264,7 +264,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 
 			if (parameter.GetType() == _parameterType)
 			{
@@ -370,7 +370,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -403,7 +403,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Timestamp     : _setSqlDbType(parameter, SqlDbType.Timestamp);     break;
 				case DataType.Xml           : _setSqlDbType(parameter, SqlDbType.Xml);           break;
 				case DataType.Structured    : _setSqlDbType(parameter, SqlDbType.Structured);    break;
-				default                     : base.SetParameterType(parameter, dataType);                    break;
+				default                     : base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new SqlServerBulkCopy(this, GetConnectionType());
+				_bulkCopy = new SqlServerBulkCopy(GetConnectionType());
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,

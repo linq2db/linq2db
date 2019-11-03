@@ -1,6 +1,7 @@
 ﻿#nullable disable
 using System;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -157,5 +158,49 @@ namespace LinqToDB.DataProvider
 
 			return string.Empty;
 		};
+
+		#region Create/Drop Database
+
+		internal static void CreateFileDatabase(
+			string databaseName,
+			bool deleteIfExists,
+			string extension,
+			Action<string> createDatabase)
+		{
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(extension))
+				databaseName += extension;
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			createDatabase(databaseName);
+		}
+
+		internal static void DropFileDatabase(string databaseName, string extension)
+		{
+			databaseName = databaseName.Trim();
+
+			if (File.Exists(databaseName))
+			{
+				File.Delete(databaseName);
+			}
+			else
+			{
+				if (!databaseName.ToLower().EndsWith(extension))
+				{
+					databaseName += extension;
+
+					if (File.Exists(databaseName))
+						File.Delete(databaseName);
+				}
+			}
+		}
+		#endregion
 	}
 }

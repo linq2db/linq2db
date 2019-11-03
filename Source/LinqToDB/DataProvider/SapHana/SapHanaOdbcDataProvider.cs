@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SapHanaOdbcSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -100,7 +100,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
 		public override IDisposable ExecuteScope(DataConnection dataConnection)
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return new InvariantCultureRegion();
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.DateTime2: parameter.DbType = DbType.DateTime; break;
 			}
 
-			base.SetParameterType(parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 	}
 }

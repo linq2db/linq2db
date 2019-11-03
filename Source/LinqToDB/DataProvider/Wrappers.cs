@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Wrappers
 							TypeSetter             = dbTypeBuilder.BuildSetter<IDbDataParameter>();
 							TypeGetter             = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 
-							//OleDbSchemaTableGetter = (Func<IDbConnection, Guid, object[]?, DataTable>)_oleDbTypeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)).Compile();
+							OleDbSchemaTableGetter = _oleDbTypeMapper.CompileFunc<IDbConnection, Guid, object[]?, DataTable>(_oleDbTypeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 						}
 					}
 				}

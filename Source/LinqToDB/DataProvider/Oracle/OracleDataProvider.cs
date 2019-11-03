@@ -417,7 +417,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new OracleSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -499,7 +499,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			switch (dataType.DataType)
 			{
@@ -533,7 +533,7 @@ namespace LinqToDB.DataProvider.Oracle
 				dataType = dataType.WithDataType(DataType.NText);
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
 		public override Type ConvertParameterType(Type type, DbDataType dataType)
@@ -570,7 +570,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setLong;
 		Action<IDbDataParameter> _setLongRaw;
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -600,7 +600,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.VarChar        : _setVarchar2         (parameter);           break;
 				case DataType.Long           : _setLong             (parameter);           break;
 				case DataType.LongRaw        : _setLongRaw          (parameter);           break;
-				default                      : base.SetParameterType(parameter, dataType); break;
+				default                      : base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 
@@ -611,7 +611,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
+				_bulkCopy = new OracleBulkCopy(GetConnectionType());
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)

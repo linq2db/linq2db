@@ -817,7 +817,7 @@ namespace Tests
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new TestNoopSqlBuilder(MappingSchema.ValueToSqlConverter);
+			return new TestNoopSqlBuilder(MappingSchema);
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -842,8 +842,8 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder(ValueToSqlConverter valueToSqlConverter)
-			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), valueToSqlConverter)
+		public TestNoopSqlBuilder(MappingSchema mappingSchema)
+			: base(mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
 		{
 		}
 

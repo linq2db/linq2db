@@ -15,13 +15,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
-		public OracleBulkCopy(OracleDataProvider dataProvider, Type connectionType)
+		public OracleBulkCopy(Type connectionType)
 		{
-			_dataProvider   = dataProvider;
 			_connectionType = connectionType;
 		}
 
-		readonly OracleDataProvider _dataProvider;
 		readonly Type               _connectionType;
 
 		Func<IDbConnection,int,IDisposable> _bulkCopyCreator;
@@ -60,7 +58,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_bulkCopyCreator != null)
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
+					var rd      = new BulkCopyReader(dataConnection, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 
 					var bcOptions = 0; // Default

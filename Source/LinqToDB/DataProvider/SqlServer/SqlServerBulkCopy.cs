@@ -15,13 +15,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
-		public SqlServerBulkCopy(SqlServerDataProvider dataProvider, Type connectionType)
+		public SqlServerBulkCopy(Type connectionType)
 		{
-			_dataProvider   = dataProvider;
 			_connectionType = connectionType;
 		}
 
-		readonly SqlServerDataProvider                                       _dataProvider;
 		readonly Type                                                        _connectionType;
 		Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction, IDisposable> _bulkCopyFactory;
 		Func<int, string, object>                                            _columnMappingFactory;
@@ -42,14 +40,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb      = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
+					var sb      = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+					var rd      = new BulkCopyReader(dataConnection, columns, source);
 					var sqlopt  = SqlBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
 
 					if (_bulkCopyFactory == null)
 					{
-						var clientNamespace    = _dataProvider.ConnectionNamespace;
+						var clientNamespace    = dataConnection.DataProvider.ConnectionNamespace;
 						var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + ".SqlBulkCopy",              true);
 						var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + ".SqlBulkCopyOptions",       true);
 						var transactionType    = _connectionType.Assembly.GetType(clientNamespace + ".SqlTransaction",           true);
@@ -91,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (options.MaxBatchSize.   HasValue) dbc.BatchSize       = options.MaxBatchSize.   Value;
 						if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+						var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 						var tableName  = GetTableName(sqlBuilder, options, table);
 
 						dbc.DestinationTableName = tableName;

@@ -13,19 +13,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using System.Globalization;
 	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
 		private readonly PostgreSQLDataProvider _provider;
-		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: this(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
 		// used by linq service
-		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public PostgreSQLSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -46,7 +47,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

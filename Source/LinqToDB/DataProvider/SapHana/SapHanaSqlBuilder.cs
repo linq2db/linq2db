@@ -8,11 +8,12 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SapHanaSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -41,7 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SapHanaSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

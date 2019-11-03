@@ -2,19 +2,20 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 	using SqlProvider;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
-		public SapHanaOdbcSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SapHanaOdbcSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 		
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaOdbcSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SapHanaOdbcSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		public override object Convert(object value, ConvertType convertType)

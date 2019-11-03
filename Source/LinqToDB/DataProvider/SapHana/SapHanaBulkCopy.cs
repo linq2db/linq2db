@@ -12,15 +12,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaBulkCopy : BasicBulkCopy
 	{
-		public SapHanaBulkCopy(SapHanaDataProvider dataProvider, Type connectionType)
+		public SapHanaBulkCopy(Type connectionType)
 		{
-			_dataProvider = dataProvider;
 			_connectionType = connectionType;
 		}
 
 		private const string KeepIdentityOptionName = "KeepIdentity";
 
-		readonly SapHanaDataProvider _dataProvider;
 		readonly Type _connectionType;
 		Func<IDbConnection,int,IDbTransaction,IDisposable> _bulkCopyCreator;
 		Type                                               _bulkCopyOptionType;
@@ -50,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (_bulkCopyCreator == null)
 			{
-				var clientNamespace    = _dataProvider.ConnectionNamespace;
+				var clientNamespace    = dataConnection.DataProvider.ConnectionNamespace;
 				var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopy", false);
 				_bulkCopyOptionType    = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyOptions", false);
 				var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
@@ -104,7 +102,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)    dbc.BatchSize = options.MaxBatchSize.Value;
 				if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-				var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				dbc.DestinationTableName = tableName;
@@ -112,7 +110,7 @@ namespace LinqToDB.DataProvider.SapHana
 				for (var i = 0; i < columns.Count; i++)
 					dbc.ColumnMappings.Add((dynamic) _columnMappingCreator(i, columns[i].ColumnName));
 
-				var rd = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
+				var rd = new BulkCopyReader(dataConnection, columns, source);
 
 				TraceAction(
 					dataConnection,

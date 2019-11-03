@@ -10,11 +10,12 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
+	using LinqToDB.Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public InformixSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new InformixSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
