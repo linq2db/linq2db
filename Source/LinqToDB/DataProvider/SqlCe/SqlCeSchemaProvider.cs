@@ -100,7 +100,7 @@ WHERE PRIMARY_KEY = 1");
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query<ForeignKeyInfo>(
 				@"

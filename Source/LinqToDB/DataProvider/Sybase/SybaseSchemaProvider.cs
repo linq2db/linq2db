@@ -130,7 +130,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			const string baseSql = @"
 SELECT

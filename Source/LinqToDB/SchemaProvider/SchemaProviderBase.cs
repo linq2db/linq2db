@@ -14,12 +14,12 @@ namespace LinqToDB.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType             GetDataType   (string dataType, string columnType, long? length, int? prec, int? scale);
-		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
-		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
-		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
-		protected abstract List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
-		protected abstract string               GetProviderSpecificTypeNamespace();
+		protected abstract DataType                            GetDataType   (string dataType, string columnType, long? length, int? prec, int? scale);
+		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
+		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection);
+		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
+		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
+		protected abstract string                              GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
@@ -165,7 +165,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : new List<ForeignKeyInfo>();
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : Array<ForeignKeyInfo>.Empty;
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{

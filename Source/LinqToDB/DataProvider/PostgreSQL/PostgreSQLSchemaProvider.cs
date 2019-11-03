@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query(
 				rd => new

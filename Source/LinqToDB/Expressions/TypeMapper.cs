@@ -432,9 +432,39 @@ namespace LinqToDB.Expressions
 				return resultLambda;
 			}
 
+			public Expression<Func<TBase, TV>> BuildGetterExpression<TBase>()
+			{
+				var generator = new ExpressionGenerator(_mapper);
+
+				var propLambda    = _mapper.MapLambdaInternal(_memberExpression);
+				var convertedType = propLambda.Parameters[0].Type;
+
+				var newParameter     = Expression.Parameter(typeof(TBase), propLambda.Parameters[0].Name);
+				var requiredVariable = generator.DeclareVariable(convertedType, "v");
+
+				generator.Assign(requiredVariable, newParameter);
+
+				var left  = propLambda.GetBody(requiredVariable).Unwrap();
+
+				generator.Read(left, typeof(TV));
+
+				var generated = generator.Build();
+
+				var resultLambda = Expression.Lambda<Func<TBase, TV>>(generated, newParameter);
+
+				return resultLambda;
+			}
+
 			public Action<TBase, TV> BuildSetter<TBase>()
 			{
 				var resultLambda = BuildSetterExpression<TBase>();
+
+				return resultLambda.Compile();
+			}
+
+			public Func<TBase, TV> BuildGetter<TBase>()
+			{
+				var resultLambda = BuildGetterExpression<TBase>();
 
 				return resultLambda.Compile();
 			}

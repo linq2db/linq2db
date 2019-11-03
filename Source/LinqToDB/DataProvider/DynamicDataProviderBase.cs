@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -7,6 +6,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Collections.Concurrent;
+	using System.Collections.Generic;
 	using Configuration;
 	using Extensions;
 	using Mapping;
@@ -30,14 +31,14 @@ namespace LinqToDB.DataProvider
 			GetConnectionType();
 		}
 
-		volatile Type _connectionType;
+		volatile Type? _connectionType;
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
 			return GetConnectionType().IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-		private         Type _dataReaderType;
+		private Type? _dataReaderType;
 
 		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
 #if NETSTANDARD2_0
@@ -59,7 +60,7 @@ namespace LinqToDB.DataProvider
 			return _connectionType;
 		}
 #else
-		public virtual string DbFactoryProviderName => null;
+		public virtual string? DbFactoryProviderName => null;
 
 		public override Type DataReaderType
 		{
@@ -77,7 +78,7 @@ namespace LinqToDB.DataProvider
 				{
 					var assembly = DbProviderFactories.GetFactory(DbFactoryProviderName).GetType().Assembly;
 
-					var idx = 0;
+					int idx;
 					var dataReaderTypeName = (idx = DataReaderTypeName.IndexOf(',')) != -1 ? DataReaderTypeName.Substring(0, idx) : DataReaderTypeName;
 					_dataReaderType = assembly.GetType(dataReaderTypeName, true);
 				}
@@ -114,7 +115,7 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
-		Func<string,IDbConnection> _createConnection;
+		Func<string, IDbConnection>? _createConnection;
 
 		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
@@ -127,10 +128,10 @@ namespace LinqToDB.DataProvider
 			return _createConnection(connectionString);
 		}
 
-		public static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
+		public static Expression<Func<string, IDbConnection>> CreateConnectionExpression(Type connectionType)
 		{
 			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string,IDbConnection>>(
+			var l = Expression.Lambda<Func<string, IDbConnection>>(
 				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
 				p);
 
@@ -202,17 +203,17 @@ namespace LinqToDB.DataProvider
 			return GetSetParameter(connectionType, parameterTypeName, propertyName, dbType, valueName);
 		}
 
-		protected Func<IDbDataParameter,bool> IsGetParameter(
+		protected Func<IDbDataParameter, bool> IsGetParameter(
 			Type connectionType,
 			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
-			var value  = Enum.Parse(dbType, valueName);
+			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
+			var value = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var l = Expression.Lambda<Func<IDbDataParameter,bool>>(
+			var l = Expression.Lambda<Func<IDbDataParameter, bool>>(
 				Expression.Equal(
 					Expression.PropertyOrField(
 						Expression.Convert(p, pType),
@@ -232,7 +233,7 @@ namespace LinqToDB.DataProvider
 		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
 			MethodCallExpression call;
 
@@ -267,7 +268,7 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField(Type fieldType, string methodName)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType }] =
 				Expression.Lambda(
@@ -285,7 +286,7 @@ namespace LinqToDB.DataProvider
 		protected void SetToTypeField(Type toType, string methodName)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
 			ReaderExpressions[new ReaderInfo { ToType = toType }] =
 				Expression.Lambda(
@@ -309,7 +310,7 @@ namespace LinqToDB.DataProvider
 		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
 			Expression methodCall;
 
@@ -337,5 +338,60 @@ namespace LinqToDB.DataProvider
 		}
 
 		#endregion
+
+		// that's fine, as TryGetValue and indexer are lock-free operations for ConcurrentDictionary
+		// in general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
+		// to support multiple wrappers
+		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters  = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
+		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
+
+		internal virtual IDbDataParameter? TryConvertParameter(Type? expectedType, IDbDataParameter parameter)
+		{
+			var param = parameter;
+			var parameterType = parameter.GetType();
+
+			if (expectedType != null && expectedType == parameterType)
+				return parameter;
+
+			if (!_parameterConverters.TryGetValue(parameterType, out var converter))
+			{
+				var converterExpr = MappingSchema.TryGetConvertExpression(parameterType, typeof(IDbDataParameter));
+				if (converterExpr != null)
+				{
+					// TODO: does it makes sense to lock on create here?
+					converter                           = (Func<IDbDataParameter, IDbDataParameter>)converterExpr.Compile();
+					_parameterConverters[parameterType] = converter;
+				}
+			}
+
+			if (converter != null)
+				return converter(parameter);
+
+			return null;
+		}
+
+		internal virtual IDbConnection? TryConvertConnection(Type? expectedType, IDbConnection connection)
+		{
+			var conn = connection;
+			var connType = connection.GetType();
+
+			if (expectedType != null && expectedType == connType)
+				return connection;
+
+			if (!_connectionConverters.TryGetValue(connType, out var converter))
+			{
+				var converterExpr = MappingSchema.TryGetConvertExpression(connType, typeof(IDbDataParameter));
+				if (converterExpr != null)
+				{
+					converter                       = (Func<IDbConnection, IDbConnection>)converterExpr.Compile();
+					_connectionConverters[connType] = converter;
+				}
+			}
+
+			if (converter != null)
+				return converter(connection);
+
+			return null;
+		}
 	}
 }

@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{

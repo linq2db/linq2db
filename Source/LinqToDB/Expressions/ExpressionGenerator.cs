@@ -68,6 +68,16 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.Assign(left, right));
 		}
 
+		public Expression Read([NotNull] Expression left, [NotNull] Type type)
+		{
+			if (left == null) throw new ArgumentNullException(nameof(left));
+
+			if (left.Type != type)
+				left = Expression.Convert(left, type);
+
+			return AddExpression(left);
+		}
+
 		public ParameterExpression AssignToVariable([NotNull] Expression expression, string? name = default)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));

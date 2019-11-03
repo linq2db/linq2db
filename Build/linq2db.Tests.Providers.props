@@ -73,6 +73,9 @@
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.50" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="3.0.0" />
 		<PackageReference Include="Npgsql" Version="4.1.1" />
+		<PackageReference Include="System.Data.Odbc" Version="4.6.0" />
+		<PackageReference Include="System.Data.OleDb" Version="4.6.0" />
+
 		<!--
 		TEMPORARY EXPLICIT TRANSIENT DEPENDENCY FROM Microsoft.Data.SQLite 3.0.0
 		REMOVE WHEN dependency updated to 2.0.1+ (expected in 3.1.0)

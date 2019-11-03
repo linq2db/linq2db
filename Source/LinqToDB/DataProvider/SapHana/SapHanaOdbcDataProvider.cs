@@ -1,20 +1,16 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
-using System.Data.Common;
-using System.Data.Odbc;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
-	public class SapHanaOdbcDataProvider : DataProviderBase
+	public class SapHanaOdbcDataProvider : DynamicDataProviderBase
 	{
 		public SapHanaOdbcDataProvider()
 			: this(ProviderName.SapHanaOdbc, new SapHanaMappingSchema())
@@ -47,17 +43,19 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public override string ConnectionNamespace => typeof(OdbcConnection).Namespace;
-		public override Type   DataReaderType      => typeof(OdbcDataReader);
+#if !NET45 && !NET46
+		public string AssemblyName => "System.Data.Odbc";
+#else
+		public string AssemblyName => "System.Data";
+#endif
 
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return typeof(OdbcConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
+		public override string ConnectionNamespace   => "System.Data.Odbc";
+		protected override string ConnectionTypeName => $"{ConnectionNamespace}.OdbcConnection, {AssemblyName}";
+		protected override string DataReaderTypeName => $"{ConnectionNamespace}.OdbcDataReader, {AssemblyName}";
 
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
+		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			return new OdbcConnection(connectionString);
+			// noop as we don't need any Odbc-specific API
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -132,23 +130,13 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
+
 			switch (dataType.DataType)
 			{
-				case DataType.Boolean:
-					parameter.DbType                    = DbType.Byte;
-					return;
-				case DataType.Date:
-					((OdbcParameter)parameter).OdbcType = OdbcType.Date;
-					return;
-				case DataType.DateTime2:
-					((OdbcParameter)parameter).OdbcType = OdbcType.DateTime;
-					return;
-				case DataType.Decimal:
-					parameter.DbType                    = DbType.Decimal;
-					((OdbcParameter)parameter).OdbcType = OdbcType.Decimal;
-					return;
-
+				case DataType.Boolean  : parameter.DbType = DbType.Byte;     return;
+				case DataType.DateTime2: parameter.DbType = DbType.DateTime; break;
 			}
+
 			base.SetParameterType(parameter, dataType);
 		}
 	}

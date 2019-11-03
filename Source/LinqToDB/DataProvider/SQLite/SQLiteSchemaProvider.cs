@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 

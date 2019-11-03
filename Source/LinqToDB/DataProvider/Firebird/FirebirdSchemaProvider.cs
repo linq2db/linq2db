@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 

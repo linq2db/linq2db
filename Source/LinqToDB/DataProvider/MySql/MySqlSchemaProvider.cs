@@ -144,7 +144,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
 			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html

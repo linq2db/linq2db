@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,9 +12,16 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+		private readonly AccessDataProvider _provider;
+
+		public AccessSqlBuilder(
+			AccessDataProvider  provider,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags,
+			ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
+			_provider = provider;
 		}
 
 		public override int CommandCount(SqlStatement statement)
@@ -99,7 +105,7 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildSql();
 		}
 
-		SqlColumn _selectColumn;
+		SqlColumn? _selectColumn;
 
 		void BuildAnyAsCount(SelectQuery selectQuery)
 		{
@@ -157,7 +163,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new AccessSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
@@ -167,9 +173,9 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
-			if (predicate.Expr2 is SqlValue)
+			if (predicate.Expr2 is SqlValue sqlValue)
 			{
-				var value = ((SqlValue)predicate.Expr2).Value;
+				var value = sqlValue.Value;
 
 				if (value != null)
 				{
@@ -180,17 +186,16 @@ namespace LinqToDB.DataProvider.Access
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
+			else if (predicate.Expr2 is SqlParameter p)
 			{
-				var p = ((SqlParameter)predicate.Expr2);
 				p.ReplaceLike = true;
 			}
 
 			if (predicate.Escape != null)
 			{
-				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
+				if (predicate.Expr2 is SqlValue escSqlValue && predicate.Escape is SqlValue)
 				{
-					var value = ((SqlValue)predicate.Expr2).Value;
+					var value = escSqlValue.Value;
 
 					if (value != null)
 					{
@@ -200,10 +205,8 @@ namespace LinqToDB.DataProvider.Access
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null);
 					}
 				}
-				else if (predicate.Expr2 is SqlParameter)
+				else if (predicate.Expr2 is SqlParameter p)
 				{
-					var p = (SqlParameter)predicate.Expr2;
-
 					if (p.LikeStart != null)
 					{
 						var value = (string)p.Value;
@@ -394,7 +397,8 @@ namespace LinqToDB.DataProvider.Access
 					break;
 			}
 
-			return value;
+			// TODO: review Convert nullability
+			return value!;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -410,7 +414,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -420,9 +424,16 @@ namespace LinqToDB.DataProvider.Access
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+			if (Wrappers.Mappers.OleDb.TypeGetter != null)
+			{
+				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter);
+				if (param != null)
+					return Wrappers.Mappers.OleDb.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

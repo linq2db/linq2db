@@ -13,10 +13,17 @@ namespace LinqToDB.DataProvider.Access
 	using Common;
 	using Data;
 	using SchemaProvider;
-	using System.Data.OleDb;
+	//using System.Data.OleDb;
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
+		private readonly AccessDataProvider _provider;
+
+		public AccessSchemaProvider(AccessDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
@@ -134,12 +141,19 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			// this line (GetOleDbSchemaTable) could crash application hard with AV:
+			if (Wrappers.Mappers.OleDb.OleDbSchemaTableGetter == null)
+				return Array<ForeignKeyInfo>.Empty;
+
+			var connection = _provider.TryConvertConnection(Wrappers.Mappers.OleDb.ConnectionType, dataConnection.Connection);
+			if (connection == null)
+				return Array<ForeignKeyInfo>.Empty;
+
+			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23
-			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
-				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, null);
+			// we cannot do anything about it as it is not exception you can handle without hacks (and it doesn't make sense anyways)
+			var data = Wrappers.Mappers.OleDb.OleDbSchemaTableGetter(connection, Wrappers.Mappers.OleDb.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo

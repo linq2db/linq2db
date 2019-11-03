@@ -356,7 +356,7 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var names = new HashSet<string>();
 

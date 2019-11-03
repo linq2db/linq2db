@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return
 			(
