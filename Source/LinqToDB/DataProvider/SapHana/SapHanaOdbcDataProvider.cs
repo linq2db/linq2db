@@ -43,19 +43,31 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-#if !NET45 && !NET46
-		public string AssemblyName => "System.Data.Odbc";
-#else
-		public string AssemblyName => "System.Data";
+#if NET45 || NET46
+		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient (netfx only)
+		public override Type DataReaderType => typeof(System.Data.Odbc.OdbcDataReader);
+
+		Type? _connectionType;
+		protected internal override Type GetConnectionType()
+		{
+			if (_connectionType != null)
+				return _connectionType;
+
+			_connectionType = typeof(System.Data.Odbc.OdbcConnection);
+			OnConnectionTypeCreated(_connectionType);
+			return _connectionType;
+		}
 #endif
 
-		public override string ConnectionNamespace   => "System.Data.Odbc";
-		protected override string ConnectionTypeName => $"{ConnectionNamespace}.OdbcConnection, {AssemblyName}";
-		protected override string DataReaderTypeName => $"{ConnectionNamespace}.OdbcDataReader, {AssemblyName}";
+		public string AssemblyName => "System.Data.Odbc";
+
+		public    override string ConnectionNamespace => "System.Data.Odbc";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.OdbcConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.OdbcDataReader, {AssemblyName}";
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			// noop as we don't need any Odbc-specific API
+			// noop as we don't need any Odbc-specific API currently
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -134,7 +146,7 @@ namespace LinqToDB.DataProvider.SapHana
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean  : parameter.DbType = DbType.Byte;     return;
-				case DataType.DateTime2: parameter.DbType = DbType.DateTime; break;
+				case DataType.DateTime2: parameter.DbType = DbType.DateTime; return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

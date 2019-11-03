@@ -8,6 +8,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -91,6 +92,19 @@ namespace Tests.Data
 					Assert.True(trace.Contains("DECLARE @p LongVarChar(3)"));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)));
 					Assert.True(trace.Contains("DECLARE @p LongVarWChar(3)"));
+				}
+			}
+		}
+
+		[Test]
+		public void TestSapHanaOdbc([IncludeDataSources(ProviderName.SapHanaOdbc)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type))
+				{
+					// provider doesn't use provider-specific API, so we just query schema
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				}
 			}
 		}
