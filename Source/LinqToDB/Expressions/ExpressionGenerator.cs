@@ -31,6 +31,14 @@ namespace LinqToDB.Expressions
 			return variable;
 		}
 
+		public ParameterExpression AddVariable([NotNull] ParameterExpression variable)
+		{
+			if (variable == null) throw new ArgumentNullException(nameof(variable));
+
+			_variables.Add(variable);
+			return variable;
+		}
+
 		public Expression AddExpression([NotNull] Expression expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));

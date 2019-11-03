@@ -151,6 +151,20 @@ namespace Tests.Playground
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
 			}
 
+			[Test]
+			public void TestMapFunc()
+			{
+				var newMemberInit = _typeMapper.MapLambda((int i) => new SampleClass(i + 55, i + 77) {StrValue = "Str"});
+				var func = _typeMapper.MapFunc<byte, object>(newMemberInit);
+				
+				var instance = (Dynamic.SampleClass)func(1);
+
+				Assert.That(instance.Id, Is.EqualTo(56));
+				Assert.That(instance.Value, Is.EqualTo(78));
+				Assert.That(instance.StrValue, Is.EqualTo("Str"));
+			}
+
+
 		}
 
 	}
