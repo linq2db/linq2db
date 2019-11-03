@@ -310,6 +310,64 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+		#region MapFunc
+
+		LambdaExpression MapFuncInternal(LambdaExpression lambda, params Type[] types)
+		{
+			if (lambda.Parameters.Count != types.Length - 1)
+				throw new LinqToDBException("Invalid count of types.");
+
+			var parameters    = new ParameterExpression[types.Length - 1];
+			var generator = new ExpressionGenerator(this);
+
+			for (int i = 0; i < types.Length - 1; i++)
+			{
+				var parameter = lambda.Parameters[i];
+				if (types[i] != parameter.Type)
+				{
+					var variable  = generator.AddVariable(parameter);
+					parameters[i] = Expression.Parameter(types[i], parameter.Name);
+					generator.Assign(variable, parameters[i]);
+				}
+				else
+				{
+					parameters[i] = parameter;
+				}
+			}
+
+			var body = lambda.Body;
+			var resultType = types[types.Length - 1];
+			if (body.Type != resultType)
+			{
+				body = Expression.Convert(body, resultType);
+			}
+
+			generator.AddExpression(body);
+			var newBody = generator.Build();
+
+			return Expression.Lambda(newBody, parameters);
+		}
+
+		public Func<TR> MapFunc<TR>(LambdaExpression lambda) => 
+			(Func<TR>)MapFuncInternal(lambda, typeof(TR)).Compile();
+
+		public Func<T, TR> MapFunc<T, TR>(LambdaExpression lambda) =>
+			(Func<T, TR>)MapFuncInternal(lambda, typeof(T), typeof(TR)).Compile();
+
+		public Func<T1, T2, TR> MapFunc<T1, T2, TR>(LambdaExpression lambda) => 
+			(Func<T1, T2, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(TR)).Compile();
+
+		public Func<T1, T2, T3, TR> MapFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
+			(Func<T1, T2, T3, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(TR)).Compile();
+
+		public Func<T1, T2, T3, T4, TR> MapFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
+			(Func<T1, T2, T3, T4, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(TR)).Compile();
+
+		public Func<T1, T2, T3, T4, T5, TR> MapFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
+			(Func<T1, T2, T3, T4, T5, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(TR)).Compile();
+
+		#endregion
+
 		#region MemberAccess
 
 		public MemberExpression MemberAccess<T>(Expression<Func<T, object?>> memberExpression, Expression obj)
