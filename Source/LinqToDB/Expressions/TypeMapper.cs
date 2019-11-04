@@ -298,7 +298,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, [CanBeNull] Type resultType, params Type[] paramTypes)
+		LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, Type? resultType, params Type[] paramTypes)
 		{
 			if (lambda.Parameters.Count != paramTypes.Length)
 				throw new LinqToDBException("Invalid count of types.");
@@ -376,77 +376,47 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		#region CompileFunc
+		#region BuildFunc
 
-		public Func<TR> CompileFunc<TR>(LambdaExpression lambda) => 
+		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) => 
 			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).Compile();
 
-		public Func<T, TR> CompileFunc<T, TR>(LambdaExpression lambda) =>
+		public Func<T, TR> BuildFunc<T, TR>(LambdaExpression lambda) =>
 			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).Compile();
 
-		public Func<T1, T2, TR> CompileFunc<T1, T2, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).Compile();
 
-		public Func<T1, T2, T3, TR> CompileFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).Compile();
 
-		public Func<T1, T2, T3, T4, TR> CompileFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
 
-		public Func<T1, T2, T3, T4, T5, TR> CompileFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
 
 		#endregion
-		#region CompileAction
 
-		LambdaExpression MapActionInternal(LambdaExpression lambda, params Type[] types)
-		{
-			if (lambda.Parameters.Count != types.Length)
-				throw new LinqToDBException("Invalid count of types.");
+		#region BuildAction
 
-			var parameters = new ParameterExpression[types.Length];
-			var generator = new ExpressionGenerator(this);
+		public Action BuildAction(LambdaExpression lambda) => 
+			(Action)CorrectLambdaParameters(lambda, null).Compile();
 
-			for (int i = 0; i < types.Length; i++)
-			{
-				var parameter = lambda.Parameters[i];
-				if (types[i] != parameter.Type)
-				{
-					var variable = generator.AddVariable(parameter);
-					parameters[i] = Expression.Parameter(types[i], parameter.Name);
-					generator.Assign(variable, parameters[i]);
-				}
-				else
-				{
-					parameters[i] = parameter;
-				}
-			}
+		public Action<T> BuildAction<T>(LambdaExpression lambda) =>
+			(Action<T>)CorrectLambdaParameters(lambda, null, typeof(T)).Compile();
 
-			var body = lambda.Body;
+		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) => 
+			(Action<T1, T2>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2)).Compile();
 
-			generator.AddExpression(body);
-			var newBody = generator.Build();
+		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3)).Compile();
 
-			return Expression.Lambda(newBody, parameters);
-		}
+		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3, T4>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
 
-		public Action CompileAction(LambdaExpression lambda) =>
-			(Action)MapActionInternal(lambda).Compile();
-
-		public Action<T> CompileAction<T>(LambdaExpression lambda) =>
-			(Action<T>)MapActionInternal(lambda, typeof(T)).Compile();
-
-		public Action<T1, T2> CompileAction<T1, T2>(LambdaExpression lambda) => 
-			(Action<T1, T2>)MapActionInternal(lambda, typeof(T1), typeof(T2)).Compile();
-
-		public Action<T1, T2, T3> CompileAction<T1, T2, T3>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3)).Compile();
-
-		public Action<T1, T2, T3, T4> CompileAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3, T4>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
-
-		public Action<T1, T2, T3, T4, T5> CompileAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3, T4, T5>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
+		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3, T4, T5>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
 
 		#endregion
 

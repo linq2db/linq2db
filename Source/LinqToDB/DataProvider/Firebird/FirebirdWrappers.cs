@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Firebird
 						var dbTypeBuilder = _typeMapper.Type<FbParameter>().Member(p => p.FbDbType);
 						TypeGetter        = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 
-						ClearAllPools = _typeMapper.CompileAction(_typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
+						ClearAllPools = _typeMapper.BuildAction(_typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 					}
 				}
 			}

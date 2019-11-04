@@ -159,7 +159,7 @@ namespace Tests.Playground
 			public void TestMapFunc()
 			{
 				var newMemberInit = _typeMapper.MapLambda((int i) => new SampleClass(i + 55, i + 77) {StrValue = "Str"});
-				var func = _typeMapper.CompileFunc<byte, object>(newMemberInit);
+				var func = _typeMapper.BuildFunc<byte, object>(newMemberInit);
 				
 				var instance = (Dynamic.SampleClass)func(1);
 
