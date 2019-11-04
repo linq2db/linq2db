@@ -56,10 +56,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			if (FirebirdWrappers.ConnectionType == null)
-			{
-				FirebirdWrappers.Initialize(connectionType);
-			}
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)

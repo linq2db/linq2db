@@ -436,8 +436,10 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null && Wrappers.Mappers.OleDb.TypeGetter != null)
+			if (_provider != null)
 			{
+				Wrappers.Mappers.OleDb.Initialize();
+
 				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, MappingSchema);
 				if (param != null)
 					return Wrappers.Mappers.OleDb.TypeGetter(param).ToString();

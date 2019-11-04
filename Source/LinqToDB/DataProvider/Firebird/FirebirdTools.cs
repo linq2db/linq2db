@@ -81,12 +81,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static void ClearAllPools()
 		{
-			if (FirebirdWrappers.ConnectionType == null)
-				_firebirdDataProvider.GetConnectionType();
-
-			// in case of user using wrapped connection without unwrap conversion
-			if (FirebirdWrappers.ClearAllPools == null)
-				throw new InvalidOperationException($"{nameof(ClearAllPools)} API not available");
+			FirebirdWrappers.Initialize();
 
 			FirebirdWrappers.ClearAllPools();
 		}

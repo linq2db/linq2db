@@ -346,11 +346,11 @@ namespace LinqToDB.DataProvider
 		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters  = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
 		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
 
-		internal virtual IDbDataParameter? TryConvertParameter(Type? expectedType, IDbDataParameter parameter, MappingSchema ms)
+		internal virtual IDbDataParameter? TryConvertParameter(Type expectedType, IDbDataParameter parameter, MappingSchema ms)
 		{
 			var parameterType = parameter.GetType();
 
-			if (expectedType != null && expectedType == parameterType)
+			if (expectedType == parameterType)
 				return parameter;
 
 			if (!_parameterConverters.TryGetValue(parameterType, out var converter))
@@ -372,11 +372,11 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 
-		internal virtual IDbConnection? TryConvertConnection(Type? expectedType, IDbConnection connection, MappingSchema ms)
+		internal virtual IDbConnection? TryConvertConnection(Type expectedType, IDbConnection connection, MappingSchema ms)
 		{
 			var connType = connection.GetType();
 
-			if (expectedType != null && expectedType == connType)
+			if (expectedType == connType)
 				return connection;
 
 			if (!_connectionConverters.TryGetValue(connType, out var converter))

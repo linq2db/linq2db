@@ -55,12 +55,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
-			if (SqlCeWrappers.ConnectionType == null)
-				_sqlCeDataProvider.GetConnectionType();
-
-			// in case of user using wrapped connection without unwrap conversion
-			if (SqlCeWrappers.ConnectionType == null)
-				throw new InvalidOperationException($"{nameof(CreateDatabase)} API not available");
+			SqlCeWrappers.Initialize();
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",

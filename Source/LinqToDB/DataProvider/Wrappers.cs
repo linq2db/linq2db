@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Reflection;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.Wrappers
@@ -14,13 +13,13 @@ namespace LinqToDB.DataProvider.Wrappers
 			private static readonly object _syncRoot = new object();
 			private static TypeMapper?     _oleDbTypeMapper;
 
-			internal static Type?                                            ParameterType;
-			internal static Type?                                            ConnectionType;
-			internal static Action<IDbDataParameter, OleDbType>?             TypeSetter;
-			internal static Func<IDbDataParameter, OleDbType>?               TypeGetter;
-			internal static Func<IDbConnection, Guid, object[]?, DataTable>? OleDbSchemaTableGetter;
+			internal static Type                                            ParameterType = null!;
+			internal static Type                                            ConnectionType = null!;
+			internal static Action<IDbDataParameter, OleDbType>             TypeSetter = null!;
+			internal static Func<IDbDataParameter, OleDbType>               TypeGetter = null!;
+			internal static Func<IDbConnection, Guid, object[]?, DataTable> OleDbSchemaTableGetter = null!;
 
-			internal static void Initialize(Assembly assembly)
+			internal static void Initialize()
 			{
 				if (_oleDbTypeMapper == null)
 				{
@@ -28,9 +27,13 @@ namespace LinqToDB.DataProvider.Wrappers
 					{
 						if (_oleDbTypeMapper == null)
 						{
-							ConnectionType = assembly.GetType("System.Data.OleDb.OleDbConnection", true);
-							ParameterType  = assembly.GetType("System.Data.OleDb.OleDbParameter",  true);
-							var dbType     = assembly.GetType("System.Data.OleDb.OleDbType",       true);
+#if NET45 || NET46
+							ConnectionType = typeof(System.Data.OleDb.OleDbConnection);
+#else
+							ConnectionType = Type.GetType("System.Data.OleDb.OleDbConnection, System.Data.OleDb", true);
+#endif
+							ParameterType  = ConnectionType.Assembly.GetType("System.Data.OleDb.OleDbParameter",  true);
+							var dbType     = ConnectionType.Assembly.GetType("System.Data.OleDb.OleDbType",       true);
 
 							_oleDbTypeMapper  = new TypeMapper(ConnectionType, ParameterType, dbType);
 

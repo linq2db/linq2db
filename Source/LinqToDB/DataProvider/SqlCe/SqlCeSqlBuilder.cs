@@ -184,8 +184,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null && SqlCeWrappers.TypeGetter != null)
+			if (_provider != null)
 			{
+				SqlCeWrappers.Initialize();
+
 				var param = _provider.TryConvertParameter(SqlCeWrappers.ParameterType, parameter, MappingSchema);
 				if (param != null)
 					return SqlCeWrappers.TypeGetter(param).ToString();

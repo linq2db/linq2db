@@ -76,10 +76,6 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			if (Wrappers.Mappers.OleDb.ConnectionType == null)
-			{
-				Wrappers.Mappers.OleDb.Initialize(connectionType.Assembly);
-			}
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
@@ -110,8 +106,9 @@ namespace LinqToDB.DataProvider.Access
 				case DataType.NText     : type = OleDbType.LongVarWChar; break;
 			}
 
-			if (type != null && Wrappers.Mappers.OleDb.TypeSetter != null)
+			if (type != null)
 			{
+				Wrappers.Mappers.OleDb.Initialize();
 				var param = TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
@@ -126,11 +123,11 @@ namespace LinqToDB.DataProvider.Access
 				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
 				// doesn't work for all situations
 				case DataType.Decimal   :
-				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; break;
+				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
 				case DataType.DateTime  :
-				case DataType.DateTime2 : parameter.DbType = DbType.DateTime;   break;
-				case DataType.Text      : parameter.DbType = DbType.AnsiString; break;
-				case DataType.NText     : parameter.DbType =  DbType.String;    break;
+				case DataType.DateTime2 : parameter.DbType = DbType.DateTime;   return;
+				case DataType.Text      : parameter.DbType = DbType.AnsiString; return;
+				case DataType.NText     : parameter.DbType =  DbType.String;    return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

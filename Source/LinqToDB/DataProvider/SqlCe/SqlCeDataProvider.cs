@@ -53,10 +53,6 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			if (SqlCeWrappers.ConnectionType == null)
-			{
-				SqlCeWrappers.Initialize(connectionType);
-			}
 		}
 
 		#region Overrides
@@ -111,8 +107,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Image      : type = SqlDbType.Image;     break;
 			}
 
-			if (type != null && SqlCeWrappers.TypeSetter != null)
+			if (type != null)
 			{
+				SqlCeWrappers.Initialize();
 				var param = TryConvertParameter(SqlCeWrappers.ParameterType, parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{

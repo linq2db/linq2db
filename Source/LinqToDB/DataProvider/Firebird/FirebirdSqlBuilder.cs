@@ -406,8 +406,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null && FirebirdWrappers.TypeGetter != null)
+			if (_provider != null)
 			{
+				FirebirdWrappers.Initialize();
+
 				var param = _provider.TryConvertParameter(FirebirdWrappers.ParameterType, parameter, MappingSchema);
 				if (param != null)
 					return FirebirdWrappers.TypeGetter(param).ToString();

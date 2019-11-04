@@ -66,15 +66,12 @@ namespace Tests.Data
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
-				using (var db = CreateDataConnection(new AccessDataProvider(), context, type))
-				{
-					// TODO: reenable, when transactions fixed
 #if NET46
-					// assert custom schema table access
-					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-					Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
+				using (var db = CreateDataConnection(new AccessDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+#else
+				using (var db = CreateDataConnection(new AccessDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
 #endif
-
+				{
 					var trace = string.Empty;
 					db.OnTraceConnection += (TraceInfo ti) =>
 					{
@@ -94,6 +91,13 @@ namespace Tests.Data
 					Assert.True(trace.Contains("DECLARE @p LongVarChar(3)"));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)));
 					Assert.True(trace.Contains("DECLARE @p LongVarWChar(3)"));
+
+					// TODO: reenable, when transactions fixed
+#if NET46
+					// assert custom schema table access
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+					Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
+#endif
 				}
 			}
 		}
@@ -103,7 +107,11 @@ namespace Tests.Data
 		{
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
-				using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type))
+#if NET46
+				using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+#else
+				using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+#endif
 				{
 					// provider doesn't use provider-specific API, so we just query schema
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
@@ -117,16 +125,10 @@ namespace Tests.Data
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
-				using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type))
+				using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
 				{
 					// just check schema (no api used)
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-
-					// assert api resolved and callable
-					// unfortunatelly it uses pre-created provider instance, so it doesn't test this call
-					// properly when called with other tests (tested manually)
-					// actually possible to test with nunit plugin with appdomain test isolation, but meh
-					FirebirdTools.ClearAllPools();
 
 					var trace = string.Empty;
 					db.OnTraceConnection += (TraceInfo ti) =>
@@ -138,6 +140,12 @@ namespace Tests.Data
 					// assert provider-specific parameter type name
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
 					Assert.True(trace.Contains("DECLARE @p VarChar"));
+
+					// assert api resolved and callable
+					// unfortunatelly it uses pre-created provider instance, so it doesn't test this call
+					// properly when called with other tests (tested manually)
+					// actually possible to test with nunit plugin with appdomain test isolation, but meh
+					FirebirdTools.ClearAllPools();
 				}
 			}
 		}
@@ -148,13 +156,10 @@ namespace Tests.Data
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
-				using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type))
+				using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type, DbProviderFactories.GetFactory("System.Data.SqlServerCe.4.0").GetType().Assembly.GetType("System.Data.SqlServerCe.SqlCeConnection")))
 				{
 					// just check schema (no api used)
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-
-					// assert api resolved and callable
-					SqlCeTools.CreateDatabase($"TestSqlCe_{Guid.NewGuid():N}");
 
 					var trace = string.Empty;
 					db.OnTraceConnection += (TraceInfo ti) =>
@@ -164,26 +169,30 @@ namespace Tests.Data
 					};
 
 					// assert provider-specific parameter type name
-					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.Text)));
+					Assert.AreEqual("111", db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.Text)));
 					Assert.True(trace.Contains("DECLARE @p NText"));
-					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)));
+					Assert.AreEqual("111", db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.NText)));
 					Assert.True(trace.Contains("DECLARE @p NText"));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.VarChar)));
 					Assert.True(trace.Contains("DECLARE @p NVarChar"));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
 					Assert.True(trace.Contains("DECLARE @p NVarChar"));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE binaryDataType = @p", new DataParameter("@p", new byte[] { 1 }, DataType.Binary)));
-					Assert.True(trace.Contains("DECLARE @p Binary "));
+					Assert.True(trace.Contains("DECLARE @p Binary("));
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE varbinaryDataType = @p", new DataParameter("@p", new byte[] { 2 }, DataType.VarBinary)));
-					Assert.True(trace.Contains("DECLARE @p VarBinary "));
-					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE imageDataType = @p", new DataParameter("@p", new byte[] { 0, 0, 0, 3 }, DataType.Image)));
-					Assert.True(trace.Contains("DECLARE @p Image "));
+					Assert.True(trace.Contains("DECLARE @p VarBinary("));
+					Assert.AreEqual(new byte[] { 0, 0, 0, 3 }, db.Execute<byte[]>("SELECT Cast(@p as image)", new DataParameter("@p", new byte[] { 0, 0, 0, 3 }, DataType.Image)));
+					Assert.True(trace.Contains("DECLARE @p Image("));
 
 					var tsVal = db.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 2");
 					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE timestampDataType = @p", new DataParameter("@p", tsVal, DataType.Timestamp)));
-					Assert.True(trace.Contains("DECLARE @p Timestamp "));
+					Assert.True(trace.Contains("DECLARE @p Timestamp("));
+
+					// assert api resolved and callable
+					SqlCeTools.CreateDatabase($"TestSqlCe_{Guid.NewGuid():N}");
 				}
 			}
+		}
 
 		public enum ConnectionType
 		{
@@ -195,13 +204,24 @@ namespace Tests.Data
 			//SimpleMiniProfilerNoMappings
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType)
+		{
+			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(connectionType, cs));
+		}
+
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName)
+		{
+			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName), cs));
+		}
+
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory)
 		{
 			var ms = new MappingSchema();
 			DataConnection db = null;
 			db = new DataConnection(provider, () =>
 			{
-				var cn = provider.CreateConnection(DataConnection.GetConnectionString(context));
+				// don't create connection using provider, or it will initialize types
+				var cn = connectionFactory(DataConnection.GetConnectionString(context));
 
 				switch (type)
 				{

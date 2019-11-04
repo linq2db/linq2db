@@ -143,8 +143,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			if (Wrappers.Mappers.OleDb.OleDbSchemaTableGetter == null)
-				return Array<ForeignKeyInfo>.Empty;
+			Wrappers.Mappers.OleDb.Initialize();
 
 			var connection = _provider.TryConvertConnection(Wrappers.Mappers.OleDb.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
