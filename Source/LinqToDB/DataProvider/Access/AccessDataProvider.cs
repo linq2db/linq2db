@@ -104,11 +104,6 @@ namespace LinqToDB.DataProvider.Access
 			OleDbType? type = null;
 			switch (dataType.DataType)
 			{
-				// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
-				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
-				// doesn't work for all situations
-				case DataType.Decimal   :
-				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
 				case DataType.DateTime  :
 				case DataType.DateTime2 : type = OleDbType.Date        ; break;
 				case DataType.Text      : type = OleDbType.LongVarChar ; break;
@@ -123,6 +118,19 @@ namespace LinqToDB.DataProvider.Access
 					Wrappers.Mappers.OleDb.TypeSetter(param, type.Value);
 					return;
 				}
+			}
+
+			switch (dataType.DataType)
+			{
+				// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
+				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
+				// doesn't work for all situations
+				case DataType.Decimal   :
+				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; break;
+				case DataType.DateTime  :
+				case DataType.DateTime2 : parameter.DbType = DbType.DateTime;   break;
+				case DataType.Text      : parameter.DbType = DbType.AnsiString; break;
+				case DataType.NText     : parameter.DbType =  DbType.String;    break;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

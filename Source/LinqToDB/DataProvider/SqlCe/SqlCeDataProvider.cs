@@ -53,50 +53,17 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_setNText     = GetSetParameter(connectionType, SqlDbType.NText);
-			_setNChar     = GetSetParameter(connectionType, SqlDbType.NChar);
-			_setNVarChar  = GetSetParameter(connectionType, SqlDbType.NVarChar);
-			_setTimestamp = GetSetParameter(connectionType, SqlDbType.Timestamp);
-			_setBinary    = GetSetParameter(connectionType, SqlDbType.Binary);
-			_setVarBinary = GetSetParameter(connectionType, SqlDbType.VarBinary);
-			_setImage     = GetSetParameter(connectionType, SqlDbType.Image);
-			_setDateTime  = GetSetParameter(connectionType, SqlDbType.DateTime );
-			_setMoney     = GetSetParameter(connectionType, SqlDbType.Money);
-			_setBoolean   = GetSetParameter(connectionType, SqlDbType.Bit);
-		}
-
-		Action<IDbDataParameter> _setNText;
-		Action<IDbDataParameter> _setNChar;
-		Action<IDbDataParameter> _setNVarChar;
-		Action<IDbDataParameter> _setTimestamp;
-		Action<IDbDataParameter> _setBinary;
-		Action<IDbDataParameter> _setVarBinary;
-		Action<IDbDataParameter> _setImage;
-		Action<IDbDataParameter> _setDateTime;
-		Action<IDbDataParameter> _setMoney;
-		Action<IDbDataParameter> _setBoolean;
-
-		static Action<IDbDataParameter> GetSetParameter(Type connectionType, SqlDbType value)
-		{
-			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + ".SqlCeParameter", true);
-
-			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var l = Expression.Lambda<Action<IDbDataParameter>>(
-				Expression.Assign(
-					Expression.PropertyOrField(
-						Expression.Convert(p, pType),
-						"SqlDbType"),
-					Expression.Constant(value)),
-				p);
-
-			return l.Compile();
+			if (SqlCeWrappers.ConnectionType == null)
+			{
+				SqlCeWrappers.Initialize(connectionType);
+			}
 		}
 
 		#region Overrides
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SqlCeSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SqlCeSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -118,13 +85,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Xml :
 					dataType = dataType.WithDataType(DataType.NVarChar);
 
-					if (value is SqlXml)
-					{
-						var xml = (SqlXml)value;
-						value = xml.IsNull ? null : xml.Value;
-					}
-					else if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					if      (value is SqlXml xml)      value = xml.IsNull ? null : xml.Value;
+					else if (value is XDocument xdoc)  value = xdoc.ToString();
+					else if (value is XmlDocument doc) value = doc.InnerXml;
 
 					break;
 			}
@@ -134,32 +97,50 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
+			SqlDbType? type = null;
+
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : parameter.DbType    = DbType.Int16;   break;
-				case DataType.UInt16     : parameter.DbType    = DbType.Int32;   break;
-				case DataType.UInt32     : parameter.DbType    = DbType.Int64;   break;
-				case DataType.UInt64     : parameter.DbType    = DbType.Decimal; break;
-				case DataType.VarNumeric : parameter.DbType    = DbType.Decimal; break;
 				case DataType.Text       :
-				case DataType.NText      : _setNText    (parameter); break;
-				case DataType.Char       :
-				case DataType.NChar      : _setNChar    (parameter); break;
+				case DataType.NText      : type = SqlDbType.NText;     break;
 				case DataType.VarChar    :
-				case DataType.NVarChar   : _setNVarChar (parameter); break;
-				case DataType.Timestamp  : _setTimestamp(parameter); break;
-				case DataType.Binary     : _setBinary   (parameter); break;
-				case DataType.VarBinary  : _setVarBinary(parameter); break;
-				case DataType.Image      : _setImage    (parameter); break;
-				case DataType.Date       :
-				case DataType.DateTime   :
-				case DataType.DateTime2  : _setDateTime (parameter); break;
-				case DataType.Money      : _setMoney    (parameter); break;
-				case DataType.Boolean    : _setBoolean  (parameter); break;
-				default                  :
-					base.SetParameterType(dataConnection, parameter, dataType);
-					break;
+				case DataType.NVarChar   : type = SqlDbType.NVarChar;  break;
+				case DataType.Timestamp  : type = SqlDbType.Timestamp; break;
+				case DataType.Binary     : type = SqlDbType.Binary;    break;
+				case DataType.VarBinary  : type = SqlDbType.VarBinary; break;
+				case DataType.Image      : type = SqlDbType.Image;     break;
 			}
+
+			if (type != null && SqlCeWrappers.TypeSetter != null)
+			{
+				var param = TryConvertParameter(SqlCeWrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					SqlCeWrappers.TypeSetter(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				case DataType.SByte      : parameter.DbType = DbType.Int16;             return;
+				case DataType.UInt16     : parameter.DbType = DbType.Int32;             return;
+				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
+				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
+				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
+				case DataType.Char       : parameter.DbType = DbType.StringFixedLength; return;
+				case DataType.Date       :
+				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;
+				case DataType.Money      : parameter.DbType = DbType.Currency;          return;
+				case DataType.Text       :
+				case DataType.VarChar    :
+				case DataType.NText      : parameter.DbType = DbType.String;            return;
+				case DataType.Timestamp  :
+				case DataType.Binary     :
+				case DataType.Image      : parameter.DbType = DbType.Binary;            return;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 #endregion

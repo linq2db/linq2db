@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -12,17 +10,24 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
+		private readonly SqlCeDataProvider? _provider;
+		public SqlCeSqlBuilder(SqlCeDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public SqlCeSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected override string FirstFormat(SelectQuery selectQuery)
+		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
+		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
 		}
@@ -63,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new SqlCeSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -163,7 +168,8 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			return value;
+			// TODO: nullable types
+			return value!;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -178,8 +184,14 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.SqlDbType.ToString();
+			if (_provider != null && SqlCeWrappers.TypeGetter != null)
+			{
+				var param = _provider.TryConvertParameter(SqlCeWrappers.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return SqlCeWrappers.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

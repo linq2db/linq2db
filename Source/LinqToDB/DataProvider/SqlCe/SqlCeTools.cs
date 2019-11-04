@@ -55,18 +55,19 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
+			if (SqlCeWrappers.ConnectionType == null)
+				_sqlCeDataProvider.GetConnectionType();
+
+			// in case of user using wrapped connection without unwrap conversion
+			if (SqlCeWrappers.ConnectionType == null)
+				throw new InvalidOperationException($"{nameof(CreateDatabase)} API not available");
+
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
 				dbName =>
 				{
-					dynamic eng = Activator.CreateInstance(
-						_sqlCeDataProvider.GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
-						"Data Source=" + dbName);
-
-					eng.CreateDatabase();
-
-					if (eng is IDisposable disp)
-						disp.Dispose();
+					using (var engine = SqlCeWrappers.NewSqlCeEngine("Data Source=" + dbName))
+						engine.CreateDatabase();
 				});
 		}
 

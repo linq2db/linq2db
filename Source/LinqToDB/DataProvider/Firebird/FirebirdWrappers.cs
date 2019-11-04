@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Data;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.DataProvider.Firebird
 {
 	using LinqToDB.Expressions;
 
-	[PublicAPI]
 	internal static class FirebirdWrappers
 	{
 		private static readonly object      _syncRoot = new object();

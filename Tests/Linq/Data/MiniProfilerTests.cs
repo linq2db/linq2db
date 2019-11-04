@@ -10,6 +10,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.SapHana;
+using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -140,6 +141,49 @@ namespace Tests.Data
 				}
 			}
 		}
+
+		[Test]
+		public void TestSqlCe([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type))
+				{
+					// just check schema (no api used)
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					// assert api resolved and callable
+					SqlCeTools.CreateDatabase($"TestSqlCe_{Guid.NewGuid():N}");
+
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					// assert provider-specific parameter type name
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.Text)));
+					Assert.True(trace.Contains("DECLARE @p NText"));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p NText"));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.VarChar)));
+					Assert.True(trace.Contains("DECLARE @p NVarChar"));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
+					Assert.True(trace.Contains("DECLARE @p NVarChar"));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE binaryDataType = @p", new DataParameter("@p", new byte[] { 1 }, DataType.Binary)));
+					Assert.True(trace.Contains("DECLARE @p Binary "));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE varbinaryDataType = @p", new DataParameter("@p", new byte[] { 2 }, DataType.VarBinary)));
+					Assert.True(trace.Contains("DECLARE @p VarBinary "));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE imageDataType = @p", new DataParameter("@p", new byte[] { 0, 0, 0, 3 }, DataType.Image)));
+					Assert.True(trace.Contains("DECLARE @p Image "));
+
+					var tsVal = db.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 2");
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE timestampDataType = @p", new DataParameter("@p", tsVal, DataType.Timestamp)));
+					Assert.True(trace.Contains("DECLARE @p Timestamp "));
+				}
+			}
 
 		public enum ConnectionType
 		{
