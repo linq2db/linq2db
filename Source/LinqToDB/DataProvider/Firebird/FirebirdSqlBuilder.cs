@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Linq;
 
@@ -18,6 +17,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
+		private readonly FirebirdDataProvider? _provider;
+
+		public FirebirdSqlBuilder(FirebirdDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public FirebirdSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
@@ -25,7 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -244,7 +251,8 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 			}
 
-			return value;
+			// TODO: nullable annotations fix
+			return value!;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -258,7 +266,7 @@ namespace LinqToDB.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-		SqlField _identityField;
+		SqlField? _identityField;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -398,8 +406,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.FbDbType.ToString();
+			if (_provider != null && FirebirdWrappers.TypeGetter != null)
+			{
+				var param = _provider.TryConvertParameter(FirebirdWrappers.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return FirebirdWrappers.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)

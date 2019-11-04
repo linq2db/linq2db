@@ -2,15 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
-	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -54,21 +50,21 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		Action<IDbDataParameter> _setTimeStamp;
-
 		public    override string ConnectionNamespace => "FirebirdSql.Data.FirebirdClient";
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.FbConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.FbDataReader, {ConnectionNamespace}";
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			//                                             ((FbParameter)parameter).FbDbType =  FbDbType.   TimeStamp;
-			_setTimeStamp = GetSetParameter(connectionType, "FbParameter",         "FbDbType", "FbDbType", "TimeStamp");
+			if (FirebirdWrappers.ConnectionType == null)
+			{
+				FirebirdWrappers.Initialize(connectionType);
+			}
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new FirebirdSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new FirebirdSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -103,13 +99,12 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);   break;
-				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);   break;
-				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);   break;
-				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal); break;
-				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal); break;
-				case DataType.DateTime   :
-				case DataType.DateTime2  : _setTimeStamp(parameter);    return;
+				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
+				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
+				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

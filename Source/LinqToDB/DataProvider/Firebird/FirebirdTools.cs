@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -80,19 +79,16 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region ClearAllPools
 
-		static Action? _clearAllPools;
-
 		public static void ClearAllPools()
 		{
-			if (_clearAllPools == null)
-				_clearAllPools =
-					Expression.Lambda<Action>(
-						Expression.Call(
-							_firebirdDataProvider.GetConnectionType(),
-							"ClearAllPools",
-							new Type[0]))
-						.Compile();
-			_clearAllPools();
+			if (FirebirdWrappers.ConnectionType == null)
+				_firebirdDataProvider.GetConnectionType();
+
+			// in case of user using wrapped connection without unwrap conversion
+			if (FirebirdWrappers.ClearAllPools == null)
+				throw new InvalidOperationException($"{nameof(ClearAllPools)} API not available");
+
+			FirebirdWrappers.ClearAllPools();
 		}
 
 		#endregion

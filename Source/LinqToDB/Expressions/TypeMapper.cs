@@ -330,7 +330,18 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		#region MapFunc
+		#region MapActionLambda
+
+		public LambdaExpression MapActionLambda(Expression<Action> action) => MapLambdaInternal(action);
+		public LambdaExpression MapActionLambda<T>(Expression<Action<T>> action) => MapLambdaInternal(action);
+		public LambdaExpression MapActionLambda<T1, T2>(Expression<Action<T1, T2>> action) => MapLambdaInternal(action);
+		public LambdaExpression MapActionLambda<T1, T2, T3>(Expression<Action<T1, T2, T3>> action) => MapLambdaInternal(action);
+		public LambdaExpression MapActionLambda<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action) => MapLambdaInternal(action);
+		public LambdaExpression MapActionLambda<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action) => MapLambdaInternal(action);
+
+		#endregion
+
+		#region CompileFunc
 
 		LambdaExpression MapFuncInternal(LambdaExpression lambda, params Type[] types)
 		{
@@ -385,6 +396,58 @@ namespace LinqToDB.Expressions
 
 		public Func<T1, T2, T3, T4, T5, TR> CompileFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
 			(Func<T1, T2, T3, T4, T5, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(TR)).Compile();
+
+		#endregion
+		#region CompileAction
+
+		LambdaExpression MapActionInternal(LambdaExpression lambda, params Type[] types)
+		{
+			if (lambda.Parameters.Count != types.Length)
+				throw new LinqToDBException("Invalid count of types.");
+
+			var parameters = new ParameterExpression[types.Length];
+			var generator = new ExpressionGenerator(this);
+
+			for (int i = 0; i < types.Length; i++)
+			{
+				var parameter = lambda.Parameters[i];
+				if (types[i] != parameter.Type)
+				{
+					var variable = generator.AddVariable(parameter);
+					parameters[i] = Expression.Parameter(types[i], parameter.Name);
+					generator.Assign(variable, parameters[i]);
+				}
+				else
+				{
+					parameters[i] = parameter;
+				}
+			}
+
+			var body = lambda.Body;
+
+			generator.AddExpression(body);
+			var newBody = generator.Build();
+
+			return Expression.Lambda(newBody, parameters);
+		}
+
+		public Action CompileAction(LambdaExpression lambda) =>
+			(Action)MapActionInternal(lambda).Compile();
+
+		public Action<T> CompileAction<T>(LambdaExpression lambda) =>
+			(Action<T>)MapActionInternal(lambda, typeof(T)).Compile();
+
+		public Action<T1, T2> CompileAction<T1, T2>(LambdaExpression lambda) => 
+			(Action<T1, T2>)MapActionInternal(lambda, typeof(T1), typeof(T2)).Compile();
+
+		public Action<T1, T2, T3> CompileAction<T1, T2, T3>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3)).Compile();
+
+		public Action<T1, T2, T3, T4> CompileAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3, T4>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
+
+		public Action<T1, T2, T3, T4, T5> CompileAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
+			(Action<T1, T2, T3, T4, T5>)MapActionInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
 
 		#endregion
 

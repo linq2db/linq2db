@@ -8,6 +8,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
@@ -105,6 +106,37 @@ namespace Tests.Data
 				{
 					// provider doesn't use provider-specific API, so we just query schema
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
+		[Test]
+		public void TestFirebird([IncludeDataSources(TestProvName.AllFirebird)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type))
+				{
+					// just check schema (no api used)
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					// assert api resolved and callable
+					// unfortunatelly it uses pre-created provider instance, so it doesn't test this call
+					// properly when called with other tests (tested manually)
+					// actually possible to test with nunit plugin with appdomain test isolation, but meh
+					FirebirdTools.ClearAllPools();
+
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					// assert provider-specific parameter type name
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
+					Assert.True(trace.Contains("DECLARE @p VarChar"));
 				}
 			}
 		}

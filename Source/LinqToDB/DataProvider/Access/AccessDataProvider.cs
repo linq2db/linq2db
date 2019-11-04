@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			if (Wrappers.Mappers.OleDb.ParameterType == null)
+			if (Wrappers.Mappers.OleDb.ConnectionType == null)
 			{
 				Wrappers.Mappers.OleDb.Initialize(connectionType.Assembly);
 			}
