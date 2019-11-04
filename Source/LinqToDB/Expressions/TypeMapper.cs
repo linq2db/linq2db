@@ -298,6 +298,41 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
+		LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, [CanBeNull] Type resultType, params Type[] paramTypes)
+		{
+			if (lambda.Parameters.Count != paramTypes.Length)
+				throw new LinqToDBException("Invalid count of types.");
+
+			var parameters = new ParameterExpression[paramTypes.Length];
+			var generator  = new ExpressionGenerator(this);
+
+			for (int i = 0; i < paramTypes.Length; i++)
+			{
+				var parameter = lambda.Parameters[i];
+				if (paramTypes[i] != parameter.Type)
+				{
+					var variable  = generator.AddVariable(parameter);
+					parameters[i] = Expression.Parameter(paramTypes[i], parameter.Name);
+					generator.Assign(variable, parameters[i]);
+				}
+				else
+				{
+					parameters[i] = parameter;
+				}
+			}
+
+			var body = lambda.Body;
+			if (resultType != null && body.Type != resultType)
+			{
+				body = Expression.Convert(body, resultType);
+			}
+
+			generator.AddExpression(body);
+			var newBody = generator.Build();
+
+			return Expression.Lambda(newBody, parameters);
+		}
+
 		#region MapExpression
 
 		public Expression MapExpression<TR>(Expression<Func<TR>> func)
@@ -343,59 +378,23 @@ namespace LinqToDB.Expressions
 
 		#region CompileFunc
 
-		LambdaExpression MapFuncInternal(LambdaExpression lambda, params Type[] types)
-		{
-			if (lambda.Parameters.Count != types.Length - 1)
-				throw new LinqToDBException("Invalid count of types.");
-
-			var parameters    = new ParameterExpression[types.Length - 1];
-			var generator = new ExpressionGenerator(this);
-
-			for (int i = 0; i < types.Length - 1; i++)
-			{
-				var parameter = lambda.Parameters[i];
-				if (types[i] != parameter.Type)
-				{
-					var variable  = generator.AddVariable(parameter);
-					parameters[i] = Expression.Parameter(types[i], parameter.Name);
-					generator.Assign(variable, parameters[i]);
-				}
-				else
-				{
-					parameters[i] = parameter;
-				}
-			}
-
-			var body = lambda.Body;
-			var resultType = types[types.Length - 1];
-			if (body.Type != resultType)
-			{
-				body = Expression.Convert(body, resultType);
-			}
-
-			generator.AddExpression(body);
-			var newBody = generator.Build();
-
-			return Expression.Lambda(newBody, parameters);
-		}
-
 		public Func<TR> CompileFunc<TR>(LambdaExpression lambda) => 
-			(Func<TR>)MapFuncInternal(lambda, typeof(TR)).Compile();
+			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).Compile();
 
 		public Func<T, TR> CompileFunc<T, TR>(LambdaExpression lambda) =>
-			(Func<T, TR>)MapFuncInternal(lambda, typeof(T), typeof(TR)).Compile();
+			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).Compile();
 
 		public Func<T1, T2, TR> CompileFunc<T1, T2, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(TR)).Compile();
+			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).Compile();
 
 		public Func<T1, T2, T3, TR> CompileFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(TR)).Compile();
+			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).Compile();
 
 		public Func<T1, T2, T3, T4, TR> CompileFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, T4, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(TR)).Compile();
+			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
 
 		public Func<T1, T2, T3, T4, T5, TR> CompileFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, T4, T5, TR>)MapFuncInternal(lambda, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(TR)).Compile();
+			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
 
 		#endregion
 		#region CompileAction
@@ -677,6 +676,42 @@ namespace LinqToDB.Expressions
 				return wrapper;
 			}
 			return (TR)result;
+		}
+
+		public void WrapAction<T>(T instance, Expression<Action<T>> action)
+			where T: TypeWrapper
+		{
+			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
+
+			expr.EvaluateExpression();
+		}
+
+		public void WrapAction<T, T1>(T instance, Expression<Action<T, T1>> action)
+			where T: TypeWrapper
+		{
+			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
+
+			expr.EvaluateExpression();
+		}
+
+		public void WrapAction<T, T1, T2>(T instance, Expression<Action<T, T1, T2>> action)
+			where T: TypeWrapper
+		{
+			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
+
+			expr.EvaluateExpression();
+		}
+
+		[return: MaybeNull]
+		public TR CreateAndWrap<TR>([JetBrains.Annotations.NotNull] Expression<Func<TR>> newFunc)
+			where TR: TypeWrapper
+		{
+			if (newFunc == null) throw new ArgumentNullException(nameof(newFunc));
+
+			var expr     = MapExpressionInternal(newFunc);
+			var instance = expr.EvaluateExpression();
+
+			return Wrap<TR>(instance);
 		}
 
 		[return: MaybeNull]

@@ -17,6 +17,8 @@ namespace Tests.Playground
 			public OtherClass GetOther(int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx };
 			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
 
+			public void SomeAction() => ++Value;
+
 			public SampleClass()
 			{
 
@@ -53,6 +55,8 @@ namespace Tests.Playground
 			public string StrValue { get; set; }
 			public OtherClass GetOther(int idx) => throw new NotImplementedException();
 			public OtherClass GetOtherAnother(int idx) => this.Wrap(t => t.GetOtherAnother(idx));
+
+			public void SomeAction() => this.WrapAction(t => t.SomeAction());
 
 			public SampleClass(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
 			{
@@ -164,6 +168,14 @@ namespace Tests.Playground
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
 			}
 
+			[Test]
+			public void TesWrapper()
+			{
+				var wrapper = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+
+				wrapper.SomeAction();
+                Assert.That(wrapper.Value, Is.EqualTo(3));
+			}
 
 		}
 

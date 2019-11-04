@@ -34,6 +34,23 @@ namespace LinqToDB.Expressions
 			return result;
 		}
 
+		public static void WrapAction<T>(this T instance, Expression<Action<T>> action)
+			where T: TypeWrapper
+		{
+			instance.mapper_.WrapAction(instance, action);
+		}
+
+		public static void WrapAction<T, T1>(this T instance, Expression<Action<T, T1>> action)
+			where T: TypeWrapper
+		{
+			instance.mapper_.WrapAction(instance, action);
+		}
+
+		public static void WrapAction<T, T1, T2>(this T instance, Expression<Action<T, T1, T2>> action)
+			where T: TypeWrapper
+		{
+			instance.mapper_.WrapAction(instance, action);
+		}
 
 		public static void SetPropValue<T, TV>(this T instance, Expression<Func<T, TV>> propExpression,
 			TV value)
