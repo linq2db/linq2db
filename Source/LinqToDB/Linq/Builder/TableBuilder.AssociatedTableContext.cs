@@ -130,6 +130,9 @@ namespace LinqToDB.Linq.Builder
 
 					// add rest of tables
 					SelectQuery.From.Tables.AddRange(associationQuery.Select.From.Tables.Where(t => t != sourceToReplace));
+
+					//TODO: Change AssociatedTableContext base class
+					//SqlTable = null;
 				}
 				else
 				{
