@@ -19,8 +19,6 @@ namespace Tests.UserTests
 			public string Name {get; set;}
 			[Column]
 			public int Age {get; set;}
-	
-	
 		}
 
 		[Table("Chipcard")]
