@@ -27,6 +27,7 @@ using MySqlDataDecimal            = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 using  MySqlDataMySqlConnection   = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 using System.Globalization;
+using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.Data
 {
@@ -101,7 +102,7 @@ namespace Tests.Data
 		[Test]
 		public void TestAccess([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
 #if NET46
@@ -160,7 +161,7 @@ namespace Tests.Data
 		[Test]
 		public void TestFirebird([IncludeDataSources(TestProvName.AllFirebird)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
 				using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
@@ -191,7 +192,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSqlCe([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
 				using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type, DbProviderFactories.GetFactory("System.Data.SqlServerCe.4.0").GetType().Assembly.GetType("System.Data.SqlServerCe.SqlCeConnection")))
@@ -342,7 +343,7 @@ namespace Tests.Data
 		[Test]
 		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
 				// AllowZeroDateTime is to enable MySqlDateTime type
@@ -408,7 +409,7 @@ namespace Tests.Data
 		[Test]
 		public void TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;// || type == ConnectionType.SimpleMiniProfilerNoMappings;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new AvoidSpecificDataProviderAPI(avoidApi))
 			{
 				using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlConnector), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
@@ -443,14 +444,39 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
+				{
+					// just check schema (no api used)
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
+		[Test]
+		public void TestMicrosoftSqlite([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
+				{
+					// just check schema (no api used)
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
 		public enum ConnectionType
 		{
 			Raw,
 			MiniProfiler,
-			MiniProfilerNoMappings,
-			// disabled for now, as it makes things too complicated
-			//SimpleMiniProfiler,
-			//SimpleMiniProfilerNoMappings
+			MiniProfilerNoMappings
 		}
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string csExtra = null)
@@ -478,9 +504,6 @@ namespace Tests.Data
 					case ConnectionType.MiniProfiler                :
 						Assert.IsNotNull(MiniProfiler.Current);
 						return new ProfiledDbConnection((DbConnection)cn, MiniProfiler.Current);
-					//case ConnectionType.SimpleMiniProfilerNoMappings:
-					//case ConnectionType.SimpleMiniProfiler          :
-					//	return new SimpleProfiledConnection(cn, MiniProfiler.Current);
 				}
 
 				return cn;
@@ -492,9 +515,6 @@ namespace Tests.Data
 					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
 					ms.SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
 					break;
-				//case ConnectionType.SimpleMiniProfiler:
-				//	ms.SetConvertExpression<SimpleProfiledConnection, IDbConnection>(db => db.WrappedConnection);
-				//	break;
 			}
 
 			db.AddMappingSchema(ms);

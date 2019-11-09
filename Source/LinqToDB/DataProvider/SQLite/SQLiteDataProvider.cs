@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.IO;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase
 	{

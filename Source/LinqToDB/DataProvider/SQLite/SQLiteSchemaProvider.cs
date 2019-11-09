@@ -13,6 +13,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSchemaProvider : SchemaProviderBase
 	{
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		{
+			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
+			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
+				return new DatabaseSchema();
+
+			return base.GetSchema(dataConnection, options);
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");

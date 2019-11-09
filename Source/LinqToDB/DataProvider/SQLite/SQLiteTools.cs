@@ -131,8 +131,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#endregion
 
-		static Action<string> _createDatabase;
-
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
@@ -141,30 +139,8 @@ namespace LinqToDB.DataProvider.SQLite
 				databaseName, deleteIfExists, ".sqlite",
 				dbName =>
 				{
-					if (_createDatabase == null)
-					{
-						var connectionType = DetectedProvider.GetConnectionType();
-						var method = connectionType.GetMethodEx("CreateFile");
-						if (method != null)
-						{
-							var p = Expression.Parameter(typeof(string));
-							var l = Expression.Lambda<Action<string>>(
-									Expression.Call(method, p),
-								p);
-							_createDatabase = l.Compile();
-						}
-						else
-						{
-							// emulate for Microsoft.Data.SQLite
-							// that's actually what System.Data.SQLite does
-							_createDatabase = name =>
-							{
-								using (File.Create(name)) { };
-							};
-						}
-					}
-
-					_createDatabase(dbName);
+					// don't use CreateFile method of System.Data.Sqlite as it just creates empty file
+					using (File.Create(dbName)) { };
 				});
 		}
 
