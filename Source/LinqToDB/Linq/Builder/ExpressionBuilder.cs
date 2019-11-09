@@ -126,14 +126,14 @@ namespace LinqToDB.Linq.Builder
 			Expression           = ConvertExpressionTree(expression);
 			_visitedExpressions  = null;
 
-			if (Configuration.AvoidSpecificDataProviderAPI)
-			{
-				DataReaderLocal = DataReaderParam;
-			}
-			else
-			{
+			//if (Configuration.AvoidSpecificDataProviderAPI)
+			//{
+				//DataReaderLocal = DataReaderParam;
+			//}
+			//else
+			//{
 				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
-			}
+			//}
 		}
 
 		#endregion

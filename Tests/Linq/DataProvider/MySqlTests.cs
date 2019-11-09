@@ -18,7 +18,6 @@ using NUnit.Framework;
 
 using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal  = MySqlData::MySql.Data.Types.MySqlDecimal;
-using MySqlDataGeometry = MySqlData::MySql.Data.Types.MySqlGeometry;
 
 using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 

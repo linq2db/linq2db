@@ -1,21 +1,20 @@
 ﻿#nullable disable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
-	using Common;
 	using Data;
 	using Linq;
-	using Extensions;
 	using SqlQuery;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 	using System.Threading.Tasks;
+	using System.Data;
+	using System.Linq.Expressions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -171,6 +170,15 @@ namespace LinqToDB.ServiceModel
 						QueryHints  = query.QueryHints
 					}))
 					{
+						var reader = rd;
+						var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);
+						if (converterExpr != null)
+						{
+							var param     = Expression.Parameter(typeof(IDataReader));
+							converterExpr = Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, rd.GetType())), param);
+							reader        = ((Func<IDataReader, IDataReader>)converterExpr.Compile())(rd);
+						}
+
 						var ret = new LinqServiceResult
 						{
 							QueryID    = Guid.NewGuid(),
@@ -221,7 +229,7 @@ namespace LinqToDB.ServiceModel
 							{
 								if (!rd.IsDBNull(i))
 								{
-									var value = columnReaders[i].GetValue(rd);
+									var value = columnReaders[i].GetValue(reader);
 
 									if (value != null)
 										data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);

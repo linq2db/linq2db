@@ -266,12 +266,12 @@ namespace LinqToDB.DataProvider
 			SetProviderField(typeof(TField), methodName);
 		}
 
-		protected void SetProviderField(Type fieldType, string methodName)
+		protected void SetProviderField(Type fieldType, string methodName, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter = Expression.Parameter(typeof(int), "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType }] =
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
@@ -284,12 +284,12 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
 		// }
-		protected void SetToTypeField(Type toType, string methodName)
+		protected void SetToTypeField(Type toType, string methodName, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ToType = toType }] =
+			ReaderExpressions[new ReaderInfo { ToType = toType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,

@@ -1386,9 +1386,10 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, int configID, string sql, [CanBeNull] string? additionalKey)
+			public QueryKey(Type type, Type readerType, int configID, string sql, [CanBeNull] string? additionalKey)
 			{
 				_type          = type;
+				_readerType    = readerType;
 				_configID      = configID;
 				_sql           = sql;
 				_additionalKey = additionalKey;
@@ -1396,6 +1397,7 @@ namespace LinqToDB.Data
 				unchecked
 				{
 					var hashCode = _type.GetHashCode();
+					hashCode = (hashCode * 397) ^ _readerType.GetHashCode();
 					hashCode = (hashCode * 397) ^ _configID;
 					hashCode = (hashCode * 397) ^ (_sql?.GetHashCode() ?? 0);
 					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
@@ -1410,6 +1412,7 @@ namespace LinqToDB.Data
 
 			readonly int     _hashCode;
 			readonly Type    _type;
+			readonly Type    _readerType;
 			readonly int     _configID;
 			readonly string  _sql;
 			readonly string? _additionalKey;
@@ -1422,23 +1425,26 @@ namespace LinqToDB.Data
 			public bool Equals(QueryKey other)
 			{
 				return
-					_type          == other._type   &&
-					_sql           == other._sql    &&
+					_type          == other._type          &&
+					_readerType    == other._readerType    &&
+					_sql           == other._sql           &&
 					_additionalKey == other._additionalKey &&
 					_configID      == other._configID
 					;
 			}
 		}
 
-		static readonly ConcurrentDictionary<QueryKey,Delegate> _objectReaders = new ConcurrentDictionary<QueryKey,Delegate>();
+		static readonly ConcurrentDictionary<QueryKey,Delegate>                   _objectReaders       = new ConcurrentDictionary<QueryKey,Delegate>();
+		static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression> _dataReaderConverter = new ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression>();
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
 		/// </summary>
 		public static void ClearObjectReaderCache()
 		{
-			_objectReaders.   Clear();
-			_parameterReaders.Clear();
+			_objectReaders.      Clear();
+			_dataReaderConverter.Clear();
+			_parameterReaders.   Clear();
 		}
 
 		string? GetCommandAdditionalKey(IDataReader rd)
@@ -1465,7 +1471,7 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
@@ -1478,7 +1484,7 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
@@ -1494,9 +1500,28 @@ namespace LinqToDB.Data
 			Func<Type,int,Expression,Expression> getMemberExpression)
 		{
 			var parameter      = Expression.Parameter(typeof(IDataReader));
-			var dataReaderExpr = Expression.Convert(parameter, dataReader.GetType());
+			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
 
 			Expression? expr;
+
+			var readerType = dataReader.GetType();
+			LambdaExpression? converterExpr = null;
+			if (dataConnection.DataProvider.DataReaderType != readerType)
+			{
+				var converterKey = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
+				if (!_dataReaderConverter.TryGetValue(converterKey, out converterExpr))
+				{
+					converterExpr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					if (converterExpr != null)
+					{
+						var param = Expression.Parameter(typeof(IDataReader));
+						converterExpr = Expression.Lambda(Expression.Convert(converterExpr.Body, dataConnection.DataProvider.DataReaderType), converterExpr.Parameters);
+						_dataReaderConverter.TryAdd(converterKey, converterExpr);
+					}
+				}
+			}
+
+			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{

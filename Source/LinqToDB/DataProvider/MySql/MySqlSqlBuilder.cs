@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,6 +12,14 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
+		private readonly MySqlDataProvider? _provider;
+
+		public MySqlSqlBuilder(MySqlDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public MySqlSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
@@ -218,7 +225,8 @@ namespace LinqToDB.DataProvider.MySql
 					break;
 			}
 
-			return value;
+			// TODO: NRT annotations
+			return value!;
 		}
 
 		protected override StringBuilder BuildExpression(
@@ -298,7 +306,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -310,8 +318,16 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.MySqlDbType.ToString();
+			if (_provider != null)
+			{
+				var wrapper = MySqlWrappers.Initialize(_provider);
+
+				var param = _provider.TryConvertParameter(wrapper.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return wrapper.GetParameterType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

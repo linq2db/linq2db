@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Reflection;
 	using SqlProvider;
 	using Tools;
+	using System.Linq.Expressions;
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
@@ -37,6 +38,31 @@ namespace LinqToDB.DataProvider.MySql
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 		}
 
+		private bool _customReadersConfigured = false;
+
+		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			if (!_customReadersConfigured)
+			{
+				var wrapper = MySqlWrappers.Initialize(this);
+
+				// configure provider-specific data readers
+				if (wrapper.GetMySqlDecimalMethodName != null)
+				{
+					// SetProviderField is not needed for this type
+					SetToTypeField  (wrapper.MySqlDecimalType, wrapper.GetMySqlDecimalMethodName, wrapper.DataReaderType);
+				}
+
+				SetProviderField(wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
+				SetToTypeField  (wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
+
+				_customReadersConfigured = true;
+			}
+
+			return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+		}
+
+
 		public    override string ConnectionNamespace => "MySql.Data.MySqlClient";
 		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
 			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
@@ -46,33 +72,8 @@ namespace LinqToDB.DataProvider.MySql
 			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
 			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
 
-		Type _mySqlDecimalType;
-		Type _mySqlDateTimeType;
-
-		Func<object,object> _mySqlDecimalValueGetter;
-		Func<object,object> _mySqlDateTimeValueGetter;
-
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_mySqlDateTimeType = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
-
-			if (Name != ProviderName.MySqlConnector)
-			{
-				_mySqlDecimalType         = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDecimal", true);
-
-				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
-				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
-
-				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
-				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
-
-				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
-			}
-
-			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
-			SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
-
-			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -82,7 +83,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new MySqlSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -111,26 +112,30 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
+			var wrapper = MySqlWrappers.Initialize(this);
+
 			switch (dataType.DataType)
 			{
 				case DataType.Decimal    :
 				case DataType.VarNumeric :
-					if (value != null && value.GetType() == _mySqlDecimalType)
-						value = _mySqlDecimalValueGetter(value);
+					if (wrapper.MySqlDecimalGetter != null && value != null && value.GetType() == wrapper.MySqlDecimalType)
+						value = wrapper.MySqlDecimalGetter(value);
 					break;
-				case DataType.Date       :
-				case DataType.DateTime   :
-				case DataType.DateTime2  :
-					if (value != null && _mySqlDateTimeValueGetter != null && value.GetType() == _mySqlDateTimeType)
-						value = _mySqlDateTimeValueGetter(value);
-					break;
-				case DataType.Char       :
-				case DataType.VarChar    :
-				case DataType.NVarChar   :
-				case DataType.NChar      :
-					if (value is char)
-						value = value.ToString();
-					break;
+				//case DataType.Date       :
+				//case DataType.DateTime   :
+				//case DataType.DateTime2  :
+				//	if (value != null && value.GetType() == wrapper.MySqlDateTimeType)
+				//		value = wrapper.MySqlDateTimeGetter(value);
+				//	break;
+
+
+				//case DataType.Char       :
+				//case DataType.VarChar    :
+				//case DataType.NVarChar   :
+				//case DataType.NChar      :
+				//	if (value is char)
+				//		value = value.ToString();
+				//	break;
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
@@ -138,10 +143,16 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
-			if (Name == ProviderName.MySqlConnector)
+			// VarNumeric - mysql.data trims fractional part
+			// Date/DateTime2 - mysql.data trims time part
+			switch (dataType.DataType)
 			{
-				base.SetParameterType(dataConnection, parameter, dataType);
+				case DataType.VarNumeric: parameter.DbType = DbType.Decimal;  return;
+				case DataType.Date:
+				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
 			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy

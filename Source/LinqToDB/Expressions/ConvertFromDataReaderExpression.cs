@@ -46,6 +46,11 @@ namespace LinqToDB.Expressions
 			return GetColumnReader(_dataContext, _dataContext.MappingSchema, dataReader, _type, _idx, _dataReaderParam);
 		}
 
+		public Expression Reduce(IDataReader dataReader, Expression dataReaderParam)
+		{
+			return GetColumnReader(_dataContext, _dataContext.MappingSchema, dataReader, _type, _idx, dataReaderParam);
+		}
+
 		static Expression GetColumnReader(
 			IDataContext dataContext, MappingSchema mappingSchema, IDataReader dataReader, Type type, int idx, Expression dataReaderExpr)
 		{

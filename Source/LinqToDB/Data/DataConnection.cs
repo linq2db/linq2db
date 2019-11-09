@@ -735,13 +735,13 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
-			private readonly bool    _dataProviderSetted;
+			private readonly bool    _dataProviderSet;
 			private readonly string? _configurationString;
 			public ConfigurationInfo(string configurationString, string connectionString, IDataProvider? dataProvider)
 			{
 				ConnectionString     = connectionString;
 				_dataProvider        = dataProvider;
-				_dataProviderSetted  = dataProvider != null;
+				_dataProviderSet     = dataProvider != null;
 				_configurationString = configurationString;
 			}
 
@@ -758,7 +758,7 @@ namespace LinqToDB.Data
 				get => _connectionString!;
 				set
 				{
-					if (!_dataProviderSetted)
+					if (!_dataProviderSet)
 						_dataProvider = null;
 
 					_connectionString = value;
