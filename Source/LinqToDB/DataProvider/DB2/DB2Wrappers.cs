@@ -99,6 +99,9 @@ namespace LinqToDB.DataProvider.DB2
 						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
+						// used by event handler
+						typeMapper.RegisterWrapper<DB2RowsCopiedEventArgs>();
+
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
 						TypeSetter        = dbTypeBuilder.BuildSetter<IDbDataParameter>();
 						TypeGetter        = dbTypeBuilder.BuildGetter<IDbDataParameter>();
@@ -299,11 +302,22 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		public class DB2RowsCopiedEventArgs : EventArgs
+		public class DB2RowsCopiedEventArgs : TypeWrapper
 		{
-			public int RowsCopied { get; }
+			public DB2RowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
 
-			public bool Abort { get; set; }
+			public int RowsCopied
+			{
+				get => this.Wrap(t => t.RowsCopied);
+			}
+
+			public bool Abort
+			{
+				get => this.Wrap(t => t.Abort);
+				set => this.SetPropValue(t => t.Abort, value);
+			}
 		}
 
 		[Wrapper]

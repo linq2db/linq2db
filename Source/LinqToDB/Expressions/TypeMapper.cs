@@ -17,7 +17,8 @@ namespace LinqToDB.Expressions
 	{
 		public Type[] Types { get; }
 
-		readonly Dictionary<Type, Type?>                        _typeMappingCache   = new Dictionary<Type, Type?>();
+		readonly Dictionary<Type, Type?>                        _typeMappingCache        = new Dictionary<Type, Type?>();
+		readonly Dictionary<Type, Type>                         _typeMappingReverseCache = new Dictionary<Type, Type>();
 		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache = new Dictionary<LambdaExpression, LambdaExpression>();
 
 		public TypeMapper([NotNull] params Type[] types)
@@ -25,9 +26,15 @@ namespace LinqToDB.Expressions
 			Types = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
-		public Type FindReplacement(Type type)
+		public Type? FindReplacement(Type type)
 		{
 			return Types.FirstOrDefault(t => t.Name == type.Name);
+		}
+
+		public bool RegisterWrapper<TWrapper>()
+			where TWrapper : TypeWrapper
+		{
+			return TryMapType(typeof(TWrapper), out var _);
 		}
 
 		private bool TryMapType(Type type, [NotNullWhen(true)] out Type? replacement)
@@ -40,6 +47,8 @@ namespace LinqToDB.Expressions
 				replacement = FindReplacement(type);
 				if (replacement == null)
 					throw new LinqToDBException($"Not registered replacement for type {type.Name}");
+				else
+					_typeMappingReverseCache.Add(replacement, type);
 			}
 
 			_typeMappingCache.Add(type, replacement);
@@ -734,6 +743,14 @@ namespace LinqToDB.Expressions
 			return wrapper;
 		}
 
+		private object? Wrap(Type wrapperType, object? instance)
+		{
+			if (instance == null)
+				return null;
+
+			return Activator.CreateInstance(wrapperType, instance, this);
+		}
+
 		public object? Evaluate<T>(object? instance, Expression<Func<T, object?>> func)
 		{
 			var expr = MapExpressionInternal(func, Expression.Constant(instance));
@@ -747,6 +764,7 @@ namespace LinqToDB.Expressions
 			return expr.EvaluateExpression();
 		}
 
+		#region events
 		public void MapEvent<TWrapper, TDelegate>(EventHandlerList events, object? instance, string eventName)
 			where TWrapper  : TypeWrapper
 			where TDelegate : Delegate
@@ -756,32 +774,87 @@ namespace LinqToDB.Expressions
 
 			if (!TryMapType(typeof(TDelegate), out var delegateType))
 				delegateType = typeof(TDelegate);
-			var invoke = delegateType.GetMethod("Invoke");
-			var hasReturnValue = invoke.ReturnType != typeof(void);
-			var parameters = new List<ParameterExpression>();
-			foreach (var parameter in invoke.GetParameters())
-			{
-				if (!TryMapType(parameter.ParameterType, out var parameterType))
-					parameterType = parameter.ParameterType;
-				parameters.Add(Expression.Parameter(parameterType));
-			}
 
+			var invoke          = delegateType.GetMethod("Invoke");
+			var hasReturnValue  = invoke.ReturnType != typeof(void);
+			var parameterInfos  = invoke.GetParameters();
+			var parameters      = new ParameterExpression[parameterInfos.Length];
+			var parameterValues = new Expression[parameterInfos.Length];
+
+			for (var i = 0; i < parameterInfos.Length; i++)
+			{
+				if (!TryMapType(parameterInfos[i].ParameterType, out var parameterType))
+					parameterType = parameterInfos[i].ParameterType;
+
+				parameterValues[i] = parameters[i] = Expression.Parameter(parameterType);
+
+				if (_typeMappingReverseCache.TryGetValue(parameterType, out var wrapperType))
+					parameterValues[i] = MapExpression((object? value) => Wrap(wrapperType, value), parameterValues[i]);
+			}
 
 			var ei = targetType.GetEvent(eventName);
 
 			var generator = new ExpressionGenerator(this);
 			var delegateVariable = generator.DeclareVariable(typeof(Delegate), "handler");
 			generator.Assign(delegateVariable, MapExpression(() => events[eventName]));
+
 			if (hasReturnValue)
-				generator.IfThenElse(MapExpression((Delegate? handler) => handler != null, delegateVariable),
-					MapExpression((Delegate handler) => handler.DynamicInvoke(parameters), delegateVariable),
+				generator.IfThenElse(
+					MapExpression((Delegate? handler) => handler != null, delegateVariable),
+					MapDynamicInvoke(delegateVariable, parameterValues),
 					Expression.Constant(null));
 			else
-				generator.IfThen(MapExpression((Delegate? handler) => handler != null, delegateVariable),
-					MapExpression((Delegate handler) => handler.DynamicInvoke(parameters), delegateVariable));
-			var generated = generator.Build();
+				generator.IfThen(
+					MapExpression((Delegate? handler) => handler != null, delegateVariable),
+					MapDynamicInvoke(delegateVariable, parameterValues));
+
+			var generated    = generator.Build();
 			var resultLambda = Expression.Lambda(delegateType, generated, parameters);
+
 			ei.AddEventHandler(instance, resultLambda.Compile());
 		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue, Expression[] parameters)
+		{
+			if (parameters.Length == 0)
+				return MapDynamicInvoke(delegateValue);
+			if (parameters.Length == 1)
+				return MapDynamicInvoke(delegateValue, parameters[0]);
+			if (parameters.Length == 2)
+				return MapDynamicInvoke(delegateValue, parameters[0], parameters[1]);
+			if (parameters.Length == 3)
+				return MapDynamicInvoke(delegateValue, parameters[0], parameters[1], parameters[2]);
+			if (parameters.Length == 4)
+				return MapDynamicInvoke(delegateValue, parameters[0], parameters[1], parameters[2], parameters[3]);
+
+			// add more when needed
+			throw new NotImplementedException($"Delegates with {parameters.Length} parameters not supported");
+		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue)
+		{
+			return MapExpression((Delegate handler) => handler.DynamicInvoke(), delegateValue);
+		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue, Expression p1)
+		{
+			return MapExpression((Delegate handler, object p1) => handler.DynamicInvoke(p1), delegateValue, p1);
+		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue, Expression p1, Expression p2)
+		{
+			return MapExpression((Delegate handler, object p1, object p2) => handler.DynamicInvoke(p1, p2), delegateValue, p1, p2);
+		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue, Expression p1, Expression p2, Expression p3)
+		{
+			return MapExpression((Delegate handler, object p1, object p2, object p3) => handler.DynamicInvoke(p1, p2, p3), delegateValue, p1, p2, p3);
+		}
+
+		private Expression MapDynamicInvoke(Expression delegateValue, Expression p1, Expression p2, Expression p3, Expression p4)
+		{
+			return MapExpression((Delegate handler, object p1, object p2, object p3, object p4) => handler.DynamicInvoke(p1, p2, p3, p4), delegateValue, p1, p2, p3, p4);
+		}
+		#endregion
 	}
 }
