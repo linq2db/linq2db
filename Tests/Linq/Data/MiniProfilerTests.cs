@@ -29,6 +29,8 @@ using  MySqlDataMySqlConnection   = MySqlData::MySql.Data.MySqlClient.MySqlConne
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
+using IBM.Data.DB2Types;
+using Tests.DataProvider;
 
 namespace Tests.Data
 {
@@ -485,29 +487,43 @@ namespace Tests.Data
 				using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
 #endif
 				{
-					//var trace = string.Empty;
-					//db.OnTraceConnection += (TraceInfo ti) =>
-					//{
-					//	if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-					//		trace = ti.SqlText;
-					//};
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
 
-					//// test provider-specific type readers
-					//var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
-					//Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
-					//Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
-					//var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
-					//Assert.True(rawDtValue is MySqlConnectorDateTime);
-					//Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
+					// we have DB2 tests for all types, so here we will test only one type (they all look the same)
+					// test provider-specific type readers
+					var longValue = -12335L;
+					Assert.AreEqual(longValue, db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value);
+					Assert.AreEqual(longValue, db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value);
+					var rawValue = db.Execute<object>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64));
+					// DB2DataReader returns provider-specific types only if asked explicitly
+					Assert.True(rawValue is long);
+					Assert.AreEqual(longValue, (long)rawValue);
 
-					//// test provider-specific parameter values
-					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
-					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
-					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+					// test provider-specific parameter values
+					Assert.AreEqual(longValue, db.Execute<long>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", new DB2Int64(longValue), DataType.Int64)));
 
 					//// assert provider-specific parameter type name
-					//Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
-					//Assert.True(trace.Contains("DECLARE @p Byte "));
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE blobDataType = @p", new DataParameter("p", new byte[] { 50, 51, 52 }, DataType.Blob)));
+					Assert.True(trace.Contains("DECLARE @p Blob("));
+
+					// bulk copy
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions() { BulkCopyType =BulkCopyType.ProviderSpecific },
+							Enumerable.Range(0, 1000).Select(n => new ALLTYPE() { ID = 2000 + n }));
+
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+					}
+					finally
+					{
+						db.GetTable<ALLTYPE>().Delete(p => p.ID >= 2000);
+					}
 
 					// just check schema (no api used)
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
