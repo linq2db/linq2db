@@ -769,7 +769,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var attr = GetTableFunctionAttribute(call.Method);
 
-							if (attr == null)
+							if (attr == null && !call.IsQueryable())
 							{
 								var ex = ConvertIQueryable(expr);
 
