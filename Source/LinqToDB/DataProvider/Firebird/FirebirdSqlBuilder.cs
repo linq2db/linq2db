@@ -388,7 +388,7 @@ namespace LinqToDB.DataProvider.Firebird
 								.AppendLine  ("AS BEGIN")
 								.AppendFormat(
 									"\tNEW.{0} = GEN_ID({1}, 1);",
-									Convert(_identityField.PhysicalName, ConvertType.NameToQueryField),
+									Convert(_identityField!.PhysicalName, ConvertType.NameToQueryField),
 									Convert("GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
 								.AppendLine  ()
 								.AppendLine  ("END");

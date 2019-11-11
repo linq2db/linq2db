@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						try
 						{
+							// TODO: use wrapper
 							var connectionType = Type.GetType(AssemblyName + ".DB2Connection, " + AssemblyName, true);
 							var serverTypeProp = connectionType
 								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
@@ -162,6 +163,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
+		// TODO: remove?
 		public static void AfterInitialized(Action action)
 		{
 			if (_isInitialized)

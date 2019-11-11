@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
@@ -13,12 +11,15 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2SqlBuilderBase(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected DB2DataProvider? Provider { get; }
+
+		protected DB2SqlBuilderBase(DB2DataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			Provider = provider;
 		}
 
-		SqlField _identityField;
+		SqlField? _identityField;
 
 		protected abstract DB2Version Version { get; }
 
@@ -122,7 +123,7 @@ namespace LinqToDB.DataProvider.DB2
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
+		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
 		}
@@ -215,7 +216,8 @@ namespace LinqToDB.DataProvider.DB2
 					break;
 			}
 
-			return value;
+			// TODO
+			return value!;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -238,7 +240,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -258,8 +260,16 @@ namespace LinqToDB.DataProvider.DB2
 				return "(" + d.Precision + "," + d.Scale + ")";
 			}
 
-			dynamic p = parameter;
-			return p.DB2Type.ToString();
+			if (Provider != null)
+			{
+				DB2Wrappers.Initialize(Provider.MappingSchema);
+
+				var param = Provider.TryConvertParameter(DB2Wrappers.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return DB2Wrappers.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

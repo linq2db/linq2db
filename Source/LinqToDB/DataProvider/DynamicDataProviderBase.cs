@@ -129,6 +129,7 @@ namespace LinqToDB.DataProvider
 			return _createConnection(connectionString);
 		}
 
+		// TODO: use wrapper
 		public static Expression<Func<string, IDbConnection>> CreateConnectionExpression(Type connectionType)
 		{
 			var p = Expression.Parameter(typeof(string));
@@ -308,7 +309,7 @@ namespace LinqToDB.DataProvider
 			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException);
 		}
 
-		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
+		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter = Expression.Parameter(typeof(int), "i");
@@ -332,7 +333,7 @@ namespace LinqToDB.DataProvider
 			if (methodCall.Type != toType)
 				methodCall = Expression.Convert(methodCall, toType);
 
-			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
+			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
 			return true;

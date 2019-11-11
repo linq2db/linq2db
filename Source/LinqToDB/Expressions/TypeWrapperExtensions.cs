@@ -58,5 +58,12 @@ namespace LinqToDB.Expressions
 		{
 			instance.mapper_.SetValue(instance.instance_, propExpression, value);
 		}
+
+		public static void WrapEvent<T, TDelegate>(this T instance, string eventName)
+			where T         : TypeWrapper
+			where TDelegate : Delegate
+		{
+			instance.mapper_.MapEvent<T, TDelegate>(instance.Events, instance.instance_, eventName);
+		}
 	}
 }

@@ -7,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
+	using System.Collections.Concurrent;
+	using System.ComponentModel;
 	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using LinqToDB.Extensions;
@@ -119,7 +121,7 @@ namespace LinqToDB.Expressions
 			return TryMapType(type, out var replacement) ? replacement : type;
 		}
 
-		LambdaExpression MapLambdaInternal(LambdaExpression lambda)
+		LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false)
 		{
 			if (_lambdaMappingCache.TryGetValue(lambda, out var mappedLambda))
 				return mappedLambda;
@@ -147,6 +149,24 @@ namespace LinqToDB.Expressions
 				{
 					switch (e.NodeType)
 					{
+						case ExpressionType.Convert  :
+							{
+								if (!mapConvert)
+									break;
+
+								var ue   = (UnaryExpression)e;
+								var expr = ReplaceTypes(ue.Operand)!;
+								var type = TryMapType(ue.Type, out var newType) ? newType : ue.Type;
+
+								if (expr.Type == type)
+									return expr;
+
+								if (ue.Type != type)
+									return Expression.Convert(expr, type);
+
+								break;
+							}
+
 						case ExpressionType.Parameter:
 							{
 								var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
@@ -176,7 +196,7 @@ namespace LinqToDB.Expressions
 								if (TryMapType(ne.Type, out var replacement))
 								{
 									var paramTypes = ne.Constructor.GetParameters()
-										.Select(p => p.ParameterType)
+										.Select(p => TryMapType(p.ParameterType, out var newType) ? newType : p.ParameterType)
 										.ToArray();
 
 									var ctor = replacement.GetConstructor(paramTypes);
@@ -279,10 +299,15 @@ namespace LinqToDB.Expressions
 
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, params Expression[] parameters)
 		{
+			return MapExpressionInternal(lambdaExpression, false, parameters);
+		}
+
+		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, bool mapConvert, params Expression[] parameters)
+		{
 			if (lambdaExpression.Parameters.Count != parameters.Length)
 				throw new LinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
 
-			var lambda = MapLambdaInternal(lambdaExpression);
+			var lambda = MapLambdaInternal(lambdaExpression, mapConvert);
 			var expr   = lambda.Body.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
@@ -678,10 +703,11 @@ namespace LinqToDB.Expressions
 		{
 			if (newFunc == null) throw new ArgumentNullException(nameof(newFunc));
 
-			var expr     = MapExpressionInternal(newFunc);
+			var expr     = MapExpressionInternal(newFunc, true);
 			var instance = expr.EvaluateExpression();
 
-			return Wrap<TR>(instance);
+			// https://github.com/dotnet/roslyn/issues/36039
+			return Wrap<TR>(instance)!;
 		}
 
 		[return: MaybeNull]
@@ -708,5 +734,41 @@ namespace LinqToDB.Expressions
 			return expr.EvaluateExpression();
 		}
 
+		public void MapEvent<TWrapper, TDelegate>(EventHandlerList events, object? instance, string eventName)
+			where TWrapper  : TypeWrapper
+			where TDelegate : Delegate
+		{
+			if (!TryMapType(typeof(TWrapper), out var targetType))
+				throw new InvalidOperationException();
+
+			if (!TryMapType(typeof(TDelegate), out var delegateType))
+				delegateType = typeof(TDelegate);
+			var invoke = delegateType.GetMethod("Invoke");
+			var hasReturnValue = invoke.ReturnType != typeof(void);
+			var parameters = new List<ParameterExpression>();
+			foreach (var parameter in invoke.GetParameters())
+			{
+				if (!TryMapType(parameter.ParameterType, out var parameterType))
+					parameterType = parameter.ParameterType;
+				parameters.Add(Expression.Parameter(parameterType));
+			}
+
+
+			var ei = targetType.GetEvent(eventName);
+
+			var generator = new ExpressionGenerator(this);
+			var delegateVariable = generator.DeclareVariable(typeof(Delegate), "handler");
+			generator.Assign(delegateVariable, MapExpression(() => events[eventName]));
+			if (hasReturnValue)
+				generator.IfThenElse(MapExpression((Delegate? handler) => handler != null, delegateVariable),
+					MapExpression((Delegate handler) => handler.DynamicInvoke(parameters), delegateVariable),
+					Expression.Constant(null));
+			else
+				generator.IfThen(MapExpression((Delegate? handler) => handler != null, delegateVariable),
+					MapExpression((Delegate handler) => handler.DynamicInvoke(parameters), delegateVariable));
+			var generated = generator.Build();
+			var resultLambda = Expression.Lambda(delegateType, generated, parameters);
+			ei.AddEventHandler(instance, resultLambda.Compile());
+		}
 	}
 }

@@ -1,28 +1,21 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Configuration;
 	using Data;
-	using Extensions;
+	using DB2BulkCopyOptions = DB2Wrappers.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
-		public DB2BulkCopy(Type connectionType)
+		public DB2BulkCopy(DB2DataProvider provider)
 		{
-			_connectionType = connectionType;
+			_provider = provider;
 		}
 
-		readonly Type _connectionType;
-
-		Func<IDbConnection,int,IDisposable> _bulkCopyCreator;
-		Func<int,string,object>             _columnMappingCreator;
-		Action<object,Action<object>>       _bulkCopySubscriber;
+		readonly DB2DataProvider _provider;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			[JetBrains.Annotations.NotNull] ITable<T> table,
@@ -38,66 +31,50 @@ namespace LinqToDB.DataProvider.DB2
 				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
-				if (_bulkCopyCreator == null)
-				{
-					var bulkCopyType       = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
-					var bulkCopyOptionType = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyOptions",       false);
-					var columnMappingType  = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
+				DB2Wrappers.Initialize(dataConnection.MappingSchema);
 
-					if (bulkCopyType != null)
-					{
-						_bulkCopyCreator      = CreateBulkCopyCreator(_connectionType, bulkCopyType, bulkCopyOptionType);
-						_columnMappingCreator = CreateColumnMappingCreator(columnMappingType);
-					}
-				}
-
-				if (_bulkCopyCreator != null)
+				var connection = _provider.TryConvertConnection(DB2Wrappers.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				if (connection != null)
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var rd      = new BulkCopyReader(dataConnection, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 
-					var bcOptions = 0; // Default
+					var bcOptions = DB2BulkCopyOptions.Default;
 
-					if (options.KeepIdentity == true) bcOptions |= 1; // KeepIdentity = 1, TableLock = 2, Truncate = 4,
-					if (options.TableLock    == true) bcOptions |= 2;
+					if (options.KeepIdentity == true) bcOptions |= DB2BulkCopyOptions.KeepIdentity;
+					if (options.TableLock    == true) bcOptions |= DB2BulkCopyOptions.TableLock;
 
-					using (var bc = _bulkCopyCreator(Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection), bcOptions))
+					using (var bc = DB2Wrappers.NewDB2BulkCopy(connection, bcOptions))
 					{
-						dynamic dbc = bc;
-
 						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue ?
 							options.MaxBatchSize.Value : options.NotifyAfter;
 
 						if (notifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
-							if (_bulkCopySubscriber == null)
-								_bulkCopySubscriber = CreateBulkCopySubscriber(bc, "DB2RowsCopied");
+							bc.NotifyAfter = notifyAfter;
 
-							dbc.NotifyAfter = notifyAfter;
-
-							_bulkCopySubscriber(bc, arg =>
+							bc.DB2RowsCopied += (sender, args) =>
 							{
-								dynamic darg = arg;
-								rc.RowsCopied = darg.RowsCopied;
+								rc.RowsCopied = args.RowsCopied;
 								options.RowsCopiedCallback(rc);
 								if (rc.Abort)
-									darg.Abort = true;
-							});
+									args.Abort = true;
+							};
 						}
 
 						if (options.BulkCopyTimeout.HasValue)
-							dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+							bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						dbc.DestinationTableName = tableName;
+						bc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
+							bc.ColumnMappings.Add(DB2Wrappers.NewDB2BulkCopyColumnMapping(i, columns[i].ColumnName));
 
 						TraceAction(
 							dataConnection,
 							() => "INSERT BULK " + tableName + Environment.NewLine,
-							() => { dbc.WriteToServer(rd); return rd.Count; });
+							() => { bc.WriteToServer(rd); return rd.Count; });
 					}
 
 					if (rc.RowsCopied != rd.Count)

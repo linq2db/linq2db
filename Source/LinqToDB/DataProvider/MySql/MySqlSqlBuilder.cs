@@ -153,10 +153,10 @@ namespace LinqToDB.DataProvider.MySql
 			set => _sprocParameterPrefix = value ?? string.Empty;
 		}
 
-		private static List<char> _convertParameterSymbols;
+		private static List<char>? _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get => _convertParameterSymbols;
+			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 

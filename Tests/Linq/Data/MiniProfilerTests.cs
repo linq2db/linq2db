@@ -28,6 +28,7 @@ using MySqlConnectorDateTime      = MySqlConnector::MySql.Data.Types.MySqlDateTi
 using  MySqlDataMySqlConnection   = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.DB2;
 
 namespace Tests.Data
 {
@@ -466,6 +467,48 @@ namespace Tests.Data
 			{
 				using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
 				{
+					// just check schema (no api used)
+					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
+		[Test]
+		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+#if NET46
+				using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+#else
+				using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+#endif
+				{
+					//var trace = string.Empty;
+					//db.OnTraceConnection += (TraceInfo ti) =>
+					//{
+					//	if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					//		trace = ti.SqlText;
+					//};
+
+					//// test provider-specific type readers
+					//var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
+					//Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
+					//Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
+					//var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
+					//Assert.True(rawDtValue is MySqlConnectorDateTime);
+					//Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
+
+					//// test provider-specific parameter values
+					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
+					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
+					//Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+
+					//// assert provider-specific parameter type name
+					//Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
+					//Assert.True(trace.Contains("DECLARE @p Byte "));
+
 					// just check schema (no api used)
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				}
