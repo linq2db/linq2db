@@ -188,6 +188,19 @@ namespace LinqToDB.Expressions
 										throw new LinqToDBException($"Property not found in target type: {replacement.FullName}.{ma.Member.Name}");
 									return Expression.MakeMemberAccess(expr, prop);
 								}
+
+								if (TryMapType(ma.Type, out replacement))
+								{
+									if (ma.Expression.NodeType == ExpressionType.Constant)
+									{
+										var wrapper = ma.EvaluateExpression() as TypeWrapper;
+										if (wrapper != null)
+										{
+											return Expression.Constant(wrapper.instance_);
+										}
+									}
+								}
+
 								break;
 							}
 						case ExpressionType.New:

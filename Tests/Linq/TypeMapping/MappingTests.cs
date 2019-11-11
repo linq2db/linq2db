@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using LinqToDB;
@@ -44,6 +45,14 @@ namespace Tests.Playground
 		{
 			public string OtherStrProp { get; set; }
 		}
+
+		public class CollectionSample : CollectionBase
+		{
+			public SampleClass Add(SampleClass sample)
+			{
+				return sample;
+			}
+		}
 	}
 	
 	namespace Wrappers
@@ -80,10 +89,28 @@ namespace Tests.Playground
 			}
 		}
 
+		class CollectionSample : TypeWrapper
+		{
+			public CollectionSample()
+			{
+			}
+
+			public CollectionSample(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
+			public SampleClass Add(SampleClass sample) => this.Wrap(t => t.Add(sample));
+		}
+
 		[TestFixture]
 		public class MappingTests : TestBase
 		{
-			private TypeMapper _typeMapper = new TypeMapper(typeof(Dynamic.SampleClass), typeof(Dynamic.OtherClass), typeof(Dynamic.SampleClassExtensions));
+			private TypeMapper _typeMapper = new TypeMapper(
+				typeof(Dynamic.SampleClass), 
+				typeof(Dynamic.OtherClass), 
+				typeof(Dynamic.SampleClassExtensions),
+				typeof(Dynamic.CollectionSample)
+				);
 
 			[Test]
 			public void WrappingTests()
@@ -175,6 +202,18 @@ namespace Tests.Playground
 
 				wrapper.SomeAction();
                 Assert.That(wrapper.Value, Is.EqualTo(3));
+			}
+
+			[Test]
+			public void TesCollection()
+			{
+				var collection = _typeMapper.CreateAndWrap(() => new CollectionSample());
+				var obj = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+
+				var same = collection.Add(obj);
+
+                Assert.That(same.Id,    Is.EqualTo(1));
+                Assert.That(same.Value, Is.EqualTo(2));
 			}
 
 		}
