@@ -752,30 +752,29 @@ namespace LinqToDB.Linq.Builder
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "With"                 : return new TransformInfo(expr);
 							}
 						}
-						else
+
+						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method, out var alias);
+
+						if (l != null)
 						{
-							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method, out var alias);
+							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							RegisterAlias(optimized, alias);
+							return new TransformInfo(optimized);
+						}
 
-							if (l != null)
+						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
+						{
+							var attr = GetTableFunctionAttribute(call.Method);
+
+							if (attr == null && !call.IsQueryable())
 							{
-								var optimized = OptimizeExpression(ConvertMethod(call, l));
-								RegisterAlias(optimized, alias);
-								return new TransformInfo(optimized);
-							}
+								var ex = ConvertIQueryable(expr);
 
-							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
-							{
-								var attr = GetTableFunctionAttribute(call.Method);
-
-								if (attr == null)
-								{
-									var ex = ConvertIQueryable(expr);
-
-									if (!ReferenceEquals(ex, expr))
-										return new TransformInfo(ConvertExpressionTree(ex));
-								}
+								if (!ReferenceEquals(ex, expr))
+									return new TransformInfo(ConvertExpressionTree(ex));
 							}
 						}
 
