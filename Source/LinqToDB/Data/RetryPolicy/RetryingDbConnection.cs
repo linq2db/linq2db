@@ -27,7 +27,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
-			return _dbConnection.BeginTransaction();
+			return _dbConnection.BeginTransaction(isolationLevel);
 		}
 
 		public override void Close()

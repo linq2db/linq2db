@@ -367,6 +367,38 @@ namespace Tests.xUpdate
 			}
 		}
 
+		class InsertTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public DateTime? CreatedOn { get; set; }
+			[Column]
+			public DateTime? ModifiedOn { get; set; }
+		}
+
+		[Test]
+		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []
+			{
+				new InsertTable{Id = 1, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+				new InsertTable{Id = 2, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+			}))
+			{
+				var affected = table
+					.Where(c => c.Id > 0)
+					.Into(table)
+					.Value(p => p.Id, c => c.Id + 10)
+					.Value(p => p.CreatedOn,  c => Sql.CurrentTimestamp)
+					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
+					.Insert();
+
+				Assert.That(affected, Is.EqualTo(2));
+			}
+		}
+
 		[Test]
 		public void Insert7([DataSources] string context)
 		{

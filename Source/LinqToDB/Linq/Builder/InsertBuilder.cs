@@ -37,8 +37,9 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
+						sequence.SelectQuery.Select.Columns.Clear();
 						foreach (var item in insertStatement.Insert.Items)
-							sequence.SelectQuery.Select.Expr(item.Expression);
+							sequence.SelectQuery.Select.ExprNew(item.Expression);
 						break;
 					}
 

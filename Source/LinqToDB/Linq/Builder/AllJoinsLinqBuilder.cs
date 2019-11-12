@@ -134,7 +134,8 @@ namespace LinqToDB.Linq.Builder
 								var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
 								return new SqlInfo(s.MemberChain)
 								{
-									Index = idx, Sql = InnerContext.SelectQuery.Select.Columns[idx],
+									Index = idx, 
+									Sql   = InnerContext.SelectQuery.Select.Columns[idx],
 									Query = InnerContext.SelectQuery
 								};
 							})
