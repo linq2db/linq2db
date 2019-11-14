@@ -176,6 +176,35 @@ namespace LinqToDB.Expressions
 								break;
 							}
 
+						case ExpressionType.Assign:
+							{
+								var be    = (BinaryExpression)e;
+								var left  = ReplaceTypes(be.Left)!;
+								var right = be.Right;
+
+								if (TryMapType(right.Type, out var replacement))
+								{
+									if (right.NodeType == ExpressionType.Constant
+										&& right.EvaluateExpression() is TypeWrapper wrapper)
+									{
+										right = Expression.Constant(wrapper.instance_);
+									}
+									else if (replacement.IsEnum)
+									{
+										right = Expression.Convert(
+											Expression.Call(
+												typeof(Enum),
+												nameof(Enum.Parse),
+												Array<Type>.Empty,
+												Expression.Constant(replacement),
+												Expression.Call(right, nameof(Enum.ToString), Array<Type>.Empty)),
+											replacement);
+									}
+								}
+
+								return Expression.Assign(left, right);
+							}
+
 						case ExpressionType.Parameter:
 							{
 								var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
@@ -200,13 +229,21 @@ namespace LinqToDB.Expressions
 
 								if (TryMapType(ma.Type, out replacement))
 								{
-									if (ma.Expression.NodeType == ExpressionType.Constant)
+									if (ma.Expression.NodeType == ExpressionType.Constant
+										&& ma.EvaluateExpression() is TypeWrapper wrapper)
 									{
-										var wrapper = ma.EvaluateExpression() as TypeWrapper;
-										if (wrapper != null)
-										{
-											return Expression.Constant(wrapper.instance_);
-										}
+										return Expression.Constant(wrapper.instance_);
+									}
+									else if (replacement.IsEnum)
+									{
+										return Expression.Convert(
+											Expression.Call(
+												typeof(Enum),
+												nameof(Enum.Parse),
+												Array<Type>.Empty,
+												Expression.Constant(replacement),
+												Expression.Call(ma, nameof(Enum.ToString), Array<Type>.Empty)),
+											replacement);
 									}
 								}
 
@@ -312,7 +349,18 @@ namespace LinqToDB.Expressions
 				return converted;
 			}
 
-			var convertedBody = ReplaceTypes(lambda.Body);
+			var convertedBody = ReplaceTypes(lambda.Body)!;
+
+			if (_typeMappingReverseCache.TryGetValue(convertedBody.Type, out var wrapperType) && wrapperType.IsEnum)
+				convertedBody = Expression.Convert(
+					Expression.Call(
+						typeof(Enum),
+						nameof(Enum.Parse),
+						Array<Type>.Empty,
+						Expression.Constant(wrapperType),
+						Expression.Call(convertedBody, nameof(Enum.ToString), Array<Type>.Empty)),
+					wrapperType);
+
 			mappedLambda = Expression.Lambda(convertedBody, newParameters);
 
 			_lambdaMappingCache.Add(lambda, mappedLambda);
@@ -498,18 +546,14 @@ namespace LinqToDB.Expressions
 
 		public LambdaExpression MapSetterValue<T, TV>(Expression<Func<T, TV>> propExpression, TV value)
 		{
-			var propLambda  = MapLambdaInternal(propExpression);
-
-			TryMapValue(value, out var replacedValue);
-
-			var left  = propLambda.Body.Unwrap();
-			var right = (Expression)Expression.Constant(replacedValue);
+			var left = propExpression.Body.Unwrap();
+			var right = (Expression)Expression.Constant(value);
 
 			if (right.Type != left.Type)
 				right = Expression.Convert(right, left.Type);
 
 			var assign = Expression.Assign(left, right);
-			return Expression.Lambda(assign, propLambda.Parameters);
+			return MapLambdaInternal(Expression.Lambda(assign, propExpression.Parameters));
 		}
 
 		public void SetValue<T>(object? instance, Expression<Func<T, object?>> propExpression, object? value)
@@ -692,6 +736,7 @@ namespace LinqToDB.Expressions
 				var wrapper = (TR)Activator.CreateInstance(typeof(TR), result, instance.mapper_);
 				return wrapper;
 			}
+
 			return (TR)result;
 		}
 

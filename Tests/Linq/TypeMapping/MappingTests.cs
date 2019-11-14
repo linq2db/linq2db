@@ -59,6 +59,15 @@ namespace Tests
 				Id = id;
 				Value = value;
 			}
+
+			public RegularEnum GetRegularEnum(int raw) => (RegularEnum)raw;
+			public FlagsEnum   GetFlagsEnum  (int raw) => (FlagsEnum)raw;
+
+			public int SetRegularEnum(RegularEnum val) => (int)val;
+			public int SetFlagsEnum  (FlagsEnum val  ) => (int)val;
+
+			public RegularEnum RegularEnumProperty { get; set; } = RegularEnum.Two;
+			public FlagsEnum   FlagsEnumProperty   { get; set; } = FlagsEnum  .Bit3;
 		}
 
 		public static class SampleClassExtensions
@@ -81,6 +90,21 @@ namespace Tests
 				return sample;
 			}
 		}
+
+		public enum RegularEnum
+		{
+			One   = 1,
+			Two   = 2,
+			Three = 3
+		}
+
+		[Flags]
+		public enum FlagsEnum
+		{
+			Bit1   = 1,
+			Bit3   = 4,
+			Bits24 = 10
+		}
 	}
 	
 	namespace Wrappers
@@ -101,6 +125,24 @@ namespace Tests
 			public OtherClass GetOtherAnother(int idx) => this.Wrap(t => t.GetOtherAnother(idx));
 
 			public void SomeAction() => this.WrapAction(t => t.SomeAction());
+
+			public RegularEnum GetRegularEnum(int raw) => this.Wrap(t => t.GetRegularEnum(raw));
+			public FlagsEnum   GetFlagsEnum  (int raw) => this.Wrap(t => t.GetFlagsEnum(raw));
+
+			public int SetRegularEnum(RegularEnum val) => this.Wrap(t => t.SetRegularEnum(val));
+			public int SetFlagsEnum  (FlagsEnum   val) => this.Wrap(t => t.SetFlagsEnum(val));
+
+			public RegularEnum RegularEnumProperty
+			{
+				get => this.Wrap        (t => t.RegularEnumProperty);
+				set => this.SetPropValue(t => t.RegularEnumProperty, value);
+			}
+
+			public FlagsEnum FlagsEnumProperty
+			{
+				get => this.Wrap        (t => t.FlagsEnumProperty);
+				set => this.SetPropValue(t => t.FlagsEnumProperty, value);
+			}
 
 			public void Fire(bool withHandlers) => this.WrapAction(t => t.Fire(withHandlers));
 
@@ -179,6 +221,22 @@ namespace Tests
 			public SampleClass Add(SampleClass sample) => this.Wrap(t => t.Add(sample));
 		}
 
+		[Wrapper]
+		public enum RegularEnum
+		{
+			One   = 3,
+			Two   = 1,
+			Three = 2
+		}
+
+		[Wrapper, Flags]
+		public enum FlagsEnum
+		{
+			Bit1   = 4,
+			Bit3   = 10,
+			Bits24 = 1
+		}
+
 		[TestFixture]
 		public class MappingTests : TestBase
 		{
@@ -190,7 +248,9 @@ namespace Tests
 				typeof(Dynamic.SimpleDelegate),
 				typeof(Dynamic.SimpleDelegateWithMapping),
 				typeof(Dynamic.ReturningDelegate),
-				typeof(Dynamic.ReturningDelegateWithMapping)
+				typeof(Dynamic.ReturningDelegateWithMapping),
+				typeof(Dynamic.RegularEnum),
+				typeof(Dynamic.FlagsEnum)
 				);
 
 			[Test]
@@ -341,7 +401,45 @@ namespace Tests
 				SampleClass handler4(SampleClass input) => input;
 			}
 
-		}
+			[Test]
+			public void TestEnums()
+			{
+				var wrapper  = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
+				// test in methods
+				//
+				// non-flags enum mapping
+				Assert.AreEqual(1, wrapper.SetRegularEnum(RegularEnum.One));
+				Assert.AreEqual(2, wrapper.SetRegularEnum(RegularEnum.Two));
+				Assert.AreEqual(3, wrapper.SetRegularEnum(RegularEnum.Three));
+				Assert.AreEqual(RegularEnum.One,   wrapper.GetRegularEnum(1));
+				Assert.AreEqual(RegularEnum.Two,   wrapper.GetRegularEnum(2));
+				Assert.AreEqual(RegularEnum.Three, wrapper.GetRegularEnum(3));
+
+				// flags enum mapping
+				Assert.AreEqual(1,  wrapper.SetFlagsEnum(FlagsEnum.Bit1));
+				Assert.AreEqual(4,  wrapper.SetFlagsEnum(FlagsEnum.Bit3));
+				Assert.AreEqual(10, wrapper.SetFlagsEnum(FlagsEnum.Bits24));
+				Assert.AreEqual(5,  wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3));
+				Assert.AreEqual(FlagsEnum.Bit1,                  wrapper.GetFlagsEnum(1));
+				Assert.AreEqual(FlagsEnum.Bit3,                  wrapper.GetFlagsEnum(4));
+				Assert.AreEqual(FlagsEnum.Bits24,                wrapper.GetFlagsEnum(10));
+				Assert.AreEqual(FlagsEnum.Bit1 | FlagsEnum.Bit3, wrapper.GetFlagsEnum(5));
+
+
+				// test in properties
+				//
+				// non-flags enum mapping
+				Assert.AreEqual(RegularEnum.Two, wrapper.RegularEnumProperty);
+				wrapper.RegularEnumProperty = RegularEnum.One;
+				Assert.AreEqual(RegularEnum.One, wrapper.RegularEnumProperty);
+
+				// flags enum mapping
+				Assert.AreEqual(FlagsEnum.Bit3, wrapper.FlagsEnumProperty);
+				wrapper.FlagsEnumProperty = FlagsEnum.Bits24;
+				Assert.AreEqual(FlagsEnum.Bits24, wrapper.FlagsEnumProperty);
+			}
+		}
 	}
 }
