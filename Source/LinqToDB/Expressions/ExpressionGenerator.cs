@@ -109,6 +109,15 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.IfThenElse(test, ifTrue, ifFalse));
 		}
 
+		public Expression Condition([NotNull] Expression test, [NotNull] Expression ifTrue, [NotNull] Expression ifFalse)
+		{
+			if (test    == null) throw new ArgumentNullException(nameof(test));
+			if (ifTrue  == null) throw new ArgumentNullException(nameof(ifTrue));
+			if (ifFalse == null) throw new ArgumentNullException(nameof(ifFalse));
+
+			return AddExpression(Expression.Condition(test, ifTrue, ifFalse));
+		}
+
 		public Expression TryCatch([NotNull] Expression body, [NotNull] CatchBlock[] catchBlocks)
 		{
 			if (body        == null) throw new ArgumentNullException(nameof(body));

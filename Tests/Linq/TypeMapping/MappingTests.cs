@@ -2,14 +2,18 @@
 using System.Collections;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
-using LinqToDB;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests
 {
 	namespace Dynamic
 	{
+		public delegate void        SimpleDelegate              (string input);
+		public delegate void        SimpleDelegateWithMapping   (SampleClass input);
+		public delegate string      ReturningDelegate           (string input);
+		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
+
 		public class SampleClass
 		{
 			public int Id    { get; set; }
@@ -20,9 +24,34 @@ namespace Tests.Playground
 
 			public void SomeAction() => ++Value;
 
+			public event SimpleDelegate               SimpleDelegateEvent;
+			public event SimpleDelegateWithMapping    SimpleDelegateWithMappingEvent;
+			// just test-case, nobody in their mind should use returning events
+			public event ReturningDelegate            ReturningDelegateEvent;
+			public event ReturningDelegateWithMapping ReturningDelegateWithMappingEvent;
+
+			public void Fire(bool withHandlers)
+			{
+				// https://www.youtube.com/watch?v=r32LcBqiv7I
+				SimpleDelegateEvent?.Invoke("param1");
+				SimpleDelegateWithMappingEvent?.Invoke(this);
+				var strResult  = ReturningDelegateEvent?.Invoke("event1");
+				var thisResult = ReturningDelegateWithMappingEvent?.Invoke(this);
+
+				if (withHandlers)
+				{
+					Assert.AreEqual("event1", strResult);
+					Assert.AreEqual(this, thisResult);
+				}
+				else
+				{
+					Assert.IsNull(strResult);
+					Assert.IsNull(thisResult);
+				}
+			}
+
 			public SampleClass()
 			{
-
 			}
 
 			public SampleClass(int id, int value)
@@ -30,7 +59,6 @@ namespace Tests.Playground
 				Id = id;
 				Value = value;
 			}
-
 		}
 
 		public static class SampleClassExtensions
@@ -57,8 +85,15 @@ namespace Tests.Playground
 	
 	namespace Wrappers
 	{
+		[Wrapper] delegate void        SimpleDelegate              (string input);
+		[Wrapper] delegate void        SimpleDelegateWithMapping   (SampleClass input);
+		[Wrapper] delegate string      ReturningDelegate           (string input);
+		[Wrapper] delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
+
 		class SampleClass : TypeWrapper
 		{
+			private bool _event1Wrapped;
+			private bool _event2Wrapped;
 			public int Id    => this.Wrap(t => t.Id);
 			public int Value => this.Wrap(t => t.Value);
 			public string StrValue { get; set; }
@@ -67,8 +102,50 @@ namespace Tests.Playground
 
 			public void SomeAction() => this.WrapAction(t => t.SomeAction());
 
+			public void Fire(bool withHandlers) => this.WrapAction(t => t.Fire(withHandlers));
+
+			public event SimpleDelegate               SimpleDelegateEvent
+			{
+				add    => Events.AddHandler(nameof(SimpleDelegateEvent), value);
+				remove => Events.RemoveHandler(nameof(SimpleDelegateEvent), value);
+			}
+			public event SimpleDelegateWithMapping    SimpleDelegateWithMappingEvent
+			{
+				add    => Events.AddHandler(nameof(SimpleDelegateWithMappingEvent), value);
+				remove => Events.RemoveHandler(nameof(SimpleDelegateWithMappingEvent), value);
+			}
+			public event ReturningDelegate            ReturningDelegateEvent
+			{
+				add    => AddHandlerDelayed(nameof(ReturningDelegateEvent), value, ref _event1Wrapped);
+				remove => Events.RemoveHandler(nameof(ReturningDelegateEvent), value);
+			}
+			public event ReturningDelegateWithMapping ReturningDelegateWithMappingEvent
+			{
+				add => AddHandlerDelayed(nameof(ReturningDelegateWithMappingEvent), value, ref _event2Wrapped);
+				remove => Events.RemoveHandler(nameof(ReturningDelegateWithMappingEvent), value);
+			}
+
+			private void AddHandlerDelayed<TDelegate>(string eventName, TDelegate handler, ref bool wrapped)
+				where TDelegate : Delegate
+			{
+				// wrap event only when handler added to avoid base event fired for empty handler
+				// this is needed only for events with return value to work properly
+				// (if `properly` word could even applied to such events, more like to make tests work)
+				if (!wrapped)
+				{
+					this.WrapEvent<SampleClass, TDelegate>(eventName);
+					wrapped = true;
+				}
+
+				Events.AddHandler(eventName, handler);
+			}
+
 			public SampleClass(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
 			{
+				this.WrapEvent<SampleClass, SimpleDelegate>(nameof(SimpleDelegateEvent));
+				this.WrapEvent<SampleClass, SimpleDelegateWithMapping>(nameof(SimpleDelegateWithMappingEvent));
+				//this.WrapEvent<SampleClass, ReturningDelegate>(nameof(ReturningDelegateEvent));
+				//this.WrapEvent<SampleClass, ReturningDelegateWithMapping>(nameof(ReturningDelegateWithMappingEvent));
 			}
 
 			public SampleClass(int id, int value) => throw new NotImplementedException();
@@ -109,7 +186,11 @@ namespace Tests.Playground
 				typeof(Dynamic.SampleClass), 
 				typeof(Dynamic.OtherClass), 
 				typeof(Dynamic.SampleClassExtensions),
-				typeof(Dynamic.CollectionSample)
+				typeof(Dynamic.CollectionSample),
+				typeof(Dynamic.SimpleDelegate),
+				typeof(Dynamic.SimpleDelegateWithMapping),
+				typeof(Dynamic.ReturningDelegate),
+				typeof(Dynamic.ReturningDelegateWithMapping)
 				);
 
 			[Test]
@@ -154,7 +235,6 @@ namespace Tests.Playground
 
 				var obj = (Dynamic.OtherClass)wrapper.Evaluate(w => w.GetOther(10));
 				Assert.That(obj.GetType(), Is.EqualTo(typeof(Dynamic.OtherClass)));
-
 			}
 
 			[Test]
@@ -201,7 +281,7 @@ namespace Tests.Playground
 				var wrapper = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 
 				wrapper.SomeAction();
-                Assert.That(wrapper.Value, Is.EqualTo(3));
+				Assert.That(wrapper.Value, Is.EqualTo(3));
 			}
 
 			[Test]
@@ -212,13 +292,56 @@ namespace Tests.Playground
 
 				var same = collection.Add(obj);
 
-                Assert.That(same.Id,    Is.EqualTo(1));
-                Assert.That(same.Value, Is.EqualTo(2));
+				Assert.That(same.Id,    Is.EqualTo(1));
+				Assert.That(same.Value, Is.EqualTo(2));
+			}
+
+			[Test]
+			public void TestEvents()
+			{
+				var wrapper  = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var instance = (Dynamic.SampleClass)wrapper.instance_;
+
+				// no subscribers
+				wrapper.Fire(false);
+
+				// subscribed
+				string strValue1 = null;
+				SampleClass thisValue1 = null;
+				wrapper.SimpleDelegateEvent                    += handler1;
+				wrapper.SimpleDelegateWithMappingEvent         += handler2;
+				wrapper.ReturningDelegateEvent                 += handler3;
+				wrapper.ReturningDelegateWithMappingEvent      += handler4;
+				wrapper.Fire(true);
+
+				Assert.AreEqual("param1", strValue1);
+				Assert.AreEqual(instance, (Dynamic.SampleClass)thisValue1.instance_);
+
+
+				wrapper.SimpleDelegateEvent                    -= handler1;
+				wrapper.SimpleDelegateWithMappingEvent         -= handler2;
+				wrapper.ReturningDelegateEvent                 -= handler3;
+				wrapper.ReturningDelegateWithMappingEvent      -= handler4;
+
+				// no subscribers again
+				wrapper.Fire(false);
+
+				void handler1(string input)
+				{
+					strValue1 = input;
+				}
+
+				void handler2(SampleClass input)
+				{
+					thisValue1 = input;
+				}
+
+				string handler3(string input) => input;
+
+				SampleClass handler4(SampleClass input) => input;
 			}
 
 		}
 
 	}
-
-
 }
