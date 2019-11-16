@@ -32,7 +32,6 @@ namespace LinqToDB.Expressions
 		}
 
 		public bool RegisterWrapper<TWrapper>()
-			where TWrapper : TypeWrapper
 		{
 			return TryMapType(typeof(TWrapper), out var _);
 		}
@@ -130,7 +129,7 @@ namespace LinqToDB.Expressions
 			return TryMapType(type, out var replacement) ? replacement : type;
 		}
 
-		LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false)
+		LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false, bool convertResult = true)
 		{
 			if (_lambdaMappingCache.TryGetValue(lambda, out var mappedLambda))
 				return mappedLambda;
@@ -351,7 +350,7 @@ namespace LinqToDB.Expressions
 
 			var convertedBody = ReplaceTypes(lambda.Body)!;
 
-			if (_typeMappingReverseCache.TryGetValue(convertedBody.Type, out var wrapperType) && wrapperType.IsEnum)
+			if (convertResult && _typeMappingReverseCache.TryGetValue(convertedBody.Type, out var wrapperType) && wrapperType.IsEnum)
 				convertedBody = Expression.Convert(
 					Expression.Call(
 						typeof(Enum),
@@ -587,7 +586,7 @@ namespace LinqToDB.Expressions
 
 				var convertedType = setterExpression.Parameters[0].Type;
 
-				var newParameter = Expression.Parameter(typeof(TBase), setterExpression.Parameters[0].Name);
+				var newParameter     = Expression.Parameter(typeof(TBase), setterExpression.Parameters[0].Name);
 				var requiredVariable = generator.DeclareVariable(convertedType, "v");
 
 				var replacedBody = setterExpression.GetBody(requiredVariable).Unwrap();
@@ -612,8 +611,10 @@ namespace LinqToDB.Expressions
 			{
 				var generator = new ExpressionGenerator(_mapper);
 
-				var propLambda    = _mapper.MapLambdaInternal(_memberExpression);
-				var convertedType = propLambda.Parameters[0].Type;
+				var propLambda    = _mapper.MapLambdaInternal(_memberExpression, false, false);
+
+				if (!_mapper.TryMapType(propLambda.Parameters[0].Type, out var convertedType))
+					convertedType = propLambda.Parameters[0].Type;
 
 				var newParameter     = Expression.Parameter(typeof(TBase), propLambda.Parameters[0].Name);
 				var valueParameter   = Expression.Parameter(typeof(TV), "value");
@@ -645,7 +646,7 @@ namespace LinqToDB.Expressions
 
 				generator.Assign(requiredVariable, newParameter);
 
-				var left  = propLambda.GetBody(requiredVariable).Unwrap();
+				var left  = propLambda.GetBody(requiredVariable);
 
 				if (left.Type != typeof(TV))
 					left = _mapper.BuildValueMapperToType<TV>(generator, left);

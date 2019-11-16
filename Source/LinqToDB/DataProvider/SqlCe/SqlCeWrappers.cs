@@ -43,6 +43,9 @@ namespace LinqToDB.DataProvider.SqlCe
 						TypeSetter        = dbTypeBuilder.BuildSetter<IDbDataParameter>();
 						TypeGetter        = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 						_typeMapper       = typeMapper;
+
+						_typeMapper.RegisterWrapper<SqlCeEngine>();
+						_typeMapper.RegisterWrapper<SqlCeParameter>();
 					}
 				}
 			}
@@ -50,6 +53,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static SqlCeEngine NewSqlCeEngine(string connectionString) => _typeMapper!.CreateAndWrap(() => new SqlCeEngine(connectionString))!;
 
+		[Wrapper]
 		internal class SqlCeEngine : TypeWrapper, IDisposable
 		{
 			public SqlCeEngine(object instance, TypeMapper mapper) : base(instance, mapper)

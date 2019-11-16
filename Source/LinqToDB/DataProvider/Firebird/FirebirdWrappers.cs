@@ -10,10 +10,10 @@ namespace LinqToDB.DataProvider.Firebird
 		private static readonly object      _syncRoot = new object();
 		private static          TypeMapper? _typeMapper;
 
-		internal static Type                             ParameterType = null!;
+		internal static Type                             ParameterType  = null!;
 		internal static Type                             ConnectionType = null!;
-		internal static Func<IDbDataParameter, FbDbType> TypeGetter = null!;
-		internal static Action                           ClearAllPools = null!;
+		internal static Func<IDbDataParameter, FbDbType> TypeGetter     = null!;
+		internal static Action                           ClearAllPools  = null!;
 
 		internal static void Initialize()
 		{
@@ -28,6 +28,10 @@ namespace LinqToDB.DataProvider.Firebird
 						var dbType     = ConnectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDbType", true);
 
 						_typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType);
+
+						_typeMapper.RegisterWrapper<FbConnection>();
+						_typeMapper.RegisterWrapper<FbParameter>();
+						_typeMapper.RegisterWrapper<FbDbType>();
 
 						var dbTypeBuilder = _typeMapper.Type<FbParameter>().Member(p => p.FbDbType);
 						TypeGetter        = dbTypeBuilder.BuildGetter<IDbDataParameter>();

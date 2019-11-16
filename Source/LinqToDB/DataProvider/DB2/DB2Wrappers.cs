@@ -99,8 +99,18 @@ namespace LinqToDB.DataProvider.DB2
 						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
-						// used by event handler
+						//typeMapper.RegisterWrapper<DB2ServerTypes>();
+						typeMapper.RegisterWrapper<DB2Connection>();
+						typeMapper.RegisterWrapper<DB2Parameter>();
+						typeMapper.RegisterWrapper<DB2Type>();
+
+						// bulk copy types
+						typeMapper.RegisterWrapper<DB2BulkCopy>();
 						typeMapper.RegisterWrapper<DB2RowsCopiedEventArgs>();
+						typeMapper.RegisterWrapper<DB2RowsCopiedEventHandler>();
+						typeMapper.RegisterWrapper<DB2BulkCopyColumnMappingCollection>();
+						typeMapper.RegisterWrapper<DB2BulkCopyOptions>();
+						typeMapper.RegisterWrapper<DB2BulkCopyColumnMapping>();
 
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
 						TypeSetter        = dbTypeBuilder.BuildSetter<IDbDataParameter>();
@@ -168,17 +178,18 @@ namespace LinqToDB.DataProvider.DB2
 		//[Wrapper] internal class DB2XsrObjectId { } (don't have Null field)
 
 
-		[Wrapper]
+		// not used yet
+		//[Wrapper]
 		internal enum DB2ServerTypes
 		{
-			DB2_390,
-			DB2_400,
-			DB2_IDS,
-			DB2_UNKNOWN,
-			DB2_UW,
-			DB2_VM,
-			DB2_VM_VSE,
-			DB2_VSE
+			DB2_390     = 2,
+			DB2_400     = 4,
+			DB2_IDS     = 16,
+			DB2_UNKNOWN = 0,
+			DB2_UW      = 1,
+			DB2_VM      = 24,
+			DB2_VM_VSE  = 8,
+			DB2_VSE     = 40
 		}
 
 		[Wrapper]
@@ -196,63 +207,65 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		internal enum DB2Type
 		{
-			BigInt,
-			BigSerial,
-			Binary,
-			BinaryXml,
-			Blob,
-			Boolean,
-			Byte,
-			Char,
-			Char1,
-			Clob,
-			Cursor,
-			Datalink,
-			Date,
-			DateTime,
-			DbClob,
-			Decimal,
-			DecimalFloat,
-			Double,
-			DynArray,
-			Float,
-			Graphic,
-			Int8,
-			Integer,
-			IntervalDayFraction,
-			IntervalYearMonth,
-			Invalid,
-			List,
-			LongVarBinary,
-			LongVarChar,
-			LongVarGraphic,
-			Money,
-			MultiSet,
-			NChar,
-			Null,
-			Numeric,
-			NVarChar,
-			Other,
-			Real,
-			Real370,
-			Row,
-			RowId,
-			Serial,
-			Serial8,
-			Set,
-			SmallFloat,
-			SmallInt,
-			SmartLobLocator,
-			SQLUDTFixed,
-			SQLUDTVar,
-			Text,
-			Time,
-			Timestamp,
-			TimeStampWithTimeZone,
-			VarBinary,
-			VarChar,
-			VarGraphic,
-			Xml
+			BigInt                = 3,
+			BigSerial             = 30,
+			Binary                = 15,
+			BinaryXml             = 31,
+			Blob                  = 22,
+			Boolean               = 1015,
+			Byte                  = 40,
+			Char                  = 12,
+			Clob                  = 21,
+			Cursor                = 33,
+			Datalink              = 24,
+			Date                  = 9,
+			DateTime              = 38,
+			DbClob                = 23,
+			Decimal               = 7,
+			DecimalFloat          = 28,
+			Double                = 5,
+			DynArray              = 29,
+			Float                 = 6,
+			Graphic               = 18,
+			Int8                  = 35,
+			Integer               = 2,
+			Invalid               = 0,
+			LongVarBinary         = 17,
+			LongVarChar           = 14,
+			LongVarGraphic        = 20,
+			Money                 = 37,
+			NChar                 = 1006,
+			Null                  = 1003,
+			Numeric               = 8,
+			NVarChar              = 1007,
+			Other                 = 1016,
+			Real                  = 4,
+			Real370               = 27,
+			RowId                 = 25,
+			Serial                = 34,
+			Serial8               = 36,
+			SmallFloat            = 1002,
+			SmallInt              = 1,
+			Text                  = 39,
+			Time                  = 10,
+			Timestamp             = 11,
+			TimeStampWithTimeZone = 32,
+			VarBinary             = 16,
+			VarChar               = 13,
+			VarGraphic            = 19,
+			Xml                   = 26,
+
+			// not compat(i|a)ble with Informix
+			Char1               = 1001,
+			IntervalDayFraction = 1005,
+			IntervalYearMonth   = 1004,
+			List                = 1010,
+			MultiSet            = 1009,
+			Row                 = 1011,
+			Set                 = 1008,
+			SmartLobLocator     = 1014,
+			SQLUDTFixed         = 1013,
+			SQLUDTVar           = 1012,
 		}
 
 		#region BulkCopy
@@ -333,13 +346,13 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2BulkCopyColumnMapping Add(DB2BulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
 		}
 
-		[Wrapper]
+		[Wrapper, Flags]
 		internal enum DB2BulkCopyOptions
 		{
-			Default,
-			KeepIdentity,
-			TableLock,
-			Truncate
+			Default      = 0,
+			KeepIdentity = 1,
+			TableLock    = 2,
+			Truncate     = 4
 		}
 
 		[Wrapper]

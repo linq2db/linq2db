@@ -405,27 +405,30 @@ namespace Tests
 			public void TestEnums()
 			{
 				var wrapper  = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
-				var instance = (Dynamic.SampleClass)wrapper.instance_;
+				// TODO: probably we need to change wrappers registration to require caller to register both
+				// original type and wrapper to avoid issues due to missing registration
+				_typeMapper.RegisterWrapper<RegularEnum>();
+				_typeMapper.RegisterWrapper<FlagsEnum>();
 
 				// test in methods
 				//
 				// non-flags enum mapping
-				Assert.AreEqual(1, wrapper.SetRegularEnum(RegularEnum.One));
-				Assert.AreEqual(2, wrapper.SetRegularEnum(RegularEnum.Two));
-				Assert.AreEqual(3, wrapper.SetRegularEnum(RegularEnum.Three));
 				Assert.AreEqual(RegularEnum.One,   wrapper.GetRegularEnum(1));
 				Assert.AreEqual(RegularEnum.Two,   wrapper.GetRegularEnum(2));
 				Assert.AreEqual(RegularEnum.Three, wrapper.GetRegularEnum(3));
+				Assert.AreEqual(1, wrapper.SetRegularEnum(RegularEnum.One));
+				Assert.AreEqual(2, wrapper.SetRegularEnum(RegularEnum.Two));
+				Assert.AreEqual(3, wrapper.SetRegularEnum(RegularEnum.Three));
 
 				// flags enum mapping
-				Assert.AreEqual(1,  wrapper.SetFlagsEnum(FlagsEnum.Bit1));
-				Assert.AreEqual(4,  wrapper.SetFlagsEnum(FlagsEnum.Bit3));
-				Assert.AreEqual(10, wrapper.SetFlagsEnum(FlagsEnum.Bits24));
-				Assert.AreEqual(5,  wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3));
 				Assert.AreEqual(FlagsEnum.Bit1,                  wrapper.GetFlagsEnum(1));
 				Assert.AreEqual(FlagsEnum.Bit3,                  wrapper.GetFlagsEnum(4));
 				Assert.AreEqual(FlagsEnum.Bits24,                wrapper.GetFlagsEnum(10));
 				Assert.AreEqual(FlagsEnum.Bit1 | FlagsEnum.Bit3, wrapper.GetFlagsEnum(5));
+				Assert.AreEqual(1,  wrapper.SetFlagsEnum(FlagsEnum.Bit1));
+				Assert.AreEqual(4,  wrapper.SetFlagsEnum(FlagsEnum.Bit3));
+				Assert.AreEqual(10, wrapper.SetFlagsEnum(FlagsEnum.Bits24));
+				Assert.AreEqual(5,  wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3));
 
 
 				// test in properties
@@ -439,6 +442,31 @@ namespace Tests
 				Assert.AreEqual(FlagsEnum.Bit3, wrapper.FlagsEnumProperty);
 				wrapper.FlagsEnumProperty = FlagsEnum.Bits24;
 				Assert.AreEqual(FlagsEnum.Bits24, wrapper.FlagsEnumProperty);
+
+				// using setters/getters
+				var typeBuilder = _typeMapper.Type<SampleClass>();
+				var regularEnumBuilder = typeBuilder.Member(p => p.RegularEnumProperty);
+				var flagsEnumBuilder   = typeBuilder.Member(p => p.FlagsEnumProperty);
+
+				var regularSetter = regularEnumBuilder.BuildSetter<Dynamic.SampleClass>();
+				var regularGetter = regularEnumBuilder.BuildGetter<Dynamic.SampleClass>();
+
+				var flagsSetter = flagsEnumBuilder.BuildSetter<Dynamic.SampleClass>();
+				var flagsGetter = flagsEnumBuilder.BuildGetter<Dynamic.SampleClass>();
+
+				// reset instance
+				wrapper = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var instance = (Dynamic.SampleClass)wrapper.instance_;
+
+				// non-flags enum mapping
+				Assert.AreEqual(RegularEnum.Two, regularGetter(instance));
+				regularSetter(instance, RegularEnum.One);
+				Assert.AreEqual(RegularEnum.One, regularGetter(instance));
+
+				// flags enum mapping
+				Assert.AreEqual(FlagsEnum.Bit3, flagsGetter(instance));
+				flagsSetter(instance, FlagsEnum.Bits24);
+				Assert.AreEqual(FlagsEnum.Bits24, flagsGetter(instance));
 			}
 		}
 	}
