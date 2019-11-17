@@ -121,21 +121,6 @@ namespace LinqToDB.DataProvider.MySql
 					if (wrapper.MySqlDecimalGetter != null && value != null && value.GetType() == wrapper.MySqlDecimalType)
 						value = wrapper.MySqlDecimalGetter(value);
 					break;
-				//case DataType.Date       :
-				//case DataType.DateTime   :
-				//case DataType.DateTime2  :
-				//	if (value != null && value.GetType() == wrapper.MySqlDateTimeType)
-				//		value = wrapper.MySqlDateTimeGetter(value);
-				//	break;
-
-
-				//case DataType.Char       :
-				//case DataType.VarChar    :
-				//case DataType.NVarChar   :
-				//case DataType.NChar      :
-				//	if (value is char)
-				//		value = value.ToString();
-				//	break;
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);

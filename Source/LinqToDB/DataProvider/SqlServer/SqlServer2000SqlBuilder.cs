@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
@@ -9,8 +6,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
+		public SqlServer2000SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
 		public SqlServer2000SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -21,7 +23,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2000SqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new SqlServer2000SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)

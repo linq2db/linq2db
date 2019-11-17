@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -10,6 +8,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{
+		public SqlServer2000SchemaProvider(SqlServerDataProvider provider)
+			: base(provider)
+		{
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"

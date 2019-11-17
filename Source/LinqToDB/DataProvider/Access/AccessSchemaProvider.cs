@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.Access
 					Name       = c.Field<string>("COLUMN_NAME"),
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType   = dt != null ? dt.TypeName : null,
+					DataType   = dt?.TypeName,
 					Length     = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
 					Precision  = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
 					Scale      = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),

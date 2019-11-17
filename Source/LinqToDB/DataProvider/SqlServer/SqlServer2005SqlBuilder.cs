@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
@@ -9,14 +6,19 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
+		public SqlServer2005SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
 		public SqlServer2005SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2005SqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new SqlServer2005SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -37,9 +39,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildFunction(func);
 		}
 
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2005; }
-		}
+		public override string  Name => ProviderName.SqlServer2005;
 	}
 }

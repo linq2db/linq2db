@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,8 +17,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
-
-		private static readonly Func<string, string> _quoteIdentifier;
 
 		// System.Data
 		// and/or
@@ -66,46 +63,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			DataConnection.AddProviderDetector(ProviderDetector);
-
-			try
-			{
-				_quoteIdentifier = TryToUseCommandBuilder();
-			}
-			catch
-			{
-			}
-
-			if (_quoteIdentifier == null)
-				_quoteIdentifier = identifier => '[' + identifier.Replace("]", "]]") + ']';
-
 		}
 
-		// also check https://github.com/linq2db/linq2db/issues/1487
-		private static Func<string, string> TryToUseCommandBuilder()
+		internal static string BasicQuoteIdentifier(string identifier)
 		{
-#if NET45 || NET46
-			return new System.Data.SqlClient.SqlCommandBuilder().QuoteIdentifier;
-#else
-			var type = Type.GetType("System.Data.SqlClient.SqlCommandBuilder, System.Data.SqlClient", false);
-			type = type ?? Type.GetType("System.Data.SqlClient.SqlCommandBuilder, Microsoft.Data.SqlClient", false);
-
-			if (type != null)
-			{
-				var mi = type.GetMethod("QuoteIdentifier", BindingFlags.Public | BindingFlags.Instance);
-				if (mi != null)
-					return (Func<string, string>)Delegate.CreateDelegate(typeof(Func<string, string>), Activator.CreateInstance(type), mi);
-			}
-
-			return null;
-#endif
+			return '[' + identifier.Replace("]", "]]") + ']';
 		}
 
-		internal static string QuoteIdentifier(string identifier)
-		{
-			return _quoteIdentifier(identifier);
-		}
-
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			var provider = Provider;
 
@@ -218,6 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
+		// TODO: migrate to wrappers
 		private static IDbConnection CreateConnection(SqlServerProvider provider, string connectionString)
 		{
 			Type type;
@@ -327,9 +293,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlGeometryType    = types.First(t => t.Name == "SqlGeometry");
 		}
 
-		internal static Type SqlHierarchyIdType;
-		internal static Type SqlGeographyType;
-		internal static Type SqlGeometryType;
+		internal static Type? SqlHierarchyIdType;
+		internal static Type? SqlGeographyType;
+		internal static Type? SqlGeometryType;
 
 		public static void SetSqlTypes(Type sqlHierarchyIdType, Type sqlGeographyType, Type sqlGeometryType)
 		{
@@ -373,14 +339,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int?                       maxBatchSize       = null,
-			int?                       bulkCopyTimeout    = null,
-			bool                       keepIdentity       = false,
-			bool                       checkConstraints   = false,
-			int                        notifyAfter        = 0,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int?                        maxBatchSize       = null,
+			int?                        bulkCopyTimeout    = null,
+			bool                        keepIdentity       = false,
+			bool                        checkConstraints   = false,
+			int                         notifyAfter        = 0,
+			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(

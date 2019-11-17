@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,14 +12,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected readonly SqlServerDataProvider? Provider;
+
+		protected SqlServerSqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			Provider = provider;
 		}
 
 		protected virtual  bool BuildAlternativeSql => false;
 
-		protected override string FirstFormat(SelectQuery selectQuery)
+		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
@@ -183,19 +185,16 @@ namespace LinqToDB.DataProvider.SqlServer
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
-			{
-				var p = ((SqlParameter)predicate.Expr2);
+			else if (predicate.Expr2 is SqlParameter p)
 				p.ReplaceLike = true;
-			}
 
 			base.BuildLikePredicate(predicate);
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb,
-			string server,
-			string database,
-			string schema,
+			string? server,
+			string? database,
+			string? schema,
 			[JetBrains.Annotations.NotNull] string table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -240,7 +239,9 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] == '[')
 							return value;
 
-						return SqlServerTools.QuoteIdentifier(name);
+						if (Provider != null)
+							return Provider.Wrapper.Value.QuoteIdentifier(name);
+						return SqlServerTools.BasicQuoteIdentifier(name);
 					}
 
 				case ConvertType.NameToServer:
@@ -254,10 +255,12 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] == '[')
 							return value;
 
-//						if (name.IndexOf('.') > 0)
-//							value = string.Join("].[", name.Split('.'));
+						//						if (name.IndexOf('.') > 0)
+						//							value = string.Join("].[", name.Split('.'));
 
-						return SqlServerTools.QuoteIdentifier(name);
+						if (Provider != null)
+							return Provider.Wrapper.Value.QuoteIdentifier(name);
+						return SqlServerTools.BasicQuoteIdentifier(name);
 					}
 
 					break;
@@ -271,7 +274,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			return value;
+			// TODO
+			return value!;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -369,19 +373,40 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string GetTypeName(IDbDataParameter parameter)
+		protected override string? GetTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).TypeName;
+			if (Provider != null)
+			{
+				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return Provider.Wrapper.Value.TypeNameGetter(param);
+			}
+
+			return base.GetTypeName(parameter);
 		}
 
-		protected override string GetUdtTypeName(IDbDataParameter parameter)
+		protected override string? GetUdtTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).UdtTypeName;
+			if (Provider != null)
+			{
+				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return Provider.Wrapper.Value.UdtTypeNameGetter(param);
+			}
+
+			return base.GetUdtTypeName(parameter);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).SqlDbType.ToString();
+			if (Provider != null)
+			{
+				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return Provider.Wrapper.Value.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

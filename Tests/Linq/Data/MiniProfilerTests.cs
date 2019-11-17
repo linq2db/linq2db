@@ -25,12 +25,14 @@ using Tests.Model;
 using MySqlDataDateTime           = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal            = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-using  MySqlDataMySqlConnection   = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
+using MySqlDataMySqlConnection    = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
 using IBM.Data.DB2Types;
 using Tests.DataProvider;
+using System.Data.SqlTypes;
+using Microsoft.SqlServer.Types;
 
 namespace Tests.Data
 {
@@ -498,7 +500,6 @@ namespace Tests.Data
 					// test provider-specific type readers
 					var longValue = -12335L;
 					Assert.AreEqual(longValue, db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value);
-					Assert.AreEqual(longValue, db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value);
 					var rawValue = db.Execute<object>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64));
 					// DB2DataReader returns provider-specific types only if asked explicitly
 					Assert.True(rawValue is long);
@@ -527,6 +528,269 @@ namespace Tests.Data
 
 					// just check schema (no api used)
 					db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
+		[Test]
+		public void TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			string providerName;
+			SqlServerVersion version;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerName = db.DataProvider.Name;
+				version      = ((SqlServerDataProvider)db.DataProvider).Version;
+			}
+
+			var tvpSupported = version >= SqlServerVersion.v2008;
+
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+#if NET46
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
+#else
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
+#endif
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var testValue = -1.2335m;
+					Assert.AreEqual(testValue, db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value);
+					var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
+					Assert.True(rawValue is decimal);
+					Assert.AreEqual(testValue, (decimal)rawValue);
+
+					// test provider-specific parameter values
+					Assert.AreEqual(testValue, db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)));
+
+					//// assert provider-specific parameter type name
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)));
+					Assert.True(trace.Contains("DECLARE @p SmallDateTime "));
+
+					//// assert UDT type name
+					var hid = SqlHierarchyId.Parse("/1/3/");
+					Assert.AreEqual(hid, db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+					Assert.True(trace.Contains("DECLARE @p hierarchyid -- Udt"));
+					Assert.AreEqual(hid, db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+
+					if (tvpSupported)
+					{
+						//// assert TVP type name
+						var record = SqlServerTypesTests.TestData[0];
+						var parameter = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecords()) { DbType = SqlServerTypesTests.TYPE_NAME };
+						var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
+										  where r.Id == record.Id
+										  select new SqlServerTypesTests.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
+
+						Assert.AreEqual(record.Id, readRecord.Id);
+						Assert.AreEqual(record.Name, readRecord.Name);
+						Assert.True(trace.Contains($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					}
+
+					// bulk copy
+					TestBulkCopy();
+					using (var tr = db.BeginTransaction())
+						TestBulkCopy();
+
+					// test schema type name escaping
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					if (tvpSupported)
+					{
+						var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+						Assert.IsNotNull(proc);
+						Assert.AreEqual("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
+					}
+
+					// test SqlException handing
+					Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+					Exception sex = null;
+					try
+					{
+						db.Execute<object>("SELECT 1 / 0");
+					}
+					catch (Exception ex)
+					{
+						sex = ex;
+					}
+					Assert.IsTrue(SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+					Assert.AreEqual(1, errors.Count());
+					Assert.AreEqual(8134, errors.Single());
+
+					// test MARS not set
+					Assert.False(((DataConnection)db).IsMarsEnabled);
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 2000);
+
+							// test quotation works
+							Assert.True(trace.Contains("[AllTypes]"));
+						}
+					}
+				}
+
+				// test MARS is set
+#if NET46
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection), ";MultipleActiveResultSets=true"))
+#else
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient", ";MultipleActiveResultSets=true"))
+#endif
+				{
+					Assert.True(((DataConnection)db).IsMarsEnabled);
+				}
+			}
+		}
+
+		[Test]
+		public void TestSqlServerMS([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			string providerName;
+			SqlServerVersion version;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerName = db.DataProvider.Name;
+				version = ((SqlServerDataProvider)db.DataProvider).Version;
+			}
+
+			var tvpSupported = version >= SqlServerVersion.v2008;
+
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var testValue = -1.2335m;
+					Assert.AreEqual(testValue, db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value);
+					var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
+					Assert.True(rawValue is decimal);
+					Assert.AreEqual(testValue, (decimal)rawValue);
+
+					// test provider-specific parameter values
+					Assert.AreEqual(testValue, db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)));
+
+					//// assert provider-specific parameter type name
+					Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)));
+					Assert.True(trace.Contains("DECLARE @p SmallDateTime "));
+
+					// not supported by provider
+					// assert UDT type name
+					//var hid = SqlHierarchyId.Parse("/1/");
+					//Assert.AreEqual(hid, db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+					//Assert.True(trace.Contains("DECLARE @p hierarchyid -- Udt"));
+					//Assert.AreEqual(hid, db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+
+					if (tvpSupported)
+					{
+						//// assert TVP type name
+						var record = SqlServerTypesTests.TestData[0];
+						var parameter = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecordsMS()) { DbType = SqlServerTypesTests.TYPE_NAME };
+						var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
+										  where r.Id == record.Id
+										  select new SqlServerTypesTests.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
+
+						Assert.AreEqual(record.Id, readRecord.Id);
+						Assert.AreEqual(record.Name, readRecord.Name);
+						Assert.True(trace.Contains($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					}
+
+					// bulk copy
+					TestBulkCopy();
+					using (var tr = db.BeginTransaction())
+						TestBulkCopy();
+
+					// test schema type name escaping
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					if (tvpSupported)
+					{
+						var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+						Assert.IsNotNull(proc);
+						Assert.AreEqual("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
+					}
+
+					// test SqlException handing
+					Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+					Exception sex = null;
+					try
+					{
+						db.Execute<object>("SELECT 1 / 0");
+					}
+					catch (Exception ex)
+					{
+						sex = ex;
+					}
+					Assert.IsTrue(SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+					Assert.AreEqual(1, errors.Count());
+					Assert.AreEqual(8134, errors.Single());
+
+					// test MARS not set
+					Assert.False(((DataConnection)db).IsMarsEnabled);
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 2000);
+
+							// test quotation works
+							Assert.True(trace.Contains("[AllTypes]"));
+						}
+					}
+				}
+
+				// test MARS is set
+				using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", ";MultipleActiveResultSets=true"))
+				{
+					Assert.True(((DataConnection)db).IsMarsEnabled);
 				}
 			}
 		}
@@ -573,6 +837,7 @@ namespace Tests.Data
 				case ConnectionType.MiniProfiler:
 					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
 					ms.SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
 					break;
 			}
 

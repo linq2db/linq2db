@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
 	{
-		protected DynamicDataProviderBase(string name, MappingSchema mappingSchema)
+		protected DynamicDataProviderBase(string name, MappingSchema? mappingSchema)
 			: base(name, mappingSchema)
 		{
 		}
@@ -262,9 +262,9 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		protected void SetProviderField<TField>(string methodName)
+		protected void SetProviderField<TField>(string methodName, Type? dataReaderType = null)
 		{
-			SetProviderField(typeof(TField), methodName);
+			SetProviderField(typeof(TField), methodName, dataReaderType);
 		}
 
 		protected void SetProviderField(Type fieldType, string methodName, Type? dataReaderType = null)
@@ -304,9 +304,9 @@ namespace LinqToDB.DataProvider
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		// }
 
-		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true)
+		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
-			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException);
+			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException, dataReaderType);
 		}
 
 		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true, Type? dataReaderType = null)
@@ -344,8 +344,9 @@ namespace LinqToDB.DataProvider
 		// that's fine, as TryGetValue and indexer are lock-free operations for ConcurrentDictionary
 		// in general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
 		// to support multiple wrappers
-		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters  = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
-		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
+		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters   = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
+		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
+		private readonly IDictionary<Type, Func<IDbTransaction, IDbTransaction>?>     _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction, IDbTransaction>?>();
 
 		internal virtual IDbDataParameter? TryConvertParameter(Type expectedType, IDbDataParameter parameter, MappingSchema ms)
 		{
@@ -394,6 +395,31 @@ namespace LinqToDB.DataProvider
 
 			if (converter != null)
 				return converter(connection);
+
+			return null;
+		}
+
+		internal virtual IDbTransaction? TryConvertTransaction(Type expectedType, IDbTransaction transaction, MappingSchema ms)
+		{
+			var transactionType = transaction.GetType();
+
+			if (expectedType == transactionType)
+				return transaction;
+
+			if (!_transactionConverters.TryGetValue(transactionType, out var converter))
+			{
+				var converterExpr = ms.GetConvertExpression(transactionType, typeof(IDbTransaction), false, false);
+				if (converterExpr != null)
+				{
+					var param = Expression.Parameter(typeof(IDbTransaction));
+					converter = (Func<IDbTransaction, IDbTransaction>)Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, transactionType)), param).Compile();
+
+					_transactionConverters[transactionType] = converter;
+				}
+			}
+
+			if (converter != null)
+				return converter(transaction);
 
 			return null;
 		}

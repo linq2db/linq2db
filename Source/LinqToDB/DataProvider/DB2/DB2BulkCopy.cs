@@ -10,15 +10,15 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
+		private readonly DB2DataProvider _provider;
+
 		public DB2BulkCopy(DB2DataProvider provider)
 		{
 			_provider = provider;
 		}
 
-		readonly DB2DataProvider _provider;
-
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table,
+			ITable<T>       table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{

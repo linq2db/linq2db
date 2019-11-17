@@ -775,7 +775,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class AllTypes
+		internal class AllTypes
 		{
 			[Identity]
 			[Column(DataType=DataType.Int32),                          NotNull]  public int             ID                       { get; set; }

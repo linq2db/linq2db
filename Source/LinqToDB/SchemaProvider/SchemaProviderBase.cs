@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -10,46 +9,38 @@ namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
-	using Extensions;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType                            GetDataType   (string dataType, string columnType, long? length, int? prec, int? scale);
+		protected abstract DataType                            GetDataType   (string dataType, string? columnType, long? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
 		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
 		protected abstract string                              GetProviderSpecificTypeNamespace();
 
-		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
-		{
-			return null;
-		}
+		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
+		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection) => null;
 
-		protected virtual List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
-		{
-			return null;
-		}
-
-		protected HashSet<string>    IncludedSchemas;
-		protected HashSet<string>    ExcludedSchemas;
-		protected HashSet<string>    IncludedCatalogs;
-		protected HashSet<string>    ExcludedCatalogs;
+		protected HashSet<string>    IncludedSchemas = null!;
+		protected HashSet<string>    ExcludedSchemas = null!;
+		protected HashSet<string>    IncludedCatalogs = null!;
+		protected HashSet<string>    ExcludedCatalogs = null!;
 		protected bool               GenerateChar1AsString;
-		protected DataTable          DataTypesSchema;
+		protected DataTable          DataTypesSchema = null!;
 
-		private Dictionary<string, DataTypeInfo> DataTypesDic;
-		private Dictionary<string, DataTypeInfo> ProviderSpecificDataTypesDic;
+		private Dictionary<string, DataTypeInfo> DataTypesDic = null!;
+		private Dictionary<string, DataTypeInfo> ProviderSpecificDataTypesDic = null!;
 
-		private Dictionary<int, DataTypeInfo> DataTypesByProviderDbTypeDic;
-		private Dictionary<int, DataTypeInfo> ProviderSpecificDataTypesByProviderDbTypeDic;
+		private Dictionary<int, DataTypeInfo> DataTypesByProviderDbTypeDic = null!;
+		private Dictionary<int, DataTypeInfo> ProviderSpecificDataTypesByProviderDbTypeDic = null!;
 
 		/// <summary>
 		/// If true, provider doesn't support schema-only procedure execution and will execute procedure for real.
 		/// </summary>
 		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
 
-		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
 			if (options == null)
 				options = new GetSchemaOptions();
@@ -343,7 +334,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
 
-		protected static HashSet<string> GetHashSet(string[] data, IEqualityComparer<string> comparer)
+		protected static HashSet<string> GetHashSet(string[]? data, IEqualityComparer<string> comparer)
 		{
 			var set = new HashSet<string>(comparer ?? StringComparer.OrdinalIgnoreCase);
 
@@ -356,15 +347,8 @@ namespace LinqToDB.SchemaProvider
 			return set;
 		}
 
-		protected virtual List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection, GetSchemaOptions options)
-		{
-			return null;
-		}
-
-		protected virtual List<ProcedureSchema> GetProviderSpecificProcedures(DataConnection dataConnection)
-		{
-			return null;
-		}
+		protected virtual List<TableSchema>?     GetProviderSpecificTables    (DataConnection dataConnection, GetSchemaOptions options) => null;
+		protected virtual List<ProcedureSchema>? GetProviderSpecificProcedures(DataConnection dataConnection) => null;
 
 		/// <summary>
 		/// Builds table function call command.
@@ -386,10 +370,10 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		protected virtual void LoadProcedureTableSchema(
-			DataConnection dataConnection,
-			GetSchemaOptions options,
-			ProcedureSchema procedure,
-			string commandText,
+			DataConnection    dataConnection,
+			GetSchemaOptions  options,
+			ProcedureSchema   procedure,
+			string            commandText,
 			List<TableSchema> tables)
 		{
 			CommandType     commandType;
@@ -464,35 +448,30 @@ namespace LinqToDB.SchemaProvider
 			};
 		}
 
-		protected virtual string GetProviderSpecificType(string dataType)
-		{
-			return null;
-		}
+		protected virtual string? GetProviderSpecificType(string dataType) => null;
 
-		protected DataTypeInfo GetDataType(string typeName, GetSchemaOptions options)
+		protected DataTypeInfo? GetDataType(string typeName, GetSchemaOptions options)
 		{
 			DataTypeInfo dt;
 			return
-				options?.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes == true
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
 				: (DataTypesDic                .TryGetValue(typeName, out dt) ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
 
-		protected DataTypeInfo GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
+		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
 			DataTypeInfo dt;
 			return
-				options?.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes == true
 				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
 				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
 
-		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected virtual DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-			{
 				return rd.Reader.GetSchemaTable();
-			}
 		}
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
@@ -525,15 +504,8 @@ namespace LinqToDB.SchemaProvider
 			).ToList();
 		}
 
-		protected virtual string GetDataSourceName(DbConnection dbConnection)
-		{
-			return dbConnection.DataSource;
-		}
-
-		protected virtual string GetDatabaseName(DbConnection dbConnection)
-		{
-			return dbConnection.Database;
-		}
+		protected virtual string GetDataSourceName(DbConnection dbConnection) => dbConnection.DataSource;
+		protected virtual string GetDatabaseName  (DbConnection dbConnection) => dbConnection.Database;
 
 		protected virtual void InitProvider(DataConnection dataConnection)
 		{
@@ -560,7 +532,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected virtual Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -570,7 +542,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected virtual string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType;
 
@@ -582,7 +554,7 @@ namespace LinqToDB.SchemaProvider
 				if (!string.IsNullOrWhiteSpace(format) && !string.IsNullOrWhiteSpace(parms))
 				{
 					var paramNames  = parms.Split(',');
-					var paramValues = new object[paramNames.Length];
+					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
@@ -627,7 +599,7 @@ namespace LinqToDB.SchemaProvider
 				;
 		}
 
-		public static string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type? type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);
@@ -717,7 +689,7 @@ namespace LinqToDB.SchemaProvider
 
 		internal static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
 		{
-			string name = null;
+			string? name = null;
 
 			if (schemaOptions.GetAssociationMemberName != null)
 			{

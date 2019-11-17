@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -9,12 +8,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2012SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2012SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
+		public SqlServer2012SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
 		}
@@ -29,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2012SqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new SqlServer2012SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -38,10 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.AppendLine(";");
 		}
 
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2012; }
-		}
+		public override string  Name => ProviderName.SqlServer2012;
 
 		protected override void BuildFunction(SqlFunction func)
 		{

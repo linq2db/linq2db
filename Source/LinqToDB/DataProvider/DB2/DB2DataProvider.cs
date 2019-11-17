@@ -196,15 +196,32 @@ namespace LinqToDB.DataProvider.DB2
 						}
 						break;
 					}
-				case DataType.Blob       :
-					base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
-					DB2Wrappers.Initialize(MappingSchema);
-					DB2Wrappers.TypeSetter(parameter, DB2Wrappers.DB2Type.Blob);
-					return;
 			}
 
 			// TODO: why we add @ explicitly for DB2, SQLite and Sybase providers???
 			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		{
+			DB2Wrappers.DB2Type? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.Blob: type = DB2Wrappers.DB2Type.Blob; break;
+			}
+
+			if (type != null)
+			{
+				DB2Wrappers.Initialize(MappingSchema);
+				var param = TryConvertParameter(DB2Wrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					DB2Wrappers.TypeSetter(param, type.Value);
+					return;
+				}
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy
