@@ -5,6 +5,8 @@ using System.ServiceModel;
 #endif
 
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -30,6 +32,7 @@ namespace Tests.UserTests
 			[Values] bool withSchema)
 		{
 			var throws = false;
+			var throwsSqlException = false;
 			string serverName;
 			string schemaName;
 			string dbName;
@@ -40,6 +43,14 @@ namespace Tests.UserTests
 				{
 					// SQL Server FQN requires schema and db components for linked-server query
 					throws = true;
+				}
+
+				if (withServer && withDatabase && withSchema && context.Contains("Azure"))
+				{
+					// linked servers not supported by Azure
+					// "Reference to database and/or server name in '...' is not supported in this version of SQL Server."
+					throws             = true;
+					throwsSqlException = true;
 				}
 
 				if (withServer && !withDatabase && context.Contains("Informix"))
@@ -79,7 +90,15 @@ namespace Tests.UserTests
 #endif
 				}
 				else if (throws)
-					Assert.Throws<LinqToDBException>(() => table.ToList());
+				{
+					if (throwsSqlException)
+						// https://www.youtube.com/watch?v=Qji5x8gBVX4
+						Assert.Throws(
+							((SqlServerDataProvider)((DataConnection)db).DataProvider).Wrapper.Value.SqlExceptionType,
+							() => table.ToList());
+					else
+						Assert.Throws<LinqToDBException>(() => table.ToList());
+				}
 				else
 					table.ToList();
 			}

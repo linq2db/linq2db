@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type DataReaderType    { get; }
 			Type ConnectionType    { get; }
 			Type TransactionType   { get; }
+			Type SqlExceptionType  { get; }
 
 			SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString);
 			SqlBulkCopy                CreateBulkCopy               (IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction);
@@ -53,6 +54,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			private readonly Type _transactionTypeType;
 			private readonly Type _dataReaderType;
 			private readonly Type _parameterType;
+			private readonly Type _sqlExceptionType;
 
 			private readonly Action<IDbDataParameter, SqlDbType> _typeSetter;
 			private readonly Func<IDbDataParameter, SqlDbType>   _typeGetter;
@@ -72,6 +74,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Type dataReaderType,
 				Type transactionTypeType,
 				Type sqlDataRecordType,
+				Type sqlExceptionType,
 				Action<IDbDataParameter, SqlDbType> typeSetter,
 				Func<IDbDataParameter, SqlDbType>   typeGetter,
 				Action<IDbDataParameter, string> udtTypeNameSetter,
@@ -86,6 +89,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				_dataReaderType      = dataReaderType;
 				_transactionTypeType = transactionTypeType;
 				_parameterType       = parameterType;
+				_sqlExceptionType    = sqlExceptionType;
 				_typeSetter          = typeSetter;
 				_typeGetter          = typeGetter;
 				_udtTypeNameSetter   = udtTypeNameSetter;
@@ -100,6 +104,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type ISqlServerWrapper.TransactionType   => _transactionTypeType;
 			Type ISqlServerWrapper.DataReaderType    => _dataReaderType;
 			Type ISqlServerWrapper.ParameterType     => _parameterType;
+			Type ISqlServerWrapper.SqlExceptionType  => _sqlExceptionType;
 
 			Action<IDbDataParameter, SqlDbType> ISqlServerWrapper.TypeSetter => _typeSetter;
 			Func<IDbDataParameter, SqlDbType> ISqlServerWrapper.TypeGetter   => _typeGetter;
@@ -203,6 +208,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					dataReaderType,
 					transactionType,
 					sqlDataRecordType,
+					sqlExceptionType,
 					dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 					dbTypeBuilder.BuildGetter<IDbDataParameter>(),
 					udtTypeNameBuilder.BuildSetter<IDbDataParameter>(),
