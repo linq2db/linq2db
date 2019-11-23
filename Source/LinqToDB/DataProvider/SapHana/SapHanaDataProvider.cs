@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -22,7 +21,7 @@ namespace LinqToDB.DataProvider.SapHana
 			: this(name, null)
 		{
 		}
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
+		protected SapHanaDataProvider(string name, MappingSchema? mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
@@ -57,20 +56,8 @@ namespace LinqToDB.DataProvider.SapHana
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
-		Action<IDbDataParameter> _setText;
-		Action<IDbDataParameter> _setNText;
-		Action<IDbDataParameter> _setBlob;
-		Action<IDbDataParameter> _setVarBinary;
-
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			const string paramTypeName = "HanaParameter";
-			const string dataTypeName  = "HanaDbType";
-
-			_setText      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
-			_setNText     = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
-			_setBlob      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Blob");
-			_setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -101,7 +88,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Char:
 					type = typeof (string);
 					break;
-				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);  break;
+				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);   break;
 				case DataType.Guid   : if (type == typeof(Guid)) return typeof(string); break;
 			}
 
@@ -133,20 +120,41 @@ namespace LinqToDB.DataProvider.SapHana
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
+			SapHanaWrappers.HanaDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Text  : _setText(parameter);      break;
-				case DataType.Image : _setBlob(parameter);      break;
-				case DataType.NText : _setNText(parameter);     break;
-				case DataType.Binary: _setVarBinary(parameter); break;
+				case DataType.Text : type = SapHanaWrappers.HanaDbType.Text; break;
+				case DataType.Image: type = SapHanaWrappers.HanaDbType.Blob; break;
 			}
+
+			if (type != null)
+			{
+				SapHanaWrappers.Initialize();
+				var param = TryConvertParameter(SapHanaWrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					SapHanaWrappers.TypeSetter(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				// fallback types
+				case DataType.Text  : parameter.DbType = DbType.String; return;
+				case DataType.Image : parameter.DbType = DbType.Binary; return;
+
+				case DataType.NText : parameter.DbType = DbType.Xml;    return;
+				case DataType.Binary: parameter.DbType = DbType.Binary; return;
+			}
+
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new SapHanaBulkCopy(GetConnectionType()).BulkCopy(
+			return new SapHanaBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,

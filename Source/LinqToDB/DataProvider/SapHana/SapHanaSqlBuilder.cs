@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -139,11 +138,11 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static bool TryConvertParameterSymbol { get; set; }
 
-		private static List<char> _convertParameterSymbols;
+		private static List<char>? _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get { return _convertParameterSymbols; }
-			set { _convertParameterSymbols = value ?? new List<char>(); }
+			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
+			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -197,7 +196,8 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			return value;
+			// TODO
+			return value!;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
@@ -222,10 +222,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -270,7 +267,7 @@ namespace LinqToDB.DataProvider.SapHana
 				ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server   != null && server.Length == 0) server = null;
 			if (schema   != null && schema.Length == 0) schema = null;

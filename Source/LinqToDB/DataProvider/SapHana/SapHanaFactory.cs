@@ -1,8 +1,8 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using Configuration;

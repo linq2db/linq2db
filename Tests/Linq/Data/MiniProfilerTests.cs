@@ -795,6 +795,69 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SapHanaDataProvider(ProviderName.SapHanaNative), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var binaryValue = new byte[] { 1, 2, 3};
+					Assert.AreEqual(binaryValue, db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)));
+					Assert.True(trace.Contains("DECLARE @p Binary("));
+					Assert.AreEqual(binaryValue, db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)));
+					Assert.True(trace.Contains("DECLARE @p Binary("));
+					var textValue = "test";
+					Assert.AreEqual(textValue, db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)));
+					Assert.True(trace.Contains("DECLARE @p NVarChar("));
+					var ntextValue = "тест";
+					Assert.AreEqual(ntextValue, db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p  -- Xml"));
+
+					// bulk copy without and with transaction
+					TestBulkCopy();
+					using (var tr = db.BeginTransaction())
+						TestBulkCopy();
+
+					// test schema type name escaping
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<SapHanaTests.AllType>().Delete(p => p.ID >= 2000);
+						}
+					}
+				}
+			}
+		}
+
 		public enum ConnectionType
 		{
 			Raw,

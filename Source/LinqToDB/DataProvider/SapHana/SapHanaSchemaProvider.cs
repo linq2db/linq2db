@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -13,14 +12,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaSchemaProvider : SchemaProviderBase
 	{
-		protected string               DefaultSchema;
-		protected GetHanaSchemaOptions HanaSchemaOptions;
-		protected bool                 HaveAccessForCalculationViews;
+		protected string                DefaultSchema = null!;
+		protected GetHanaSchemaOptions? HanaSchemaOptions;
+		protected bool                  HaveAccessForCalculationViews;
 
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			HanaSchemaOptions = options as GetHanaSchemaOptions;
-			DefaultSchema = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
+			HanaSchemaOptions             = options as GetHanaSchemaOptions;
+			DefaultSchema                 = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
 			HaveAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
 			return base.GetSchema(dataConnection, options);
 		}
@@ -373,7 +372,7 @@ namespace LinqToDB.DataProvider.SapHana
 				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName"))
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
 				let dataType     = GetDataTypeByProviderDbType(providerType, options)
-				let columnType   = dataType == null ? null : dataType.TypeName
+				let columnType   = dataType?.TypeName
 				let length       = r.Field<int>("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
@@ -399,20 +398,15 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType != null)
-			{
-				switch (dataType.ToLower())
-				{
-					case "tinyint": return typeof(byte);
-				}
-			}
+			if (dataType.ToLowerInvariant() == "tinyint")
+				return typeof(byte);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -548,18 +542,10 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			//bug in drivers, SchemaOnly executes statement
-			dataConnection.BeginTransaction();
-
-			try
+			using (dataConnection.BeginTransaction())
+			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
 			{
-				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-				{
-					return rd.Reader.GetSchemaTable();
-				}
-			}
-			finally
-			{
-				dataConnection.RollbackTransaction();
+				return rd.Reader.GetSchemaTable();
 			}
 		}
 
