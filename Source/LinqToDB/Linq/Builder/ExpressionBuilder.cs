@@ -764,10 +764,10 @@ namespace LinqToDB.Linq.Builder
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "With"                 : return new TransformInfo(expr);
 							}
 						}
-						else
-						{
+
 							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
 
 							if (l != null)
@@ -781,7 +781,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var attr = GetTableFunctionAttribute(call.Method);
 
-								if (attr == null)
+							if (attr == null && !call.IsQueryable())
 								{
 									var ex = ConvertIQueryable(expr);
 
@@ -789,7 +789,6 @@ namespace LinqToDB.Linq.Builder
 										return new TransformInfo(ConvertExpressionTree(ex));
 								}
 							}
-						}
 
 						return new TransformInfo(ConvertSubquery(expr));
 					}

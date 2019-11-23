@@ -1011,7 +1011,7 @@ namespace LinqToDB
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			[NotNull] this       IDataContext dataContext,
 			[SqlQueryDependent]  RawSqlString sql,
-			[NotNull] params     object?[]    parameters)
+			[SqlQueryDependent, NotNull] params object?[] parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
