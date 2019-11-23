@@ -1378,6 +1378,7 @@ namespace LinqToDB.SqlQuery
 			if (_visitedElements.TryGetValue(element, out var newElement))
 				return newElement;
 
+			using (Scope(element)) 
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
