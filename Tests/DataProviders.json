@@ -10,7 +10,7 @@
 //			{
 //				"Connections" :
 //				{
-//					"SqlAzure.2012" :
+//					"SqlAzure" :
 //					{
 //						"Provider"         : "System.Data.SqlClient",
 //						"ConnectionString" : "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=xxx;Trusted_Connection=False;Encrypt=True;"
@@ -133,7 +133,7 @@
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "Server=DBHost2008\\SQLSERVER2000;Database=TestData;User Id=sa;Password=TestPassword;"
 			},
-			"SqlAzure.2012": {
+			"SqlAzure": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
 			},
@@ -236,7 +236,7 @@
 			"SqlServer.2005",
 			"SqlServer.2005.1",
 			"SqlServer.2000",
-			"SqlAzure.2012",
+			"SqlAzure",
 			"DB2",
 			"Firebird",
 			"Informix",

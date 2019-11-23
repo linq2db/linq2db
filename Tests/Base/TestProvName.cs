@@ -2,7 +2,7 @@
 {
 	public static class TestProvName
 	{
-		public const string SqlAzure          = "SqlAzure.2012";
+		public const string SqlAzure          = "SqlAzure";
 		public const string MariaDB           = "MariaDB";
 		/// <summary>
 		/// MySQL 5.5
@@ -40,13 +40,13 @@
 		public const string AllFirebird           = "Firebird,Firebird3";
 		public const string AllSQLite             = "SQLite.Classic,SQLite.MS";
 		public const string AllSybase             = "Sybase,Sybase.Managed";
-		public const string AllSqlServer          = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer          = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
 		public const string AllSqlServer2005Minus = "SqlServer.2000,SqlServer.2005";
 		public const string AllSqlServer2008Minus = "SqlServer.2000,SqlServer.2005,SqlServer.2008";
-		public const string AllSqlServer2005Plus  = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
-		public const string AllSqlServer2008Plus  = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
-		public const string AllSqlServer2012Plus  = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
-		public const string AllSqlServer2016Plus  = "SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2005Plus  = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
+		public const string AllSqlServer2008Plus  = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
+		public const string AllSqlServer2012Plus  = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
+		public const string AllSqlServer2016Plus  = "SqlServer.2017,SqlAzure";
 		public const string AllSqlServer2017Plus  = "SqlServer.2017";
 		public const string AllSQLiteNorthwind    = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana            = "SapHana.Native,SapHana.Odbc";

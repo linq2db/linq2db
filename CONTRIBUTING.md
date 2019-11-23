@@ -175,7 +175,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2012", "SqlServer.2012.1",
             "SqlServer.2008", "SqlServer.2008.1",
             "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure.2012",
+            "SqlAzure",
             "DB2",
             "Firebird",
             "Informix",
@@ -211,7 +211,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2012", "SqlServer.2012.1",
             "SqlServer.2008", "SqlServer.2008.1",
             "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure.2012",
+            "SqlAzure",
             "Firebird",
             "MySql",
             "MariaDB",
@@ -227,9 +227,9 @@ The `[User]DataProviders.json` is a regular JSON file:
         "BasedOn"           : "CommonConnectionStrings",
         "Connections"       :
         {
-            // override connection string for SqlAzure.2012 provider
+            // override connection string for SqlAzure provider
             // all other providers will use default inherited connection strings from CommonConnectionStrings configuration
-            "SqlAzure.2012" :
+            "SqlAzure" :
             {
                  "Provider"         : "System.Data.SqlClient",
                  "ConnectionString" : "Server=tcp:xxxxxxxxx.database.windows.net,1433;Database=TestData;User ID=TestUser@zzzzzzzzz;Password=TestPassword;Trusted_Connection=False;Encrypt=True;"
