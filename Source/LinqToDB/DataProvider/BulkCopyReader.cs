@@ -17,21 +17,23 @@ namespace LinqToDB.DataProvider
 	{
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable collection)
 		{
-			_dataConnection = dataConnection;
-			_columns        = columns;
-			_enumerator     = collection.GetEnumerator();
-			_columnTypes    = _columns
+			_dataConnection      = dataConnection;
+			_columns             = columns;
+			_enumerator          = collection.GetEnumerator();
+			_columnTypes         = _columns
 				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? _dataConnection.DataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType, c.DbType, c.Length))
 				.ToArray();
+			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
 		public int Count;
 
-		readonly DataConnection         _dataConnection;
-		readonly DbDataType[]           _columnTypes;
-		readonly List<ColumnDescriptor> _columns;
-		readonly IEnumerator            _enumerator;
-		readonly Parameter              _valueConverter = new Parameter();
+		readonly DataConnection                   _dataConnection;
+		readonly DbDataType[]                     _columnTypes;
+		readonly List<ColumnDescriptor>           _columns;
+		readonly IEnumerator                      _enumerator;
+		readonly Parameter                        _valueConverter = new Parameter();
+		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		public class Parameter : IDbDataParameter
 		{
@@ -83,10 +85,7 @@ namespace LinqToDB.DataProvider
 			return count;
 		}
 
-		public override int FieldCount
-		{
-			get { return _columns.Count; }
-		}
+		public override int FieldCount => _columns.Count;
 
 		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
@@ -98,32 +97,25 @@ namespace LinqToDB.DataProvider
 			throw new NotImplementedException();
 		}
 
-		public override string      GetDataTypeName(int i)       { throw new NotImplementedException(); }
-		public override int         GetOrdinal     (string name) { throw new NotImplementedException(); }
-		public override bool        GetBoolean     (int i)       { throw new NotImplementedException(); }
-		public override byte        GetByte        (int i)       { throw new NotImplementedException(); }
-		public override char        GetChar        (int i)       { throw new NotImplementedException(); }
-		public override Guid        GetGuid        (int i)       { throw new NotImplementedException(); }
-		public override short       GetInt16       (int i)       { throw new NotImplementedException(); }
-		public override int         GetInt32       (int i)       { throw new NotImplementedException(); }
-		public override long        GetInt64       (int i)       { throw new NotImplementedException(); }
-		public override float       GetFloat       (int i)       { throw new NotImplementedException(); }
-		public override double      GetDouble      (int i)       { throw new NotImplementedException(); }
-		public override string      GetString      (int i)       { throw new NotImplementedException(); }
-		public override decimal     GetDecimal     (int i)       { throw new NotImplementedException(); }
-		public override DateTime    GetDateTime    (int i)       { throw new NotImplementedException(); }
-		//public override IDataReader GetData        (int i)       { throw new NotImplementedException(); }
-		public override bool        IsDBNull       (int i)       { return GetValue(i) == null;          }
+		public override string      GetDataTypeName(int i)       => throw new NotImplementedException();
+		public override int         GetOrdinal     (string name) => _ordinals[name];
+		public override bool        GetBoolean     (int i)       => throw new NotImplementedException();
+		public override byte        GetByte        (int i)       => throw new NotImplementedException();
+		public override char        GetChar        (int i)       => throw new NotImplementedException();
+		public override Guid        GetGuid        (int i)       => throw new NotImplementedException();
+		public override short       GetInt16       (int i)       => throw new NotImplementedException();
+		public override int         GetInt32       (int i)       => throw new NotImplementedException();
+		public override long        GetInt64       (int i)       => throw new NotImplementedException();
+		public override float       GetFloat       (int i)       => throw new NotImplementedException();
+		public override double      GetDouble      (int i)       => throw new NotImplementedException();
+		public override string      GetString      (int i)       => throw new NotImplementedException();
+		public override decimal     GetDecimal     (int i)       => throw new NotImplementedException();
+		public override DateTime    GetDateTime    (int i)       => throw new NotImplementedException();
+		//public override IDataReader GetData        (int i)       => throw new NotImplementedException();
+		public override bool        IsDBNull       (int i)       => GetValue(i) == null;
 
-		public override object this[int i]
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public override object this[string name]
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public override object this[int i]       => throw new NotImplementedException();
+		public override object this[string name] => throw new NotImplementedException();
 
 		#endregion
 
@@ -190,10 +182,7 @@ namespace LinqToDB.DataProvider
 			return table;
 		}
 
-		public override bool NextResult()
-		{
-			return false;
-		}
+		public override bool NextResult()   => false;
 
 		public override bool Read()
 		{
@@ -221,10 +210,7 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		public override IEnumerator GetEnumerator()
-		{
-			throw new NotImplementedException();
-		}
+		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
 
 		public override bool HasRows => throw new NotImplementedException();
 	}

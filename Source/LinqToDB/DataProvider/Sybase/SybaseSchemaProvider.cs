@@ -1,8 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -23,7 +21,7 @@ namespace LinqToDB.DataProvider.Sybase
 		// sybase provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -151,7 +149,7 @@ FROM
 WHERE
 	c.status = 64";
 
-			string sql = null;
+			string? sql = null;
 
 			for (var i = 1; i <= 16; i++)
 			{
@@ -233,7 +231,7 @@ WHERE
 			}
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 
@@ -268,7 +266,7 @@ WHERE
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			List<DataTypeInfo> dataTypes = null;
+			List<DataTypeInfo>? dataTypes = null;
 
 			try
 			{

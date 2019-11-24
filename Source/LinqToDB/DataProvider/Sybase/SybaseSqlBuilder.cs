@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -12,6 +10,14 @@ namespace LinqToDB.DataProvider.Sybase
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
+		private readonly SybaseDataProvider? _provider;
+
+		public SybaseSqlBuilder(SybaseDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public SybaseSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
@@ -38,9 +44,10 @@ namespace LinqToDB.DataProvider.Sybase
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlBuilder(bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		SybaseSqlBuilder(SybaseDataProvider? provider, bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			_provider    = provider;
 			_skipAliases = skipAliases;
 		}
 
@@ -72,7 +79,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(_isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -213,7 +220,8 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 			}
 
-			return value;
+			// TODO
+			return value!;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -241,8 +249,14 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.AseDbType.ToString();
+			if (_provider != null)
+			{
+				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return _provider.Wrapper.Value.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

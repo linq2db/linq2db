@@ -33,6 +33,7 @@ using IBM.Data.DB2Types;
 using Tests.DataProvider;
 using System.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
+using LinqToDB.DataProvider.Sybase;
 
 namespace Tests.Data
 {
@@ -854,6 +855,85 @@ namespace Tests.Data
 							db.GetTable<SapHanaTests.AllType>().Delete(p => p.ID >= 2000);
 						}
 					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestSybaseNative([IncludeDataSources(ProviderName.Sybase)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SybaseDataProvider(ProviderName.Sybase), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var ntextValue = "тест";
+					Assert.AreEqual(ntextValue, db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p Unitext("));
+
+					// bulk copy without and with transaction
+					TestBulkCopy();
+					using (var tr = db.BeginTransaction())
+						TestBulkCopy();
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied,
+								KeepIdentity       = true
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<SybaseTests.AllType>().Delete(p => p.ID >= 2000);
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestSybaseManaged([IncludeDataSources(ProviderName.SybaseManaged)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new SybaseDataProvider(ProviderName.SybaseManaged), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var ntextValue = "тест";
+					Assert.AreEqual(ntextValue, db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p Unitext("));
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				}
 			}
 		}

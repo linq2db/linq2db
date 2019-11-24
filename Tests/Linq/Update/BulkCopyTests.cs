@@ -16,7 +16,10 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
+		// TODO: update Sybase.sql to use proper type for identity. not it uses INT for most of tables, which
+		// is silently treated as non-identity field
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
 		[Table("AllTypes")]
 		public class TestTable1
 		{
@@ -25,10 +28,12 @@ namespace Tests.xUpdate
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
+			[Column("Value", Configuration = ProviderName.Sybase)]
 			public int Value { get; set; }
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
 		[Table("AllTypes")]
 		public class TestTable2
 		{
@@ -37,9 +42,11 @@ namespace Tests.xUpdate
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
+			[Column("Value", Configuration = ProviderName.Sybase)]
 			public int Value { get; set; }
 		}
 
+		[ActiveIssue("Sybase: Bulk insert failed. Null value is not allowed in not null column.", Configuration = ProviderName.Sybase)]
 		[Test]
 		public void KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false)]string context,
@@ -103,7 +110,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configuration = ProviderName.OracleNative)]
+		//[ActiveIssue("Sybase: Bulk insert failed. Null value is not allowed in not null column.", Configuration = ProviderName.Sybase)]
+		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { ProviderName.OracleNative , ProviderName.Sybase } )]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,
