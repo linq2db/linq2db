@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
-			: base(name, null)
+			: base(name, null!)
 		{
 			Version = version;
 			Provider = provider;
@@ -257,7 +257,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			var param = TryConvertParameter(Wrapper.Value.ParameterType, parameter, MappingSchema);
 

@@ -1,6 +1,4 @@
-﻿#nullable disable
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
@@ -18,7 +16,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaOdbcSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{

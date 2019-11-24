@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 using System.Text;
 using System.Net;
@@ -17,8 +15,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		private readonly PostgreSQLDataProvider _provider;
-		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		private readonly PostgreSQLDataProvider? _provider;
+		public PostgreSQLSqlBuilder(PostgreSQLDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
@@ -101,18 +99,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var udtType = type.Type.ToNullableUnderlying();
 
-						if      (udtType == _provider.NpgsqlPointType)    StringBuilder.Append("point");
-						else if (udtType == _provider.NpgsqlLineType)     StringBuilder.Append("line");
-						else if (udtType == _provider.NpgsqlBoxType)      StringBuilder.Append("box");
-						else if (udtType == _provider.NpgsqlLSegType)     StringBuilder.Append("lseg");
-						else if (udtType == _provider.NpgsqlCircleType)   StringBuilder.Append("circle");
-						else if (udtType == _provider.NpgsqlPolygonType)  StringBuilder.Append("polygon");
-						else if (udtType == _provider.NpgsqlPathType)     StringBuilder.Append("path");
-						else if (udtType == _provider.NpgsqlDateType)     StringBuilder.Append("date");
-						else if (udtType == _provider.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+						if      (udtType == _provider!.NpgsqlPointType)    StringBuilder.Append("point");
+						else if (udtType == _provider!.NpgsqlLineType)     StringBuilder.Append("line");
+						else if (udtType == _provider!.NpgsqlBoxType)      StringBuilder.Append("box");
+						else if (udtType == _provider!.NpgsqlLSegType)     StringBuilder.Append("lseg");
+						else if (udtType == _provider!.NpgsqlCircleType)   StringBuilder.Append("circle");
+						else if (udtType == _provider!.NpgsqlPolygonType)  StringBuilder.Append("polygon");
+						else if (udtType == _provider!.NpgsqlPathType)     StringBuilder.Append("path");
+						else if (udtType == _provider!.NpgsqlDateType)     StringBuilder.Append("date");
+						else if (udtType == _provider!.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
 						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
 						else if (udtType == typeof(PhysicalAddress)
-							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
+							&& !_provider!.HasMacAddr8)                    StringBuilder.Append("macaddr");
 						else                                              base.BuildDataTypeFromDataType(type, forCreateTable);
 					}
 					else
@@ -131,7 +129,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -141,21 +139,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
-					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '"')
-							return name;
+						if (value.Length > 0 && value[0] == '"')
+							return value;
 
 						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote)
-							return '"' + name + '"';
+							return '"' + value + '"';
 
-						if (IsReserved(name))
-							return '"' + name + '"';
+						if (IsReserved(value))
+							return '"' + value + '"';
 
-						if (name.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
-							return '"' + name + '"';
+						if (value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							return '"' + value + '"';
 					}
 
 					break;
@@ -166,13 +162,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					return ":" + value;
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return (str.Length > 0 && str[0] == ':')? str.Substring(1): str;
-					}
-
-					break;
+					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
 			}
 
 			return value;
@@ -225,7 +215,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table)
+		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
@@ -233,16 +223,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
+					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable);
 					var server   = GetTableServerName(table);
 					var database = GetTableDatabaseName(table);
 					var schema   = attr.Schema != null
-						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
+						? Convert(attr.Schema, ConvertType.NameToSchema)
 						: GetTableSchemaName(table);
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name).ToString());
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name));
 					sb.Append(")");
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -288,7 +278,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -301,7 +291,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, null, database, schema, table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.NpgsqlDbType.ToString();

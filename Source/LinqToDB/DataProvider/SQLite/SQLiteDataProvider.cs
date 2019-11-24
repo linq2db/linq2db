@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -22,7 +21,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		public SQLiteDataProvider(string name)
-			: this(name, null)
+			: this(name, null!)
 		{
 		}
 
@@ -57,7 +56,7 @@ namespace LinqToDB.DataProvider.SQLite
 			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
 			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
 
-		protected override string NormalizeTypeName(string typeName)
+		protected override string? NormalizeTypeName(string? typeName)
 		{
 			if (typeName == null)
 				return null;
@@ -80,7 +79,7 @@ namespace LinqToDB.DataProvider.SQLite
 			_needsCommandDisposeOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
+		public override IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
 			if (_needsCommandDisposeOnError)
 				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
@@ -120,7 +119,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite

@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 		protected SapHanaDataProvider(string name, MappingSchema? mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema!)
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{

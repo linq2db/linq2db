@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -45,7 +44,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -87,7 +86,7 @@ namespace LinqToDB.DataProvider.Informix
 			return "IBM.Data.Informix";
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
@@ -115,16 +114,14 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		List<PrimaryKeyInfo> _pks;
-
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			return _pks =
+			return
 			(
 				from pk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16];
+						var arr = new string?[16];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
@@ -287,9 +284,9 @@ namespace LinqToDB.DataProvider.Informix
 						case    4 : c.DataType = "SMALLFLOAT";       break;
 						case    5 :
 							c.DataType  = "DECIMAL";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -298,14 +295,14 @@ namespace LinqToDB.DataProvider.Informix
 						case    7 : c.DataType = "DATE";             break;
 						case    8 :
 							c.DataType  = "MONEY";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
 							c.DataType = "DATETIME";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   11 : c.DataType = "BYTE";             break;
 						case   12 : c.DataType = "TEXT";             break;
@@ -315,7 +312,7 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   15 :
 							c.DataType = "NCHAR";
@@ -365,7 +362,7 @@ namespace LinqToDB.DataProvider.Informix
 				from fk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16][];
+						var arr = new string?[16][];
 
 						for (var i = 0; i < arr.Length; i++)
 						{

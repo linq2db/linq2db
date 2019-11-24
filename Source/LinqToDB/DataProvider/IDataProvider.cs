@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -30,12 +29,12 @@ namespace LinqToDB.DataProvider
 		/// <param name="commandText">Command SQL.</param>
 		/// <param name="parameters">Optional list of parameters to add to initialized command.</param>
 		/// <param name="withParameters">Flag to indicate that command has parameters. Used to configure parameters support when method called without parameters and parameters added later to command.</param>
-		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters);
+		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DataConnection dataConnection);
-		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
+		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
-		void               SetParameter          (DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value);
+		void               SetParameter          (DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
@@ -48,7 +47,7 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance used with scope.</param>
 		/// <returns>Returns disposable scope object. Cannot be null.</returns>
-		IDisposable ExecuteScope          (DataConnection dataConnection);
+		IDisposable?       ExecuteScope          (DataConnection dataConnection);
 
 		ISchemaProvider    GetSchemaProvider     ();
 

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -87,7 +86,7 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema       { get; }
 		public          SqlProviderFlags SqlProviderFlags    { get; }
 
-		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
+		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
 
 		public IDbConnection CreateConnection(string connectionString)
 		{
@@ -103,7 +102,7 @@ namespace LinqToDB.DataProvider
 		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			dataConnection.Command.CommandType = commandType;
 
@@ -118,7 +117,7 @@ namespace LinqToDB.DataProvider
 			dataConnection.Command.Dispose();
 		}
 
-		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
+		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
 		}
@@ -128,7 +127,7 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable ExecuteScope(DataConnection dataConnection)
+		public virtual IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
 			return null;
 		}
@@ -174,7 +173,7 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
-		protected virtual string NormalizeTypeName(string typeName)
+		protected virtual string? NormalizeTypeName(string? typeName)
 		{
 			return typeName;
 		}
@@ -187,7 +186,7 @@ namespace LinqToDB.DataProvider
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
+			string? typeName = ((DbDataReader)reader).GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
@@ -285,7 +284,7 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{

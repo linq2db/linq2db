@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -14,10 +13,10 @@ namespace LinqToDB.DataProvider
 		public static void ConvertStringToSql(
 			StringBuilder stringBuilder,
 			string plusOperator,
-			string startPrefix,
+			string? startPrefix,
 			Action<StringBuilder,int> appendConversion,
 			string value,
-			char[] extraEscapes)
+			char[]? extraEscapes)
 		{
 			if (value.Length > 0
 				&& (value.IndexOfAny(_escapes) >= 0 || (extraEscapes != null && value.IndexOfAny(extraEscapes) >= 0)))

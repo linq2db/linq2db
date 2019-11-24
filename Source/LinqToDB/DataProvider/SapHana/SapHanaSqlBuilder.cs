@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.SapHana
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -153,29 +153,15 @@ namespace LinqToDB.DataProvider.SapHana
 					return ":" + value;
 
 				case ConvertType.NameToCommandParameter:
-					return value;
-
 				case ConvertType.NameToSprocParameter:
-					{
-						var valueStr = value.ToString();
-
-						if(string.IsNullOrEmpty(valueStr))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
-
-						return valueStr;
-					}
-
 				case ConvertType.SprocParameterToName:
-					{
-						return value.ToString();
-					}
+					return value;
 
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '"')
+						if (value.Length > 0 && value[0] == '"')
 							return value;
 						return "\"" + value + "\"";
 					}
@@ -184,20 +170,13 @@ namespace LinqToDB.DataProvider.SapHana
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
-					if (value != null)
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '\"')
-							return value;
+					if (value.Length > 0 && value[0] == '\"')
+						return value;
 
-						return "\"" + value + "\"";
-					}
-
-					break;
+					return "\"" + value + "\"";
 			}
 
-			// TODO
-			return value!;
+			return value;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
@@ -213,7 +192,7 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 

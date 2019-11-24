@@ -4,7 +4,6 @@ using System.Data;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using System.Data.Common;
-	using System.Reflection;
 	using LinqToDB.Expressions;
 
 	internal static class SqlCeWrappers

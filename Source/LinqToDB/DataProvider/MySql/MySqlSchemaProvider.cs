@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -182,7 +181,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -272,7 +271,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 
@@ -328,7 +327,7 @@ SELECT
 			return "MySql.Data.Types";
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType.ToLower())
 			{
@@ -343,17 +342,17 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (columnType != null && columnType.Contains("unsigned"))
 			{
 				switch (dataType.ToLower())
 				{
-					case "smallint"   : return typeof(UInt16);
-					case "int"        : return typeof(UInt32);
-					case "mediumint"  : return typeof(UInt32);
-					case "bigint"     : return typeof(UInt64);
-					case "tiny int"   : return typeof(Byte);
+					case "smallint"   : return typeof(ushort);
+					case "int"        :
+					case "mediumint"  : return typeof(uint);
+					case "bigint"     : return typeof(ulong);
+					case "tiny int"   : return typeof(byte);
 				}
 			}
 
@@ -361,7 +360,7 @@ SELECT
 			{
 				case "tinyint"   :
 					if (columnType == "tinyint(1)")
-						return typeof(Boolean);
+						return typeof(bool);
 					break;
 				case "datetime2" : return typeof(DateTime);
 			}

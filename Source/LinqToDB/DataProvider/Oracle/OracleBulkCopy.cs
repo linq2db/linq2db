@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 	using SqlProvider;
-	using Extensions;
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
@@ -22,16 +20,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 		readonly Type               _connectionType;
 
-		Func<IDbConnection,int,IDisposable> _bulkCopyCreator;
-		Func<int,string,object>             _columnMappingCreator;
-		Action<object,Action<object>>       _bulkCopySubscriber;
+		Func<IDbConnection,int,IDisposable>? _bulkCopyCreator;
+		Func<int,string,object>?             _columnMappingCreator;
+		Action<object,Action<object>>?       _bulkCopySubscriber;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table,
+			ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			var dataConnection = table?.DataContext as DataConnection;
+			var dataConnection = table.DataContext as DataConnection;
 
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
@@ -95,7 +93,7 @@ namespace LinqToDB.DataProvider.Oracle
 						dbc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator!(i, columns[i].ColumnName));
 
 						TraceAction(
 							dataConnection,

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -9,11 +8,9 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Configuration;
 	using Common;
 	using Data;
 	using SchemaProvider;
-	//using System.Data.OleDb;
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
@@ -168,12 +165,12 @@ namespace LinqToDB.DataProvider.Access
 			return q.ToList();
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
+		protected override string? GetProviderSpecificTypeNamespace()
 		{
 			return null;
 		}
 
-		List<ProcedureInfo> _procedures;
+		List<ProcedureInfo>? _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
@@ -197,13 +194,13 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		static Regex _paramsExp;
+		static Regex? _paramsExp;
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
 			var list = new List<ProcedureParameterInfo>();
 
-			foreach (var procedure in _procedures)
+			foreach (var procedure in _procedures!)
 			{
 				if (_paramsExp == null)
 					_paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
@@ -252,7 +249,7 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (dataTypeInfo == null)
 			{
@@ -266,7 +263,7 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{

@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,7 +8,6 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;

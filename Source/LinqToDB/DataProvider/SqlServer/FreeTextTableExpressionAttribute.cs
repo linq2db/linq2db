@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -42,7 +41,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (fieldExpr.NodeType == ExpressionType.Constant)
 				field = ((ConstantExpression)fieldExpr).Value;
 
-			ISqlExpression fieldExpression = null;
+			ISqlExpression? fieldExpression = null;
 
 			if (field is LambdaExpression lambdaExpression)
 			{

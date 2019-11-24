@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -53,7 +52,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}
 
-		protected override string NormalizeTypeName(string typeName)
+		protected override string? NormalizeTypeName(string? typeName)
 		{
 			if (typeName == null)
 				return null;
@@ -66,25 +65,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public PostgreSQLVersion Version { get; private set; }
 
-		internal Type NpgsqlTimeSpanType;
-		internal Type NpgsqlInetType;
-		internal Type NpgsqlPointType;
-		internal Type NpgsqlLineType;
-		internal Type NpgsqlLSegType;
-		internal Type NpgsqlBoxType;
-		internal Type NpgsqlPathType;
-		internal Type NpgsqlPolygonType;
-		internal Type NpgsqlCircleType;
-		internal Type NpgsqlDateType;
-		internal Type NpgsqlDateTimeType;
-		internal Type NpgsqlRange;
+		internal Type? NpgsqlTimeSpanType;
+		internal Type? NpgsqlInetType;
+		internal Type? NpgsqlPointType;
+		internal Type? NpgsqlLineType;
+		internal Type? NpgsqlLSegType;
+		internal Type? NpgsqlBoxType;
+		internal Type? NpgsqlPathType;
+		internal Type? NpgsqlPolygonType;
+		internal Type? NpgsqlCircleType;
+		internal Type? NpgsqlDateType;
+		internal Type? NpgsqlDateTimeType;
+		internal Type? NpgsqlRange;
 
 		internal bool HasMacAddr8 { get; private set; }
 
 		/// <summary>
 		/// PostgreSQL parameter type enum type.
 		/// </summary>
-		internal Type NpgsqlDbType;
+		internal Type? NpgsqlDbType;
 
 		/// <summary>
 		/// Map of canonical PostgreSQL type name to NpgsqlDbType enumeration value.
@@ -255,10 +254,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			_setNativeParameterType = GetSetParameter<object>(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType);
 
-			AddUdtType(NpgsqlDateType);
-			AddUdtType(NpgsqlDateTimeType);
+			AddUdtType(NpgsqlDateType!);
+			AddUdtType(NpgsqlDateTimeType!);
 
-			AddUdtType(NpgsqlInetType);
+			AddUdtType(NpgsqlInetType!);
 			AddUdtType(typeof(IPAddress));
 			AddUdtType(typeof(PhysicalAddress));
 
@@ -292,9 +291,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			
 			if (NpgsqlRange != null)
 			{
-				void SetRangeConversion<T>(string fromDbType = null, DataType fromDataType = DataType.Undefined, string toDbType = null, DataType toDataType = DataType.Undefined)
+				void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
 				{
-					var rangeType  = NpgsqlRange.MakeGenericType(typeof(T));
+					var rangeType  = NpgsqlRange!.MakeGenericType(typeof(T));
 					var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
 					var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
 					var rangeParam = Expression.Parameter(rangeType, "p");
@@ -386,19 +385,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 #endif
 
-		Action<IDbDataParameter> _setMoney;
-		Action<IDbDataParameter> _setVarBinary;
-		Action<IDbDataParameter> _setBoolean;
-		Action<IDbDataParameter> _setXml;
-		Action<IDbDataParameter> _setText;
-		Action<IDbDataParameter> _setBit;
-		Action<IDbDataParameter> _setHstore;
-		Action<IDbDataParameter> _setJsonb;
-		Action<IDbDataParameter> _setJson;
+		Action<IDbDataParameter>? _setMoney;
+		Action<IDbDataParameter>? _setVarBinary;
+		Action<IDbDataParameter>? _setBoolean;
+		Action<IDbDataParameter>? _setXml;
+		Action<IDbDataParameter>? _setText;
+		Action<IDbDataParameter>? _setBit;
+		Action<IDbDataParameter>? _setHstore;
+		Action<IDbDataParameter>? _setJsonb;
+		Action<IDbDataParameter>? _setJson;
 
-		Action<IDbDataParameter, object> _setNativeParameterType;
+		Action<IDbDataParameter, object>? _setNativeParameterType;
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
@@ -474,12 +473,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// Custom types not supported. Also could fail on some types as PostgreSQL have a lot of ways to write same
 		/// type.
 		/// </summary>
-		internal object GetNativeType(string dbType)
+		internal object? GetNativeType(string? dbType)
 		{
 			if (string.IsNullOrWhiteSpace(dbType))
 				return null;
 
-			dbType = dbType.ToLower();
+			dbType = dbType!.ToLower();
 
 			// detect arrays
 			var isArray = false;

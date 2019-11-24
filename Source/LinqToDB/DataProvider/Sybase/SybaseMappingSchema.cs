@@ -3,8 +3,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;

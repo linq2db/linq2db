@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -36,7 +35,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected string CurrentSchema { get; private set; }
+		protected string? CurrentSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
@@ -83,7 +82,7 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						id   = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
 						name = rd.ToString(2),
-						cols = rd.ToString(3).Split('+').Skip(1).ToArray(),
+						cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
 					},@"
 SELECT
 	TABSCHEMA,
@@ -105,7 +104,7 @@ WHERE
 			).ToList();
 		}
 
-		List<ColumnInfo> _columns;
+		List<ColumnInfo>? _columns;
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -159,8 +158,8 @@ WHERE
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if ((size  ?? 0) > 0) ci.Precision = (int?)size.Value;
-					if ((scale ?? 0) > 0) ci.Scale     = scale;
+					if (size  > 0) ci.Precision = (int?)size;
+					if (scale > 0) ci.Scale     = scale;
 					break;
 
 				case "DBCLOB"                    :
@@ -190,9 +189,9 @@ WHERE
 				{
 					name         = rd.ToString(0),
 					thisTable    = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
-					thisColumns  = rd.ToString(3),
+					thisColumns  = rd.ToString(3)!,
 					otherTable   = dataConnection.Connection.Database + "." + rd.ToString(4)  + "." + rd.ToString(5),
-					otherColumns = rd.ToString(6),
+					otherColumns = rd.ToString(6)!,
 				},@"
 SELECT
 	CONSTNAME,
@@ -242,7 +241,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var type = GetDataType(columnType, options);
 
@@ -280,7 +279,7 @@ WHERE
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -322,7 +321,7 @@ WHERE
 			return "IBM.Data.DB2Types";
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
@@ -490,9 +489,9 @@ WHERE
 
 	static class DB2Extensions
 	{
-		public static string ToString(this IDataReader reader, int i)
+		public static string? ToString(this IDataReader reader, int i)
 		{
-			var value = Converter.ChangeTypeTo<string>(reader[i]);
+			var value = Converter.ChangeTypeTo<string?>(reader[i]);
 			return value?.TrimEnd();
 		}
 	}

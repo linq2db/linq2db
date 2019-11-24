@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -53,7 +52,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			//if (css.IsGlobal)
 			//	return null;
@@ -85,7 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return null;
 		}
 
-		static string _detectedProviderName;
+		static string? _detectedProviderName;
 
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
@@ -144,10 +143,10 @@ namespace LinqToDB.DataProvider.Oracle
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			this DataConnection        dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			this DataConnection          dataConnection,
+			IEnumerable<T>               source,
+			int                          maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
@@ -160,18 +159,19 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int?                       maxBatchSize       = null,
-			int?                       bulkCopyTimeout    = null,
-			int                        notifyAfter        = 0,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection               dataConnection,
+			IEnumerable<T>               source,
+			int?                         maxBatchSize       = null,
+			int?                         bulkCopyTimeout    = null,
+			int                          notifyAfter        = 0,
+			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
 					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					MaxBatchSize       = maxBatchSize,
 					BulkCopyTimeout    = bulkCopyTimeout,
 					NotifyAfter        = notifyAfter,
 					RowsCopiedCallback = rowsCopiedCallback,

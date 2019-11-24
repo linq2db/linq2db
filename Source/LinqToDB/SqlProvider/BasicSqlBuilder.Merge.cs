@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
@@ -29,13 +28,13 @@ namespace LinqToDB.SqlProvider
 		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property should contain name of table with single record.
 		/// </summary>
-		protected virtual string FakeTable => null;
+		protected virtual string? FakeTable => null;
 
 		/// <summary>
 		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
-		protected virtual string FakeTableSchema => null;
+		protected virtual string? FakeTableSchema => null;
 
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{

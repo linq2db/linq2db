@@ -93,12 +93,12 @@ namespace LinqToDB.DataProvider.Informix
 
 		public static void ResolveInformix(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(path, AssemblyName!);
 		}
 
 		public static void ResolveInformix(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, AssemblyName!);
 		}
 
 #region CreateDataConnection

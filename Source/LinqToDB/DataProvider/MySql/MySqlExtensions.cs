@@ -1,4 +1,3 @@
-#nullable disable
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using System;
@@ -11,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static class MySqlExtensions
 	{
-		public static IMySqlExtensions MySql(this Sql.ISqlExtension ext) => null;
+		public static IMySqlExtensions? MySql(this Sql.ISqlExtension ext) => null;
 
 		#region FTS
 		class ModifierBuilder : Sql.IExtensionCallBuilder

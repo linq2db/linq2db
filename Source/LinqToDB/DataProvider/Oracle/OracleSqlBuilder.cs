@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Linq;
 
@@ -43,7 +42,7 @@ namespace LinqToDB.DataProvider.Oracle
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table)
+		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
@@ -190,7 +189,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -232,7 +231,7 @@ namespace LinqToDB.DataProvider.Oracle
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -244,19 +243,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
+					if (!IsValidIdentifier(value))
 					{
-						var name = value.ToString();
-
-						if (!IsValidIdentifier(name))
-						{
-							return '"' + name + '"';
-						}
-
-						return name;
+						return '"' + value + '"';
 					}
 
-					break;
+					return value;
 			}
 
 			return value;
@@ -282,7 +274,7 @@ namespace LinqToDB.DataProvider.Oracle
 			StringBuilder.AppendLine();
 		}
 
-		SqlField _identityField;
+		SqlField? _identityField;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -464,7 +456,7 @@ END;",
 						StringBuilder
 							.AppendLine  (" FOR EACH ROW")
 							.AppendLine  ("BEGIN")
-							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
+							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField!.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
@@ -479,7 +471,7 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
@@ -495,7 +487,7 @@ END;",
 			return sb;
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.OracleDbType.ToString();

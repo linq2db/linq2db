@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -7,9 +6,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Data;
 	using Common;
-	using Extensions;
 	using Mapping;
-	using Reflection;
 	using SqlProvider;
 	using Tools;
 	using System.Linq.Expressions;
@@ -22,7 +19,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public MySqlDataProvider(string name)
-			: this(name, null)
+			: this(name, null!)
 		{
 		}
 
@@ -50,7 +47,7 @@ namespace LinqToDB.DataProvider.MySql
 				if (wrapper.GetMySqlDecimalMethodName != null)
 				{
 					// SetProviderField is not needed for this type
-					SetToTypeField  (wrapper.MySqlDecimalType, wrapper.GetMySqlDecimalMethodName, wrapper.DataReaderType);
+					SetToTypeField  (wrapper.MySqlDecimalType!, wrapper.GetMySqlDecimalMethodName, wrapper.DataReaderType);
 				}
 
 				SetProviderField(wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
@@ -110,7 +107,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 #endif
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			var wrapper = MySqlWrappers.Initialize(this);
 

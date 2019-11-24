@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -188,36 +188,27 @@ namespace LinqToDB.DataProvider.DB2
 					return ":" + value;
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == ':'? str.Substring(1): str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == ':'? value.Substring(1): value;
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
-					if (value != null && IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '"')
-							return name;
+						if (value.Length > 0 && value[0] == '"')
+							return value;
 
 						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-							name.StartsWith("_") ||
-							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-							return '"' + name + '"';
+							value.StartsWith("_") ||
+							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + value + '"';
 					}
 
 					break;
 			}
 
-			// TODO
-			return value!;
+			return value;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -252,7 +243,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.BuildTableName(sb, null, database, schema, table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
 			{

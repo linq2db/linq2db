@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -132,44 +132,28 @@ namespace LinqToDB.DataProvider.SqlCe
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-					break;
+					var str = value.ToString();
+					return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
 			}
 
-			// TODO: nullable types
-			return value!;
+			return value;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -177,12 +161,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
 			{

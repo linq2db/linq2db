@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -176,21 +175,17 @@ namespace LinqToDB.DataProvider.Informix
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
+					if (value.Length > 0 && !IsValidIdentifier(value))
 					{
-						var name = value.ToString();
-						if (name.Length > 0 && !IsValidIdentifier(name))
-						{
-							// I wonder what to do if identifier has " in name?
-							return '"' + name + '"';
-						}
+						// I wonder what to do if identifier has " in name?
+						return '"' + value + '"';
 					}
 
 					break;
@@ -198,13 +193,7 @@ namespace LinqToDB.DataProvider.Informix
 				case ConvertType.NameToCommandParameter :
 				case ConvertType.NameToSprocParameter   : return ":" + value;
 				case ConvertType.SprocParameterToName   :
-					if (value != null)
-					{
-						var str = value.ToString();
-						return (str.Length > 0 && str[0] == ':')? str.Substring(1): str;
-					}
-
-					break;
+					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
 			}
 
 			return value;
@@ -239,7 +228,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
@@ -263,7 +252,7 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 

@@ -1,5 +1,3 @@
-#nullable disable
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -46,7 +44,7 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
-		List<PrimaryKeyInfo> _primaryKeys;
+		List<PrimaryKeyInfo>? _primaryKeys;
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
@@ -121,8 +119,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if ((size  ?? 0) > 0) ci.Precision = (int?)size.Value;
-					if ((scale ?? 0) > 0) ci.Scale     = scale;
+					if (size  > 0) ci.Precision = (int)size;
+					if (scale > 0) ci.Scale     = scale;
 					break;
 
 				case "DBCLOB"                    :

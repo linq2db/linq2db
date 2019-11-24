@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data.SqlTypes;
 using System.IO;
 using System.Text;
@@ -81,7 +80,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
-			string startPrefix;
+			string? startPrefix;
 
 			switch (sqlDataType.DataType)
 			{

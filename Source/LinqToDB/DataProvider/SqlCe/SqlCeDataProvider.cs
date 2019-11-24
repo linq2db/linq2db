@@ -1,9 +1,7 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -74,7 +72,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{

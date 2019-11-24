@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -79,7 +78,7 @@ namespace LinqToDB.DataProvider.Firebird
 			BuildExpression(identityField, false, true);
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table)
+		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
@@ -128,50 +127,12 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-//		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
-//		{
-//			switch (type.DataType)
-//			{
-//				case DataType.DateTimeOffset :
-//				case DataType.DateTime2      :
-//				case DataType.Time           :
-//				case DataType.Date           : StringBuilder.Append("DateTime"); return;
-//				case DataType.Xml            : StringBuilder.Append("NText");    return;
-//				case DataType.NVarChar       :
-//
-//					if (type.Length == int.MaxValue || type.Length < 0)
-//					{
-//						StringBuilder
-//							.Append(type.DataType)
-//							.Append("(4000)");
-//						return;
-//					}
-//
-//					break;
-//
-//				case DataType.VarChar        :
-//				case DataType.VarBinary      :
-//
-//					if (type.Length == int.MaxValue || type.Length < 0)
-//					{
-//						StringBuilder
-//							.Append(type.DataType)
-//							.Append("(8000)");
-//						return;
-//					}
-//
-//					break;
-//			}
-//
-//			base.BuildDataType(type, createDbType);
-//		}
-
 		protected sealed override bool IsReserved(string word)
 		{
 			return ReservedWords.IsReserved(word, ProviderName.Firebird);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -216,22 +177,18 @@ namespace LinqToDB.DataProvider.Firebird
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
-					if (value != null)
+					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
-						var name = value.ToString();
-						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-						   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(name)))
-						{
-							// I wonder what to do if identifier has " in name?
-							return '"' + name + '"';
-						}
+						// I wonder what to do if identifier has " in name?
+						return '"' + value + '"';
 					}
 
 					break;
@@ -242,17 +199,10 @@ namespace LinqToDB.DataProvider.Firebird
 					return "@" + value;
 
 				case ConvertType.SprocParameterToName  :
-					if (value != null)
-					{
-						string str = value.ToString();
-						return str.Length > 0 && str[0] == '@' ? str.Substring(1) : str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 			}
 
-			// TODO: nullable annotations fix
-			return value!;
+			return value;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -399,12 +349,12 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
 			{

@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.Sybase
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -160,68 +160,48 @@ namespace LinqToDB.DataProvider.Sybase
 				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					{
-						var name = "@" + value;
+					value = "@" + value;
 
-						if (name.Length > 27)
-							name = name.Substring(0, 27);
+					if (value.Length > 27)
+						value = value.Substring(0, 27);
 
-						return name;
-					}
+					return value;
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
+					if (value.Length > 28 || value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 28 || name.Length > 0 && name[0] == '[')
-							return value;
-
-						// https://github.com/linq2db/linq2db/issues/1064
-						if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && name[0] == '#')
-							return value;
-					}
+					// https://github.com/linq2db/linq2db/issues/1064
+					if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && value[0] == '#')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
+						return value;
 
-						if (name.Length > 28 || name.Length > 0 && (name[0] == '[' || name[0] == '#'))
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
-			// TODO
-			return value!;
+			return value;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -247,7 +227,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(")");
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
 			{

@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
 	{
-		protected DynamicDataProviderBase(string name, MappingSchema? mappingSchema)
+		protected DynamicDataProviderBase(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 		}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -13,7 +12,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
 			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
 			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
@@ -149,7 +148,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return dbConnection.DataSource;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -203,12 +202,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
+		protected override string? GetProviderSpecificTypeNamespace()
 		{
 			return null;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -69,11 +68,11 @@ namespace LinqToDB.DataProvider.Informix
 				return dr.GetDecimal(idx);
 		}
 
-		Type _ifxBlob;
-		Type _ifxClob;
-		Type _ifxDecimal;
-		Type _ifxDateTime;
-		Type _ifxTimeSpan;
+		Type? _ifxBlob;
+		Type? _ifxClob;
+		Type? _ifxDecimal;
+		Type? _ifxDateTime;
+		Type? _ifxTimeSpan;
 
 		public override IDisposable ExecuteScope(DataConnection dataConnection)
 		{
@@ -125,7 +124,7 @@ namespace LinqToDB.DataProvider.Informix
 			//AddScalarType(typeof(IfxMonthSpan),   IfxMonthSpan.  Null, DataType.Time);
 		}
 
-		static object GetNullValue(Type type)
+		static object? GetNullValue(Type type)
 		{
 			try
 			{
@@ -163,9 +162,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSchemaProvider();
 		}
 
-		Func<TimeSpan,object> _newIfxTimeSpan;
+		Func<TimeSpan,object>? _newIfxTimeSpan;
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts && _newIfxTimeSpan != null)
 			{
@@ -186,7 +185,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter>? _setText;
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -197,8 +196,8 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.UInt64    : dataType = dataType.WithDataType(DataType.Decimal);  break;
 				case DataType.VarNumeric: dataType = dataType.WithDataType(DataType.Decimal);  break;
 				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
-				case DataType.Text      : _setText(parameter); return;
-				case DataType.NText     : _setText(parameter); return;
+				case DataType.Text      : _setText!(parameter); return;
+				case DataType.NText     : _setText!(parameter); return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

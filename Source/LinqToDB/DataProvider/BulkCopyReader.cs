@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -40,10 +39,10 @@ namespace LinqToDB.DataProvider
 			public DbType             DbType        { get; set; }
 			public ParameterDirection Direction     { get; set; }
 			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string             ParameterName { get; set; }
-			public string             SourceColumn  { get; set; }
+			public string?            ParameterName { get; set; }
+			public string?            SourceColumn  { get; set; }
 			public DataRowVersion     SourceVersion { get; set; }
-			public object             Value         { get; set; }
+			public object?            Value         { get; set; }
 			public byte               Precision     { get; set; }
 			public byte               Scale         { get; set; }
 			public int                Size          { get; set; }
@@ -61,7 +60,7 @@ namespace LinqToDB.DataProvider
 			return _dataConnection.DataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
 		}
 
-		public override object GetValue(int i)
+		public override object? GetValue(int i)
 		{
 			var value = _columns[i].GetValue(_dataConnection.MappingSchema, _enumerator.Current);
 
@@ -70,7 +69,7 @@ namespace LinqToDB.DataProvider
 			return _valueConverter.Value;
 		}
 
-		public override int GetValues(object[] values)
+		public override int GetValues(object?[] values)
 		{
 			var count = _columns.Count;
 			var obj   = _enumerator.Current;

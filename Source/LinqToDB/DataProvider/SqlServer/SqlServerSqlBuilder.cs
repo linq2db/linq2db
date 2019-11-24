@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			StringBuilder
 				.Append(" ")
-				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
+				.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}
 
@@ -147,10 +147,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);
 			else
-				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
+				StringBuilder.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias));
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -195,7 +195,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			string? server,
 			string? database,
 			string? schema,
-			[JetBrains.Annotations.NotNull] string table)
+			string table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return sb.Append(table);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -233,49 +233,32 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-
-						if (Provider != null)
-							return Provider.Wrapper.Value.QuoteIdentifier(name);
-						return SqlServerTools.BasicQuoteIdentifier(name);
-					}
+					if (Provider != null)
+						return Provider.Wrapper.Value.QuoteIdentifier(value);
+					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					//						if (value.IndexOf('.') > 0)
+					//							value = string.Join("].[", value.Split('.'));
 
-						//						if (name.IndexOf('.') > 0)
-						//							value = string.Join("].[", name.Split('.'));
-
-						if (Provider != null)
-							return Provider.Wrapper.Value.QuoteIdentifier(name);
-						return SqlServerTools.BasicQuoteIdentifier(name);
-					}
-
-					break;
+					if (Provider != null)
+						return Provider.Wrapper.Value.QuoteIdentifier(value);
+					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
-			// TODO
-			return value!;
+			return value;
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -397,7 +380,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetUdtTypeName(parameter);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (Provider != null)
 			{

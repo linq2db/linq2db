@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,12 +10,11 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Diagnostics;
 
 	public class DB2DataProvider : DynamicDataProviderBase
 	{
 		public DB2DataProvider(string name, DB2Version version)
-			: base(name, null)
+			: base(name, null!)
 		{
 			Version = version;
 
@@ -128,13 +126,13 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is sbyte sb)
 			{
@@ -226,7 +224,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region BulkCopy
 
-		DB2BulkCopy _bulkCopy;
+		DB2BulkCopy? _bulkCopy;
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{

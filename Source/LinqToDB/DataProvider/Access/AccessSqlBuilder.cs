@@ -358,7 +358,7 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -370,45 +370,29 @@ namespace LinqToDB.DataProvider.Access
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					var name = value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1) : value;
 			}
 
-			// TODO: review Convert nullability
-			return value!;
+			return value;
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

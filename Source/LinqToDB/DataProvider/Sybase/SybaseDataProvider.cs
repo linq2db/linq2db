@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		public SybaseDataProvider(string name)
-			: base(name, null)
+			: base(name, null!)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSchemaProvider(Name);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{

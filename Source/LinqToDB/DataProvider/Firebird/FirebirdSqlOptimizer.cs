@@ -1,5 +1,4 @@
-﻿#nullable disable
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using SqlProvider;
@@ -116,7 +115,7 @@ namespace LinqToDB.DataProvider.Firebird
 					case "Convert" :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							ISqlExpression ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}

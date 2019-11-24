@@ -1,13 +1,9 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -30,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public OracleDataProvider(string name)
-			: base(name, null)
+			: base(name, null!)
 		{
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
@@ -54,25 +50,25 @@ namespace LinqToDB.DataProvider.Oracle
 //			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
 		}
 
-		Type _oracleBFile;
-		Type _oracleBinary;
-		Type _oracleBlob;
-		Type _oracleClob;
-		Type _oracleDate;
-		Type _oracleDecimal;
-		Type _oracleIntervalDS;
-		Type _oracleIntervalYM;
-		Type _oracleRef;
-		Type _oracleRefCursor;
-		Type _oracleString;
-		Type _oracleTimeStamp;
-		Type _oracleTimeStampLTZ;
-		Type _oracleTimeStampTZ;
-		Type _oracleXmlType;
-		Type _oracleXmlStream;
+		Type? _oracleBFile;
+		Type? _oracleBinary;
+		Type? _oracleBlob;
+		Type? _oracleClob;
+		Type? _oracleDate;
+		Type? _oracleDecimal;
+		Type? _oracleIntervalDS;
+		Type? _oracleIntervalYM;
+		Type? _oracleRef;
+		Type? _oracleRefCursor;
+		Type? _oracleString;
+		Type? _oracleTimeStamp;
+		Type? _oracleTimeStampLTZ;
+		Type? _oracleTimeStampTZ;
+		Type? _oracleXmlType;
+		Type? _oracleXmlStream;
 
 #if !NETSTANDARD2_0 && !NETCOREAPP2_1
-		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
+		public override string? DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -149,7 +145,7 @@ namespace LinqToDB.DataProvider.Oracle
 							{
 								Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter)),
 								Expression.Call(
-									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null!)),
 									Expression.Convert(tstz, typeof(object))
 								)
 							}),
@@ -277,7 +273,7 @@ namespace LinqToDB.DataProvider.Oracle
 										null,
 										null)),
 								Expression.Call(
-									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null!)),
 									Expression.Convert(tstz, typeof(object))
 								)
 							}),
@@ -297,7 +293,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.Call(
-										MemberHelper.MethodOf(() => Proxy.GetUnderlyingObject((DbCommand)null)),
+										MemberHelper.MethodOf(() => Proxy.GetUnderlyingObject((DbCommand)null!)),
 										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
 									connectionType.Assembly.GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
@@ -442,9 +438,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSchemaProvider(Name);
 		}
 
-		Action<DataConnection, bool> _setBindByName;
+		Action<DataConnection, bool>? _setBindByName;
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
 
@@ -456,7 +452,7 @@ namespace LinqToDB.DataProvider.Oracle
 			// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 			// incorectly identified by native provider as parameter
 			var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
-			_setBindByName(dataConnection, bind);
+			_setBindByName!(dataConnection, bind);
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
@@ -497,9 +493,9 @@ namespace LinqToDB.DataProvider.Oracle
 			base.DisposeCommand(dataConnection);
 		}
 
-		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
+		Func<DateTimeOffset,string,object>? _createOracleTimeStampTZ;
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -508,7 +504,7 @@ namespace LinqToDB.DataProvider.Oracle
 					{
 						var dto  = (DateTimeOffset)value;
 						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
-						value = _createOracleTimeStampTZ(dto, zone);
+						value = _createOracleTimeStampTZ!(dto, zone);
 					}
 					break;
 				case DataType.Boolean:
@@ -543,32 +539,32 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
-				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
-				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);     break;
-				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);      break;
+				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ!; break;
+				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);        break;
+				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);      break;
+				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);       break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		Action<IDbDataParameter> _setSingle;
-		Action<IDbDataParameter> _setDouble;
-		Action<IDbDataParameter> _setText;
-		Action<IDbDataParameter> _setNText;
-		Action<IDbDataParameter> _setImage;
-		Action<IDbDataParameter> _setBinary;
-		Action<IDbDataParameter> _setVarBinary;
-		Action<IDbDataParameter> _setDate;
-		Action<IDbDataParameter> _setSmallDateTime;
-		Action<IDbDataParameter> _setDateTime2;
-		Action<IDbDataParameter> _setDateTimeOffset;
-		Action<IDbDataParameter> _setGuid;
-		Action<IDbDataParameter> _setCursor;
-		Action<IDbDataParameter> _setNVarchar2;
-		Action<IDbDataParameter> _setVarchar2;
-		Action<IDbDataParameter> _setLong;
-		Action<IDbDataParameter> _setLongRaw;
+		Action<IDbDataParameter>? _setSingle;
+		Action<IDbDataParameter>? _setDouble;
+		Action<IDbDataParameter>? _setText;
+		Action<IDbDataParameter>? _setNText;
+		Action<IDbDataParameter>? _setImage;
+		Action<IDbDataParameter>? _setBinary;
+		Action<IDbDataParameter>? _setVarBinary;
+		Action<IDbDataParameter>? _setDate;
+		Action<IDbDataParameter>? _setSmallDateTime;
+		Action<IDbDataParameter>? _setDateTime2;
+		Action<IDbDataParameter>? _setDateTimeOffset;
+		Action<IDbDataParameter>? _setGuid;
+		Action<IDbDataParameter>? _setCursor;
+		Action<IDbDataParameter>? _setNVarchar2;
+		Action<IDbDataParameter>? _setVarchar2;
+		Action<IDbDataParameter>? _setLong;
+		Action<IDbDataParameter>? _setLongRaw;
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -583,30 +579,30 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.UInt32         : parameter.DbType = DbType.Int64;            break;
 				case DataType.UInt64         : parameter.DbType = DbType.Decimal;          break;
 				case DataType.VarNumeric     : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Single         : _setSingle           (parameter);           break;
-				case DataType.Double         : _setDouble           (parameter);           break;
-				case DataType.Text           : _setText             (parameter);           break;
-				case DataType.NText          : _setNText            (parameter);           break;
-				case DataType.Image          : _setImage            (parameter);           break;
-				case DataType.Binary         : _setBinary           (parameter);           break;
-				case DataType.VarBinary      : _setVarBinary        (parameter);           break;
-				case DataType.Date           : _setDate             (parameter);           break;
-				case DataType.SmallDateTime  : _setSmallDateTime    (parameter);           break;
-				case DataType.DateTime2      : _setDateTime2        (parameter);           break;
-				case DataType.DateTimeOffset : _setDateTimeOffset   (parameter);           break;
-				case DataType.Guid           : _setGuid             (parameter);           break;
-				case DataType.Cursor         : _setCursor           (parameter);           break;
-				case DataType.NVarChar       : _setNVarchar2        (parameter);           break;
-				case DataType.VarChar        : _setVarchar2         (parameter);           break;
-				case DataType.Long           : _setLong             (parameter);           break;
-				case DataType.LongRaw        : _setLongRaw          (parameter);           break;
+				case DataType.Single         : _setSingle!          (parameter);           break;
+				case DataType.Double         : _setDouble!          (parameter);           break;
+				case DataType.Text           : _setText!            (parameter);           break;
+				case DataType.NText          : _setNText!           (parameter);           break;
+				case DataType.Image          : _setImage!           (parameter);           break;
+				case DataType.Binary         : _setBinary!          (parameter);           break;
+				case DataType.VarBinary      : _setVarBinary!       (parameter);           break;
+				case DataType.Date           : _setDate!            (parameter);           break;
+				case DataType.SmallDateTime  : _setSmallDateTime!   (parameter);           break;
+				case DataType.DateTime2      : _setDateTime2!       (parameter);           break;
+				case DataType.DateTimeOffset : _setDateTimeOffset!  (parameter);           break;
+				case DataType.Guid           : _setGuid!            (parameter);           break;
+				case DataType.Cursor         : _setCursor!          (parameter);           break;
+				case DataType.NVarChar       : _setNVarchar2!       (parameter);           break;
+				case DataType.VarChar        : _setVarchar2!        (parameter);           break;
+				case DataType.Long           : _setLong!            (parameter);           break;
+				case DataType.LongRaw        : _setLongRaw!         (parameter);           break;
 				default                      : base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 
 		#region BulkCopy
 
-		OracleBulkCopy _bulkCopy;
+		OracleBulkCopy? _bulkCopy;
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{

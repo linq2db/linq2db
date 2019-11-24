@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -72,10 +71,10 @@ namespace LinqToDB.DataProvider
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
-				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer).    ToString(),
-				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
-				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema).    ToString(),
-				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())
+				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer),
+				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase),
+				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema),
+											  sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable))
 			.ToString();
 		}
 
@@ -130,7 +129,7 @@ namespace LinqToDB.DataProvider
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
-			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object) null, "", false));
+			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object?)null, "", false));
 
 			var lambda = Expression.Lambda<Func<Action<object>,Delegate>>(
 				Expression.Call(

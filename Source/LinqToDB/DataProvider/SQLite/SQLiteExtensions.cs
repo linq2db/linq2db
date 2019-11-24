@@ -1,4 +1,3 @@
-#nullable disable
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
@@ -15,7 +14,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteExtensions
 	{
-		public static ISQLiteExtensions SQLite(this Sql.ISqlExtension ext) => null;
+		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension ext) => null;
 
 		#region FTS
 		/// <summary>
@@ -541,9 +540,9 @@ namespace LinqToDB.DataProvider.SQLite
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
-				columns[i] = (string)sqlBuilder.Convert(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
+				columns[i]         = sqlBuilder.Convert(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
 				parameterTokens[i] = $"@p{i}";
-				parameters[i] = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(dc.MappingSchema, record));
+				parameters[i]      = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(dc.MappingSchema, record));
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);

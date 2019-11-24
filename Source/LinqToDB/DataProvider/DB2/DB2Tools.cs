@@ -14,7 +14,6 @@ namespace LinqToDB.DataProvider.DB2
 	using Common;
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	[PublicAPI]
 	public static class DB2Tools
@@ -131,12 +130,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static void ResolveDB2(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(path, AssemblyName!);
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, AssemblyName!);
 		}
 
 		#region OnInitialized

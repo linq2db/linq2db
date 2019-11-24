@@ -1,9 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 
 // ReSharper disable InconsistentNaming
 
@@ -12,7 +9,6 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
-	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -518,7 +514,8 @@ namespace LinqToDB.SqlProvider
 					{
 						case "+":
 						{
-							if (be.Expr1 is SqlValue v1)
+							var v1 = be.Expr1 as SqlValue;
+							if (v1 != null)
 							{
 								switch (v1.Value)
 								{
@@ -529,9 +526,9 @@ namespace LinqToDB.SqlProvider
 									case string  s when s == "" : return be.Expr2;
 								}
 							}
-							else v1 = null;
 
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -590,7 +587,6 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v2 = null;
 
 							if (v1 != null && v2 != null)
 							{
@@ -633,7 +629,8 @@ namespace LinqToDB.SqlProvider
 
 						case "-":
 						{
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -678,7 +675,6 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v2 = null;
 
 							if (be.Expr1 is SqlValue v1 && v2 != null)
 							{
@@ -690,7 +686,8 @@ namespace LinqToDB.SqlProvider
 
 						case "*":
 						{
-							if (be.Expr1 is SqlValue v1)
+							var v1 = be.Expr1 as SqlValue;
+							if (v1 != null)
 							{
 								switch (v1.Value)
 								{
@@ -707,9 +704,9 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v1 = null;
 
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -717,7 +714,6 @@ namespace LinqToDB.SqlProvider
 									case int i when i == 1 : return be.Expr1;
 								}
 							}
-							else v2 = null;
 
 							if (v1 != null && v2 != null)
 							{
@@ -1209,7 +1205,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected ISqlExpression AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
+		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
 		{
 			var par = func.Parameters[paramNumber];
 
@@ -1305,7 +1301,7 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		SqlTableSource GetMainTableSource(SelectQuery selectQuery)
+		SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
 				return tableSource;
@@ -1327,8 +1323,8 @@ namespace LinqToDB.SqlProvider
 			if (statement.SelectQuery.Select.HasModifier)
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
 
-			SqlTable tableToUpdate  = statement.Update.Table;
-			SqlTable tableToCompare = null;
+			SqlTable? tableToUpdate  = statement.Update.Table;
+			SqlTable? tableToCompare = null;
 
 			switch (tableSource.Source)
 			{
@@ -1503,7 +1499,7 @@ namespace LinqToDB.SqlProvider
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 				updateStatement.SelectQuery.ParentSelect = sql;
 
-				var tableToUpdate = updateStatement.Update.Table;
+				SqlTable? tableToUpdate = updateStatement.Update.Table;
 				if (tableToUpdate == null)
 				{
 					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
@@ -1617,12 +1613,12 @@ namespace LinqToDB.SqlProvider
 				updateStatement = newUpdateStatement;
 
 				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
-				tableSource.Alias = "$F";
+				tableSource!.Alias = "$F";
 			}
 			else
 			{
 				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
-				if (tableSource.Source is SqlTable || updateStatement.Update.Table != null)
+				if (tableSource!.Source is SqlTable || updateStatement.Update.Table != null)
 				{
 					tableSource.Alias = "$F";
 				}
@@ -1692,7 +1688,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Helpers
 
-		static string SetAlias(string alias, int maxLen)
+		static string? SetAlias(string? alias, int maxLen)
 		{
 			if (alias == null)
 				return null;
@@ -1894,7 +1890,7 @@ namespace LinqToDB.SqlProvider
 					var query = queries[queries.Length - 1];
 					var processingQuery = queries[queries.Length - 2];
 
-					SqlOrderByItem[] orderByItems = null;
+					SqlOrderByItem[]? orderByItems = null;
 					if (!query.OrderBy.IsEmpty)
 						orderByItems = query.OrderBy.Items.ToArray();
 					//else if (query.Select.Columns.Count > 0)

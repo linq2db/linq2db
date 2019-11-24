@@ -137,16 +137,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			new AssemblyResolver(assembly, "Npgsql");
 		}
 
-		public static Type GetNpgsqlDateType      () { return _postgreSQLDataProvider92.NpgsqlDateType;       }
-		public static Type GetNpgsqlDateTimeType  () { return _postgreSQLDataProvider92.NpgsqlDateTimeType;   }
-		public static Type GetNpgsqlInetType      () { return _postgreSQLDataProvider92.NpgsqlInetType;       }
-		public static Type GetNpgsqlPointType     () { return _postgreSQLDataProvider92.NpgsqlPointType;      }
-		public static Type GetNpgsqlLineType      () { return _postgreSQLDataProvider92.NpgsqlLineType;       }
-		public static Type GetNpgsqlLSegType      () { return _postgreSQLDataProvider92.NpgsqlLSegType;       }
-		public static Type GetNpgsqlBoxType       () { return _postgreSQLDataProvider92.NpgsqlBoxType;        }
-		public static Type GetNpgsqlPathType      () { return _postgreSQLDataProvider92.NpgsqlPathType;       }
-		public static Type GetNpgsqlPolygonType   () { return _postgreSQLDataProvider92.NpgsqlPolygonType;    }
-		public static Type GetNpgsqlCircleType    () { return _postgreSQLDataProvider92.NpgsqlCircleType;     }
+		public static Type? GetNpgsqlDateType      () { return _postgreSQLDataProvider92.NpgsqlDateType;       }
+		public static Type? GetNpgsqlDateTimeType  () { return _postgreSQLDataProvider92.NpgsqlDateTimeType;   }
+		public static Type? GetNpgsqlInetType      () { return _postgreSQLDataProvider92.NpgsqlInetType;       }
+		public static Type? GetNpgsqlPointType     () { return _postgreSQLDataProvider92.NpgsqlPointType;      }
+		public static Type? GetNpgsqlLineType      () { return _postgreSQLDataProvider92.NpgsqlLineType;       }
+		public static Type? GetNpgsqlLSegType      () { return _postgreSQLDataProvider92.NpgsqlLSegType;       }
+		public static Type? GetNpgsqlBoxType       () { return _postgreSQLDataProvider92.NpgsqlBoxType;        }
+		public static Type? GetNpgsqlPathType      () { return _postgreSQLDataProvider92.NpgsqlPathType;       }
+		public static Type? GetNpgsqlPolygonType   () { return _postgreSQLDataProvider92.NpgsqlPolygonType;    }
+		public static Type? GetNpgsqlCircleType    () { return _postgreSQLDataProvider92.NpgsqlCircleType;     }
 
 		#region CreateDataConnection
 
