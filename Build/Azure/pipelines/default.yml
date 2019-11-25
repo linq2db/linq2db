@@ -279,14 +279,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'
 
 #############################################
 #  Tests: Windows (NETFX 4.6)               #
@@ -354,14 +348,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
