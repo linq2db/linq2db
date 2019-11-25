@@ -754,6 +754,17 @@ namespace LinqToDB.Linq.Builder
 								case ExpressionType.Parameter    :
 									{
 										var sequence  = GetSequence(expression, level);
+
+										if (sequence == null)
+										{
+											var buildInfo = new BuildInfo(Parent, expression, new SelectQuery());
+											if (!Builder.IsSequence(buildInfo))
+												break;
+
+											sequence = Builder.BuildSequence(buildInfo);
+											return sequence.IsExpression(levelExpression, level, requestFlag);
+										}
+
 										var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 
 										if (ReferenceEquals(levelExpression, expression))
