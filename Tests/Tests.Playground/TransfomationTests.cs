@@ -44,7 +44,8 @@ namespace Tests.Playground
 		{
 			var source = GenerateA();
 			var details = GenerateB();
-			var query = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a, B = b });
+			var query = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a, B = details });
+			var filtered = query.Where(q => q.B.Any(bb => bb.BValue == "BValue2"));
 
 			EagerLoadingProbes.RegisterTransformation(query.Expression);
 		}
