@@ -1178,7 +1178,7 @@ namespace Tests.Linq
 
 		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 
 		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1205,7 +1205,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1217,7 +1217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))

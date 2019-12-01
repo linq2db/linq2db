@@ -32,6 +32,7 @@ namespace Tests.xUpdate
 
 				// takes too long
 				case ProviderName.Informix     : batchSize = 500; break;
+				case ProviderName.InformixDB2  : batchSize = 500; break;
 
 				// big query makes Oracle to heavy eat memory
 				// this will affect other servers

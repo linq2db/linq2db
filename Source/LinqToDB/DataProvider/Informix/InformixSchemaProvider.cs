@@ -83,11 +83,13 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
+			// TODO: DB2 provider support
 			return "IBM.Data.Informix";
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
+			// TODO: DB2 provider support
 			switch (dataType)
 			{
 				case "DATETIME" : return "IfxDateTime";

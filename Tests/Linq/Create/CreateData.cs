@@ -264,6 +264,7 @@ namespace Tests._Create
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
+				case ProviderName.InformixDB2   : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action);    break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.SapHanaNative : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.SapHanaOdbc   : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
@@ -357,7 +358,7 @@ namespace Tests._Create
 
 		static void InformixAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.Informix))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes
@@ -367,9 +368,26 @@ namespace Tests._Create
 					WHERE ID = 2",
 					new
 					{
-						blob     = new byte[] { 1, 2 },
-						// no idea why it works with IBM.Data.Informix provider
-						textBlob ="BBBBB"
+						blob = new byte[] { 1, 2 },
+						text = "BBBBB"
+					});
+			}
+		}
+
+		static void InformixDB2Action(IDbConnection connection)
+		{
+			using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.InformixDB2))
+			{
+				conn.Execute(@"
+					UPDATE AllTypes
+					SET
+						byteDataType = ?,
+						textDataType = ?
+					WHERE ID = 2",
+					new
+					{
+						blob = new byte[] { 1, 2 },
+						text = "BBBBB"
 					});
 			}
 		}

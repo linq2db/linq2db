@@ -349,6 +349,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{
+			var isIDS = IsIDSProvider(context);
+
 			using (var db = GetDataContext(context))
 			{
 				PrepareTypesData(db);
@@ -362,17 +364,17 @@ namespace Tests.xUpdate
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], provider);
+					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
 				}
 
 				for (var i = 0; i < InitialTypes2Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], provider);
+					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 				}
 			}
 		}
 
-		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string provider)
+		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string provider, bool isIDS)
 		{
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
@@ -386,7 +388,7 @@ namespace Tests.xUpdate
 				else
 					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
 
-			AssertString(expected.FieldString, actual.FieldString, provider);
+			AssertString(expected.FieldString, actual.FieldString, provider, isIDS);
 			AssertNString(expected.FieldNString, actual.FieldNString, provider);
 
 			AssertChar(expected.FieldChar, actual.FieldChar, provider);
@@ -405,7 +407,7 @@ namespace Tests.xUpdate
 
 			AssertBinary(expected.FieldBinary, actual.FieldBinary, provider);
 
-			if (provider != ProviderName.Informix)
+			if (!provider.Contains(ProviderName.Informix))
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
 			if (provider != ProviderName.SQLiteClassic && provider != ProviderName.SQLiteMS)
@@ -441,13 +443,13 @@ namespace Tests.xUpdate
 					expected = expected.TrimEnd(' ');
 			}
 
-			if (provider != ProviderName.Informix)
+			if (!provider.Contains(ProviderName.Informix))
 				Assert.AreEqual(expected, actual);
 		}
 
 		private static void AssertBinary(byte[] expected, byte[] actual, string provider)
 		{
-			if (provider == ProviderName.Informix
+			if (provider.Contains(ProviderName.Informix)
 				|| provider == ProviderName.OracleManaged
 				|| provider == ProviderName.OracleNative
 				|| provider == ProviderName.Firebird
@@ -489,7 +491,7 @@ namespace Tests.xUpdate
 			if (   provider != ProviderName.SqlServer2000
 				&& provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
-				&& provider != ProviderName.Informix
+				&& !provider.Contains(ProviderName.Informix)
 				&& provider != ProviderName.Firebird
 				&& provider != TestProvName.Firebird3
 				&& provider != ProviderName.MySql
@@ -579,7 +581,7 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertString(string expected, string actual, string provider)
+		private static void AssertString(string expected, string actual, string provider, bool isIDS)
 		{
 			if (expected != null)
 			{
@@ -591,8 +593,7 @@ namespace Tests.xUpdate
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
-						if (!InformixTools.IsCore)
-							expected = expected.TrimEnd('\t', ' ');
+						expected = isIDS ? expected : expected.TrimEnd('\t', ' ');
 						break;
 				}
 			}
@@ -646,11 +647,9 @@ namespace Tests.xUpdate
 					case TestProvName.Firebird3:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
+					case ProviderName.InformixDB2:
 					case ProviderName.Informix:
-						if (InformixTools.IsCore)
-							expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
-						else
-							expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
 					case ProviderName.PostgreSQL:
 					case ProviderName.PostgreSQL92:
@@ -686,9 +685,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
+			var isIDS = IsIDSProvider(context);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new DisableLogging())
@@ -709,12 +710,12 @@ namespace Tests.xUpdate
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], provider);
+					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
 				}
 
 				for (var i = 0; i < InitialTypes2Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], provider);
+					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 				}
 			}
 		}

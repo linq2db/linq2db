@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -13,6 +12,14 @@ namespace LinqToDB.DataProvider.Informix
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
+		private readonly InformixDataProvider? _provider;
+
+		public InformixSqlBuilder(InformixDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public InformixSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
@@ -52,7 +59,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
@@ -63,11 +70,6 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NOT NULL", "1=0")
 				.Replace("NULL IS NULL",     "1=1");
 		}
-
-//		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
-//		{
-//			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
-//		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -183,13 +185,12 @@ namespace LinqToDB.DataProvider.Informix
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && !IsValidIdentifier(value))
-					{
 						// I wonder what to do if identifier has " in name?
 						return '"' + value + '"';
-					}
 
 					break;
-				case ConvertType.NameToQueryParameter   : return "?";
+				case ConvertType.NameToQueryParameter   :
+					return SqlProviderFlags.IsParameterOrderDependent ? "?" : "@" + value;
 				case ConvertType.NameToCommandParameter :
 				case ConvertType.NameToSprocParameter   : return ":" + value;
 				case ConvertType.SprocParameterToName   :
@@ -254,12 +255,17 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
+			if (_provider != null)
+			{
+				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					if (_provider.Name == ProviderName.Informix)
+						return _provider.Wrapper.Value.IfxTypeGetter!(param).ToString();
+					else
+						return _provider.Wrapper.Value.DB2TypeGetter!(param).ToString();
+			}
 
-			if (parameter.GetType().Name == "DB2Parameter")
-				return p.DB2Type.ToString();
-
-			return p.IfxType.ToString();
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)

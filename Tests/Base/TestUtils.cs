@@ -90,6 +90,7 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 				case ProviderName.Oracle:
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
@@ -167,6 +168,7 @@ namespace Tests
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 					return db.Select(() => ServerName());
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -238,6 +240,7 @@ namespace Tests
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First();
 			}
 

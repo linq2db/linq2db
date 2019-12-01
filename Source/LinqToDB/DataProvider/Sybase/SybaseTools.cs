@@ -15,7 +15,9 @@ namespace LinqToDB.DataProvider.Sybase
 		public static string AssemblyName;
 		public static string NativeAssemblyName = "Sybase.AdoNet45.AseClient.dll";
 
+#if NET45 || NET46
 		static readonly SybaseDataProvider _sybaseNativeDataProvider  = new SybaseDataProvider(ProviderName.Sybase);
+#endif
 		static readonly SybaseDataProvider _sybaseManagedDataProvider = new SybaseDataProvider(ProviderName.SybaseManaged);
 
 #pragma warning disable 3015, 219
@@ -24,7 +26,9 @@ namespace LinqToDB.DataProvider.Sybase
 			AssemblyName = DetectedProviderName == ProviderName.SybaseManaged ? "AdoNetCore.AseClient" : NativeAssemblyName;
 
 			DataConnection.AddDataProvider(ProviderName.Sybase, DetectedProvider);
+#if NET45 || NET46
 			DataConnection.AddDataProvider(_sybaseNativeDataProvider);
+#endif
 			DataConnection.AddDataProvider(_sybaseManagedDataProvider);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
@@ -43,7 +47,10 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 
 				case "Sybase.Native":
-				case "Sybase.Data.AseClient": return _sybaseNativeDataProvider;
+				case "Sybase.Data.AseClient":
+#if NET45 || NET46
+					return _sybaseNativeDataProvider;
+#endif
 				case "Sybase.Managed":
 				case "AdoNetCore.AseClient" : return _sybaseManagedDataProvider;
 				case "Sybase":
@@ -51,8 +58,10 @@ namespace LinqToDB.DataProvider.Sybase
 					if (css.Name.Contains("Managed"))
 						return _sybaseManagedDataProvider;
 
+#if NET45 || NET46
 					if (css.Name.Contains("Native"))
 						return _sybaseNativeDataProvider;
+#endif
 
 					return DetectedProvider;
 			}
@@ -65,7 +74,11 @@ namespace LinqToDB.DataProvider.Sybase
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
 		private static SybaseDataProvider DetectedProvider =>
-			DetectedProviderName == ProviderName.Sybase ? _sybaseNativeDataProvider : _sybaseManagedDataProvider;
+#if NET45 || NET46
+			DetectedProviderName == ProviderName.Sybase
+				? _sybaseNativeDataProvider :
+#endif
+				_sybaseManagedDataProvider;
 
 		private static string DetectProviderName()
 		{

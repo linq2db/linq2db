@@ -341,14 +341,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+      displayName: '$(title)'
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
@@ -395,14 +389,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+      displayName: '$(title)'
 
 #################################
 #  Tests: Linux (NETCOREAPP2_1) #

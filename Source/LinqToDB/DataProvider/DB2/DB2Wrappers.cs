@@ -14,39 +14,40 @@ namespace LinqToDB.DataProvider.DB2
 		private static readonly object _syncRoot = new object();
 		private static TypeMapper? _typeMapper;
 
-		internal static Type ConnectionType = null!;
-		internal static Type ParameterType  = null!;
-		internal static Type DataReaderType = null!;
+		internal static Type ConnectionType  = null!;
+		internal static Type ParameterType   = null!;
+		internal static Type DataReaderType  = null!;
+		internal static Type TransactionType = null!;
 
 		internal static Action<IDbDataParameter, DB2Type> TypeSetter = null!;
 		internal static Func<IDbDataParameter, DB2Type>   TypeGetter = null!;
-		
+
+		internal static IDB2BulkCopyWrapper BulkCopy = null!;
+
 		// TODO: use in Tools
 		//internal static Func<IDbConnection, DB2ServerTypes> ServerTypeGetter = null!;
 
 		// not sure if it is still actual, but let's leave it optional for compatibility
 		internal static Type? DB2DateTimeType;
-		internal static Type DB2BinaryType       = null!;
-		internal static Type DB2BlobType         = null!;
-		internal static Type DB2ClobType         = null!;
-		internal static Type DB2DateType         = null!;
-		internal static Type DB2DecimalType      = null!;
-		internal static Type DB2DecimalFloatType = null!;
-		internal static Type DB2DoubleType       = null!;
-		internal static Type DB2Int16Type        = null!;
-		internal static Type DB2Int32Type        = null!;
-		internal static Type DB2Int64Type        = null!;
-		internal static Type DB2RealType         = null!;
-		internal static Type DB2Real370Type      = null!;
-		internal static Type DB2RowIdType        = null!;
-		internal static Type DB2StringType       = null!;
-		internal static Type DB2TimeType         = null!;
-		internal static Type DB2TimeStampType    = null!;
-		internal static Type DB2XmlType          = null!;
-
-		// TODO: second parameter cast is a temporary hack
-		internal static DB2BulkCopy NewDB2BulkCopy(IDbConnection connection, DB2BulkCopyOptions options)     => _typeMapper!.CreateAndWrap(() => new DB2BulkCopy((DB2Connection)connection, (DB2BulkCopyOptions)options))!;
-		internal static DB2BulkCopyColumnMapping NewDB2BulkCopyColumnMapping(int source, string destination) => _typeMapper!.CreateAndWrap(() => new DB2BulkCopyColumnMapping(source, destination))!;
+		internal static Type  DB2BinaryType       = null!;
+		internal static Type  DB2BlobType         = null!;
+		internal static Type  DB2ClobType         = null!;
+		internal static Type  DB2DateType         = null!;
+		internal static Type  DB2DecimalType      = null!;
+		internal static Type  DB2DecimalFloatType = null!;
+		internal static Type  DB2DoubleType       = null!;
+		internal static Type  DB2Int16Type        = null!;
+		internal static Type  DB2Int32Type        = null!;
+		internal static Type  DB2Int64Type        = null!;
+		internal static Type  DB2RealType         = null!;
+		internal static Type  DB2Real370Type      = null!;
+		internal static Type  DB2RowIdType        = null!;
+		internal static Type  DB2StringType       = null!;
+		internal static Type  DB2TimeType         = null!;
+		internal static Type  DB2TimeStampType    = null!;
+		internal static Type  DB2XmlType          = null!;
+		// optional, because recent provider version contains it as obsolete stub
+		internal static Type? DB2TimeSpanType;
 
 		internal static void Initialize(MappingSchema mappingSchema)
 		{
@@ -63,11 +64,12 @@ namespace LinqToDB.DataProvider.DB2
 						const string assemblyName    = "IBM.Data.DB2.Core";
 						const string clientNamespace = "IBM.Data.DB2.Core";
 #endif
-						ConnectionType = Type.GetType($"{clientNamespace}.DB2Connection, {assemblyName}", true);
-						var assembly   = ConnectionType.Assembly;
-						ParameterType  = assembly.GetType($"{clientNamespace}.DB2Parameter", true);
-						DataReaderType = assembly.GetType($"{clientNamespace}.DB2DataReader", true);
-						var dbType     = assembly.GetType($"{clientNamespace}.DB2Type", true);
+						ConnectionType  = Type.GetType($"{clientNamespace}.DB2Connection, {assemblyName}", true);
+						var assembly    = ConnectionType.Assembly;
+						ParameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter", true);
+						DataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader", true);
+						TransactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true);
+						var dbType      = assembly.GetType($"{clientNamespace}.DB2Type", true);
 
 						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy", true);
 						var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.DB2BulkCopyOptions", true);
@@ -95,14 +97,17 @@ namespace LinqToDB.DataProvider.DB2
 						DB2TimeType         = loadType("DB2Time"        , DataType.Time     )!;
 						DB2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
 						DB2XmlType          = loadType("DB2Xml"         , DataType.Xml      )!;
+						// TODO: register only for Informix
+						DB2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 
-						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType,
+						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType, TransactionType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
 						//typeMapper.RegisterWrapper<DB2ServerTypes>();
 						typeMapper.RegisterWrapper<DB2Connection>();
 						typeMapper.RegisterWrapper<DB2Parameter>();
 						typeMapper.RegisterWrapper<DB2Type>();
+						typeMapper.RegisterWrapper<DB2Transaction>();
 
 						// bulk copy types
 						typeMapper.RegisterWrapper<DB2BulkCopy>();
@@ -121,6 +126,8 @@ namespace LinqToDB.DataProvider.DB2
 
 						_typeMapper = typeMapper;
 
+						BulkCopy = new DB2BulkCopyWrapper(typeMapper);
+
 						// moved from OnConnectionTypeCreated
 						if (DataConnection.TraceSwitch.TraceInfo)
 						{
@@ -137,15 +144,20 @@ namespace LinqToDB.DataProvider.DB2
 
 						DB2Tools.Initialized();
 
-						Type? loadType(string typeName, DataType dataType, bool optional = false)
+						Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 						{
 							var type = assembly.GetType($"IBM.Data.DB2Types.{typeName}", !optional);
 							if (type == null)
 								return null;
 
-							var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
+							if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+								return null;
 
-							mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
+							if (register)
+							{
+								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
+								mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
+							}
 
 							return type;
 						}
@@ -268,7 +280,34 @@ namespace LinqToDB.DataProvider.DB2
 			SQLUDTVar           = 1012,
 		}
 
+		[Wrapper]
+		internal class DB2Transaction
+		{
+		}
+
 		#region BulkCopy
+
+		internal interface IDB2BulkCopyWrapper
+		{
+			DB2BulkCopy CreateBulkCopy(IDbConnection connection, DB2BulkCopyOptions options);
+			DB2BulkCopyColumnMapping CreateBulkCopyColumnMapping(int source, string destination);
+		}
+
+		class DB2BulkCopyWrapper : IDB2BulkCopyWrapper
+		{
+			private readonly TypeMapper _typeMapper;
+
+			internal DB2BulkCopyWrapper(TypeMapper typeMapper)
+			{
+				_typeMapper = typeMapper;
+			}
+
+			DB2BulkCopy IDB2BulkCopyWrapper.CreateBulkCopy(IDbConnection connection, DB2BulkCopyOptions options)
+				=> _typeMapper!.CreateAndWrap(() => new DB2BulkCopy((DB2Connection)connection, (DB2BulkCopyOptions)options))!;
+			DB2BulkCopyColumnMapping IDB2BulkCopyWrapper.CreateBulkCopyColumnMapping(int source, string destination)
+				=> _typeMapper!.CreateAndWrap(() => new DB2BulkCopyColumnMapping(source, destination))!;
+		}
+
 		[Wrapper]
 		internal class DB2BulkCopy : TypeWrapper, IDisposable
 		{

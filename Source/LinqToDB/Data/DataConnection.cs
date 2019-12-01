@@ -568,6 +568,9 @@ namespace LinqToDB.Data
 		{
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
+			// TODO: remove, this code just triggers tools static constructors, so they
+			// register corresponding providers
+			// intstead we should register provider factory to lazy-initialize providers
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
@@ -578,7 +581,7 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.Oracle.    OracleTools.    GetDataProvider();
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
 			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
-			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
+			var _ = LinqToDB.DataProvider.Informix.InformixTools.DefaultBulkCopyType;
 			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider();
 
 			var section = DefaultSettings;

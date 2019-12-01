@@ -24,7 +24,8 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle 
-			//ProviderName.Informix,
+			// TODO: v14
+			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 

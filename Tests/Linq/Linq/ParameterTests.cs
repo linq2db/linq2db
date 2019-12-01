@@ -58,7 +58,7 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
@@ -78,7 +78,7 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
@@ -97,7 +97,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
 				TestProvName.AllSapHana)]
@@ -128,7 +128,7 @@ namespace Tests.Linq
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2)]
 			string context)
 		{
@@ -152,7 +152,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

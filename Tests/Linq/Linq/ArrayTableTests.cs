@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
@@ -63,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray2([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray2([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray3([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray3([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 
@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray4([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray4([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			var arr = new[] {"Janet", "Doe", "John", doe};
@@ -144,7 +144,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray5([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray5([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 
@@ -216,7 +216,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Details = "It is more complicated and needs analysis")]
 		[Test]
-		public void InnerJoinClassArray([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinClassArray([DataSources(ProviderName.Access, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

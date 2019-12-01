@@ -22,80 +22,77 @@ namespace LinqToDB.DataProvider.Sybase
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (_provider.Wrapper.Value.BulkCopy == null)
-				return MultipleRowsCopy(table, options, source);
-
-			if (!(table?.DataContext is DataConnection dataConnection))
-				throw new ArgumentNullException(nameof(dataConnection));
-
-			var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
-
-			// for run in transaction see
-			// https://stackoverflow.com/questions/57675379
-			// provider will call sp_oledb_columns which creates temp table
-			var transaction = dataConnection.Transaction;
-			if (connection != null && transaction != null)
-				transaction = _provider.TryConvertTransaction(_provider.Wrapper.Value.TransactionType, transaction, dataConnection.MappingSchema);
-
-			if (connection != null && (dataConnection.Transaction == null || transaction != null))
+			if (table.DataContext is DataConnection dataConnection && _provider.Wrapper.Value.BulkCopy != null)
 			{
-				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-				var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var rd      = new BulkCopyReader(dataConnection, columns, source);
-				var sqlopt  = SybaseWrappers.AseBulkCopyOptions.Default;
-				var rc      = new BulkCopyRowsCopied();
+				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
 
-				if (options.CheckConstraints       == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.CheckConstraints;
-				if (options.KeepIdentity           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepIdentity;
-				if (options.TableLock              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.TableLock;
-				if (options.KeepNulls              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepNulls;
-				if (options.FireTriggers           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.FireTriggers;
-				if (options.UseInternalTransaction == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.UseInternalTransaction;
+				// for run in transaction see
+				// https://stackoverflow.com/questions/57675379
+				// provider will call sp_oledb_columns which creates temp table
+				var transaction = dataConnection.Transaction;
+				if (connection != null && transaction != null)
+					transaction = _provider.TryConvertTransaction(_provider.Wrapper.Value.TransactionType, transaction, dataConnection.MappingSchema);
 
-				using (var bc = _provider.Wrapper.Value.BulkCopy.CreateBulkCopy(connection, sqlopt, transaction))
+				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-					{
-						bc.NotifyAfter = options.NotifyAfter;
+					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+					var rd      = new BulkCopyReader(dataConnection, columns, source);
+					var sqlopt  = SybaseWrappers.AseBulkCopyOptions.Default;
+					var rc      = new BulkCopyRowsCopied();
 
-						bc.AseRowsCopied += (sender, args) =>
+					if (options.CheckConstraints       == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.CheckConstraints;
+					if (options.KeepIdentity           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepIdentity;
+					if (options.TableLock              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.TableLock;
+					if (options.KeepNulls              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepNulls;
+					if (options.FireTriggers           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.FireTriggers;
+					if (options.UseInternalTransaction == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.UseInternalTransaction;
+
+					using (var bc = _provider.Wrapper.Value.BulkCopy.CreateBulkCopy(connection, sqlopt, transaction))
+					{
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
-							rc.RowsCopied = args.RowCopied;
-							options.RowsCopiedCallback(rc);
-							if (rc.Abort)
-								args.Abort = true;
-						};
+							bc.NotifyAfter = options.NotifyAfter;
+
+							bc.AseRowsCopied += (sender, args) =>
+							{
+								rc.RowsCopied = args.RowCopied;
+								options.RowsCopiedCallback(rc);
+								if (rc.Abort)
+									args.Abort = true;
+							};
+						}
+
+						if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
+						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+
+						var tableName = GetTableName(sb, options, table);
+
+						// do not convert table and column names to valid sql name, as sybase bulk copy implementation
+						// doesn't understand escaped names (facepalm)
+						// which means it will probably fail when escaping required anyways...
+						bc.DestinationTableName = GetDestinationTableName(sb, options, table);
+
+						for (var i = 0; i < columns.Count; i++)
+							bc.ColumnMappings.Add(_provider.Wrapper.Value.BulkCopy.CreateBulkCopyColumnMapping(columns[i].ColumnName, columns[i].ColumnName));
+
+						TraceAction(
+							dataConnection,
+							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+							() => { bc.WriteToServer(rd); return rd.Count; });
 					}
 
-					if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
-					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+					if (rc.RowsCopied != rd.Count)
+					{
+						rc.RowsCopied = rd.Count;
 
-					var tableName = GetTableName(sb, options, table);
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+							options.RowsCopiedCallback(rc);
+					}
 
-					// do not convert table and column names to valid sql name, as sybase bulk copy implementation
-					// doesn't understand escaped names (facepalm)
-					// which means it will probably fail when escaping required anyways...
-					bc.DestinationTableName = GetDestinationTableName(sb, options, table);
-
-					for (var i = 0; i < columns.Count; i++)
-						bc.ColumnMappings.Add(_provider.Wrapper.Value.BulkCopy.CreateBulkCopyColumnMapping(columns[i].ColumnName, columns[i].ColumnName));
-
-					TraceAction(
-						dataConnection,
-						() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
-						() => { bc.WriteToServer(rd); return rd.Count; });
+					return rc;
 				}
-
-				if (rc.RowsCopied != rd.Count)
-				{
-					rc.RowsCopied = rd.Count;
-
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						options.RowsCopiedCallback(rc);
-				}
-
-				return rc;
 			}
 
 			return MultipleRowsCopy(table, options, source);

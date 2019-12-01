@@ -42,7 +42,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
-		public void TruncateIdentityTest([DataSources(ProviderName.Informix, TestProvName.AllSapHana)]
+		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

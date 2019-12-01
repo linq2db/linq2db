@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using System.Globalization;
 	using Mapping;
 	using SqlQuery;
 
@@ -22,9 +23,25 @@ namespace LinqToDB.DataProvider.Informix
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v)   => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v)   => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)   => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+		}
+
+		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+		{
+			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
+			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
+			var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
+			sb.AppendFormat(
+				CultureInfo.InvariantCulture,
+				"INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)",
+				interval.Days,
+				absoluteTs.Hours,
+				absoluteTs.Minutes,
+				absoluteTs.Seconds,
+				(absoluteTs.Ticks / 100) % 100000);
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -75,5 +92,22 @@ namespace LinqToDB.DataProvider.Informix
 			stringBuilder.AppendFormat(format, value);
 		}
 
+		internal static readonly InformixMappingSchema Instance = new InformixMappingSchema();
+
+		public class IDSMappingSchema : MappingSchema
+		{
+			public IDSMappingSchema()
+				: base(ProviderName.Informix, Instance)
+			{
+			}
+		}
+
+		public class DB2MappingSchema : MappingSchema
+		{
+			public DB2MappingSchema()
+				: base(ProviderName.InformixDB2, Instance)
+			{
+			}
+		}
 	}
 }

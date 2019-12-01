@@ -81,7 +81,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar1([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -92,7 +92,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllInformix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -148,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, TestProvName.AllSapHana)]
+		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -158,7 +158,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault4([DataSources(ProviderName.Informix, TestProvName.AllPostgreSQLLess10)] string context)
+		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQLLess10)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

@@ -7,6 +7,8 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlProviderFlags
 	{
+		public bool        IsSybaseBuggyGroupBy           { get; set; }
+
 		public bool        IsParameterOrderDependent      { get; set; }
 		public bool        AcceptsTakeAsParameter         { get; set; }
 		public bool        AcceptsTakeAsParameterIfSkip   { get; set; }
@@ -24,7 +26,6 @@ namespace LinqToDB.SqlProvider
 		public bool        IsGroupByExpressionSupported   { get; set; }
 		public int         MaxInListValuesCount           { get; set; }
 		public bool        IsUpdateSetTableAliasSupported { get; set; }
-		public bool        IsSybaseBuggyGroupBy           { get; set; }
 		//public IsTakeHints GetIsTakeHintsSupported        { get; set; }
 		public TakeHints?  TakeHintsSupported             { get; set; }
 

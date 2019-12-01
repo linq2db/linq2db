@@ -1480,7 +1480,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase,
 			TestProvName.AllPostgreSQL,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			ProviderName.Access,
 			ProviderName.Firebird)] string context)
@@ -1538,7 +1538,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1591,7 +1591,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,

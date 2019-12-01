@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 		public void TestParameters1([MergeDataContextSource(
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -78,7 +78,7 @@ namespace Tests.xUpdate
 		public void TestParameters3([MergeDataContextSource(
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -216,7 +216,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("IFX: Parameters disabled", Configuration = ProviderName.Informix)]
+		[ActiveIssue("IFX: Parameters disabled", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void TestParametersInMatchCondition([MergeDataContextSource(false)] string context)
 		{
@@ -247,6 +247,7 @@ namespace Tests.xUpdate
 			{
 				case ProviderName.SapHanaOdbc:
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 					return '?';
 				case ProviderName.SapHanaNative:
 				case ProviderName.OracleManaged:
@@ -260,7 +261,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInUpdateCondition([MergeDataContextSource(
 			false,
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -287,7 +288,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInInsertCondition([MergeDataContextSource(
 			false,
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -315,7 +316,7 @@ namespace Tests.xUpdate
 		public void TestParametersInDeleteCondition([MergeDataContextSource(
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -397,7 +398,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Informix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -438,7 +439,7 @@ namespace Tests.xUpdate
 			false,
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Informix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -514,7 +515,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInSourceFilter([MergeDataContextSource(
 			false,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+			ProviderName.Firebird, TestProvName.Firebird3, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -542,7 +543,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInSourceSelect([MergeDataContextSource(
 			false,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
+			ProviderName.Firebird, TestProvName.Firebird3, TestProvName.AllInformix,
 			ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
 		{

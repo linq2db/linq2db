@@ -65,7 +65,7 @@ namespace Tests.UserTests
 					throws = true;
 				}
 
-				if (withDatabase && !withSchema && context.Contains("DB2"))
+				if (withDatabase && !withSchema && context.Contains("DB2") && !context.Contains("Informix"))
 				{
 					throws = true;
 				}

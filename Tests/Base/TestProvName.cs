@@ -50,5 +50,6 @@
 		public const string AllSqlServer2017Plus  = "SqlServer.2017";
 		public const string AllSQLiteNorthwind    = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana            = "SapHana.Native,SapHana.Odbc";
+		public const string AllInformix           = "Informix,Informix.DB2";
 	}
 }

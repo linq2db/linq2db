@@ -195,7 +195,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInDeletePredicate([MergeDataContextSource(
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -228,7 +228,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -278,7 +278,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, TestProvName.AllSapHana)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -323,7 +323,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -370,7 +370,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInMatch([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -416,7 +416,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -542,7 +542,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -618,7 +618,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
 			false,
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -651,7 +651,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -703,7 +703,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, TestProvName.AllSapHana)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -748,7 +748,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -797,7 +797,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInMatch([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -843,7 +843,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInUpdate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -971,7 +971,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{

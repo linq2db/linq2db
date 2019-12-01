@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
-	using System.Collections.Concurrent;
 	using System.ComponentModel;
 	using System.Diagnostics.CodeAnalysis;
 	using Common;
@@ -19,7 +17,7 @@ namespace LinqToDB.Expressions
 
 		readonly Dictionary<Type, Type?>                        _typeMappingCache        = new Dictionary<Type, Type?>();
 		readonly Dictionary<Type, Type>                         _typeMappingReverseCache = new Dictionary<Type, Type>();
-		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache = new Dictionary<LambdaExpression, LambdaExpression>();
+		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache      = new Dictionary<LambdaExpression, LambdaExpression>();
 
 		public TypeMapper([NotNull] params Type[] types)
 		{

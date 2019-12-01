@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Sybase
 			Action<IDbDataParameter, AseDbType> ISybaseWrapper.TypeSetter => _typeSetter;
 			Func<IDbDataParameter, AseDbType> ISybaseWrapper.TypeGetter   => _typeGetter;
 
-			internal static ISybaseWrapper Initialize(MappingSchema mappingSchema, bool native)
+			internal static ISybaseWrapper Initialize(bool native)
 			{
 				var clientNamespace = native ? "Sybase.Data.AseClient" : "AdoNetCore.AseClient";
 
@@ -175,7 +175,7 @@ namespace LinqToDB.DataProvider.Sybase
 					{
 						if (_nativeWrapper == null)
 						{
-							_nativeWrapper = SybaseWrapper.Initialize(provider.MappingSchema, true);
+							_nativeWrapper = SybaseWrapper.Initialize(true);
 						}
 					}
 				}
@@ -190,7 +190,7 @@ namespace LinqToDB.DataProvider.Sybase
 					{
 						if (_managedWrapper == null)
 						{
-							_managedWrapper = SybaseWrapper.Initialize(provider.MappingSchema, false);
+							_managedWrapper = SybaseWrapper.Initialize(false);
 						}
 					}
 				}

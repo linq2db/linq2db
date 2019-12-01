@@ -223,7 +223,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
 					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);

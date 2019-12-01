@@ -34,6 +34,10 @@ using Tests.DataProvider;
 using System.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.DataProvider.Informix;
+#if NET46
+using IBM.Data.Informix;
+#endif
 
 namespace Tests.Data
 {
@@ -934,6 +938,163 @@ namespace Tests.Data
 					Assert.True(trace.Contains("DECLARE @p Unitext("));
 
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				}
+			}
+		}
+
+#if NET46
+		[Test]
+		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				var provider = new InformixDataProvider(ProviderName.Informix);
+				using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					// IfxType type name test
+					try
+					{
+						// ifx parameters not suported for select list, so we will just check generated trace
+						db.Execute<string>("SELECT FIRST 1 ? FROM SYSTABLES", new DataParameter("p", "qqq", DataType.NText));
+					}
+					catch
+					{
+					}
+					Assert.True(trace.Contains("DECLARE @p Clob("));
+
+					// provider-specific type classes
+					if (!provider.Wrapper.Value.IsIDSProvider)
+					{
+						var ifxTSVal = db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType IS NOT NULL");
+						Assert.AreEqual(ifxTSVal, db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time)));
+						var rawValue = db.Execute<object>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time));
+						Assert.True(rawValue is TimeSpan);
+						Assert.AreEqual((TimeSpan)ifxTSVal, rawValue);
+					}
+					else
+					{
+						var dateTimeValue = db.Execute<IfxDateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE ID = 2");
+						Assert.AreEqual(dateTimeValue, db.Execute<IfxDateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)));
+						var rawValue = db.Execute<object>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime));
+						Assert.True(rawValue is DateTime);
+						Assert.AreEqual((DateTime)dateTimeValue, rawValue);
+					}
+
+					// bulk copy (transaction not supported)
+					if (provider.Wrapper.Value.IsIDSProvider)
+						TestBulkCopy();
+
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied,
+								KeepIdentity       = !unmapped
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new InformixTests.AllType() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<InformixTests.AllType>().Delete(p => p.ID >= 2000);
+						}
+					}
+				}
+			}
+		}
+#endif
+
+		[Test]
+		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				var provider =new InformixDataProvider(ProviderName.InformixDB2);
+#if NET46
+				using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+#else
+				using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+#endif
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					// DB2Type type name test
+					try
+					{
+						// ifx parameters not suported for select list, so we will just check generated trace
+						db.Execute<string>("SELECT FIRST 1 @p FROM SYSTABLES", new DataParameter("@p", "qqq", DataType.NText));
+					}
+					catch
+					{
+					}
+					Assert.True(trace.Contains("DECLARE @p Clob("));
+
+					// provider-specific type classes
+					var dateTimeValue = db.Execute<DB2DateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE ID = 2");
+					Assert.AreEqual(dateTimeValue, db.Execute<DB2DateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)));
+					var rawValue = db.Execute<object>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime));
+					Assert.True(rawValue is DateTime);
+					Assert.AreEqual((DateTime)dateTimeValue, rawValue);
+
+					// bulk copy (transaction not supported)
+					if (provider.Wrapper.Value.DB2BulkCopy != null)
+						TestBulkCopy();
+
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied,
+								KeepIdentity       = !unmapped
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new InformixTests.AllType() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<InformixTests.AllType>().Delete(p => p.ID >= 2000);
+						}
+					}
 				}
 			}
 		}

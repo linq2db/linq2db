@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
 		// }
-		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true)
+		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter = Expression.Parameter(typeof(int), "i");
@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider
 				call = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
 			}
 
-			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] =
+			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					call,
 					dataReaderParameter,

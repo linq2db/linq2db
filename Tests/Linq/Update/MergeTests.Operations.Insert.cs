@@ -725,7 +725,7 @@ namespace Tests.xUpdate
 		#region Insert<TEntity>(predicate)
 		[Test]
 		public void SameSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -929,7 +929,7 @@ namespace Tests.xUpdate
 		#region Insert<TEntity>(predicate, create)
 		[Test]
 		public void SameSourceInsertWithPredicateAndCreate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -980,7 +980,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1032,7 +1032,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1299,7 +1299,7 @@ namespace Tests.xUpdate
 		#region Insert<TTarget, TSource>(predicate, create)
 		[Test]
 		public void OtherSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1341,7 +1341,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1391,7 +1391,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1442,7 +1442,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertReservedAndCaseNames([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1492,7 +1492,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertReservedAndCaseNamesFromList([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

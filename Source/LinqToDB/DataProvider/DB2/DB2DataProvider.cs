@@ -239,5 +239,6 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 #endregion
+
 	}
 }

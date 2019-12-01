@@ -10,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.DataProvider.Informix;
 	using Model;
 
 	[TestFixture]
@@ -53,20 +54,23 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
+			List<TestTable1> list = null;
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			//using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
 				try
 				{
+					list = db.GetTable<TestTable1>().ToList();
 					var options = new BulkCopyOptions()
 					{
 						KeepIdentity = keepIdentity,
 						BulkCopyType = copyType
 					};
 
-					if (!Execute(context, perform, keepIdentity, copyType))
+					if (!Execute(db, context, perform, keepIdentity, copyType))
 						return;
 
 					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
@@ -106,6 +110,9 @@ namespace Tests.xUpdate
 				{
 					// cleanup
 					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
+					if (list != null)
+						foreach (var item in list)
+							db.Insert(item);
 				}
 			}
 		}
@@ -136,7 +143,7 @@ namespace Tests.xUpdate
 						BulkCopyType = copyType
 					};
 
-					if (!Execute(context, perform, keepIdentity, copyType))
+					if (!Execute(db, context, perform, keepIdentity, copyType))
 						return;
 
 					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
@@ -183,7 +190,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		private bool Execute(string context, Action perform, bool? keepIdentity, BulkCopyType copyType)
+		private bool Execute(DataConnection db, string context, Action perform, bool? keepIdentity, BulkCopyType copyType)
 		{
 			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
 				&& keepIdentity == true
@@ -197,10 +204,17 @@ namespace Tests.xUpdate
 				return false;
 			}
 
+			bool notSupported = false;
+			if (context.Contains(ProviderName.Informix))
+			{
+				notSupported = !((InformixDataProvider)db.DataProvider).Wrapper.Value.IsIDSProvider
+					|| copyType == BulkCopyType.MultipleRows;
+			}
+
 			// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
 			if ((copyType       == BulkCopyType.RowByRow
 					|| context  == ProviderName.Access
-					|| context  == ProviderName.Informix
+					|| notSupported
 					|| (context.StartsWith(ProviderName.SapHana)
 						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))
 					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))

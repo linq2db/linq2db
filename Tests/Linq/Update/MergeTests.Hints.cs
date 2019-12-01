@@ -171,7 +171,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, ProviderName.Informix)]
+		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

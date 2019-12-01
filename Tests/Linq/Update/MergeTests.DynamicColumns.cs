@@ -74,7 +74,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DynamicColumns_UpdateWithConditionDelete([MergeDataContextSource(
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -107,7 +107,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DynamicColumns_DeleteWithConditionUpdate([MergeDataContextSource(
 			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -169,7 +169,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DynamicColumns_InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
 			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -235,7 +235,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_SameSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
