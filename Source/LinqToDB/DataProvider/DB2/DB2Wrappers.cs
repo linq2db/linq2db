@@ -77,7 +77,6 @@ namespace LinqToDB.DataProvider.DB2
 						var rowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventHandler", true);
 						var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs", true);
 						var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true);
-						
 
 						DB2BinaryType       = loadType("DB2Binary"      , DataType.VarBinary)!;
 						DB2BlobType         = loadType("DB2Blob"        , DataType.Blob     )!;

@@ -358,9 +358,9 @@ WHERE
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override string GetDataSourceName(DbConnection dbConnection)
+		protected override string GetDataSourceName(DataConnection connection)
 		{
-			var str = dbConnection.ConnectionString;
+			var str = ((DbConnection)connection.Connection).ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -375,7 +375,7 @@ WHERE
 			if (host != null)
 				return host;
 
-			return base.GetDataSourceName(dbConnection);
+			return base.GetDataSourceName(connection);
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)

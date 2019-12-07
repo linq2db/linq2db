@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -12,6 +11,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 	partial class OracleSqlBuilder : BasicSqlBuilder
 	{
+		private readonly OracleDataProvider? _provider;
+
+		public OracleSqlBuilder(OracleDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
 		public OracleSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
@@ -93,7 +100,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new OracleSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -244,9 +251,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
 					if (!IsValidIdentifier(value))
-					{
 						return '"' + value + '"';
-					}
 
 					return value;
 			}
@@ -489,8 +494,14 @@ END;",
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.OracleDbType.ToString();
+			if (_provider != null)
+			{
+				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				if (param != null)
+					return _provider.Wrapper.Value.TypeGetter(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 	}
 }

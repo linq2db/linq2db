@@ -7,27 +7,34 @@ using System.Data;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Configuration;
 	using Data;
 	using SchemaProvider;
 
 	class OracleSchemaProvider : SchemaProviderBase
 	{
-		public OracleSchemaProvider(string providerName)
+		private readonly OracleDataProvider _provider;
+
+		public OracleSchemaProvider(OracleDataProvider provider)
 		{
-			_providerName = providerName;
+			_provider = provider;
 		}
 
-		readonly string _providerName;
-
-		protected override string GetDataSourceName(DbConnection dbConnection)
+		protected override string GetDataSourceName(DataConnection dataConnection)
 		{
-			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).HostName;
+			var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			if (connection == null)
+				return string.Empty;
+
+			return _provider.Wrapper.Value.HostNameGetter(connection);
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection dataConnection)
 		{
-			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
+			var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			if (connection == null)
+				return string.Empty;
+
+			return _provider.Wrapper.Value.DatabaseNameGetter(connection);
 		}
 
 		private string? _currentUser;
@@ -341,7 +348,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return _providerName == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
+			return _provider.Name == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)

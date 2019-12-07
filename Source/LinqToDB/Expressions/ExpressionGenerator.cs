@@ -156,6 +156,23 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
 			=> _mapper.MapExpression(func, p1, p2, p3, p4, p5);
 
+		public Expression MapExpression<TR>(Expression<Func<TR>> func, bool mapConvert)
+			=> _mapper.MapExpression(func, mapConvert);
+
+		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, bool mapConvert, Expression p)
+			=> _mapper.MapExpression(func, mapConvert, p);
+
+		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, bool mapConvert, Expression p1, Expression p2)
+			=> _mapper.MapExpression(func, mapConvert, p1, p2);
+
+		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3)
+			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3);
+
+		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3, p4);
+
+		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
 

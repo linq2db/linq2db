@@ -32,12 +32,12 @@ namespace LinqToDB.DataProvider.Access
 					return action(newConnection);
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			var name = base.GetDatabaseName(dbConnection);
+			var name = base.GetDatabaseName(connection);
 
 			if (name.IsNullOrEmpty())
-				name = Path.GetFileNameWithoutExtension(GetDataSourceName(dbConnection));
+				name = Path.GetFileNameWithoutExtension(GetDataSourceName(connection));
 
 			return name;
 		}

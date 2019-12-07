@@ -143,9 +143,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return result;
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			return dbConnection.DataSource;
+			return ((DbConnection)connection.Connection).DataSource;
 		}
 
 		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)

@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	public enum AlternativeBulkCopy
 	{
@@ -23,7 +22,9 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public static string AssemblyName;
 
+#if NET45 || NET46
 		static readonly OracleDataProvider _oracleNativeDataProvider  = new OracleDataProvider(ProviderName.OracleNative);
+#endif
 		static readonly OracleDataProvider _oracleManagedDataProvider = new OracleDataProvider(ProviderName.OracleManaged);
 
 		static OracleTools()
@@ -31,7 +32,9 @@ namespace LinqToDB.DataProvider.Oracle
 			AssemblyName = DetectedProviderName == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
 
 			DataConnection.AddDataProvider(ProviderName.Oracle, DetectedProvider);
+#if NET45 || NET46
 			DataConnection.AddDataProvider(_oracleNativeDataProvider);
+#endif
 			DataConnection.AddDataProvider(_oracleManagedDataProvider);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
@@ -67,7 +70,10 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 
 				case "Oracle.Native"                   :
-				case "Oracle.DataAccess.Client"        : return _oracleNativeDataProvider;
+				case "Oracle.DataAccess.Client"        :
+#if NET45 || NET46
+					return _oracleNativeDataProvider;
+#endif
 				case "Oracle.Managed"                  :
 				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider;
 				case "Oracle"                          :
@@ -75,8 +81,10 @@ namespace LinqToDB.DataProvider.Oracle
 					if (css.Name.Contains("Managed"))
 						return _oracleManagedDataProvider;
 
+#if NET45 || NET46
 					if (css.Name.Contains("Native"))
 						return _oracleNativeDataProvider;
+#endif
 
 					return DetectedProvider;
 			}
@@ -90,14 +98,17 @@ namespace LinqToDB.DataProvider.Oracle
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
 		static OracleDataProvider DetectedProvider =>
-			DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider;
+#if NET45 || NET46
+			DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider :
+#endif
+			_oracleManagedDataProvider;
 
 		static string DetectProviderName()
 		{
+#if NET45 || NET46
 			try
 			{
 				var path = typeof(OracleTools).Assembly.GetPath();
-
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
 						return ProviderName.OracleManaged;
@@ -107,6 +118,9 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return ProviderName.OracleNative;
+#else
+			return ProviderName.OracleManaged;
+#endif
 		}
 
 		public static IDataProvider GetDataProvider()

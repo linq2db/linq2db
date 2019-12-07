@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider
 		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter = Expression.Parameter(typeof(int), "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
 			Expression methodCall;
 
@@ -345,6 +345,7 @@ namespace LinqToDB.DataProvider
 		// in general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
 		// to support multiple wrappers
 		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters   = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
+		private readonly IDictionary<Type, Func<IDbCommand, IDbCommand>?>             _commandConverters     = new ConcurrentDictionary<Type, Func<IDbCommand, IDbCommand>?>();
 		private readonly IDictionary<Type, Func<IDbConnection, IDbConnection>?>       _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection, IDbConnection>?>();
 		private readonly IDictionary<Type, Func<IDbTransaction, IDbTransaction>?>     _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction, IDbTransaction>?>();
 
@@ -370,6 +371,31 @@ namespace LinqToDB.DataProvider
 
 			if (converter != null)
 				return converter(parameter);
+
+			return null;
+		}
+
+		internal virtual IDbCommand? TryConvertCommand(Type expectedType, IDbCommand command, MappingSchema ms)
+		{
+			var commandType = command.GetType();
+
+			if (expectedType == commandType)
+				return command;
+
+			if (!_commandConverters.TryGetValue(commandType, out var converter))
+			{
+				var converterExpr = ms.GetConvertExpression(commandType, typeof(IDbCommand), false, false);
+				if (converterExpr != null)
+				{
+					var param = Expression.Parameter(typeof(IDbCommand));
+					converter = (Func<IDbCommand, IDbCommand>)Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, commandType)), param).Compile();
+
+					_commandConverters[commandType] = converter;
+				}
+			}
+
+			if (converter != null)
+				return converter(command);
 
 			return null;
 		}

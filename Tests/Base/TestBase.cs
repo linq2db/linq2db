@@ -962,12 +962,12 @@ namespace Tests
 			Func<IEnumerable<T>, IEnumerable<T>> sort,
 			bool allowEmpty = false)
 		{
-			var resultList = result.Select(fixSelector).ToList();
+			var resultList   = result.Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
 			{
-				resultList = sort(resultList).ToList();
+				resultList   = sort(resultList).ToList();
 				expectedList = sort(expectedList).ToList();
 			}
 
@@ -976,11 +976,11 @@ namespace Tests
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.Except(expectedList, comparer).ToList();
-			var exceptResultList = expectedList.Except(resultList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList, comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
-			var exceptResult = exceptResultList.Count;
-			var message = new StringBuilder();
+			var exceptResult   = exceptResultList.Count;
+			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 			{

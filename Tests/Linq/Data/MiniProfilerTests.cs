@@ -35,6 +35,7 @@ using System.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.Oracle;
 #if NET46
 using IBM.Data.Informix;
 #endif
@@ -1067,7 +1068,6 @@ namespace Tests.Data
 					if (provider.Wrapper.Value.DB2BulkCopy != null)
 						TestBulkCopy();
 
-
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 					void TestBulkCopy()
@@ -1098,6 +1098,184 @@ namespace Tests.Data
 				}
 			}
 		}
+
+#if NET46
+		[Test]
+		public void TestOracleNative([IncludeDataSources(ProviderName.OracleNative)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var wrapped = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new OracleDataProvider(ProviderName.OracleNative), context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var ntextValue = "тест";
+					Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p NClob "));
+
+					// provider-specific type classes and readers
+					var decValue = 123.45m;
+					var decimalValue = db.Execute<Oracle.DataAccess.Types.OracleDecimal>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+					Assert.AreEqual(decValue, (decimal)decimalValue);
+					var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+					Assert.True(rawValue is decimal);
+					Assert.AreEqual(decValue, (decimal)rawValue);
+
+					// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
+					var dtoVal = DateTimeOffset.Now;
+					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
+					Assert.AreEqual(dtoVal, dtoValue);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+
+					// bulk copy without transaction (transaction not supported)
+					TestBulkCopy();
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					// ToLower, because native prodiver returns it lowercased
+					Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
+					//schema.DataSource not asserted, as it returns db hostname
+
+					Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
+
+					// dbcommand properties
+					db.DisposeCommand();
+					// clean instance
+					dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.CommandType, cmd.GetType());
+					var bindByName = cmd.BindByName;
+					var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
+					var arrayBindCount = cmd.ArrayBindCount;
+					Assert.AreEqual(false, bindByName);
+					Assert.AreEqual(0, initialLONGFetchSizeSetter);
+					Assert.AreEqual(0, arrayBindCount);
+					db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
+					// instance, used for query
+					cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+					if (unmapped)
+					{
+						Assert.AreEqual(false, cmd.BindByName);
+						Assert.AreEqual(0, cmd.InitialLONGFetchSize);
+						Assert.AreEqual(0, arrayBindCount);
+					}
+					else
+					{
+						Assert.AreEqual(true, cmd.BindByName);
+						Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
+						Assert.AreEqual(0, arrayBindCount);
+					}
+
+					void TestBulkCopy()
+					{
+						using (db.CreateTempTable<OracleBulkCopyTable>())
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied,
+								KeepIdentity       = true
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+					}
+				}
+			}
+		}
+#endif
+
+		[Test]
+		public void TestOracleManaged([IncludeDataSources(ProviderName.OracleManaged)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var wrapped = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				using (var db = CreateDataConnection(new OracleDataProvider(ProviderName.OracleManaged), context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var ntextValue = "тест";
+					Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
+					Assert.True(trace.Contains("DECLARE @p NClob "));
+
+					// provider-specific type classes and readers
+					var decValue = 123.45m;
+					var decimalValue = db.Execute<Oracle.ManagedDataAccess.Types.OracleDecimal>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+					Assert.AreEqual(decValue, (decimal)decimalValue);
+					var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+					Assert.True(rawValue is decimal);
+					Assert.AreEqual(decValue, (decimal)rawValue);
+
+					// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
+					var dtoVal = DateTimeOffset.Now;
+					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
+					Assert.AreEqual(dtoVal, dtoValue);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
+					//schema.DataSource not asserted, as it returns db hostname
+
+					Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
+
+					// dbcommand properties
+					db.DisposeCommand();
+					// clean instance
+					dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.CommandType, cmd.GetType());
+					var bindByName = cmd.BindByName;
+					var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
+					var arrayBindCount = cmd.ArrayBindCount;
+					Assert.AreEqual(false, bindByName);
+					Assert.AreEqual(0, initialLONGFetchSizeSetter);
+					Assert.AreEqual(0, arrayBindCount);
+					db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
+					// instance, used for query
+					cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+					if (unmapped)
+					{
+						Assert.AreEqual(false, cmd.BindByName);
+						Assert.AreEqual(0, cmd.InitialLONGFetchSize);
+						Assert.AreEqual(0, arrayBindCount);
+					}
+					else
+					{
+						Assert.AreEqual(true, cmd.BindByName);
+						Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
+						Assert.AreEqual(0, arrayBindCount);
+					}
+				}
+			}
+		}
+
+		[Table]
+		public class OracleBulkCopyTable
+		{ 
+			[Column]
+			public int ID { get; set; }
+		}
+
 
 		public enum ConnectionType
 		{
@@ -1139,9 +1317,10 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
+					ms.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
 					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
+					ms.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
 					break;
 			}
 

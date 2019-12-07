@@ -321,8 +321,8 @@ namespace LinqToDB.SchemaProvider
 
 			return ProcessSchema(new DatabaseSchema
 			{
-				DataSource                    = GetDataSourceName(dbConnection),
-				Database                      = GetDatabaseName  (dbConnection),
+				DataSource                    = GetDataSourceName(dataConnection),
+				Database                      = GetDatabaseName  (dataConnection),
 				ServerVersion                 = dbConnection.ServerVersion,
 				Tables                        = tables,
 				Procedures                    = procedures,
@@ -504,8 +504,8 @@ namespace LinqToDB.SchemaProvider
 			).ToList();
 		}
 
-		protected virtual string GetDataSourceName(DbConnection dbConnection) => dbConnection.DataSource;
-		protected virtual string GetDatabaseName  (DbConnection dbConnection) => dbConnection.Database;
+		protected virtual string GetDataSourceName(DataConnection dbConnection) => ((DbConnection)dbConnection.Connection).DataSource;
+		protected virtual string GetDatabaseName  (DataConnection dbConnection) => ((DbConnection)dbConnection.Connection).Database;
 
 		protected virtual void InitProvider(DataConnection dataConnection)
 		{

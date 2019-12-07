@@ -280,7 +280,7 @@ namespace Tests.Update
 				AreEqual(expected, actual);
 
 			}
-		}		
+		}
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinTake(

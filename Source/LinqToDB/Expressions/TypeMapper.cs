@@ -117,7 +117,7 @@ namespace LinqToDB.Expressions
 			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
 				Throw(() => new LinqToDBException("Can not convert Enum value.")));
 
-			var result = generator.MapExpression((string n) => (TTarget)Enum.Parse(toType, n), nameVar);
+			var result = generator.MapExpression((string n) => (TTarget)Enum.Parse(toType, n), false, nameVar);
 
 			return result;
 		}
@@ -163,6 +163,30 @@ namespace LinqToDB.Expressions
 								var ue   = (UnaryExpression)e;
 								var expr = ReplaceTypes(ue.Operand)!;
 								var type = TryMapType(ue.Type, out var newType) ? newType : ue.Type;
+
+								if (ue.Method != null)
+								{
+									if (TryMapType(ue.Method.DeclaringType, out var replacement))
+									{
+										var types = ue.Method.GetParameters()
+											.Select(p => MakeReplacement(p.ParameterType))
+											.ToArray();
+
+										// op_Explicit overloads by return type...
+										var method = replacement.GetMethodEx(MakeReplacement(ue.Method.ReturnType), ue.Method.Name, types);
+
+										if (method == null)
+										{
+											var name = replacement.FullName + "." + ue.Method.Name + "(" +
+													   string.Join(", ", types.Select(t => t.Name)) + ")";
+											throw new LinqToDBException($"Method not found in target type: {name}");
+										}
+
+										return Expression.Convert(expr, type, method);
+									}
+
+									return ue;
+								}
 
 								if (expr.Type == type)
 									return expr;
@@ -366,7 +390,7 @@ namespace LinqToDB.Expressions
 
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, params Expression[] parameters)
 		{
-			return MapExpressionInternal(lambdaExpression, false, parameters);
+			return MapExpressionInternal(lambdaExpression, true, parameters);
 		}
 
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, bool mapConvert, params Expression[] parameters)
@@ -445,15 +469,32 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
 			=> MapExpressionInternal(func, p1, p2, p3, p4, p5);
 
+		public Expression MapExpression<TR>(Expression<Func<TR>> func, bool mapConvert)
+			=> MapExpressionInternal(func, mapConvert);
+
+		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, bool mapConvert, Expression p)
+			=> MapExpressionInternal(func, mapConvert, p);
+
+		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, bool mapConvert, Expression p1, Expression p2)
+			=> MapExpressionInternal(func, mapConvert, p1, p2);
+
+		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3)
+			=> MapExpressionInternal(func, mapConvert, p1, p2, p3);
+
+		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> MapExpressionInternal(func, mapConvert, p1, p2, p3, p4);
+
+		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> MapExpressionInternal(func, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
 		#region MapLambda
 
-		public LambdaExpression MapLambda<T, TR>(Expression<Func<T, TR>> func) => MapLambdaInternal(func);
-		public LambdaExpression MapLambda<T1, T2, TR>(Expression<Func<T1, T2, TR>> func) => MapLambdaInternal(func);
-		public LambdaExpression MapLambda<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func) => MapLambdaInternal(func);
-		public LambdaExpression MapLambda<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func) => MapLambdaInternal(func);
-		public LambdaExpression MapLambda<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func) => MapLambdaInternal(func);
+		public LambdaExpression MapLambda<T, TR>(Expression<Func<T, TR>> func) => MapLambdaInternal(func, true);
+		public LambdaExpression MapLambda<T1, T2, TR>(Expression<Func<T1, T2, TR>> func) => MapLambdaInternal(func, true);
+		public LambdaExpression MapLambda<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func) => MapLambdaInternal(func, true);
+		public LambdaExpression MapLambda<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func) => MapLambdaInternal(func, true);
+		public LambdaExpression MapLambda<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func) => MapLambdaInternal(func, true);
 
 		#endregion
 

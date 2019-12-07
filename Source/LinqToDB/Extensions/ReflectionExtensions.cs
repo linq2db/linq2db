@@ -83,6 +83,38 @@ namespace LinqToDB.Extensions
 			return type.GetMethod(name);
 		}
 
+		/// <summary>
+		/// Gets method by name, input parameters and return type.
+		/// Usefull for method overloads by return type, like op_Explicit/op_Implicit conversions.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, Type returnType, string name, params Type[] types)
+		{
+			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				if (method.Name == name && method.ReturnType == returnType)
+				{
+					var parameters = method.GetParameters();
+					if (parameters.Length != types.Length)
+						continue;
+
+					var found = true;
+					for (var i = 0; i < types.Length; i++)
+					{
+						if (types[i] != parameters[i].ParameterType)
+						{
+							found = false;
+							break;
+						}
+					}
+
+					if (found)
+						return method;
+				}
+			}
+
+			return null;
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);

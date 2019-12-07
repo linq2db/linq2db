@@ -54,6 +54,9 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
+			if (context == ProviderName.OracleNative && copyType == BulkCopyType.ProviderSpecific)
+				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
+
 			List<TestTable1> list = null;
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
