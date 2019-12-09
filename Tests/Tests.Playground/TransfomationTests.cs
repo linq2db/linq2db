@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -44,12 +47,44 @@ namespace Tests.Playground
 		{
 			var source = GenerateA();
 			var details = GenerateB();
-			var query = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a, B = details });
+			var query = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a.AValue, B = details });
 			var filtered = query.Where(q => q.B.Any(bb => bb.BValue == "BValue2"));
 
-			EagerLoadingProbes.RegisterTransformation(query.Expression);
+			var lambdaToReplace = query.Expression;
+			var newQuery = EagerLoadingProbes.ApplyReMapping(query.Expression, null);
 		}
 
 
+		[Test]
+		public void TestSelectMany1()
+		{
+			var source  = GenerateA();
+			var details = GenerateB();
+			var subQuery  = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a.AValue, B = details });
+			// var query = from s in subQuery.SelectMany(q => q.B, (q, c) => c);
+
+			var query = from s in subQuery
+				from d in s.B
+				from s2 in source.LeftJoin(s2 => s2.AId == d.BId)
+				select new { d, s2 };
+
+			var withGrouping = from q in query
+				group q by q.d.BId.ToString()
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			var lambdaToReplace = (MethodCallExpression)subQuery.Expression;
+
+			var resultSelector = (LambdaExpression)lambdaToReplace.Arguments[1].Unwrap();
+
+			var additionalKey = Expression.PropertyOrField(resultSelector.Parameters[0], "AId");
+
+			var replaceInfo = new EagerLoadingProbes.ReplaceInfo();
+			replaceInfo.TargetLambda = resultSelector;
+			replaceInfo.Keys.Add(additionalKey);
+
+			// var newQuery = EagerLoadingProbes.ApplyReMapping(query.Expression, replaceInfo);
+			var newQuery2 = EagerLoadingProbes.ApplyReMapping(withGrouping.Expression, replaceInfo);
+		}
 	}
 }

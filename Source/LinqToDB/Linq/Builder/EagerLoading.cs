@@ -15,7 +15,7 @@ using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
-	class EagerLoading
+	internal class EagerLoading
 	{
 		private static readonly MethodInfo[] _tupleConstructors = 
 		{
