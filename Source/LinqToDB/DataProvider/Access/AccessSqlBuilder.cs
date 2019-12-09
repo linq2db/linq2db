@@ -173,7 +173,8 @@ namespace LinqToDB.DataProvider.Access
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+		
+					var ntext = DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
@@ -209,7 +210,7 @@ namespace LinqToDB.DataProvider.Access
 
 						if (value != null)
 						{
-							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
+							value     = DataTools.EscapeUnterminatedBracket(value).Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
 							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
 							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null);
 						}

@@ -175,7 +175,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+					var ntext = DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
