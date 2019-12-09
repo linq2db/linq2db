@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -1420,7 +1421,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
 				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
+					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
 						p = accessor.Value;
 
 			if (p == null)
@@ -1786,7 +1787,7 @@ namespace LinqToDB.Linq.Builder
 				default: throw new InvalidOperationException();
 			}
 
-			if (left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert)
+			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context, left, op, right);
 				if (p != null)
@@ -3145,7 +3146,7 @@ namespace LinqToDB.Linq.Builder
 					var foundMember = typeMembers.Find(tm => tm.Name == param.Name);
 					if (foundMember == null)
 						foundMember = typeMembers.Find(tm =>
-							tm.Name.Equals(param.Name, StringComparison.CurrentCultureIgnoreCase));
+							tm.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
 					if (foundMember == null)
 						continue;
 
@@ -3182,8 +3183,9 @@ namespace LinqToDB.Linq.Builder
 									members.Add(info.GetPropertyInfo(), converted);
 							}
 						}
-						
-						CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
+
+						if (!MappingSchema.IsScalarType(expr.Type))
+							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
 
 						return members.Count > 0;
 					}
@@ -3217,7 +3219,8 @@ namespace LinqToDB.Linq.Builder
 
 						// process fabric methods
 
-						CollectParameters(mc.Type, mc.Method, mc.Arguments);
+						if (!MappingSchema.IsScalarType(mc.Type))
+							CollectParameters(mc.Type, mc.Method, mc.Arguments);
 
 						return members.Count > 0;
 					}

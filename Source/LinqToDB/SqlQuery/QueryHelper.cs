@@ -95,6 +95,32 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public static IEnumerable<ISqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
+		{
+			foreach (var j in tableSource.Joins)
+			{
+				yield return j.Table;
+
+				foreach (var js in EnumerateLevelSources(j.Table))
+				{
+					yield return js;
+				}
+			}
+		}
+
+		public static IEnumerable<ISqlTableSource> EnumerateLevelSources(SelectQuery selectQuery)
+		{
+			foreach (var tableSource in selectQuery.Select.From.Tables)
+			{
+				yield return tableSource;
+
+				foreach (var js in EnumerateLevelSources(tableSource))
+				{
+					yield return js;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
 		/// </summary>
@@ -253,7 +279,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
- 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
@@ -270,6 +296,66 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		/// <summary>
+		/// Returns correct column or field according to nesting.
+		/// </summary>
+		/// <param name="selectQuery">Analyzed query.</param>
+		/// <param name="forExpression">Expression that has to be enveloped by column.</param>
+		/// <param name="inProjection">If 'true', function ensures that column is created. If 'false' it may return Field if it fits to nesting level.</param>
+		/// <returns>Returns Column of Field according to its nesting level. May return null if expression is not valid for <paramref name="selectQuery"/></returns>
+		public static ISqlExpression NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
+		{
+			var field = GetUnderlyingField(forExpression);
+
+			SqlColumn column = null;
+
+			if (inProjection)
+			{
+				column = selectQuery.Select.Columns.Find(c =>
+					{
+						if (c.Expression.Equals(forExpression))
+							return true;
+						if (field != null && field.Equals(GetUnderlyingField(c.Expression)))
+							return true;
+						return false;
+					}
+				);
+			}
+
+			if (column != null)
+				return column;
+
+			var tableToCompare = field?.Table;
+
+			var tableSources = EnumerateLevelSources(selectQuery).OfType<SqlTableSource>().Select(s => s.Source).ToArray();
+
+			// enumerate tables first
+
+			foreach (var table in tableSources.OfType<SqlTable>())
+			{
+				if (tableToCompare != null && tableToCompare == table)
+				{
+					if (inProjection)
+						return selectQuery.Select.AddNewColumn(field);
+					return field;
+				}
+			}
+
+			foreach (var subQuery in tableSources.OfType<SelectQuery>())
+			{
+				column = NeedColumnForExpression(subQuery, forExpression, true) as SqlColumn;
+				if (column != null && inProjection)
+				{
+					column = selectQuery.Select.AddNewColumn(column);
+				}
+
+				if (column != null)
+					break;
+			}
+
+			return column;
+		}
+
 		public static bool IsEqualTables(SqlTable table1, SqlTable table2)
 		{
 			var result =
@@ -284,5 +370,28 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
+		{
+			for (int i = 0; i < searchCondition.Conditions.Count; i++)
+			{
+				var visitor      = new QueryVisitor();
+				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
+				{
+					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
+					{
+						if (visitor.ParentElement?.ElementType != QueryElementType.Column)
+						{
+							var column = NeedColumnForExpression(selectQuery, (ISqlExpression)e, false);
+							if (column != null)
+								return column;
+						}
+					}
+
+					return e;
+				});
+
+				searchCondition.Conditions[i] = newCondition;
+			}
+		}
 	}
 }

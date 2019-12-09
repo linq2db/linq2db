@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.9.2
-  packageVersion: 2.9.2
+  assemblyVersion: 2.9.5
+  packageVersion: 2.9.5
 
 cache:
 - packages -> appveyor.yml
@@ -36,7 +36,7 @@ build_script:
 
 before_build:
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release2")
     {
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }
@@ -87,7 +87,7 @@ after_build:
 
 test_script:
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release2")
     {
         .\Build\AppVeyor.NUnit.Tests.ps1
     }
@@ -109,7 +109,7 @@ deploy:
   api_key:
     secure: Kj9jdUr/iDoMahZT336+c2V/25VD8ES3UOTLKFcBpdkAjCY7Bd9pCAq26bz6LUBx
   on:
-    branch: release
+    branch: release2
 
 - provider: NuGet
   server: https://www.myget.org/F/linq2db/api/v2

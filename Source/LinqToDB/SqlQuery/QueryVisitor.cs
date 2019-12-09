@@ -1168,6 +1168,7 @@ namespace LinqToDB.SqlQuery
 			if (_visitedElements.TryGetValue(element, out var newElement))
 				return newElement;
 
+			using (Scope(element)) 
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -2042,5 +2043,34 @@ namespace LinqToDB.SqlQuery
 
 
 		#endregion
+
+		#region Convert Immutable
+
+		public List<IQueryElement> Stack     { get; } = new List<IQueryElement>();
+		public IQueryElement ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+
+		class ConvertScope : IDisposable
+		{
+			private QueryVisitor _visitor;
+
+			public ConvertScope(QueryVisitor visitor, IQueryElement parent)
+			{
+				_visitor = visitor;
+				_visitor.Stack.Add(parent);
+			}
+
+			public void Dispose()
+			{
+				_visitor.Stack.RemoveAt(_visitor.Stack.Count - 1);
+			}
+		}
+
+		ConvertScope Scope(IQueryElement parent)
+		{
+			return new ConvertScope(this, parent);
+		}
+
+		#endregion
+
 	}
 }

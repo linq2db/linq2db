@@ -33,6 +33,10 @@
 		<PackageReference Include="NETStandard.Library" Version="2.0.3" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="TypeMapping\" />
+	</ItemGroup>
+
 	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">
 		<PropertyGroup>
 			<AliasPackageReference>@(PackageReference->'%(Identity)')</AliasPackageReference>

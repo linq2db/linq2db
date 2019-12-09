@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class Issue082Tests : TestBase
+	public class Issue0082Tests : TestBase
 	{
 		[Test]
 		public void Test1([DataSources] string context)

@@ -104,6 +104,8 @@ namespace LinqToDB.Linq.Builder
 
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
+			CollectQueryDepended(expression);
+
 			CompiledParameters   = compiledParameters;
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
@@ -752,30 +754,29 @@ namespace LinqToDB.Linq.Builder
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "With"                 : return new TransformInfo(expr);
 							}
 						}
-						else
+
+						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method, out var alias);
+
+						if (l != null)
 						{
-							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method, out var alias);
+							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							RegisterAlias(optimized, alias);
+							return new TransformInfo(optimized);
+						}
 
-							if (l != null)
+						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
+						{
+							var attr = GetTableFunctionAttribute(call.Method);
+
+							if (attr == null && !call.IsQueryable())
 							{
-								var optimized = OptimizeExpression(ConvertMethod(call, l));
-								RegisterAlias(optimized, alias);
-								return new TransformInfo(optimized);
-							}
+								var ex = ConvertIQueryable(expr);
 
-							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
-							{
-								var attr = GetTableFunctionAttribute(call.Method);
-
-								if (attr == null)
-								{
-									var ex = ConvertIQueryable(expr);
-
-									if (!ReferenceEquals(ex, expr))
-										return new TransformInfo(ConvertExpressionTree(ex));
-								}
+								if (!ReferenceEquals(ex, expr))
+									return new TransformInfo(ConvertExpressionTree(ex));
 							}
 						}
 
@@ -1646,6 +1647,29 @@ namespace LinqToDB.Linq.Builder
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
 			return Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+		}
+
+		#endregion
+
+		#region SqQueryDepended support
+
+		void CollectQueryDepended(Expression expr)
+		{
+			expr.Visit(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var call = (MethodCallExpression)e;
+					var parameters = call.Method.GetParameters();
+					for (int i = 0; i < parameters.Length; i++)
+					{
+						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
+							.FirstOrDefault();
+						if (attr != null)
+							_query.AddQueryDependedObject(call.Arguments[i], attr);
+					}
+				}
+			});
 		}
 
 		#endregion

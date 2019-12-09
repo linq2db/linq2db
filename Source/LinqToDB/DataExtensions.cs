@@ -793,6 +793,20 @@ namespace LinqToDB
 
 				return base.ExpressionsEqual(expr1, expr2, comparer);
 			}
+
+			public override Expression PrepareForCache(Expression expression)
+			{
+				if (expression.NodeType != ExpressionType.Call)
+					return base.PrepareForCache(expression);
+
+				var mc = (MethodCallExpression)expression;
+				var newArguments = new List<Expression>();
+				newArguments.Add(Expression.Constant(mc.Arguments[0].EvaluateExpression()));
+				newArguments.AddRange(mc.Arguments.Skip(1));
+
+				mc = mc.Update(mc.Object, newArguments);
+				return mc;
+			}
 		}
 
 		/// <summary>
@@ -860,9 +874,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			[NotNull] this       IDataContext dataContext,
-			[SqlQueryDependent]  RawSqlString sql,
-			[NotNull] params     object[]     parameters)
+			[NotNull] this                      IDataContext dataContext,
+			[SqlQueryDependent]                 RawSqlString sql,
+			[SqlQueryDependent, NotNull] params object[] parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
