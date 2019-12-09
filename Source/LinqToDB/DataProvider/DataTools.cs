@@ -30,13 +30,16 @@ namespace LinqToDB.DataProvider
 			{
 				if (nextIndex != 0)
 				{
-					newStr.Append(str.Substring(lastIndex, nextIndex-lastIndex));
+					newStr.Append(str.Substring(lastIndex, nextIndex - lastIndex));
 				}
+
 				lastIndex = nextIndex;
 
 				var closeBracket = str.IndexOf(']', nextIndex + 1);
 				nextIndex = str.IndexOf('[', nextIndex + 1);
-				if (closeBracket > 0 && (closeBracket < nextIndex || nextIndex < 0))
+				if ((closeBracket > 0 && (closeBracket < nextIndex || nextIndex < 0))
+				    ||
+				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
 				{
 					if (nextIndex < 0)
 					{
@@ -47,8 +50,9 @@ namespace LinqToDB.DataProvider
 				{
 					newStr.Append("[[]");
 				}
-				
+
 			}
+
 			newStr.Append(str.Substring(lastIndex + 1));
 			return newStr.ToString();
 		}

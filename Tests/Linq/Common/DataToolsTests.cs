@@ -72,6 +72,7 @@ namespace Tests.Common
 			new object[] {"6[5]", "6[5]"},
 			new object[] {"[4]6[5]", "[4]6[5]"},
 			new object[] {"[4]6[5", "[4]6[[]5"},
+			new object[] {"[[]", "[[]"}
 		};
 		[TestCaseSource(nameof(_escapeUnterminatedBracketTestData))]
 		public void EscapeUnterminatedBracket(string testString, string expectedResult)
