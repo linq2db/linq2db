@@ -30,20 +30,24 @@ namespace LinqToDB.DataProvider
 			{
 				if (nextIndex != 0)
 				{
-					newStr.Append(str.Substring(lastIndex, nextIndex));
+					newStr.Append(str.Substring(lastIndex, nextIndex-lastIndex));
 				}
 				lastIndex = nextIndex;
-				var nextBracket = str.IndexOf('[', nextIndex + 1);
+
 				var closeBracket = str.IndexOf(']', nextIndex + 1);
-				if (closeBracket > 0 && (closeBracket < nextBracket || nextBracket < 0))
+				nextIndex = str.IndexOf('[', nextIndex + 1);
+				if (closeBracket > 0 && (closeBracket < nextIndex || nextIndex < 0))
 				{
-					newStr.Append("[");
+					if (nextIndex < 0)
+					{
+						newStr.Append("[");
+					}
 				}
 				else
 				{
 					newStr.Append("[[]");
 				}
-				nextIndex = str.IndexOf('[', nextIndex + 1);
+				
 			}
 			newStr.Append(str.Substring(lastIndex + 1));
 			return newStr.ToString();
