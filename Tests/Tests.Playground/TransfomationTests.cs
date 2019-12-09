@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -51,7 +52,7 @@ namespace Tests.Playground
 			var filtered = query.Where(q => q.B.Any(bb => bb.BValue == "BValue2"));
 
 			var lambdaToReplace = query.Expression;
-			var newQuery = EagerLoadingProbes.ApplyReMapping(query.Expression, null);
+			var newQuery = EagerLoading.ApplyReMapping(query.Expression, null);
 		}
 
 
@@ -79,12 +80,12 @@ namespace Tests.Playground
 
 			var additionalKey = Expression.PropertyOrField(resultSelector.Parameters[0], "AId");
 
-			var replaceInfo = new EagerLoadingProbes.ReplaceInfo();
+			var replaceInfo = new EagerLoading.ReplaceInfo();
 			replaceInfo.TargetLambda = resultSelector;
 			replaceInfo.Keys.Add(additionalKey);
 
-			// var newQuery = EagerLoadingProbes.ApplyReMapping(query.Expression, replaceInfo);
-			var newQuery2 = EagerLoadingProbes.ApplyReMapping(withGrouping.Expression, replaceInfo);
+			var newQuery = EagerLoading.ApplyReMapping(query.Expression, replaceInfo);
+			var newQuery2 = EagerLoading.ApplyReMapping(withGrouping.Expression, replaceInfo);
 		}
 	}
 }

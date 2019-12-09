@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Tests.Playground
+namespace LinqToDB.Linq.Builder
 {
 	public static class KDH
 	{
