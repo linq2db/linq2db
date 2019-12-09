@@ -136,4 +136,17 @@ namespace Tests.Model
 			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
 		}
 	}
+
+	[Table("LinqDataTypes")]
+	public class LinqDataTypes3
+	{
+		public struct CustomMoneyType
+		{
+			public decimal? Amount;
+
+			public static explicit operator CustomMoneyType(decimal? amount) => new CustomMoneyType{Amount = amount};
+		}
+
+		[Column] public CustomMoneyType MoneyValue;
+	}
 }
