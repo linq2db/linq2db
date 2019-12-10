@@ -214,7 +214,7 @@ namespace Tests.Model
 
 			public decimal ToDecimal(IFormatProvider provider)
 			{
-				return Amount != null ? Amount.Value : decimal.MinValue;
+				throw new NotImplementedException();
 			}
 
 			public DateTime ToDateTime(IFormatProvider provider)
