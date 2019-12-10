@@ -145,7 +145,6 @@ namespace Tests.Model
 			public decimal? Amount;
 
 			public static explicit operator CustomMoneyType(decimal? amount) => new CustomMoneyType{Amount = amount};
-			public static implicit operator Nullable<decimal>(CustomMoneyType customMoney) => customMoney.Amount;
 
 			public TypeCode GetTypeCode()
 			{
