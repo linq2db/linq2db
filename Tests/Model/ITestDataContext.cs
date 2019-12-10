@@ -26,7 +26,6 @@ namespace Tests.Model
 		ITable<GrandChild1>            GrandChild1            { get; }
 		ITable<LinqDataTypes>          Types                  { get; }
 		ITable<LinqDataTypes2>         Types2                 { get; }
-		ITable<LinqDataTypes3>         Types3                 { get; }
 		ITable<TestIdentity>           TestIdentity           { get; }
 		ITable<InheritanceParentBase>  InheritanceParent      { get; }
 		ITable<InheritanceChildBase>   InheritanceChild       { get; }

@@ -8,7 +8,6 @@ using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
@@ -468,13 +467,110 @@ namespace Tests.Common
 		public void NullableParameterInOperatorConvert([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<LinqDataTypes3>())
+			using (db.CreateLocalTable<NullableParameterInOperatorTestTable>())
 			{
-				db.Types3.Insert(() => new LinqDataTypes3 {MoneyValue = new LinqDataTypes3.CustomMoneyType{Amount = 1m}});
-				var rows = db.Types3.ToArray();
+				db.GetTable<NullableParameterInOperatorTestTable>().Insert(() => new NullableParameterInOperatorTestTable {MoneyValue = new NullableParameterInOperatorTestTable.CustomMoneyType{Amount = 1m}});
+				var rows = db.GetTable<NullableParameterInOperatorTestTable>().ToArray();
 				Assert.AreEqual(1m, rows[0].MoneyValue.Amount);
 			}
+		}
 
+		[Table]
+		public class  NullableParameterInOperatorTestTable
+		{
+			public struct CustomMoneyType : IConvertible
+			{
+				public decimal? Amount;
+
+				public static explicit operator CustomMoneyType(decimal? amount) => new CustomMoneyType{Amount = amount};
+
+				public TypeCode GetTypeCode()
+				{
+					throw new NotImplementedException();
+				}
+
+				public bool ToBoolean(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public char ToChar(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public sbyte ToSByte(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public byte ToByte(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public short ToInt16(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public ushort ToUInt16(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public int ToInt32(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public uint ToUInt32(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public long ToInt64(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public ulong ToUInt64(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public float ToSingle(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public double ToDouble(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public decimal ToDecimal(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public DateTime ToDateTime(IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+
+				public string ToString(IFormatProvider provider)
+				{
+					return Amount != null ? Amount.Value.ToString() : null;
+				}
+
+				public object ToType(Type conversionType, IFormatProvider provider)
+				{
+					throw new NotImplementedException();
+				}
+			}
+
+			[Column(DataType = DataType.Decimal)] public CustomMoneyType MoneyValue;
 		}
 
 

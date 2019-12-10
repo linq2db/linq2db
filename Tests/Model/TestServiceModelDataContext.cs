@@ -44,7 +44,6 @@ namespace Tests.Model
 		public ITable<GrandChild1>            GrandChild1            { get { return this.GetTable<GrandChild1>();            } }
 		public ITable<LinqDataTypes>          Types                  { get { return this.GetTable<LinqDataTypes>();          } }
 		public ITable<LinqDataTypes2>         Types2                 { get { return this.GetTable<LinqDataTypes2>();         } }
-		public ITable<LinqDataTypes3>         Types3                 { get { return this.GetTable<LinqDataTypes3>();         } } 
 		public ITable<TestIdentity>           TestIdentity           { get { return this.GetTable<TestIdentity>();           } }
 		public ITable<InheritanceParentBase>  InheritanceParent      { get { return this.GetTable<InheritanceParentBase>();  } }
 		public ITable<InheritanceChildBase>   InheritanceChild       { get { return this.GetTable<InheritanceChildBase>();   } }

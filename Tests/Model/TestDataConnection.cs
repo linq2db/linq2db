@@ -65,7 +65,6 @@ namespace Tests.Model
 		public ITable<GrandChild1>            GrandChild1            => GetTable<GrandChild1>();
 		public ITable<LinqDataTypes>          Types                  => GetTable<LinqDataTypes>();
 		public ITable<LinqDataTypes2>         Types2                 => GetTable<LinqDataTypes2>();
-		public ITable<LinqDataTypes3>         Types3                 => GetTable<LinqDataTypes3>();
 		public ITable<TestIdentity>           TestIdentity           => GetTable<TestIdentity>();
 		public ITable<InheritanceParentBase>  InheritanceParent      => GetTable<InheritanceParentBase>();
 		public ITable<InheritanceChildBase>   InheritanceChild       => GetTable<InheritanceChildBase>();
