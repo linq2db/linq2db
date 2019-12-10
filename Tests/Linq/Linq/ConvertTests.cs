@@ -704,12 +704,5 @@ namespace Tests.Linq
 				}
 			}
 		}
-	
-		[Test]
-		public void NullableParameterInOperatorConvert([DataSources(TestProvName.AllSQLite)] string context)
-		{
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(1.11m, (from t in db.Types3 select t).First().MoneyValue.Amount);
-		}
 	}
 }

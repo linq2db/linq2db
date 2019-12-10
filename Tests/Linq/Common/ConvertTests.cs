@@ -2,11 +2,13 @@
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
-
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
@@ -461,5 +463,19 @@ namespace Tests.Common
 			Assert.AreEqual(0,    ConvertTo<int>. From((Enum15?)null));
 			Assert.AreEqual(null, ConvertTo<int?>.From((Enum15?)null));
 		}
+	
+		[Test]
+		public void NullableParameterInOperatorConvert([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<LinqDataTypes3>())
+			{
+				db.Types3.Insert(() => new LinqDataTypes3 {MoneyValue = new LinqDataTypes3.CustomMoneyType{Amount = 1.11m}});
+				Assert.AreEqual(1.11m, db.Types3.First().MoneyValue.Amount);
+			}
+
+		}
+
+
 	}
 }
