@@ -223,7 +223,7 @@ namespace Tests.Model
 
 			public string ToString(IFormatProvider provider)
 			{
-				return Amount != null ? Amount.Value.ToString() : decimal.MinValue.ToString();
+				return Amount != null ? Amount.Value.ToString() : null;
 			}
 
 			public object ToType(Type conversionType, IFormatProvider provider)

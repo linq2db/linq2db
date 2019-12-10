@@ -465,13 +465,14 @@ namespace Tests.Common
 		}
 	
 		[Test]
-		public void NullableParameterInOperatorConvert([DataSources] string context)
+		public void NullableParameterInOperatorConvert([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<LinqDataTypes3>())
 			{
-				db.Types3.Insert(() => new LinqDataTypes3 {MoneyValue = new LinqDataTypes3.CustomMoneyType{Amount = 1.11m}});
-				Assert.AreEqual(1.11m, db.Types3.First().MoneyValue.Amount);
+				db.Types3.Insert(() => new LinqDataTypes3 {MoneyValue = new LinqDataTypes3.CustomMoneyType{Amount = 1m}});
+				var rows = db.Types3.ToArray();
+				Assert.AreEqual(1m, rows[0].MoneyValue.Amount);
 			}
 
 		}
