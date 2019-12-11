@@ -3,6 +3,7 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -464,115 +465,37 @@ namespace Tests.Common
 		}
 	
 		[Test]
-		public void NullableParameterInOperatorConvert([IncludeDataSources(ProviderName.Access)] string context)
+		public void NullableParameterInOperatorConvert()
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<NullableParameterInOperatorTestTable>())
-			{
-				db.GetTable<NullableParameterInOperatorTestTable>().Insert(() => new NullableParameterInOperatorTestTable {MoneyValue = new NullableParameterInOperatorTestTable.CustomMoneyType{Amount = 1m}});
-				var rows = db.GetTable<NullableParameterInOperatorTestTable>().ToArray();
-				Assert.AreEqual(1m, rows[0].MoneyValue.Amount);
-			}
+			var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1) 
+				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(ConvertTests.CustomMoneyType));
+
+			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.Compile();
+			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2.Compile();
+
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromDecimalFunc1(1.11m));
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromDecimalFunc2(1.11m));
+
+
+			var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2) 
+				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(ConvertTests.CustomMoneyType));
+
+			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.Compile();
+			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2.Compile();
+
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromNullableDecimalFunc1(1.11m));
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromNullableDecimalFunc2(1.11m));
+
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = null}, convertFromNullableDecimalFunc1(null));
+			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = null}, convertFromNullableDecimalFunc2(null));
 		}
 
-		[Table]
-		public class  NullableParameterInOperatorTestTable
+		private struct CustomMoneyType
 		{
-			public struct CustomMoneyType : IConvertible
-			{
-				public decimal? Amount;
+			public decimal? Amount;
 
-				public static explicit operator CustomMoneyType(decimal? amount) => new CustomMoneyType{Amount = amount};
-
-				public TypeCode GetTypeCode()
-				{
-					throw new NotImplementedException();
-				}
-
-				public bool ToBoolean(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public char ToChar(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public sbyte ToSByte(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public byte ToByte(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public short ToInt16(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public ushort ToUInt16(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public int ToInt32(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public uint ToUInt32(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public long ToInt64(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public ulong ToUInt64(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public float ToSingle(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public double ToDouble(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public decimal ToDecimal(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public DateTime ToDateTime(IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-
-				public string ToString(IFormatProvider provider)
-				{
-					return Amount != null ? Amount.Value.ToString() : null;
-				}
-
-				public object ToType(Type conversionType, IFormatProvider provider)
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			[Column(DataType = DataType.Decimal)] public CustomMoneyType MoneyValue;
+			public static explicit operator CustomMoneyType(decimal? amount) =>
+				new CustomMoneyType {Amount = amount};
 		}
-
-
 	}
 }
