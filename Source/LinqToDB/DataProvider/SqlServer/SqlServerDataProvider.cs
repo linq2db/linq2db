@@ -53,11 +53,25 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetCharFieldToType<char>("char", (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
-			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
-			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
-			_sqlServer2008SqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
-			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
-			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
+			switch (version)
+			{
+				case SqlServerVersion.v2000:
+					_sqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
+					break;
+				case SqlServerVersion.v2005:
+					_sqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
+					break;
+				default:
+				case SqlServerVersion.v2008:
+					_sqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
+					break;
+				case SqlServerVersion.v2012:
+					_sqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
+					break;
+				case SqlServerVersion.v2017:
+					_sqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
+					break;
+			}
 
 			SetField<IDataReader, decimal>((r, i) => r.GetDecimal(i));
 			SetField<IDataReader, decimal>("money"     , (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
@@ -205,25 +219,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException();
 		}
 
-		readonly ISqlOptimizer _sqlServer2000SqlOptimizer;
-		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
-		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
-		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
-		readonly ISqlOptimizer _sqlServer2017SqlOptimizer;
+		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
-		{
-			switch (Version)
-			{
-				case SqlServerVersion.v2000 : return _sqlServer2000SqlOptimizer;
-				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
-				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
-				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
-				case SqlServerVersion.v2017 : return _sqlServer2017SqlOptimizer;
-			}
-
-			return _sqlServer2008SqlOptimizer;
-		}
+		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
 		public override ISchemaProvider GetSchemaProvider()
 		{

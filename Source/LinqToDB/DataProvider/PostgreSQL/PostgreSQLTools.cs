@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	[PublicAPI]
 	public static class PostgreSQLTools
 	{
-		static readonly PostgreSQLDataProvider _postgreSQLDataProvider   = new PostgreSQLDataProvider();
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider92 = new PostgreSQLDataProvider(ProviderName.PostgreSQL92, PostgreSQLVersion.v92);
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider93 = new PostgreSQLDataProvider(ProviderName.PostgreSQL93, PostgreSQLVersion.v93);
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider95 = new PostgreSQLDataProvider(ProviderName.PostgreSQL95, PostgreSQLVersion.v95);
@@ -24,7 +23,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			AutoDetectProvider = true;
 
-			DataConnection.AddDataProvider(_postgreSQLDataProvider);
 			DataConnection.AddDataProvider(_postgreSQLDataProvider92);
 			DataConnection.AddDataProvider(_postgreSQLDataProvider93);
 			DataConnection.AddDataProvider(_postgreSQLDataProvider95);
@@ -49,7 +47,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "PostgreSQL92"   :
 				case "PostgreSQL.92"  :
 				case "PostgreSQL.9.2" :
-					return _postgreSQLDataProvider;
+					return _postgreSQLDataProvider92;
 
 				case "PostgreSQL93"   : case "PostgreSQL.93"  : case "PostgreSQL.9.3" :
 				case "PostgreSQL94"   : case "PostgreSQL.94"  : case "PostgreSQL.9.4" :
@@ -63,7 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "Npgsql"         :
 
 					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
-						return _postgreSQLDataProvider;
+						return _postgreSQLDataProvider92;
 
 					if (css.Name.Contains("93") || css.Name.Contains("9.3") ||
 						css.Name.Contains("94") || css.Name.Contains("9.4"))
@@ -77,6 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						try
 						{
+							// TODO: use provider wrapper
 							var connectionType    = Type.GetType("Npgsql.NpgsqlConnection, Npgsql", true);
 							var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
 							var cs                = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
@@ -97,12 +96,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									return _postgreSQLDataProvider93;
 								}
 
-								return _postgreSQLDataProvider;
+								return _postgreSQLDataProvider92;
 							}
 						}
-						catch (Exception)
+						catch
 						{
-							return _postgreSQLDataProvider;
+							return _postgreSQLDataProvider92;
 						}
 					}
 
@@ -120,10 +119,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					return _postgreSQLDataProvider95;
 				case PostgreSQLVersion.v93:
 					return _postgreSQLDataProvider93;
+				default:
 				case PostgreSQLVersion.v92:
 					return _postgreSQLDataProvider92;
-				default:
-					return _postgreSQLDataProvider;
 			}
 		}
 
@@ -136,17 +134,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			new AssemblyResolver(assembly, "Npgsql");
 		}
-
-		public static Type? GetNpgsqlDateType      () { return _postgreSQLDataProvider92.NpgsqlDateType;       }
-		public static Type? GetNpgsqlDateTimeType  () { return _postgreSQLDataProvider92.NpgsqlDateTimeType;   }
-		public static Type? GetNpgsqlInetType      () { return _postgreSQLDataProvider92.NpgsqlInetType;       }
-		public static Type? GetNpgsqlPointType     () { return _postgreSQLDataProvider92.NpgsqlPointType;      }
-		public static Type? GetNpgsqlLineType      () { return _postgreSQLDataProvider92.NpgsqlLineType;       }
-		public static Type? GetNpgsqlLSegType      () { return _postgreSQLDataProvider92.NpgsqlLSegType;       }
-		public static Type? GetNpgsqlBoxType       () { return _postgreSQLDataProvider92.NpgsqlBoxType;        }
-		public static Type? GetNpgsqlPathType      () { return _postgreSQLDataProvider92.NpgsqlPathType;       }
-		public static Type? GetNpgsqlPolygonType   () { return _postgreSQLDataProvider92.NpgsqlPolygonType;    }
-		public static Type? GetNpgsqlCircleType    () { return _postgreSQLDataProvider92.NpgsqlCircleType;     }
 
 		#region CreateDataConnection
 

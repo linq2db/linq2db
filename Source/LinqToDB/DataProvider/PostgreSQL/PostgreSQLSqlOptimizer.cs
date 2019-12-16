@@ -4,9 +4,30 @@
 	using SqlProvider;
 	using SqlQuery;
 
-	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
+	class PostgreSQLSql92Optimizer : PostgreSQLSqlOptimizer
 	{
-		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public PostgreSQLSql92Optimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+	}
+
+	class PostgreSQLSql93Optimizer : PostgreSQLSqlOptimizer
+	{
+		public PostgreSQLSql93Optimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+	}
+
+	class PostgreSQLSql95Optimizer : PostgreSQLSqlOptimizer
+	{
+		public PostgreSQLSql95Optimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+	}
+
+	abstract class PostgreSQLSqlOptimizer : BasicSqlOptimizer
+	{
+		protected PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 

@@ -36,6 +36,7 @@ using Microsoft.SqlServer.Types;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 #if NET46
 using IBM.Data.Informix;
 #endif
@@ -1276,6 +1277,97 @@ namespace Tests.Data
 			public int ID { get; set; }
 		}
 
+		[Test]
+		public void TestPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] ConnectionType type, [Values] bool avoidApi)
+		{
+			var wrapped  = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+
+			PostgreSQLVersion version;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				version = ((PostgreSQLDataProvider)db.DataProvider).Version;
+			}
+
+			using (new AvoidSpecificDataProviderAPI(avoidApi))
+			{
+				var provider = new PostgreSQLDataProvider(version);
+				using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql"))
+				{
+					var trace = string.Empty;
+					db.OnTraceConnection += (TraceInfo ti) =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					var jsonValue = "{ \"x\": 1 }";
+					Assert.AreEqual(jsonValue, db.Execute<string>("SELECT @p", new DataParameter("@p", jsonValue, DataType.Json)));
+					Assert.True(trace.Contains("DECLARE @p Json"));
+
+					// provider-specific type classes and readers
+					var dateValue = new DateTime(1234, 11, 22);
+					var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
+					Assert.AreEqual(dateValue, (DateTime)ndateValue);
+					var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
+					Assert.True(rawValue is DateTime);
+					Assert.AreEqual(dateValue, (DateTime)rawValue);
+
+					// bulk copy without and with transaction
+					TestBulkCopy();
+					using (var tr = db.BeginTransaction())
+						TestBulkCopy();
+
+					// provider types support by schema
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault();
+					Assert.NotNull(allTypes);
+					var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault();
+					Assert.NotNull(tsColumn);
+					Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
+
+					// provider properties
+					Assert.AreEqual(true, provider.HasMacAddr8);
+
+					// type name generation from provider type
+					using (db.CreateLocalTable<TestPostgreSQLTypeName>())
+						Assert.True(trace.Contains("\"Column\" circle     NULL"));
+
+					void TestBulkCopy()
+					{
+						try
+						{
+							long copied = 0;
+							var options = new BulkCopyOptions()
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied,
+								KeepIdentity       = true
+							};
+
+							db.BulkCopy(
+								options,
+								Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
+
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+							Assert.AreEqual(1000, copied);
+						}
+						finally
+						{
+							db.GetTable<PostgreSQLTests.AllTypes>().Delete(p => p.ID >= 2000);
+						}
+					}
+				}
+			}
+		}
+
+		[Table]
+		public class TestPostgreSQLTypeName
+		{ 
+			[Column]
+			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
+		}
 
 		public enum ConnectionType
 		{

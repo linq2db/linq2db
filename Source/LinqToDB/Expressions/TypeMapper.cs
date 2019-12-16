@@ -64,10 +64,7 @@ namespace LinqToDB.Expressions
 			{
 				if (replacementType.IsEnum)
 				{
-					var enumName = Enum.GetName(valueType, value);
-					if (enumName.IsNullOrEmpty())
-						throw new LinqToDBException($"Enum value '{value}' does not have name.");
-					replacement = Enum.Parse(replacementType, enumName, true);
+					replacement = Enum.Parse(replacementType, value.ToString(), true);
 					return true;
 				}
 
@@ -88,15 +85,7 @@ namespace LinqToDB.Expressions
 			if (!replacementType.IsEnum)
 				throw new LinqToDBException("Only enums converted automatically.");
 
-			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
-				Expression.Convert(expression, typeof(object)));
-			var nameVar  = generator.DeclareVariable(typeof(string), "enumName");
-
-			generator.Assign(nameVar, nameExpr);
-			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
-				Throw(() => new LinqToDBException("Can not convert Enum value.")));
-
-			var result = generator.MapExpression((string n) => Enum.Parse(replacementType, n), nameVar);
+			var result = generator.MapExpression((object val) => Enum.Parse(replacementType, val.ToString()), expression);
 
 			return result;
 		}
@@ -109,15 +98,7 @@ namespace LinqToDB.Expressions
 			if (!toType.IsEnum)
 				throw new LinqToDBException("Only enums converted automatically.");
 
-			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
-				Expression.Convert(expression, typeof(object)));
-			var nameVar = generator.DeclareVariable(typeof(string), "enumName");
-
-			generator.Assign(nameVar, nameExpr);
-			generator.IfThen(MapExpression((string s) => s.IsNullOrEmpty(), nameVar),
-				Throw(() => new LinqToDBException("Can not convert Enum value.")));
-
-			var result = generator.MapExpression((string n) => (TTarget)Enum.Parse(toType, n), false, nameVar);
+			var result = generator.MapExpression((object val) => (TTarget)Enum.Parse(toType, val.ToString()), false, expression);
 
 			return result;
 		}
@@ -347,18 +328,39 @@ namespace LinqToDB.Expressions
 										.Select(p => MakeReplacement(p.ParameterType))
 										.ToArray();
 
-									var method = replacement.GetMethod(mc.Method.Name, types);
-
-									if (method == null)
+									if (mc.Method.IsGenericMethod)
 									{
-										var name = replacement.FullName + "." + mc.Method.Name + "(" +
-										           string.Join(", ", types.Select(t => t.Name)) + ")";
-										throw new LinqToDBException($"Method not found in target type: {name}");
-									}
+										// typeArgs replacements not implemented now, as we don't have usecases for it
+										var typeArgs = mc.Method.GetGenericArguments();
+										var method   = replacement.GetMethodEx(mc.Method.Name, typeArgs.Length, types);
 
-									var newArguments  = mc.Arguments.Select(ReplaceTypes);
-									var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), method, newArguments);
-									return newMethodCall;
+										if (method == null)
+										{
+											var name = replacement.FullName + "." + mc.Method.Name + "<" +
+													   string.Join(", ", typeArgs.Select(t => t.Name))+ ">(" +
+													   string.Join(", ", types.Select(t => t.Name)) + ")";
+											throw new LinqToDBException($"Method not found in target type: {name}");
+										}
+
+										var newArguments  = mc.Arguments.Select(ReplaceTypes);
+										var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), mc.Method.Name, typeArgs, newArguments.ToArray());
+										return newMethodCall;
+									}
+									else
+									{
+										var method = replacement.GetMethod(mc.Method.Name, types);
+
+										if (method == null)
+										{
+											var name = replacement.FullName + "." + mc.Method.Name + "(" +
+													   string.Join(", ", types.Select(t => t.Name)) + ")";
+											throw new LinqToDBException($"Method not found in target type: {name}");
+										}
+
+										var newArguments = mc.Arguments.Select(ReplaceTypes);
+										var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), method, newArguments);
+										return newMethodCall;
+									}
 								}
 
 								break;
@@ -486,6 +488,27 @@ namespace LinqToDB.Expressions
 
 		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
 			=> MapExpressionInternal(func, mapConvert, p1, p2, p3, p4, p5);
+		#endregion
+
+		#region MapAction
+
+		public Expression MapAction(Expression<Action> action, bool mapConvert)
+			=> MapExpressionInternal(action, mapConvert);
+
+		public Expression MapAction<T>(Expression<Action<T>> action, bool mapConvert, Expression p)
+			=> MapExpressionInternal(action, mapConvert, p);
+
+		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, bool mapConvert, Expression p1, Expression p2)
+			=> MapExpressionInternal(action, mapConvert, p1, p2);
+
+		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, bool mapConvert, Expression p1, Expression p2, Expression p3)
+			=> MapExpressionInternal(action, mapConvert, p1, p2, p3);
+
+		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> MapExpressionInternal(action, mapConvert, p1, p2, p3, p4);
+
+		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> MapExpressionInternal(action, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
 		#region MapLambda

@@ -21,12 +21,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 		}
+
+		internal static MappingSchema Instance = new PostgreSQLMappingSchema();
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
@@ -82,6 +84,30 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+		}
+	}
+
+	public class PostgreSQL92MappingSchema : MappingSchema
+	{
+		public PostgreSQL92MappingSchema()
+			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		{
+		}
+	}
+
+	public class PostgreSQL93MappingSchema : MappingSchema
+	{
+		public PostgreSQL93MappingSchema()
+			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
+		{
+		}
+	}
+
+	public class PostgreSQL95MappingSchema : MappingSchema
+	{
+		public PostgreSQL95MappingSchema()
+			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
+		{
 		}
 	}
 }

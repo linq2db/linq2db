@@ -175,6 +175,26 @@ namespace LinqToDB.Expressions
 			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
+		#region MapAction
+		public Expression MapAction(Expression<Action> action)
+			=> _mapper.MapAction(action, true);
+
+		public Expression MapAction<T>(Expression<Action<T>> action, Expression p)
+			=> _mapper.MapAction(action, true, p);
+
+		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, Expression p1, Expression p2)
+			=> _mapper.MapAction(action, true, p1, p2);
+
+		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, Expression p1, Expression p2, Expression p3)
+			=> _mapper.MapAction(action, true, p1, p2, p3);
+
+		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> _mapper.MapAction(action, true, p1, p2, p3, p4);
+
+		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> _mapper.MapAction(action, true, p1, p2, p3, p4, p5);
+		#endregion
+
 
 	}
 }

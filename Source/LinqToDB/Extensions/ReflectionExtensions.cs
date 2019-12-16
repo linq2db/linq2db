@@ -115,6 +115,20 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
+		/// <summary>
+		/// Gets generic method.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, string name, int genericParametersCount, params Type[] types)
+		{
+			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				if (method.IsGenericMethod && method.Name == name && method.GetParameters().Length == genericParametersCount)
+					return method;
+			}
+
+			return null;
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);

@@ -16,15 +16,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
-		readonly PostgreSQLDataProvider _dataProvider;
-		readonly Type                   _connectionType;
+		readonly PostgreSQLDataProvider _provider;
 
+		// TODO: permanent cache is bad
 		static readonly ConcurrentDictionary<object, object> _rowWriterCache = new ConcurrentDictionary<object, object>();
 
-		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider, Type connectionType)
+		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider)
 		{
-			_dataProvider   = dataProvider;
-			_connectionType = connectionType;
+			_provider = dataProvider;
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
@@ -36,21 +35,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
-				var connection = dataConnection.Connection;
+				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
 
 				if (connection == null)
 					return MultipleRowsCopy(table, options, source);
 
-				if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
-					return MultipleRowsCopy(table, options, source);
+				var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var ed         = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var tableName  = GetTableName(sqlBuilder, options, table);
+				var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
 
-				var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var tableName = GetTableName(sqlBuilder, options, table);
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
-				var writerType = _connectionType.Assembly.GetType("Npgsql.NpgsqlBinaryImporter", true);
-
-				var fields = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
+				var fields      = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
 				var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
 				var rowsCopied = new BulkCopyRowsCopied();
@@ -58,20 +53,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
 				var currentCount = 0;
 
-				var dc = (dynamic)connection;
-
 				var key = new { Type = typeof(T), options.KeepIdentity, ed };
-				var rowWriter = (Action<MappingSchema, object, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
+				var rowWriter = (Action<MappingSchema, PostgreSQLWrappers.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
 					key,
-					_ => BuildRowWriter<T>(writerType, columns, dataConnection.MappingSchema));
+					_ => _provider.Wrapper.Value.GetBinaryImportRowWriter<T>(_provider, sqlBuilder, columns, dataConnection.MappingSchema));
 
-				var writer = dc.BeginBinaryImport(copyCommand);
+				var useComplete = _provider.Wrapper.Value.BinaryImporterHasComplete;
+				var writer      = _provider.Wrapper.Value.BeginBinaryImport(connection, copyCommand);
 
-				// https://github.com/npgsql/npgsql/issues/1646
-				// Cancel: npgsql 3.x
-				// Complete: npgsql 4+
-				var hasCancel = writer.GetType().GetMethod("Cancel") != null;
-				var hasComplete = writer.GetType().GetMethod("Complete") != null;
 				try
 				{
 					foreach (var item in source)
@@ -81,34 +70,45 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						currentCount++;
 						rowsCopied.RowsCopied++;
 
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
+						{
+							options.RowsCopiedCallback(rowsCopied);
+
+							if (rowsCopied.Abort)
+							{
+								if (!useComplete)
+									writer.Cancel();
+								break;
+							}
+						}
+
 						if (currentCount >= batchSize)
 						{
-							if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
-							{
-								options.RowsCopiedCallback(rowsCopied);
-
-								if (rowsCopied.Abort)
-								{
-									if (hasCancel)
-										writer.Cancel();
-									break;
-								}
-							}
-
-							if (hasComplete)
+							if (useComplete)
 								writer.Complete();
 
 							writer.Dispose();
 
-							writer = dc.BeginBinaryImport(copyCommand);
+							writer       = _provider.Wrapper.Value.BeginBinaryImport(connection, copyCommand);
 							currentCount = 0;
 						}
 					}
 
-					if (!rowsCopied.Abort && hasComplete)
-						writer.Complete();
+					if (!rowsCopied.Abort)
+					{
+						TraceAction(
+							dataConnection,
+							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+							() => { 
+								if (useComplete)
+									writer.Complete();
+								return (int)rowsCopied.RowsCopied; });
+					}
+
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+						options.RowsCopiedCallback(rowsCopied);
 				}
-				catch when (hasCancel)
+				catch when (!useComplete)
 				{
 					writer.Cancel();
 					throw;
@@ -122,61 +122,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return MultipleRowsCopy(table, options, source);
-		}
-
-		Action<MappingSchema, object, ColumnDescriptor[], TEntity> BuildRowWriter<TEntity>(
-			Type writerType, ColumnDescriptor[] columns, MappingSchema mappingSchema)
-		{
-			var pMapping    = Expression.Parameter(typeof(MappingSchema));
-			var pWriter     = Expression.Parameter(typeof(object));
-			var pColumns    = Expression.Parameter(typeof(ColumnDescriptor[]));
-			var pEntity     = Expression.Parameter(typeof(TEntity));
-
-			var writerVar   = Expression.Variable(writerType);
-			var exprs       = new List<Expression>
-			{
-				Expression.Assign(writerVar, Expression.Convert(pWriter, writerType)),
-				Expression.Call(writerVar, "StartRow", Array<Type>.Empty)
-			};
-
-			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder(mappingSchema);
-
-			for (var i = 0; i < columns.Length; i++)
-			{
-				var npgsqlType = _dataProvider.GetNativeType(columns[i].DbType);
-				if (npgsqlType == null)
-				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i]) : null;
-
-					if (columnType == null || columnType.DataType == DataType.Undefined)
-						columnType = mappingSchema.GetDataType(columns[i].StorageType);
-
-					var sb = new StringBuilder();
-					builder.BuildTypeName(sb, columnType);
-					npgsqlType = _dataProvider.GetNativeType(sb.ToString());
-				}
-
-				if (npgsqlType == null)
-					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
-
-				// don't use WriteNull because Write already handle both null and DBNull values properly
-				exprs.Add(Expression.Call(
-					writerVar,
-					"Write",
-					new[] { typeof(object) },
-					Expression.Call(
-						Expression.ArrayIndex(pColumns, Expression.Constant(i)),
-						MemberHelper.MethodOf((ColumnDescriptor cd) => cd.GetValue(default, default)),
-						pMapping,
-						pEntity),
-					Expression.Constant(npgsqlType)));
-			}
-
-			var ex = Expression.Lambda<Action<MappingSchema, object, ColumnDescriptor[], TEntity>>(
-					Expression.Block(new[] { writerVar }, exprs),
-					pMapping, pWriter, pColumns, pEntity);
-
-			return ex.Compile();
 		}
 	}
 }
