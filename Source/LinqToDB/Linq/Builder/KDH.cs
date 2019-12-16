@@ -13,6 +13,10 @@ namespace LinqToDB.Linq.Builder
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
 	public class KDH<TKey, TData>
 	{
+		public KDH()
+		{
+		}
+
 		public KDH(TKey key, TData data)
 		{
 			Key = key;

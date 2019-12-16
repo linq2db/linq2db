@@ -557,6 +557,34 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
+		Expression TraverseMethodCall(MemberExpression ma)
+		{
+			if (ma.Expression?.NodeType == ExpressionType.Call)
+			{
+				var mc  = (MethodCallExpression)ma.Expression;
+				var pms = mc.Method.GetParameters();
+				var foundParam = pms.FirstOrDefault(p => p.Name == ma.Member.Name);
+				if (foundParam == null)
+				{
+					foundParam = pms.FirstOrDefault(p => p.Name.Equals(ma.Member.Name, StringComparison.OrdinalIgnoreCase));
+				}
+								
+				if (foundParam != null && ma.Type.IsAssignableFrom(foundParam.ParameterType))
+				{
+					var argIdx = Array.IndexOf(pms, foundParam);
+					if (argIdx >= 0)
+					{
+						var newArg = mc.Arguments[argIdx];
+						if (newArg.NodeType == ExpressionType.MemberAccess)
+							return TraverseMethodCall((MemberExpression)newArg);
+						return newArg;
+					}
+				}
+			}
+
+			return ma;
+		}
+
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
 			var l = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
