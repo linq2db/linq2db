@@ -160,16 +160,17 @@ namespace LinqToDB.SqlQuery
 		//
 		public class Like : NotExpr
 		{
-			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression escape)
+			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression escape, bool isSqlLike)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
 				Expr2  = exp2;
 				Escape = escape;
+				IsSqlLike = isSqlLike;
 			}
 
 			public ISqlExpression Expr2  { get; internal set; }
 			public ISqlExpression Escape { get; internal set; }
-
+			public bool IsSqlLike { get; internal set; }
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
@@ -185,7 +186,7 @@ namespace LinqToDB.SqlQuery
 
 				if (!objectTree.TryGetValue(this, out var clone))
 					objectTree.Add(this, clone = new Like(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Escape));
+						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Escape, IsSqlLike));
 
 				return clone;
 			}

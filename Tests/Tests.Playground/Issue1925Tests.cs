@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.OleDb;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,10 +33,21 @@ namespace Tests.Playground
 				table.Insert(() => new SampleClass() { Id = 1, Value = "6" });
 				Assert.AreEqual(1, table.ToList().Count());
 				var asParam = "[0-9]";
-				Assert.AreEqual(1, table.Where(r => AccessLike(r.Value, asParam)).ToList().Count());
-				Assert.AreEqual(1, table.Where(r => AccessLike(r.Value, "[0-9]")).ToList().Count());
+				var asParamUnterm = "[0";
+
+				Assert.AreEqual(0, table.Where(r => r.Value.Contains("[0")).ToList().Count());
+
+				Assert.AreEqual(0, table.Where(r => r.Value.Contains(asParamUnterm)).ToList().Count());
+
+				Assert.AreEqual(1, table.Where(r => r.Value.Contains("[0-9]")).ToList().Count());
+
+				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
+				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+
 
 				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count());
+
+				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count());
 
 			}
 		}

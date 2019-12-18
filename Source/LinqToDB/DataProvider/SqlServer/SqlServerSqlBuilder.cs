@@ -175,16 +175,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = DataTools.EscapeUnterminatedBracket(text);
+					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
 			{
 				var p = ((SqlParameter)predicate.Expr2);
-				p.ReplaceLike = true;
+				p.ReplaceLike = predicate.IsSqlLike != true;
 			}
 
 			base.BuildLikePredicate(predicate);

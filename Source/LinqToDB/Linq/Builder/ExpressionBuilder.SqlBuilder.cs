@@ -1561,9 +1561,9 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (e.Method.Name)
 							{
-								case "Contains"   : predicate = ConvertLikePredicate(context, e, "%", "%"); break;
-								case "StartsWith" : predicate = ConvertLikePredicate(context, e, "",  "%"); break;
-								case "EndsWith"   : predicate = ConvertLikePredicate(context, e, "%", "");  break;
+								case "Contains"   : predicate = ConvertLikePredicate(context, e, "%", "%", false); break;
+								case "StartsWith" : predicate = ConvertLikePredicate(context, e, "",  "%", false); break;
+								case "EndsWith"   : predicate = ConvertLikePredicate(context, e, "%", "", false);  break;
 							}
 						}
 						else if (e.Method.Name == "Contains")
@@ -1604,11 +1604,11 @@ namespace LinqToDB.Linq.Builder
 							predicate = ConvertInPredicate(context, expr);
 						}
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
-						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
+						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e,true);
+						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e, true);
 #endif
-						else if (e.Method == ReflectionHelper.Functions.String.Like21) predicate = ConvertLikePredicate(context, e);
-						else if (e.Method == ReflectionHelper.Functions.String.Like22) predicate = ConvertLikePredicate(context, e);
+						else if (e.Method == ReflectionHelper.Functions.String.Like21) predicate = ConvertLikePredicate(context, e, true);
+						else if (e.Method == ReflectionHelper.Functions.String.Like22) predicate = ConvertLikePredicate(context, e, true);
 
 						if (predicate != null)
 							return Convert(context, predicate);
@@ -2449,7 +2449,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression, string start, string end)
+		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression, string start, string end, bool isSqlLike)
 		{
 			var e = expression;
 			var o = ConvertToSql(context, e.Object);
@@ -2463,8 +2463,8 @@ namespace LinqToDB.Linq.Builder
 					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
 
 				return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0?
-					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'));
+					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, isSqlLike):
+					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'), isSqlLike);
 			}
 
 			if (a is SqlParameter p)
@@ -2491,7 +2491,7 @@ namespace LinqToDB.Linq.Builder
 
 				CurrentSqlParameters.Add(ep);
 
-				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'));
+				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), isSqlLike);
 			}
 
 			var mi = MemberHelper.MethodOf(() => "".Replace("", ""));
@@ -2512,10 +2512,10 @@ namespace LinqToDB.Linq.Builder
 			if (!string.IsNullOrEmpty(end))
 				expr = new SqlBinaryExpression(typeof(string), expr, "+", new SqlValue("%"));
 
-			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'));
+			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'), isSqlLike);
 		}
 
-		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
+		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression, bool isSqlLike)
 		{
 			var e  = expression;
 			var a1 = ConvertToSql(context, e.Arguments[0]);
@@ -2526,7 +2526,7 @@ namespace LinqToDB.Linq.Builder
 			if (e.Arguments.Count == 3)
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
-			return new SqlPredicate.Like(a1, false, a2, a3);
+			return new SqlPredicate.Like(a1, false, a2, a3, isSqlLike);
 		}
 
 		static string EscapeLikeText(string text)
