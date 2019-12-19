@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Tests.Playground
 {
 	[TestFixture]
-	public class TestAccess1925 : TestBase
+	public class Issue1925Tests : TestBase
 	{
 
 		[Table]
@@ -22,9 +22,8 @@ namespace Tests.Playground
 		}
 
 		[Test]
-
 		[ActiveIssue(1925)]
-		public void Issue1925Test([IncludeDataSources(ProviderName.Access)]  string context)
+		public void Issue1925Test([IncludeDataSources(ProviderName.Access, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -51,11 +50,6 @@ namespace Tests.Playground
 
 			}
 		}
-
-		[Sql.Expression("{0} LIKE {1}", ServerSideOnly = true, IsPredicate = true)]
-		public static bool AccessLike(string col, string expr)
-		{
-			return Sql.Like(col, expr);
-		}
+        
 	}
 }
