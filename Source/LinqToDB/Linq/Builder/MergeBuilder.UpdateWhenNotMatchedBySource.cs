@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
+						new ExpressionContext(null, new[] { mergeContext.TargetContext }, condition),
 						conditionExpr,
 						operation.Where.Conditions,
 						false);

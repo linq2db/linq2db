@@ -88,8 +88,13 @@ namespace LinqToDB.Linq.Builder
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
-					_innerContext = builder.BuildSequence(new BuildInfo(this, selectManyMethod, new SelectQuery())
-					{ IsAssociationBuilt = true });
+					var buildInfo = new BuildInfo(this, selectManyMethod, new SelectQuery()) { IsAssociationBuilt = true };
+					_innerContext = builder.BuildSequence(buildInfo);
+
+					if (Association.CanBeNull)
+					{
+						_innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, _innerContext, null);
+					}
 
 					var associationQuery = _innerContext.SelectQuery;
 
@@ -142,6 +147,9 @@ namespace LinqToDB.Linq.Builder
 
 					// add rest of tables
 					SelectQuery.From.Tables.AddRange(associationQuery.Select.From.Tables.Where(t => t != sourceToReplace));
+
+					//TODO: Change AssociatedTableContext base class
+					//SqlTable = null;
 				}
 				else
 				{

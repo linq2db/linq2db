@@ -91,7 +91,7 @@ public class MySettings : ILinqToDBSettings
             yield return
                 new ConnectionStringSettings
                 {
-                    Name = "SqlServer",
+                    Name = "Northwind",
                     ProviderName = "SqlServer",
                     ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
                 };

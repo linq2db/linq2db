@@ -978,7 +978,7 @@ namespace LinqToDB.Expressions
 		{
 			var type = method.Method.DeclaringType;
 
-			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
+			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) || type == typeof(DataExtensions);
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
