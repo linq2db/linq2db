@@ -115,6 +115,42 @@ namespace LinqToDB.Linq.Builder
 
 			Expression[] arguments;
 
+			if (count > MutableTuple.MaxMemberCount)
+			{
+				count = MutableTuple.MaxMemberCount;
+				arguments = new Expression[count];
+				Array.Copy(members, startIndex, arguments, 0, count - 1);
+				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count);
+			}
+			else
+			{
+				arguments = new Expression[count];
+				Array.Copy(members, startIndex, arguments, 0, count);
+			}
+
+			var type = MutableTuple.Types[count - 1];
+			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
+
+			var constructor = concreteType.GetConstructor(Array<Type>.Empty);
+
+			var newExpression = Expression.New(constructor);
+			var initExpression = Expression.MemberInit(newExpression,
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1)), a)));
+			return initExpression;
+		}
+
+
+		private static Expression GenerateKeyExpressionOld(Expression[] members, int startIndex)
+		{
+			var count = members.Length - startIndex;
+			if (count == 0)
+				throw new ArgumentException();
+
+			if (count == 1)
+				return members[startIndex];
+
+			Expression[] arguments;
+
 			if (count > 8)
 			{
 				count = 8;
@@ -280,11 +316,12 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<Expression> ExtractArguments(Expression expression)
 		{
-			if (expression is MethodCallExpression mc)
+			if (expression is MemberInitExpression mi)
 			{
-				foreach (var argument in mc.Arguments)
+				foreach (var binding in mi.Bindings)
 				{
-					foreach (var subArgument in ExtractArguments(argument))
+					var assignment = (MemberAssignment)binding;
+					foreach (var subArgument in ExtractArguments(assignment.Expression))
 					{
 						yield return subArgument;
 					}
@@ -298,16 +335,13 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<Tuple<Expression, MemberExpression>> ExtractTupleValues(Expression expression, Expression obj)
 		{
-			if (expression.NodeType == ExpressionType.Call)
+			if (expression is MemberInitExpression mi)
 			{
-				var mc = (MethodCallExpression)expression;
-				var properties = mc.Type.GetProperties();
-				for (var i = 0; i < mc.Arguments.Count; i++)
+				foreach (var binding in mi.Bindings)
 				{
-					var argument     = mc.Arguments[i];
-					var memberAccess = Expression.MakeMemberAccess(obj, properties[i]);
-
-					foreach (var subExpr in ExtractTupleValues(argument, memberAccess))
+					var assignment = (MemberAssignment)binding;
+					var memberAccess = Expression.MakeMemberAccess(obj, assignment.Member);
+					foreach (var subExpr in ExtractTupleValues(assignment.Expression, memberAccess))
 					{
 						yield return subExpr;
 					}

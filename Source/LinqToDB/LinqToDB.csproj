@@ -36,9 +36,25 @@
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
 
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
+
 		<None Update="AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
+
+		<None Update="Common\Internal\MutableTuple.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+		</None>
+
+		<None Update="Linq\Builder\DynamicClasses.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>DynamicClasses.generated.cs</LastGenOutput>
 		</None>
 	</ItemGroup>
 
@@ -94,5 +110,9 @@
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 </Project>

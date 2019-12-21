@@ -557,32 +557,36 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		Expression TraverseMethodCall(MemberExpression ma)
+		Expression TraverseMethodCall(Expression expr)
 		{
-			if (ma.Expression?.NodeType == ExpressionType.Call)
+			if (expr.NodeType == ExpressionType.MemberAccess)
 			{
-				var mc  = (MethodCallExpression)ma.Expression;
-				var pms = mc.Method.GetParameters();
-				var foundParam = pms.FirstOrDefault(p => p.Name == ma.Member.Name);
-				if (foundParam == null)
+				var ma = (MemberExpression)expr;
+				if(ma.Expression?.NodeType == ExpressionType.Call)
 				{
-					foundParam = pms.FirstOrDefault(p => p.Name.Equals(ma.Member.Name, StringComparison.OrdinalIgnoreCase));
-				}
-								
-				if (foundParam != null && ma.Type.IsAssignableFrom(foundParam.ParameterType))
-				{
-					var argIdx = Array.IndexOf(pms, foundParam);
-					if (argIdx >= 0)
+					var mc = (MethodCallExpression)ma.Expression;
+					var pms = mc.Method.GetParameters();
+					var foundParam = pms.FirstOrDefault(p => p.Name == ma.Member.Name);
+					if (foundParam == null)
 					{
-						var newArg = mc.Arguments[argIdx];
-						if (newArg.NodeType == ExpressionType.MemberAccess)
-							return TraverseMethodCall((MemberExpression)newArg);
-						return newArg;
+						foundParam = pms.FirstOrDefault(p =>
+							p.Name.Equals(ma.Member.Name, StringComparison.OrdinalIgnoreCase));
+					}
+
+					if (foundParam != null && ma.Type.IsAssignableFrom(foundParam.ParameterType))
+					{
+						var argIdx = Array.IndexOf(pms, foundParam);
+						if (argIdx >= 0)
+						{
+							var newArg = mc.Arguments[argIdx];
+								newArg = TraverseMethodCall(newArg);
+							return newArg;
+						}
 					}
 				}
 			}
 
-			return ma;
+			return expr;
 		}
 
 		Expression ConvertMethod(MethodCallExpression pi)
@@ -3160,6 +3164,129 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		public bool ProcessProjection(Dictionary<Expression,Expression> members, Expression expression, Expression obj)
+		{
+			void CollectProjection(Expression currentExpression, Expression currentObj)
+			{
+				switch (currentExpression.NodeType)
+				{
+					// new { ... }
+					//
+					case ExpressionType.New        :
+						{
+							var expr = (NewExpression)currentExpression;
+
+							if (expr.Members != null)
+							{
+								for (var i = 0; i < expr.Members.Count; i++)
+								{
+									var member = expr.Members[i];
+
+									var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+									var ma = Expression.MakeMemberAccess(currentObj, member);
+									members.Add(ma, converted);
+									CollectProjection(converted, ma);
+
+									if (member is MethodInfo info)
+									{
+										ma = Expression.MakeMemberAccess(currentObj, info.GetPropertyInfo());
+										members.Add(ma, converted);
+										CollectProjection(converted, ma);
+									}
+								}
+							}
+
+							if (!MappingSchema.IsScalarType(expr.Type))
+								CollectParameters(expr, expr.Constructor, expr.Arguments);
+
+							break;
+						}
+
+					// new MyObject { ... }
+					//
+					case ExpressionType.MemberInit :
+						{
+							var expr = (MemberInitExpression)expression;
+							var typeMembers = TypeAccessor.GetAccessor(expr.Type).Members;
+
+							var dic  = typeMembers
+								.Select((m,i) => new { m, i })
+								.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
+
+							foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
+							{
+								var converted = binding.Expression.Transform(e => RemoveNullPropagation(e));
+								var ma = Expression.MakeMemberAccess(currentObj, binding.Member);
+								members.Add(ma, converted);
+								CollectProjection(converted, ma);
+
+								if (binding.Member is MethodInfo info)
+								{
+									ma = Expression.MakeMemberAccess(currentObj, info.GetPropertyInfo());
+									members.Add(ma, converted);
+									CollectProjection(converted, ma);
+								}
+							}
+
+							break;
+						}
+
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)expression;
+
+							// process fabric methods
+
+							if (!MappingSchema.IsScalarType(mc.Type))
+								CollectParameters(mc, mc.Method, mc.Arguments);
+
+							break;
+						}
+
+					// .Select(p => everything else)
+					//
+					default                        :
+						break;
+				}
+
+			}
+
+			void CollectParameters(Expression currentObj, MethodBase method, ReadOnlyCollection<Expression> arguments)
+			{
+				var pms = method.GetParameters();
+
+				var typeMembers = TypeAccessor.GetAccessor(currentObj.Type).Members;
+
+				for (var i = 0; i < pms.Length; i++)
+				{
+					var param = pms[i];
+					var foundMember = typeMembers.Find(tm => tm.Name == param.Name);
+					if (foundMember == null)
+						foundMember = typeMembers.Find(tm =>
+							tm.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+					if (foundMember == null)
+						continue;
+
+					var converted = arguments[i].Transform(e => RemoveNullPropagation(e));
+
+					var ma = Expression.MakeMemberAccess(currentObj, foundMember.MemberInfo);
+
+					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
+						continue;
+
+					members.Remove(ma);
+					members.Add(ma, converted);
+
+					CollectProjection(converted, ma);
+				}
+			}
+
+			//CollectProjection(expression, obj);
+
+			return members.Count > 0;
+		}
+
+
 		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
 			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
@@ -3186,7 +3313,7 @@ namespace LinqToDB.Linq.Builder
 					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
 						continue;
 
-					members.Add(foundMember.MemberInfo, converted);
+					members.Add(foundMember.MemberInfo, TraverseMethodCall(converted));
 				}
 			}
 
@@ -3204,7 +3331,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+								var converted = TraverseMethodCall(expr.Arguments[i].Transform(e => RemoveNullPropagation(e)));
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3231,7 +3358,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
 						{
-							var converted = binding.Expression.Transform(e => RemoveNullPropagation(e));
+							var converted = TraverseMethodCall(binding.Expression.Transform(e => RemoveNullPropagation(e)));
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)
