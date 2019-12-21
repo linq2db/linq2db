@@ -115,6 +115,7 @@ namespace LinqToDB.Async
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
+			// - Npgsql 4.1.2+
 			var disposeAsync  = CreateDelegate<Func<IDbConnection                    , Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
 			// Task DisposeAsync()
 			// Availability:
@@ -176,6 +177,7 @@ namespace LinqToDB.Async
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
+			// - Npgsql 4.1.2+
 			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
 			// Task DisposeAsync()
 			// Availability:
