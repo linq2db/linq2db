@@ -497,7 +497,8 @@ namespace Tests.DataProvider
 					var xdoc = XDocument.Parse("<xml/>");
 					var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-					Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
+					var xmlExpected = GetProviderName(context, out var _) == ProviderName.OracleNative ? "<xml/>\n" : "<xml/>";
+					Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo(xmlExpected));
 					Assert.That(conn.Execute<XDocument>  (PathThroughSql, DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>(PathThroughSql, DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>  (PathThroughSql, new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
@@ -2341,6 +2342,137 @@ namespace Tests.DataProvider
 				{
 					OracleTools.DontEscapeLowercaseIdentifiers = initial;
 				}
+			}
+		}
+
+		[Test]
+		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			var isNative = GetProviderName(context, out var _) == ProviderName.OracleNative;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var pms = new[]
+				{
+					new DataParameter {Name = "ID"                    , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+
+					new DataParameter {Name = "bigintDataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "numericDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "bitDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "smallintDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "decimalDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "smallmoneyDataType"    , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "intDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "tinyintDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "moneyDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "floatDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Double,         Value = 1},
+					new DataParameter {Name = "realDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Single,         Value = 1},
+
+					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = DateTime.Now},
+					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = DateTime.Now},
+					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+
+					new DataParameter {Name = "charDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'A'},
+					new DataParameter {Name = "char20DataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'B'},
+					new DataParameter {Name = "varcharDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.VarChar,        Value = "VarChar"},
+					new DataParameter {Name = "textDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Text,           Value = "Text"},
+					new DataParameter {Name = "ncharDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.NChar,          Value = "NChar"},
+					new DataParameter {Name = "nvarcharDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.NVarChar,       Value = "NVarChar"},
+					new DataParameter {Name = "ntextDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.NText,          Value = "NText"},
+
+					new DataParameter {Name = "binaryDataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Blob,           Value = new byte []{ 1,2,3 }},
+
+					new DataParameter {Name = "bfileDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.BFile,          Value = new byte []{ 1,2,3 }},
+
+					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = Guid.NewGuid()},
+
+					// TODO: it is not clear which db type use for this parameter so oracle will accept it
+					//new DataParameter {Name = "uriDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Undefined,      Value = "http://uri.com" },
+					new DataParameter {Name = "xmlDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Xml,            Value = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>hi</test>"},
+				};
+
+				db.ExecuteProc("AllOutputParameters", pms);
+
+				// assert types converted
+				Assert.AreEqual(typeof(decimal)       , pms[0] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[1] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[2] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[3] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[4] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[5] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[6] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[7] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[8] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[9] .Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[10].Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[11].Value.GetType());
+				Assert.AreEqual(typeof(DateTime)      , pms[12].Value.GetType());
+				Assert.AreEqual(typeof(DateTime)      , pms[13].Value.GetType());
+				Assert.AreEqual(typeof(DateTimeOffset), pms[14].Value.GetType());
+				Assert.AreEqual(typeof(DateTimeOffset), pms[15].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[16].Value.GetType());
+				// [17] is char20 which is not set now for some reason
+				Assert.AreEqual(typeof(string)        , pms[18].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[19].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[20].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[21].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[22].Value.GetType());
+				Assert.AreEqual(typeof(byte[])        , pms[23].Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleBFileType, pms[24].Value.GetType());
+				Assert.AreEqual(typeof(byte[])        , pms[25].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[26].Value.GetType());
+
+				// assert values
+				Assert.AreEqual(2                     , pms[0].Value);
+				Assert.AreEqual(1000000               , pms[1].Value);
+				Assert.AreEqual(9999999               , pms[2].Value);
+				Assert.AreEqual(1                     , pms[3].Value);
+				Assert.AreEqual(25555                 , pms[4].Value);
+				Assert.AreEqual(2222222               , pms[5].Value);
+				Assert.AreEqual(100000                , pms[6].Value);
+				Assert.AreEqual(7777777               , pms[7].Value);
+				Assert.AreEqual(100                   , pms[8].Value);
+				Assert.AreEqual(100000                , pms[9].Value);
+				Assert.AreEqual(20.31                 , pms[10].Value);
+				Assert.AreEqual(16.2                  , pms[11].Value);
+				Assert.AreEqual(new DateTime(2012, 12, 12, 12, 12, 12), pms[12].Value);
+				Assert.AreEqual(new DateTime(2012, 12, 12, 12, 12, 12, 12), pms[13].Value);
+				Assert.AreEqual(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TimeSpan.FromHours(-5)), pms[14].Value);
+				Assert.AreEqual(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero), pms[15].Value);
+				Assert.AreEqual("1"                   , pms[16].Value);
+				Assert.IsNull(pms[17].Value);
+				Assert.AreEqual("234"                 , pms[18].Value);
+				Assert.AreEqual("567"                 , pms[19].Value);
+				Assert.AreEqual("23233"               , pms[20].Value);
+				Assert.AreEqual("3323"                , pms[21].Value);
+				Assert.AreEqual("111"                 , pms[22].Value);
+				Assert.AreEqual(new byte[] { 0, 0xAA }, pms[23].Value);
+
+				// default converter for BFile missing intentionally
+				var bfile = pms[24].Output.Value;
+				if (isNative)
+				{
+#if NET46
+					using (var file = (Oracle.DataAccess.Types.OracleBFile)bfile)
+					{
+						file.OpenFile();
+						Assert.AreEqual(new byte[] { 0x31, 0x32, 0x33, 0x34, 0x35 }, file.Value);
+					}
+#endif
+				}
+				else
+				{
+					using (var file = (Oracle.ManagedDataAccess.Types.OracleBFile)bfile)
+					{
+						file.OpenFile();
+						Assert.AreEqual(new byte[] { 0x31, 0x32, 0x33, 0x34, 0x35 }, file.Value);
+					}
+
+				}
+
+				// guid is autogenerated
+				Assert.AreEqual(16                    , ((byte[])pms[25].Value).Length);
+				Assert.AreEqual("<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n", pms[26].Value);
 			}
 		}
 

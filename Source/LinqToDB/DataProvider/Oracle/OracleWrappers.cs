@@ -353,22 +353,23 @@ namespace LinqToDB.DataProvider.Oracle
 				var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType", true);
 				var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand", true);
 
-				var oracleBFileType        = loadType("OracleBFile"       , DataType.VarChar         )!;
-				var oracleBinaryType       = loadType("OracleBinary"      , DataType.VarBinary       )!;
-				var oracleBlobType         = loadType("OracleBlob"        , DataType.Blob            )!;
-				var oracleClobType         = loadType("OracleClob"        , DataType.NText           )!;
-				var oracleDateType         = loadType("OracleDate"        , DataType.DateTime        )!;
-				var oracleDecimalType      = loadType("OracleDecimal"     , DataType.Decimal         )!;
-				var oracleIntervalDSType   = loadType("OracleIntervalDS"  , DataType.Time            )!;
-				var oracleIntervalYMType   = loadType("OracleIntervalYM"  , DataType.Date            )!;
-				var oracleStringType       = loadType("OracleString"      , DataType.NVarChar        )!;
-				var oracleTimeStampType    = loadType("OracleTimeStamp"   , DataType.DateTime2       )!;
-				var oracleTimeStampLTZType = loadType("OracleTimeStampLTZ", DataType.DateTimeOffset  )!;
-				var oracleTimeStampTZType  = loadType("OracleTimeStampTZ" , DataType.DateTimeOffset  )!;
-				var oracleXmlTypeType      = loadType("OracleXmlType"     , DataType.Xml             )!;
-				var oracleXmlStreamType    = loadType("OracleXmlStream"   , DataType.Xml, true, false)!;
-				var oracleRefCursorType    = loadType("OracleRefCursor"   , DataType.Binary          )!;
-				var oracleRefType          = loadType("OracleRef"         , DataType.Binary, true);
+				// do not set default conversion for BFile as it could be converted to file name, byte[], Stream and we don't know what user needs
+				var oracleBFileType        = loadType("OracleBFile"       , DataType.BFile                  , skipConvertExpression: true)!;
+				var oracleBinaryType       = loadType("OracleBinary"      , DataType.VarBinary              )!;
+				var oracleBlobType         = loadType("OracleBlob"        , DataType.Blob                   )!;
+				var oracleClobType         = loadType("OracleClob"        , DataType.NText                  )!;
+				var oracleDateType         = loadType("OracleDate"        , DataType.DateTime               )!;
+				var oracleDecimalType      = loadType("OracleDecimal"     , DataType.Decimal                )!;
+				var oracleIntervalDSType   = loadType("OracleIntervalDS"  , DataType.Time                   )!;
+				var oracleIntervalYMType   = loadType("OracleIntervalYM"  , DataType.Date                   )!;
+				var oracleStringType       = loadType("OracleString"      , DataType.NVarChar               )!;
+				var oracleTimeStampType    = loadType("OracleTimeStamp"   , DataType.DateTime2              )!;
+				var oracleTimeStampLTZType = loadType("OracleTimeStampLTZ", DataType.DateTimeOffset         )!;
+				var oracleTimeStampTZType  = loadType("OracleTimeStampTZ" , DataType.DateTimeOffset         )!;
+				var oracleXmlTypeType      = loadType("OracleXmlType"     , DataType.Xml                    )!;
+				var oracleXmlStreamType    = loadType("OracleXmlStream"   , DataType.Xml, true, false       )!;
+				var oracleRefCursorType    = loadType("OracleRefCursor"   , DataType.Binary, hasValue: false)!;
+				var oracleRefType          = loadType("OracleRef"         , DataType.Binary, true           );
 
 				IBulkCopyWrapper? bulkCopy = null;
 				TypeMapper typeMapper;
@@ -456,29 +457,39 @@ namespace LinqToDB.DataProvider.Oracle
 					oracleRefCursorType,
 					oracleRefType);
 
-				Type? loadType(string typeName, DataType dataType, bool optional = false, bool getNull = true
-					)
+				Type? loadType(string typeName, DataType dataType, bool optional = false, bool hasNull = true, bool hasValue = true, bool skipConvertExpression = false)
 				{
 					var type = assembly.GetType($"{typesNamespace}.{typeName}", !optional);
 					if (type == null)
 						return null;
 
-					// TODO: do we still need this double calls
-					//try
-					//{
-					//	return getValue.Compile()();
-					//}
-					//catch (Exception)
-					//{
-					//	return getValue.Compile()();
-					//}
-					if (getNull)
+					if (hasNull)
 					{
 						var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
 						mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 					}
 					else
 						mappingSchema.AddScalarType(type, null, true, dataType);
+
+					if (skipConvertExpression)
+						return type;
+
+					// conversion from provider-specific type
+					var valueParam = Expression.Parameter(type);
+
+					Expression memberExpression;
+					if (!hasValue)
+						memberExpression = valueParam;
+					else
+						memberExpression = Expression.Property(valueParam, "Value");
+
+					var condition = Expression.Condition(
+						Expression.Equal(valueParam, Expression.Field(null, type, "Null")),
+						Expression.Constant(null, typeof(object)),
+						Expression.Convert(memberExpression, typeof(object)));
+
+					var convertExpression = Expression.Lambda(condition, valueParam);
+					mappingSchema.SetConvertExpression(type, typeof(object), convertExpression);
 
 					return type;
 				}

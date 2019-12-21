@@ -1175,6 +1175,8 @@ namespace LinqToDB.Mapping
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
+				SetConverter<DBNull, object?>(_ => null);
+
 				ValueToSqlConverter.SetDefaults();
 			}
 		}

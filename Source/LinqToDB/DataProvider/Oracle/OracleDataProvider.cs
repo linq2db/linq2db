@@ -193,6 +193,12 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
+				case DataType.BFile:
+					{
+						// TODO: BFile we do not support setting parameter value
+						value = null;
+						break;
+					}
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
@@ -228,17 +234,19 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (dataType.DataType)
 			{
-				case DataType.Single         : type = OracleWrappers.OracleDbType.BinaryFloat ; break;
-				case DataType.Double         : type = OracleWrappers.OracleDbType.BinaryDouble; break;
-				case DataType.Text           : type = OracleWrappers.OracleDbType.Clob        ; break;
-				case DataType.NText          : type = OracleWrappers.OracleDbType.NClob       ; break;
-				case DataType.Image          :
-				case DataType.Binary         :
-				case DataType.VarBinary      : type = OracleWrappers.OracleDbType.Blob        ; break;
-				case DataType.Cursor         : type = OracleWrappers.OracleDbType.RefCursor   ; break;
-				case DataType.NVarChar       : type = OracleWrappers.OracleDbType.NVarchar2   ; break;
-				case DataType.Long           : type = OracleWrappers.OracleDbType.Long        ; break;
-				case DataType.LongRaw        : type = OracleWrappers.OracleDbType.LongRaw     ; break;
+				case DataType.BFile    : type = OracleWrappers.OracleDbType.BFile       ; break;
+				case DataType.Xml      : type = OracleWrappers.OracleDbType.XmlType     ; break;
+				case DataType.Single   : type = OracleWrappers.OracleDbType.BinaryFloat ; break;
+				case DataType.Double   : type = OracleWrappers.OracleDbType.BinaryDouble; break;
+				case DataType.Text     : type = OracleWrappers.OracleDbType.Clob        ; break;
+				case DataType.NText    : type = OracleWrappers.OracleDbType.NClob       ; break;
+				case DataType.Image    :
+				case DataType.Binary   :
+				case DataType.VarBinary: type = OracleWrappers.OracleDbType.Blob        ; break;
+				case DataType.Cursor   : type = OracleWrappers.OracleDbType.RefCursor   ; break;
+				case DataType.NVarChar : type = OracleWrappers.OracleDbType.NVarchar2   ; break;
+				case DataType.Long     : type = OracleWrappers.OracleDbType.Long        ; break;
+				case DataType.LongRaw  : type = OracleWrappers.OracleDbType.LongRaw     ; break;
 			}
 
 			if (type != null)
@@ -273,6 +281,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Image         :
 				case DataType.Binary        :
 				case DataType.Cursor        : parameter.DbType = DbType.Binary;      break;
+				case DataType.BFile         : parameter.DbType = DbType.Binary;      break;
+				case DataType.Xml           : parameter.DbType = DbType.String;      break;
 
 				default: base.SetParameterType(dataConnection, parameter, dataType); break;
 			}

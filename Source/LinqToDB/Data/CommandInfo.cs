@@ -1199,6 +1199,27 @@ namespace LinqToDB.Data
 			}
 		}
 
+		static object ConvertParameterValue<TFrom>(TFrom value, MappingSchema mappingSchema)
+		{
+			var converter = mappingSchema.GetConverter<TFrom, object>();
+			var result    = converter!(value);
+			return result;
+		}
+
+		private static MethodInfo _convertParameterValueMethodInfo =
+			MemberHelper.MethodOf(() => ConvertParameterValue(1, MappingSchema.Default)).GetGenericMethodDefinition();
+
+		static object? ConvertParameterValue(object? value, MappingSchema mappingSchema)
+		{
+			if (ReferenceEquals(value, null))
+				return null;
+
+			var methodInfo = _convertParameterValueMethodInfo.MakeGenericMethod(value.GetType());
+			var result     = methodInfo.Invoke(null, new[] { value, mappingSchema });
+
+			return result;
+		}
+
 		static void RebindParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			var dbParameters = dataConnection.Command.Parameters;
@@ -1210,11 +1231,12 @@ namespace LinqToDB.Data
 				if (dataParameter.Direction.HasValue &&
 					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput || dataParameter.Direction == ParameterDirection.ReturnValue))
 				{
-					var dbParameter = (IDbDataParameter)dbParameters[i];
+					var dbParameter      = (IDbDataParameter)dbParameters[i];
+					dataParameter.Output = dbParameter;
 
 					if (!object.Equals(dataParameter.Value, dbParameter.Value))
 					{
-						dataParameter.Value = dbParameter.Value;
+						dataParameter.Value = ConvertParameterValue(dbParameter.Value, dataConnection.MappingSchema);
 					}
 				}
 			}
