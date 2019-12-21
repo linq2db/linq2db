@@ -124,9 +124,7 @@ namespace LinqToDB.DataProvider.SQLite
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
 			if (Name == ProviderName.SQLiteMS && value is char)
-			{
 				value = value.ToString();
-			}
 
 			// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
 			// https://github.com/aspnet/EntityFrameworkCore/issues/15078
