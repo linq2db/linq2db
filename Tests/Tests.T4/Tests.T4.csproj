@@ -135,7 +135,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.6.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 	<None Remove="Models\bbb.txt" />
 	<Content Include="Models\bbb.txt" />
 	</ItemGroup>
