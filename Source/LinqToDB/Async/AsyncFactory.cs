@@ -137,6 +137,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
+			// - Npgsql 4.1.2+
 			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true)
 			// Task<IDbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
@@ -148,6 +149,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
+			// - Npgsql 4.1.2+
 			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true)
 			// Task<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
