@@ -53,16 +53,16 @@ Legend:
 |Access<sup>[3](#notes)</sup><br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE 12 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
-|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
 |MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 1.0.19269.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.7.0|:x:|:x:|:x:|:x:|
+|Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.0|:x:|:x:|:x:|:x:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.18|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.18|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.60.3|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
