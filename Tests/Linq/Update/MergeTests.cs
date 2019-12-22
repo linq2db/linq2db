@@ -23,6 +23,8 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteClassic,
+				TestProvName.SQLiteClassicMiniProfilerMapped,
+				TestProvName.SQLiteClassicMiniProfilerUnmapped,
 				ProviderName.SQLiteMS,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,

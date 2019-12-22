@@ -9,7 +9,6 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using Expressions;
-	using Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
@@ -33,7 +32,7 @@ namespace LinqToDB.Data
 		int                 _varIndex;
 		ParameterExpression _variable;
 
-		public RecordReaderBuilder(IDataContext dataContext, Type objectType, IDataReader reader)
+		public RecordReaderBuilder(IDataContext dataContext, Type objectType, IDataReader reader, LambdaExpression converterExpr)
 		{
 			DataContext   = dataContext;
 			MappingSchema = dataContext.MappingSchema;
@@ -42,14 +41,8 @@ namespace LinqToDB.Data
 			Reader        = reader;
 			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i, MappingSchema.ColumnNameComparer);
 
-			if (Common.Configuration.AvoidSpecificDataProviderAPI)
-			{
-				DataReaderLocal = DataReaderParam;
-			}
-			else
-			{
-				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
-			}
+			var typedDataReader = Expression.Convert(DataReaderParam, reader.GetType());
+			DataReaderLocal     = BuildVariable(converterExpr?.GetBody(typedDataReader) ?? typedDataReader, "ldr");
 		}
 
 		static object DefaultInheritanceMappingException(object value, Type type)

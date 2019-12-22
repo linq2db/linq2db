@@ -27,9 +27,11 @@ namespace LinqToDB.Expressions
 		readonly IDataContext _dataContext;
 		         Type         _type;
 
-		public override Type           Type      => _type;
-		public override ExpressionType NodeType  => ExpressionType.Extension;
-		public override bool           CanReduce => true;
+		public override Type           Type        => _type;
+		public override ExpressionType NodeType    => ExpressionType.Extension;
+		public override bool           CanReduce   => true;
+		public          int            Index       => _idx;
+		public          IDataContext   DataContext => _dataContext;
 
 		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
 

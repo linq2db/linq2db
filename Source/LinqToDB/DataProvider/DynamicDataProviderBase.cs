@@ -35,11 +35,6 @@ namespace LinqToDB.DataProvider
 
 		volatile Type? _connectionType;
 
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return GetConnectionType().IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
-
 		private Type? _dataReaderType;
 
 		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet

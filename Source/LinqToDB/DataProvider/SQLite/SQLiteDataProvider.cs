@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			if (Name == ProviderName.SQLiteClassic)
+			if (Name != ProviderName.SQLiteMS)
 				return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);

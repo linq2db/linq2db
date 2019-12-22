@@ -284,7 +284,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))

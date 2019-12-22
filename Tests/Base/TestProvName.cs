@@ -19,6 +19,18 @@
 		public const string PostgreSQL11      = "PostgreSQL.11";
 
 		/// <summary>
+		/// SQLite classic provider wrapped into MiniProfiler without mappings to provider types configured.
+		/// Used to test general compatibility of linq2db with wrapped providers.
+		/// </summary>
+		public const string SQLiteClassicMiniProfilerUnmapped = "SQLite.Classic.MiniProfiler.Unmapped";
+		/// <summary>
+		/// SQLite classic provider wrapped into MiniProfiler with mappings to provider types configured.
+		/// Used to test general compatibility of linq2db with wrapped providers.
+		/// </summary>
+		public const string SQLiteClassicMiniProfilerMapped   = "SQLite.Classic.MiniProfiler.Mapped";
+
+
+		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
 		/// by real database access.
 		/// </summary>
@@ -38,7 +50,8 @@
 		public const string AllPostgreSQL10Plus   = "PostgreSQL.10,PostgreSQL.11";
 		public const string AllOracle             = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird           = "Firebird,Firebird3";
-		public const string AllSQLite             = "SQLite.Classic,SQLite.MS";
+		public const string AllSQLite             = "SQLite.Classic,SQLite.MS,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";
+		public const string AllSQLiteClassic      = "SQLite.Classic,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";
 		public const string AllSybase             = "Sybase,Sybase.Managed";
 		public const string AllSqlServer          = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
 		public const string AllSqlServer2005Minus = "SqlServer.2000,SqlServer.2005";

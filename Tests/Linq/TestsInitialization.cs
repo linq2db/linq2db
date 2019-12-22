@@ -58,6 +58,7 @@ public class TestsInitialization
 
 		// register test providers
 		TestNoopProvider.Init();
+		SQLiteMiniprofilerProvider.Init();
 	}
 
 	private void RegisterSapHanaFactory()

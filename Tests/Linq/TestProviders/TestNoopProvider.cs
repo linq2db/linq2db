@@ -833,11 +833,6 @@ namespace Tests
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
 		}
-
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return true;
-		}
 	}
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder

@@ -91,7 +91,7 @@ namespace Tests.Samples
 
 #if !NETCOREAPP2_1
 		[Test]
-		public void StandardExceptionExecuteReader([IncludeDataSources(ProviderName.SQLiteClassic)]
+		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			Assert.Throws<SQLiteException>(() =>

@@ -311,7 +311,7 @@ namespace LinqToDB.Linq.Builder
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
 					var dataReaderLocal = context.Builder.DataReaderLocal;
 
-					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
+					if (keyExpr.Find(e => e == dataReaderLocal) != null)
 					{
 						keyExpr = Expression.Block(
 							new[] { context.Builder.DataReaderLocal },
@@ -344,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
-							Expression.Constant(keyReader.Compile()),
+							keyReader,
 							Expression.Constant(itemReader)
 						});
 				}

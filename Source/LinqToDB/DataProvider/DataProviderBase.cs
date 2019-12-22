@@ -366,7 +366,6 @@ namespace LinqToDB.DataProvider
 			return type;
 		}
 
-		public abstract bool            IsCompatibleConnection(IDbConnection connection);
 		public abstract ISchemaProvider GetSchemaProvider     ();
 
 		protected virtual void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)

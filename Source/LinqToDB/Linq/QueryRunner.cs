@@ -49,82 +49,67 @@ namespace LinqToDB.Linq
 				_expression = mapperExpression;
 			}
 
-			readonly Expression<Func<IQueryRunner,IDataReader,T>>                  _expression;
-			         ConcurrentDictionary<Type, Tuple<Expression<Func<IQueryRunner, IDataReader, T>>, Func<IQueryRunner,IDataReader,T>>>  _mappers
-				= new ConcurrentDictionary<Type, Tuple<Expression<Func<IQueryRunner, IDataReader, T>>, Func<IQueryRunner, IDataReader, T>>>();
-
-			bool _isFaulted;
+			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
+			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ConcurrentDictionary<Type, ReaderMapperInfo>();
 
 			public IQueryRunner QueryRunner;
 
+			class ReaderMapperInfo
+			{
+				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression;
+				public Func<IQueryRunner, IDataReader, T>             Mapper;
+				public bool                                           IsFaulted;
+			}
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
 			{
-				Expression<Func<IQueryRunner, IDataReader, T>> mapperExpression;
-				Func<IQueryRunner, IDataReader, T> mapper;
-
 				var dataReaderType = dataReader.GetType();
 
-				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
-				{
-					var converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
-					var variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
+				ParameterExpression oldVariable;
+				ParameterExpression newVariable;
+				LambdaExpression    converterExpr;
+				Type                variableType;
+				ReaderMapperInfo    mapperInfo;
 
-					ParameterExpression oldVariable = null;
-					ParameterExpression newVariable = null;
-					mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
+				if (!_mappers.TryGetValue(dataReaderType, out mapperInfo))
+				{
+					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
+					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
+
+					oldVariable = null;
+					newVariable = null;
+					var replace = context.DataReaderType != dataReaderType;
+					var mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
 						e => {
 							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(dataReader, newVariable).Transform(replaceVariable);
+								if (replace)
+									return ex.Reduce(dataReader, newVariable).Transform(replaceVariable);
+								else
+									return ex.Reduce(dataReader);
 
-							return replaceVariable(e);
+							if (replace)
+								return replaceVariable(e);
+
+							return e;
 						});
-
-					Expression replaceVariable(Expression e)
-					{
-						if (e is ParameterExpression vex && vex.Name == "ldr")
-						{
-							oldVariable = vex;
-							return newVariable ?? (newVariable = Expression.Variable(variableType, "ldr"));
-						}
-
-						if (e is BinaryExpression bex
-							&& bex.NodeType == ExpressionType.Assign
-							&& bex.Left     == oldVariable)
-						{
-							Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
-
-							if (converterExpr != null)
-							{
-								dataReaderExpression = Expression.Convert(converterExpr.GetBody(dataReaderExpression), variableType);
-							}
-
-							return Expression.Assign(newVariable, dataReaderExpression);
-						}
-
-						return e;
-					}
 
 					var qr = QueryRunner;
 					if (qr != null)
 						qr.MapperExpression = mapperExpression;
 
-					mapper = mapperExpression.Compile();
-					_mappers.TryAdd(dataReaderType, Tuple.Create(mapperExpression, mapper));
-				}
-				else
-				{
-					mapperExpression = mapperInfo.Item1;
-					mapper           = mapperInfo.Item2;
+					var mapper = mapperExpression.Compile();
+					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
+					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
 
 				try
 				{
-					return mapper(queryRunner, dataReader);
+					return mapperInfo.Mapper(queryRunner, dataReader);
 				}
 				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException)
 				{
-					if (_isFaulted)
+					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+					if (mapperInfo.IsFaulted)
 						throw;
 
 					if (DataConnection.TraceSwitch.TraceInfo)
@@ -135,15 +120,51 @@ namespace LinqToDB.Linq
 
 					var qr = QueryRunner;
 					if (qr != null)
-						qr.MapperExpression = mapperExpression;
+						qr.MapperExpression = mapperInfo.MapperExpression;
 
-					mapper = _expression.Compile();
+					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
+					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
 
-					_isFaulted = true;
+					oldVariable = null;
+					newVariable = null;
+					var replace = context.DataReaderType != dataReaderType;
+					var expression = !replace ? _expression : (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
+						if (e is ConvertFromDataReaderExpression ex)
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable, ex.DataContext);
 
-					_mappers[dataReaderType] = Tuple.Create(mapperExpression, mapper);
+						return replaceVariable(e);
+					});
 
-					return mapper(queryRunner, dataReader);
+					mapperInfo.Mapper = expression.Compile();
+
+					mapperInfo.IsFaulted = true;
+
+					return mapperInfo.Mapper(queryRunner, dataReader);
+				}
+
+				Expression replaceVariable(Expression e)
+				{
+					if (e is ParameterExpression vex && vex.Name == "ldr")
+					{
+						oldVariable = vex;
+						return newVariable ?? (newVariable = Expression.Variable(variableType, "ldr"));
+					}
+
+					if (e is BinaryExpression bex
+						&& bex.NodeType == ExpressionType.Assign
+						&& bex.Left == oldVariable)
+					{
+						Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
+
+						if (converterExpr != null)
+						{
+							dataReaderExpression = Expression.Convert(converterExpr.GetBody(dataReaderExpression), variableType);
+						}
+
+						return Expression.Assign(newVariable, dataReaderExpression);
+					}
+
+					return e;
 				}
 			}
 		}

@@ -1555,7 +1555,7 @@ namespace LinqToDB.Data
 
 				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
 				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader);
+					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
 					return readerBuilder.BuildReaderFunction<T>();
 				}
 

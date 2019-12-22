@@ -241,10 +241,6 @@ namespace LinqToDB.Data
 
 			_connection = AsyncFactory.Create(connection);
 
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(_connection.Connection))
-				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{_connection.Connection}' are not compatible.");
-
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
 			_disposeConnection = disposeConnection;
@@ -278,10 +274,6 @@ namespace LinqToDB.Data
 			if (transaction  == null) throw new ArgumentNullException(nameof(transaction));
 
 			InitConfig();
-
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
-				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{transaction.Connection}' are not compatible.");
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
@@ -731,7 +723,7 @@ namespace LinqToDB.Data
 		/// Returns registered database providers.
 		/// </summary>
 		/// <returns>
-		/// Returns copy of registered providers"
+		/// Returns registered providers collection.
 		/// </returns>
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
 			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
@@ -788,27 +780,37 @@ namespace LinqToDB.Data
 			{
 				var configuration            = css.Name;
 				var providerName             = css.ProviderName;
-				IDataProvider? dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
+
+				IDataProvider? dataProvider = null;
+
+				// don't go through all detection logic, if we have provider already registered
+				if (!string.IsNullOrEmpty(providerName))
+					_dataProviders.TryGetValue(providerName, out dataProvider);
 
 				if (dataProvider == null)
 				{
-					var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
+					dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
-					if (string.IsNullOrEmpty(providerName))
-						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.ContainsKey(providerName))
-						dataProvider = _dataProviders[providerName];
-					else if (_dataProviders.ContainsKey(configuration))
-						dataProvider = _dataProviders[configuration];
-					else
+					if (dataProvider == null)
 					{
-						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+						var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
 
-						switch (providers.Count)
+						if (string.IsNullOrEmpty(providerName))
+							dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+						else if (_dataProviders.ContainsKey(providerName))
+							dataProvider = _dataProviders[providerName];
+						else if (_dataProviders.ContainsKey(configuration))
+							dataProvider = _dataProviders[configuration];
+						else
 						{
-							case 0  : dataProvider = defaultDataProvider;                                        break;
-							case 1  : dataProvider = providers[0].Value;                                         break;
-							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+							var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+
+							switch (providers.Count)
+							{
+								case 0  : dataProvider = defaultDataProvider;                                        break;
+								case 1  : dataProvider = providers[0].Value;                                         break;
+								default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+							}
 						}
 					}
 				}

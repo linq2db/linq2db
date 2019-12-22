@@ -72,7 +72,6 @@ namespace Tests
 
 			//			Configuration.RetryPolicy.Factory = db => new Retry();
 
-			//			Configuration.AvoidSpecificDataProviderAPI = true;
 			Configuration.Linq.TraceMapperExpression = false;
 			//			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
@@ -291,6 +290,8 @@ namespace Tests
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
 			ProviderName.SQLiteClassic,
+			TestProvName.SQLiteClassicMiniProfilerMapped,
+			TestProvName.SQLiteClassicMiniProfilerUnmapped,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
 			ProviderName.Firebird,
@@ -1141,21 +1142,6 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.AllowMultipleQuery = _oldValue;
-		}
-	}
-
-	public class AvoidSpecificDataProviderAPI : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.AvoidSpecificDataProviderAPI;
-
-		public AvoidSpecificDataProviderAPI(bool value)
-		{
-			Configuration.AvoidSpecificDataProviderAPI = value;
-		}
-
-		public void Dispose()
-		{
-			Configuration.AvoidSpecificDataProviderAPI = _oldValue;
 		}
 	}
 

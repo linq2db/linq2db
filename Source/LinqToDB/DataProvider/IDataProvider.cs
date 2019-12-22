@@ -36,7 +36,6 @@ namespace LinqToDB.DataProvider
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
-		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
 		/// Returns context object to wrap calls of Execute* methods.

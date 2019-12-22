@@ -214,6 +214,8 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.SQLiteClassic:
+				case TestProvName.SQLiteClassicMiniProfilerMapped:
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
 				case ProviderName.SQLiteMS:
 					return "main";
 				case ProviderName.Access:

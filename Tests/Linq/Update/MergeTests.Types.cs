@@ -410,7 +410,7 @@ namespace Tests.xUpdate
 			if (!provider.Contains(ProviderName.Informix))
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			if (provider != ProviderName.SQLiteClassic && provider != ProviderName.SQLiteMS)
+			if (!provider.Contains("SQLite"))
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (   provider != ProviderName.SqlServer2000
@@ -500,6 +500,8 @@ namespace Tests.xUpdate
 				&& provider != TestProvName.MariaDB
 				&& provider != ProviderName.Access
 				&& provider != ProviderName.SQLiteClassic
+				&& provider != TestProvName.SQLiteClassicMiniProfilerMapped
+				&& provider != TestProvName.SQLiteClassicMiniProfilerUnmapped
 				&& provider != ProviderName.SQLiteMS
 				&& provider != ProviderName.Sybase
 				&& provider != ProviderName.SybaseManaged
@@ -609,6 +611,8 @@ namespace Tests.xUpdate
 				|| provider == ProviderName.OracleNative
 				|| provider == ProviderName.SqlCe
 				|| provider == ProviderName.SQLiteClassic
+				|| provider == TestProvName.SQLiteClassicMiniProfilerMapped
+				|| provider == TestProvName.SQLiteClassicMiniProfilerUnmapped
 				|| provider == ProviderName.SQLiteMS
 				|| provider == TestProvName.MySql55
 				|| provider == ProviderName.Firebird
