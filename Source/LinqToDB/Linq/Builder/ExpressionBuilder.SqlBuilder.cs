@@ -559,6 +559,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression TraverseMethodCall(Expression expr)
 		{
+			return expr;
 			if (expr.NodeType == ExpressionType.MemberAccess)
 			{
 				var ma = (MemberExpression)expr;

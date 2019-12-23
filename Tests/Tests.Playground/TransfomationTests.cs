@@ -80,7 +80,7 @@ namespace Tests.Playground
 
 			var additionalKey = Expression.PropertyOrField(resultSelector.Parameters[0], "AId");
 
-			var replaceInfo = new EagerLoading.ReplaceInfo();
+			var replaceInfo = new EagerLoading.ReplaceInfo(MappingSchema.Default);
 			replaceInfo.TargetLambda = resultSelector;
 			replaceInfo.Keys.Add(additionalKey);
 
