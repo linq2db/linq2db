@@ -905,7 +905,7 @@ namespace LinqToDB.Linq.Builder
 				mainQueryWithCollectedKey     = ExpandKeyToMany(mainQueryWithCollectedKey, mappingSchema);
 
 				var resultParameterType = GetEnumerableElementType(mainQueryWithCollectedKey.Type, builder.MappingSchema);
-				var resultParameter     = Expression.Parameter(resultParameterType, "key_data");
+				var resultParameter     = Expression.Parameter(resultParameterType, "key_data_result");
 
 				var generateKeyExpression   = GenerateKeyExpression(keysInfo.Select(k => k.ForCompilation).ToArray(), 0);
 				var keySelectExpression     = GenerateKeyExpression(keysInfo.Select(k => k.ForSelect).ToArray(), 0);
@@ -1264,6 +1264,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal static Expression ExpandKeyToMany(Expression queryExpression, MappingSchema mappingSchema)
 		{
+            return queryExpression;
 			var elementType = GetEnumerableElementType(queryExpression.Type, mappingSchema);
 			if (typeof(KDH<,>).IsSameOrParentOf(elementType))
 			{

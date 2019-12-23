@@ -926,6 +926,11 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
+				case ExpressionType.Convert:
+					{
+						var e = (UnaryExpression)expr;
+						return e.Operand.GetRootObject(mapping);
+					}
 			}
 
 			return expr;
