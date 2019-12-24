@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -128,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				Array.Copy(members, startIndex, arguments, 0, count);
 			}
 
-			var type = MutableTuple.Types[count - 1];
+			var type = MutableTuple.MTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
 
 			var constructor = concreteType.GetConstructor(Array<Type>.Empty);
@@ -614,6 +615,13 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<KeyInfo> ConvertToKeyInfos2(IBuildContext ctx, Expression forExpr)
 		{
+			var level = forExpr.GetLevel();
+			var exprCtx = ctx.Builder.GetContext(ctx, forExpr);
+			if (exprCtx == null)
+				yield break;
+			if (forExpr.NodeType == ExpressionType.MemberAccess && forExpr.Type.IsClassEx())
+				yield break;
+
 			var flags = forExpr.NodeType == ExpressionType.Parameter ? ConvertFlags.Key : ConvertFlags.Field;
 			var sql   = ctx.ConvertToIndex(forExpr, 0, flags);
 
@@ -729,7 +737,7 @@ namespace LinqToDB.Linq.Builder
 			Expression resultExpression;
 
 			// recursive processing
-			if (typeof(KDH).IsSameOrParentOf(mainQueryElementType))
+			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
 				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
 					throw new InvalidOperationException("Unexpected Main Query");
@@ -902,7 +910,6 @@ namespace LinqToDB.Linq.Builder
 				replaceInfo.Keys.AddRange(dependencyParameters);
 
 				var mainQueryWithCollectedKey = ApplyReMapping(initialMainQuery, replaceInfo);
-				mainQueryWithCollectedKey     = ExpandKeyToMany(mainQueryWithCollectedKey, mappingSchema);
 
 				var resultParameterType = GetEnumerableElementType(mainQueryWithCollectedKey.Type, builder.MappingSchema);
 				var resultParameter     = Expression.Parameter(resultParameterType, "key_data_result");
@@ -943,6 +950,7 @@ namespace LinqToDB.Linq.Builder
 					return e;
 				});
 
+				queryableDetailCorrected = MakeExpressionCopy(queryableDetailCorrected);
 				queryableDetailCorrected = EnsureEnumerable(queryableDetailCorrected, builder.MappingSchema);
 
 				var queryableDetailLambda = Expression.Lambda(queryableDetailCorrected, resultParameter);
@@ -1177,7 +1185,11 @@ namespace LinqToDB.Linq.Builder
 
 		private static int RegisterPreambles<TD, TKey>(ExpressionBuilder builder, IQueryable<KeyDetailEnvelope<TKey, TD>> detailQuery)
 		{
+			// Finalize keys for recursive processing
 			var expr = detailQuery.Expression;
+			expr = ExpressionBuilder.ExpandExpression(expr);
+			expr = FinalizeExpressionKeys(expr);
+
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
 			var idx = builder.RegisterPreamble(dc =>
 				{
@@ -1256,42 +1268,254 @@ namespace LinqToDB.Linq.Builder
 			return memberInit;
 		}
 
-		class MIReplacement : Expression
+		internal static Expression MakeExpressionCopy(Expression expression)
 		{
-			public Expression Original { get; set; }
-			public Expression WithKey  { get; set; }
+			var result = expression.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Lambda)
+				{
+					var lambda = (LambdaExpression)e;
+					var newParameters = lambda.Parameters
+						.Select(p => Expression.Parameter(p.Type, "_" + p.Name)).ToArray();
+					var newBody = lambda.Body.Transform(b =>
+					{
+						if (b.NodeType == ExpressionType.Parameter)
+						{
+							var prm = (ParameterExpression)b;
+							var idx = lambda.Parameters.IndexOf(prm);
+							if (idx >= 0)
+								return newParameters[idx];
+						}
+
+						return b;
+					});
+
+					newBody = MakeExpressionCopy(newBody);
+
+					return Expression.Lambda(newBody, newParameters);
+				}
+
+				return e;
+			});
+
+			return result;
 		}
 
-		internal static Expression ExpandKeyToMany(Expression queryExpression, MappingSchema mappingSchema)
+		internal static Type FinalizeType(Type type)
 		{
-            return queryExpression;
-			var elementType = GetEnumerableElementType(queryExpression.Type, mappingSchema);
-			if (typeof(KDH<,>).IsSameOrParentOf(elementType))
+			if (!type.IsGenericTypeEx())
+				return type;
+
+			var arguments = type.GenericTypeArguments.Select(FinalizeType).ToArray();
+
+			var newType = type;
+
+			if (typeof(KDH<,>).IsSameOrParentOf(type))
+				newType = typeof(FKDH<,>).MakeGenericType(arguments);
+			else
+				newType = type.GetGenericTypeDefinition().MakeGenericType(arguments);
+
+			return newType;
+		}
+
+		internal static MemberInfo GetMemberForType(Type type, MemberInfo memberInfo)
+		{
+			if (type == memberInfo.DeclaringType)
+				return memberInfo;
+			return type.GetMemberEx(memberInfo);
+		}
+
+
+		internal static Expression ReplaceParametersWithChangedType(Expression body, IList<ParameterExpression> before, IList<ParameterExpression> after)
+		{
+			if (body == null)
+				return null;
+
+			var newBody = body.Transform(b =>
 			{
-				var keyType = elementType.GetGenericArguments()[0];
-				if (IsEnumerableType(keyType, mappingSchema))
+				if (b.NodeType == ExpressionType.MemberAccess)
 				{
-					var arg1        = queryExpression;
-					var secondParam = Expression.Parameter(elementType, "many_keys");
-					var body2       = Expression.PropertyOrField(secondParam, "Key");
-					var arg2        = Expression.Lambda(EnsureEnumerable(body2, mappingSchema), secondParam);
-
-					var simplifiedKey = GetEnumerableElementType(body2.Type, mappingSchema);
-
-					var thirdParam1 = Expression.Parameter(elementType, "many_key");
-					var thirdParam2 = Expression.Parameter(simplifiedKey, "simplified_key");
-					var body3       = CreateKDH(thirdParam2, Expression.PropertyOrField(thirdParam1, "Data"));
-					var arg3        = Expression.Lambda(body3, thirdParam1, thirdParam2);
-
-					var methodInfo = _selectManyMethodInfo.MakeGenericMethod(elementType, simplifiedKey, body3.Type);
-
-					var newQuery = Expression.Call(methodInfo, arg1, Expression.Quote(arg2), Expression.Quote(arg3));
-
-					queryExpression = ExpandKeyToMany(newQuery, mappingSchema);
+					var ma = (MemberExpression)b;
+					if (ma.Expression.NodeType == ExpressionType.Parameter)
+					{
+						var idx = before.IndexOf((ParameterExpression)ma.Expression);
+						if (idx >= 0)
+						{
+							var prm = after[idx];
+							if (prm != ma.Expression)
+								return Expression.MakeMemberAccess(prm, GetMemberForType(prm.Type, ma.Member));
+						}
+					}
 				}
-			}
+				else if (b.NodeType == ExpressionType.Invoke)
+				{
+					var inv = (InvocationExpression)b;
+					var newExpression = ReplaceParametersWithChangedType(inv.Expression, before, after);
+					var newArguments  = inv.Arguments.Select(a => ReplaceParametersWithChangedType(a, before, after));
+					return Expression.Invoke(newExpression, newArguments);
+				}
 
-			return queryExpression;
+				return b;
+			});
+
+			newBody = newBody.Transform(b =>
+			{
+				if (b.NodeType == ExpressionType.Parameter)
+				{
+					var idx = before.IndexOf((ParameterExpression)b);
+					if (idx >= 0)
+					{
+						return after[idx];
+					}
+				}
+
+				return b;
+			});
+
+			return newBody;
+		}
+
+		internal static Expression FinalizeExpressionKeys(Expression expr)
+		{
+			if (expr == null)
+				return null;
+
+			var result = expr.Transform(e =>
+			{
+				switch (e.NodeType)
+				{
+					// case ExpressionType.New:
+					// 	{
+					// 		var newType = FinalizeType(e.Type);
+					// 		if (newType != e.Type)
+					// 		{
+					// 			var mi = (MemberInitExpression)e;
+					// 			var newAssignments = mi.Bindings.Cast<MemberAssignment>().Select(a =>
+					// 				{
+					// 					var finalized = FinalizeExpressionKeys(a.Expression);
+					// 					return Expression.Bind(GetMemberForType(finalized.Type, a.Member), finalized);
+					// 				})
+					// 				.ToArray();
+					//
+					// 			var newMemberInit = Expression.MemberInit(
+					// 				Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
+					// 				               throw new ArgumentException()), newAssignments);
+					// 			return newMemberInit;
+					// 		}
+					//
+					// 		break;
+					// 	}
+
+					case ExpressionType.MemberInit:
+						{
+							var newType = FinalizeType(e.Type);
+							if (newType != e.Type)
+							{
+								var mi = (MemberInitExpression)e;
+								var newAssignments = mi.Bindings.Cast<MemberAssignment>().Select(a =>
+									{
+										var finalized = FinalizeExpressionKeys(a.Expression);
+										return Expression.Bind(GetMemberForType(newType, a.Member), finalized);
+									})
+									.ToArray();
+
+								var newMemberInit = Expression.MemberInit(
+									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
+												   throw new ArgumentException()), newAssignments);
+								return newMemberInit;
+							}
+
+							break;
+						}
+					case ExpressionType.Convert:
+						{
+							var unary      = (UnaryExpression)e;
+							var newType    = FinalizeType(unary.Type);
+							var newOperand = FinalizeExpressionKeys(unary.Operand);
+							if (newType != unary.Type || newOperand != unary.Operand)
+								return Expression.Convert(newOperand, newType);
+							break;
+						}
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)e;
+
+							var changed = false;
+							var newArguments = mc.Arguments.Select(a =>
+							{
+								var n = FinalizeExpressionKeys(a);
+								changed = changed || n != a;
+								return n;
+							}).ToArray();
+
+							var method = mc.Method;
+							if (mc.Method.IsGenericMethod)
+							{
+								var newGenericArguments = mc.Method.GetGenericArguments().Select(t =>
+									{
+										var nt = FinalizeType(t);
+										changed = changed || nt != t;
+										return nt;
+									})
+									.ToArray();
+
+								if (changed)
+									method = mc.Method.GetGenericMethodDefinition()
+										.MakeGenericMethod(newGenericArguments);
+
+							}
+
+							if (changed)
+								return Expression.Call(method, newArguments);
+
+							break;
+						}
+					case ExpressionType.MemberAccess:
+						{
+							var ma = (MemberExpression)e;
+							var newObj = FinalizeExpressionKeys(ma.Expression);
+							if (newObj != ma.Expression)
+							{
+								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member));
+							}
+							break;
+						}
+					case ExpressionType.Invoke:
+						{
+							break;
+						}
+					case ExpressionType.Lambda:
+						{
+							var lambda  = (LambdaExpression)e;
+							var changed = false;
+							var newParameters = lambda.Parameters.Select(p =>
+								{
+									var nt = FinalizeType(p.Type);
+									if (nt != p.Type)
+									{
+										p = Expression.Parameter(nt, p.Name);
+										changed = true;
+									}
+
+									return p;
+								})
+								.ToArray();
+
+							var newBody = FinalizeExpressionKeys(lambda.Body);
+							if (changed || newBody != lambda.Body)
+							{
+								newBody = ReplaceParametersWithChangedType(newBody, lambda.Parameters, newParameters);
+								return Expression.Lambda(newBody, newParameters);
+							}
+
+							break;
+						}
+				}
+
+				return e;
+			});
+
+			return result;
 		}
 
 		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo)
@@ -1376,10 +1600,12 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var newBody = ApplyReMapping(lambdaExpression.Body, replaceInfo);
-							if (newBody != lambdaExpression.Body)
+							var current = lambdaExpression.Body.Unwrap();
+							var newBody = ApplyReMapping(current, replaceInfo);
+							if (newBody != current)
 							{
 								newExpr = Expression.Lambda(newBody, lambdaExpression.Parameters);
+								newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr);
 							}
 
 						}
@@ -1411,15 +1637,20 @@ namespace LinqToDB.Linq.Builder
 								for (int i = 0; i < mc.Arguments.Count; i++)
 								{
 									var arg = mc.Arguments[i];
-									var newArg = ApplyReMapping(arg, replaceInfo);
-									if (arg.Type != newArg.Type)
+									var newArg = arg;
+									if (!methodNeedsUpdate)
 									{
-										methodNeedsUpdate = true;
-										RegisterTypeRemapping(genericParameters[i].ParameterType, newArg.Type,
-											genericArguments, typesMapping);
+										newArg = ApplyReMapping(arg, replaceInfo);
+										
+										if (arg != newArg)
+										{
+											methodNeedsUpdate = true;
+											RegisterTypeRemapping(genericParameters[i].ParameterType, newArg.Type,
+												genericArguments, typesMapping);
 
-										newArguments[i] = newArg;
-									}
+											newArguments[i] = newArg;
+											continue;
+										}									}
 									else
 									{
 										arg = arg.Unwrap();
@@ -1471,7 +1702,7 @@ namespace LinqToDB.Linq.Builder
 																}
 
 																return e;
-															});															
+															});
 														}
 													}
 												}
@@ -1518,7 +1749,7 @@ namespace LinqToDB.Linq.Builder
 												var newArgLambda = Expression.Lambda(newBody, newParameters);
 
 												newArgLambda = CorrectLambdaType(argLambda, newArgLambda);
-												
+
 												RegisterTypeRemapping(templateLambdaType.GetGenericArguments()[0], newArgLambda.Type, genericArguments, typesMapping);
 
 												newArguments[i] = newArgLambda;

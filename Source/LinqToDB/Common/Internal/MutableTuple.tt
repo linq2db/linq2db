@@ -10,24 +10,32 @@ namespace LinqToDB.Common.Internal
 {
 <#
 	var MaxMemberCount = 10;
+	var prefixes = new[] { "M", "F" };
 #>
 	internal static partial class MutableTuple
 	{
 		public const int MaxMemberCount = <#= MaxMemberCount #>;
 
-		public static readonly Type[] Types = new []
+<#
+	foreach (var prefix in prefixes)
+	{
+#>
+		public static readonly Type[] <#= prefix #>Types = new []
 		{
 <#
-	foreach (var info in Enumerable.Range(1, MaxMemberCount))
-	{ 
-		var indexes = Enumerable.Range(1, info).ToArray();
-		var types = string.Join(",", indexes.Select(i => ""));
+	    foreach (var info in Enumerable.Range(1, MaxMemberCount))
+	    {
+	        var indexes = Enumerable.Range(1, info).ToArray();
+	        var types = string.Join(",", indexes.Select(i => ""));
 #>
-			typeof(MTuple<<#= types #>>),
+			typeof(<#= prefix #>Tuple<<#= types #>>),
 <#
-	}#>	
+	    } #>	
 		};
 
+<#
+	}
+#>
 		internal static int CombineHashCodes(int h1, int h2)
 		{
 			return (((h1 << 5) + h1) ^ h2);
@@ -35,15 +43,15 @@ namespace LinqToDB.Common.Internal
 <#
 	for (var info = 3; info <= MaxMemberCount; info++)
 	{
-		var leftSide = (info + 1) / 2;
-		var rightSide = info - leftSide;
-		var leftNames = Enumerable.Range(1, leftSide);
-		var rightNames = Enumerable.Range(leftSide + 1, rightSide);
-		var allNames = Enumerable.Range(1, info);
-		var leftCallArguments = string.Join(", ", leftNames.Select(i => $"h{i}"));
+		var leftSide           = (info + 1) / 2;
+		var rightSide          = info - leftSide;
+		var leftNames          = Enumerable.Range(1, leftSide);
+		var rightNames         = Enumerable.Range(leftSide + 1, rightSide);
+		var allNames           = Enumerable.Range(1, info);
+		var leftCallArguments  = string.Join(", ", leftNames.Select(i => $"h{i}"));
 		var rightCallArguments = string.Join(", ", rightNames.Select(i => $"h{i}"));
-		var allParameters = string.Join(", ", allNames.Select(i => $"int h{i}"));
-		var leftCall = $"CombineHashCodes({leftCallArguments})";
+		var allParameters      = string.Join(", ", allNames.Select(i => $"int h{i}"));
+		var leftCall           = $"CombineHashCodes({leftCallArguments})";
 		string rightCall;
 		if (rightSide == 1)
 			rightCall = rightCallArguments;
@@ -59,20 +67,22 @@ namespace LinqToDB.Common.Internal
 	}
 		
 <#
+	foreach (var prefix in prefixes)
 	foreach (var info in Enumerable.Range(1, MaxMemberCount))
 	{
 
-		var indexes = Enumerable.Range(1, info).ToArray();
-		var types = string.Join(", ", indexes.Select(i => "T" + i.ToString()));
-		var equals = string.Join(" && ", indexes.Select(i => $"Equals(Item{i}, objTuple.Item{i})"));
-		var hashCodes = string.Join(", ", indexes.Select(i => $"Item{i}.GetHashCode()"));
+		var indexes      = Enumerable.Range(1, info).ToArray();
+		var types        = string.Join(", ", indexes.Select(i => "T" + i.ToString()));
+		var equals       = string.Join("\n\t\t\t\t&& ", indexes.Select(i => $"Equals(Item{i}, objTuple.Item{i})"));
+		var hashCodes    = string.Join(", ", indexes.Select(i => $"Item{i}.GetHashCode()"));
 		var hashCodesStr = hashCodes;
 		if (info > 1)
 		    hashCodesStr = $"MutableTuple.CombineHashCodes({hashCodes})";
 
+
 #>
 
-	internal class MTuple<<#= types #>>
+	internal class <#= prefix #>Tuple<<#= types #>>
 	{
 <#
 	foreach (var idx in indexes)

@@ -27,4 +27,21 @@ namespace LinqToDB.Linq.Builder
 		public TData Data { get; set; }
 	}
 
+	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
+	public class FKDH<TKey, TData>
+	{
+		public FKDH()
+		{
+		}
+
+		public FKDH(TKey key, TData data)
+		{
+			Key = key;
+			Data = data;
+		}
+
+		public TKey  Key { get; set; }
+		public TData Data { get; set; }
+	}
+
 }
