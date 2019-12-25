@@ -39,9 +39,9 @@ namespace LinqToDB.DataProvider.Informix
 				case "":
 				case null:
 
-					if (css.Name == "Informix.Core")
+					if (css.Name == "Informix.Core" || css.Name == "Informix.DB2")
 						goto case "IBM.Data.Informix.Core";
-					if (css.Name == "Informix")
+					if (css.Name?.Contains("Informix") == true)
 						goto case "IBM.Data.Informix";
 					break;
 
