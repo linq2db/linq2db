@@ -8,6 +8,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 	internal static class SapHanaWrappers
 	{
+#if NET45 || NET46
+		public static readonly string AssemblyName = "Sap.Data.Hana.v4.5";
+#endif
+
+#if NETCOREAPP2_1
+		public static readonly string AssemblyName = "Sap.Data.Hana.Core.v2.1";
+#endif
+
 		private static readonly object _syncRoot = new object();
 		private static TypeMapper? _typeMapper;
 

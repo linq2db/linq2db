@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using Configuration;
@@ -13,14 +12,7 @@ namespace LinqToDB.DataProvider.SapHana
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-#if !NETSTANDARD2_0
-			if (assemblyName != null)
-				SapHanaTools.AssemblyName = assemblyName.Value;
-
-			return new SapHanaDataProvider();
-#else
-			throw new PlatformNotSupportedException();
-#endif
+			return SapHanaTools.GetDataProvider(null, assemblyName?.Value);
 		}
 	}
 }

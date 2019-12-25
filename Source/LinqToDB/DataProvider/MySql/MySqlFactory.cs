@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new MySqlDataProvider();
+			return MySqlTools.GetDataProvider();
 		}
 	}
 }

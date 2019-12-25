@@ -11,6 +11,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 	internal static class OracleWrappers
 	{
+#if NET45 || NET46
+		public static string NativeAssemblyName = "Oracle.DataAccess";
+#endif
+		public static string ManagedAssemblyName = "Oracle.ManagedDataAccess";
+
 		private static object _nativeSyncRoot   = new object();
 		private static object _managedSyncRoot  = new object();
 

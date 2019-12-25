@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace LinqToDB.SqlProvider
 {
@@ -42,8 +41,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		bool IsDependedBetweenJoins(SqlTableSource table,
-			SqlJoinedTable testedJoin)
+		bool IsDependedBetweenJoins(SqlTableSource table, SqlJoinedTable testedJoin)
 		{
 			var testedSources = new HashSet<int>(testedJoin.Table.GetTables().Select(t => t.SourceID));
 
@@ -1247,7 +1245,7 @@ namespace LinqToDB.SqlProvider
 		[DebuggerDisplay("{DisplayString()}")]
 		class VirtualField
 		{
-			public VirtualField([NotNull] ISqlExpression expression)
+			public VirtualField(ISqlExpression expression)
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -1260,12 +1258,12 @@ namespace LinqToDB.SqlProvider
 						nameof(expression));
 			}
 
-			public VirtualField([NotNull] SqlField field)
+			public VirtualField(SqlField field)
 			{
 				Field = field ?? throw new ArgumentNullException(nameof(field));
 			}
 
-			public VirtualField([NotNull] SqlColumn column)
+			public VirtualField(SqlColumn column)
 			{
 				Column = column ?? throw new ArgumentNullException(nameof(column));
 			}

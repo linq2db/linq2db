@@ -36,7 +36,7 @@ namespace LinqToDB
 		/// Creates instance of attribute.
 		/// </summary>
 		/// <param name="methodName">Name of method in the same class that returns substitution expression.</param>
-		public ExpressionMethodAttribute([NotNull] string methodName)
+		public ExpressionMethodAttribute(string methodName)
 		{
 			if (string.IsNullOrEmpty(methodName))
 				throw new ArgumentException("Value cannot be null or empty.", nameof(methodName));
@@ -47,7 +47,7 @@ namespace LinqToDB
 		/// Creates instance of attribute.
 		/// </summary>
 		/// <param name="expression">Substitution expression.</param>
-		public ExpressionMethodAttribute([NotNull] LambdaExpression expression)
+		public ExpressionMethodAttribute(LambdaExpression expression)
 		{
 			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
 		}

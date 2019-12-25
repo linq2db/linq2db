@@ -12,30 +12,28 @@ namespace LinqToDB.DataProvider.Informix
 	public static class InformixTools
 	{
 #if NET45 || NET46
-		static readonly InformixDataProvider _informixDataProvider    = new InformixDataProvider(ProviderName.Informix);
-#endif
-		static readonly InformixDataProvider _informixDB2DataProvider = new InformixDataProvider(ProviderName.InformixDB2);
-
-		public static bool AutoDetectProvider { get; set; }
-
-		static InformixTools()
+		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			AutoDetectProvider = true;
+			var provider = new InformixDataProvider(ProviderName.Informix);
 
-#if NET45 || NET46
-			DataConnection.AddDataProvider(_informixDataProvider);
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
 #endif
-			DataConnection.AddDataProvider(_informixDB2DataProvider);
 
-#if !NETCOREAPP2_1
-			DataConnection.AddProviderDetector(ProviderDetector);
-#endif
-		}
-
-#if !NETCOREAPP2_1
-		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		private static readonly Lazy<IDataProvider> _informixDB2DataProvider = new Lazy<IDataProvider>(() =>
 		{
-			// IBM.Data.DB2.Core already mapped to DB2 provider...
+			var provider = new InformixDataProvider(ProviderName.InformixDB2);
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
+			// NOTE: IBM.Data.DB2.Core already mapped to DB2 provider
 			switch (css.ProviderName)
 			{
 				case "":
@@ -49,19 +47,18 @@ namespace LinqToDB.DataProvider.Informix
 
 				case "Informix.Core":
 				case "IBM.Data.Informix.Core":
-					return _informixDB2DataProvider;
+					return _informixDB2DataProvider.Value;
 
 				case "IBM.Data.Informix":
 #if NET45 || NET46
-					return _informixDataProvider;
+					return _informixDataProvider.Value;
 #else
-					return _informixDB2DataProvider;
+					return _informixDB2DataProvider.Value;
 #endif
 			}
 
 			return null;
 		}
-#endif
 
 		private static string DetectProviderName()
 		{
@@ -75,45 +72,42 @@ namespace LinqToDB.DataProvider.Informix
 			return ProviderName.InformixDB2;
 		}
 
-		private static string? _detectedProviderName;
-		public static string DetectedProviderName =>
+		private  static string? _detectedProviderName;
+		internal static string DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
-		private static InformixDataProvider DetectedProvider =>
-#if NET45 || NET46
-			DetectedProviderName == ProviderName.Informix
-				? _informixDataProvider :
-#endif
-				_informixDB2DataProvider;
-
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			return DetectedProvider;
+			switch (providerName ?? DetectedProviderName)
+			{
+#if NET45 || NET46
+				case ProviderName.Informix   : return _informixDataProvider.Value;
+#endif
+				case ProviderName.InformixDB2: return _informixDB2DataProvider.Value;
+			}
+
+#if NET45 || NET46
+				return _informixDataProvider.Value;
+#else
+				return _informixDB2DataProvider.Value;
+#endif
 		}
 
-		#region CreateDataConnection
+#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			switch (providerName)
-			{
-#if NET45 || NET46
-				case ProviderName.Informix   : return new DataConnection(_informixDataProvider, connection);
-#endif
-				case ProviderName.InformixDB2: return new DataConnection(_informixDB2DataProvider, connection);
-			}
-
-			return new DataConnection(DetectedProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 #endregion

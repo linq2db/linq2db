@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new FirebirdDataProvider();
+			return FirebirdTools.GetDataProvider();
 		}
 	}
 }

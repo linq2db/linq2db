@@ -24,6 +24,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		internal static IDB2BulkCopyWrapper BulkCopy = null!;
 
+		internal static DB2Connection CreateDB2Connection(string connectionString)
+			=> _typeMapper!.CreateAndWrap(() => new DB2Connection(connectionString))!;
+
 		// TODO: use in Tools
 		//internal static Func<IDbConnection, DB2ServerTypes> ServerTypeGetter = null!;
 
@@ -49,6 +52,12 @@ namespace LinqToDB.DataProvider.DB2
 		// optional, because recent provider version contains it as obsolete stub
 		internal static Type? DB2TimeSpanType;
 
+#if NET45 || NET46
+		public static string AssemblyName => "IBM.Data.DB2";
+#else
+		public static string AssemblyName => "IBM.Data.DB2.Core";
+#endif
+
 		internal static void Initialize(MappingSchema mappingSchema)
 		{
 			if (_typeMapper == null)
@@ -57,19 +66,14 @@ namespace LinqToDB.DataProvider.DB2
 				{
 					if (_typeMapper == null)
 					{
-#if NET45 || NET46
-						const string assemblyName    = "IBM.Data.DB2";
-						const string clientNamespace = "IBM.Data.DB2";
-#else
-						const string assemblyName    = "IBM.Data.DB2.Core";
-						const string clientNamespace = "IBM.Data.DB2.Core";
-#endif
-						ConnectionType  = Type.GetType($"{clientNamespace}.DB2Connection, {assemblyName}", true);
-						var assembly    = ConnectionType.Assembly;
-						ParameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter", true);
-						DataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader", true);
-						TransactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true);
-						var dbType      = assembly.GetType($"{clientNamespace}.DB2Type", true);
+						var clientNamespace = AssemblyName;
+						ConnectionType               = Type.GetType($"{clientNamespace}.DB2Connection, {AssemblyName}", true);
+						var assembly                 = ConnectionType.Assembly;
+						ParameterType                = assembly.GetType($"{clientNamespace}.DB2Parameter", true);
+						DataReaderType               = assembly.GetType($"{clientNamespace}.DB2DataReader", true);
+						TransactionType              = assembly.GetType($"{clientNamespace}.DB2Transaction", true);
+						var dbType                   = assembly.GetType($"{clientNamespace}.DB2Type", true);
+						var serverTypesType          = assembly.GetType($"{clientNamespace}.DB2ServerTypes", true);
 
 						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy", true);
 						var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.DB2BulkCopyOptions", true);
@@ -99,10 +103,10 @@ namespace LinqToDB.DataProvider.DB2
 						// TODO: register only for Informix
 						DB2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 
-						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType, TransactionType,
+						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType, serverTypesType, TransactionType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
-						//typeMapper.RegisterWrapper<DB2ServerTypes>();
+						typeMapper.RegisterWrapper<DB2ServerTypes>();
 						typeMapper.RegisterWrapper<DB2Connection>();
 						typeMapper.RegisterWrapper<DB2Parameter>();
 						typeMapper.RegisterWrapper<DB2Type>();
@@ -119,9 +123,6 @@ namespace LinqToDB.DataProvider.DB2
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
 						TypeSetter        = dbTypeBuilder.BuildSetter<IDbDataParameter>();
 						TypeGetter        = dbTypeBuilder.BuildGetter<IDbDataParameter>();
-
-						//var serverTypeBuilder = typeMapper.Type<DB2Connection>().Member(p => p.eServerType);
-						//ServerTypeGetter = serverTypeBuilder.BuildGetter<IDbConnection>();
 
 						_typeMapper = typeMapper;
 
@@ -140,8 +141,6 @@ namespace LinqToDB.DataProvider.DB2
 								DataConnection.TraceSwitch.DisplayName,
 								TraceLevel.Info);
 						}
-
-						DB2Tools.Initialized();
 
 						Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 						{
@@ -188,9 +187,7 @@ namespace LinqToDB.DataProvider.DB2
 		//[Wrapper] internal class DB2TimeStampOffset { }
 		//[Wrapper] internal class DB2XsrObjectId { } (don't have Null field)
 
-
-		// not used yet
-		//[Wrapper]
+		[Wrapper]
 		internal enum DB2ServerTypes
 		{
 			DB2_390     = 2,
@@ -204,9 +201,20 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal class DB2Connection
+		internal class DB2Connection : TypeWrapper, IDisposable
 		{
-			internal DB2ServerTypes eServerType { get; }
+			public DB2Connection(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
+			public DB2Connection(string connectionString) => throw new NotImplementedException();
+
+			// internal actually
+			public DB2ServerTypes eServerType => this.Wrap(t => t.eServerType);
+
+			public void Open() => this.WrapAction(c => c.Open());
+
+			public void Dispose() => this.WrapAction(t => t.Dispose());
 		}
 
 		[Wrapper]

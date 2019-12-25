@@ -12,10 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			if (assemblyName != null)
-				OracleTools.AssemblyName = assemblyName.Value;
-
-			return new OracleDataProvider();
+			return OracleTools.GetDataProvider(null, assemblyName?.Value);
 		}
 	}
 }

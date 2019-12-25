@@ -4,8 +4,6 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
-using JBNotNull = JetBrains.Annotations.NotNullAttribute;
-
 namespace LinqToDB.Tools
 {
 	using Comparers;
@@ -23,10 +21,10 @@ namespace LinqToDB.Tools
 		/// <param name="columnPredicate">A function to filter columns to compare.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
+		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
-			[JBNotNull] this MappingSchema mappingSchema,
-			[JBNotNull, InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
+			this MappingSchema mappingSchema,
+			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
 			if (mappingSchema   == null) throw new ArgumentNullException(nameof(mappingSchema));
 			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
@@ -45,8 +43,8 @@ namespace LinqToDB.Tools
 		/// <param name="mappingSchema">Instance of <see cref="T:MappingSchema" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetEntityEqualityComparer<T>([JBNotNull] this MappingSchema mappingSchema)
+		[Pure]
+		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this MappingSchema mappingSchema)
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -64,8 +62,8 @@ namespace LinqToDB.Tools
 		/// <param name="mappingSchema">Instance of <see cref="T:MappingSchema" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetKeyEqualityComparer<T>([JBNotNull] this MappingSchema mappingSchema)
+		[Pure]
+		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this MappingSchema mappingSchema)
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -87,10 +85,10 @@ namespace LinqToDB.Tools
 		/// <param name="columnPredicate">A function to filter columns to compare.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
+		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
-			[JBNotNull] this IDataContext dataContext,
-			[JBNotNull, InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
+			this IDataContext dataContext,
+			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
 			if (dataContext     == null) throw new ArgumentNullException(nameof(dataContext));
 			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
@@ -105,8 +103,8 @@ namespace LinqToDB.Tools
 		/// <param name="dataContext">Instance of <see cref="T:IDataContext" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetEntityEqualityComparer<T>([JBNotNull] this IDataContext dataContext)
+		[Pure]
+		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this IDataContext dataContext)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -120,8 +118,8 @@ namespace LinqToDB.Tools
 		/// <param name="dataContext">Instance of <see cref="T:IDataContext" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetKeyEqualityComparer<T>([JBNotNull] this IDataContext dataContext)
+		[Pure]
+		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this IDataContext dataContext)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -136,10 +134,10 @@ namespace LinqToDB.Tools
 		/// <param name="columnPredicate">A function to filter columns to compare.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
+		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
-			[JBNotNull] this ITable<T> table,
-			[JBNotNull, InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
+			this ITable<T> table,
+			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
 			if (table           == null) throw new ArgumentNullException(nameof(table));
 			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
@@ -154,8 +152,8 @@ namespace LinqToDB.Tools
 		/// <param name="table">Instance of <see cref="T:ITable`1" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetEntityEqualityComparer<T>([JBNotNull] this ITable<T> table)
+		[Pure]
+		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this ITable<T> table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -169,8 +167,8 @@ namespace LinqToDB.Tools
 		/// <param name="table">Instance of <see cref="T:ITable`1" />.</param>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
-		[JBNotNull, Pure]
-		public static IEqualityComparer<T> GetKeyEqualityComparer<T>([JBNotNull] this ITable<T> table)
+		[Pure]
+		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this ITable<T> table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

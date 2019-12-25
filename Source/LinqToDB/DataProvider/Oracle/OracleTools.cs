@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -20,46 +19,34 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-		public static string AssemblyName;
-
 #if NET45 || NET46
-		static readonly OracleDataProvider _oracleNativeDataProvider  = new OracleDataProvider(ProviderName.OracleNative);
-#endif
-		static readonly OracleDataProvider _oracleManagedDataProvider = new OracleDataProvider(ProviderName.OracleManaged);
-
-		static OracleTools()
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			AssemblyName = DetectedProviderName == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
+			var provider = new OracleDataProvider(ProviderName.OracleNative);
 
-			DataConnection.AddDataProvider(ProviderName.Oracle, DetectedProvider);
-#if NET45 || NET46
-			DataConnection.AddDataProvider(_oracleNativeDataProvider);
+			DataConnection.AddDataProvider(provider);
+
+			if (DetectedProviderName == ProviderName.OracleNative)
+				DataConnection.AddDataProvider(ProviderName.Oracle, provider);
+
+			return provider;
+		}, true);
 #endif
-			DataConnection.AddDataProvider(_oracleManagedDataProvider);
 
-			DataConnection.AddProviderDetector(ProviderDetector);
-
-			foreach (var method in typeof(OracleTools).GetMethods().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
-			{
-				var parameters = method.GetParameters();
-
-				if (parameters[1].ParameterType == typeof(string))
-					OracleXmlTableString = method;
-				else if (parameters[1].ParameterType == typeof(Func<string>))
-					OracleXmlTableFuncString = method;
-				else if (parameters[1].ParameterType.IsGenericType &&
-				         parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-					OracleXmlTableIEnumerableT = method;
-				else
-					throw new InvalidOperationException("Overload method for OracleXmlTable is unknown");
-			}
-		}
-
-		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			//if (css.IsGlobal)
-			//	return null;
+			var provider = new OracleDataProvider(ProviderName.OracleManaged);
 
+			DataConnection.AddDataProvider(provider);
+
+			if (DetectedProviderName == ProviderName.OracleManaged)
+				DataConnection.AddDataProvider(ProviderName.Oracle, provider);
+
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
 			switch (css.ProviderName)
 			{
 				case ""                                :
@@ -72,21 +59,21 @@ namespace LinqToDB.DataProvider.Oracle
 				case "Oracle.Native"                   :
 				case "Oracle.DataAccess.Client"        :
 #if NET45 || NET46
-					return _oracleNativeDataProvider;
+					return _oracleNativeDataProvider.Value;
 #endif
 				case "Oracle.Managed"                  :
-				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider;
+				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider.Value;
 				case "Oracle"                          :
 
 					if (css.Name.Contains("Managed"))
-						return _oracleManagedDataProvider;
+						return _oracleManagedDataProvider.Value;
 
 #if NET45 || NET46
 					if (css.Name.Contains("Native"))
-						return _oracleNativeDataProvider;
+						return _oracleNativeDataProvider.Value;
 #endif
 
-					return DetectedProvider;
+					return GetDataProvider();
 			}
 
 			return null;
@@ -96,12 +83,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
-
-		static OracleDataProvider DetectedProvider =>
-#if NET45 || NET46
-			DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider :
-#endif
-			_oracleManagedDataProvider;
 
 		static string DetectProviderName()
 		{
@@ -123,36 +104,59 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-			return DetectedProvider;
+#if NET45 || NET46
+			if (assemblyName == OracleWrappers.NativeAssemblyName)  return _oracleManagedDataProvider.Value;
+			if (assemblyName == OracleWrappers.ManagedAssemblyName) return _oracleManagedDataProvider.Value;
+
+			switch (providerName)
+			{
+				case ProviderName.OracleNative : return _oracleNativeDataProvider.Value;
+				case ProviderName.OracleManaged: return _oracleManagedDataProvider.Value;
+			}
+
+			return DetectedProviderName == ProviderName.OracleNative
+				? _oracleNativeDataProvider.Value
+				: _oracleManagedDataProvider.Value;
+#else
+			return _oracleManagedDataProvider.Value;
+#endif
 		}
 
-		public static void ResolveOracle(string path)       => new AssemblyResolver(path, AssemblyName);
-		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, AssemblyName);
+		public static void ResolveOracle(string path)       => new AssemblyResolver(
+			path,
+#if NET45 || NET46
+			DetectedProviderName == ProviderName.OracleManaged
+				? OracleWrappers.ManagedAssemblyName
+				: OracleWrappers.NativeAssemblyName
+#else
+			OracleWrappers.ManagedAssemblyName
+#endif
+			);
 
-		public static bool IsXmlTypeSupported => DetectedProvider.IsXmlTypeSupported;
+		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName);
 
-		#region CreateDataConnection
+#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
@@ -192,7 +196,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}, source);
 		}
 
-		#endregion
+#endregion
 
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 

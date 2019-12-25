@@ -6,10 +6,12 @@ namespace LinqToDB.DataProvider.Sybase
 	using System.Data.Common;
 	using System.Reflection;
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
 
 	internal static class SybaseWrappers
 	{
+		public static readonly string NativeAssemblyName  = "Sybase.AdoNet45.AseClient";
+		public static readonly string ManagedAssemblyName = "AdoNetCore.AseClient";
+
 		private static object _nativeSyncRoot   = new object();
 		private static object _managedSyncRoot  = new object();
 
@@ -99,13 +101,13 @@ namespace LinqToDB.DataProvider.Sybase
 #if !NETSTANDARD2_0 && !NETCOREAPP2_1
 				if (native)
 				{
-					assembly = Type.GetType($"{clientNamespace}.AseConnection, {SybaseTools.NativeAssemblyName}", false)?.Assembly
+					assembly = Type.GetType($"{clientNamespace}.AseConnection, {NativeAssemblyName}", false)?.Assembly
 							?? DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly;
 				}
 				else
 #endif
 				{
-					assembly = Type.GetType($"{clientNamespace}.AseConnection, AdoNetCore.AseClient", true).Assembly;
+					assembly = Type.GetType($"{clientNamespace}.AseConnection, {ManagedAssemblyName}", true).Assembly;
 				}
 
 				var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection", true);

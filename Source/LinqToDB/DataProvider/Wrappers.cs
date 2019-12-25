@@ -112,6 +112,11 @@ namespace LinqToDB.DataProvider.Wrappers
 			}
 			#endregion
 		}
+
+		internal class ODBC
+		{
+			public static readonly string AssemblyName = "System.Data.Odbc";
+		}
 	}
 
 	// current ODBC provider doesn't need any ODBC types

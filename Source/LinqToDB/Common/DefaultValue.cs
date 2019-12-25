@@ -47,7 +47,7 @@ namespace LinqToDB.Common
 		/// <param name="type">Type, for which default value requested.</param>
 		/// <param name="mappingSchema">Optional mapping schema to provide mapping information for enum type.</param>
 		/// <returns>Default value for specific type.</returns>
-		public static object? GetValue([JetBrains.Annotations.NotNull] Type type, MappingSchema? mappingSchema = null)
+		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 

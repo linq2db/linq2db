@@ -1,6 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
@@ -14,7 +12,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Static instance of empty array of specific type.
 		/// </summary>
-		[NotNull]
 		public static readonly T[] Empty = new T[0];
 	}
 }

@@ -17,11 +17,6 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		#region Init
 
-		public SybaseDataProvider()
-			: this(SybaseTools.DetectedProviderName)
-		{
-		}
-
 		public SybaseDataProvider(string name)
 			: base(name, null!)
 		{
@@ -49,7 +44,7 @@ namespace LinqToDB.DataProvider.Sybase
 			Wrapper = new Lazy<SybaseWrappers.ISybaseWrapper>(() => Initialize(), true);
 		}
 
-		public             string AssemblyName        => Name == ProviderName.Sybase ? SybaseTools.NativeAssemblyName : "AdoNetCore.AseClient";
+		public             string AssemblyName        => Name == ProviderName.Sybase ? SybaseWrappers.NativeAssemblyName : SybaseWrappers.ManagedAssemblyName;
 		public    override string ConnectionNamespace => Name == ProviderName.Sybase ? "Sybase.Data.AseClient" : "AdoNetCore.AseClient";
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
@@ -223,7 +218,7 @@ namespace LinqToDB.DataProvider.Sybase
 		SybaseBulkCopy? _bulkCopy;
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SybaseBulkCopy(this);

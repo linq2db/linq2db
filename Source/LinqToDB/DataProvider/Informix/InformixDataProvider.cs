@@ -11,11 +11,6 @@ namespace LinqToDB.DataProvider.Informix
 
 	public class InformixDataProvider : DynamicDataProviderBase
 	{
-		public InformixDataProvider()
-			: this(InformixTools.DetectedProviderName)
-		{
-		}
-
 		public InformixDataProvider(string providerName)
 			: base(providerName, null!)
 		{
@@ -218,7 +213,7 @@ namespace LinqToDB.DataProvider.Informix
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new InformixBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,

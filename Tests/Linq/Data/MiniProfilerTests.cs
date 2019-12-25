@@ -478,6 +478,15 @@ namespace Tests.Data
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+				// test connection server type property
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+				using (var cn = DB2Wrappers.CreateDB2Connection(cs))
+				{
+					cn.Open();
+
+					Assert.AreEqual(DB2Wrappers.DB2ServerTypes.DB2_UW, cn.eServerType);
+				}
 			}
 		}
 
@@ -573,6 +582,15 @@ namespace Tests.Data
 
 				// test MARS not set
 				Assert.False(((DataConnection)db).IsMarsEnabled);
+
+				// test server version
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+				using (var cn = ((SqlServerDataProvider)db.DataProvider).Wrapper.Value.CreateSqlConnection(cs))
+				{
+					cn.Open();
+
+					Assert.IsNotNull(cn.ServerVersion);
+				}
 
 				void TestBulkCopy()
 				{
@@ -702,6 +720,15 @@ namespace Tests.Data
 
 				// test MARS not set
 				Assert.False(((DataConnection)db).IsMarsEnabled);
+
+				// test server version
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+				using (var cn = ((SqlServerDataProvider)db.DataProvider).Wrapper.Value.CreateSqlConnection(cs))
+				{
+					cn.Open();
+
+					Assert.IsNotNull(cn.ServerVersion);
+				}
 
 				void TestBulkCopy()
 				{
@@ -1243,6 +1270,17 @@ namespace Tests.Data
 				// type name generation from provider type
 				using (db.CreateLocalTable<TestPostgreSQLTypeName>())
 					Assert.True(trace.Contains("\"Column\" circle     NULL"));
+
+				// test server version
+				var parts = db.Execute<string>("SHOW server_version;").Split('.').Select(int.Parse).ToArray();
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+				using (var cn = ((PostgreSQLDataProvider)db.DataProvider).Wrapper.Value.CreateNpgsqlConnection(cs))
+				{
+					cn.Open();
+
+					Assert.AreEqual(parts[0], cn.PostgreSqlVersion.Major);
+					Assert.AreEqual(parts[1], cn.PostgreSqlVersion.Minor);
+				}
 
 				void TestBulkCopy()
 				{

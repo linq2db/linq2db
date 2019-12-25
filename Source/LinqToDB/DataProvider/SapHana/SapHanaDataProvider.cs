@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SapHana
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
 		public SapHanaDataProvider()
-			: this(SapHanaTools.DetectedProviderName)
+			: this(ProviderName.SapHanaNative)
 		{
 		}
 
@@ -49,8 +49,8 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public    override string ConnectionNamespace => "Sap.Data.Hana";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaWrappers.AssemblyName}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaWrappers.AssemblyName}";
 
 #if !NETSTANDARD2_0
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SapHanaBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,

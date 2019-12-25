@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		private SqlServerWrappers.ISqlServerWrapper Initialize()
 		{
-			var wrapper =  SqlServerWrappers.Initialize(this);
+			var wrapper =  SqlServerWrappers.Initialize(Provider, MappingSchema);
 
 			// missing:
 			// GetSqlBytes

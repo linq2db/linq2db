@@ -8,49 +8,63 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
+	using LinqToDB.Configuration;
 
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider();
-
-		static FirebirdTools()
+		private static readonly Lazy<IDataProvider> _firebirdDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			DataConnection.AddDataProvider(_firebirdDataProvider);
+			var provider = new FirebirdDataProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
+			if (css.ProviderName?.Contains("Firebird") == true
+				|| css.Name?.Contains("Firebird") == true)
+			{
+				return _firebirdDataProvider.Value;
+			}
+
+			return null;
 		}
 
 		public static IDataProvider GetDataProvider()
 		{
-			return _firebirdDataProvider;
+			return _firebirdDataProvider.Value;
 		}
 
-		public static void ResolveFirebird([NotNull] string path)
+		public static void ResolveFirebird(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, "FirebirdSql.Data.FirebirdClient");
+			new AssemblyResolver(path, FirebirdWrappers.AssemblyName);
 		}
 
-		public static void ResolveFirebird([NotNull] Assembly assembly)
+		public static void ResolveFirebird(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, "FirebirdSql.Data.FirebirdClient");
+			new AssemblyResolver(assembly, FirebirdWrappers.AssemblyName);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_firebirdDataProvider, connectionString);
+			return new DataConnection(_firebirdDataProvider.Value, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_firebirdDataProvider, connection);
+			return new DataConnection(_firebirdDataProvider.Value, connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_firebirdDataProvider, transaction);
+			return new DataConnection(_firebirdDataProvider.Value, transaction);
 		}
 
 		#endregion

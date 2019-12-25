@@ -6,46 +6,57 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Data;
+	using LinqToDB.Configuration;
 
 	public static class SqlCeTools
 	{
-		static readonly SqlCeDataProvider _sqlCeDataProvider = new SqlCeDataProvider();
-
-		static SqlCeTools()
+		private static readonly Lazy<IDataProvider> _sqlCeDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			DataConnection.AddDataProvider(_sqlCeDataProvider);
+			var provider = new SqlCeDataProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
+			if (css.ProviderName?.Contains("SqlCe") == true
+				|| css.Name?.Contains("SqlCe") == true)
+			{
+				return _sqlCeDataProvider.Value;
+			}
+
+			return null;
 		}
 
-		public static IDataProvider GetDataProvider()
-		{
-			return _sqlCeDataProvider;
-		}
+		public static IDataProvider GetDataProvider() => _sqlCeDataProvider.Value;
 
 		public static void ResolveSqlCe(string path)
 		{
-			new AssemblyResolver(path, "System.Data.SqlServerCe");
+			new AssemblyResolver(path, SqlCeWrappers.AssemblyName);
 		}
 
 		public static void ResolveSqlCe(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, "System.Data.SqlServerCe");
+			new AssemblyResolver(assembly, assembly.FullName);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_sqlCeDataProvider, connectionString);
+			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_sqlCeDataProvider, connection);
+			return new DataConnection(_sqlCeDataProvider.Value, connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_sqlCeDataProvider, transaction);
+			return new DataConnection(_sqlCeDataProvider.Value, transaction);
 		}
 
 		#endregion

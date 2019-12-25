@@ -43,6 +43,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			Func<IDbDataParameter, string>   TypeNameGetter { get; }
 
 			string QuoteIdentifier(string identifier);
+
+			SqlConnection CreateSqlConnection(string connectionString);
 		}
 
 		class SqlClientWrapper : ISqlServerWrapper
@@ -115,6 +117,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			Action<IDbDataParameter, string> ISqlServerWrapper.TypeNameSetter => _typeNameSetter;
 			Func<IDbDataParameter, string> ISqlServerWrapper.TypeNameGetter   => _typeNameGetter;
 
+			SqlConnection ISqlServerWrapper.CreateSqlConnection(string connectionString)
+				=> _typeMapper!.CreateAndWrap(() => new SqlConnection(connectionString))!;
 
 			SqlConnectionStringBuilder ISqlServerWrapper.CreateConnectionStringBuilder(string connectionString)
 				=> _typeMapper!.CreateAndWrap(() => new SqlConnectionStringBuilder(connectionString))!;
@@ -143,9 +147,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				var assembly = connectionType.Assembly;
 
-				var parameterType         = assembly.GetType($"{clientNamespace}.SqlParameter", true);
-				var dataReaderType        = assembly.GetType($"{clientNamespace}.SqlDataReader", true);
-				var transactionType       = assembly.GetType($"{clientNamespace}.SqlTransaction", true);
+				var parameterType   = assembly.GetType($"{clientNamespace}.SqlParameter", true);
+				var dataReaderType  = assembly.GetType($"{clientNamespace}.SqlDataReader", true);
+				var transactionType = assembly.GetType($"{clientNamespace}.SqlTransaction", true);
 
 				var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder", true);
 				var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true);
@@ -219,9 +223,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		internal static ISqlServerWrapper Initialize(SqlServerDataProvider provider)
+		internal static ISqlServerWrapper Initialize(SqlServerProvider provider, MappingSchema mappingSchema)
 		{
-			if (provider.Provider == SqlServerProvider.SystemDataSqlClient)
+			if (provider == SqlServerProvider.SystemDataSqlClient)
 			{
 				if (_systemWrapper == null)
 				{
@@ -229,7 +233,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (_systemWrapper == null)
 						{
-							_systemWrapper = SqlClientWrapper.Initialize(provider.MappingSchema, true);
+							_systemWrapper = SqlClientWrapper.Initialize(mappingSchema, true);
 						}
 					}
 				}
@@ -244,7 +248,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (_msWrapper == null)
 						{
-							_msWrapper = SqlClientWrapper.Initialize(provider.MappingSchema, false);
+							_msWrapper = SqlClientWrapper.Initialize(mappingSchema, false);
 						}
 					}
 				}
@@ -340,8 +344,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlConnection
+		internal class SqlConnection : TypeWrapper, IDisposable
 		{
+			public SqlConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
+			public SqlConnection(string connectionString) => throw new NotImplementedException();
+
+			public IDbCommand CreateCommand() => this.Wrap(t => t.CreateCommand());
+
+			public string ServerVersion => this.Wrap(t => t.ServerVersion);
+
+			public void Open() => this.WrapAction(c => c.Open());
+
+			public void Dispose() => this.WrapAction(t => t.Dispose());
 		}
 
 		[Wrapper]

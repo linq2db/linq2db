@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider
 			SetResolver();
 		}
 
+		// TODO: update resolver with .net core support
 		void SetResolver()
 		{
 			ResolveEventHandler resolver = Resolver;

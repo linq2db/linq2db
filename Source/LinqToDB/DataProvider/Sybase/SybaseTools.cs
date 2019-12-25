@@ -12,30 +12,26 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public static class SybaseTools
 	{
-		public static string AssemblyName;
-		public static string NativeAssemblyName = "Sybase.AdoNet45.AseClient.dll";
-
 #if NET45 || NET46
-		static readonly SybaseDataProvider _sybaseNativeDataProvider  = new SybaseDataProvider(ProviderName.Sybase);
-#endif
-		static readonly SybaseDataProvider _sybaseManagedDataProvider = new SybaseDataProvider(ProviderName.SybaseManaged);
-
-#pragma warning disable 3015, 219
-		static SybaseTools()
+		private static readonly Lazy<IDataProvider> _sybaseNativeDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			AssemblyName = DetectedProviderName == ProviderName.SybaseManaged ? "AdoNetCore.AseClient" : NativeAssemblyName;
+			var provider = new SybaseDataProvider(ProviderName.Sybase);
 
-			DataConnection.AddDataProvider(ProviderName.Sybase, DetectedProvider);
-#if NET45 || NET46
-			DataConnection.AddDataProvider(_sybaseNativeDataProvider);
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
 #endif
-			DataConnection.AddDataProvider(_sybaseManagedDataProvider);
+		private static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new SybaseDataProvider(ProviderName.SybaseManaged);
 
-			DataConnection.AddProviderDetector(ProviderDetector);
-		}
-#pragma warning restore 3015, 219
+			DataConnection.AddDataProvider(provider);
 
-		private static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			switch (css.ProviderName)
 			{
@@ -49,21 +45,21 @@ namespace LinqToDB.DataProvider.Sybase
 				case "Sybase.Native":
 				case "Sybase.Data.AseClient":
 #if NET45 || NET46
-					return _sybaseNativeDataProvider;
+					return _sybaseNativeDataProvider.Value;
 #endif
 				case "Sybase.Managed":
-				case "AdoNetCore.AseClient" : return _sybaseManagedDataProvider;
+				case "AdoNetCore.AseClient" : return _sybaseManagedDataProvider.Value;
 				case "Sybase":
 
 					if (css.Name.Contains("Managed"))
-						return _sybaseManagedDataProvider;
+						return _sybaseManagedDataProvider.Value;
 
 #if NET45 || NET46
 					if (css.Name.Contains("Native"))
-						return _sybaseNativeDataProvider;
+						return _sybaseNativeDataProvider.Value;
 #endif
 
-					return DetectedProvider;
+					return GetDataProvider();
 			}
 
 			return null;
@@ -72,13 +68,6 @@ namespace LinqToDB.DataProvider.Sybase
 		private static string? _detectedProviderName;
 		public  static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
-
-		private static SybaseDataProvider DetectedProvider =>
-#if NET45 || NET46
-			DetectedProviderName == ProviderName.Sybase
-				? _sybaseNativeDataProvider :
-#endif
-				_sybaseManagedDataProvider;
 
 		private static string DetectProviderName()
 		{
@@ -90,36 +79,54 @@ namespace LinqToDB.DataProvider.Sybase
 			return ProviderName.Sybase;
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-			return DetectedProvider;
+#if NET45 || NET46
+			if (assemblyName == SybaseWrappers.NativeAssemblyName)  return _sybaseNativeDataProvider.Value;
+			if (assemblyName == SybaseWrappers.ManagedAssemblyName) return _sybaseManagedDataProvider.Value;
+
+			switch (providerName)
+			{
+				case ProviderName.Sybase       : return _sybaseNativeDataProvider.Value;
+				case ProviderName.SybaseManaged: return _sybaseManagedDataProvider.Value;
+			}
+
+			if (DetectedProviderName == ProviderName.Sybase)
+				return _sybaseNativeDataProvider.Value;
+#endif
+
+			return _sybaseManagedDataProvider.Value;
 		}
 
 		public static void ResolveSybase(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(
+				path,
+				DetectedProviderName == ProviderName.Sybase
+					? SybaseWrappers.NativeAssemblyName
+					: SybaseWrappers.ManagedAssemblyName);
 		}
 
 		public static void ResolveSybase(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, assembly.FullName);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 		#endregion

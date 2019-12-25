@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.Access
 #region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 
 			return new AccessBulkCopy().BulkCopy(

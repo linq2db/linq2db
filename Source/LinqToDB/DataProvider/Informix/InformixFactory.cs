@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new InformixDataProvider();
+			return InformixTools.GetDataProvider();
 		}
 	}
 }

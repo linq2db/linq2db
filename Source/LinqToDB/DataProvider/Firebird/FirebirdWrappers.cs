@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.Firebird
 		internal static Func<IDbDataParameter, FbDbType> TypeGetter     = null!;
 		internal static Action                           ClearAllPools  = null!;
 
+		public static string AssemblyName = "FirebirdSql.Data.FirebirdClient";
+
 		internal static void Initialize()
 		{
 			if (_typeMapper == null)
@@ -23,7 +25,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					if (_typeMapper == null)
 					{
-						ConnectionType = Type.GetType("FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient", true);
+						ConnectionType = Type.GetType($"FirebirdSql.Data.FirebirdClient.FbConnection, {AssemblyName}", true);
 						ParameterType  = ConnectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbParameter", true);
 						var dbType     = ConnectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDbType", true);
 

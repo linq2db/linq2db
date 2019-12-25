@@ -19,6 +19,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	internal static class PostgreSQLWrappers
 	{
+		public static readonly string AssemblyName = "Npgsql";
+
 		private static object _syncRoot = new object();
 
 		private static IPostgreSQLWrapper? _wrapper;
@@ -58,6 +60,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlDbType ApplyFlags(NpgsqlDbType type, bool isArray, bool isRange, bool convertAlways);
 
 			void SetupMappingSchema(MappingSchema mappingSchema);
+
+			NpgsqlConnection CreateNpgsqlConnection(string connectionString);
 		}
 
 		class NpgsqlWrapper : IPostgreSQLWrapper
@@ -137,22 +141,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				_beginBinaryImport = beginBinaryImport;
 				_binaryImporterHasComplete = binaryImporterHasComplete;
 
-				_npgsqlDateType     = npgsqlDateType;
-				_npgsqlPointType    = npgsqlPointType;
-				_npgsqlLSegType     = npgsqlLSegType;
-				_npgsqlBoxType      = npgsqlBoxType;
-				_npgsqlCircleType   = npgsqlCircleType;
-				_npgsqlPathType     = npgsqlPathType;
-				_npgsqlPolygonType  = npgsqlPolygonType;
-				_npgsqlLineType     = npgsqlLineType;
-				_npgsqlInetType     = npgsqlInetType;
+				_npgsqlDateType = npgsqlDateType;
+				_npgsqlPointType = npgsqlPointType;
+				_npgsqlLSegType = npgsqlLSegType;
+				_npgsqlBoxType = npgsqlBoxType;
+				_npgsqlCircleType = npgsqlCircleType;
+				_npgsqlPathType = npgsqlPathType;
+				_npgsqlPolygonType = npgsqlPolygonType;
+				_npgsqlLineType = npgsqlLineType;
+				_npgsqlInetType = npgsqlInetType;
 				_npgsqlTimeSpanType = npgsqlTimeSpanType;
 				_npgsqlDateTimeType = npgsqlDateTimeType;
-				_npgsqlRangeTType   = npgsqlRangeTType;
+				_npgsqlRangeTType = npgsqlRangeTType;
 
 				// because NpgsqlDbType enumeration changes often (compared to other providers)
 				// we should create lookup list of mapped fields, defined in used npgsql version
-				var dbTypeKnownNames    = Enum.GetNames(dbTypeType);
+				var dbTypeKnownNames = Enum.GetNames(dbTypeType);
 				var dbMappedDbTypeNames = Enum.GetNames(typeof(NpgsqlDbType));
 				foreach (var knownTypeName in from nType in dbTypeKnownNames
 											  join mType in dbMappedDbTypeNames on nType equals mType
@@ -215,6 +219,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			Func<IDbConnection, string, NpgsqlBinaryImporter> IPostgreSQLWrapper.BeginBinaryImport => _beginBinaryImport;
 			bool IPostgreSQLWrapper.BinaryImporterHasComplete => _binaryImporterHasComplete;
+
+			NpgsqlConnection IPostgreSQLWrapper.CreateNpgsqlConnection(string connectionString)
+				=> _typeMapper!.CreateAndWrap(() => new NpgsqlConnection(connectionString))!;
 
 			Action<MappingSchema, NpgsqlBinaryImporter, ColumnDescriptor[], TEntity> IPostgreSQLWrapper.GetBinaryImportRowWriter<TEntity>(
 				PostgreSQLDataProvider provider,
@@ -571,8 +578,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[Wrapper]
-		internal class NpgsqlConnection
+		internal class NpgsqlConnection : TypeWrapper, IDisposable
 		{
+			public NpgsqlConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
+			public NpgsqlConnection(string connectionString) => throw new NotImplementedException();
+
+			public Version PostgreSqlVersion => this.Wrap(t => t.PostgreSqlVersion);
+
+			public void Open() => this.WrapAction(c => c.Open());
+
+			public void Dispose() => this.WrapAction(t => t.Dispose());
+
+			// not implemented, as it is not called from wrapper
 			public NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
 		}
 

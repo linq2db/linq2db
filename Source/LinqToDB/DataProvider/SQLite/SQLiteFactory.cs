@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new SQLiteDataProvider();
+			return SQLiteTools.GetDataProvider();
 		}
 	}
 }

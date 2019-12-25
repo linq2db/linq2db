@@ -14,11 +14,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
-		public OracleDataProvider()
-			: this(OracleTools.DetectedProviderName)
-		{
-		}
-
 		public OracleDataProvider(string name)
 			: base(name, null!)
 		{

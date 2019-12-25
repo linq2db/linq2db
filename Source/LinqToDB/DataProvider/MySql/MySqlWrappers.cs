@@ -8,6 +8,9 @@ namespace LinqToDB.DataProvider.MySql
 
 	internal static class MySqlWrappers
 	{
+		public static string MySqlConnectorAssemblyName = "MySqlConnector";
+		public static string MySqlDataAssemblyName      = "MySql.Data";
+
 		internal interface IMySqlWrapper
 		{
 			Type ParameterType { get; }

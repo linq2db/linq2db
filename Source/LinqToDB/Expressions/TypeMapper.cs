@@ -223,7 +223,7 @@ namespace LinqToDB.Expressions
 									if (expr.Type != replacement)
 										throw new LinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
 
-									var prop = replacement.GetProperty(ma.Member.Name);
+									var prop = replacement.GetProperty(ma.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 									if (prop == null)
 										throw new LinqToDBException($"Property not found in target type: {replacement.FullName}.{ma.Member.Name}");
 									return Expression.MakeMemberAccess(expr, prop);
@@ -828,7 +828,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: MaybeNull]
-		public TR CreateAndWrap<TR>([JetBrains.Annotations.NotNull] Expression<Func<TR>> newFunc)
+		public TR CreateAndWrap<TR>(Expression<Func<TR>> newFunc)
 			where TR: TypeWrapper
 		{
 			if (newFunc == null) throw new ArgumentNullException(nameof(newFunc));

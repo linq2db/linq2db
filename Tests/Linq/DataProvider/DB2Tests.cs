@@ -545,16 +545,9 @@ namespace Tests.DataProvider
 			//p.
 			//new IBM.Data.DB2Types.DB2RowId();
 
-			dynamic int64Value = null;
-			dynamic int32Value = null;
-			dynamic int16Value = null;
-
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = new DB2Int64(1);
-				int32Value = new DB2Int32(2);
-				int16Value = new DB2Int16(3);
-			});
+			var int64Value = new DB2Int64(1);
+			var int32Value = new DB2Int32(2);
+			var int16Value = new DB2Int16(3);
 
 			using (var conn = new DataConnection(context))
 			{
@@ -607,12 +600,9 @@ namespace Tests.DataProvider
 			Assert.That(dateValue.            Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 1)));
 			Assert.That(timeValue.            Value, Is.TypeOf<TimeSpan>().And.EqualTo(new TimeSpan(1, 1, 1)));
 
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = new DB2Int64();
-				int32Value = new DB2Int32();
-				int16Value = new DB2Int16();
-			});
+			int64Value = new DB2Int64();
+			int32Value = new DB2Int32();
+			int16Value = new DB2Int16();
 
 			Assert.That(int64Value.IsNull, Is.True);
 			Assert.That(int32Value.IsNull, Is.True);

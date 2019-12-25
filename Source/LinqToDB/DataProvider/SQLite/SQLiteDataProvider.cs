@@ -15,11 +15,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteDataProvider : DynamicDataProviderBase
 	{
-		public SQLiteDataProvider()
-			: this(ProviderName.SQLite)
-		{
-		}
-
 		public SQLiteDataProvider(string name)
 			: this(name, null!)
 		{
@@ -233,7 +228,7 @@ namespace LinqToDB.DataProvider.SQLite
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,

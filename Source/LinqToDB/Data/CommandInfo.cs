@@ -1408,7 +1408,7 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, Type readerType, int configID, string sql, [CanBeNull] string? additionalKey)
+			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey)
 			{
 				_type          = type;
 				_readerType    = readerType;

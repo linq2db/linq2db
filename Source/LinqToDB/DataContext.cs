@@ -38,10 +38,10 @@ namespace LinqToDB
 		/// In case of <c>null</c> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
-		public DataContext([CanBeNull] string? configurationString)
+		public DataContext(string? configurationString)
 		{
 			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
-			DataProvider        = DataConnection.GetDataProvider(ConfigurationString);
+			DataProvider        = DataConnection.GetDataProvider(ConfigurationString!);
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -51,7 +51,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
-		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext(IDataProvider dataProvider, string connectionString)
 		{
 			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
 			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
@@ -64,7 +64,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
-		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext( string providerName, string connectionString)
 		{
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -108,7 +108,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		[CanBeNull]
 		public Action<TraceInfo>? OnTraceConnection { get; set; } 
 
 		private bool _keepConnectionAlive;

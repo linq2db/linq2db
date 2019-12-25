@@ -167,9 +167,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
-		private static MethodInfo? OracleXmlTableIEnumerableT;
-		private static MethodInfo? OracleXmlTableString;
-		private static MethodInfo? OracleXmlTableFuncString;
+		private static MethodInfo OracleXmlTableIEnumerableT = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableString       = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableFuncString   = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				OracleXmlTableIEnumerableT!.MakeGenericMethod(typeof(T)),
+				OracleXmlTableIEnumerableT.MakeGenericMethod(typeof(T)),
 				dataContext,
 				data);
 		}
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				OracleXmlTableString!.MakeGenericMethod(typeof(T)),
+				OracleXmlTableString.MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}
@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				OracleXmlTableFuncString!.MakeGenericMethod(typeof(T)),
+				OracleXmlTableFuncString.MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}

@@ -12,25 +12,36 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
-		public static string AssemblyName;
+		internal static readonly string SQLiteClassicAssemblyName = "System.Data.SQLite";
+		internal static readonly string SQLiteMSAssemblyName      = "Microsoft.Data.Sqlite";
 
-		static readonly SQLiteDataProvider _SQLiteClassicDataProvider  = new SQLiteDataProvider(ProviderName.SQLiteClassic);
-		static readonly SQLiteDataProvider _SQLiteMSDataProvider       = new SQLiteDataProvider(ProviderName.SQLiteMS);
+		private static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new SQLiteDataProvider(ProviderName.SQLiteClassic);
+
+			DataConnection.AddDataProvider(provider);
+
+			if (DetectedProviderName == ProviderName.SQLiteClassic)
+				DataConnection.AddDataProvider(ProviderName.SQLite, provider);
+
+			return provider;
+		}, true);
+
+		private static readonly Lazy<IDataProvider> _SQLiteMSDataProvider = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new SQLiteDataProvider(ProviderName.SQLiteMS);
+
+			DataConnection.AddDataProvider(provider);
+
+			if (DetectedProviderName == ProviderName.SQLiteMS)
+				DataConnection.AddDataProvider(ProviderName.SQLite, provider);
+
+			return provider;
+		}, true);
 
 		public static bool AlwaysCheckDbNull = true;
 
-		static SQLiteTools()
-		{
-			AssemblyName = DetectedProviderName == ProviderName.SQLiteClassic ? "System.Data.SQLite" : "Microsoft.Data.Sqlite";
-
-			DataConnection.AddDataProvider(ProviderName.SQLite, DetectedProvider);
-			DataConnection.AddDataProvider(_SQLiteClassicDataProvider);
-			DataConnection.AddDataProvider(_SQLiteMSDataProvider);
-
-			DataConnection.AddProviderDetector(ProviderDetector);
-		}
-
-		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal)
 				return null;
@@ -47,18 +58,18 @@ namespace LinqToDB.DataProvider.SQLite
 				case "SQLite.MS"             :
 				case "SQLite.Microsoft"      :
 				case "Microsoft.Data.Sqlite" :
-				case "Microsoft.Data.SQLite" : return _SQLiteMSDataProvider;
+				case "Microsoft.Data.SQLite" : return _SQLiteMSDataProvider.Value;
 				case "SQLite.Classic"        :
-				case "System.Data.SQLite"    : return _SQLiteClassicDataProvider;
+				case "System.Data.SQLite"    : return _SQLiteClassicDataProvider.Value;
 				case "SQLite"                :
 
 					if (css.Name.Contains("MS") || css.Name.Contains("Microsoft"))
-						return _SQLiteMSDataProvider;
+						return _SQLiteMSDataProvider.Value;
 
 					if (css.Name.Contains("Classic"))
-						return _SQLiteClassicDataProvider;
+						return _SQLiteClassicDataProvider.Value;
 
-					return DetectedProvider;
+					return GetDataProvider();
 			}
 
 			return null;
@@ -68,9 +79,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
-
-		static SQLiteDataProvider DetectedProvider =>
-			DetectedProviderName == ProviderName.SQLiteClassic ? _SQLiteClassicDataProvider : _SQLiteMSDataProvider;
 
 		static string DetectProviderName()
 		{
@@ -82,7 +90,7 @@ namespace LinqToDB.DataProvider.SQLite
 					if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
 						return ProviderName.SQLiteMS;
 			}
-			catch (Exception)
+			catch
 			{
 			}
 
@@ -90,40 +98,49 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			return DetectedProvider;
+			switch (providerName)
+			{
+				case ProviderName.SQLiteClassic: return _SQLiteClassicDataProvider.Value;
+				case ProviderName.SQLiteMS     : return _SQLiteMSDataProvider.Value;
+			}
+
+			if (DetectedProviderName == ProviderName.SQLiteClassic)
+				return _SQLiteClassicDataProvider.Value;
+
+			return _SQLiteMSDataProvider.Value;
 		}
 
 		public static void ResolveSQLite(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(
+				path,
+				DetectedProviderName == ProviderName.SQLiteClassic
+						? SQLiteClassicAssemblyName
+						: SQLiteMSAssemblyName);
 		}
 
 		public static void ResolveSQLite(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, assembly.FullName);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(
-				connection.GetType().Namespace.Contains("Microsoft") ? _SQLiteMSDataProvider : _SQLiteClassicDataProvider,
-				connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(
-				transaction.GetType().Namespace.Contains("Microsoft") ? _SQLiteMSDataProvider : _SQLiteClassicDataProvider,
-				transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 		#endregion

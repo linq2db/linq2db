@@ -8,6 +8,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	internal static class SqlCeWrappers
 	{
+		public static readonly string AssemblyName = "System.Data.SqlServerCe";
+
 		private static readonly object _syncRoot = new object();
 		private static TypeMapper? _typeMapper;
 

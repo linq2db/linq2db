@@ -12,10 +12,7 @@ namespace LinqToDB.DataProvider.Sybase
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			if (assemblyName != null)
-				SybaseTools.AssemblyName = assemblyName.Value;
-
-			return new SybaseDataProvider();
+			return SybaseTools.GetDataProvider(null, assemblyName?.Value);
 		}
 	}
 }

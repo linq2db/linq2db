@@ -43,7 +43,7 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string?)null)
+		public DataConnection(MappingSchema mappingSchema) : this((string?)null)
 		{
 			AddMappingSchema(mappingSchema);
 		}
@@ -54,7 +54,7 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public DataConnection(string configurationString, MappingSchema mappingSchema)
 			: this(configurationString)
 		{
 			AddMappingSchema(mappingSchema);
@@ -89,9 +89,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-				[JetBrains.Annotations.NotNull] string        providerName,
-				[JetBrains.Annotations.NotNull] string        connectionString,
-				[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+				string        providerName,
+				string        connectionString,
+				MappingSchema mappingSchema)
 			: this(providerName, connectionString)
 		{
 			AddMappingSchema(mappingSchema);
@@ -103,8 +103,8 @@ namespace LinqToDB.Data
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] string providerName,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			string providerName,
+			string connectionString)
 		{
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -126,9 +126,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] string        connectionString,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			IDataProvider dataProvider,
+			string        connectionString,
+			MappingSchema mappingSchema)
 			: this(dataProvider, connectionString)
 		{
 			AddMappingSchema(mappingSchema);
@@ -140,8 +140,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			IDataProvider dataProvider,
+			string connectionString)
 		{
 			InitConfig();
 
@@ -157,9 +157,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
-			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory,
-			[JetBrains.Annotations.NotNull] MappingSchema       mappingSchema)
+			IDataProvider       dataProvider,
+			Func<IDbConnection> connectionFactory,
+			MappingSchema       mappingSchema)
 			: this(dataProvider, connectionFactory)
 		{
 			AddMappingSchema(mappingSchema);
@@ -171,8 +171,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
-			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory)
+			IDataProvider       dataProvider,
+			Func<IDbConnection> connectionFactory)
 		{
 			if (dataProvider      == null) throw new ArgumentNullException(nameof(dataProvider));
 			if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
@@ -199,9 +199,9 @@ namespace LinqToDB.Data
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			IDataProvider dataProvider,
+			IDbConnection connection,
+			MappingSchema mappingSchema)
 			: this(dataProvider, connection)
 		{
 			AddMappingSchema(mappingSchema);
@@ -216,8 +216,8 @@ namespace LinqToDB.Data
 		/// <paramref name="connection"/> would not be disposed.
 		/// </remarks>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection)
+			IDataProvider dataProvider,
+			IDbConnection connection)
 			: this(dataProvider, connection, false)
 		{
 
@@ -230,8 +230,8 @@ namespace LinqToDB.Data
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			IDataProvider dataProvider,
+			IDbConnection connection,
 											bool          disposeConnection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
@@ -253,9 +253,9 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
-			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
-			[JetBrains.Annotations.NotNull] MappingSchema  mappingSchema)
+			IDataProvider  dataProvider,
+			IDbTransaction transaction,
+			MappingSchema  mappingSchema)
 			: this(dataProvider, transaction)
 		{
 			AddMappingSchema(mappingSchema);
@@ -267,8 +267,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
-			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
+			IDataProvider  dataProvider,
+			IDbTransaction transaction)
 		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 			if (transaction  == null) throw new ArgumentNullException(nameof(transaction));
@@ -388,7 +388,6 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// </summary>
-		[CanBeNull]
 		public  Action<TraceInfo>? OnTraceConnection { get; set; } = OnTrace;
 
 		static void OnTraceInternal(TraceInfo info)
@@ -560,21 +559,19 @@ namespace LinqToDB.Data
 		{
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
-			// TODO: remove, this code just triggers tools static constructors, so they
-			// register corresponding providers
-			// intstead we should register provider factory to lazy-initialize providers
-			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
-			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
-			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
-			LinqToDB.DataProvider.Firebird.  FirebirdTools.  GetDataProvider();
-			LinqToDB.DataProvider.MySql.     MySqlTools.     GetDataProvider();
-			LinqToDB.DataProvider.SQLite.    SQLiteTools.    GetDataProvider();
-			LinqToDB.DataProvider.Sybase.    SybaseTools.    GetDataProvider();
-			LinqToDB.DataProvider.Oracle.    OracleTools.    GetDataProvider();
-			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
-			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
-			var _ = LinqToDB.DataProvider.Informix.InformixTools.DefaultBulkCopyType;
-			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider();
+			// lazy registration of embedded providers using detectors
+			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
 
 			var section = DefaultSettings;
 
@@ -648,8 +645,8 @@ namespace LinqToDB.Data
 		/// <param name="providerName">Provider name, to which provider implementation will be mapped.</param>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider(
-			[JetBrains.Annotations.NotNull] string        providerName,
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider)
+			string        providerName,
+			IDataProvider dataProvider)
 		{
 			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
@@ -664,7 +661,7 @@ namespace LinqToDB.Data
 		/// Registers database provider implementation using <see cref="IDataProvider.Name"/> name.
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
-		public static void AddDataProvider([JetBrains.Annotations.NotNull] IDataProvider dataProvider)
+		public static void AddDataProvider(IDataProvider dataProvider)
 		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 
@@ -676,7 +673,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="configurationString">Connection configuration name.</param>
 		/// <returns>Database provider.</returns>
-		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string? configurationString)
+		public static IDataProvider GetDataProvider(string configurationString)
 		{
 			InitConfig();
 
@@ -691,9 +688,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Connection string.</param>
 		/// <returns>Database provider.</returns>
 		public static IDataProvider? GetDataProvider(
-			[JetBrains.Annotations.NotNull] string providerName,
-			[JetBrains.Annotations.NotNull] string configurationString,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			string providerName,
+			string configurationString,
+			string connectionString)
 		{
 			InitConfig();
 
@@ -709,8 +706,8 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Connection string.</param>
 		/// <returns>Database provider.</returns>
 		public static IDataProvider? GetDataProvider(
-			[JetBrains.Annotations.NotNull] string providerName,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			string providerName,
+			string connectionString)
 		{
 			InitConfig();
 
@@ -864,8 +861,8 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Connection string.</param>
 		/// <param name="dataProvider">Database provider. If not specified, will use provider, registered using <paramref name="configuration"/> value.</param>
 		public static void AddConfiguration(
-			[JetBrains.Annotations.NotNull] string configuration,
-			[JetBrains.Annotations.NotNull] string connectionString,
+			string configuration,
+			string connectionString,
 			IDataProvider? dataProvider = null)
 		{
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
@@ -898,9 +895,9 @@ namespace LinqToDB.Data
 		}
 
 		public static void AddOrSetConfiguration(
-			[JetBrains.Annotations.NotNull] string configuration,
-			[JetBrains.Annotations.NotNull] string connectionString,
-			[JetBrains.Annotations.NotNull] string dataProvider)
+			string configuration,
+			string connectionString,
+			string dataProvider)
 		{
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -920,8 +917,8 @@ namespace LinqToDB.Data
 		/// <param name="configuration">Connection name.</param>
 		/// <param name="connectionString">Connection string.</param>
 		public static void SetConnectionString(
-			[JetBrains.Annotations.NotNull] string configuration,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			string configuration,
+			string connectionString)
 		{
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));

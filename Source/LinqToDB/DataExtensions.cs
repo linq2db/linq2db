@@ -55,8 +55,8 @@ namespace LinqToDB
 		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object? instance,
-			[NotNull] MethodInfo methodInfo,
-			[NotNull] params object?[] parameters)
+			MethodInfo methodInfo,
+			params object?[] parameters)
 			where T : class
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -104,8 +104,8 @@ namespace LinqToDB
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDc,TResult> Compile<TDc,TResult>(
-			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc,TResult>> query)
+			this IDataContext dataContext,
+			Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -126,8 +126,8 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
-			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
+			this IDataContext dataContext,
+			Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -149,8 +149,8 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
-			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
+			this IDataContext dataContext,
+			Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -173,8 +173,8 @@ namespace LinqToDB
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
-			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
+			this IDataContext dataContext,
+			Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -198,7 +198,7 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
+		public static int Insert<T>(this IDataContext dataContext, T obj,
 			string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -219,7 +219,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -248,7 +248,7 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj,
+		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -272,7 +272,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertOrReplaceAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -301,7 +301,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static object InsertWithIdentity<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -325,7 +325,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static int InsertWithInt32Identity<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -349,7 +349,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static long InsertWithInt64Identity<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -373,7 +373,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static decimal InsertWithDecimalIdentity<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -398,7 +398,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static Task<object> InsertWithIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -424,7 +424,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -452,7 +452,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -480,7 +480,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -511,7 +511,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Update<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -536,7 +536,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> UpdateAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -565,7 +565,7 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Delete<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string? tableName    = null,
 			string? databaseName = null,
@@ -590,7 +590,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> DeleteAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			T obj,
 			string?           tableName    = null,
 			string?           databaseName = null,
@@ -625,7 +625,8 @@ namespace LinqToDB
 		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Created table as queryable source.</returns>
-		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
+		public static ITable<T> CreateTable<T>(
+			this IDataContext dataContext,
 			string?         tableName       = null,
 			string?         databaseName    = null,
 			string?         schemaName      = null,
@@ -659,7 +660,8 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
-		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
+		public static Task<ITable<T>> CreateTableAsync<T>(
+			this IDataContext dataContext,
 			string?           tableName       = null,
 			string?           databaseName    = null,
 			string?           schemaName      = null,
@@ -692,7 +694,7 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		public static void DropTable<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			string? tableName                 = null,
 			string? databaseName              = null,
 			string? schemaName                = null,
@@ -728,7 +730,7 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		public static void DropTable<T>(
-			[NotNull] this ITable<T> table,
+			this ITable<T> table,
 			string? tableName                 = null,
 			string? databaseName              = null,
 			string? schemaName                = null,
@@ -778,7 +780,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
-			[NotNull] this IDataContext dataContext,
+			this IDataContext dataContext,
 			string? tableName                 = null,
 			string? databaseName              = null,
 			string? schemaName                = null,
@@ -817,7 +819,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
-			[NotNull] this ITable<T> table,
+			this ITable<T> table,
 			string? tableName                 = null,
 			string? databaseName              = null,
 			string? schemaName                = null,
@@ -867,9 +869,9 @@ namespace LinqToDB
 		/// <param name="cteTableName">Common table expression name.</param>
 		/// <returns>Common table expression.</returns>
 		public static IQueryable<T> GetCte<T>(
-			[NotNull]   this IDataContext                 dataContext,
-			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
-			[CanBeNull] string?                           cteTableName = null)
+			                this IDataContext                 dataContext,
+			[InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
+			                string?                           cteTableName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
@@ -895,9 +897,9 @@ namespace LinqToDB
 		/// <param name="cteTableName">Common table expression name.</param>
 		/// <returns>Common table expression.</returns>
 		public static IQueryable<T> GetCte<T>(
-			[NotNull]                this IDataContext                 dataContext,
-			[CanBeNull]              string?                           cteTableName,
-			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody)
+			                this IDataContext                 dataContext,
+			                string?                           cteTableName,
+			[InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody)
 		{
 			return GetCte(dataContext, cteBody, cteTableName);
 		}
@@ -1009,9 +1011,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			[NotNull] this       IDataContext dataContext,
-			[SqlQueryDependent]  RawSqlString sql,
-			[SqlQueryDependent, NotNull] params object?[] parameters)
+			this                IDataContext dataContext,
+			[SqlQueryDependent] RawSqlString sql,
+			[SqlQueryDependent] params object?[] parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -1057,8 +1059,8 @@ namespace LinqToDB
 		/// </example>
 		[Pure]
 		public static IQueryable<TEntity> SelectQuery<TEntity>(
-			[NotNull]                this IDataContext         dataContext,
-			[NotNull, InstantHandle] Expression<Func<TEntity>> selector)
+			                this IDataContext         dataContext,
+			[InstantHandle] Expression<Func<TEntity>> selector)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));

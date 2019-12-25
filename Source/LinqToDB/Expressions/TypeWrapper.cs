@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
@@ -16,7 +15,7 @@ namespace LinqToDB.Expressions
 		{
 		}
 
-		public TypeWrapper(object? instance, [NotNull] TypeMapper mapper)
+		public TypeWrapper(object? instance, TypeMapper mapper)
 		{
 			instance_ = instance;
 			mapper_   = mapper ?? throw new ArgumentNullException(nameof(mapper));

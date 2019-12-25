@@ -13,11 +13,6 @@ namespace LinqToDB.DataProvider.MySql
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
-		public MySqlDataProvider()
-			: this(ProviderName.MySql, new MySqlMappingSchema())
-		{
-		}
-
 		public MySqlDataProvider(string name)
 			: this(name, null!)
 		{
@@ -140,7 +135,7 @@ namespace LinqToDB.DataProvider.MySql
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
 				throw new ArgumentException("Source is null!", nameof(source));
