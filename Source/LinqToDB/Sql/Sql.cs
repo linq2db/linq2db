@@ -677,13 +677,13 @@ namespace LinqToDB
 			}
 		}
 
-		[ConcatAttribute]
+		[Concat]
 		public static string Concat(params object[] args)
 		{
 			return string.Concat(args);
 		}
 
-		[ConcatAttribute]
+		[Concat]
 		public static string Concat(params string[] args)
 		{
 			return string.Concat(args);

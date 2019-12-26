@@ -479,3 +479,10 @@ INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 't
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('record not found', 'empty');
 GO
+DROP TABLE IF EXISTS Issue1993
+GO
+CREATE TABLE Issue1993 (
+	id			INTEGER UNSIGNED	NOT NULL   AUTO_INCREMENT,
+	description	VARCHAR(100)		NULL,
+PRIMARY KEY(id));
+GO
