@@ -44,6 +44,7 @@ bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
 bool NormalizeNames                      = true;
+bool NormalizeNamesWithoutUnderscores    = false;
 static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
@@ -855,9 +856,12 @@ private int _counter = 0;
 
 string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
-	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
+	if (NormalizeNames)
 	{
-		name = SplitAndJoin(name, "", '_');
+		if (mayRemoveUnderscore && name.Contains("_"))
+			name = SplitAndJoin(name, "", '_');
+		else if (NormalizeNamesWithoutUnderscores)
+			name = NormalizeFragment(name);
 	}
 
 	if (name.Contains("."))
@@ -882,9 +886,14 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 static string SplitAndJoin(string value, string join, params char[] split)
 {
 	var ss = value.Split(split, StringSplitOptions.RemoveEmptyEntries)
-		.Select(s => char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1)));
+		.Select(NormalizeFragment);
 
 	return string.Join(join, ss.ToArray());
+}
+
+static string NormalizeFragment(string s)
+{
+	return char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 }
 
 private string GetAssociationExtensionSinglularNameDefault(ForeignKey key)
