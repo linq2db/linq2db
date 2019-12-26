@@ -321,7 +321,7 @@ namespace TestAzureSQL
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test"), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test"), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Parent")]

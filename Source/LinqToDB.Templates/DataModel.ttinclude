@@ -441,7 +441,7 @@ void LoadMetadata(DataConnection dataConnection)
 			col.MemberName = ConvertToCompilable(col.MemberName, true);
 
 			if (col.MemberName == t.TypeName)
-				col.MemberName += "_Column";
+				col.MemberName += "Column";
 		}
 
 		foreach (var fk in t.ForeignKeys.Values)
