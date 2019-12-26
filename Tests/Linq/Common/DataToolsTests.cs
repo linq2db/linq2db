@@ -74,12 +74,12 @@ namespace Tests.Common
 			new object[] { "[4]6[5" , "[4]6[[]5" },
 			new object[] { "[[]"    , "[[]"      }
 		};
+
 		[TestCaseSource(nameof(_escapeUnterminatedBracketTestData))]
 		public void EscapeUnterminatedBracket(string testString, string expectedResult)
 		{
 			Assert.AreEqual(expectedResult, DataTools.EscapeUnterminatedBracket(testString));
 		}
-
 
 		[TestCaseSource(nameof(_convertStringToSqlTestData))]
 		public void ConvertStringToSql(string testString, string startPrefix, char[] extraEscapes, string expected)
