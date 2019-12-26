@@ -62,17 +62,17 @@ namespace Tests.Common
 
 		private static readonly object[] _escapeUnterminatedBracketTestData =
 		{
-			new object[] {"[", "[[]"},
-			new object[] {"[0]", "[0]"},
-			new object[] {"[0-9]", "[0-9]"},
-			new object[] {"", ""},
-			new object[] {null,null},
-			new object[] {"[6", "[[]6"},
-			new object[] {"6[", "6[[]"},
-			new object[] {"6[5]", "6[5]"},
-			new object[] {"[4]6[5]", "[4]6[5]"},
-			new object[] {"[4]6[5", "[4]6[[]5"},
-			new object[] {"[[]", "[[]"}
+			new object[] { "["      , "[[]"      },
+			new object[] { "[0]"    , "[0]"      },
+			new object[] { "[0-9]"  , "[0-9]"    },
+			new object[] { ""       , ""         },
+			new object[] { null     , null       },
+			new object[] { "[6"     , "[[]6"     },
+			new object[] { "6["     , "6[[]"     },
+			new object[] { "6[5]"   , "6[5]"     },
+			new object[] { "[4]6[5]", "[4]6[5]"  },
+			new object[] { "[4]6[5" , "[4]6[[]5" },
+			new object[] { "[[]"    , "[[]"      }
 		};
 		[TestCaseSource(nameof(_escapeUnterminatedBracketTestData))]
 		public void EscapeUnterminatedBracket(string testString, string expectedResult)

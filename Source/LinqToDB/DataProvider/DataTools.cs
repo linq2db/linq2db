@@ -8,54 +8,46 @@ namespace LinqToDB.DataProvider
 	public class DataTools
 	{
 		/// <summary>
-		/// use in place of .Replace("[", "[[]")
+		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
 		/// </summary>
-		/// <param name="str"></param>
-		/// <returns></returns>
 		public static string EscapeUnterminatedBracket(string str)
 		{
 			if (str == null)
-			{
 				return str;
-			}
+
 			var nextIndex = str.IndexOf('[');
 			if (nextIndex < 0)
-			{
 				return str;
-			}
+
 			var lastIndex = 0;
-			StringBuilder newStr = new StringBuilder(str.Length + 10);
+			var newStr = new StringBuilder(str.Length + 10);
 
 			while (nextIndex >= 0)
 			{
 				if (nextIndex != 0)
-				{
 					newStr.Append(str.Substring(lastIndex, nextIndex - lastIndex));
-				}
 
 				lastIndex = nextIndex;
 
 				var closeBracket = str.IndexOf(']', nextIndex + 1);
-				nextIndex = str.IndexOf('[', nextIndex + 1);
+				nextIndex        = str.IndexOf('[', nextIndex + 1);
+
 				if ((closeBracket > 0 && (closeBracket < nextIndex || nextIndex < 0))
 				    ||
 				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
 				{
 					if (nextIndex < 0)
-					{
 						newStr.Append("[");
-					}
 				}
 				else
-				{
 					newStr.Append("[[]");
-				}
 
 			}
 
 			newStr.Append(str.Substring(lastIndex + 1));
 			return newStr.ToString();
 		}
+
 		static readonly char[] _escapes = { '\x0', '\'' };
 
 		public static void ConvertStringToSql(

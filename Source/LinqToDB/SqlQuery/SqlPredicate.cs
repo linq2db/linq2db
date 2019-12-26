@@ -168,9 +168,10 @@ namespace LinqToDB.SqlQuery
 				IsSqlLike = isSqlLike;
 			}
 
-			public ISqlExpression Expr2  { get; internal set; }
-			public ISqlExpression Escape { get; internal set; }
-			public bool IsSqlLike { get; internal set; }
+			public ISqlExpression Expr2     { get; internal set; }
+			public ISqlExpression Escape    { get; internal set; }
+			public bool           IsSqlLike { get; internal set; }
+
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
