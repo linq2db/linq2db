@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 	internal static class SybaseWrappers
 	{
-		public static readonly string NativeAssemblyName  = "Sybase.AdoNet45.AseClient";
-		public static readonly string ManagedAssemblyName = "AdoNetCore.AseClient";
+		public const string NativeAssemblyName  = "Sybase.AdoNet45.AseClient";
+		public const string ManagedAssemblyName = "AdoNetCore.AseClient";
 
 		private static object _nativeSyncRoot   = new object();
 		private static object _managedSyncRoot  = new object();

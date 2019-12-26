@@ -150,47 +150,25 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (css.ProviderName == "Microsoft.Data.SqlClient")
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
 			else if (css.ProviderName == "System.Data.SqlClient")
-				// not sure about it, netfx applications will start failing if they were using sql client from System.Data
-				// with this provider name
 				provider = SqlServerProvider.SystemDataSqlClient;
 
 			switch (css.ProviderName)
 			{
 				case ""                      :
 				case null                    :
-
 					if (css.Name == "SqlServer")
-						goto case "SqlServer";
+						goto case ProviderName.SqlServer;
 					break;
-
-				case "SqlServer2000"            :
-				case "SqlServer.2000"           : return GetDataProvider(SqlServerVersion.v2000, provider);
-				case "SqlServer2005"            :
-				case "SqlServer.2005"           : return GetDataProvider(SqlServerVersion.v2005, provider);
-				case "SqlServer2008"            :
-				case "SqlServer.2008"           : return GetDataProvider(SqlServerVersion.v2008, provider);
-				case "SqlServer2012"            :
-				case "SqlServer.2012"           :
-				case "SqlServer2014"            :
-				case "SqlServer.2014"           :
-				case "SqlServer2016"            :
-				case "SqlServer.2016"           : return GetDataProvider(SqlServerVersion.v2012, provider);
-				case "SqlServer2017"            :
-				case "SqlServer.2017"           :
-				case "SqlServer2019"            :
-				case "SqlServer.2019"           : return GetDataProvider(SqlServerVersion.v2017, provider);
-
-				case "SqlServer"                :
-				case "System.Data.SqlClient"    :
-				case "Microsoft.Data.SqlClient" :
-
-					if (css.Name.Contains("2000"))	return GetDataProvider(SqlServerVersion.v2000, provider);
-					if (css.Name.Contains("2005"))	return GetDataProvider(SqlServerVersion.v2005, provider);
-					if (css.Name.Contains("2008"))	return GetDataProvider(SqlServerVersion.v2008, provider);
-					if (css.Name.Contains("2012") || css.Name.Contains("2014") || css.Name.Contains("2016"))
-													return GetDataProvider(SqlServerVersion.v2012, provider);
-					if (css.Name.Contains("2017") || css.Name.Contains("2019"))
-													return GetDataProvider(SqlServerVersion.v2017, provider);
+				case var providerName when providerName.Contains("SqlServer") || providerName.Contains("SqlClient"):
+				case ProviderName.SqlServer:
+					if (css.Name.Contains("2000") || css.ProviderName?.Contains("2000") == true) return GetDataProvider(SqlServerVersion.v2000, provider);
+					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);
+					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider);
+					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
+					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
+					if (css.Name.Contains("2016") || css.ProviderName?.Contains("2016") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
+					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(SqlServerVersion.v2017, provider);
+					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(SqlServerVersion.v2017, provider);
 
 					if (AutoDetectProvider)
 					{
@@ -231,10 +209,12 @@ namespace LinqToDB.DataProvider.SqlServer
 											case  9 : return GetDataProvider(SqlServerVersion.v2005, provider);
 											case 10 : return GetDataProvider(SqlServerVersion.v2008, provider);
 											case 11 :
-											case 12 : return GetDataProvider(SqlServerVersion.v2012, provider);
-											case 14 : return GetDataProvider(SqlServerVersion.v2017, provider);
+											case 12 :
+											case 13 : return GetDataProvider(SqlServerVersion.v2012, provider);
+											case 14 :
+											case 15 : return GetDataProvider(SqlServerVersion.v2017, provider);
 											default :
-												if (version > 14)
+												if (version > 15)
 													return GetDataProvider(SqlServerVersion.v2017, provider);
 												return GetDataProvider(SqlServerVersion.v2008, provider);
 										}
@@ -247,7 +227,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					}
 
-					break;
+					return GetDataProvider(provider: provider);
 			}
 
 			return null;

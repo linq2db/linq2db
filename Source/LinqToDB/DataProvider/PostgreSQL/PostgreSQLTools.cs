@@ -46,29 +46,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (css.ProviderName)
 			{
-				case ""               :
-				case null             :
-
+				case ProviderName.PostgreSQL92                                : return _postgreSQLDataProvider92.Value;
+				case ProviderName.PostgreSQL93                                : return _postgreSQLDataProvider93.Value;
+				case ProviderName.PostgreSQL95                                : return _postgreSQLDataProvider95.Value;
+				case ""                                                       :
+				case null                                                     :
 					if (css.Name == "PostgreSQL")
-						goto case "PostgreSQL";
+						goto case "Npgsql";
 					break;
-
-				case "PostgreSQL92"   :
-				case "PostgreSQL.92"  :
-				case "PostgreSQL.9.2" :
-					return _postgreSQLDataProvider92.Value;
-
-				case "PostgreSQL93"   : case "PostgreSQL.93"  : case "PostgreSQL.9.3" :
-				case "PostgreSQL94"   : case "PostgreSQL.94"  : case "PostgreSQL.9.4" :
-					return _postgreSQLDataProvider93.Value;
-
-				case "PostgreSQL95"   : case "PostgreSQL.95"  : case "PostgreSQL.9.5" :
-				case "PostgreSQL96"   : case "PostgreSQL.96"  : case "PostgreSQL.9.6" :
-					return _postgreSQLDataProvider95.Value;
-
-				case "PostgreSQL"     :
-				case "Npgsql"         :
-
+				case "Npgsql"                                                 :
+				case var providerName when providerName.Contains("PostgreSQL"):
 					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
 						return _postgreSQLDataProvider92.Value;
 
@@ -109,7 +96,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						}
 					}
 
-					break;
+					return GetDataProvider();
 			}
 
 			return null;

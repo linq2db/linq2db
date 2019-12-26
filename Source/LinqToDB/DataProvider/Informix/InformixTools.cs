@@ -36,20 +36,24 @@ namespace LinqToDB.DataProvider.Informix
 			// NOTE: IBM.Data.DB2.Core already mapped to DB2 provider
 			switch (css.ProviderName)
 			{
-				case "":
-				case null:
-
-					if (css.Name == "Informix.Core" || css.Name == "Informix.DB2")
-						goto case "IBM.Data.Informix.Core";
-					if (css.Name?.Contains("Informix") == true)
-						goto case "IBM.Data.Informix";
-					break;
-
-				case "Informix.Core":
-				case "IBM.Data.Informix.Core":
+				case ProviderName.InformixDB2:
 					return _informixDB2DataProvider.Value;
+#if NET45 || NET46
+				case "IBM.Data.Informix"     :
+					return _informixDataProvider.Value;
+#endif
+				case ""                      :
+				case null                    :
+				case "IBM.Data.DB2"          :
+				case "IBM.Data.DB2.Core"     :
 
-				case "IBM.Data.Informix":
+					if (css.Name.Contains("Informix"))
+						goto case ProviderName.Informix;
+					break;
+				case ProviderName.Informix   :
+					if (css.Name.Contains("DB2"))
+						return _informixDB2DataProvider.Value;
+
 #if NET45 || NET46
 					return _informixDataProvider.Value;
 #else

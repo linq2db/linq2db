@@ -64,8 +64,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// access provoider detector use connection string for detection, so BAD is not so bad
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, ProviderName.Access)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{

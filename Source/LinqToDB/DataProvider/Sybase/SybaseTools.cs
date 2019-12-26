@@ -35,30 +35,25 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (css.ProviderName)
 			{
-				case "":
-				case null:
-
-					if (css.Name.Contains("Sybase"))
-						goto case "Sybase";
-					break;
-
-				case "Sybase.Native":
-				case "Sybase.Data.AseClient":
+				case SybaseWrappers.ManagedAssemblyName:
+				case ProviderName.SybaseManaged        : return _sybaseManagedDataProvider.Value;
 #if NET45 || NET46
-					return _sybaseNativeDataProvider.Value;
+				case "Sybase.Native"                   :
+				case "Sybase.Data.AseClient"           :
+				case SybaseWrappers.NativeAssemblyName : return _sybaseNativeDataProvider.Value;
 #endif
-				case "Sybase.Managed":
-				case "AdoNetCore.AseClient" : return _sybaseManagedDataProvider.Value;
-				case "Sybase":
-
+				case ""                                :
+				case null                              :
+					if (css.Name.Contains("Sybase"))
+						goto case ProviderName.Sybase;
+					break;
+				case ProviderName.Sybase               :
 					if (css.Name.Contains("Managed"))
 						return _sybaseManagedDataProvider.Value;
-
 #if NET45 || NET46
 					if (css.Name.Contains("Native"))
 						return _sybaseNativeDataProvider.Value;
 #endif
-
 					return GetDataProvider();
 			}
 

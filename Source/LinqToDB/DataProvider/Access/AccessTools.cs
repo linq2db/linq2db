@@ -25,10 +25,8 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			// Access is too generic word to use contains
-			// e.g. it will match Oracle.DataAccess
-			if (css.ProviderName == "Access"
-				|| css.Name?.Contains("Access") == true
+			if (css.ProviderName == ProviderName.Access
+				|| css.Name.Contains("Access")
 				|| connectionString.Contains("Microsoft.ACE.OLEDB")
 				|| connectionString.Contains("Microsoft.Jet.OLEDB"))
 			{

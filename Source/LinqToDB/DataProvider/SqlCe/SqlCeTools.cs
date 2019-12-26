@@ -22,10 +22,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.ProviderName?.Contains("SqlCe") == true
-				|| css.Name?.Contains("SqlCe") == true)
-			{
+				|| css.ProviderName?.Contains("SqlServerCe") == true
+				|| css.Name.Contains("SqlCe")
+				|| css.Name.Contains("SqlServerCe"))
 				return _sqlCeDataProvider.Value;
-			}
 
 			return null;
 		}

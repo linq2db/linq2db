@@ -105,27 +105,28 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
+			if (connectionString.IndexOf("HDBODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
+				return _hanaOdbcDataProvider.Value;
 
 			switch (css.ProviderName)
 			{
-				case "":
-				case null:
+#if !NETSTANDARD2_0
+				case "Sap.Data.Hana"           :
+				case "Sap.Data.Hana.v4.5"      :
+				case "Sap.Data.Hana.Core"      :
+				case "Sap.Data.Hana.Core.v2.1" :
+				case ProviderName.SapHanaNative: return _hanaDataProvider.Value;
+#endif
+				case ProviderName.SapHanaOdbc  : return _hanaOdbcDataProvider.Value;
 
+				case ""                        :
+				case null                      :
 					if (css.Name.Contains("Hana"))
-						goto case "SapHana";
+						goto case ProviderName.SapHana;
 					break;
 
-				case "SapHana.Odbc"      : return _hanaOdbcDataProvider.Value;
-				case "Sap.Data.Hana"     :
-				case "Sap.Data.Hana.Core":
-#if !NETSTANDARD2_0
-					return _hanaDataProvider.Value;
-#else
-					return _hanaOdbcDataProvider.Value;
-#endif
-				case "SapHana":
-
-					if (css.Name.Contains("Odbc"))
+				case ProviderName.SapHana      :
+					if (css.Name.IndexOf("ODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 
 					return GetDataProvider();

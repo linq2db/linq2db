@@ -49,29 +49,29 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (css.ProviderName)
 			{
-				case ""                                :
-				case null                              :
+#if NET45 || NET46
+				case "Oracle.DataAccess"              :
+				case "Oracle.DataAccess.Client"       :
+				case ProviderName.OracleNative        : return _oracleNativeDataProvider.Value;
+#endif
+				case "Oracle.ManagedDataAccess"       :
+				case "Oracle.ManagedDataAccess.Core"  :
+				case "Oracle.ManagedDataAccess.Client":
+				case ProviderName.OracleManaged       : return _oracleManagedDataProvider.Value;
+				case ""                               :
+				case null                             :
 
 					if (css.Name.Contains("Oracle"))
-						goto case "Oracle";
+						goto case ProviderName.Oracle;
 					break;
-
-				case "Oracle.Native"                   :
-				case "Oracle.DataAccess.Client"        :
-#if NET45 || NET46
-					return _oracleNativeDataProvider.Value;
-#endif
-				case "Oracle.Managed"                  :
-				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider.Value;
-				case "Oracle"                          :
-
-					if (css.Name.Contains("Managed"))
-						return _oracleManagedDataProvider.Value;
-
+				case ProviderName.Oracle              :
 #if NET45 || NET46
 					if (css.Name.Contains("Native"))
 						return _oracleNativeDataProvider.Value;
 #endif
+
+					if (css.Name.Contains("Managed"))
+						return _oracleManagedDataProvider.Value;
 
 					return GetDataProvider();
 			}

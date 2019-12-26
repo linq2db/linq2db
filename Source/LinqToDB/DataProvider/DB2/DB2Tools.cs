@@ -36,23 +36,30 @@ namespace LinqToDB.DataProvider.DB2
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
+			// DB2 ODS provider could be used by informix
+			if (css.Name.Contains("Informix"))
+				return null;
+
 			switch (css.ProviderName)
 			{
+				case ProviderName.DB2LUW: return _db2DataProviderLUW.Value;
+				case ProviderName.DB2zOS: return _db2DataProviderzOS.Value;
+
 				case ""             :
 				case null           :
 
 					if (css.Name == "DB2")
-						goto case "DB2";
+						goto case ProviderName.DB2;
 					break;
 
-				case "IBM.Data.DB2.Core" :
-					goto case "DB2";
-
-				case "DB2"               :
+				case ProviderName.DB2    :
 				case "IBM.Data.DB2"      :
+				case "IBM.Data.DB2.Core" :
 
-					if (css.Name.Contains("LUW") || css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
-						break;
+					if (css.Name.Contains("LUW"))
+						return _db2DataProviderLUW.Value;
+					if (css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
+						return _db2DataProviderzOS.Value;
 
 					if (AutoDetectProvider)
 					{
@@ -76,7 +83,7 @@ namespace LinqToDB.DataProvider.DB2
 						}
 					}
 
-					break;
+					return GetDataProvider();
 			}
 
 			return null;

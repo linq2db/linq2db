@@ -48,21 +48,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 			switch (css.ProviderName)
 			{
+				case "System.Data.SQLite"              :
+				case ProviderName.SQLiteClassic        : return _SQLiteClassicDataProvider.Value;
+				case "Microsoft.Data.SQLite"           :
+				case ProviderName.SQLiteMS             : return _SQLiteMSDataProvider.Value;
 				case ""                                :
 				case null                              :
-
 					if (css.Name.Contains("SQLite"))
-						goto case "SQLite";
+						goto case ProviderName.SQLite;
 					break;
-
-				case "SQLite.MS"             :
-				case "SQLite.Microsoft"      :
-				case "Microsoft.Data.Sqlite" :
-				case "Microsoft.Data.SQLite" : return _SQLiteMSDataProvider.Value;
-				case "SQLite.Classic"        :
-				case "System.Data.SQLite"    : return _SQLiteClassicDataProvider.Value;
-				case "SQLite"                :
-
+				case ProviderName.SQLite               :
 					if (css.Name.Contains("MS") || css.Name.Contains("Microsoft"))
 						return _SQLiteMSDataProvider.Value;
 
