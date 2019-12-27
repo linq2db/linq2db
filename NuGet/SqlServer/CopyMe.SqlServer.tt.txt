@@ -44,6 +44,11 @@
 		with
 
 			"$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"
+
+		IMPORTANT: if running .tt file gives you error like this:
+		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<SOME_DB>TemplatesDirectory)LinqToDB.<DB_NAME>.Tools.ttinclude"
+		check tt file properties.
+		Custom tool must be set to TextTemplatingFileGenerator, not TextTemplatingFilePreprocessor or any other value.
 	*/
 
 	NamespaceName = "DataModels";
