@@ -37,11 +37,11 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_SLAVETABLE>        Slavetables         { get { return this.GetTable<DB2ADMIN_SLAVETABLE>(); } }
 		public ITable<DB2ADMIN_Test>              Tests               { get { return this.GetTable<DB2ADMIN_Test>(); } }
 		public ITable<DB2ADMIN_TestIdentity>      TestIdentities      { get { return this.GetTable<DB2ADMIN_TestIdentity>(); } }
-		public ITable<DB2ADMIN_TestIdTrun>        TestIdTruns         { get { return this.GetTable<DB2ADMIN_TestIdTrun>(); } }
 		public ITable<DB2ADMIN_Testmerge1>        Testmerge1          { get { return this.GetTable<DB2ADMIN_Testmerge1>(); } }
 		public ITable<DB2ADMIN_TestMerge1>        TestMerge1          { get { return this.GetTable<DB2ADMIN_TestMerge1>(); } }
 		public ITable<DB2ADMIN_Testmerge2>        Testmerge2          { get { return this.GetTable<DB2ADMIN_Testmerge2>(); } }
 		public ITable<DB2ADMIN_TestMerge2>        TestMerge2          { get { return this.GetTable<DB2ADMIN_TestMerge2>(); } }
+		public ITable<DB2ADMIN_TestTimeType>      TestTimeTypes       { get { return this.GetTable<DB2ADMIN_TestTimeType>(); } }
 
 		public TESTDATADB()
 		{
@@ -266,13 +266,6 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2ADMIN", Name="TestIdTrun")]
-	public partial class DB2ADMIN_TestIdTrun
-	{
-		[Column(DbType="INTEGER", DataType=DataType.Int32),                PrimaryKey, Identity] public int     ID     { get; set; } // INTEGER
-		[Column(DbType="DECIMAL", DataType=DataType.Decimal, Precision=5), NotNull             ] public decimal Field1 { get; set; } // DECIMAL
-	}
-
 	[Table(Schema="DB2ADMIN", Name="testmerge1")]
 	public partial class DB2ADMIN_Testmerge1
 	{
@@ -349,11 +342,33 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
+	[Table(Schema="DB2ADMIN", Name="TestTimeTypes")]
+	public partial class DB2ADMIN_TestTimeType
+	{
+		[Column(DbType="INTEGER",   DataType=DataType.Int32),     NotNull    ] public int       Id          { get; set; } // INTEGER
+		[Column(DbType="DATE",      DataType=DataType.Date),      NotNull    ] public DateTime  Date1       { get; set; } // DATE
+		[Column(DbType="DATE",      DataType=DataType.Date),      NotNull    ] public DateTime  Date2       { get; set; } // DATE
+		[Column(DbType="TIME",      DataType=DataType.Time),      NotNull    ] public TimeSpan  Time        { get; set; } // TIME
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp0  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp1  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp2  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp3  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp4  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp5  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp6  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp7  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp8  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp9  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp10 { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp11 { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp12 { get; set; } // TIMESTAMP
+	}
+
 	public static partial class TESTDATADBStoredProcedures
 	{
 		#region PersonSelectbykey
 
-		public static int PersonSelectbykey(this DataConnection dataConnection, int? ID)
+		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? ID)
 		{
 			return dataConnection.ExecuteProc("DB2ADMIN.PERSON_SELECTBYKEY",
 				new DataParameter("ID", ID, DataType.Int32));
@@ -363,7 +378,7 @@ namespace DB2DataContext
 
 		#region ADDISSUE792RECORD
 
-		public static int ADDISSUE792RECORD(this DataConnection dataConnection)
+		public static int ADDISSUE792RECORD(this TESTDATADB dataConnection)
 		{
 			return dataConnection.ExecuteProc("DB2ADMIN.ADDISSUE792RECORD");
 		}
@@ -423,12 +438,6 @@ namespace DB2DataContext
 		}
 
 		public static DB2ADMIN_TestIdentity Find(this ITable<DB2ADMIN_TestIdentity> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static DB2ADMIN_TestIdTrun Find(this ITable<DB2ADMIN_TestIdTrun> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

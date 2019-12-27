@@ -88,6 +88,22 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region Issue1921
+
+		[Sql.TableFunction(Schema="dbo", Name="Issue1921")]
+		public ITable<Issue1921Result> Issue1921()
+		{
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+		}
+
+		public partial class Issue1921Result
+		{
+			public string name  { get; set; }
+			public int?   objid { get; set; }
+		}
+
+		#endregion
+
 		#endregion
 	}
 
@@ -305,7 +321,7 @@ namespace TestAzureSQL
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test"), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test"), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
@@ -592,7 +608,7 @@ namespace TestAzureSQL
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this Issue1733DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[AddIssue792Record]");
 		}
@@ -601,7 +617,7 @@ namespace TestAzureSQL
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -622,9 +638,18 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region Issue1897
+
+		public static int Issue1897(this Issue1733DB dataConnection)
+		{
+			return dataConnection.ExecuteProc("[dbo].[Issue1897]");
+		}
+
+		#endregion
+
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefEnumTest(this Issue1733DB dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
@@ -641,7 +666,7 @@ namespace TestAzureSQL
 
 		#region OutRefTest
 
-		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefTest(this Issue1733DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
@@ -663,7 +688,7 @@ namespace TestAzureSQL
 
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this Issue1733DB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[dbo].[Patient_SelectAll]");
 		}
@@ -682,7 +707,7 @@ namespace TestAzureSQL
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this Issue1733DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -703,7 +728,7 @@ namespace TestAzureSQL
 
 		#region PersonDelete
 
-		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
+		public static int PersonDelete(this Issue1733DB dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
 				new DataParameter("@PersonID", @PersonID, DataType.Int32));
@@ -713,7 +738,7 @@ namespace TestAzureSQL
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this Issue1733DB dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
@@ -731,7 +756,7 @@ namespace TestAzureSQL
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this Issue1733DB dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
@@ -749,7 +774,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectAll
 
-		public static IEnumerable<Person> PersonSelectAll(this DataConnection dataConnection)
+		public static IEnumerable<Person> PersonSelectAll(this Issue1733DB dataConnection)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectAll]");
 		}
@@ -758,7 +783,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<Person> PersonSelectByKey(this DataConnection dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKey(this Issue1733DB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32));
@@ -768,7 +793,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByName
 
-		public static IEnumerable<Person> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<Person> PersonSelectByName(this Issue1733DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -779,7 +804,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<Person> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<Person> PersonSelectListByName(this Issue1733DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -790,7 +815,7 @@ namespace TestAzureSQL
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static int PersonUpdate(this Issue1733DB dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
@@ -804,7 +829,7 @@ namespace TestAzureSQL
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -825,7 +850,7 @@ namespace TestAzureSQL
 
 		#region TableTypeTestProc
 
-		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
+		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this Issue1733DB dataConnection, DataTable @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[dbo].[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" });
@@ -841,7 +866,7 @@ namespace TestAzureSQL
 
 		#region TestProcedure
 
-		public static IEnumerable<TestProcedureResult> TestProcedure(this DataConnection dataConnection)
+		public static IEnumerable<TestProcedureResult> TestProcedure(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -862,7 +887,7 @@ namespace TestAzureSQL
 
 		#region VariableResults
 
-		public static IEnumerable<VariableResultsResult> VariableResults(this DataConnection dataConnection, bool? @ReturnFullRow)
+		public static IEnumerable<VariableResultsResult> VariableResults(this Issue1733DB dataConnection, bool? @ReturnFullRow)
 		{
 			return dataConnection.QueryProc<VariableResultsResult>("[dbo].[VariableResults]",
 				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean));

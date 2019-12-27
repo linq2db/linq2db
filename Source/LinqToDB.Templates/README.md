@@ -257,7 +257,11 @@ SingularizeDataContextPropertyNames = false;
 // Enables normalization of of type and member names.
 // Default normalization removes underscores and capitalize first letter.
 // Could be overriden using ToValidName option below.
-NormalizeNames                                 = false;
+// By default doesn't normalize names without underscores.
+// see NormalizeNamesWithoutUnderscores setting
+NormalizeNames                                 = true;
+// enables normalization of names without underscores.
+NormalizeNamesWithoutUnderscores               = false;
 // Defines logic to convert type/member name, derived from database object name, to C# identifier.
 Func<string, bool, string> ToValidName         = ToValidNameDefault;
 // Makes C# identifier valid by removing unsupported symbols and calling ToValidName
