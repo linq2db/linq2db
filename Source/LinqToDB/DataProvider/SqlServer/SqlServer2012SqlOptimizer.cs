@@ -1,13 +1,17 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion = SqlServerVersion.v2012) : base(sqlProviderFlags, sqlVersion)
+		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags)
+			: this(sqlProviderFlags, SqlServerVersion.v2012)
+		{
+		}
+
+		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion = SqlServerVersion.v2012)
+			: base(sqlProviderFlags, sqlVersion)
 		{
 		}
 
