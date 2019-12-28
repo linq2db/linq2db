@@ -158,7 +158,7 @@ namespace Tests.Playground
 		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
-			var intParam = 0;
+			var intParam = 1;
 
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
@@ -460,11 +460,11 @@ namespace Tests.Playground
 			{
 				var query = master.Take(20)
 					.GroupJoin(detail, m => m.Id1, d => d.MasterId,
-						(m, d) => new { Master = m, Details = d.ToArray() });
+						(m1, d) => new { Master = m1, Details = d.ToArray() });
 
 				var expectedQuery = masterRecords.Take(20)
 					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId,
-						(m, d) => new { Master = m, Details = d.ToArray() });
+						(m1, d) => new { Master = m1, Details = d.ToArray() });
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
@@ -472,7 +472,6 @@ namespace Tests.Playground
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
-
 
 		[Test]
 		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)

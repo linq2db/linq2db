@@ -1705,11 +1705,11 @@ namespace LinqToDB.Linq.Builder
 		/// Gets Expression.Equal if <paramref name="left"/> and <paramref name="right"/> expression types are not same
 		/// <paramref name="right"/> would be converted to <paramref name="left"/>
 		/// </summary>
-		/// <param name="mappringSchema"></param>
+		/// <param name="mappingSchema"></param>
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		internal static BinaryExpression Equal(MappingSchema mappringSchema, Expression left, Expression right)
+		internal static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
@@ -1719,8 +1719,8 @@ namespace LinqToDB.Linq.Builder
 					left = Expression.Convert(left, right.Type);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
-					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
+					var rightConvert = ConvertBuilder.GetConverter(mappingSchema, right.Type, left. Type);
+					var leftConvert  = ConvertBuilder.GetConverter(mappingSchema, left. Type, right.Type);
 
 					var leftIsPrimitive  = left. Type.IsPrimitiveEx();
 					var rightIsPrimitive = right.Type.IsPrimitiveEx();

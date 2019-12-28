@@ -10,7 +10,7 @@ namespace LinqToDB.Common.Internal
 {
 <#
 	var MaxMemberCount = 10;
-	var prefixes = new[] { "M", "F" };
+	var prefixes = new[] { "M" };
 #>
 	internal static partial class MutableTuple
 	{
@@ -74,7 +74,7 @@ namespace LinqToDB.Common.Internal
 		var indexes      = Enumerable.Range(1, info).ToArray();
 		var types        = string.Join(", ", indexes.Select(i => "T" + i.ToString()));
 		var equals       = string.Join("\n\t\t\t\t&& ", indexes.Select(i => $"Equals(Item{i}, objTuple.Item{i})"));
-		var hashCodes    = string.Join(", ", indexes.Select(i => $"Item{i}.GetHashCode()"));
+		var hashCodes    = string.Join(",\n\t\t\t\t", indexes.Select(i => $"Item{i}?.GetHashCode() ?? 0"));
 		var hashCodesStr = hashCodes;
 		if (info > 1)
 		    hashCodesStr = $"MutableTuple.CombineHashCodes({hashCodes})";

@@ -22,21 +22,6 @@ namespace LinqToDB.Common.Internal
 	
 		};
 
-		public static readonly Type[] FTypes = new []
-		{
-			typeof(FTuple<>),
-			typeof(FTuple<,>),
-			typeof(FTuple<,,>),
-			typeof(FTuple<,,,>),
-			typeof(FTuple<,,,,>),
-			typeof(FTuple<,,,,,>),
-			typeof(FTuple<,,,,,,>),
-			typeof(FTuple<,,,,,,,>),
-			typeof(FTuple<,,,,,,,,>),
-			typeof(FTuple<,,,,,,,,,>),
-	
-		};
-
 		internal static int CombineHashCodes(int h1, int h2)
 		{
 			return (((h1 << 5) + h1) ^ h2);
@@ -86,7 +71,7 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> Item1.GetHashCode();
+			=> Item1?.GetHashCode() ?? 0;
 	}
 
 	internal class MTuple<T1, T2>
@@ -108,7 +93,8 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3>
@@ -132,7 +118,9 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4>
@@ -158,7 +146,10 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5>
@@ -186,7 +177,11 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6>
@@ -216,7 +211,12 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0,
+				Item6?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7>
@@ -248,7 +248,13 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0,
+				Item6?.GetHashCode() ?? 0,
+				Item7?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8>
@@ -282,7 +288,14 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0,
+				Item6?.GetHashCode() ?? 0,
+				Item7?.GetHashCode() ?? 0,
+				Item8?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>
@@ -318,7 +331,15 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode(), Item9.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0,
+				Item6?.GetHashCode() ?? 0,
+				Item7?.GetHashCode() ?? 0,
+				Item8?.GetHashCode() ?? 0,
+				Item9?.GetHashCode() ?? 0);
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
@@ -356,296 +377,15 @@ namespace LinqToDB.Common.Internal
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode(), Item9.GetHashCode(), Item10.GetHashCode());
-	}
-
-	internal class FTuple<T1>
-	{
-		public T1 Item1 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1);
-		}
-
-		public override int GetHashCode() 
-			=> Item1.GetHashCode();
-	}
-
-	internal class FTuple<T1, T2>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5, T6>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-		public T6 Item6 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5, T6>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5, T6, T7>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-		public T6 Item6 { get; set; }
-		public T7 Item7 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5, T6, T7>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5, T6, T7, T8>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-		public T6 Item6 { get; set; }
-		public T7 Item7 { get; set; }
-		public T8 Item8 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5, T6, T7, T8>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-		public T6 Item6 { get; set; }
-		public T7 Item7 { get; set; }
-		public T8 Item8 { get; set; }
-		public T9 Item9 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8)
-				&& Equals(Item9, objTuple.Item9);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode(), Item9.GetHashCode());
-	}
-
-	internal class FTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-	{
-		public T1 Item1 { get; set; }
-		public T2 Item2 { get; set; }
-		public T3 Item3 { get; set; }
-		public T4 Item4 { get; set; }
-		public T5 Item5 { get; set; }
-		public T6 Item6 { get; set; }
-		public T7 Item7 { get; set; }
-		public T8 Item8 { get; set; }
-		public T9 Item9 { get; set; }
-		public T10 Item10 { get; set; }
-	
-		public override Boolean Equals(object other) 
-		{
-			if (other == null) return false;
-
-			var objTuple = other as MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>;
-
-			if (objTuple == null)
-				return false;
-
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8)
-				&& Equals(Item9, objTuple.Item9)
-				&& Equals(Item10, objTuple.Item10);
-		}
-
-		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1.GetHashCode(), Item2.GetHashCode(), Item3.GetHashCode(), Item4.GetHashCode(), Item5.GetHashCode(), Item6.GetHashCode(), Item7.GetHashCode(), Item8.GetHashCode(), Item9.GetHashCode(), Item10.GetHashCode());
+			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
+				Item2?.GetHashCode() ?? 0,
+				Item3?.GetHashCode() ?? 0,
+				Item4?.GetHashCode() ?? 0,
+				Item5?.GetHashCode() ?? 0,
+				Item6?.GetHashCode() ?? 0,
+				Item7?.GetHashCode() ?? 0,
+				Item8?.GetHashCode() ?? 0,
+				Item9?.GetHashCode() ?? 0,
+				Item10?.GetHashCode() ?? 0);
 	}
 }

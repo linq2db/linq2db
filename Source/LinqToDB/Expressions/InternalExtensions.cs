@@ -1119,7 +1119,7 @@ namespace LinqToDB.Expressions
 		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
 		{
 			var current = 0;
-			var expr    = FindLevel(expression, mapping, level, ref current);
+			var expr    = FindLevel(expression.Unwrap(), mapping, level, ref current);
 
 			if (expr == null || current != level)
 				throw new InvalidOperationException();

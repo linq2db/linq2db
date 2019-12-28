@@ -51,11 +51,6 @@
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
-
-		<None Update="Linq\Builder\DynamicClasses.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		  <LastGenOutput>DynamicClasses.generated.cs</LastGenOutput>
-		</None>
 	</ItemGroup>
 
 
