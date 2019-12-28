@@ -1,0 +1,124 @@
+﻿using LinqToDB.Metadata;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data.Linq.Mapping;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Tests.Metadata
+{
+	[TestFixture]
+	public class SystemDataLinqAttributeReaderTests
+	{
+		// this is the reduced part of Northwind DB Linq2sql mapping
+		[global::System.Data.Linq.Mapping.TableAttribute(Name = "dbo.Shippers")]
+		public partial class Shipper : INotifyPropertyChanging, INotifyPropertyChanged
+		{
+
+			private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+
+			private int _ShipperID;
+
+			private string _CompanyName;
+
+			private string _Phone;
+
+			#region Extensibility Method Definitions
+			partial void OnLoaded();
+			partial void OnValidate(System.Data.Linq.ChangeAction action);
+			partial void OnCreated();
+			partial void OnShipperIDChanging(int value);
+			partial void OnShipperIDChanged();
+			partial void OnCompanyNameChanging(string value);
+			partial void OnCompanyNameChanged();
+			partial void OnPhoneChanging(string value);
+			partial void OnPhoneChanged();
+			#endregion
+
+			public Shipper()
+			{
+				OnCreated();
+			}
+
+			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_ShipperID", AutoSync = AutoSync.OnInsert, DbType = "Int NOT NULL IDENTITY", IsPrimaryKey = true, IsDbGenerated = true)]
+			public int ShipperID {
+				get {
+					return this._ShipperID;
+				}
+				set {
+					if ((this._ShipperID != value)) {
+						this.OnShipperIDChanging(value);
+						this.SendPropertyChanging();
+						this._ShipperID = value;
+						this.SendPropertyChanged("ShipperID");
+						this.OnShipperIDChanged();
+					}
+				}
+			}
+
+			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CompanyName", DbType = "NVarChar(40) NOT NULL", CanBeNull = false)]
+			public string CompanyName {
+				get {
+					return this._CompanyName;
+				}
+				set {
+					if ((this._CompanyName != value)) {
+						this.OnCompanyNameChanging(value);
+						this.SendPropertyChanging();
+						this._CompanyName = value;
+						this.SendPropertyChanged("CompanyName");
+						this.OnCompanyNameChanged();
+					}
+				}
+			}
+
+			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Phone", DbType = "NVarChar(24)")]
+			public string Phone {
+				get {
+					return this._Phone;
+				}
+				set {
+					if ((this._Phone != value)) {
+						this.OnPhoneChanging(value);
+						this.SendPropertyChanging();
+						this._Phone = value;
+						this.SendPropertyChanged("Phone");
+						this.OnPhoneChanged();
+					}
+				}
+			}
+
+			public event PropertyChangingEventHandler PropertyChanging;
+
+			public event PropertyChangedEventHandler PropertyChanged;
+
+			protected virtual void SendPropertyChanging()
+			{
+				if ((this.PropertyChanging != null)) {
+					this.PropertyChanging(this, emptyChangingEventArgs);
+				}
+			}
+
+			protected virtual void SendPropertyChanged(String propertyName)
+			{
+				if ((this.PropertyChanged != null)) {
+					this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				}
+			}
+		}
+
+		[Test]
+		public void ParseTableAttribute() {
+			var rd     = new SystemDataLinqAttributeReader();
+			var attrs = rd.GetAttributes<LinqToDB.Mapping.TableAttribute>(typeof(Shipper), true);
+
+			Assert.NotNull(attrs);
+			Assert.AreEqual(1, attrs.Length);
+			Assert.AreEqual("Shippers", attrs[0].Name);
+			Assert.AreEqual("dbo",      attrs[0].Schema);
+		}
+	}
+}
