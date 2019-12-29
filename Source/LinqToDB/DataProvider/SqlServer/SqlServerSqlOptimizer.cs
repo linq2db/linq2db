@@ -6,11 +6,11 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServerSqlOptimizer : BasicSqlOptimizer
+	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
 		private readonly SqlServerVersion _sqlVersion;
 
-		public SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
+		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
 		{
 			_sqlVersion = sqlVersion;
 		}
