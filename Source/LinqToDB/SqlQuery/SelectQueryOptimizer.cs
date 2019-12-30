@@ -1014,27 +1014,37 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				// correct conditions
-				if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
-				{
-					var map = sql.Select.Columns.ToDictionary(c => c.Expression);
-					foreach (var condition in searchCondition)
-					{
-						condition.Predicate.Walk(new WalkOptions(), e =>
-						{
-							if (map.TryGetValue(e, out var newExpr))
-								return newExpr;
-
-							return e;
-						});
-					}
-				}
-
 				if (!ContainsTable(tableSource.Source, sql))
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)
 						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+
+					// correct conditions
+					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+					{
+						var map = sql.Select.Columns.ToDictionary(c => c.Expression);
+						foreach (var condition in searchCondition)
+						{
+							var visitor = new QueryVisitor();
+							var newPredicate = visitor.ConvertImmutable(condition.Predicate, e =>
+							{
+								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
+								{
+									if (visitor.ParentElement is SqlColumn column)
+									{
+										if (newExpr != column)
+											e = newExpr;
+									}
+									else 
+										e = newExpr;
+								}
+
+								return e;
+							});
+							condition.Predicate = newPredicate;
+						}
+					}
 
 					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);

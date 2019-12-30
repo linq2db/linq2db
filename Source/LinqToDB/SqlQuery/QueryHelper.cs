@@ -837,7 +837,7 @@ namespace LinqToDB.SqlQuery
 			for (int i = 0; i < searchCondition.Conditions.Count; i++)
 			{
 				var visitor      = new QueryVisitor();
-				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
+				var newCondition = visitor.ConvertImmutable(searchCondition.Conditions[i], e =>
 				{
 					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 					{

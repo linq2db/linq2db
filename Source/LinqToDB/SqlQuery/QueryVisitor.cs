@@ -1635,7 +1635,7 @@ namespace LinqToDB.SqlQuery
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
 
 						break;
 					}
@@ -2619,7 +2619,7 @@ namespace LinqToDB.SqlQuery
 
 						List<ISqlExpression[]> uk = null;
 							if (table.HasUniqueKeys)
-								uk = ConvertListArray(table.UniqueKeys, null);
+								uk = ConvertImmutableListArray(table.UniqueKeys, null);
 
 							if (source != null && !ReferenceEquals(source, table.Source) ||
 							joins  != null && !ReferenceEquals(table.Joins, joins))
@@ -2711,7 +2711,7 @@ namespace LinqToDB.SqlQuery
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
 
 						break;
 					}

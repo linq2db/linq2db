@@ -208,6 +208,28 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(2005)]
+		[Test]
+		public void StartsWithSQL([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
+
+				// https://github.com/linq2db/linq2db/issues/2005
+				if (context.Contains("Firebird"))
+				{
+					Assert.True(db.LastQuery.Contains(" STARTING WITH 'Jo'"));
+					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
+				}
+				else
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
+				}
+			}
+		}
+
 		[Test]
 		public void StartsWith2([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
 		{

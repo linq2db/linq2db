@@ -174,16 +174,17 @@ namespace LinqToDB.DataProvider.Access
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+		
+					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
 			{
 				var p = ((SqlParameter)predicate.Expr2);
-				p.ReplaceLike = true;
+				p.ReplaceLike = predicate.IsSqlLike != true;
 			}
 
 			if (predicate.Escape != null)
@@ -197,7 +198,7 @@ namespace LinqToDB.DataProvider.Access
 						var text = ((SqlValue)predicate.Expr2).Value.ToString();
 						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
 
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);
 					}
 				}
 				else if (predicate.Expr2 is SqlParameter)
@@ -210,9 +211,10 @@ namespace LinqToDB.DataProvider.Access
 
 						if (value != null)
 						{
-							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
+							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value))
+								.Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
 							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
-							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null);
+							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null, predicate.IsSqlLike);
 						}
 					}
 				}
