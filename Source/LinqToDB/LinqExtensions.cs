@@ -1797,7 +1797,10 @@ namespace LinqToDB
 
 		static Expression WrapConstant<TV>(Expression body, TV value)
 		{
-			var valueType = ReferenceEquals(null, value) ? body.Unwrap().Type : value!.GetType();
+			var bodyType  = body.Unwrap().Type;
+			var valueType = ReferenceEquals(null, value) ? bodyType : value.GetType();
+			if (bodyType.IsInterface)
+				valueType = bodyType;
 			var result    = (Expression)Expression.Constant(value, valueType);
 			if (result.Type != typeof(TV))
 				result = Expression.Convert(result, typeof(TV));

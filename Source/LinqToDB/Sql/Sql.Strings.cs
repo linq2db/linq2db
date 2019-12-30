@@ -377,7 +377,9 @@ namespace LinqToDB
 
 			protected override SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator)
 			{
-				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN({1}) + 2, 8000)",
+				// you can read more about this gore code here:
+				// https://stackoverflow.com/questions/2025585
+				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(MAX), {1}) + N'!'), 8000)",
 					Precedence.Primary, value, separator);
 			}
 		}

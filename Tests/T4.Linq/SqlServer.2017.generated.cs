@@ -28,7 +28,7 @@ namespace Sql2017
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
 		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
 		public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
-		public ITable<Customer0>                  Customers                    { get { return this.GetTable<Customer0>(); } }
+		public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
 		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
 		public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
 		public ITable<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
@@ -122,7 +122,7 @@ namespace Sql2017
 	}
 
 	[Table("Customers")]
-	public partial class Customer0
+	public partial class Customer
 	{
 		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  PrimaryKey,  NotNull] public string CustomerID   { get; set; } // nchar(5)
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),              NotNull] public string CompanyName  { get; set; } // nvarchar(40)
@@ -174,7 +174,7 @@ namespace Sql2017
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public Customer0 Customer { get; set; }
+		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo
@@ -331,7 +331,7 @@ namespace Sql2017
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public Customer0 Customer { get; set; }
+		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
@@ -703,7 +703,7 @@ namespace Sql2017
 				t.CategoryID == CategoryID);
 		}
 
-		public static Customer0 Find(this ITable<Customer0> table, string CustomerID)
+		public static Customer Find(this ITable<Customer> table, string CustomerID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CustomerID == CustomerID);
@@ -780,7 +780,7 @@ namespace Sql2017
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this Customer0 obj, IDataContext db)
+		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
 		}
@@ -789,7 +789,7 @@ namespace Sql2017
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders0(this Customer0 obj, IDataContext db)
+		public static IQueryable<Order> Orders0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
 		}
@@ -802,16 +802,16 @@ namespace Sql2017
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static IQueryable<Customer0> Customers0(this CustomerCustomerDemo obj, IDataContext db)
+		public static IQueryable<Customer> Customers0(this CustomerCustomerDemo obj, IDataContext db)
 		{
-			return db.GetTable<Customer0>().Where(c => c.CustomerID == obj.CustomerID);
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
 		}
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static CustomerCustomerDemo Customer0(this Customer0 obj, IDataContext db)
+		public static CustomerCustomerDemo Customer0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
 		}
@@ -944,16 +944,16 @@ namespace Sql2017
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static IQueryable<Customer0> Customers1(this Order obj, IDataContext db)
+		public static IQueryable<Customer> Customers1(this Order obj, IDataContext db)
 		{
-			return db.GetTable<Customer0>().Where(c => c.CustomerID == obj.CustomerID);
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
 		}
 
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static Order Customer1(this Customer0 obj, IDataContext db)
+		public static Order Customer1(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
 		}
@@ -1092,11 +1092,9 @@ namespace Sql2017
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<Customer1>               Customers                { get { return this.GetTable<Customer1>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<Group>                   Groups                   { get { return this.GetTable<Group>(); } }
 		public ITable<GuidID>                  GuidIds                  { get { return this.GetTable<GuidID>(); } }
 		public ITable<GuidID2>                 GuidID2                  { get { return this.GetTable<GuidID2>(); } }
 		public ITable<IndexTable>              IndexTables              { get { return this.GetTable<IndexTable>(); } }
@@ -1114,7 +1112,6 @@ namespace Sql2017
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Ref>                     Refs                     { get { return this.GetTable<Ref>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
@@ -1258,16 +1255,6 @@ namespace Sql2017
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
-	[Table("Customer")]
-	public partial class Customer1
-	{
-		[Column(           DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(           DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } // nvarchar(255)
-		[Column("Ref_ID",  DbType="int",           DataType=DataType.Int32),                            NotNull] public int      RefId         { get; set; } // int
-		[Column(           DbType="datetime",      DataType=DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
-		[Column("Ref_ID2", DbType="int",           DataType=DataType.Int32),                            NotNull] public int      RefID2        { get; set; } // int
-	}
-
 	[Table("DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
@@ -1292,12 +1279,6 @@ namespace Sql2017
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id           { get; set; } // int
-	}
-
-	[Table("Group")]
-	public partial class Group
-	{
-		[Column(DbType="int", DataType=DataType.Int32), NotNull] public int Id { get; set; } // int
 	}
 
 	[Table("GuidID")]
@@ -1401,7 +1382,7 @@ namespace Sql2017
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	/// <summary>
@@ -1436,15 +1417,6 @@ namespace Sql2017
 	{
 		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
 		[Column(DbType="nvarchar(256)", DataType=DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } // nvarchar(256)
-	}
-
-	[Table("Ref")]
-	public partial class Ref
-	{
-		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(DbType="int",           DataType=DataType.Int32),                            NotNull] public int      ID2           { get; set; } // int
-		[Column(DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } // nvarchar(255)
-		[Column(DbType="datetime",      DataType=DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
 	}
 
 	[Table("SameTableName")]
@@ -1933,12 +1905,6 @@ namespace Sql2017
 				t.Id == Id);
 		}
 
-		public static Customer1 Find(this ITable<Customer1> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
 		{
 			return table.FirstOrDefault(t =>
@@ -2023,12 +1989,6 @@ namespace Sql2017
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
-		}
-
-		public static Ref Find(this ITable<Ref> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
 		}
 
 		public static SqlType Find(this ITable<SqlType> table, int ID)

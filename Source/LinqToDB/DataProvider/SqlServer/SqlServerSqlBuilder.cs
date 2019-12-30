@@ -179,14 +179,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter p)
-				p.ReplaceLike = true;
+				p.ReplaceLike = predicate.IsSqlLike != true;
 
 			base.BuildLikePredicate(predicate);
 		}
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+							return value;
 
 					if (Provider != null)
 						return Provider.Wrapper.Value.QuoteIdentifier(value);
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+							return value;
 
 					//						if (value.IndexOf('.') > 0)
 					//							value = string.Join("].[", value.Split('.'));

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
@@ -53,7 +54,7 @@ namespace LinqToDB.SqlQuery
 
 				if (ReplaceLike)
 				{
-					value = value?.ToString().Replace("[", "[[]");
+					value = DataTools.EscapeUnterminatedBracket(value?.ToString());
 				}
 
 				if (LikeStart != null)

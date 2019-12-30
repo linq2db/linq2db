@@ -190,15 +190,16 @@ namespace LinqToDB.DataProvider.Access
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+		
+					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter p)
 			{
-				p.ReplaceLike = true;
+				p.ReplaceLike = predicate.IsSqlLike != true;
 			}
 
 			if (predicate.Escape != null)
@@ -212,7 +213,7 @@ namespace LinqToDB.DataProvider.Access
 						var text = ((SqlValue)predicate.Expr2).Value.ToString();
 						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
 
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);
 					}
 				}
 				else if (predicate.Expr2 is SqlParameter p)
@@ -223,9 +224,10 @@ namespace LinqToDB.DataProvider.Access
 
 						if (value != null)
 						{
-							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
+							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value)!)
+								.Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
 							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
-							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null);
+							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null, predicate.IsSqlLike);
 						}
 					}
 				}
@@ -371,7 +373,7 @@ namespace LinqToDB.DataProvider.Access
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+							return value;
 
 					return "[" + value + "]";
 
@@ -381,12 +383,12 @@ namespace LinqToDB.DataProvider.Access
 					var name = value;
 
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+							return value;
 
 					if (value.IndexOf('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
-					return "[" + value + "]";
+						return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'? value.Substring(1) : value;
@@ -421,7 +423,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
-			{
+		{
 				Wrappers.Mappers.OleDb.Initialize();
 
 				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, MappingSchema);

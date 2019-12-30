@@ -1789,6 +1789,11 @@ namespace PostreSQLDataContext
 		[Column(DataType=DataType.DateTimeOffset, Precision=6),                       NotNull] public DateTimeOffset TransactionDate { get; set; } // timestamp (6) with time zone
 	}
 
+	[Table(Schema="public", Name="Transactions")]
+	public partial class Transaction
+	{
+	}
+
 	public static partial class SqlFunctions
 	{
 		#region PgCharMaxLength

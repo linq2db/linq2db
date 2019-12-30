@@ -5,7 +5,7 @@
 
 	class SqlServer2000SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2000SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2000SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2000)
 		{
 		}
 
