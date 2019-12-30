@@ -1,17 +1,16 @@
-﻿using LinqToDB.Metadata;
+﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+using LinqToDB;
+using LinqToDB.Metadata;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq.Mapping;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tests.Metadata
 {
 	[TestFixture]
-	public class SystemDataLinqAttributeReaderTests
+	public class SystemDataLinqAttributeReaderTests : TestBase
 	{
 		// this is the reduced part of Northwind DB Linq2sql mapping
 		[global::System.Data.Linq.Mapping.TableAttribute(Name = "dbo.Shippers")]
@@ -120,5 +119,19 @@ namespace Tests.Metadata
 			Assert.AreEqual("Shippers", attrs[0].Name);
 			Assert.AreEqual("dbo",      attrs[0].Schema);
 		}
+
+		[Test]
+		public void SmokeSelect([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from s in db.GetTable<Shipper>()
+					orderby s.CompanyName
+					select new { s.CompanyName, s.Phone };
+				var records = query.ToArray();
+			}
+		}
 	}
 }
+#endif
