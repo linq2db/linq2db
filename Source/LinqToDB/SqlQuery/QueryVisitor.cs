@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
@@ -14,6 +15,7 @@ namespace LinqToDB.SqlQuery
 		bool                     _all;
 		Func<IQueryElement,bool> _action1;
 		Action<IQueryElement>    _action2;
+		Func<IQueryElement, IQueryElement> _convert;
 
 		public void VisitParentFirst(IQueryElement element, Func<IQueryElement,bool> action)
 		{
@@ -1426,7 +1428,7 @@ namespace LinqToDB.SqlQuery
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
 
 						break;
 					}
@@ -2041,13 +2043,20 @@ namespace LinqToDB.SqlQuery
 			return list2;
 		}
 
-
 		#endregion
 
 		#region Convert Immutable
 
 		public List<IQueryElement> Stack     { get; } = new List<IQueryElement>();
 		public IQueryElement ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+
+		public T ConvertImmutable<T>(T element, Func<IQueryElement,IQueryElement> action)
+			where T : class, IQueryElement
+		{
+			_visitedElements.Clear();
+			_convert = action;
+			return (T)ConvertImmutableInternal(element) ?? element;
+		}
 
 		class ConvertScope : IDisposable
 		{
@@ -2070,7 +2079,957 @@ namespace LinqToDB.SqlQuery
 			return new ConvertScope(this, parent);
 		}
 
-		#endregion
+		void CorrectQueryHierarchy(SelectQuery parentQuery)
+		{
+			if (parentQuery == null)
+				return;
+			new QueryVisitor().Visit(parentQuery, element =>
+			{
+				if (element is SelectQuery q)
+					q.ParentSelect = parentQuery;
+			});
+			parentQuery.ParentSelect = null;
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void AddVisited(IQueryElement element, IQueryElement newElement)
+		{
+			if (!_visitedElements.ContainsKey(element))
+				_visitedElements[element] = newElement;
+		}
+
+		IQueryElement ConvertImmutableInternal(IQueryElement element)
+		{
+			if (element == null)
+				return null;
+
+			IQueryElement newElement = null;
+			// if element manually added outside to VisistedElements as null, it will be processed continuously.
+			// Useful when we have to duplicate such items, especially parameters
+			if (_visitedElements.TryGetValue(element, out newElement) && newElement != null)
+				return newElement;
+
+			using (Scope(element))
+			switch (element.ElementType)
+			{
+				case QueryElementType.SqlFunction:
+					{
+						var func  = (SqlFunction)element;
+						var parms = ConvertImmutable(func.Parameters);
+
+						if (parms != null && !ReferenceEquals(parms, func.Parameters))
+							newElement = new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
+
+						break;
+					}
+
+				case QueryElementType.SqlExpression:
+					{
+						var expr      = (SqlExpression)element;
+						var parameter = ConvertImmutable(expr.Parameters);
+
+						if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
+							newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, parameter);
+
+						break;
+					}
+
+				case QueryElementType.SqlBinaryExpression:
+					{
+						var bexpr = (SqlBinaryExpression)element;
+						var expr1 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr1);
+						var expr2 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr2);
+
+						if (expr1 != null && !ReferenceEquals(expr1, bexpr.Expr1) ||
+							expr2 != null && !ReferenceEquals(expr2, bexpr.Expr2))
+							newElement = new SqlBinaryExpression(bexpr.SystemType, expr1 ?? bexpr.Expr1, bexpr.Operation, expr2 ?? bexpr.Expr2, bexpr.Precedence);
+
+						break;
+					}
+
+				case QueryElementType.SqlTable:
+					{
+						var table    = (SqlTable)element;
+						var newTable = (SqlTable)_convert(table);
+
+						if (ReferenceEquals(newTable, table))
+						{
+							var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
+								null : ConvertImmutable(table.TableArguments);
+
+							if (targs != null && !ReferenceEquals(table.TableArguments, targs))
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlTable(table, newFields, targs);
+							}
+						}
+
+						if (!ReferenceEquals(table, newTable))
+						{
+							AddVisited(table.All, newTable.All);
+							foreach (var prevField in table.Fields.Values)
+							{
+								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									AddVisited(prevField, newField);
+							}
+						}
+
+						newElement = newTable;
+
+						break;
+					}
+
+				case QueryElementType.SqlCteTable:
+					{
+						var table    = (SqlCteTable)element;
+						var newTable = (SqlCteTable)_convert(table);
+
+						if (ReferenceEquals(newTable, table))
+						{
+							var cte   = (CteClause)ConvertImmutableInternal(table.Cte);
+							var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
+
+							if (ce)
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlCteTable(table, newFields, cte);
+							}
+						}
+
+						if (!ReferenceEquals(table, newTable))
+						{
+							AddVisited(table.All, newTable.All);
+							foreach (var prevField in table.Fields.Values)
+							{
+								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									AddVisited(prevField, newField);
+							}
+						}
+
+						newElement = newTable;
+
+						break;
+					}
+
+				case QueryElementType.Column:
+					{
+						var col  = (SqlColumn)element;
+						var expr = (ISqlExpression)ConvertImmutableInternal(col.Expression);
+
+						if (expr != null && !ReferenceEquals(expr, col.Expression))
+							newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
+
+						break;
+					}
+
+				case QueryElementType.TableSource:
+					{
+						var table  = (SqlTableSource)element;
+						var source = (ISqlTableSource)ConvertImmutableInternal(table.Source);
+						var joins  = ConvertImmutable(table.Joins);
+
+						List<ISqlExpression[]> uk = null;
+							if (table.HasUniqueKeys)
+								uk = ConvertImmutableListArray(table.UniqueKeys, null);
+
+							if (source != null && !ReferenceEquals(source, table.Source) ||
+							joins  != null && !ReferenceEquals(table.Joins, joins))
+							newElement = new SqlTableSource(
+								source ?? table.Source,
+								table._alias,
+								joins ?? table.Joins,
+								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
+
+						break;
+					}
+
+				case QueryElementType.JoinedTable:
+					{
+						var join  = (SqlJoinedTable)element;
+						var table = (SqlTableSource)    ConvertImmutableInternal(join.Table    );
+						var cond  = (SqlSearchCondition)ConvertImmutableInternal(join.Condition);
+
+						if (table != null && !ReferenceEquals(table, join.Table) ||
+							cond  != null && !ReferenceEquals(cond,  join.Condition))
+							newElement = new SqlJoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition);
+
+						break;
+					}
+
+				case QueryElementType.SearchCondition:
+					{
+						var sc    = (SqlSearchCondition)element;
+						var conds = ConvertImmutable(sc.Conditions);
+
+						if (conds != null && !ReferenceEquals(sc.Conditions, conds))
+							newElement = new SqlSearchCondition(conds);
+
+						break;
+					}
+
+				case QueryElementType.Condition:
+					{
+						var c = (SqlCondition)element;
+						var p = (ISqlPredicate)ConvertImmutableInternal(c.Predicate);
+
+						if (p != null && !ReferenceEquals(c.Predicate, p))
+							newElement = new SqlCondition(c.IsNot, p, c.IsOr);
+
+						break;
+					}
+
+				case QueryElementType.ExprPredicate:
+					{
+						var p = (SqlPredicate.Expr)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+
+						if (e != null && !ReferenceEquals(p.Expr1, e))
+							newElement = new SqlPredicate.Expr(e, p.Precedence);
+
+						break;
+					}
+
+				case QueryElementType.NotExprPredicate:
+					{
+						var p = (SqlPredicate.NotExpr)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+
+						if (e != null && !ReferenceEquals(p.Expr1, e))
+							newElement = new SqlPredicate.NotExpr(e, p.IsNot, p.Precedence);
+
+						break;
+					}
+
+				case QueryElementType.ExprExprPredicate:
+					{
+						var p  = (SqlPredicate.ExprExpr)element;
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2);
+
+						if (e1 != null && !ReferenceEquals(p.Expr1, e1) || e2 != null && !ReferenceEquals(p.Expr2, e2))
+							newElement = new SqlPredicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2);
+
+						break;
+					}
+
+				case QueryElementType.LikePredicate:
+					{
+						var p  = (SqlPredicate.Like)element;
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1 );
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2 );
+						var es = (ISqlExpression)ConvertImmutableInternal(p.Escape);
+
+						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
+							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
+							es != null && !ReferenceEquals(p.Escape, es))
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
+
+						break;
+					}
+
+				case QueryElementType.BetweenPredicate:
+					{
+						var p = (SqlPredicate.Between)element;
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2);
+						var e3 = (ISqlExpression)ConvertImmutableInternal(p.Expr3);
+
+						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
+							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
+							e3 != null && !ReferenceEquals(p.Expr3, e3))
+							newElement = new SqlPredicate.Between(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, e3 ?? p.Expr3);
+
+						break;
+					}
+
+				case QueryElementType.IsNullPredicate:
+					{
+						var p = (SqlPredicate.IsNull)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+
+						if (e != null && !ReferenceEquals(p.Expr1, e))
+							newElement = new SqlPredicate.IsNull(e, p.IsNot);
+
+						break;
+					}
+
+				case QueryElementType.InSubQueryPredicate:
+					{
+						var p = (SqlPredicate.InSubQuery)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var q = (SelectQuery)ConvertImmutableInternal(p.SubQuery);
+
+						if (e != null && !ReferenceEquals(p.Expr1, e) || q != null && !ReferenceEquals(p.SubQuery, q))
+							newElement = new SqlPredicate.InSubQuery(e ?? p.Expr1, p.IsNot, q ?? p.SubQuery);
+
+						break;
+					}
+
+				case QueryElementType.InListPredicate:
+					{
+						var p = (SqlPredicate.InList)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var v = ConvertImmutable(p.Values);
+
+						if (e != null && !ReferenceEquals(p.Expr1, e) || v != null && !ReferenceEquals(p.Values, v))
+							newElement = new SqlPredicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
+
+						break;
+					}
+
+				case QueryElementType.FuncLikePredicate:
+					{
+						var p = (SqlPredicate.FuncLike)element;
+						var f = (SqlFunction)ConvertImmutableInternal(p.Function);
+
+						if (f != null && !ReferenceEquals(p.Function, f))
+							newElement = new SqlPredicate.FuncLike(f);
+
+						break;
+					}
+
+				case QueryElementType.SetExpression:
+					{
+						var s = (SqlSetExpression)element;
+						var c = (ISqlExpression)ConvertImmutableInternal(s.Column    );
+						var e = (ISqlExpression)ConvertImmutableInternal(s.Expression);
+
+						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
+							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
+
+						break;
+					}
+
+				case QueryElementType.InsertClause:
+					{
+						var s = (SqlInsertClause)element;
+						var t = s.Into != null ? (SqlTable)ConvertImmutableInternal(s.Into) : null;
+						var i = ConvertImmutable(s.Items);
+
+						if (t != null && !ReferenceEquals(s.Into, t) || i != null && !ReferenceEquals(s.Items, i))
+						{
+							var sc = new SqlInsertClause { Into = t ?? s.Into };
+
+							sc.Items.AddRange(i ?? s.Items);
+							sc.WithIdentity = s.WithIdentity;
+
+							newElement = sc;
+						}
+
+						break;
+					}
+
+				case QueryElementType.UpdateClause:
+					{
+						var s = (SqlUpdateClause)element;
+						var t = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
+						var i = ConvertImmutable(s.Items);
+						var k = ConvertImmutable(s.Keys );
+
+						if (t != null && !ReferenceEquals(s.Table, t) ||
+							i != null && !ReferenceEquals(s.Items, i) ||
+							k != null && !ReferenceEquals(s.Keys,  k))
+						{
+							var sc = new SqlUpdateClause { Table = t ?? s.Table };
+
+							sc.Items.AddRange(i ?? s.Items);
+							sc.Keys. AddRange(k ?? s.Keys);
+
+							newElement = sc;
+						}
+
+						break;
+					}
+
+				case QueryElementType.SelectStatement:
+					{
+						var s = (SqlSelectStatement)element;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)  ConvertImmutableInternal(s.SelectQuery) : null;
+						var with        = s.With        != null ? (SqlWithClause)ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
+
+						if (ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							with        != null && !ReferenceEquals(s.With,        with))
+						{
+							newElement = new SqlSelectStatement(selectQuery ?? s.SelectQuery);
+							((SqlSelectStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
+							((SqlSelectStatement)newElement).With = with ?? s.With;
+							CorrectQueryHierarchy(((SqlSelectStatement) newElement).SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.InsertStatement:
+					{
+						var s = (SqlInsertStatement)element;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
+
+						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							with        != null && !ReferenceEquals(s.With,        with))
+						{
+							newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert };
+							((SqlInsertStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
+							((SqlInsertStatement)newElement).With = with ?? s.With;
+							CorrectQueryHierarchy(((SqlInsertStatement) newElement).SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						var s = (SqlUpdateStatement)element;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
+
+						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							with        != null && !ReferenceEquals(s.With,        with))
+						{
+							newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery) { Update = update ?? s.Update };
+							((SqlUpdateStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
+							((SqlUpdateStatement)newElement).With = with ?? s.With;
+							CorrectQueryHierarchy(((SqlUpdateStatement) newElement).SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						var s = (SqlInsertOrUpdateStatement)element;
+
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert     ) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
+
+						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
+							update      != null && !ReferenceEquals(s.Update,      update)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							with        != null && !ReferenceEquals(s.With,        with))
+						{
+							newElement = new SqlInsertOrUpdateStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert, Update = update ?? s.Update };
+							((SqlInsertOrUpdateStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
+							((SqlInsertOrUpdateStatement)newElement).With = with ?? s.With;
+							CorrectQueryHierarchy(((SqlInsertOrUpdateStatement) newElement).SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.DeleteStatement:
+					{
+						var s = (SqlDeleteStatement)element;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)   ConvertImmutableInternal(s.SelectQuery) : null;
+						var table       = s.Table       != null ? (SqlTable)      ConvertImmutableInternal(s.Table      ) : null;
+						var top         = s.Top         != null ? (ISqlExpression)ConvertImmutableInternal(s.Top        ) : null;
+						var with        = s.With        != null ? (SqlWithClause) ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
+
+						if (table       != null && !ReferenceEquals(s.Table,       table)       ||
+							top         != null && !ReferenceEquals(s.Top,         top)         ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)          ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
+							with        != null && !ReferenceEquals(s.With,        with))
+						{
+							newElement = new SqlDeleteStatement
+							{
+								Table                = table       ?? s.Table,
+								SelectQuery          = selectQuery ?? s.SelectQuery,
+								Top                  = top         ?? s.Top,
+								IsParameterDependent = s.IsParameterDependent
+							};
+							((SqlDeleteStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
+							((SqlDeleteStatement)newElement).With = with ?? s.With;
+							CorrectQueryHierarchy(((SqlDeleteStatement) newElement).SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.CreateTableStatement:
+					{
+						var s  = (SqlCreateTableStatement)element;
+						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
+						var ps = ConvertImmutableSafe(s.Parameters);
+
+						if (t  != null && !ReferenceEquals(s.Table, t) ||
+							ps != null && !ReferenceEquals(s.Parameters,  ps))
+						{
+							newElement = new SqlCreateTableStatement { Table = t ?? s.Table };
+							if (ps != null)
+								((SqlCreateTableStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlCreateTableStatement)newElement).Parameters.AddRange(s.Parameters);
+						}
+
+						break;
+					}
+
+				case QueryElementType.DropTableStatement:
+					{
+						var s  = (SqlDropTableStatement)element;
+						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
+						var ps = ConvertImmutableSafe(s.Parameters);
+
+						if (t  != null && !ReferenceEquals(s.Table, t) ||
+							ps != null && !ReferenceEquals(s.Parameters,  ps))
+						{
+							newElement = new SqlDropTableStatement(s.IfExists) { Table = t ?? s.Table };
+							if (ps != null)
+								((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlDropTableStatement)newElement).Parameters.AddRange(s.Parameters);
+						}
+
+						break;
+					}
+
+				case QueryElementType.SelectClause:
+					{
+						var sc   = (SqlSelectClause)element;
+						var cols = ConvertImmutable(sc.Columns, column =>
+						{
+							var newColumn = new SqlColumn(sc.SelectQuery, column.Expression);
+							_visitedElements.Remove(column);
+							_visitedElements.Add(column, newColumn);
+							return newColumn;
+						});
+						var take = (ISqlExpression)ConvertImmutableInternal(sc.TakeValue);
+						var skip = (ISqlExpression)ConvertImmutableInternal(sc.SkipValue);
+
+						if (
+							cols != null && !ReferenceEquals(sc.Columns,   cols) ||
+							take != null && !ReferenceEquals(sc.TakeValue, take) ||
+							skip != null && !ReferenceEquals(sc.SkipValue, skip))
+						{
+							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
+							((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.FromClause:
+					{
+						var fc   = (SqlFromClause)element;
+						var ts = ConvertImmutable(fc.Tables);
+
+						if (ts != null && !ReferenceEquals(fc.Tables, ts))
+						{
+							newElement = new SqlFromClause(ts ?? fc.Tables);
+							((SqlFromClause)newElement).SetSqlQuery(fc.SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.WhereClause:
+					{
+						var wc   = (SqlWhereClause)element;
+						var cond = (SqlSearchCondition)ConvertImmutableInternal(wc.SearchCondition);
+
+						if (cond != null && !ReferenceEquals(wc.SearchCondition, cond))
+						{
+							newElement = new SqlWhereClause(cond ?? wc.SearchCondition);
+							((SqlWhereClause)newElement).SetSqlQuery(wc.SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.GroupByClause:
+					{
+						var gc = (SqlGroupByClause)element;
+						var es = ConvertImmutable(gc.Items);
+
+						if (es != null && !ReferenceEquals(gc.Items, es))
+						{
+							newElement = new SqlGroupByClause(es ?? gc.Items);
+							((SqlGroupByClause)newElement).SetSqlQuery(gc.SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.OrderByClause:
+					{
+						var oc = (SqlOrderByClause)element;
+						var es = ConvertImmutable(oc.Items);
+
+						if (es != null && !ReferenceEquals(oc.Items, es))
+						{
+							newElement = new SqlOrderByClause(es ?? oc.Items);
+							((SqlOrderByClause)newElement).SetSqlQuery(oc.SelectQuery);
+						}
+
+						break;
+					}
+
+				case QueryElementType.OrderByItem:
+					{
+						var i = (SqlOrderByItem)element;
+						var e = (ISqlExpression)ConvertImmutableInternal(i.Expression);
+
+						if (e != null && !ReferenceEquals(i.Expression, e))
+							newElement = new SqlOrderByItem(e, i.IsDescending);
+
+						break;
+					}
+
+				case QueryElementType.SetOperator:
+					{
+						var u = (SqlSetOperator)element;
+						var q = (SelectQuery)ConvertImmutableInternal(u.SelectQuery);
+
+						if (q != null && !ReferenceEquals(u.SelectQuery, q))
+							newElement = new SqlSetOperator(q, u.Operation);
+
+						break;
+					}
+
+				case QueryElementType.SqlQuery:
+					{
+						var q = (SelectQuery)element;
+
+						var fc = (SqlFromClause)   ConvertImmutableInternal(q.From   ) ?? q.From;
+						var sc = (SqlSelectClause) ConvertImmutableInternal(q.Select ) ?? q.Select;
+						var wc = (SqlWhereClause)  ConvertImmutableInternal(q.Where  ) ?? q.Where;
+						var gc = (SqlGroupByClause)ConvertImmutableInternal(q.GroupBy) ?? q.GroupBy;
+						var hc = (SqlWhereClause)  ConvertImmutableInternal(q.Having ) ?? q.Having;
+						var oc = (SqlOrderByClause)ConvertImmutableInternal(q.OrderBy) ?? q.OrderBy;
+						var us = q.HasSetOperators ? ConvertImmutable(q.SetOperators) : q.SetOperators;
+
+						List<ISqlExpression[]> uk = null;
+						if (q.HasUniqueKeys)
+							uk = ConvertImmutableListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
+
+						if (   !ReferenceEquals(fc, q.From)
+						    || !ReferenceEquals(sc, q.Select)
+						    || !ReferenceEquals(wc, q.Where)
+						    || !ReferenceEquals(gc, q.GroupBy)
+						    || !ReferenceEquals(hc, q.Having)
+						    || !ReferenceEquals(oc, q.OrderBy)
+						    || us != null && !ReferenceEquals(us, q.SetOperators)
+							|| uk != null && !ReferenceEquals(uk, q.UniqueKeys)
+						)
+						{
+							var nq = new SelectQuery();
+
+							var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
+
+							if (ReferenceEquals(sc, q.Select))
+								sc = new SqlSelectClause (nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
+							if (ReferenceEquals(fc, q.From))
+								fc = new SqlFromClause   (nq, fc, objTree, e => false);
+							if (ReferenceEquals(wc, q.Where))
+								wc = new SqlWhereClause  (nq, wc, objTree, e => false);
+							if (ReferenceEquals(gc, q.GroupBy))
+								gc = new SqlGroupByClause(nq, gc, objTree, e => false);
+							if (ReferenceEquals(hc, q.Having))
+								hc = new SqlWhereClause  (nq, hc, objTree, e => false);
+							if (ReferenceEquals(oc, q.OrderBy))
+								oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+							if (us == null || ReferenceEquals(us, q.SetOperators))
+								us = new List<SqlSetOperator>(us ?? q.SetOperators);
+
+							AddVisited(q.All, nq.All);
+
+							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
+								q.ParentSelect,
+								q.IsParameterDependent);
+
+							// update visited in case if columns were cloned
+							foreach (var pair in objTree)
+							{
+								if (pair.Key is IQueryElement queryElement)
+								{
+									_visitedElements.Remove(queryElement);
+									_visitedElements.Add(queryElement, (IQueryElement)pair.Value);
+								}
+							}
+
+							newElement = nq;
+						}
+						break;
+					}
+
+				case QueryElementType.TruncateTableStatement:
+					{
+						var truncate = (SqlTruncateTableStatement)element;
+
+						if (truncate.Table != null)
+						{
+							var table = (SqlTable)ConvertImmutableInternal(truncate.Table);
+
+							if (table != null && !ReferenceEquals(truncate.Table, table))
+							{
+								newElement = new SqlTruncateTableStatement()
+									{
+										Table = table,
+										ResetIdentity = truncate.ResetIdentity
+									};
+							}
+						}
+
+						break;
+					}
+
+				case QueryElementType.SqlRawSqlTable:
+					{
+						var table   = (SqlRawSqlTable)element;
+						var fields1 = ToArray(table.Fields);
+						var fields2 = ConvertImmutable(fields1, f => new SqlField(f));
+						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
+							null : ConvertImmutable(table.Parameters);
+
+						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
+						var ta = targs != null && !ReferenceEquals(table.Parameters, targs);
+
+						if (fe || ta)
+						{
+							if (!fe)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+							newElement = new SqlRawSqlTable(table, fields2, targs ?? table.Parameters);
+
+							_visitedElements[((SqlRawSqlTable)newElement).All] = table.All;
+						}
+
+						break;
+					}
+
+				case QueryElementType.CteClause:
+					{
+						var cte = (CteClause)element;
+
+						if (QueryVisitor.Find(cte.Body, e => e == cte) == null)
+						{
+							// non-recursive
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							if (body   != null && !ReferenceEquals(cte.Body, body) ||
+								fields != null && !ReferenceEquals(cte.Fields, fields))
+							{
+								newElement = new CteClause(
+									body ?? cte.Body,
+									fields ?? cte.Fields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+							}
+						}
+						else
+						{
+							var newCte = new CteClause(cte.ObjectType, cte.IsRecursive, cte.Name);
+
+							_visitedElements.Add(cte, newCte);
+
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							newCte.Init(body ?? cte.Body, fields ?? cte.Fields);
+
+							var elem = _convert(newCte) ?? newCte;
+							_visitedElements[cte] = elem;
+
+							return elem;
+						}
+
+						break;
+					}
+
+				case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
+
+						var clauses = ConvertImmutableSafe(with.Clauses);
+
+						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
+							newElement = new SqlWithClause()
+							{
+								Clauses = clauses
+							};
+
+						break;
+					}
+
+				case QueryElementType.SqlField    :
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlValue    :
+				case QueryElementType.SqlDataType :
+					break;
+
+				default:
+					throw new InvalidOperationException($"ConvertImmutable visitor not implemented for element {element.ElementType}");
+			}
+
+			newElement = newElement == null ? _convert(element) : (_convert(newElement) ?? newElement);
+
+			AddVisited(element, newElement);
+
+			return newElement;
+		}
+
+		T[] ConvertImmutable<T>(T[] arr)
+			where T : class, IQueryElement
+		{
+			return ConvertImmutable(arr, null);
+		}
+
+		T[] ConvertImmutable<T>(T[] arr1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			T[] arr2 = null;
+
+			for (var i = 0; i < arr1.Length; i++)
+			{
+				var elem1 = arr1[i];
+				var elem2 = (T)ConvertImmutableInternal(elem1);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (arr2 == null)
+					{
+						arr2 = new T[arr1.Length];
+
+						for (var j = 0; j < i; j++)
+							arr2[j] = clone == null ? arr1[j] : clone(arr1[j]);
+					}
+
+					arr2[i] = elem2;
+				}
+				else if (arr2 != null)
+					arr2[i] = clone == null ? elem1 : clone(elem1);
+			}
+
+			return arr2;
+		}
+
+		List<T> ConvertImmutableSafe<T>(IList<T> list)
+			where T : class, IQueryElement
+		{
+			return ConvertImmutableSafe(list, null);
+		}
+
+		List<T> ConvertImmutableSafe<T>(IList<T> list1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = ConvertImmutableInternal(elem1) as T;
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : clone(list1[j]));
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : clone(elem1));
+			}
+
+			return list2;
+		}
+
+		List<T> ConvertImmutable<T>(List<T> list)
+			where T : class, IQueryElement
+		{
+			return ConvertImmutable(list, null);
+		}
+
+		List<T> ConvertImmutable<T>(List<T> list1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = (T)ConvertImmutableInternal(elem1);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : clone(list1[j]));
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : clone(elem1));
+			}
+
+			return list2;
+		}
+
+		List<T[]> ConvertImmutableListArray<T>(List<T[]> list1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T[]> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = ConvertImmutable(elem1);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T[]>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray() );
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : elem1.Select(e => clone(e)).ToArray());
+			}
+
+			return list2;
+		}
+
+		#endregion
 	}
 }

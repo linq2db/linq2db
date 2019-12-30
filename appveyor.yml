@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.9.4
-  packageVersion: 2.9.4
+  assemblyVersion: 2.9.5
+  packageVersion: 2.9.5
 
 cache:
 - packages -> appveyor.yml

@@ -52,6 +52,7 @@ namespace PostreSQLDataContext
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
+		public ITable<Transaction>                    Transactions              { get { return this.GetTable<Transaction>(); } }
 
 		partial void InitMappingSchema()
 		{
@@ -1759,6 +1760,13 @@ namespace PostreSQLDataContext
 	public partial class test_schema_Testserialidentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
+	[Table(Schema="public", Name="Transactions")]
+	public partial class Transaction
+	{
+		[PrimaryKey, NotNull] public int            TransactionId   { get; set; } // integer
+		[Column,     NotNull] public DateTimeOffset TransactionDate { get; set; } // timestamp (6) with time zone
 	}
 
 	public static partial class SqlFunctions
@@ -24726,6 +24734,12 @@ namespace PostreSQLDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static Transaction Find(this ITable<Transaction> table, int TransactionId)
+		{
+			return table.FirstOrDefault(t =>
+				t.TransactionId == TransactionId);
 		}
 	}
 }

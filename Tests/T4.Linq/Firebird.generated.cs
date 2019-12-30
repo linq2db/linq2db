@@ -202,9 +202,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_15177
+		/// INTEG_22164
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_15177", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_22164", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -228,7 +228,7 @@ namespace FirebirdDataContext
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_15177_BackReference
+		/// INTEG_22164_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT INTEG { get; set; }
@@ -317,7 +317,7 @@ namespace FirebirdDataContext
 	{
 		#region ADDISSUE792RECORD
 
-		public static int ADDISSUE792RECORD(this DataConnection dataConnection)
+		public static int ADDISSUE792RECORD(this TESTDB25DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("ADDISSUE792RECORD");
 		}
@@ -326,7 +326,7 @@ namespace FirebirdDataContext
 
 		#region OUTREFENUMTEST
 
-		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
+		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this TESTDB25DB dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFENUMTESTResult>("OUTREFENUMTEST",
 				new DataParameter("STR",            STR,            DataType.NVarChar),
@@ -350,7 +350,7 @@ namespace FirebirdDataContext
 
 		#region OUTREFTEST
 
-		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
+		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this TESTDB25DB dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFTESTResult>("OUTREFTEST",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -382,7 +382,7 @@ namespace FirebirdDataContext
 
 		#region PatientSelectall
 
-		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this TESTDB25DB dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTALLResult>("PATIENT_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -416,7 +416,7 @@ namespace FirebirdDataContext
 
 		#region PatientSelectbyname
 
-		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this TESTDB25DB dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
@@ -446,7 +446,7 @@ namespace FirebirdDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this DataConnection dataConnection, int? PERSONID)
+		public static int PersonDelete(this TESTDB25DB dataConnection, int? PERSONID)
 		{
 			return dataConnection.ExecuteProc("PERSON_DELETE",
 				new DataParameter("PERSONID", PERSONID, DataType.Int32));
@@ -456,7 +456,7 @@ namespace FirebirdDataContext
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonINSERTResult> PersonInsert(this TESTDB25DB dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonINSERTResult>("PERSON_INSERT",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -479,7 +479,7 @@ namespace FirebirdDataContext
 
 		#region PersonInsertOutputparameter
 
-		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this TESTDB25DB dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonInsertOUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -502,7 +502,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectall
 
-		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this TESTDB25DB dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTALLResult>("PERSON_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -533,7 +533,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectbykey
 
-		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this TESTDB25DB dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYKEYResult>("PERSON_SELECTBYKEY",
 				new DataParameter("ID",         ID,         DataType.Int32),
@@ -565,7 +565,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectbyname
 
-		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this TESTDB25DB dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYNAMEResult>("PERSON_SELECTBYNAME",
 				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
@@ -598,7 +598,7 @@ namespace FirebirdDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this TESTDB25DB dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("PERSON_UPDATE",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
@@ -612,7 +612,7 @@ namespace FirebirdDataContext
 
 		#region ScalarDatareader
 
-		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
+		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this TESTDB25DB dataConnection, out int? INTFIELD, out string STRINGFIELD)
 		{
 			var ret = dataConnection.QueryProc<ScalarDATAREADERResult>("SCALAR_DATAREADER",
 				new DataParameter("INTFIELD", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -634,7 +634,7 @@ namespace FirebirdDataContext
 
 		#region ScalarOutputparameter
 
-		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
+		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this TESTDB25DB dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
 		{
 			var ret = dataConnection.QueryProc<ScalarOUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER",
 				new DataParameter("OUTPUTINT", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -656,7 +656,7 @@ namespace FirebirdDataContext
 
 		#region ScalarReturnparameter
 
-		public static IEnumerable<ScalarRETURNPARAMETERResult> ScalarReturnparameter(this DataConnection dataConnection, out int? RETURN_VALUE)
+		public static IEnumerable<ScalarRETURNPARAMETERResult> ScalarReturnparameter(this TESTDB25DB dataConnection, out int? RETURN_VALUE)
 		{
 			var ret = dataConnection.QueryProc<ScalarRETURNPARAMETERResult>("SCALAR_RETURNPARAMETER",
 				new DataParameter("RETURN_VALUE", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
