@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -85,6 +86,12 @@ namespace LinqToDB.Common
 			{
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
+		}
+
+		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		{
+			foreach (var item in items) 
+				hashSet.Add(item);
 		}
 	}
 }

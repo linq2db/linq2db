@@ -360,11 +360,13 @@ namespace Tests.Linq
 			{
 				var expectedQuery = from p in Parent
 					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
 					where p.ParentID >= 1
 					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
 
 				var actualQuery = from p in db.Parent
 					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
 					where p.ParentID >= 1
 					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
 
@@ -536,8 +538,9 @@ namespace Tests.Linq
 					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() });
 		}
 
+		// Access has strange order strategy
 		[Test]
-		public void GroupJoin9([DataSources] string context)
+		public void GroupJoin9([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -642,7 +645,8 @@ namespace Tests.Linq
 						.SelectMany(
 							a => a.y.DefaultIfEmpty(),
 							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						));
+						)
+					);
 		}
 
 		[Test]

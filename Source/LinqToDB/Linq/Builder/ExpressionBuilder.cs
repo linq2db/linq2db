@@ -30,6 +30,7 @@ namespace LinqToDB.Linq.Builder
 			new SelectManyBuilder          (),
 			new WhereBuilder               (),
 			new OrderByBuilder             (),
+			new RemoveOrderByBuilder       (),
 			new GroupByBuilder             (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),

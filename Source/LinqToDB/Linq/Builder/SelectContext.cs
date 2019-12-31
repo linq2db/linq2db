@@ -39,7 +39,6 @@ namespace LinqToDB.Linq.Builder
 		Expression IBuildContext.Expression => Lambda;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
-		public readonly Dictionary<Expression,Expression> Members2 = new Dictionary<Expression,Expression>(new ExpressionEqualityComparer());
 
 		public SelectContext(IBuildContext parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
@@ -1032,12 +1031,6 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess :
 						{
 							var memberExpression = Members[((MemberExpression)levelExpression).Member];
-
-							if (memberExpression.NodeType == ExpressionType.Call)
-							{
-								var zz = Expression.MakeMemberAccess(memberExpression,
-									((MemberExpression)levelExpression).Member);
-							}
 
 							root =  memberExpression.GetRootObject(Builder.MappingSchema);
 

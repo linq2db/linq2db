@@ -335,34 +335,39 @@ namespace Tests.Linq
 
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					(
-						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
-						select new
-						{
-							p.ParentID,
-							Any    = ch2.Any(),
-							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
-							First2 = ch2.FirstOrDefault()
-						}
-					).Where(t => t.ParentID > 0)
-					,
-					(
-						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
-						select new
-						{
-							p.ParentID,
-							Any    = ch2.Any(),
-							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
-							First2 = ch2.FirstOrDefault()
-						}
-					).Where(t => t.ParentID > 0));
+			{
+				var expected = (from p in Parent
+					let ch1 = Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+					let ch2 = ch1.Where(c => c.ChildID > -100).OrderBy(c => c.ChildID)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					})
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				var actual = (
+					from p in db.Parent
+					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+					let ch2 = ch1.Where(c => c.ChildID > -100).OrderBy(c => c.ChildID)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					}
+				)
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
@@ -373,8 +378,8 @@ namespace Tests.Linq
 				AreEqual(
 					(
 						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+						let ch2 = ch1.Where(c => c.ChildID > -100).OrderBy(c => c.ChildID)
 						select new
 						{
 							p.ParentID,
@@ -387,8 +392,8 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+						let ch2 = ch1.Where(c => c.ChildID > -100).OrderBy(c => c.ChildID)
 						select new
 						{
 							p.ParentID,
@@ -439,7 +444,7 @@ namespace Tests.Linq
 				AreEqual(
 					(
 						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
@@ -448,7 +453,7 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
 						select new
 						{
 							First = ch1.FirstOrDefault()

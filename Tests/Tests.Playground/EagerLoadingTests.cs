@@ -250,6 +250,7 @@ namespace Tests.Playground
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
 				var query = from m in master
+					orderby m.Id2 descending 
 					where m.Id1 >= intParam
 					select new
 					{
@@ -482,7 +483,7 @@ namespace Tests.Playground
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.Take(20)
+				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
 					join d in detail on m.Id1 equals d.MasterId into j
 					from dd in j
 					select new
@@ -492,7 +493,7 @@ namespace Tests.Playground
 						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
 					};
 
-				var expectedQuery = from m in masterRecords.Take(20)
+				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
 					join d in detailRecords on m.Id1 equals d.MasterId into j
 					from dd in j
 					select new

@@ -2645,9 +2645,6 @@ namespace LinqToDB
 
 		#region IOrderedQueryable
 
-		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() =>
-			ThenOrBy(null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Adds ascending sort expression to a query.
 		/// If query already sorted, existing sorting will be preserved and updated with new sort.
@@ -2671,12 +2668,9 @@ namespace LinqToDB
 			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_thenOrBy.MakeGenericMethod(typeof(TSource), typeof(TKey)),
+					MethodHelper.GetMethodInfo(ThenOrBy, source, keySelector),
 					new[] { currentSource.Expression, Expression.Quote(keySelector) }));
 		}
-
-		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() =>
-			ThenOrByDescending(null, (Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds descending sort expression to a query.
@@ -2701,8 +2695,29 @@ namespace LinqToDB
 			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_thenOrByDescending.MakeGenericMethod(typeof(TSource), typeof(TKey)),
+					MethodHelper.GetMethodInfo(ThenOrByDescending, source, keySelector),
 					new[] { currentSource.Expression, Expression.Quote(keySelector) }));
+		}
+
+		/// <summary>
+		/// Removes ordering from current query.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Unsorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> RemoveOrderBy<TSource>(
+			[NotNull]                this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(RemoveOrderBy, source), currentSource.Expression));
 		}
 
 		#endregion

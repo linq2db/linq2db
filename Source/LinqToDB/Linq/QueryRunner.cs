@@ -624,6 +624,7 @@ namespace LinqToDB.Linq
 							dataReaderParam,
 							Expression.Property(queryRunnerParam, _expressionInfo),
 							Expression.Property(queryRunnerParam, _parametersInfo),
+							Expression.Property(queryRunnerParam, _preamblesInfo),
 							Expression.Property(queryRunnerParam, _rowsCountnfo),
 						}),
 					queryRunnerParam,

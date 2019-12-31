@@ -1174,6 +1174,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Currently linq2db do not support such queries")]
 		[Test]
 		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
