@@ -1583,7 +1583,20 @@ namespace LinqToDB.Linq.Builder
 				var exas = expression.GetExpressionAccessors(p);
 				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
-				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
+				var allowedParameters = new HashSet<ParameterExpression>() { p };
+
+				if (null != expr.Find(e => {
+					if (e is LambdaExpression lambda)
+					{
+						// allow parameters, declared inside expr
+						foreach (var param in lambda.Parameters)
+							allowedParameters.Add(param);
+					}
+					else if (e is ParameterExpression pe)
+						return !allowedParameters.Contains(pe);
+
+					return false;
+				}))
 					return expression;
 
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });

@@ -2497,8 +2497,8 @@ namespace LinqToDB.Linq.Builder
 					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
 
 				return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0?
-					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'));
+					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, false):
+					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'), false);
 			}
 
 			if (a is SqlParameter p)
@@ -2525,7 +2525,7 @@ namespace LinqToDB.Linq.Builder
 
 				CurrentSqlParameters.Add(ep);
 
-				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'));
+				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), false);
 			}
 
 			var mi = MemberHelper.MethodOf(() => "".Replace("", ""));
@@ -2546,7 +2546,7 @@ namespace LinqToDB.Linq.Builder
 			if (!string.IsNullOrEmpty(end))
 				expr = new SqlBinaryExpression(typeof(string), expr, "+", new SqlValue("%"));
 
-			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'));
+			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'), false);
 		}
 
 		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
@@ -2560,7 +2560,7 @@ namespace LinqToDB.Linq.Builder
 			if (e.Arguments.Count == 3)
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
-			return new SqlPredicate.Like(a1, false, a2, a3);
+			return new SqlPredicate.Like(a1, false, a2, a3, true);
 		}
 
 		static string EscapeLikeText(string text)

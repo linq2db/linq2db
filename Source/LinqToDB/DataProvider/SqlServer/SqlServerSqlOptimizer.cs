@@ -6,10 +6,13 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServerSqlOptimizer : BasicSqlOptimizer
+	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
-		public SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		private readonly SqlServerVersion _sqlVersion;
+
+		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
 		{
+			_sqlVersion = sqlVersion;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -85,15 +88,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						if (IsTimeDataType(func.Parameters[0]))
 						{
-							// TODO: this is really bad place for code like that
-							// time type not supported by SQL Server 2005-, but nobody really should use
-							// DateTimeOffset type with it
-							if (type1 == typeof(DateTimeOffset))
-								return new SqlExpression(
-									func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, func.Parameters[1]);
-							if (type1 == typeof(DateTime))
-								return new SqlExpression(
-									func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
+							if (type1 == typeof(DateTimeOffset) || type1 == typeof(DateTime))
+								if (_sqlVersion >= SqlServerVersion.v2008)
+									return new SqlExpression(
+										func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, func.Parameters[1]);
+								else
+									return new SqlExpression(
+										func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
 
 							if (func.Parameters[1].SystemType == typeof(string))
 								return func.Parameters[1];

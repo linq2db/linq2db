@@ -29,6 +29,7 @@ namespace MySqlConnectorDataContext
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
+		public ITable<Issue1993>         Issue1993          { get { return this.GetTable<Issue1993>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
@@ -177,6 +178,13 @@ namespace MySqlConnectorDataContext
 		[Column,        Nullable] public string Name                { get; set; } // varchar(50)
 	}
 
+	[Table("issue1993")]
+	public partial class Issue1993
+	{
+		[Column("id"),          PrimaryKey, Identity] public uint   Id          { get; set; } // int(10) unsigned
+		[Column("description"), Nullable            ] public string Description { get; set; } // varchar(100)
+	}
+
 	[Table("linqdatatypes")]
 	public partial class Linqdatatype
 	{
@@ -322,7 +330,7 @@ namespace MySqlConnectorDataContext
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this TestmysqlconnectordbDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("`AddIssue792Record`");
 		}
@@ -331,7 +339,7 @@ namespace MySqlConnectorDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this TestmysqlconnectordbDB dataConnection, string aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -346,7 +354,7 @@ namespace MySqlConnectorDataContext
 
 		#region TestProcedure
 
-		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this TestmysqlconnectordbDB dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
@@ -411,6 +419,12 @@ namespace MySqlConnectorDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static Issue1993 Find(this ITable<Issue1993> table, uint Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Patient Find(this ITable<Patient> table, int PersonID)
