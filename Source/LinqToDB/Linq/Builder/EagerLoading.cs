@@ -1007,6 +1007,25 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		// private static Expression FlattenQuery(Expression query, MappingSchema mappingSchema)
+		// {
+		// 	var queryElementType = GetEnumerableElementType(query.Type, mappingSchema);
+		// 	if (typeof(IQueryable<>).IsSameOrParentOf(queryElementType))
+		// 	{
+		// 		var masterParam   = Expression.Parameter(queryElementType, "m");
+		// 		var selectDetails = Expression.Lambda(EnsureEnumerable(masterParam, mappingSchema), masterParam);
+		// 		var masterParam2  =  Expression.Parameter(queryElementType, "mm");
+		// 		var detailParamParam2  =  Expression.Parameter(GetEnumerableElementType(masterParam.Type, mappingSchema), "dd");
+		// 		var pairLambda = Expression.Lambda(detailParamParam2, masterParam2, detailParamParam2);
+		// 		var methodInfo = _selectManyMethodInfo.MakeGenericMethod(masterParam.Type, detailParamParam2.Type,
+		// 			detailParamParam2.Type);
+		// 		var newExpression = Expression.Call(methodInfo, query, selectDetails, pairLambda);
+		// 		return FlattenQuery(newExpression, mappingSchema);
+		// 	}
+		//
+		// 	return query;
+		// }
+
 		public static Expression GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters)
 		{
@@ -1108,7 +1127,7 @@ namespace LinqToDB.Linq.Builder
 				// replaceInfo.Keys.AddRange(keysInfo.Select(k => k.ForSelect));
 				replaceInfo.Keys.AddRange(dependencyParameters);
 
-				var mainQueryWithCollectedKey = ApplyReMapping(initialMainQuery, replaceInfo);
+				var mainQueryWithCollectedKey = ApplyReMapping(initialMainQuery, replaceInfo, true);
 
 				var resultParameterType = GetEnumerableElementType(mainQueryWithCollectedKey.Type, builder.MappingSchema);
 				var resultParameter     = Expression.Parameter(resultParameterType, "key_data_result");
@@ -1588,20 +1607,20 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo)
+		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo, bool isQueryable)
 		{
 			var newExpr = expr;
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Constant:
 					{
-						if (typeof(IQueryable<>).IsSameOrParentOf(expr.Type))
+						if (isQueryable)
 						{
 							var cnt   = (ConstantExpression)expr;
 							var value = ((IQueryable)cnt.Value).Expression;
 							if (value.NodeType != ExpressionType.Constant)
 							{
-								var newValue = ApplyReMapping(value, replaceInfo);
+								var newValue = ApplyReMapping(value, replaceInfo, isQueryable);
 								if (newValue.Type != value.Type)
 								{
 									newExpr = newValue;
@@ -1613,7 +1632,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Quote:
 					{
 						var unary      = (UnaryExpression)expr;
-						var newOperand = ApplyReMapping(unary.Operand, replaceInfo);
+						var newOperand = ApplyReMapping(unary.Operand, replaceInfo, isQueryable);
 						newExpr = unary.Update(newOperand);
 						break;
 					}
@@ -1623,7 +1642,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr == replaceInfo.TargetLambda)
 						{
-							if (typeof(IQueryable<>).IsSameOrParentOf(lambdaExpression.Body.Type))
+							if (isQueryable)
 							{
 								// replacing body
 								var neededKey     = GenerateKeyExpression(replaceInfo.Keys.ToArray(), 0);
@@ -1649,11 +1668,12 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var current = lambdaExpression.Body.Unwrap();
-							var newBody = ApplyReMapping(current, replaceInfo);
+							var newBody = ApplyReMapping(current, replaceInfo, isQueryable);
 							if (newBody != current)
 							{
 								newExpr = Expression.Lambda(newBody, lambdaExpression.Parameters);
-								newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr);
+								if (isQueryable)
+									newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr);
 							}
 
 						}
@@ -1688,10 +1708,16 @@ namespace LinqToDB.Linq.Builder
 									var newArg = arg;
 									if (!methodNeedsUpdate)
 									{
-										newArg = ApplyReMapping(arg, replaceInfo);
+										var expectQueryable = mc.IsQueryable("SelectMany") && i == 1
+										                      || i == 0;
+										newArg = ApplyReMapping(arg, replaceInfo, expectQueryable);
 										
 										if (arg != newArg)
 										{
+											if (newArg.Unwrap().NodeType == ExpressionType.Lambda)
+												newArg = Expression.Quote(CorrectLambdaType((LambdaExpression)arg.Unwrap(), (LambdaExpression)newArg.Unwrap()));
+
+
 											methodNeedsUpdate = true;
 											RegisterTypeRemapping(genericParameters[i].ParameterType, newArg.Type,
 												genericArguments, typesMapping);
@@ -1847,7 +1873,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (mi.Bindings[i] is MemberAssignment arg)
 							{
-								var newArg = ApplyReMapping(arg.Expression, replaceInfo);
+								var newArg = ApplyReMapping(arg.Expression, replaceInfo, false);
 								if (newArg != arg.Expression)
 								{
 									updated = newArg;
@@ -1876,7 +1902,7 @@ namespace LinqToDB.Linq.Builder
 						for (int i = 0; i < ne.Arguments.Count; i++)
 						{
 							var arg = ne.Arguments[i];
-							var newArg = ApplyReMapping(arg, replaceInfo);
+							var newArg = ApplyReMapping(arg, replaceInfo, false);
 							if (arg != newArg)
 							{
 								updated = newArg;
@@ -1917,7 +1943,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (expr is UnaryExpression unary)
 						{
-							newExpr = unary.Update(ApplyReMapping(unary.Operand, replaceInfo));
+							newExpr = unary.Update(ApplyReMapping(unary.Operand, replaceInfo, isQueryable));
 						}
 						
 						break;

@@ -1324,7 +1324,6 @@ namespace Tests.OrmBattle
 		}
 
 		[Test, Category("Join")]
-		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void LeftJoinTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1409,8 +1408,9 @@ namespace Tests.OrmBattle
 				Setup(context);
 				var result = db.Supplier.Select(
 					supplier => db.Product.Select(
-						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
-				var count = result.ToList().Count;
+						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)))
+					.ToList();
+				var count = result.Count;
 				Assert.Greater(count, 0);
 				foreach (var queryable in result)
 				{

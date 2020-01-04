@@ -44,19 +44,6 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestSelectMany()
-		{
-			var source = GenerateA();
-			var details = GenerateB();
-			var query = source.SelectMany(a => details.Where(b => b.ParentId == a.AId), (a, b) => new { A = a.AValue, B = details });
-			var filtered = query.Where(q => q.B.Any(bb => bb.BValue == "BValue2"));
-
-			var lambdaToReplace = query.Expression;
-			var newQuery = EagerLoading.ApplyReMapping(query.Expression, null);
-		}
-
-
-		[Test]
 		public void TestSelectMany1()
 		{
 			var source  = GenerateA();
@@ -84,8 +71,8 @@ namespace Tests.Playground
 			replaceInfo.TargetLambda = resultSelector;
 			replaceInfo.Keys.Add(additionalKey);
 
-			var newQuery = EagerLoading.ApplyReMapping(query.Expression, replaceInfo);
-			var newQuery2 = EagerLoading.ApplyReMapping(withGrouping.Expression, replaceInfo);
+			var newQuery = EagerLoading.ApplyReMapping(query.Expression, replaceInfo, true);
+			var newQuery2 = EagerLoading.ApplyReMapping(withGrouping.Expression, replaceInfo, true);
 		}
 	}
 }

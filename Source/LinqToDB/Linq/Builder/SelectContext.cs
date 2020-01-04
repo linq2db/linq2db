@@ -765,7 +765,13 @@ namespace LinqToDB.Linq.Builder
 											return sequence.IsExpression(levelExpression, level, requestFlag);
 										}
 
-										var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
+										var idx = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
+										if (idx < 0)
+										{
+											return IsExpressionResult.False;
+										}
+
+										var parameter = Lambda.Parameters[idx];
 
 										if (ReferenceEquals(levelExpression, expression))
 										{
