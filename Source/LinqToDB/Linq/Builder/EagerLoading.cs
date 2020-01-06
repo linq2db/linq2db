@@ -200,6 +200,8 @@ namespace LinqToDB.Linq.Builder
 				return type;
 			if (type.IsArray)
 				return type.GetElementType();
+			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
+				return type.GetGenericArguments()[1];
 			return type.GetGenericArguments()[0];
 		}
 
@@ -1050,6 +1052,11 @@ namespace LinqToDB.Linq.Builder
 				dependencyParameters.Remove((ParameterExpression)queryableDetail);
 				dependencies.Remove(queryableDetail);
 			}
+
+			//TODO: we have to create sophisticated grouping handling
+			var root = queryableDetail.GetRootObject(mappingSchema);
+			if (typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
+				return null;
 
 			var contextForKeys = context;
 

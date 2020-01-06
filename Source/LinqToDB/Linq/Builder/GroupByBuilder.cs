@@ -546,7 +546,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (flags == ConvertFlags.Field && !_key.IsScalar)
 						return _element.ConvertToSql(null, 0, flags);
-					return _key.ConvertToSql(null, 0, flags);
+					var keys = _key.ConvertToSql(null, 0, flags);
+					foreach (var key in keys)
+					{
+						key.MemberChain.Add(_keyProperty);
+					}
+
+					return keys;
 				}
 
 				if (level > 0)
