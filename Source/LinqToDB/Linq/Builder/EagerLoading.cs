@@ -1139,6 +1139,32 @@ namespace LinqToDB.Linq.Builder
 				var resultParameterType = GetEnumerableElementType(mainQueryWithCollectedKey.Type, builder.MappingSchema);
 				var resultParameter     = Expression.Parameter(resultParameterType, "key_data_result");
 
+				var dataType = resultParameterType.GetGenericArguments()[1];
+
+				// Collecting keys from previous iteration
+				if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(dataType))
+				{
+					if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+						throw new InvalidOperationException("Unexpected Main Query");
+
+					var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
+					var envelopeCreateMethod = (MemberInitExpression)envelopeCreateLambda.Body;
+
+					var keyExpression = ((MemberAssignment)envelopeCreateMethod.Bindings[0]).Expression;
+					var prevKeys      = ExtractKeys(context, keyExpression).ToArray();
+					var keysPath      = Expression.PropertyOrField(Expression.PropertyOrField(resultParameter, "Data"), "Key");
+
+					var prevPairs     = ExtractTupleValues(keyExpression, keysPath)
+						.ToLookup(p => p.Item1);
+
+					foreach (var prevKey in prevKeys)
+					{
+						prevKey.ForSelect = prevKey.ForSelect.Transform(e => prevPairs.Contains(e) ? prevPairs[e].First().Item2 : e);
+					}
+
+					keysInfo.AddRange(prevKeys);
+				}
+
 				var generateKeyExpression   = GenerateKeyExpression(keysInfo.Select(k => k.ForCompilation).ToArray(), 0);
 				var keySelectExpression     = GenerateKeyExpression(keysInfo.Select(k => k.ForSelect).ToArray(), 0);
 				var keyParametersExpression = GenerateKeyExpression(dependencyParameters.Cast<Expression>().ToArray(), 0);
