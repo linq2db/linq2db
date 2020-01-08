@@ -65,6 +65,33 @@ namespace LinqToDB.Linq.Builder
 			return prefix + idx;
 		}
 
+		static MethodCallExpression MakeMethodCall(MethodInfo methodInfo, params Expression[] arguments)
+		{
+			if (!methodInfo.IsGenericMethodDefinition)
+				methodInfo = methodInfo.GetGenericMethodDefinition();
+		
+			var genericArguments = methodInfo.GetGenericArguments();
+			var typesMapping     = new Dictionary<Type, Type>();
+
+			for (var i = 0; i < methodInfo.GetParameters().Length; i++)
+			{
+				var parameter = methodInfo.GetParameters()[i];
+				RegisterTypeRemapping(parameter.ParameterType, arguments[i].Type, genericArguments, typesMapping);
+			}
+
+			var newGenericArguments = genericArguments.Select((t, i) =>
+			{
+				if (!typesMapping.TryGetValue(t, out var replaced))
+					throw new Exception($"Not found type mapping for generic argument '{t.Name}'.");
+				return replaced;
+			}).ToArray();
+
+			var callMethodInfo = methodInfo.MakeGenericMethod(newGenericArguments);
+			var callExpression = Expression.Call(callMethodInfo, arguments);
+
+			return callExpression;
+		}
+
 		class EagerLoadingContext<T, TKey>
 		{
 			private Dictionary<TKey, List<T>> _items;
@@ -574,8 +601,20 @@ namespace LinqToDB.Linq.Builder
 				{
 					var elementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
 					replaceParam    = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
-					finalExpression = Expression.Call(
-						_asQueryableMethodInfo.MakeGenericMethod(elementType), replaceParam);
+					finalExpression = null;
+					if (queryableExpression.Type.IsArray)
+					{
+						finalExpression = Expression.Call(_toArrayMethodInfo.MakeGenericMethod(elementType),
+							replaceParam);
+					} else if (!typeof(IQueryable<>).IsSameOrParentOf(queryableExpression.Type) && !queryableExpression.Type.IsArray)
+					{
+						var convertExpr = mappingSchema.GetConvertExpression(
+							typeof(IEnumerable<>).MakeGenericType(elementType), queryableExpression.Type);
+						if (convertExpr != null)
+							finalExpression = Expression.Invoke(convertExpr, replaceParam);
+					}
+					if (finalExpression == null)
+						finalExpression = Expression.Call(_asQueryableMethodInfo.MakeGenericMethod(elementType), replaceParam);
 				}
 			}
 
@@ -746,8 +785,9 @@ namespace LinqToDB.Linq.Builder
 			// that means we processing association from TableContext. First parameter is master
 			Expression detailQuery;
 
-			var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
-			var masterParm           = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
+			var masterParm            = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+			var associationParentType = association.MemberInfo.DeclaringType;
 
 			Expression resultExpression;
 
@@ -791,6 +831,32 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				Expression parentExpr = null;
+
+				if (!mainQueryElementType.IsSameOrParentOf(associationParentType))
+				{
+					if (context.Parent is SelectContext selectContext)
+						parentExpr = selectContext.Lambda.Parameters.FirstOrDefault(p =>
+							associationParentType.IsSameOrParentOf(p.Type));
+
+					else if (context.Parent is ExpressionContext expressionContext)
+						parentExpr =
+							expressionContext.Lambda.Parameters.FirstOrDefault(p =>
+								associationParentType.IsSameOrParentOf(p.Type));
+
+					if (parentExpr == null)
+					{
+						throw new NotImplementedException();
+					}
+
+					var detailExpression1 = Expression.MakeMemberAccess(parentExpr, association.MemberInfo);
+
+					var result = GenerateDetailsExpression(context.Parent, builder.MappingSchema, detailExpression1,
+						new HashSet<ParameterExpression>());
+
+					return result;
+				}
+
 				masterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("master_"));
 				var masterKeys = ExtractKeys(context, masterParm).ToArray();
 
@@ -1089,7 +1155,13 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				detailLambda = FindContainingLambda(initialMainQuery, queryableDetail);
+				var searchExpression = queryableDetail;
+
+				// handling case with association
+				while (searchExpression.NodeType == ExpressionType.MemberAccess)
+					searchExpression = ((MemberExpression)searchExpression).Expression;
+
+				detailLambda = FindContainingLambda(initialMainQuery, searchExpression);
 				if (detailLambda == null)
 					throw new NotImplementedException();
 
@@ -1152,8 +1224,8 @@ namespace LinqToDB.Linq.Builder
 
 					var keyExpression = ((MemberAssignment)envelopeCreateMethod.Bindings[0]).Expression;
 					var prevKeys      = ExtractKeys(context, keyExpression).ToArray();
-					var keysPath      = Expression.PropertyOrField(Expression.PropertyOrField(resultParameter, "Data"), "Key");
 
+					var keysPath      = Expression.PropertyOrField(Expression.PropertyOrField(resultParameter, "Data"), "Key");
 					var prevPairs     = ExtractTupleValues(keyExpression, keysPath)
 						.ToLookup(p => p.Item1);
 
@@ -1645,30 +1717,6 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = expr;
 			switch (expr.NodeType)
 			{
-				case ExpressionType.Constant:
-					{
-						if (isQueryable)
-						{
-							var cnt   = (ConstantExpression)expr;
-							var value = ((IQueryable)cnt.Value).Expression;
-							if (value.NodeType != ExpressionType.Constant)
-							{
-								var newValue = ApplyReMapping(value, replaceInfo, isQueryable);
-								if (newValue.Type != value.Type)
-								{
-									newExpr = newValue;
-								}
-							}
-						}
-						break;
-					}
-				case ExpressionType.Quote:
-					{
-						var unary      = (UnaryExpression)expr;
-						var newOperand = ApplyReMapping(unary.Operand, replaceInfo, isQueryable);
-						newExpr = unary.Update(newOperand);
-						break;
-					}
 				case ExpressionType.Lambda:
 					{
 						var lambdaExpression = (LambdaExpression)expr;
@@ -1742,7 +1790,7 @@ namespace LinqToDB.Linq.Builder
 									if (!methodNeedsUpdate)
 									{
 										var expectQueryable = mc.IsQueryable("SelectMany") && i == 1
-										                      || i == 0;
+															  || i == 0;
 										newArg = ApplyReMapping(arg, replaceInfo, expectQueryable);
 										
 										if (arg != newArg)

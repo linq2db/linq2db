@@ -87,7 +87,8 @@ namespace Tests.UserTests
 					where att.Index == 1
 					select att;
 
-				var qry = from branchInfo in NotDeletedBranchInfo(db)
+				var qry = 
+					from branchInfo in NotDeletedBranchInfo(db)
 					from att in attachmentQry.LeftJoin(m => m.ItemId == branchInfo.BranchId)
 					where branchInfo.BranchIsShow == 0
 					select new BranchSelectOutput

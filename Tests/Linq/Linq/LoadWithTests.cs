@@ -88,10 +88,10 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith4([DataSources] string context)
 		{
-			MappingSchema.Default.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
+			var ms = new MappingSchema();
+			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
-			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
 			{
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
@@ -214,7 +214,6 @@ namespace Tests.Linq
 //#endif
 		public void LoadWith10([DataSources(ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =

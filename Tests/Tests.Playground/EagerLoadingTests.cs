@@ -344,7 +344,7 @@ namespace Tests.Playground
 						}).ToArray()
 					};
 
-				var result = masterQuery.ToArray();
+				var result   = masterQuery.ToArray();
 				var expected = expectedQuery.ToArray();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
