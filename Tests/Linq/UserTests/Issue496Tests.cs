@@ -117,7 +117,6 @@ namespace Tests.UserTests
 		[Test]
 		public void Test2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent1>()
@@ -150,7 +149,6 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent2>()

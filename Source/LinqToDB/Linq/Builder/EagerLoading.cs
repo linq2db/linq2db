@@ -597,10 +597,11 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (!typeof(List<>).IsSameOrParentOf(queryableExpression.Type))
+				var elementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
+				var loadedType  = typeof(List<>).MakeGenericType(elementType);
+				if (!queryableExpression.Type.IsSameOrParentOf(loadedType))
 				{
-					var elementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
-					replaceParam    = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
+					replaceParam    = Expression.Parameter(loadedType, "replacement");
 					finalExpression = null;
 					if (queryableExpression.Type.IsArray)
 					{
@@ -662,7 +663,7 @@ namespace LinqToDB.Linq.Builder
 			forExpr     = forExpr.Unwrap();
 			var exprCtx = ctx.Builder.GetContext(ctx, forExpr) ?? ctx;
 
-			if (forExpr.NodeType == ExpressionType.MemberAccess && forExpr.Type.IsClassEx())
+			if (forExpr.NodeType == ExpressionType.MemberAccess && (forExpr.Type.IsClassEx() || forExpr.Type.IsInterfaceEx()))
 				yield break;
 
 			var flags      = forExpr.NodeType == ExpressionType.Parameter ? ConvertFlags.Key : ConvertFlags.Field;
@@ -933,6 +934,7 @@ namespace LinqToDB.Linq.Builder
 		private static void CollectDependencies(Expression forExpr, List<Expression> dependencies, List<ParameterExpression> dependencyParameters)
 		{
 			var ignore  = new HashSet<Expression>();
+			ignore.Add(forExpr);
 
 			// parent first
 			forExpr.Visit(e =>
@@ -952,13 +954,13 @@ namespace LinqToDB.Linq.Builder
 				if (e.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression)e;
-					while (ma.Expression.NodeType == ExpressionType.MemberAccess)
+					while (ma.Expression?.NodeType == ExpressionType.MemberAccess)
 					{
 						ignore.Add(ma.Expression);
 						ma = (MemberExpression)ma.Expression;
 					}
 
-					if (ma.Expression.NodeType == ExpressionType.Parameter && !ignore.Contains(ma.Expression))
+					if (ma.Expression != null && ma.Expression.NodeType == ExpressionType.Parameter && !ignore.Contains(ma.Expression))
 					{
 						dependencies.Add(e);
 						ignore.Add(ma.Expression);
