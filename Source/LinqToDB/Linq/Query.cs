@@ -174,7 +174,7 @@ namespace LinqToDB.Linq
 			var result = new List<object>();
 			foreach (var p in _preambles)
 			{
-				result.Add(await p.Item2(dc));
+				result.Add(await p.Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 			}
 			return result.ToArray();
 		}

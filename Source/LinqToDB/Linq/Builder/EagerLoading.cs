@@ -57,6 +57,10 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _toArrayMethodInfo =
 			MemberHelper.MethodOf(() => Enumerable.ToArray<object>(null)).GetGenericMethodDefinition();
 
+		static readonly MethodInfo _takeMethodInfo =
+			MemberHelper.MethodOf<IQueryable<object>>(n => n.Take(1)).GetGenericMethodDefinition();
+
+
 		static int _masterParamcounter;
 
 		static string GetMasterParamName(string prefix)
@@ -491,6 +495,21 @@ namespace LinqToDB.Linq.Builder
 			if (expression.Type != enumerable)
 				expression = Expression.Convert(expression, enumerable);
 			return expression;
+		}
+
+		static Expression ValidateMainQuery(Expression mainQuery)
+		{
+			if (typeof(IQueryable<>).IsSameOrParentOf(mainQuery.Type))
+				return mainQuery;
+
+			if (mainQuery.NodeType != ExpressionType.Call)
+				throw new LinqException($"Expected Method call but found '{mainQuery.NodeType}'");
+			var mc = (MethodCallExpression) mainQuery;
+			if (!mc.IsQueryable() || !mc.Method.Name.In("First", "FirstOrDefault", "Single", "SingleOrDefault"))
+				throw new LinqException($"Unsupported Method call '{mc.Method.Name}'");
+
+			var newExpr = MakeMethodCall(_takeMethodInfo, mc.Arguments[0], Expression.Constant(1));
+			return newExpr;
 		}
 
 		static void ExtractIndepended(MappingSchema mappingSchema, Expression mainExpression, Expression detailExpression, HashSet<ParameterExpression> parameters, out Expression queryableExpression, out Expression finalExpression, out ParameterExpression replaceParam)
@@ -1099,10 +1118,10 @@ namespace LinqToDB.Linq.Builder
 		public static Expression GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters)
 		{
-			expression               = expression.Unwrap();
+			expression                 = expression.Unwrap();
 
 			var builder                = context.Builder;
-			var initialMainQuery       = builder.Expression.Unwrap();
+			var initialMainQuery       = ValidateMainQuery(builder.Expression.Unwrap());
 			var unchangedDetailQuery   = expression;
 			var hasConectionWithMaster = true;
 
@@ -1394,7 +1413,7 @@ namespace LinqToDB.Linq.Builder
 				async dc =>
 				{
 					var queryable = new ExpressionQueryImpl<TD>(dc, expr);
-					var details = await queryable.ToListAsync();
+					var details = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					return details;
 				}
 			);
@@ -1425,7 +1444,7 @@ namespace LinqToDB.Linq.Builder
 				async dc =>
 				{
 					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, expr);
-					var detailsWithKey      = await queryable.ToListAsync();
+					var detailsWithKey      = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
 					foreach (var d in detailsWithKey)

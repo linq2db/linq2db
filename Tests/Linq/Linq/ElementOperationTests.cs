@@ -141,8 +141,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent select p.Children.FirstOrDefault(),
-					from p in db.Parent select p.Children.FirstOrDefault());
+					from p in    Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+					from p in db.Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]
@@ -164,8 +164,9 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault());
 		}
 
+		//TODO: Access has nonstandard join, we have to improve it
 		[Test]
-		public void NestedFirstOrDefault5([DataSources] string context)
+		public void NestedFirstOrDefault5([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

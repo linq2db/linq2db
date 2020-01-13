@@ -87,7 +87,10 @@ namespace LinqToDB.Linq
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
-			var value = await GetQuery(ref expression, false).GetElementAsync(
+			var query      = GetQuery(ref expression, false);
+			Preambles      = await query.InitPreamblesAsync(DataContext).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			var value = await query.GetElementAsync(
 				DataContext, expression, Parameters, Preambles, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return (TResult)value;
@@ -95,6 +98,11 @@ namespace LinqToDB.Linq
 
 		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
 		{
+			var query      = GetQuery(ref expression, false);
+
+			//TODO: need async call
+			Preambles      = query.InitPreambles(DataContext);
+
 			return Query<TResult>.GetQuery(DataContext, ref expression)
 				.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
 		}
@@ -104,7 +112,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-			Preambles      = await query.InitPreamblesAsync(DataContext);
+			Preambles      = await query.InitPreamblesAsync(DataContext).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			await query
 				.GetForEachAsync(DataContext, Expression, Parameters, Preambles, r => { action(r); return true; }, cancellationToken);
@@ -164,12 +172,18 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters, Preambles);
+			var query  = GetQuery(ref expression, false);
+			Preambles  = query.InitPreambles(DataContext);
+
+			return (TResult)query.GetElement(DataContext, expression, Parameters, Preambles);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters, Preambles);
+			var query  = GetQuery(ref expression, false);
+			Preambles  = query.InitPreambles(DataContext);
+
+			return query.GetElement(DataContext, expression, Parameters, Preambles);
 		}
 
 		#endregion
