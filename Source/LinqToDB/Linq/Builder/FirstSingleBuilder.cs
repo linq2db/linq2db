@@ -254,8 +254,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						{
 							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
+						}
 
 						var idx = Parent.SelectQuery.Select.Add(SelectQuery);
 						    idx = Parent.ConvertToParentIndex(idx, Parent);

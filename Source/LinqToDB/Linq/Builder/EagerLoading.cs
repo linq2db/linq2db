@@ -634,7 +634,16 @@ namespace LinqToDB.Linq.Builder
 							finalExpression = Expression.Invoke(convertExpr, replaceParam);
 					}
 					if (finalExpression == null)
-						finalExpression = Expression.Call(_asQueryableMethodInfo.MakeGenericMethod(elementType), replaceParam);
+					{
+						finalExpression = Expression.Call(_asQueryableMethodInfo.MakeGenericMethod(elementType),
+							replaceParam);
+						if (typeof(ITable<>).IsSameOrParentOf(queryableExpression.Type))
+						{
+							var tableType  = typeof(PersistentTable<>).MakeGenericType(elementType);
+							finalExpression = Expression.New(tableType.GetConstructor(new[] { finalExpression.Type }),
+								finalExpression);
+						}
+					}
 				}
 			}
 
