@@ -868,6 +868,10 @@ namespace LinqToDB.Linq.Builder
 						parentExpr = selectContext.Lambda.Parameters.FirstOrDefault(p =>
 							associationParentType.IsSameOrParentOf(p.Type));
 
+//					if (context.Parent is FirstSingleBuilder.FirstSingleContext firstSingleContext)
+//						parentExpr = firstSingleContext.Lambda.Parameters.FirstOrDefault(p =>
+//							associationParentType.IsSameOrParentOf(p.Type));
+//
 					else if (context.Parent is ExpressionContext expressionContext)
 						parentExpr =
 							expressionContext.Lambda.Parameters.FirstOrDefault(p =>
