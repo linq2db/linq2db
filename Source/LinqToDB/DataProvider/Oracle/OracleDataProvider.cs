@@ -195,8 +195,7 @@ namespace LinqToDB.DataProvider.Oracle
 								Expression.Block(
 									Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
 									Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
-									Expression.Break(label, decimalVar),
-									Expression.Constant(0)
+									Expression.Break(label, decimalVar)
 								),
 								Expression.Catch(typeof(OverflowException),
 									Expression.Block(
@@ -204,10 +203,8 @@ namespace LinqToDB.DataProvider.Oracle
 											Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)),
 												Expression.Constant(26)),
 											Expression.Rethrow()
-										),
-										Expression.Constant(0)
+										)
 									)
-
 								)
 							),
 							label),
