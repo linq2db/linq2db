@@ -916,7 +916,7 @@ namespace LinqToDB.Linq.Builder
 				where T : class
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
-				{
+				{	
 					var expression = association.Builder.DataContext.GetTable<T>();
 
 					var loadWith = association.GetLoadWith();
@@ -971,6 +971,20 @@ namespace LinqToDB.Linq.Builder
 							p = (SqlPredicate.ExprExpr)cond.Predicate;
 						}
 
+						if (parent is UnaryExpression parentUnaryExpression)
+						{
+							if (parentUnaryExpression.NodeType == ExpressionType.Convert &&
+							    parentUnaryExpression.Type.IsAssignableFrom(parentUnaryExpression.Operand.Type))
+							{
+								// When parentUnaryExpression.Type is an interface and
+								// parentUnaryExpression.Operand.Type is generic type that implements the interface type
+								// var e1 = Expression.MakeMemberAccess (see below) fails,
+								// because ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo is declared in parentUnaryExpression.Operand.Type
+								// and of course is missing in parentUnaryExpression.Type
+								parent = parentUnaryExpression.Operand;
+							}
+						} 
+						
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
 						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
