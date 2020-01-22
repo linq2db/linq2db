@@ -264,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		static Expression ConstructMemberPath(List<MemberInfo> memberPath, Expression ob)
+		static Expression ConstructMemberPath(List<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
 			if (memberPath.Count == 0)
 				return null;
@@ -274,7 +274,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var memberInfo = memberPath[i];
 				if (result.Type != memberInfo.DeclaringType)
+				{
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
 					return null;
+				}
 				result = Expression.MakeMemberAccess(result, memberInfo);
 			}
 
@@ -293,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var transform in mainParamTranformation.Values)
 				{
-					forDetail = ConstructMemberPath(s.MemberChain, transform);
+					forDetail = ConstructMemberPath(s.MemberChain, transform, false);
 					if (forDetail != null)
 						break;
 				}
@@ -727,7 +731,7 @@ namespace LinqToDB.Linq.Builder
 				if (sqlInfo.Sql.ElementType == QueryElementType.SqlQuery)
 					continue;
 
-				var forSelect = ConstructMemberPath(sqlInfo.MemberChain, forExpr);
+				var forSelect = ConstructMemberPath(sqlInfo.MemberChain, forExpr, false);
 				if (forSelect == null && forExpr.NodeType == ExpressionType.MemberAccess)
 					forSelect = forExpr;
 				if (forSelect != null)
@@ -775,7 +779,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var sqlInfo in sql)
 			{
-				var forSelect = ConstructMemberPath(sqlInfo.MemberChain, obj);
+				var forSelect = ConstructMemberPath(sqlInfo.MemberChain, obj, false);
 				if (forSelect == null && forExpr?.NodeType == ExpressionType.MemberAccess)
 					forSelect = forExpr;
 				if (forSelect != null)
@@ -809,14 +813,27 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, AssociationDescriptor association)
 		{
-			var initialMainQuery = builder.Expression;
+			var initialMainQuery = ValidateMainQuery(builder.Expression);
 
 			// that means we processing association from TableContext. First parameter is master
 			Expression detailQuery;
 
 			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
 			var masterParm            = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
-			var associationParentType = association.MemberInfo.DeclaringType;
+
+			var associationPath = new List<MemberInfo>();
+			associationPath.Insert(0, association.MemberInfo);
+
+			var parentContext  = context as TableBuilder.AssociatedTableContext;
+			var extractContext = context;
+			while (parentContext != null)
+			{
+				associationPath.Insert(0, parentContext.Association.MemberInfo);
+				extractContext = parentContext.ParentAssociation ?? extractContext;
+				parentContext  = parentContext.ParentAssociation as TableBuilder.AssociatedTableContext;
+			}
+
+			var associationParentType = associationPath[0].DeclaringType;
 
 			Expression resultExpression;
 
@@ -853,29 +870,16 @@ namespace LinqToDB.Linq.Builder
 					key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
 				}
 
-				detailQuery = Expression.MakeMemberAccess(detailProp, association.MemberInfo);
+				detailQuery = ConstructMemberPath(associationPath, detailProp, true);
 				
 				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
-				resultExpression = GeneratePreambleExpression(masterKeys, null, newMasterParm, newMasterParm, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, newMasterParm, newMasterParm, detailQuery, initialMainQuery, builder);
 			}
 			else
 			{
-				Expression parentExpr = null;
-
 				if (!mainQueryElementType.IsSameOrParentOf(associationParentType))
-				{
-					if (context.Parent is SelectContext selectContext)
-						parentExpr = selectContext.Lambda.Parameters.FirstOrDefault(p =>
-							associationParentType.IsSameOrParentOf(p.Type));
-
-//					if (context.Parent is FirstSingleBuilder.FirstSingleContext firstSingleContext)
-//						parentExpr = firstSingleContext.Lambda.Parameters.FirstOrDefault(p =>
-//							associationParentType.IsSameOrParentOf(p.Type));
-//
-					else if (context.Parent is ExpressionContext expressionContext)
-						parentExpr =
-							expressionContext.Lambda.Parameters.FirstOrDefault(p =>
-								associationParentType.IsSameOrParentOf(p.Type));
+				{ 
+					var parentExpr = builder.AssociationRoot;
 
 					if (parentExpr == null)
 					{
@@ -891,11 +895,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				masterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("master_"));
-				var masterKeys = ExtractKeys(context, masterParm).ToArray();
+				var masterKeys = ExtractKeys(extractContext, masterParm).ToArray();
 
-				detailQuery = Expression.MakeMemberAccess(masterParm, association.MemberInfo);
+				detailQuery = ConstructMemberPath(associationPath, masterParm, true);
 
-				resultExpression = GeneratePreambleExpression(masterKeys, null, masterParm, masterParm, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParm, masterParm, detailQuery, initialMainQuery, builder);
 			}
 
 			resultExpression = EnsureDestinationType(resultExpression, association.MemberInfo.GetMemberType(), builder.MappingSchema);
@@ -1332,17 +1336,11 @@ namespace LinqToDB.Linq.Builder
 			return resultExpression;
 		}
 
-		private static Expression GeneratePreambleExpression(KeyInfo[] preparedKeys, Dictionary<Expression, Expression> detailExpressionTransformation,
+		private static Expression GeneratePreambleExpression(KeyInfo[] preparedKeys, 
 			ParameterExpression masterParam, ParameterExpression detailParam, Expression detailQuery, Expression masterQuery, ExpressionBuilder builder)
 		{
 			var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
 			var keySelectExpression   = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
-
-			if (detailExpressionTransformation != null)
-			{
-				keySelectExpression = keySelectExpression.Transform(e =>
-					detailExpressionTransformation.TryGetValue(e, out var replacement) ? replacement : e);
-			}
 
 			var keySelectLambda    = Expression.Lambda(keySelectExpression, masterParam);
 			var detailsQueryLambda = Expression.Lambda(EnsureEnumerable(detailQuery, builder.MappingSchema), detailParam);

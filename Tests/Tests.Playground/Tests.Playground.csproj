@@ -27,6 +27,7 @@
 		<Compile Include="..\Linq\OrmBattle\OrmBattleTests.cs" Link="OrmBattleTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue496Tests.cs" Link="Issue496Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1486Tests.cs" Link="Issue1486Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

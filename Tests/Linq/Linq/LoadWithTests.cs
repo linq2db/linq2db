@@ -249,5 +249,26 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Test]
+		public void LoadWith12([DataSources(ProviderName.Access)] string context)
+		{
+			// using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					(from p in db.Parent.LoadWith(p => p.Children[0].Parent.Children)
+					where p.ParentID < 2
+					select new
+					{
+						p,
+					});
+
+				var result = q1.FirstOrDefault();
+
+				Assert.DoesNotThrow(() => result.p.Children.Single().Parent.Children.Single());
+			}
+		}
+
 	}
 }

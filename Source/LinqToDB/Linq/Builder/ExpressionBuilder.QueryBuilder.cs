@@ -927,6 +927,8 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
+		public Expression AssociationRoot;
+
 		HashSet<Expression> _buildMultipleQueryExpressions;
 
 		public Expression BuildMultipleQuery(IBuildContext context, Expression expression, bool enforceServerSide)

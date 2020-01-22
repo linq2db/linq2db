@@ -163,6 +163,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var sequence = GetSequence(expression, level);
 
+					Builder.AssociationRoot = expression;
+
 					return ReferenceEquals(levelExpression, expression) ?
 						sequence.BuildExpression(null,       0,         enforceServerSide) :
 						sequence.BuildExpression(expression, level + 1, enforceServerSide);
