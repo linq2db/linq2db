@@ -200,6 +200,7 @@ namespace Tests.Playground
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -223,6 +224,7 @@ namespace Tests.Playground
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -247,6 +249,7 @@ namespace Tests.Playground
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -272,6 +275,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -295,6 +299,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -319,6 +324,7 @@ namespace Tests.Playground
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			var masterFilter = 5;
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -358,6 +364,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -392,6 +399,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -425,6 +433,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -457,6 +466,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -481,6 +491,7 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))

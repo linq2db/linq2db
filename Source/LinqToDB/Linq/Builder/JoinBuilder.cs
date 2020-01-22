@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
-			var join = isGroup ? innerContext.SelectQuery.WeakInnerJoin() : innerContext.SelectQuery.InnerJoin();
+			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
 			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
@@ -413,9 +413,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_groupExpression == null)
 					{
-						var loadingExpression = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
-							expression,
-							new HashSet<ParameterExpression>());
+						var loadingExpression = Builder.BuildMultipleQuery(this, expression, true);
 
 						 _groupExpression = loadingExpression;
 						return _groupExpression;
@@ -426,9 +424,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expression != null && expression.NodeType == ExpressionType.Call)
 				{
-					var loadingExpression = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
-						expression,
-						new HashSet<ParameterExpression>());
+					var loadingExpression = Builder.BuildMultipleQuery(this, expression, true);
 				
 					return loadingExpression;
 				}

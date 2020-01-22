@@ -49,6 +49,7 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(data))
 			{
 				var values1 = from t in db.GetTable<SampleClass>()

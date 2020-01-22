@@ -139,6 +139,7 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
@@ -158,6 +159,7 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault4([DataSources(ProviderName.Informix, TestProvName.AllPostgreSQLLess10)] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault(),
@@ -168,6 +170,7 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault5([DataSources(ProviderName.Access)] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    GrandChild select p.Child.Parent.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
@@ -186,6 +189,7 @@ namespace Tests.Linq
 		[Test]
 		public void FirstOrDefaultEntitySet([NorthwindDataContext] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);

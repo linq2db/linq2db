@@ -24,7 +24,6 @@
 		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\ExpressionUtils.cs" Link="ExpressionUtils.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\GenericEqualityComparer.cs" Link="GenericEqualityComparer.cs" />
-		<Compile Include="..\Linq\OrmBattle\OrmBattleTests.cs" Link="OrmBattleTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue496Tests.cs" Link="Issue496Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1486Tests.cs" Link="Issue1486Tests.cs" />

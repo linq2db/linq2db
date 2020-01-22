@@ -557,39 +557,6 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		Expression TraverseMethodCall(Expression expr)
-		{
-			return expr;
-			if (expr.NodeType == ExpressionType.MemberAccess)
-			{
-				var ma = (MemberExpression)expr;
-				if(ma.Expression?.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)ma.Expression;
-					var pms = mc.Method.GetParameters();
-					var foundParam = pms.FirstOrDefault(p => p.Name == ma.Member.Name);
-					if (foundParam == null)
-					{
-						foundParam = pms.FirstOrDefault(p =>
-							p.Name.Equals(ma.Member.Name, StringComparison.OrdinalIgnoreCase));
-					}
-
-					if (foundParam != null && ma.Type.IsAssignableFrom(foundParam.ParameterType))
-					{
-						var argIdx = Array.IndexOf(pms, foundParam);
-						if (argIdx >= 0)
-						{
-							var newArg = mc.Arguments[argIdx];
-								newArg = TraverseMethodCall(newArg);
-							return newArg;
-						}
-					}
-				}
-			}
-
-			return expr;
-		}
-
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
 			var l = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
@@ -3191,7 +3158,7 @@ namespace LinqToDB.Linq.Builder
 					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
 						continue;
 
-					members.Add(foundMember.MemberInfo, TraverseMethodCall(converted));
+					members.Add(foundMember.MemberInfo, converted);
 				}
 			}
 
@@ -3209,7 +3176,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = TraverseMethodCall(expr.Arguments[i].Transform(e => RemoveNullPropagation(e)));
+								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3236,7 +3203,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
 						{
-							var converted = TraverseMethodCall(binding.Expression.Transform(e => RemoveNullPropagation(e)));
+							var converted = binding.Expression.Transform(e => RemoveNullPropagation(e));
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)
