@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -29,9 +30,6 @@ namespace LinqToDB.Linq.Builder
 				get { return ParentAssociation.Parent; }
 				set { }
 			}
-
-			static MethodInfo _selectManyMethodInfo = MemberHelper.MethodOf((IQueryable<int> q) =>
-				q.SelectMany(i => new int [0], (i, c) => i)).GetGenericMethodDefinition();
 
 			Dictionary<ISqlExpression, SqlField> _replaceMap;
 			IBuildContext                        _innerContext;
@@ -214,9 +212,9 @@ namespace LinqToDB.Linq.Builder
 				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
 				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
 
-				var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parentType, ObjectType, ObjectType);
-				var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
-				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentTableExpression, queryMethod, resultLamba);
+				var selectManyMethodInfo = Methods.Queryable.SelectManyProjection.MakeGenericMethod(parentType, ObjectType, ObjectType);
+				var resultLambda         = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
+				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentTableExpression, queryMethod, resultLambda);
 
 				return selectManyMethod;
 			}
@@ -490,19 +488,12 @@ namespace LinqToDB.Linq.Builder
 					return base.BuildQuery(tableType, tableContext, parentObject);
 				}
 
+				if (Configuration.Linq.AllowMultipleQuery == false)
+					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
+
 				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association);
 
 				return detailExpression;
-
-				//TODO: remove
-
-				if (Common.Configuration.Linq.AllowMultipleQuery == false)
-					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
-				var sqtype = typeof(SubQueryHelper<>).MakeGenericType(tableType);
-				var helper = (ISubQueryHelper)Activator.CreateInstance(sqtype);
-
-				return helper.GetSubquery(Builder, this, parentObject);
 			}
 		}
 	}

@@ -91,6 +91,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context, ms))
 			{
 				var q =
@@ -214,6 +215,7 @@ namespace Tests.Linq
 //#endif
 		public void LoadWith10([DataSources(ProviderName.Access)] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -253,7 +255,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith12([DataSources(ProviderName.Access)] string context)
 		{
-			// using (new AllowMultipleQuery())
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =

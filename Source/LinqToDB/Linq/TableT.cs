@@ -2,6 +2,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Common;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq
 {
@@ -44,7 +46,7 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = LinqExtensions.DatabaseNameMethodInfo.MakeGenericMethod(typeof(T))),
+						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T))),
 						new[] { Expression, Expression.Constant(value) });
 
 					_databaseName = value;
@@ -62,7 +64,7 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = LinqExtensions.SchemaNameMethodInfo.MakeGenericMethod(typeof(T))),
+						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T))),
 						new[] { Expression, Expression.Constant(value) });
 
 					_schemaName = value;
@@ -80,7 +82,7 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_tableNameMethodInfo ?? (_tableNameMethodInfo = LinqExtensions.TableNameMethodInfo.MakeGenericMethod(typeof(T))),
+						_tableNameMethodInfo ?? (_tableNameMethodInfo = Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T))),
 						new[] { Expression, Expression.Constant(value) });
 
 					_tableName = value;

@@ -24,8 +24,6 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		internal static readonly MethodInfo TableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null, null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides table or view name with new name for current query.
 		/// </summary>
@@ -43,8 +41,6 @@ namespace LinqToDB
 			var result = ((ITableMutable<T>)table).ChangeTableName(name);
 			return result;
 		}
-
-		internal static readonly MethodInfo DatabaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Overrides database name with new name for current query. This call will have effect only for databases that support
@@ -86,8 +82,6 @@ namespace LinqToDB
 			return SchemaName(table, name);
 		}
 
-		internal static readonly MethodInfo SchemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
@@ -104,8 +98,6 @@ namespace LinqToDB
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
 			return result;
 		}
-
-		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Replaces access to a table in generated query with SQL expression.
@@ -129,13 +121,11 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				_withTableExpressionMethodInfo.MakeGenericMethod(typeof(T)),
+				MethodHelper.GetMethodInfo(WithTableExpression, table, expression),
 				new[] { table.Expression, Expression.Constant(expression) });
 
 			return table;
 		}
-
-		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds table hints to a table in generated query.
@@ -157,7 +147,7 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				_with.MakeGenericMethod(typeof(T)),
+				MethodHelper.GetMethodInfo(With, table, args),
 				new[] { table.Expression, Expression.Constant(args) });
 
 			return table;
