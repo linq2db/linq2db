@@ -308,11 +308,6 @@ namespace LinqToDB.Linq.Builder
 				Expression GetGroupJoin(GroupJoinContext context);
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				return base.ConvertToParentIndex(index, context);
-			}
-
 			class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
 			{
 				public Expression GetGroupJoin(GroupJoinContext context)
@@ -424,9 +419,42 @@ namespace LinqToDB.Linq.Builder
 
 				if (expression != null && expression.NodeType == ExpressionType.Call)
 				{
-					var loadingExpression = Builder.BuildMultipleQuery(this, expression, true);
-				
-					return loadingExpression;
+					Expression replaceExpression = null;
+
+					if (level == 0)
+					{
+						if (expression.Find(Lambda.Parameters[1]) != null)
+							replaceExpression = Lambda.Parameters[1];
+					}
+					else
+					{
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+						if (levelExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							var memberExpression = GetMemberExpression(
+								((MemberExpression)levelExpression).Member,
+								ReferenceEquals(levelExpression, expression),
+								levelExpression.Type,
+								expression);
+
+							if (memberExpression.Find(Lambda.Parameters[1]) != null)
+								replaceExpression = levelExpression;
+						}
+					}
+
+					if (replaceExpression != null)
+					{
+						var call   = (MethodCallExpression)expression;
+						var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(InnerKeyLambda.Parameters[0].Type);
+						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
+						var expr   = helper.GetGroupJoinCall(this);
+
+						expr = call.Transform(e => e == replaceExpression ? expr : e);
+
+						return Builder.BuildExpression(this, expr, enforceServerSide);
+					}
+
 				}
 
 				return base.BuildExpression(expression, level, enforceServerSide);

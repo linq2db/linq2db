@@ -36,10 +36,10 @@ namespace LinqToDB.Linq
 			set { throw new NotImplementedException(); }
 		}
 
-		public string SqlText { get; }
-		public IDataContext DataContext => null;
-		public Type ElementType => _query.ElementType;
-		public IQueryProvider Provider => _query.Provider;
+		public string         SqlText { get; }
+		public IDataContext   DataContext => null;
+		public Type           ElementType => _query.ElementType;
+		public IQueryProvider Provider    => _query.Provider;
 
 		public IQueryable CreateQuery(Expression expression)
 		{

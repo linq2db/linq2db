@@ -411,7 +411,6 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin52([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -660,7 +659,6 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoinAny1([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent
@@ -674,7 +672,6 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoinAny2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent
@@ -712,7 +709,6 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoinAny5([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent
@@ -1136,7 +1132,6 @@ namespace Tests.Linq
 		[Test]
 		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent
