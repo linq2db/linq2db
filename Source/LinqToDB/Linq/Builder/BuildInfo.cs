@@ -35,6 +35,7 @@ namespace LinqToDB.Linq.Builder
 		public bool                 CreateSubQuery           { get; set; }
 		public bool                 AssociationsAsSubQueries { get; set; }
 		public JoinType             JoinType                 { get; set; }
+		public bool                 IsWeakJoin               { get; set; }
 		public bool                 IsSubQuery => Parent != null;
 
 		private bool _isAssociationBuilt;
