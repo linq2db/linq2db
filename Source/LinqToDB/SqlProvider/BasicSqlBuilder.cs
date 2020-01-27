@@ -394,7 +394,7 @@ namespace LinqToDB.SqlProvider
 					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
-							StringBuilder.AppendLine(", ");
+							StringBuilder.AppendLine(",");
 						firstField = false;
 						AppendIndent();
 						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
@@ -417,6 +417,10 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 					}
 					StringBuilder.AppendLine(")");
+				}
+				else
+				{
+					StringBuilder.Append(' ');
 				}
 
 				AppendIndent();
