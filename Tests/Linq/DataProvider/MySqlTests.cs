@@ -898,6 +898,8 @@ namespace Tests.DataProvider
 			[Column                                                 ] public Guid Guid;
 		}
 
+		// for Travis use old mysql version
+		[Category("SkipCI")]
 		[ActiveIssue(Configuration = ProviderName.MySql, Details = "Disable test for MySql test provider, as it use old mysql version, which is fixed in 3.0 branch")]
 		[Test]
 		public void TestCreateTable([IncludeDataSources(false, TestProvName.AllMySql)] string context)
