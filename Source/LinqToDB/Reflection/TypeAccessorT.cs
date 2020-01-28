@@ -96,7 +96,8 @@ namespace LinqToDB.Reflection
 		{
 			// init members
 			foreach (var member in _members)
-				AddMember(new MemberAccessor(this, member, null));
+				if (!member.GetMemberType().IsByRef)
+					AddMember(new MemberAccessor(this, member, null));
 
 			ObjectFactory = _objectFactory;
 		}

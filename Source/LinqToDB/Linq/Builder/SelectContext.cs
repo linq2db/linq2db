@@ -871,7 +871,13 @@ namespace LinqToDB.Linq.Builder
 				if (level == 0)
 				{
 					var sequence = GetSequence(expression, level);
-					return sequence.GetContext(expression, level + 1, buildInfo);
+					if (sequence != null)
+						return sequence.GetContext(expression, level + 1, buildInfo);
+					if (Builder.IsSequence(buildInfo))
+					{
+						sequence = Builder.BuildSequence(buildInfo);
+						return sequence;
+					}
 				}
 			}
 

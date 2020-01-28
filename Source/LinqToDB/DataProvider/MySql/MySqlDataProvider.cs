@@ -62,9 +62,17 @@ namespace LinqToDB.DataProvider.MySql
 				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
 
 				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
-				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
+				SetToTypeField  (_mySqlDecimalType, "GetMySqlDecimal");
 
 				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
+
+				// TODO: first we need to be able to read TIMESTAMP columns with MySQL.Data provider
+				//SetProviderField<IDataReader, DateTimeOffset>((r, i) => new DateTimeOffset(r.GetDateTime(i), TimeSpan.Zero));
+			}
+			else
+			{
+				SetProviderField(typeof(DateTimeOffset), "GetDateTimeOffset");
+				SetToTypeField  (typeof(DateTimeOffset), "GetDateTimeOffset");
 			}
 
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
