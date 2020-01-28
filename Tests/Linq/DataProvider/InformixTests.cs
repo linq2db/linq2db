@@ -3,7 +3,9 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
+#if NET45 || NET46
 using IBM.Data.Informix;
+#endif
 using LinqToDB.DataProvider.Informix;
 using NUnit.Framework;
 
@@ -32,7 +34,9 @@ namespace Tests.DataProvider
 				Assert.That(TestType<int?>        (conn, "intDataType",      DataType.Int32),     Is.EqualTo(7777777));
 				Assert.That(TestType<short?>      (conn, "smallintDataType", DataType.Int16),     Is.EqualTo(100));
 				Assert.That(TestType<decimal?>    (conn, "decimalDataType",  DataType.Decimal),   Is.EqualTo(9999999m));
+#if NET45 || NET46
 				Assert.That(TestType<IfxDecimal?> (conn, "decimalDataType",  DataType.Decimal),   Is.EqualTo(new IfxDecimal(9999999m)));
+#endif
 				Assert.That(TestType<decimal?>    (conn, "moneyDataType",    DataType.Money),     Is.EqualTo(8888888m));
 				Assert.That(TestType<float?>      (conn, "realDataType",     DataType.Single),    Is.EqualTo(20.31f));
 				Assert.That(TestType<double?>     (conn, "floatDataType",    DataType.Double),    Is.EqualTo(16.2d));
@@ -47,9 +51,12 @@ namespace Tests.DataProvider
 
 				Assert.That(TestType<DateTime?>   (conn, "dateDataType",     DataType.Date),      Is.EqualTo(new DateTime(2012, 12, 12)));
 				Assert.That(TestType<DateTime?>   (conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+#if NET45 || NET46
 				Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime),  Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));
+				// TODO: TimeSpan case disabled, as it is not clear how to work with informix interval using IBM.Data.DB2.Core provider
 				Assert.That(TestType<TimeSpan?>   (conn, "intervalDataType", DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
 				Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time),      Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
+#endif
 
 				Assert.That(TestType<string>      (conn, "textDataType",     DataType.Text,      skipPass:true), Is.EqualTo("BBBBB"));
 				Assert.That(TestType<string>      (conn, "textDataType",     DataType.NText,     skipPass:true), Is.EqualTo("BBBBB"));
@@ -61,7 +68,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+			//InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
 
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -86,17 +93,17 @@ namespace Tests.DataProvider
 			}
 		}
 
-//		[Test]
-		public void Driver([IncludeDataSources(CurrentProvider)] string context)
-		{
-//			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
-//
-//			var dr = null as IfxDataReader;
-//
-//			var _ = dr.GetBigInt(0);
+		//[Test]
+		//public void Driver([IncludeDataSources(CurrentProvider)] string context)
+		//{
+		//	InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
 
-			var tm = new IfxTimeSpan(0);
-			var _ = IfxTimeSpan.Null;
-		}
+		//	var dr = null as IfxDataReader;
+
+		//	var _ = dr.GetBigInt(0);
+
+		//	var tm = new IfxTimeSpan(0);
+		//	var _ = IfxTimeSpan.Null;
+		//}
 	}
 }

@@ -20,7 +20,8 @@ namespace Tests.Linq
 		public class IdlProvidersAttribute : IncludeDataSourcesAttribute
 		{
 			public IdlProvidersAttribute()
-				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)
+				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus,
+					ProviderName.Access)
 			{
 			}
 		}
@@ -533,7 +534,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestUpdateWithTargetByAssociationProperty([IdlProviders] string context)
 		{
-			TestUpdateByAssociationProperty(context,true);
+			TestUpdateByAssociationProperty(context, true);
 		}
 
 		[Test]

@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -43,14 +44,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
+			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
 				return MultipleRowsCopy(table, options, source);
 
 			var sqlBuilder   = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var ed           = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName    = GetTableName(sqlBuilder, options, table);
 			var columns      = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
-			var writerType   = _connectionType.AssemblyEx().GetType("Npgsql.NpgsqlBinaryImporter", true);
+			var writerType   = _connectionType.Assembly.GetType("Npgsql.NpgsqlBinaryImporter", true);
 
 			var fields       = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand  = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
@@ -70,7 +71,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var writer       = dc.BeginBinaryImport(copyCommand);
 
 			// https://github.com/npgsql/npgsql/issues/1646
-			// npgsql 4.0 will revert logic by removing explicit Cancel() and add explicit Complete()
+			// Cancel: npgsql 3.x
+			// Complete: npgsql 4+
 			var hasCancel   = writer.GetType().GetMethod("Cancel")   != null;
 			var hasComplete = writer.GetType().GetMethod("Complete") != null;
 			try
@@ -144,7 +146,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var npgsqlType = _dataProvider.GetNativeType(columns[i].DbType);
 				if (npgsqlType == null)
 				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i].DataType) : null;
+					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i]) : null;
 
 					if (columnType == null || columnType.DataType == DataType.Undefined)
 						columnType = mappingSchema.GetDataType(columns[i].StorageType);

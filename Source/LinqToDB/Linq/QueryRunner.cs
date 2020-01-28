@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics;
 	using Async;
 	using Builder;
 	using Common;
@@ -79,7 +81,8 @@ namespace LinqToDB.Linq
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName);
+							DataConnection.TraceSwitch.DisplayName,
+							TraceLevel.Error);
 
 					var qr = QueryRunner;
 					if (qr != null)
@@ -103,6 +106,16 @@ namespace LinqToDB.Linq
 			foreach (var sql in query.Queries)
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
+
+				sql.Statement.UpdateIsParameterDepended();
+				sql.Statement.SetAliases();
+
+				// normalize parameters
+				if (query.SqlProviderFlags.IsParameterOrderDependent)
+					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
+				else
+					sql.Statement.CollectParameters();
+
 				var parameters =
 					sql.Parameters
 						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})
@@ -127,6 +140,158 @@ namespace LinqToDB.Linq
 
 				sql.Parameters = parameters.ToList();
 			}
+		}
+
+		private static bool HasQueryParameters(ISqlExpression expr)
+		{
+			var hasParameters  = null != new QueryVisitor().Find(expr,
+				el => el.ElementType == QueryElementType.SqlParameter &&
+				      ((SqlParameter)el).IsQueryParameter);
+
+			return hasParameters;
+		}
+
+		private static T NormalizeExpressions<T>(T expression) 
+			where T : class, IQueryElement
+		{
+			var queryVisitor = new QueryVisitor();
+			var result = queryVisitor.ConvertImmutable(expression, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlExpression)
+				{
+					var expr = (SqlExpression)e;
+
+					// we interested in modifying only expressions which have parameters
+					if (HasQueryParameters(expr))
+					{
+						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+							return expr;
+
+						var newExpressions = new List<ISqlExpression>();
+
+						var newExpr = QueryHelper.TransformExpressionIndexes(expr.Expr,
+							idx =>
+							{
+								if (idx >= 0 && idx < expr.Parameters.Length)
+								{
+									var paramExpr  = expr.Parameters[idx];
+									var normalized = paramExpr;
+									var newIndex   = newExpressions.Count;
+
+									if (newExpressions.Contains(normalized) && HasQueryParameters(normalized))
+									{
+										normalized = (ISqlExpression)normalized.Clone(
+											new Dictionary<ICloneableElement, ICloneableElement>(),
+											c => true);
+									}
+
+									newExpressions.Add(normalized);
+									return newIndex;
+								}
+								return idx;
+							});
+
+						// always create copy
+						var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
+						// force re-entrance
+						queryVisitor.VisitedElements.Remove(expr);
+						queryVisitor.VisitedElements.Add(expr, null);
+						return newExpression;
+					}
+				}
+				return e;
+			});
+
+			return result;
+		}
+
+		private static SqlStatement NormalizeParameters(SqlStatement statement, List<ParameterAccessor> accessors)
+		{
+			// remember accessor indexes
+			new QueryVisitor().VisitAll(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						var idx = accessors.FindIndex(a => object.ReferenceEquals(a.SqlParameter, parameter));
+						parameter.AccessorId = idx >= 0 ? (int?)idx : null;
+					}
+				}
+			});
+			
+			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
+			statement = NormalizeExpressions(statement);
+
+			var found                     = new HashSet<ISqlExpression>();
+			var columnExpressions         = new HashSet<ISqlExpression>();
+			var parameterDuplicateVisitor = new QueryVisitor();
+			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						var parentElement = parameterDuplicateVisitor.ParentElement;
+						if (parentElement is SqlColumn)
+							columnExpressions.Add(parameter);
+						else if (parentElement.ElementType == QueryElementType.SetExpression)
+						{
+							// consider that expression is already processed by SelectQuery and we do not need duplication.
+							// It is specific how InsertStatement is built
+							if (columnExpressions.Contains(parameter))
+								return parameter;
+						}
+
+						if (!found.Add(parameter))
+						{
+							var newParameter =
+								(SqlParameter)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+									c => true);
+							return newParameter;
+						}
+
+						// notify visitor to process this parameter always
+						parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
+					}
+				}
+
+				return e;
+			});
+
+			// clone accessors for new parameters
+			new QueryVisitor().Visit(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter && parameter.AccessorId != null)
+					{
+						var accessor = accessors[parameter.AccessorId.Value];
+						if (!ReferenceEquals(accessor.SqlParameter, parameter))
+						{
+							var newAccessor = new ParameterAccessor
+							(
+								accessor.Expression,
+								accessor.Accessor,
+								accessor.DataTypeAccessor,
+								accessor.DbTypeAccessor,
+								accessor.SizeAccessor,
+								parameter
+							);
+
+							parameter.AccessorId = accessors.Count;
+							accessors.Add(newAccessor);
+						}
+					}
+				}
+			});
+
+			statement.CollectParameters();
+
+			return statement;
 		}
 
 		static void ClearParameters(Query query)
@@ -167,9 +332,9 @@ namespace LinqToDB.Linq
 					var type = vs.GetType();
 					var etype = type.GetItemType();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-						etype.GetGenericArgumentsEx()[0].IsEnumEx())
+					if (etype == null || etype == typeof(object) || etype.IsEnum ||
+						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						etype.GetGenericArguments()[0].IsEnum)
 					{
 						var values = new List<object>();
 
@@ -181,7 +346,7 @@ namespace LinqToDB.Linq
 							{
 								var valueType = v.GetType();
 
-								if (valueType.ToNullableUnderlying().IsEnumEx())
+								if (valueType.ToNullableUnderlying().IsEnum)
 									value = query.GetConvertedEnum(valueType, value);
 							}
 

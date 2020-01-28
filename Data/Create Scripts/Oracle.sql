@@ -61,10 +61,10 @@ CREATE TABLE StringTest
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
 /
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
-/
+
 
 -- Inheritance Parent/Child
-
+/
 DROP TABLE InheritanceParent
 /
 
@@ -75,7 +75,6 @@ CREATE TABLE InheritanceParent
 	Name                NVARCHAR2(50)     NULL
 )
 /
-
 DROP TABLE InheritanceChild
 /
 
@@ -684,7 +683,6 @@ create sequence sq_test_user
 create sequence sq_test_user_contract
 /
 
-
 DROP SEQUENCE TestIdentitySeq
 /
 DROP TABLE TestIdentity
@@ -921,8 +919,9 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
 
-/
+
 -- merge test tables
+/
 DROP TABLE TestMerge1
 /
 DROP TABLE TestMerge2

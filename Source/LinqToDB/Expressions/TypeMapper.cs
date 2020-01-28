@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using LinqToDB.Extensions;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.Expressions
 	{
 		public Type[] Types { get; }
 
-		readonly Dictionary<Type, Type>                         _typeMappingCache   = new Dictionary<Type, Type>();
+		readonly Dictionary<Type, Type?>                        _typeMappingCache   = new Dictionary<Type, Type?>();
 		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache = new Dictionary<LambdaExpression, LambdaExpression>();
 
 		public TypeMapper([NotNull] params Type[] types)
@@ -27,12 +28,12 @@ namespace LinqToDB.Expressions
 			return Types.FirstOrDefault(t => t.Name == type.Name);
 		}
 
-		private bool TryMapType(Type type, out Type replacement)
+		private bool TryMapType(Type type, [NotNullWhen(true)] out Type? replacement)
 		{
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
-			if (typeof(TypeWrapper).IsSameOrParentOf(type) || type.GetCustomAttributesEx(typeof(WrapperAttribute), true).Any())
+			if (typeof(TypeWrapper).IsSameOrParentOf(type) || type.GetCustomAttributes(typeof(WrapperAttribute), true).Any())
 			{
 				replacement = FindReplacement(type);
 				if (replacement == null)
@@ -44,7 +45,7 @@ namespace LinqToDB.Expressions
 			return replacement != null;
 		}
 
-		private bool TryMapValue(object value, out object replacement)
+		private bool TryMapValue(object? value, [NotNullWhen(true)] out object? replacement)
 		{
 			replacement = value;
 			if (value == null)
@@ -53,7 +54,7 @@ namespace LinqToDB.Expressions
 			var valueType = value.GetType();
 			if (TryMapType(valueType, out var replacementType))
 			{
-				if (replacementType.IsEnumEx())
+				if (replacementType.IsEnum)
 				{
 					var enumName = Enum.GetName(valueType, value);
 					if (enumName.IsNullOrEmpty())
@@ -76,7 +77,7 @@ namespace LinqToDB.Expressions
 			if (!TryMapType(valueType, out var replacementType))
 				return expression;
 
-			if (!replacementType.IsEnumEx()) 
+			if (!replacementType.IsEnum)
 				throw new LinqToDBException("Only enums converted automatically.");
 
 			var nameExpr = Expression.Call(_getNameMethodInfo, Expression.Constant(valueType),
@@ -117,7 +118,7 @@ namespace LinqToDB.Expressions
 				return newMembers[0];
 			}
 
-			Expression ReplaceTypes(Expression expression)
+			Expression? ReplaceTypes(Expression? expression)
 			{
 				if (expression == null)
 					return null;
@@ -138,7 +139,7 @@ namespace LinqToDB.Expressions
 								var ma = (MemberExpression)e;
 								if (TryMapType(ma.Expression.Type, out var replacement))
 								{
-									var expr = ReplaceTypes(ma.Expression);
+									var expr = ReplaceTypes(ma.Expression)!;
 									if (expr.Type != replacement)
 										throw new LinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
 
@@ -187,7 +188,7 @@ namespace LinqToDB.Expressions
 								var mi = (MemberInitExpression)e;
 								if (TryMapType(mi.Type, out var replacement))
 								{
-									var newExpression = (NewExpression)ReplaceTypes(mi.NewExpression);
+									var newExpression = (NewExpression)ReplaceTypes(mi.NewExpression)!;
 									var newBindings = mi.Bindings.Select(b =>
 									{
 										switch (b.BindingType)
@@ -311,7 +312,7 @@ namespace LinqToDB.Expressions
 
 		#region MemberAccess
 
-		public MemberExpression MemberAccess<T>(Expression<Func<T, object>> memberExpression, Expression obj)
+		public MemberExpression MemberAccess<T>(Expression<Func<T, object?>> memberExpression, Expression obj)
 		{
 			var expr = MapExpression(memberExpression, obj).Unwrap();
 			return (MemberExpression)expr;
@@ -321,8 +322,8 @@ namespace LinqToDB.Expressions
 
 		#region Setters
 
-		public LambdaExpression MapSetter<T>(Expression<Func<T, object>> propExpression,
-			Expression<Func<object>> valueExpression)
+		public LambdaExpression MapSetter<T>(Expression<Func<T, object?>> propExpression,
+			Expression<Func<object?>> valueExpression)
 		{
 			var propLambda  = MapLambdaInternal(propExpression);
 
@@ -354,13 +355,13 @@ namespace LinqToDB.Expressions
 			return Expression.Lambda(assign, propLambda.Parameters);
 		}
 
-		public void SetValue<T>(object instance, Expression<Func<T, object>> propExpression, object value)
+		public void SetValue<T>(object? instance, Expression<Func<T, object?>> propExpression, object? value)
 		{
 			var setterExpression = MapSetterValue(propExpression, value);
 			setterExpression.Compile().DynamicInvoke(instance);
 		}
 
-		public void SetValue<T, TV>(object instance, Expression<Func<T, TV>> propExpression, TV value)
+		public void SetValue<T, TV>(object? instance, Expression<Func<T, TV>> propExpression, TV value)
 		{
 			var setterExpression = MapSetterValue(propExpression, value);
 			setterExpression.Compile().DynamicInvoke(instance);
@@ -485,6 +486,7 @@ namespace LinqToDB.Expressions
 		#endregion
 
 
+		[return: MaybeNull]
 		public TR Wrap<T, TR>(T instance, Expression<Func<T, TR>> func)
 			where T: TypeWrapper
 		{
@@ -493,7 +495,7 @@ namespace LinqToDB.Expressions
 			var result = expr.EvaluateExpression();
 
 			if (result == null)
-				return default;
+				return default!;
 
 			if (typeof(TypeWrapper).IsSameOrParentOf(typeof(TR)))
 			{
@@ -503,23 +505,24 @@ namespace LinqToDB.Expressions
 			return (TR)result;
 		}
 
-		public TR Wrap<TR>(object instance)
+		[return: MaybeNull]
+		public TR Wrap<TR>(object? instance)
 			where TR: TypeWrapper
 		{
 			if (instance == null)
-				return null;
+				return null!;
 
 			var wrapper = (TR)Activator.CreateInstance(typeof(TR), instance, this);
 			return wrapper;
 		}
 
-		public object Evaluate<T>(object instance, Expression<Func<T, object>> func)
+		public object? Evaluate<T>(object? instance, Expression<Func<T, object?>> func)
 		{
 			var expr = MapExpressionInternal(func, Expression.Constant(instance));
 			return expr.EvaluateExpression();
 		}
 
-		public object Evaluate<T>(T instance, Expression<Func<T, object>> func)
+		public object? Evaluate<T>(T instance, Expression<Func<T, object?>> func)
 			where T: TypeWrapper
 		{
 			var expr = MapExpressionInternal(func, Expression.Constant(instance.instance_));

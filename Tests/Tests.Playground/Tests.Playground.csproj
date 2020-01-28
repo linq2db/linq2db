@@ -1,73 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
-	<Import Project="..\..\Build\linq2db.Tests.Playground.props" />
-	<Import Project="..\..\Build\linq2db.Providers.props" />
+	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
+		<Nullable>disable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
-		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
-		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
-		<Compile Include="..\Linq\Linq\ConvertExpressionTests.cs" Link="ConvertExpressionTests.cs" />
-		<Compile Include="..\Linq\Linq\ElementOperationTests.cs" Link="ElementOperationTests.cs" />
-		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
-		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
-		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
-		<Compile Include="..\Linq\Linq\LoadWithTests.cs" Link="LoadWithTests.cs" />
-		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
-		<Compile Include="..\Linq\Linq\MultipleQueryTests.cs" Link="MultipleQueryTests.cs" />
-		<Compile Include="..\Linq\Linq\SelectQueryTests.cs" Link="SelectQueryTests.cs" />
-		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />
-		<Compile Include="..\Linq\OrmBattle\Helper\ExpressionUtils.cs" Link="ExpressionUtils.cs" />
-		<Compile Include="..\Linq\OrmBattle\Helper\GenericEqualityComparer.cs" Link="GenericEqualityComparer.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue496Tests.cs" Link="Issue496Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1486Tests.cs" Link="Issue1486Tests.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Base\Tests.Base.csproj" />
-		<ProjectReference Include="..\Model\Tests.Model.csproj" />
-
-		<None Include="..\..\Data\*">
-			<Link>Database/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\..\Data\Create Scripts\*">
-			<Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-
-		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
-
-		<PackageReference Include="NETStandard.Library" Version="2.0.3" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="TypeMapping\" />
-	</ItemGroup>
-
-	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">
-		<PropertyGroup>
-			<AliasPackageReference>@(PackageReference->'%(Identity)')</AliasPackageReference>
-			<AliasName>@(PackageReference->'%(Alias)')</AliasName>
-		</PropertyGroup>
-
-		<ItemGroup>
-			<ReferencePath Condition="'%(FileName)'=='$(AliasPackageReference)'">
-				<Aliases>$(AliasName)</Aliases>
-			</ReferencePath>
-		</ItemGroup>
-	</Target>
-
-
-	<!-- .NET Framework -->
-
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
-		<PlatformTarget>x86</PlatformTarget>
-	</PropertyGroup>
 </Project>

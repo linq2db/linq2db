@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+using System;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -13,6 +15,15 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
 		{
 			_sqlVersion = sqlVersion;
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			statement = SeparateDistinctFromPagination(statement);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement);
+			statement = ReplaceTakeSkipWithRowNumber(statement, false);
+			statement = QueryHelper.OptimizeSubqueries(statement);
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -10,38 +11,8 @@ namespace LinqToDB.DataProvider.SapHana
 	using Data;
 	using SchemaProvider;
 
-	class SapHanaOdbcSchemaProvider:SapHanaSchemaProvider
+	class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 	{
-		private String _dataSourceName;
-		private String _databaseName;
-
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
-		{
-			DefaultSchema   = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
-			_databaseName   = ((DbConnection)dataConnection.Connection).Database;
-			_dataSourceName = ((DbConnection) dataConnection.Connection).DataSource;            
-
-			if (String.IsNullOrEmpty(_dataSourceName) || String.IsNullOrEmpty(_databaseName))
-			{
-				using (var reader = dataConnection.ExecuteReader(@"
-					SELECT
-						HOST,
-						KEY,
-						VALUE
-					FROM M_HOST_INFORMATION
-					WHERE KEY = 'sid'"))
-				{
-					if (reader.Reader.Read())
-					{
-						_dataSourceName = reader.Reader.GetString(0);
-						_databaseName   = reader.Reader.GetString(2);
-					}
-				}
-			}
-
-			return base.GetSchema(dataConnection, options);
-		}
-
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
@@ -65,10 +36,10 @@ namespace LinqToDB.DataProvider.SapHana
 					x.CreateFormat = x.TypeName;
 					if (x.CreateParameters != null)
 					{
-						x.CreateFormat += String.Concat('(',
-							String.Join(", ",
+						x.CreateFormat += string.Concat('(',
+							string.Join(", ",
 								Enumerable.Range(0, x.CreateParameters.Split(',').Length)
-									.Select(i => String.Concat('{', i, '}'))),
+									.Select(i => string.Concat('{', i, '}'))),
 							')');
 					}
 				}
@@ -93,7 +64,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new PrimaryKeyInfo
 				{
-					TableID = String.Concat(schema, '.', tableName),
+					TableID = string.Concat(schema, '.', tableName),
 					ColumnName = columnName,
 					Ordinal = position,
 					PrimaryKeyName = indexName
@@ -108,39 +79,6 @@ namespace LinqToDB.DataProvider.SapHana
 					POSITION
 				FROM INDEX_COLUMNS")
 				.Where(x => x != null).ToList();
-		}
-
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
-		{
-			if (commandType == CommandType.StoredProcedure)
-			{
-				commandText = "{ CALL " + commandText + "(" + String.Join(",", parameters.Select(x => "?")) + ")}";    
-			}
-
-			//bug SchemaOnly simply doesn't work
-			dataConnection.BeginTransaction();
-
-			try
-			{
-				using (var rd = dataConnection.ExecuteReader(commandText, CommandType.Text, CommandBehavior.Default, parameters))
-				{
-					return rd.Reader.GetSchemaTable();
-				}
-			}
-			finally
-			{
-				dataConnection.RollbackTransaction();
-			}
-		}
-
-		protected override string GetDataSourceName(DbConnection dbConnection)
-		{
-			return _dataSourceName;
-		}
-
-		protected override string GetDatabaseName(DbConnection dbConnection)
-		{
-			return _databaseName;
 		}
 	}
 }

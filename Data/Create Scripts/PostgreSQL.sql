@@ -260,6 +260,7 @@ CREATE TABLE "AllTypes"
 	"timeDataType"        time                     NULL,
 	"timeTZDataType"      time with time zone      NULL,
 	"intervalDataType"    interval                 NULL,
+	"intervalDataType2"   interval                 NULL,
 
 	"charDataType"        char(1)                  NULL,
 	"char20DataType"      char(20)                 NULL,

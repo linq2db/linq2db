@@ -22,7 +22,7 @@ namespace LinqToDB.Expressions
 
 		public Expression ResultExpression => Build();
 
-		public ParameterExpression DeclareVariable([NotNull] Type type, string name = default)
+		public ParameterExpression DeclareVariable([NotNull] Type type, string? name = default)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 			return block;
 		}
 
-		public static Expression Build([NotNull] Action<ExpressionGenerator> buildFunc, TypeMapper typeMapper = default)
+		public static Expression Build([NotNull] Action<ExpressionGenerator> buildFunc, TypeMapper? typeMapper = default)
 		{
 			if (buildFunc == null) throw new ArgumentNullException(nameof(buildFunc));
 
@@ -68,7 +68,7 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.Assign(left, right));
 		}
 
-		public ParameterExpression AssignToVariable([NotNull] Expression expression, string name = default)
+		public ParameterExpression AssignToVariable([NotNull] Expression expression, string? name = default)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 

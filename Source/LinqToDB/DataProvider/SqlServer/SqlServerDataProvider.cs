@@ -1,39 +1,40 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.SqlServer.Server;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Configuration;
 	using Common;
 	using Data;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SqlServerDataProvider : DataProviderBase
+	public class SqlServerDataProvider : DynamicDataProviderBase
 	{
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: base(name, (MappingSchema)null)
+			: this(name, version, SqlServerProvider.SystemDataSqlClient)
+		{
+		}
+
+		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
+			: base(name, null)
 		{
 			Version = version;
+			Provider = provider;
 
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported            = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -53,31 +54,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
-			{
-				SetProviderField<SqlDataReader,SqlBinary  ,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
-				SetProviderField<SqlDataReader,SqlBoolean ,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
-				SetProviderField<SqlDataReader,SqlByte    ,SqlByte    >((r,i) => r.GetSqlByte    (i));
-				SetProviderField<SqlDataReader,SqlDateTime,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
-				SetProviderField<SqlDataReader,SqlDecimal ,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
-				SetProviderField<SqlDataReader,SqlDouble  ,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
-				SetProviderField<SqlDataReader,SqlGuid    ,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
-				SetProviderField<SqlDataReader,SqlInt16   ,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
-				SetProviderField<SqlDataReader,SqlInt32   ,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
-				SetProviderField<SqlDataReader,SqlInt64   ,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
-				SetProviderField<SqlDataReader,SqlMoney   ,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
-				SetProviderField<SqlDataReader,SqlSingle  ,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
-				SetProviderField<SqlDataReader,SqlString  ,SqlString  >((r,i) => r.GetSqlString  (i));
-				SetProviderField<SqlDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
-
-				SetProviderField<SqlDataReader,DateTimeOffset>((r,i) => r.GetDateTimeOffset(i));
-				SetProviderField<SqlDataReader,TimeSpan>      ((r,i) => r.GetTimeSpan      (i));
-			}
-			else
-			{
-				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
-			}
-
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 			_sqlServer2008SqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
@@ -90,14 +66,105 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetField<IDataReader,decimal>("decimal",    (r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
 		}
 
+		private Type                                _parameterType;
+		private Type                                _sqlDataRecordType;
+
+		private Action<IDbDataParameter, string>    _setUdtTypeName;
+		private Action<IDbDataParameter, string>    _setTypeName;
+		private Action<IDbDataParameter, SqlDbType> _setSqlDbType;
+
+		private Func<IDbDataParameter, SqlDbType>   _getSqlDbType;
+
+		protected override void OnConnectionTypeCreated(Type connectionType)
+		{
+			if (!Configuration.AvoidSpecificDataProviderAPI)
+			{
+				SetProviderField<SqlBinary  , SqlBinary  >("GetSqlBinary"  );
+				SetProviderField<SqlBoolean , SqlBoolean > ("GetSqlBoolean");
+				SetProviderField<SqlByte    , SqlByte    > ("GetSqlByte"   );
+				SetProviderField<SqlDateTime, SqlDateTime>("GetSqlDateTime");
+				SetProviderField<SqlDecimal , SqlDecimal >("GetSqlDecimal" );
+				SetProviderField<SqlDouble  , SqlDouble  >("GetSqlDouble"  );
+				SetProviderField<SqlGuid    , SqlGuid    >("GetSqlGuid"    );
+				SetProviderField<SqlInt16   , SqlInt16   >("GetSqlInt16"   );
+				SetProviderField<SqlInt32   , SqlInt32   >("GetSqlInt32"   );
+				SetProviderField<SqlInt64   , SqlInt64   >("GetSqlInt64"   );
+				SetProviderField<SqlMoney   , SqlMoney   >("GetSqlMoney"   );
+				SetProviderField<SqlSingle  , SqlSingle  >("GetSqlSingle"  );
+				SetProviderField<SqlString  , SqlString  >("GetSqlString"  );
+				SetProviderField<SqlXml     , SqlXml     >("GetSqlXml"     );
+
+				SetProviderField<DateTimeOffset>("GetDateTimeOffset");
+				SetProviderField<TimeSpan>      ("GetTimeSpan");
+			}
+			else
+			{
+				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
+			}
+
+			_parameterType     = connectionType.Assembly.GetType(ParameterTypeName,     true);
+			_sqlDataRecordType = connectionType.Assembly.GetType(SqlDataRecordTypeName, true);
+
+			_setUdtTypeName = GetSetParameter<string>   (_parameterType, "UdtTypeName", typeof(string));
+			_setTypeName    = GetSetParameter<string>   (_parameterType, "TypeName",    typeof(string));
+			_setSqlDbType   = GetSetParameter<SqlDbType>(_parameterType, "SqlDbType",   typeof(SqlDbType));
+			_getSqlDbType   = GetGetParameter<SqlDbType>(_parameterType, "SqlDbType");
+		}
+
+#if NET45 || NET46
+		Type _dataReaderType;
+		public override Type DataReaderType
+		{
+			get
+			{
+				if (_dataReaderType != null)
+					return _dataReaderType;
+
+				if (Provider == SqlServerProvider.SystemDataSqlClient)
+				{
+					_dataReaderType = typeof(System.Data.SqlClient.SqlDataReader);
+					return _dataReaderType;
+				}
+
+				return base.DataReaderType;
+			}
+		}
+
+		Type _connectionType;
+		protected internal override Type GetConnectionType()
+		{
+			if (_connectionType != null)
+				return _connectionType;
+
+			if (Provider == SqlServerProvider.SystemDataSqlClient)
+			{
+				_connectionType = typeof(System.Data.SqlClient.SqlConnection);
+				OnConnectionTypeCreated(_connectionType);
+				return _connectionType;
+			}
+
+			return base.GetConnectionType();
+		}
+#endif
+
 		#endregion
 
 		#region Public Properties
 
-		public override string ConnectionNamespace => typeof(SqlConnection).Namespace;
-		public override Type   DataReaderType      => typeof(SqlDataReader);
+		public             string AssemblyName          => Provider == SqlServerProvider.SystemDataSqlClient    ? "System.Data.SqlClient" : "Microsoft.Data.SqlClient";
+		public    override string ConnectionNamespace   => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
+		protected override string ConnectionTypeName    => $"{ConnectionNamespace}.SqlConnection, {AssemblyName}";
+		protected override string DataReaderTypeName    => $"{ConnectionNamespace}.SqlDataReader, {AssemblyName}";
+		protected          string ParameterTypeName     => $"{ConnectionNamespace}.SqlParameter";
+		protected          string SqlDataRecordTypeName => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient.Server.SqlDataRecord" : "Microsoft.SqlServer.Server.SqlDataRecord";
+
+#if !NETSTANDARD2_0
+		public override string DbFactoryProviderName => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
+#endif
 
 		public SqlServerVersion Version { get; }
+
+		public SqlServerProvider Provider { get; }
 
 		#endregion
 
@@ -127,11 +194,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				return base.MappingSchema;
 			}
-		}
-
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
-		{
-			return new SqlConnection(connectionString);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
@@ -168,17 +230,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return _sqlServer2008SqlOptimizer;
 		}
 
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
-
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
-#endif
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
@@ -215,13 +270,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case DataType.Udt        :
 					{
-						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
-							if (parameter is SqlParameter)
-#if NETSTANDARD1_6
-								((SqlParameter)parameter).TypeName = s;
-#else
-								((SqlParameter)parameter).UdtTypeName = s;
-#endif
+						if (parameter.GetType() == _parameterType
+							&& value != null
+							&& _udtTypes.TryGetValue(value.GetType(), out var s))
+							_setUdtTypeName(parameter, s);
 					}
 
 					break;
@@ -248,10 +300,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 
 				case DataType.Undefined:
-					if (value is DataTable
+					if (value != null
+						&& (value is DataTable
 						|| value is DbDataReader
-						|| value is IEnumerable<SqlDataRecord>
-						|| value is IEnumerable<DbDataRecord>)
+							|| value is IEnumerable<DbDataRecord>
+							|| value.GetType().IsEnumerableTType(_sqlDataRecordType)))
 					{
 						dataType = dataType.WithDataType(DataType.Structured);
 					}
@@ -261,19 +314,19 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			base.SetParameter(parameter, name, dataType, value);
 
-			if (parameter is SqlParameter param)
+			if (parameter.GetType() == _parameterType)
 			{
 				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
-				switch (param.SqlDbType)
+				switch (_getSqlDbType(parameter))
 				{
 					case SqlDbType.Structured:
 						{
 							if (!dataType.DbType.IsNullOrEmpty())
-								param.TypeName = dataType.DbType;
+								_setTypeName(parameter, dataType.DbType);
 
 							// TVP doesn't support DBNull
-							if (param.Value is DBNull)
-								param.Value = null;
+							if (parameter.Value is DBNull)
+								parameter.Value = null;
 
 							break;
 						}
@@ -281,11 +334,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var strValue = value as string;
 							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
-								param.Size = -1;
+								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
-								param.Size = dataType.Length.Value;
+								parameter.Size = dataType.Length.Value;
 							else
-								param.Size = 8000;
+								parameter.Size = 8000;
 
 							break;
 						}
@@ -293,11 +346,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var strValue = value as string;
 							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
-								param.Size = -1;
+								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
-								param.Size = dataType.Length.Value;
+								parameter.Size = dataType.Length.Value;
 							else
-								param.Size = 4000;
+								parameter.Size = 4000;
 
 							break;
 						}
@@ -305,11 +358,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var binaryValue = value as byte[];
 							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
-								param.Size = -1;
+								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
-								param.Size = dataType.Length.Value;
+								parameter.Size = dataType.Length.Value;
 							else
-								param.Size = 8000;
+								parameter.Size = 8000;
 
 							break;
 						}
@@ -329,26 +382,27 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
 							DbType.DateTime :
 							DbType.DateTime2;
 					break;
-				case DataType.Text          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;          break;
-				case DataType.NText         : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;         break;
-				case DataType.Binary        : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;        break;
+				case DataType.Text          : _setSqlDbType(parameter, SqlDbType.Text);          break;
+				case DataType.NText         : _setSqlDbType(parameter, SqlDbType.NText);         break;
+				case DataType.Binary        : _setSqlDbType(parameter, SqlDbType.Binary);        break;
 				case DataType.Blob          :
-				case DataType.VarBinary     : ((SqlParameter)parameter).SqlDbType = SqlDbType.VarBinary;     break;
-				case DataType.Image         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Image;         break;
-				case DataType.Money         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Money;         break;
-				case DataType.SmallMoney    : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallMoney;    break;
-				case DataType.Date          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Date;          break;
-				case DataType.Time          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Time;          break;
-				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
-				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
-				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
-				case DataType.Structured    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Structured;    break;
+				case DataType.VarBinary     : _setSqlDbType(parameter, SqlDbType.VarBinary);     break;
+				case DataType.Image         : _setSqlDbType(parameter, SqlDbType.Image);         break;
+				case DataType.Money         : _setSqlDbType(parameter, SqlDbType.Money);         break;
+				case DataType.SmallMoney    : _setSqlDbType(parameter, SqlDbType.SmallMoney);    break;
+				case DataType.Date          : _setSqlDbType(parameter, SqlDbType.Date);          break;
+				case DataType.Time          : _setSqlDbType(parameter, SqlDbType.Time);          break;
+				case DataType.SmallDateTime : _setSqlDbType(parameter, SqlDbType.SmallDateTime); break;
+				case DataType.Timestamp     : _setSqlDbType(parameter, SqlDbType.Timestamp);     break;
+				case DataType.Xml           : _setSqlDbType(parameter, SqlDbType.Xml);           break;
+				case DataType.Structured    : _setSqlDbType(parameter, SqlDbType.Structured);    break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
@@ -396,36 +450,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new SqlServerBulkCopy(this);
+				_bulkCopy = new SqlServerBulkCopy(this, GetConnectionType());
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

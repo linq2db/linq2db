@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -22,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 			var returnType = methodCall.Method.ReturnType;
 
 			if (methodCall.IsAsyncExtension())
-				returnType = returnType.GetGenericArgumentsEx()[0];
+				returnType = returnType.GetGenericArguments()[0];
 
 			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{

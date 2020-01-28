@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 			isEnumerable = type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type);
 
-			if (!isEnumerable && type.IsClassEx() && type.IsGenericTypeEx() && type.Name.StartsWith("<>"))
+			if (!isEnumerable && type.IsClass && type.IsGenericType && type.Name.StartsWith("<>"))
 			{
 				isEnumerable = type.GenericTypeArguments.Any(t => IsDetailType(t));
 			}
@@ -440,7 +440,7 @@ namespace LinqToDB.Linq.Builder
 			forExpr     = forExpr.Unwrap();
 			var exprCtx = ctx.Builder.GetContext(ctx, forExpr) ?? ctx;
 
-			if (forExpr.NodeType == ExpressionType.MemberAccess && (forExpr.Type.IsClassEx() || forExpr.Type.IsInterfaceEx()))
+			if (forExpr.NodeType == ExpressionType.MemberAccess && (forExpr.Type.IsClass || forExpr.Type.IsInterface))
 				yield break;
 
 			var flags      = forExpr.NodeType == ExpressionType.Parameter ? ConvertFlags.Key : ConvertFlags.Field;
@@ -1267,7 +1267,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal static Type FinalizeType(Type type)
 		{
-			if (!type.IsGenericTypeEx())
+			if (!type.IsGenericType)
 				return type;
 
 			var arguments = type.GenericTypeArguments.Select(FinalizeType).ToArray();
@@ -1532,10 +1532,10 @@ namespace LinqToDB.Linq.Builder
 									var expectQueryable = typeof(IEnumerable<>).IsSameOrParentOf(genericParameter.ParameterType);
 									if (!expectQueryable && typeof(Expression<>).IsSameOrParentOf(genericParameter.ParameterType))
 									{
-										var lambdaType = genericParameter.ParameterType.GetGenericArgumentsEx()[0];
-										if (lambdaType.IsGenericTypeEx())
+										var lambdaType = genericParameter.ParameterType.GetGenericArguments()[0];
+										if (lambdaType.IsGenericType)
 										{
-											var lambdaGenericParams = lambdaType.GetGenericArgumentsEx();
+											var lambdaGenericParams = lambdaType.GetGenericArguments();
 											var resultType          = lambdaGenericParams[lambdaGenericParams.Length - 1];
 											expectQueryable         = typeof(IEnumerable<>).IsSameOrParentOf(resultType);
 										}
@@ -1790,7 +1790,7 @@ namespace LinqToDB.Linq.Builder
 
 		static void RegisterTypeRemapping(Type templateType, Type replaced, Type[] templateArguments, Dictionary<Type, Type> typeMappings)
 		{
-			if (templateType.IsGenericTypeEx())
+			if (templateType.IsGenericType)
 			{
 				var currentTemplateArguments = templateType.GetGenericArguments();
 

@@ -360,6 +360,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void TestUnicodeString(
 			[IncludeDataSources(TestProvName.AllSybase)] string context,

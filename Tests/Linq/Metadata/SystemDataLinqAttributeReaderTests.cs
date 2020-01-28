@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+﻿#if NET45 || NET46
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;

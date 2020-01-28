@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data.Linq;
 
 using LinqToDB.Mapping;
@@ -79,6 +80,8 @@ namespace Tests.Model
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
 		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
+		// native provider bulk copy cannot handle byte, which we will use for bool type
+		[Column(DataType = DataType.Int16, Configuration = ProviderName.OracleNative)]
 		[Column]                                        public bool?     BoolValue;
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;

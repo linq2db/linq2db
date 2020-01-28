@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,9 +28,9 @@ namespace LinqToDB.Metadata
 			if (!inherit)
 				return Array<T>.Empty;
 
-			var parents = new [] { type.BaseTypeEx() }
+			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfacesEx());
+				.Concat(type.GetInterfaces());
 
 			foreach(var p in parents)
 			{
@@ -60,9 +61,9 @@ namespace LinqToDB.Metadata
 			if (inherit == false)
 				return Array<T>.Empty;
 
-			var parents = new [] { type.BaseTypeEx() }
+			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfacesEx())
+				.Concat(type.GetInterfaces())
 				.Select(_ => new { Type = _, Member = _.GetMemberEx(memberInfo) })
 				.Where(_ => _.Member != null);
 

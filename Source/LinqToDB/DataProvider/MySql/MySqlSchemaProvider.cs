@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -95,7 +96,7 @@ SELECT
 			.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/columns-table.html
 			// nullable columns:
@@ -280,36 +281,38 @@ SELECT
 			// returns fake schema with output parameters as columns
 			// we can detect it by column name prefix
 			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/StoredProcedure.cs#L42
-			if (rv != null && rv.AsEnumerable().Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")))
+			// UPDATE:
+			// now we have similar issue with MySqlConnector
+			// https://github.com/mysql-net/MySqlConnector/issues/722
+			if (rv != null && rv.AsEnumerable()
+					.Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")
+						||    r.Field<string>("ColumnName") == "\ue001\b\v"))
 				rv = null;
 
 			return rv;
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
-#if !NETSTANDARD
 			return
 			(
 				from r in resultTable.AsEnumerable()
 
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
-				let columnType = dataType == null ? null : dataType.TypeName
-
-				let columnName = r.Field<string>("ColumnName")
-				let isNullable = r.Field<bool>("AllowDBNull")
-
-				let length = r.Field<int>("ColumnSize")
-				let precision = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
-				let scale = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let dataType     = GetDataTypeByProviderDbType(providerType, options)
+				let columnType   = dataType == null ? null : dataType.TypeName
+				let columnName   = r.Field<string>("ColumnName")
+				let isNullable   = r.Field<bool>("AllowDBNull")
+				let length       = r.Field<int>("ColumnSize")
+				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
 				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
 
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
@@ -319,9 +322,6 @@ SELECT
 					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
 				}
 			).ToList();
-#else
-			return new List<ColumnSchema>();
-#endif
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()

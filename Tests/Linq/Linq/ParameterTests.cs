@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NUnit.Framework;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
-using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -65,7 +61,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -85,7 +81,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -105,7 +101,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -143,38 +139,6 @@ namespace Tests.Linq
 				var s2 = db.Select(() => Sql.ToSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
-			}
-		}
-
-		[Test]
-		public void SqlStringParameter([DataSources(false)] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "John";
-				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				p = "Tester";
-				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
-			}
-		}
-
-		// Excluded providers inline such parameter
-		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)]
-			string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}
 		}
 
@@ -243,6 +207,46 @@ namespace Tests.Linq
 				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
+			}
+		}
+
+
+		static class AdditionalSql
+		{
+			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
+			public static int Operation(int item1, int item2, int item3)
+			{
+				return (item3 * (item2 - item1) / item3) * item1;
+			}
+
+		}
+
+		[Test]
+		public void TestPositionedParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var x3  = 3;
+				var y10 = 10;
+				var z2  = 2;
+
+				var query = from child in db.Child
+					select new
+					{
+						Value1 = Sql.AsSql(AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3)))
+					};
+
+				var expected = from child in Child
+					select new
+					{
+						Value1 = AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3))
+					};
+
+				AreEqual(expected, query);
 			}
 		}
 

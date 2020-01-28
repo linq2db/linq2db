@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿#nullable disable
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
 	using SqlQuery;
@@ -50,6 +51,26 @@
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+		}
+
+		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
+
+#if !NETSTANDARD2_0
+		public class NativeMappingSchema : MappingSchema
+		{
+			public NativeMappingSchema()
+				: base(ProviderName.SapHanaNative, Instance)
+			{
+			}
+		}
+#endif
+
+		public class OdbcMappingSchema : MappingSchema
+		{
+			public OdbcMappingSchema()
+				: base(ProviderName.SapHanaOdbc, Instance)
+			{
+			}
 		}
 	}
 }

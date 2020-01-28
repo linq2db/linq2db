@@ -92,6 +92,9 @@ namespace LinqToDB.Tools
 			[JBNotNull] this IDataContext dataContext,
 			[JBNotNull, InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
+			if (dataContext     == null) throw new ArgumentNullException(nameof(dataContext));
+			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
+
 			return dataContext.MappingSchema.GetEqualityComparer<T>(columnPredicate);
 		}
 
@@ -105,6 +108,8 @@ namespace LinqToDB.Tools
 		[JBNotNull, Pure]
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>([JBNotNull] this IDataContext dataContext)
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
 			return dataContext.MappingSchema.GetEntityEqualityComparer<T>();
 		}
 
@@ -118,6 +123,8 @@ namespace LinqToDB.Tools
 		[JBNotNull, Pure]
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>([JBNotNull] this IDataContext dataContext)
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
 			return dataContext.MappingSchema.GetKeyEqualityComparer<T>();
 		}
 
@@ -134,6 +141,9 @@ namespace LinqToDB.Tools
 			[JBNotNull] this ITable<T> table,
 			[JBNotNull, InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
+			if (table           == null) throw new ArgumentNullException(nameof(table));
+			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
+
 			return table.DataContext.MappingSchema.GetEqualityComparer<T>(columnPredicate);
 		}
 
@@ -147,6 +157,8 @@ namespace LinqToDB.Tools
 		[JBNotNull, Pure]
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>([JBNotNull] this ITable<T> table)
 		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
 			return table.DataContext.MappingSchema.GetEntityEqualityComparer<T>();
 		}
 
@@ -160,6 +172,8 @@ namespace LinqToDB.Tools
 		[JBNotNull, Pure]
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>([JBNotNull] this ITable<T> table)
 		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
 			return table.DataContext.MappingSchema.GetKeyEqualityComparer<T>();
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -12,6 +13,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.IO;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase
 	{
@@ -36,6 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -69,8 +72,21 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
+		// workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
+		// needed only for Microsoft.Data.Sqlite 3.0.0
+		private bool _needsCommandDisposeOnError;
+
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
+			_needsCommandDisposeOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
+		}
+
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
+		{
+			if (_needsCommandDisposeOnError)
+				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
+
+			return base.ExecuteScope(dataConnection);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
@@ -92,12 +108,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
@@ -109,9 +123,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
+			// handles situation, when char values were serialized as character hex value for some
+			// versions of Microsoft.Data.Sqlite
 			if (Name == ProviderName.SQLiteMS && value is char)
-			{
 				value = value.ToString();
+
+			// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
+			// https://github.com/aspnet/EntityFrameworkCore/issues/15078
+			// pre-3.0 and System.Data.Sqlite uses binary type for Guid values, there is no reason to replace it with string value
+			// we can allow strings later if there will be request for it
+			if (Name == ProviderName.SQLiteMS && value is Guid guid)
+			{
+				value = guid.ToByteArray();
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);
@@ -141,11 +164,25 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (_createDatabase == null)
 					{
+						var connectionType = GetConnectionType();
+						var method         = connectionType.GetMethodEx("CreateFile");
+						if (method != null)
+						{
 						var p = Expression.Parameter(typeof(string));
 						var l = Expression.Lambda<Action<string>>(
-							Expression.Call(GetConnectionType(), "CreateFile", null, p),
+								Expression.Call(method, p),
 							p);
 						_createDatabase = l.Compile();
+					}
+						else
+						{
+							// emulate for Microsoft.Data.SQLite
+							// that's actually what System.Data.SQLite does
+							_createDatabase = name =>
+							{
+								using (File.Create(name)) { };
+							};
+						}
 					}
 
 					_createDatabase(dbName);

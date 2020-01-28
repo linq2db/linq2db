@@ -12,6 +12,9 @@ using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
 
+using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
+using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
+
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
@@ -61,14 +64,32 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public static IEnumerable<SqlDataRecordMS> GetSqlDataRecordsMS()
+		{
+			var sqlRecord = new SqlDataRecordMS(
+				new SqlMetaDataMS("Id", SqlDbType.Int),
+				new SqlMetaDataMS("Name", SqlDbType.NVarChar, 10));
+
+			foreach (var record in TestData)
+			{
+				sqlRecord.SetValue(0, record.Id);
+				sqlRecord.SetValue(1, record.Name);
+
+				yield return sqlRecord;
+			}
+		}
+
 		public static IEnumerable<Func<DataConnection, object>> ParameterFactories
 		{
 			get
 			{
 				// as DataTable
 				yield return _ => GetDataTable();
+
 				// as IEnumerable<SqlDataRecord>
-				yield return _ => GetSqlDataRecords();
+				yield return _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection
+				? (object)GetSqlDataRecordsMS()
+				: GetSqlDataRecords();
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider

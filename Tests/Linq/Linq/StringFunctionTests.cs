@@ -1,6 +1,6 @@
 ﻿using System;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
@@ -291,7 +291,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void Like11([DataSources] string context)
 		{
@@ -363,7 +363,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1685, Configurations = new[] { ProviderName.SapHana })]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
@@ -376,7 +376,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.LastName.IndexOf(s, n1, n2) == 1 && p.ID == 2 select p;
+				var q = from p in db.Person where p.LastName.IndexOf(s, n1, n2) == 4 && p.ID == 2 select p;
 				Assert.AreEqual(2, q.ToList().First().ID);
 			}
 		}
@@ -384,7 +384,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -397,7 +397,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -411,7 +411,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -495,7 +495,7 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -817,7 +817,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void CompareTo3([DataSources] string context)
 		{
@@ -847,7 +846,6 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
-#endif
 
 		[Test]
 		public void CompareOrdinal1([DataSources] string context)
@@ -904,11 +902,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#if !NETSTANDARD1_6
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
-#else
-				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;
-#endif
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

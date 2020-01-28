@@ -155,6 +155,16 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
+		/// <summary>
+		/// SAP HANA provider.
+		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.
+		/// </summary>
+		public const string SapHanaNative = "SapHana.Native";
+		/// <summary>
+		/// SAP HANA ODBC provider.
+		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
+		/// </summary>
+		public const string SapHanaOdbc = "SapHana.Odbc";
 	}
 #pragma warning restore 1574
 }

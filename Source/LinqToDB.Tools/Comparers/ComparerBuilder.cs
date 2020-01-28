@@ -93,7 +93,7 @@ namespace LinqToDB.Tools.Comparers
 
 			public override int  GetHashCode(T obj)    => obj == null ? 0 : _getHashCode(obj);
 
-			internal static Comparer<T> DefaultInstance;
+			internal static Comparer<T>? DefaultInstance;
 		}
 
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Tools.Comparers
 				var arg0 = RemoveCastToObject(me.GetBody(x));
 				var arg1 = RemoveCastToObject(me.GetBody(y));
 				var eq   = GetEqualityComparerExpression(arg1.Type);
-				var mi   = eq.Type.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
+				var mi   = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
 				Expression expr = Expression.Call(eq, mi, arg0, arg1);
 
@@ -205,30 +205,30 @@ namespace LinqToDB.Tools.Comparers
 
 			if (type == typeof(BitArray))
 				comparerType = typeof(BitArrayEqualityComparer);
-			else if (type != typeof(string) && typeof(IEnumerable).IsAssignableFromEx(type))
+			else if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
 				comparerType = typeof(IEnumerable<>).IsSameOrParentOf(type)
 					? typeof(EnumerableEqualityComparer<>).MakeGenericType(type.IsArray
 						? type.GetElementType()
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
-			else if (type.IsClassEx() &&  (type.Name.StartsWith("<>") || !type.GetMethodsEx().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
+			else if (type.IsClass &&  (type.Name.StartsWith("<>") || !type.GetMethods().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
 				return Expression.Call(_getEqualityComparerMethodInfo.MakeGenericMethod(type));
 			else 
 				comparerType = typeof(EqualityComparer<>).MakeGenericType(type);
 
 			var constructors = comparerType.GetConstructors();
 
-			if (comparerType.IsGenericTypeEx() && !comparerType.IsGenericTypeDefinitionEx())
+			if (comparerType.IsGenericType && !comparerType.IsGenericTypeDefinition)
 			{
 				var withComparerConstructor = constructors.FirstOrDefault(c => c.GetParameters().Length == 1);
 				if (withComparerConstructor != null)
 				{
 					return Expression.New(withComparerConstructor,
-						GetEqualityComparerExpression(comparerType.GetGenericArgumentsEx()[0]));
+						GetEqualityComparerExpression(comparerType.GetGenericArguments()[0]));
 				}
 			}
 
-			return Expression.MakeMemberAccess(null, comparerType.GetPropertyEx("Default"));
+			return Expression.MakeMemberAccess(null, comparerType.GetProperty("Default"));
 		}
 
 		[NotNull, Pure]
@@ -241,7 +241,7 @@ namespace LinqToDB.Tools.Comparers
 				{
 					var ma = RemoveCastToObject(me.GetBody(parameter));
 					var eq = GetEqualityComparerExpression(ma.Type);
-					var mi = eq.Type.GetMethodsEx().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
+					var mi = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
 
 					return Expression.Add(
 						Expression.Multiply(e, Expression.Constant(-1521134295)),

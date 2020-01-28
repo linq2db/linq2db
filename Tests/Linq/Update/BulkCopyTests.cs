@@ -68,7 +68,6 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.Oracle
 						|| context == ProviderName.OracleNative
 						|| context == ProviderName.OracleManaged;
 
@@ -138,7 +137,6 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.Oracle
 						|| context == ProviderName.OracleNative
 						|| context == ProviderName.OracleManaged;
 
@@ -195,8 +193,9 @@ namespace Tests.xUpdate
 			if ((copyType       == BulkCopyType.RowByRow
 					|| context  == ProviderName.Access
 					|| context  == ProviderName.Informix
-					|| (context == ProviderName.SapHana
-						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
+					|| (context.StartsWith(ProviderName.SapHana)
+						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))
+					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
 				var ex = Assert.Catch(() => perform());

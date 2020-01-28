@@ -19,8 +19,8 @@ namespace LinqToDB.DataProvider.DB2
 	[PublicAPI]
 	public static class DB2Tools
 	{
-		public static string AssemblyName;
-		public static bool   IsCore;
+		public static string? AssemblyName;
+		public static bool    IsCore;
 
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
 		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			try
 			{
-				var path = typeof(DB2Tools).AssemblyEx().GetPath();
+				var path = typeof(DB2Tools).Assembly.GetPath();
 
 				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
 
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.DB2
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			//if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 			//	return null;
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var connectionType = Type.GetType(AssemblyName + ".DB2Connection, " + AssemblyName, true);
 							var serverTypeProp = connectionType
-								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
+								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
 								.FirstOrDefault(p => p.Name == "eServerType");
 
 							if (serverTypeProp != null)
@@ -140,9 +140,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region OnInitialized
 
-		private static  bool                  _isInitialized;
-		static readonly object                _syncAfterInitialized    = new object();
-		private static  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+		private static  bool                   _isInitialized;
+		static readonly object                 _syncAfterInitialized    = new object();
+		private static  ConcurrentBag<Action>? _afterInitializedActions = new ConcurrentBag<Action>();
 
 		internal static void Initialized()
 		{
@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						_isInitialized = true;
 
-						foreach (var action in _afterInitializedActions)
+						foreach (var action in _afterInitializedActions!)
 							action();
 						_afterInitializedActions = null;
 					}
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 					}
 					else
 					{
-						_afterInitializedActions.Add(action);
+						_afterInitializedActions!.Add(action);
 					}
 				}
 			}
@@ -225,10 +225,10 @@ namespace LinqToDB.DataProvider.DB2
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int                         maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
@@ -241,12 +241,12 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int?                       bulkCopyTimeout    = null,
-			bool                       keepIdentity       = false,
-			int                        notifyAfter        = 0,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int?                        bulkCopyTimeout    = null,
+			bool                        keepIdentity       = false,
+			int                         notifyAfter        = 0,
+			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(

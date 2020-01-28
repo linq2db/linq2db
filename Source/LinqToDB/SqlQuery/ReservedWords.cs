@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace LinqToDB.SqlQuery
 			_reservedWords[ProviderName.Firebird]      = _reservedWordsFirebird;
 
 
-			var assembly = typeof(SelectQuery).AssemblyEx();
+			var assembly = typeof(SelectQuery).Assembly;
 			var name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt"));
 
 			using (var stream = assembly.GetManifestResourceStream(name))

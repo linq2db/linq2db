@@ -13,11 +13,15 @@ namespace LinqToDB.SqlProvider
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
+			statement.UpdateIsParameterDepended();
+
 			// transforming parameters to values
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
 			// optimizing expressions according to new values
 			newStatement = optimizer.OptimizeStatement(newStatement);
+
+			newStatement.SetAliases();
 
 			// reset parameters
 			newStatement.CollectParameters();

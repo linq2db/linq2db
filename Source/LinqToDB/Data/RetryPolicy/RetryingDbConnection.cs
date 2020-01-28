@@ -62,11 +62,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return new RetryingDbCommand(_dbConnection.CreateCommand(), _policy);
 		}
 
-		public
-#if !NET40
-			override
-#endif
-			async Task OpenAsync(CancellationToken cancellationToken)
+		public override async Task OpenAsync(CancellationToken cancellationToken)
 		{
 			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
@@ -78,7 +74,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public DbConnection UnderlyingObject => _dbConnection;
 
-#if !NETSTANDARD1_6
 		public override DataTable GetSchema()
 		{
 			return _dbConnection.GetSchema();
@@ -99,7 +94,6 @@ namespace LinqToDB.Data.RetryPolicy
 			get => _dbConnection.Site;
 			set => _dbConnection.Site = value;
 		}
-#endif
 
 		public override int ConnectionTimeout => _connection.ConnectionTimeout;
 
@@ -129,9 +123,14 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public Task CloseAsync(CancellationToken cancellationToken = default)
+		public Task CloseAsync()
 		{
-			return _connection.CloseAsync(cancellationToken);
+			return _connection.CloseAsync();
+		}
+
+		public Task DisposeAsync()
+		{
+			return _connection.DisposeAsync();
 		}
 
 		public IAsyncDbConnection TryClone()

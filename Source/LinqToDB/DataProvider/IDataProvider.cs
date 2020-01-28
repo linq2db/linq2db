@@ -1,9 +1,8 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
@@ -47,44 +46,12 @@ namespace LinqToDB.DataProvider
 		/// DataConnection.ExecuteNonQuery
 		/// DataConnection.ExecuteReader.
 		/// </summary>
+		/// <param name="dataConnection">Data connection instance used with scope.</param>
 		/// <returns>Returns disposable scope object. Cannot be null.</returns>
-		IDisposable        ExecuteScope          ();
+		IDisposable ExecuteScope          (DataConnection dataConnection);
 
-#if !NETSTANDARD1_6
 		ISchemaProvider    GetSchemaProvider     ();
-#endif
 
 		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
-
-		int Merge<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName)
-			where T : class;
-
-		Task<int> MergeAsync<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName,
-			CancellationToken        token)
-			where T : class;
-
-		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class;
-
-		Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class;
-
-		//TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay);
 	}
 }

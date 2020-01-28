@@ -5,10 +5,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.DataProvider.Access;
-#endif
 
 using NUnit.Framework;
 
@@ -96,16 +93,11 @@ namespace Tests._Create
 								command.TrimStart().StartsWith("DROP") ||
 								command.TrimStart().StartsWith("CALL DROP");
 
-#if APPVEYOR
-							if (!isDrop)
-#endif
 							Console.WriteLine(ex.Message);
 
 							if (isDrop)
 							{
-#if !APPVEYOR
 								Console.WriteLine("\nnot too OK\n");
-#endif
 							}
 							else
 							{
@@ -242,7 +234,7 @@ namespace Tests._Create
 		}
 
 		[Test, Order(0)]
-		public void CreateDatabase([DataSources(false)] string context)
+		public void CreateDatabase([CreateDatabaseSources] string context)
 		{
 			switch (context)
 			{
@@ -256,7 +248,7 @@ namespace Tests._Create
 				case TestProvName.PostgreSQL11  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.MySql         : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case ProviderName.MySqlConnector: RunScript(context,          "\nGO\n",  "MySql");                          break;
-				case TestProvName.MySql57       : RunScript(context,          "\nGO\n",  "MySql");                          break;
+				case TestProvName.MySql55       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MariaDB       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case ProviderName.SqlServer2000 : RunScript(context,          "\nGO\n",  "SqlServer2000");                  break;
 				case ProviderName.SqlServer2005 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
@@ -267,29 +259,25 @@ namespace Tests._Create
 				case TestProvName.SqlAzure      : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SQLiteMS      : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
-#if !NETSTANDARD1_6
 				case ProviderName.OracleManaged : RunScript(context,          "\n/\n",   "Oracle");                         break;
 				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
-#endif
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-				case TestProvName.PostgreSQLLatest: RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
-				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
-				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
-				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
-				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
+				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
+				case ProviderName.SapHanaNative : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
+				case ProviderName.SapHanaOdbc   : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
-				case ProviderName.SapHana       : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
+				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
+				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
+#if !NETCOREAPP2_1
+				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.OracleNative  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default: throw new InvalidOperationException(context);
 			}
 		}
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
 		static void AccessAction(IDbConnection connection)
 		{
@@ -326,8 +314,6 @@ namespace Tests._Create
 					});
 			}
 		}
-
-#endif
 
 		void FirebirdAction(IDbConnection connection)
 		{
@@ -376,11 +362,14 @@ namespace Tests._Create
 				conn.Execute(@"
 					UPDATE AllTypes
 					SET
-						byteDataType = ?
+						byteDataType = ?,
+						textDataType = ?
 					WHERE ID = 2",
 					new
 					{
-						blob = new byte[] { 1, 2 },
+						blob     = new byte[] { 1, 2 },
+						// no idea why it works with IBM.Data.Informix provider
+						textBlob ="BBBBB"
 					});
 			}
 		}

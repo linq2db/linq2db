@@ -74,8 +74,10 @@ namespace LinqToDB.Linq
 		Expression IExpressionQuery.Expression => Expression;
 
 		public string DatabaseName { get; }
-		public string SchemaName { get; }
-		public string TableName { get; }
+		public string SchemaName   { get; }
+		public string TableName    { get; }
+		public string ServerName   { get; }
+
 		public string GetTableName()
 		{
 			return null;

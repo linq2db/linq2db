@@ -27,7 +27,7 @@ namespace LinqToDB
 		readonly LambdaExpression      _query;
 		volatile Func<object[],object[],object> _compiledQuery;
 
-		TResult ExecuteQuery<TResult>(params object[] args)
+		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
@@ -35,7 +35,7 @@ namespace LinqToDB
 						_compiledQuery = CompileQuery(_query);
 
 			//TODO: pass preambles
-			return (TResult)_compiledQuery(args, null);
+			return (TResult)_compiledQuery(args, null)!;
 		}
 
 		enum MethodType
@@ -67,7 +67,7 @@ namespace LinqToDB
 			}
 		}
 
-		static Func<object[],object[],object> CompileQuery(LambdaExpression query)
+		static Func<object?[],object?[],object?> CompileQuery(LambdaExpression query)
 		{
 			var ps       = Expression.Parameter(typeof(object[]), "ps");
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
@@ -91,9 +91,9 @@ namespace LinqToDB
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributesEx(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
 							{
-								var type = expr.Type.GetGenericArgumentsEx()[0];
+								var type = expr.Type.GetGenericArguments()[0];
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type));
 
@@ -107,7 +107,7 @@ namespace LinqToDB
 
 								var qtype  = type.GetGenericType(expr.Type);
 								var helper = (ITableHelper)Activator.CreateInstance(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArgumentsEx()[0]));
+									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
 								return helper.CallTable(query, expr, ps, preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
@@ -123,7 +123,7 @@ namespace LinqToDB
 						{
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
-								.MakeGenericType(pi.Type.GetGenericArgumentsEx()[0]));
+								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
 							return helper.CallTable(query, pi, ps, preambles, MethodType.Queryable);
 						}
 
@@ -133,7 +133,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object[],object[],object>>(Expression.Convert(info, typeof(object)), ps, preambles).Compile();
+			return Expression.Lambda<Func<object?[],object?[],object?>>(Expression.Convert(info, typeof(object)), ps, preambles).Compile();
 		}
 
 		#region Invoke

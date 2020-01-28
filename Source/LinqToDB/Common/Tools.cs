@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -75,7 +76,13 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path =
+
+				var path = string.Empty;
+
+				if (uri.Host != string.Empty)
+					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
+
+				path +=
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);
@@ -86,6 +93,33 @@ namespace LinqToDB.Common
 			{
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
+		}
+
+		public static string ToDebugDisplay(string str)
+		{
+			string RemoveDuplicates(string pattern, string input)
+			{
+				var toSearch = pattern + pattern;
+				do
+				{
+					var s = input.Replace(toSearch, pattern);
+					if (s == input)
+						break;
+					input = s;
+				} while (true);
+
+				return input;
+			}
+
+			str = RemoveDuplicates("\t",   str);
+			str = RemoveDuplicates("\r\n", str);
+			str = RemoveDuplicates("\n",   str);
+
+			str = str.Replace("\t",   " ");
+			str = str.Replace("\r\n", " ");
+			str = str.Replace("\n",   " ");
+
+			return str.Trim();
 		}
 
 		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)

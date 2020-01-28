@@ -192,7 +192,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("PosgreSql needs type for literals. We have to rewise literals generation.")]
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL)]
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

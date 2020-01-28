@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,7 +86,7 @@ namespace LinqToDB.Mapping
 				{
 					foreach (var type in _genericConvertProviders)
 					{
-						var args = type.Key.GetGenericArgumentsEx();
+						var args = type.Key.GetGenericArguments();
 
 						if (args.Length == types.Length)
 						{
@@ -198,7 +199,7 @@ namespace LinqToDB.Mapping
 
 		public void SetDataType(Type type, DataType dataType)
 		{
-			SetDataType(type, new SqlDataType(dataType, type, null, null, null));
+			SetDataType(type, new SqlDataType(dataType, type, null, null, null, null));
 		}
 
 		public void SetDataType(Type type, SqlDataType dataType)

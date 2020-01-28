@@ -45,7 +45,7 @@ namespace LinqToDB.Common.Internal
 
         private static void ProcessType(StringBuilder builder, Type type, bool fullName)
         {
-            if (type.IsGenericTypeEx())
+            if (type.IsGenericType)
             {
                 var genericArguments = type.GetGenericArguments();
                 ProcessGenericType(builder, type, genericArguments, genericArguments.Length, fullName);

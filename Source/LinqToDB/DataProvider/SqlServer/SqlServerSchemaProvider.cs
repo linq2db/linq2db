@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -118,7 +119,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ColumnInfo>(
 				_isAzure ? @"
@@ -170,9 +171,9 @@ namespace LinqToDB.DataProvider.SqlServer
 						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
-					DataTypeInfo dti;
+					var dti = GetDataType(c.DataType, options);
 
-					if (DataTypesDic.TryGetValue(c.DataType, out dti))
+					if (dti != null)
 					{
 						switch (dti.CreateParameters)
 						{
@@ -430,13 +431,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)
 				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
 
-			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)

@@ -43,7 +43,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
@@ -57,7 +57,7 @@ namespace Tests.Linq
 			public StringTestOrderSourcesAttribute(bool includeLinqService = true) : base(includeLinqService,
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllPostgreSQL,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2)
