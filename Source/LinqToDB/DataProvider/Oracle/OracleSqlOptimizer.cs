@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (query.Select.SkipValue != null)
 						return 2;
 
-					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty)
+					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{
 						query.Select.Where.EnsureConjunction().Expr(RowNumExpr)
 							.LessOrEqual.Expr(query.Select.TakeValue);

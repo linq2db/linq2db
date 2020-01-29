@@ -291,45 +291,5 @@ namespace Tests.Linq
 					select o);
 			}
 		}
-
-		class AnyLimitedTempClass
-		{
-			[Column(DataType = DataType.VarChar, Length = 10)]
-			public string Value { get; set; }
-		}
-
-		[Test]
-		public void AnyLimitedTest([DataSources] string context)
-		{
-			var testData = new[]
-			{
-				new AnyLimitedTempClass { Value = "PIPPO" }, 
-				new AnyLimitedTempClass { Value = "PLUTO" }, 
-				new AnyLimitedTempClass { Value = "PLUTO" }
-			};
-
-			using (var db = GetDataContext(context))
-			using (var tempTable = db.CreateLocalTable(testData))
-			{
-
-				var actual = tempTable
-					.GroupBy(item => item.Value)
-					.Where(group => group.Count() > 1)
-					.Select(item => item.Key)
-					.Take(1)
-					.Any();
-
-				var expected = testData
-					.GroupBy(item => item.Value)
-					.Where(group => group.Count() > 1)
-					.Select(item => item.Key)
-					.Take(1)
-					.Any();
-
-				Assert.AreEqual(expected, actual);
-			}
-		}
-
-
 	}
 }
