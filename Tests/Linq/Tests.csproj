@@ -72,6 +72,7 @@
 		<Compile Remove="Mapping\DynamicStoreTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
+		<Compile Remove="UserTests\Issue1925Tests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="TypeMapping\OracleWrappingTests.cs" />
 	</ItemGroup>
@@ -89,6 +90,7 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
+		<Compile Remove="UserTests\Issue1925Tests.cs" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>
 </Project>
