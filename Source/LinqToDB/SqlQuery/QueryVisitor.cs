@@ -2831,7 +2831,7 @@ namespace LinqToDB.SqlQuery
 						{
 							// non-recursive
 							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
-							var fields = ConvertImmutableSafe(cte.Fields);
+							var fields = ConvertImmutable(cte.Fields);
 
 							if (body   != null && !ReferenceEquals(cte.Body, body) ||
 								fields != null && !ReferenceEquals(cte.Fields, fields))
@@ -2851,7 +2851,7 @@ namespace LinqToDB.SqlQuery
 							_visitedElements.Add(cte, newCte);
 
 							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
-							var fields = ConvertImmutableSafe(cte.Fields);
+							var fields = ConvertImmutable(cte.Fields);
 
 							newCte.Init(body ?? cte.Body, fields ?? cte.Fields);
 
