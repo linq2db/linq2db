@@ -273,7 +273,7 @@ namespace Tests.Linq
 
 				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCte("EmployeeSubordinatesReport");
 
-				var result =
+				var actualQuery =
 					from employee in employeeSubordinatesReportCte
 					from manager in employeeSubordinatesReportCte.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -286,7 +286,7 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expected =
+				var expectedQuery =
 					from employee in employeeSubordinatesReport
 					from manager in employeeSubordinatesReport.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -299,10 +299,10 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var actual   = actualQuery.ToArray();
+				var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result);
+				AreEqual(expected, actual);
 			}
 		}
 

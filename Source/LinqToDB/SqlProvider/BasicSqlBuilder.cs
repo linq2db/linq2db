@@ -384,7 +384,7 @@ namespace LinqToDB.SqlProvider
 
 				ConvertTableName(StringBuilder, null, null, cte.Name);
 
-				if (cte.Fields.Count > 3)
+				if (cte.Fields.Length > 3)
 				{
 					StringBuilder.AppendLine();
 					AppendIndent(); StringBuilder.AppendLine("(");
@@ -404,7 +404,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.AppendLine();
 					AppendIndent(); StringBuilder.AppendLine(")");
 				}
-				else if (cte.Fields.Count > 0)
+				else if (cte.Fields.Length > 0)
 				{
 					StringBuilder.Append(" (");
 
