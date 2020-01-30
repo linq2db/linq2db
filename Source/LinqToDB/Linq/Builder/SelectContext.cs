@@ -172,8 +172,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
+							var memberInfo = ((MemberExpression)levelExpression).Member;
+
 							var memberExpression = GetMemberExpression(
-								((MemberExpression)levelExpression).Member,
+								memberInfo,
 								ReferenceEquals(levelExpression, expression),
 								levelExpression.Type,
 								expression);
@@ -224,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+								return Builder.BuildExpression(this, memberExpression, enforceServerSide, memberInfo.Name);
 							}
 
 							{
@@ -862,7 +864,13 @@ namespace LinqToDB.Linq.Builder
 				if (level == 0)
 				{
 					var sequence = GetSequence(expression, level);
-					return sequence.GetContext(expression, level + 1, buildInfo);
+					if (sequence != null)
+						return sequence.GetContext(expression, level + 1, buildInfo);
+					if (Builder.IsSequence(buildInfo))
+					{
+						sequence = Builder.BuildSequence(buildInfo);
+						return sequence;
+					}
 				}
 			}
 

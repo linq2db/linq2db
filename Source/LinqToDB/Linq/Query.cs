@@ -132,7 +132,7 @@ namespace LinqToDB.Linq
 
 		#region Cache Support
 
-		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
+		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ConcurrentQueue<Action>();
 
 		/// <summary>
 		/// Clears query caches for all typed queries.
@@ -212,7 +212,7 @@ namespace LinqToDB.Linq
 			_sync         = new object();
 			_orderedCache = new List<Query<T>>(CacheSize);
 
-			CacheCleaners.Add(ClearCache);
+			CacheCleaners.Enqueue(ClearCache);
 		}
 
 		/// <summary>

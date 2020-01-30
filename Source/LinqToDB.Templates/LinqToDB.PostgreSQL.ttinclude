@@ -26,7 +26,7 @@ bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sen
 // exception: functions with only one out parameter treat it as return parameter
 void FixRecordResultFunctions()
 {
-	var initMappingSchema = new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial };
+	var initMappingSchema = new Method(() => "void", "InitMappingSchema") { AccessModifier = GenerateConstructors ? AccessModifier.Partial : AccessModifier.Protected };
 	DataContextObject.Members.Add(initMappingSchema);
 	foreach (var proc in Procedures.Values
 		.Where(p => p.IsFunction && !p.IsAggregateFunction && !p.IsTableFunction && p.ProcParameters.Any(pr => pr.IsOut)))

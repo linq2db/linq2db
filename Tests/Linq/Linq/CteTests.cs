@@ -273,7 +273,7 @@ namespace Tests.Linq
 
 				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCte("EmployeeSubordinatesReport");
 
-				var result =
+				var actualQuery =
 					from employee in employeeSubordinatesReportCte
 					from manager in employeeSubordinatesReportCte.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -286,7 +286,7 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expected =
+				var expectedQuery =
 					from employee in employeeSubordinatesReport
 					from manager in employeeSubordinatesReport.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -299,10 +299,10 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var actual   = actualQuery.ToArray();
+				var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result);
+				AreEqual(expected, actual);
 			}
 		}
 
@@ -417,6 +417,42 @@ namespace Tests.Linq
 					select p;
 
 				Assert.AreEqual(expected.Count(), query.Count());
+			}
+		}
+
+		[Test]
+		public void TestCustomCount([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct()
+					.AsCte();
+
+				var query = from c in cte1
+					select new
+					{
+						Count = Sql.Ext.Count().ToValue()
+					};
+
+
+				var expected = Child
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct().Count();
+
+
+				var actual = query.AsEnumerable().Select(c => c.Count).First();
+
+				Assert.AreEqual(expected, actual);
 			}
 		}
 
