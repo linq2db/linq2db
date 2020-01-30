@@ -197,8 +197,7 @@ namespace LinqToDB.DataProvider.Oracle
 								Expression.Block(
 									Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
 									Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
-									Expression.Break(label, decimalVar),
-									Expression.Constant(0)
+									Expression.Break(label, decimalVar)
 								),
 								Expression.Catch(typeof(OverflowException),
 									Expression.Block(
@@ -206,10 +205,8 @@ namespace LinqToDB.DataProvider.Oracle
 											Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)),
 												Expression.Constant(26)),
 											Expression.Rethrow()
-										),
-										Expression.Constant(0)
+										)
 									)
-
 								)
 							),
 							label),
@@ -244,8 +241,17 @@ namespace LinqToDB.DataProvider.Oracle
 						indexParameter);
 				}
 
-				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = _oracleDecimal }] = getDecimalAdv;
-				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal)}        ] = getDecimalAdv;
+				// workaround for mapper issue with complex reader expressions handling
+				// https://github.com/linq2db/linq2db/issues/2032
+				var compiledReader     = getDecimalAdv.Compile();
+
+				var getDecimalAdvFixed = Expression.Lambda(
+					Expression.Invoke(Expression.Constant(compiledReader), dataReaderParameter, indexParameter),
+					dataReaderParameter,
+					indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = _oracleDecimal }] = getDecimalAdvFixed;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal)        }] = getDecimalAdvFixed;
 				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = GetDecimal(typeof(int),     true);
 				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = GetDecimal(typeof(long),    true);
 				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = GetDecimal(typeof(decimal), false);

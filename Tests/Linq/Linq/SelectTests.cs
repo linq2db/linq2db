@@ -1331,5 +1331,54 @@ namespace Tests.Linq
 					results);
 			}
 		}
+
+		[Test]
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// TODO: eager loading
+			// using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c1 in db.Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = db.Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				query = query
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID);
+
+
+				var expectedQuery = 
+					from p in Parent
+					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				var actual = query.ToArray();
+
+				var expected = expectedQuery
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID)
+					.ToArray();
+
+				AreEqual(expected, actual);
+			}
+		}
 	}
 }

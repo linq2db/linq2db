@@ -1,5 +1,6 @@
 ﻿#nullable disable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -107,6 +108,20 @@ namespace LinqToDB.Linq.Builder
 				return queryContext.IsExpression(expression, level, requestFor);
 			}
 
+			static string GenerateAlias(Expression expression)
+			{
+				string alias = null;
+				var current  = expression;
+				while (current?.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression) current;
+					alias = alias == null ? ma.Member.Name : ma.Member.Name + "_"  + alias;
+					current = ma.Expression;
+				}
+
+				return alias;
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
 				var queryContext = GetQueryContext();
@@ -115,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 
 				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
 
-				if (flags != ConvertFlags.All && _cte.Fields.Count == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
+				if (flags != ConvertFlags.All && _cte.Fields.Length == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
 				{
 					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
 					ConvertToSql(null, 0, ConvertFlags.All);
@@ -126,11 +141,14 @@ namespace LinqToDB.Linq.Builder
 				var result = infos
 					.Select(info =>
 					{
-						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
-						var alias    = baseInfo?.MemberChain.LastOrDefault()?.Name ??
+						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
+						if (alias == null)
+						{
+							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
 						                  info.MemberChain.LastOrDefault()?.Name;
-						var field    = RegisterCteField(baseInfo?.Sql, expr, info.Index, alias);
+						}	
+						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain)
 						{
 							Sql = field,
@@ -140,14 +158,43 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
+			static string GetColumnFriendlyAlias(SqlColumn column)
+			{
+				string alias = null;
+
+				var visited = new HashSet<ISqlExpression>();
+				ISqlExpression current = column;
+				while (current is SqlColumn clmn && !visited.Contains(clmn))
+				{
+					if (clmn.RawAlias != null)
+					{
+						alias = clmn.RawAlias;
+						break;
+					}
+					visited.Add(clmn);
+					current = clmn.Expression;
+				}
+
+				if (alias == null)
+				{
+					var field = current as SqlField;
+
+					alias = field?.Name;
+				}				
+
+				if (alias == null)
+					alias = column.Alias;
+
+				return alias;
+			}
+
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				if (context == _cteQueryContext)
 				{
 					var queryColumn = context.SelectQuery.Select.Columns[index];
-					var expr  = queryColumn.Expression;
-					    expr  = expr is SqlColumn column ? column.Expression : expr;
-					var field = RegisterCteField(null, expr, index, queryColumn.Alias);
+					var alias       = GetColumnFriendlyAlias(queryColumn);
+					var field       = RegisterCteField(null, queryColumn, index, alias);
 
 					index = SelectQuery.Select.Add(field);
 				}
@@ -166,6 +213,9 @@ namespace LinqToDB.Linq.Builder
 							var newField = f == null
 								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = alias }
 								: new SqlField(f);
+
+							if (alias != null)
+								newField.Name = alias;
 
 							newField.PhysicalName = newField.Name;
 							return newField;
@@ -204,7 +254,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				if (_cte.Fields.Count == 0)
+				if (_cte.Fields.Length == 0)
 				{
 					ConvertToSql(null, 0, ConvertFlags.Key);
 				}

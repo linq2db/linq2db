@@ -688,6 +688,26 @@ namespace LinqToDB.Linq.Builder
 							.SelectMany(si => si)
 							.ToArray();
 					}
+				case ExpressionType.Call         :
+					{
+						var callCtx = GetContext(context, expression);
+						if (callCtx != null)
+						{
+							var mc = (MethodCallExpression)expression;
+							if (IsSubQuery(callCtx, mc))
+							{
+								var subQueryContextInfo = GetSubQueryContext(callCtx, mc);
+								if (subQueryContextInfo.Context.IsExpression(null, 0, RequestFor.Object).Result)
+								{
+									var info = subQueryContextInfo.Context.ConvertToSql(null, 0, ConvertFlags.All);
+									return info;
+								}
+
+								return new[] { new SqlInfo { Sql = subQueryContextInfo.Context.SelectQuery } };
+							}
+						}						
+						break;
+					}
 			}
 
 			var ctx = GetContext(context, expression);
