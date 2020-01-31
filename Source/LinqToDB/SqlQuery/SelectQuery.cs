@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 	public class SelectQuery : ISqlTableSource
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		protected string DebugSqlText => Common.Tools.ToDebugDisplay(SqlText);
+		protected string DebugSqlText => SqlText;
 
 		#region Init
 
