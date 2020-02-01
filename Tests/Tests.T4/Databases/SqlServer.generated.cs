@@ -54,22 +54,6 @@ namespace DataModel
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
-		public NorthwindDB(int i)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public NorthwindDB(string configuration)
-			: base(configuration)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
-
 		#region Alias members
 
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
@@ -1259,24 +1243,6 @@ namespace DataModel
 		}
 
 		#endregion
-
-		public TestData2014DB(int i)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestData2014DB(string configuration)
-			: base(configuration)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
 
 		#region Table Functions
 

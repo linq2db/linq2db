@@ -29,7 +29,7 @@ namespace LinqToDB.Linq
 		{
 			static Cache()
 			{
-				Query.CacheCleaners.Add(ClearCache);
+				Query.CacheCleaners.Enqueue(ClearCache);
 			}
 
 			public static void ClearCache()

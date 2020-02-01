@@ -40,6 +40,11 @@ namespace LinqToDB.DataProvider.MySql
 			/// </summary>
 			string? GetMySqlDecimalMethodName { get; }
 
+			/// <summary>
+			/// MySqlConnector-only.
+			/// </summary>
+			string? GetDateTimeOffsetMethodName { get; }
+
 			string GetMySqlDateTimeMethodName { get; }
 		}
 
@@ -80,8 +85,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			Func<object, decimal>  IMySqlWrapper.MySqlDecimalGetter  => _decimalGetter;
 
-			string IMySqlWrapper.GetMySqlDecimalMethodName  => "GetMySqlDecimal";
-			string IMySqlWrapper.GetMySqlDateTimeMethodName => "GetMySqlDateTime";
+			string IMySqlWrapper.GetMySqlDecimalMethodName    => "GetMySqlDecimal";
+			string IMySqlWrapper.GetMySqlDateTimeMethodName   => "GetMySqlDateTime";
+			string? IMySqlWrapper.GetDateTimeOffsetMethodName => null;
 
 			object IMySqlWrapper.GetParameterType(IDbDataParameter parameter)
 			{
@@ -225,8 +231,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			Func<object, decimal>? IMySqlWrapper.MySqlDecimalGetter  => null;
 
-			string? IMySqlWrapper.GetMySqlDecimalMethodName => null;
-			string IMySqlWrapper.GetMySqlDateTimeMethodName => "GetMySqlDateTime";
+			string? IMySqlWrapper.GetMySqlDecimalMethodName  => null;
+			string IMySqlWrapper.GetMySqlDateTimeMethodName  => "GetMySqlDateTime";
+			string IMySqlWrapper.GetDateTimeOffsetMethodName => "GetDateTimeOffset";
 
 			internal static IMySqlWrapper Initialize(MappingSchema mappingSchema)
 			{

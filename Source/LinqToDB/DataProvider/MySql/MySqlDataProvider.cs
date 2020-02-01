@@ -45,6 +45,12 @@ namespace LinqToDB.DataProvider.MySql
 					SetToTypeField  (wrapper.MySqlDecimalType!, wrapper.GetMySqlDecimalMethodName, wrapper.DataReaderType);
 				}
 
+				if (wrapper.GetDateTimeOffsetMethodName != null)
+				{
+					SetProviderField(typeof(DateTimeOffset), wrapper.GetDateTimeOffsetMethodName, wrapper.DataReaderType);
+					SetToTypeField  (typeof(DateTimeOffset), wrapper.GetDateTimeOffsetMethodName, wrapper.DataReaderType);
+				}
+
 				SetProviderField(wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
 				SetToTypeField  (wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
 

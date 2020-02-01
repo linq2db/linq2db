@@ -259,8 +259,15 @@ namespace LinqToDB.DataProvider.Oracle
 				body = generator.Build();
 
 				_readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(body, rdParam, indexParam);
+				// workaround for mapper issue with complex reader expressions handling
+				// https://github.com/linq2db/linq2db/issues/2032
+				var compiledReader             = _readOracleDecimalToDecimalAdv.Compile();
+				_readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(
+					Expression.Invoke(Expression.Constant(compiledReader), rdParam, indexParam),
+					rdParam,
+					indexParam);
 
-				_readOracleDecimalToInt     = (Expression<Func<IDataReader, int, int>>)    typeMapper.MapLambda<IDataReader, int, int    >((rd, i) => (int) (decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
+				_readOracleDecimalToInt = (Expression<Func<IDataReader, int, int>>)    typeMapper.MapLambda<IDataReader, int, int    >((rd, i) => (int) (decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
 				_readOracleDecimalToLong    = (Expression<Func<IDataReader, int, long>>)   typeMapper.MapLambda<IDataReader, int, long   >((rd, i) => (long)(decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
 				_readOracleDecimalToDecimal = (Expression<Func<IDataReader, int, decimal>>)typeMapper.MapLambda<IDataReader, int, decimal>((rd, i) =>       (decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
 			}
