@@ -100,15 +100,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var udtType = type.Type.ToNullableUnderlying();
 
-						     if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlPointType   ) StringBuilder.Append("point");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlLineType    ) StringBuilder.Append("line");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlBoxType     ) StringBuilder.Append("box");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlLSegType    ) StringBuilder.Append("lseg");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlCircleType  ) StringBuilder.Append("circle");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlPolygonType ) StringBuilder.Append("polygon");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlPathType    ) StringBuilder.Append("path");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlDateType    ) StringBuilder.Append("date");
-						else if (_provider != null && udtType == _provider.Wrapper.Value.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+						     if (_provider != null && udtType == _provider.Adapter.NpgsqlPointType   ) StringBuilder.Append("point");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlLineType    ) StringBuilder.Append("line");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlBoxType     ) StringBuilder.Append("box");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlLSegType    ) StringBuilder.Append("lseg");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlCircleType  ) StringBuilder.Append("circle");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlPolygonType ) StringBuilder.Append("polygon");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlPathType    ) StringBuilder.Append("path");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlDateType    ) StringBuilder.Append("date");
+						else if (_provider != null && udtType == _provider.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
 						else if (udtType == typeof(PhysicalAddress) && _provider != null && !_provider.HasMacAddr8) StringBuilder.Append("macaddr");
 						else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
 						else base.BuildDataTypeFromDataType(type, forCreateTable);
@@ -295,9 +295,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (_provider != null)
 			{
-				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Wrapper.Value.TypeGetter(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

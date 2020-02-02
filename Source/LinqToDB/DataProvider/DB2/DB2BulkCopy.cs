@@ -6,8 +6,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
-	using LinqToDB.Mapping;
-	using DB2BulkCopyOptions = DB2Wrappers.DB2BulkCopyOptions;
+	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
@@ -25,9 +24,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
-				DB2Wrappers.Initialize(dataConnection.MappingSchema);
-
-				var connection = _provider.TryConvertConnection(DB2Wrappers.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 				if (connection != null)
 					return ProviderSpecificCopyImpl(
 						table,
@@ -35,7 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 						source,
 						dataConnection,
 						connection,
-						DB2Wrappers.BulkCopy,
+						_provider.Adapter.BulkCopy,
 						TraceAction);
 			}
 
@@ -43,12 +40,12 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		internal static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
-			ITable<T>                       table,
-			BulkCopyOptions                 options,
-			IEnumerable<T>                  source,
-			DataConnection                  dataConnection,
-			IDbConnection                   connection,
-			DB2Wrappers.IDB2BulkCopyWrapper bulkCopy,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			IEnumerable<T>                                  source,
+			DataConnection                                  dataConnection,
+			IDbConnection                                   connection,
+			DB2ProviderAdapter.BulkCopyAdapter              bulkCopy,
 			Action<DataConnection, Func<string>, Func<int>> traceAction)
 		{
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -63,7 +60,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (options.KeepIdentity == true) bcOptions |= DB2BulkCopyOptions.KeepIdentity;
 			if (options.TableLock    == true) bcOptions |= DB2BulkCopyOptions.TableLock;
 
-			using (var bc = bulkCopy.CreateBulkCopy(connection, bcOptions))
+			using (var bc = bulkCopy.Create(connection, bcOptions))
 			{
 				var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue ?
 					options.MaxBatchSize.Value : options.NotifyAfter;
@@ -87,7 +84,7 @@ namespace LinqToDB.DataProvider.DB2
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
 
 				traceAction(
 					dataConnection,

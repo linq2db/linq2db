@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
@@ -10,17 +9,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlProvider;
 
-	public class PostgreSQLDataProvider : DynamicDataProviderBase
+	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
 		public PostgreSQLDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
-			: this(
-				GetProviderName(version),
-				version)
+			: this(GetProviderName(version), version)
 		{
 		}
 
 		public PostgreSQLDataProvider(string name, PostgreSQLVersion version = PostgreSQLVersion.v92)
-			: base(name, null!)
+			: base(
+				  name,
+				  MappingSchemaInstance.Get(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
+				  NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
 
@@ -40,107 +40,99 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			switch (version)
 			{
-				default:
 				case PostgreSQLVersion.v92:
 					_sqlOptimizer = new PostgreSQLSql92Optimizer(SqlProviderFlags);
 					break;
 				case PostgreSQLVersion.v93:
 					_sqlOptimizer = new PostgreSQLSql93Optimizer(SqlProviderFlags);
 					break;
+				default:
 				case PostgreSQLVersion.v95:
 					_sqlOptimizer = new PostgreSQLSql95Optimizer(SqlProviderFlags);
 					break;
 			}
 
-			Wrapper = new Lazy<PostgreSQLWrappers.IPostgreSQLWrapper>(() => Initialize(), true);
+			ConfigureTypes();
 		}
 
-		internal readonly Lazy<PostgreSQLWrappers.IPostgreSQLWrapper> Wrapper;
-
-		private PostgreSQLWrappers.IPostgreSQLWrapper Initialize()
+		private void ConfigureTypes()
 		{
-			var wrapper = PostgreSQLWrappers.Initialize();
-
 			// https://www.postgresql.org/docs/current/static/datatype.html
 			// not all types are supported now
 			// numeric types
-			mapType("smallint"                , PostgreSQLWrappers.NpgsqlDbType.Smallint);
-			mapType("integer"                 , PostgreSQLWrappers.NpgsqlDbType.Integer);
-			mapType("bigint"                  , PostgreSQLWrappers.NpgsqlDbType.Bigint);
-			mapType("numeric"                 , PostgreSQLWrappers.NpgsqlDbType.Numeric);
-			mapType("real"                    , PostgreSQLWrappers.NpgsqlDbType.Real);
-			mapType("double precision"        , PostgreSQLWrappers.NpgsqlDbType.Double);
+			mapType("smallint"                , NpgsqlProviderAdapter.NpgsqlDbType.Smallint);
+			mapType("integer"                 , NpgsqlProviderAdapter.NpgsqlDbType.Integer);
+			mapType("bigint"                  , NpgsqlProviderAdapter.NpgsqlDbType.Bigint);
+			mapType("numeric"                 , NpgsqlProviderAdapter.NpgsqlDbType.Numeric);
+			mapType("real"                    , NpgsqlProviderAdapter.NpgsqlDbType.Real);
+			mapType("double precision"        , NpgsqlProviderAdapter.NpgsqlDbType.Double);
 			// monetary types
-			mapType("money"                   , PostgreSQLWrappers.NpgsqlDbType.Money);
+			mapType("money"                   , NpgsqlProviderAdapter.NpgsqlDbType.Money);
 			// character types
-			mapType("character"               , PostgreSQLWrappers.NpgsqlDbType.Char);
-			mapType("character varying"       , PostgreSQLWrappers.NpgsqlDbType.Varchar);
-			mapType("text"                    , PostgreSQLWrappers.NpgsqlDbType.Text);
-			mapType("name"                    , PostgreSQLWrappers.NpgsqlDbType.Name);
-			mapType("char"                    , PostgreSQLWrappers.NpgsqlDbType.InternalChar);
+			mapType("character"               , NpgsqlProviderAdapter.NpgsqlDbType.Char);
+			mapType("character varying"       , NpgsqlProviderAdapter.NpgsqlDbType.Varchar);
+			mapType("text"                    , NpgsqlProviderAdapter.NpgsqlDbType.Text);
+			mapType("name"                    , NpgsqlProviderAdapter.NpgsqlDbType.Name);
+			mapType("char"                    , NpgsqlProviderAdapter.NpgsqlDbType.InternalChar);
 			// binary types
-			mapType("bytea"                   , PostgreSQLWrappers.NpgsqlDbType.Bytea);
+			mapType("bytea"                   , NpgsqlProviderAdapter.NpgsqlDbType.Bytea);
 			// date/time types (reltime missing from enum)
-			mapType("timestamp"               , PostgreSQLWrappers.NpgsqlDbType.Timestamp);
-			mapType("timestamp with time zone", PostgreSQLWrappers.NpgsqlDbType.TimestampTZ);
-			mapType("date"                    , PostgreSQLWrappers.NpgsqlDbType.Date);
-			mapType("time"                    , PostgreSQLWrappers.NpgsqlDbType.Time);
-			mapType("time with time zone"     , PostgreSQLWrappers.NpgsqlDbType.TimeTZ);
-			mapType("interval"                , PostgreSQLWrappers.NpgsqlDbType.Interval);
-			mapType("abstime"                 , PostgreSQLWrappers.NpgsqlDbType.Abstime);
+			mapType("timestamp"               , NpgsqlProviderAdapter.NpgsqlDbType.Timestamp);
+			mapType("timestamp with time zone", NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ);
+			mapType("date"                    , NpgsqlProviderAdapter.NpgsqlDbType.Date);
+			mapType("time"                    , NpgsqlProviderAdapter.NpgsqlDbType.Time);
+			mapType("time with time zone"     , NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ);
+			mapType("interval"                , NpgsqlProviderAdapter.NpgsqlDbType.Interval);
+			mapType("abstime"                 , NpgsqlProviderAdapter.NpgsqlDbType.Abstime);
 			// boolean type
-			mapType("boolean"                 , PostgreSQLWrappers.NpgsqlDbType.Boolean);
+			mapType("boolean"                 , NpgsqlProviderAdapter.NpgsqlDbType.Boolean);
 			// geometric types
-			mapType("point"                   , PostgreSQLWrappers.NpgsqlDbType.Point);
-			mapType("line"                    , PostgreSQLWrappers.NpgsqlDbType.Line);
-			mapType("lseg"                    , PostgreSQLWrappers.NpgsqlDbType.LSeg);
-			mapType("box"                     , PostgreSQLWrappers.NpgsqlDbType.Box);
-			mapType("path"                    , PostgreSQLWrappers.NpgsqlDbType.Path);
-			mapType("polygon"                 , PostgreSQLWrappers.NpgsqlDbType.Polygon);
-			mapType("circle"                  , PostgreSQLWrappers.NpgsqlDbType.Circle);
+			mapType("point"                   , NpgsqlProviderAdapter.NpgsqlDbType.Point);
+			mapType("line"                    , NpgsqlProviderAdapter.NpgsqlDbType.Line);
+			mapType("lseg"                    , NpgsqlProviderAdapter.NpgsqlDbType.LSeg);
+			mapType("box"                     , NpgsqlProviderAdapter.NpgsqlDbType.Box);
+			mapType("path"                    , NpgsqlProviderAdapter.NpgsqlDbType.Path);
+			mapType("polygon"                 , NpgsqlProviderAdapter.NpgsqlDbType.Polygon);
+			mapType("circle"                  , NpgsqlProviderAdapter.NpgsqlDbType.Circle);
 			// network address types
-			mapType("cidr"                    , PostgreSQLWrappers.NpgsqlDbType.Cidr);
-			mapType("inet"                    , PostgreSQLWrappers.NpgsqlDbType.Inet);
-			mapType("macaddr"                 , PostgreSQLWrappers.NpgsqlDbType.MacAddr);
-			mapType("macaddr8"                , PostgreSQLWrappers.NpgsqlDbType.MacAddr8);
+			mapType("cidr"                    , NpgsqlProviderAdapter.NpgsqlDbType.Cidr);
+			mapType("inet"                    , NpgsqlProviderAdapter.NpgsqlDbType.Inet);
+			mapType("macaddr"                 , NpgsqlProviderAdapter.NpgsqlDbType.MacAddr);
+			mapType("macaddr8"                , NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
 			// bit string types
-			mapType("bit"                     , PostgreSQLWrappers.NpgsqlDbType.Bit);
-			mapType("bit varying"             , PostgreSQLWrappers.NpgsqlDbType.Varbit);
+			mapType("bit"                     , NpgsqlProviderAdapter.NpgsqlDbType.Bit);
+			mapType("bit varying"             , NpgsqlProviderAdapter.NpgsqlDbType.Varbit);
 			// text search types
-			mapType("tsvector"                , PostgreSQLWrappers.NpgsqlDbType.TsVector);
-			mapType("tsquery"                 , PostgreSQLWrappers.NpgsqlDbType.TsQuery);
+			mapType("tsvector"                , NpgsqlProviderAdapter.NpgsqlDbType.TsVector);
+			mapType("tsquery"                 , NpgsqlProviderAdapter.NpgsqlDbType.TsQuery);
 			// UUID type
-			mapType("uuid"                    , PostgreSQLWrappers.NpgsqlDbType.Uuid);
+			mapType("uuid"                    , NpgsqlProviderAdapter.NpgsqlDbType.Uuid);
 			// XML type
-			mapType("xml"                     , PostgreSQLWrappers.NpgsqlDbType.Xml);
+			mapType("xml"                     , NpgsqlProviderAdapter.NpgsqlDbType.Xml);
 			// JSON types
-			mapType("json"                    , PostgreSQLWrappers.NpgsqlDbType.Json);
-			mapType("jsonb"                   , PostgreSQLWrappers.NpgsqlDbType.Jsonb);
+			mapType("json"                    , NpgsqlProviderAdapter.NpgsqlDbType.Json);
+			mapType("jsonb"                   , NpgsqlProviderAdapter.NpgsqlDbType.Jsonb);
 			// Object Identifier Types (only supported by npgsql)
-			mapType("oid"                     , PostgreSQLWrappers.NpgsqlDbType.Oid);
-			mapType("regtype"                 , PostgreSQLWrappers.NpgsqlDbType.Regtype);
-			mapType("xid"                     , PostgreSQLWrappers.NpgsqlDbType.Xid);
-			mapType("cid"                     , PostgreSQLWrappers.NpgsqlDbType.Cid);
-			mapType("tid"                     , PostgreSQLWrappers.NpgsqlDbType.Tid);
+			mapType("oid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Oid);
+			mapType("regtype"                 , NpgsqlProviderAdapter.NpgsqlDbType.Regtype);
+			mapType("xid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Xid);
+			mapType("cid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Cid);
+			mapType("tid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Tid);
 			// other types
-			mapType("citext"                  , PostgreSQLWrappers.NpgsqlDbType.Citext);
-			mapType("hstore"                  , PostgreSQLWrappers.NpgsqlDbType.Hstore);
-			mapType("refcursor"               , PostgreSQLWrappers.NpgsqlDbType.Refcursor);
-			mapType("oidvector"               , PostgreSQLWrappers.NpgsqlDbType.Oidvector);
-			mapType("int2vector"              , PostgreSQLWrappers.NpgsqlDbType.Int2Vector);
+			mapType("citext"                  , NpgsqlProviderAdapter.NpgsqlDbType.Citext);
+			mapType("hstore"                  , NpgsqlProviderAdapter.NpgsqlDbType.Hstore);
+			mapType("refcursor"               , NpgsqlProviderAdapter.NpgsqlDbType.Refcursor);
+			mapType("oidvector"               , NpgsqlProviderAdapter.NpgsqlDbType.Oidvector);
+			mapType("int2vector"              , NpgsqlProviderAdapter.NpgsqlDbType.Int2Vector);
 
-			wrapper.SetupMappingSchema(MappingSchema);
+			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, "GetInterval"             , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, "GetTimeStamp"            , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlInetType    , Adapter.NpgsqlInetType    , "GetProviderSpecificValue", dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , "GetDate"                 , dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField(wrapper.NpgsqlTimeSpanType, wrapper.NpgsqlTimeSpanType, "GetInterval"             , dataReaderType: wrapper.DataReaderType);
-			SetProviderField(wrapper.NpgsqlDateTimeType, wrapper.NpgsqlDateTimeType, "GetTimeStamp"            , dataReaderType: wrapper.DataReaderType);
-			SetProviderField(wrapper.NpgsqlInetType    , wrapper.NpgsqlInetType    , "GetProviderSpecificValue", dataReaderType: wrapper.DataReaderType);
-			SetProviderField(wrapper.NpgsqlDateType    , wrapper.NpgsqlDateType    , "GetDate"                 , dataReaderType: wrapper.DataReaderType);
-
-			return wrapper;
-
-			bool mapType(string dbType, PostgreSQLWrappers.NpgsqlDbType type)
+			bool mapType(string dbType, NpgsqlProviderAdapter.NpgsqlDbType type)
 			{
-				if (wrapper.IsDbTypeSupported(type))
+				if (Adapter.IsDbTypeSupported(type))
 				{
 					_npgsqlTypeMap.Add(dbType, type);
 					return true;
@@ -160,16 +152,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return typeName;
 		}
 
-		public PostgreSQLVersion Version { get; private set; }
+		public PostgreSQLVersion Version { get; }
 
-		internal bool HasMacAddr8 => Wrapper.Value.IsDbTypeSupported(PostgreSQLWrappers.NpgsqlDbType.MacAddr8);
+		internal bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
 
 		/// <summary>
 		/// Map of canonical PostgreSQL type name to NpgsqlDbType enumeration value.
 		/// This map shouldn't be used directly, you should resolve PostgreSQL types using
 		/// <see cref="GetNativeType(string, bool)"/> method, which takes into account different type aliases.
 		/// </summary>
-		private IDictionary<string, PostgreSQLWrappers.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, PostgreSQLWrappers.NpgsqlDbType>();
+		private IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
 
 		private static string GetProviderName(PostgreSQLVersion version)
 		{
@@ -183,14 +175,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					return ProviderName.PostgreSQL95;
 			}
 		}
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-		}
-
-		public    override string ConnectionNamespace => "Npgsql";
-		protected override string ConnectionTypeName  => "Npgsql.NpgsqlConnection, Npgsql";
-		protected override string DataReaderTypeName  => "Npgsql.NpgsqlDataReader, Npgsql";
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -227,21 +211,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			// didn't tried to detect and cleanup unnecessary type mappings, as npgsql develops rapidly and
 			// it doesn't pay efforts to track changes for each version in this area
-			PostgreSQLWrappers.NpgsqlDbType? type = null;
+			NpgsqlProviderAdapter.NpgsqlDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Money     : type = PostgreSQLWrappers.NpgsqlDbType.Money  ; break;
+				case DataType.Money     : type = NpgsqlProviderAdapter.NpgsqlDbType.Money  ; break;
 				case DataType.Image     :
 				case DataType.Binary    :
-				case DataType.VarBinary : type = PostgreSQLWrappers.NpgsqlDbType.Bytea  ; break;
-				case DataType.Boolean   : type = PostgreSQLWrappers.NpgsqlDbType.Boolean; break;
-				case DataType.Xml       : type = PostgreSQLWrappers.NpgsqlDbType.Xml    ; break;
+				case DataType.VarBinary : type = NpgsqlProviderAdapter.NpgsqlDbType.Bytea  ; break;
+				case DataType.Boolean   : type = NpgsqlProviderAdapter.NpgsqlDbType.Boolean; break;
+				case DataType.Xml       : type = NpgsqlProviderAdapter.NpgsqlDbType.Xml    ; break;
 				case DataType.Text      :
-				case DataType.NText     : type = PostgreSQLWrappers.NpgsqlDbType.Text   ; break;
-				case DataType.BitArray  : type = PostgreSQLWrappers.NpgsqlDbType.Bit    ; break;
-				case DataType.Dictionary: type = PostgreSQLWrappers.NpgsqlDbType.Hstore ; break;
-				case DataType.Json      : type = PostgreSQLWrappers.NpgsqlDbType.Json   ; break;
-				case DataType.BinaryJson: type = PostgreSQLWrappers.NpgsqlDbType.Jsonb  ; break;
+				case DataType.NText     : type = NpgsqlProviderAdapter.NpgsqlDbType.Text   ; break;
+				case DataType.BitArray  : type = NpgsqlProviderAdapter.NpgsqlDbType.Bit    ; break;
+				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore ; break;
+				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json   ; break;
+				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb  ; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))
@@ -251,10 +235,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (type != null)
 			{
-				var param = TryConvertParameter(Wrapper.Value.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					Wrapper.Value.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}
@@ -300,16 +284,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#endregion
 
 		/// <summary>
-		/// Returns NpgsqlDbType enumeration value for requested postgresql type or null if type cannot be resolved.
+		/// Returns <see cref="NpgsqlProviderAdapter.NpgsqlDbType"/> enumeration value for requested postgresql type or null if type cannot be resolved.
 		/// This method expects correct PostgreSQL type as input.
 		/// Custom types not supported. Also could fail on some types as PostgreSQL have a lot of ways to write same
 		/// type.
 		/// </summary>
 		/// <remarks>
-		/// Returned value could be invalid for <see cref="PostgreSQLWrappers.NpgsqlDbType"/> type, if range/array flags
+		/// Returned value could be invalid for <see cref="NpgsqlProviderAdapter.NpgsqlDbType"/> type, if range/array flags
 		/// were applied. Don't try to use results of this function for anything except passing it directly to npgsql.
 		/// </remarks>
-		internal PostgreSQLWrappers.NpgsqlDbType? GetNativeType(string? dbType, bool convertAlways = false)
+		internal NpgsqlProviderAdapter.NpgsqlDbType? GetNativeType(string? dbType, bool convertAlways = false)
 		{
 			if (string.IsNullOrWhiteSpace(dbType))
 				return null;
@@ -432,7 +416,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
-				result = Wrapper.Value.ApplyFlags(result, isArray, isRange, convertAlways);
+				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, convertAlways);
 
 				return result;
 			}
@@ -445,20 +429,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public static readonly MappingSchema PostgreSQL92MappingSchema = new PostgreSQL92MappingSchema();
 			public static readonly MappingSchema PostgreSQL93MappingSchema = new PostgreSQL93MappingSchema();
 			public static readonly MappingSchema PostgreSQL95MappingSchema = new PostgreSQL95MappingSchema();
-		}
 
-		public override MappingSchema MappingSchema
-		{
-			get
+			public static MappingSchema Get(PostgreSQLVersion version, MappingSchema providerSchema)
 			{
-				switch (Version)
+				switch (version)
 				{
-					case PostgreSQLVersion.v92: return MappingSchemaInstance.PostgreSQL92MappingSchema;
-					case PostgreSQLVersion.v93: return MappingSchemaInstance.PostgreSQL93MappingSchema;
-					case PostgreSQLVersion.v95: return MappingSchemaInstance.PostgreSQL95MappingSchema;
+					case PostgreSQLVersion.v92: return new MappingSchema(PostgreSQL92MappingSchema, providerSchema);
+					case PostgreSQLVersion.v93: return new MappingSchema(PostgreSQL93MappingSchema, providerSchema);
+					default:
+					case PostgreSQLVersion.v95: return new MappingSchema(PostgreSQL95MappingSchema, providerSchema);
 				}
-
-				return base.MappingSchema;
 			}
 		}
 	}

@@ -358,11 +358,9 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (_provider != null)
 			{
-				FirebirdWrappers.Initialize();
-
-				var param = _provider.TryConvertParameter(FirebirdWrappers.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return FirebirdWrappers.TypeGetter(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

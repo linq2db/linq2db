@@ -2,15 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -35,7 +29,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
-				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				if (connection == null)
 					return MultipleRowsCopy(table, options, source);
@@ -54,12 +48,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var currentCount = 0;
 
 				var key = new { Type = typeof(T), options.KeepIdentity, ed };
-				var rowWriter = (Action<MappingSchema, PostgreSQLWrappers.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
+				var rowWriter = (Action<MappingSchema, NpgsqlProviderAdapter.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
 					key,
-					_ => _provider.Wrapper.Value.GetBinaryImportRowWriter<T>(_provider, sqlBuilder, columns, dataConnection.MappingSchema));
+					_ => _provider.Adapter.CreateBinaryImportRowWriter<T>(_provider, sqlBuilder, columns, dataConnection.MappingSchema));
 
-				var useComplete = _provider.Wrapper.Value.BinaryImporterHasComplete;
-				var writer      = _provider.Wrapper.Value.BeginBinaryImport(connection, copyCommand);
+				var useComplete = _provider.Adapter.BinaryImporterHasComplete;
+				var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
 				try
 				{
@@ -89,7 +83,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							writer.Dispose();
 
-							writer       = _provider.Wrapper.Value.BeginBinaryImport(connection, copyCommand);
+							writer       = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 							currentCount = 0;
 						}
 					}

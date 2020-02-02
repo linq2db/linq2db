@@ -107,8 +107,8 @@ namespace LinqToDB.DataProvider.Oracle
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
 #if NET45 || NET46
-			if (assemblyName == OracleWrappers.NativeAssemblyName)  return _oracleManagedDataProvider.Value;
-			if (assemblyName == OracleWrappers.ManagedAssemblyName) return _oracleManagedDataProvider.Value;
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName)  return _oracleManagedDataProvider.Value;
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return _oracleManagedDataProvider.Value;
 
 			switch (providerName)
 			{
@@ -128,10 +128,10 @@ namespace LinqToDB.DataProvider.Oracle
 			path,
 #if NET45 || NET46
 			DetectedProviderName == ProviderName.OracleManaged
-				? OracleWrappers.ManagedAssemblyName
-				: OracleWrappers.NativeAssemblyName
+				? OracleProviderAdapter.ManagedAssemblyName
+				: OracleProviderAdapter.NativeAssemblyName
 #else
-			OracleWrappers.ManagedAssemblyName
+			OracleProviderAdapter.ManagedAssemblyName
 #endif
 			);
 

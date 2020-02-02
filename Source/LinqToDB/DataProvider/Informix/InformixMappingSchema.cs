@@ -94,9 +94,9 @@ namespace LinqToDB.DataProvider.Informix
 
 		internal static readonly InformixMappingSchema Instance = new InformixMappingSchema();
 
-		public class IDSMappingSchema : MappingSchema
+		public class IfxMappingSchema : MappingSchema
 		{
-			public IDSMappingSchema()
+			public IfxMappingSchema()
 				: base(ProviderName.Informix, Instance)
 			{
 			}

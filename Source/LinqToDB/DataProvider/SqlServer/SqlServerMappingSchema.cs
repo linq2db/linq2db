@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
+	using LinqToDB.Metadata;
 	using Mapping;
 	using SqlQuery;
 
@@ -66,6 +67,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), int.MaxValue));
+
+			AddMetadataReader(new SystemDataSqlServerAttributeReader());
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD2_0
+using System;
 using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -6,56 +7,72 @@ namespace LinqToDB.DataProvider.SapHana
 	using System.Data.Common;
 	using LinqToDB.Expressions;
 
-	internal static class SapHanaWrappers
+	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
+		private static readonly object _syncRoot = new object();
+		private static SapHanaProviderAdapter? _instance;
+
 #if NET45 || NET46
 		public static readonly string AssemblyName = "Sap.Data.Hana.v4.5";
 #endif
-
 #if NETCOREAPP2_1
 		public static readonly string AssemblyName = "Sap.Data.Hana.Core.v2.1";
 #endif
 
-		private static readonly object _syncRoot = new object();
-		private static TypeMapper? _typeMapper;
+		private SapHanaProviderAdapter(
+			Type connectionType,
+			Type dataReaderType,
+			Type parameterType,
+			Type commandType,
+			Type transactionType,
 
-		internal static Type ConnectionType  = null!;
-		internal static Type ParameterType   = null!;
-		internal static Type DataReaderType  = null!;
-		internal static Type TransactionType = null!;
+			Action<IDbDataParameter, HanaDbType> dbTypeSetter,
 
-		internal static Action<IDbDataParameter, HanaDbType> TypeSetter = null!;
-		
-		internal static HanaBulkCopy              NewHanaBulkCopy(IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => _typeMapper!.CreateAndWrap(() => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction))!;
-		internal static HanaBulkCopyColumnMapping NewHanaBulkCopyColumnMapping(int source, string destination) => _typeMapper!.CreateAndWrap(() => new HanaBulkCopyColumnMapping(source, destination))!;
-
-		internal static void Initialize()
+			Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> bulkCopyCreator,
+			Func<int, string, HanaBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
 		{
-			if (_typeMapper == null)
+			ConnectionType  = connectionType;
+			DataReaderType  = dataReaderType;
+			ParameterType   = parameterType;
+			CommandType     = commandType;
+			TransactionType = transactionType;
+
+			SetDbType = dbTypeSetter;
+
+			CreateBulkCopy              = bulkCopyCreator;
+			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
+		}
+
+		public Type ConnectionType  { get; }
+		public Type DataReaderType  { get; }
+		public Type ParameterType   { get; }
+		public Type CommandType     { get; }
+		public Type TransactionType { get; }
+
+		public Action<IDbDataParameter, HanaDbType> SetDbType { get; }
+
+		public Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
+		public Func<int, string, HanaBulkCopyColumnMapping>                            CreateBulkCopyColumnMapping { get; }
+
+		internal static SapHanaProviderAdapter GetInstance()
+		{
+			if (_instance == null)
 			{
 				lock (_syncRoot)
 				{
-					if (_typeMapper == null)
+					if (_instance == null)
 					{
-#if NET45 || NET46
-						const string assemblyName    = "Sap.Data.Hana.v4.5";
-#else
-						const string assemblyName    = "Sap.Data.Hana.Core.v2.1";
-#endif
 						const string clientNamespace = "Sap.Data.Hana";
 
-#if !NETSTANDARD2_0
-						var assembly = Type.GetType($"{clientNamespace}.HanaConnection, {assemblyName}", false)?.Assembly
+						var assembly = Type.GetType($"{clientNamespace}.HanaConnection, {AssemblyName}", false)?.Assembly
 							?? DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly;
-#else
-						var assembly = Type.GetType($"{clientNamespace}.HanaConnection, {assemblyName}", true).Assembly;
-#endif
 
-						ConnectionType  = assembly.GetType($"{clientNamespace}.HanaConnection", true);
-						ParameterType   = assembly.GetType($"{clientNamespace}.HanaParameter", true);
-						DataReaderType  = assembly.GetType($"{clientNamespace}.HanaDataReader", true);
-						TransactionType = assembly.GetType($"{clientNamespace}.HanaTransaction", true);
-						var dbType      = assembly.GetType($"{clientNamespace}.HanaDbType", true);
+						var connectionType  = assembly.GetType($"{clientNamespace}.HanaConnection", true);
+						var dataReaderType  = assembly.GetType($"{clientNamespace}.HanaDataReader", true);
+						var parameterType   = assembly.GetType($"{clientNamespace}.HanaParameter", true);
+						var commandType     = assembly.GetType($"{clientNamespace}.HanaCommand", true);
+						var transactionType = assembly.GetType($"{clientNamespace}.HanaTransaction", true);
+						var dbType          = assembly.GetType($"{clientNamespace}.HanaDbType", true);
 
 						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.HanaBulkCopy", true);
 						var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.HanaBulkCopyOptions", true);
@@ -64,7 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 						var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.HanaRowsCopiedEventArgs", true);
 						var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.HanaBulkCopyColumnMappingCollection", true);
 
-						var typeMapper = new TypeMapper(ConnectionType, ParameterType, dbType, TransactionType,
+						var typeMapper = new TypeMapper(connectionType, parameterType, dbType, transactionType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
 						typeMapper.RegisterWrapper<HanaConnection>();
@@ -80,22 +97,31 @@ namespace LinqToDB.DataProvider.SapHana
 						typeMapper.RegisterWrapper<HanaBulkCopyOptions>();
 						typeMapper.RegisterWrapper<HanaBulkCopyColumnMapping>();
 
-						var dbTypeBuilder = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
-						TypeSetter        = dbTypeBuilder.BuildSetter<IDbDataParameter>();
+						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<IDbDataParameter>();
 
-						_typeMapper = typeMapper;
+						_instance = new SapHanaProviderAdapter(
+							connectionType,
+							dataReaderType,
+							parameterType,
+							commandType,
+							transactionType,
+							typeSetter,
+							(IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => typeMapper.CreateAndWrap(() => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction))!,
+							(int source, string destination) => typeMapper.CreateAndWrap(() => new HanaBulkCopyColumnMapping(source, destination))!);
 					}
 				}
 			}
+
+			return _instance;
 		}
 
 		[Wrapper]
-		internal class HanaTransaction
+		public class HanaTransaction
 		{
 		}
 
 		[Wrapper]
-		internal class HanaConnection
+		public class HanaConnection
 		{
 		}
 
@@ -106,7 +132,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		internal enum HanaDbType
+		public enum HanaDbType
 		{
 			AlphaNum     = 1,
 			BigInt       = 2,
@@ -135,7 +161,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		#region BulkCopy
 		[Wrapper]
-		internal class HanaBulkCopy : TypeWrapper, IDisposable
+		public class HanaBulkCopy : TypeWrapper, IDisposable
 		{
 			public HanaBulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
 			{
@@ -150,25 +176,25 @@ namespace LinqToDB.DataProvider.SapHana
 
 			public int NotifyAfter
 			{
-				get => this.Wrap        (t => t.NotifyAfter);
+				get => this.Wrap(t => t.NotifyAfter);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BatchSize
 			{
-				get => this.Wrap        (t => t.BatchSize);
+				get => this.Wrap(t => t.BatchSize);
 				set => this.SetPropValue(t => t.BatchSize, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap        (t => t.BulkCopyTimeout);
+				get => this.Wrap(t => t.BulkCopyTimeout);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap        (t => t.DestinationTableName);
+				get => this.Wrap(t => t.DestinationTableName);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
@@ -179,7 +205,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			public event HanaRowsCopiedEventHandler HanaRowsCopied
 			{
-				add => Events.AddHandler      (nameof(HanaRowsCopied), value);
+				add => Events.AddHandler(nameof(HanaRowsCopied), value);
 				remove => Events.RemoveHandler(nameof(HanaRowsCopied), value);
 			}
 		}
@@ -198,16 +224,16 @@ namespace LinqToDB.DataProvider.SapHana
 
 			public bool Abort
 			{
-				get => this.Wrap        (t => t.Abort);
+				get => this.Wrap(t => t.Abort);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
 
 		[Wrapper]
-		internal delegate void HanaRowsCopiedEventHandler(object sender, HanaRowsCopiedEventArgs e);
+		public delegate void HanaRowsCopiedEventHandler(object sender, HanaRowsCopiedEventArgs e);
 
 		[Wrapper]
-		internal class HanaBulkCopyColumnMappingCollection : TypeWrapper
+		public class HanaBulkCopyColumnMappingCollection : TypeWrapper
 		{
 			public HanaBulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
 			{
@@ -217,16 +243,16 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper, Flags]
-		internal enum HanaBulkCopyOptions
+		public enum HanaBulkCopyOptions
 		{
-			Default                = 0,
-			KeepIdentity           = 1,
-			TableLock              = 2,
+			Default = 0,
+			KeepIdentity = 1,
+			TableLock = 2,
 			UseInternalTransaction = 4
 		}
 
 		[Wrapper]
-		internal class HanaBulkCopyColumnMapping : TypeWrapper
+		public class HanaBulkCopyColumnMapping : TypeWrapper
 		{
 			public HanaBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
 			{
@@ -238,3 +264,4 @@ namespace LinqToDB.DataProvider.SapHana
 		#endregion
 	}
 }
+#endif

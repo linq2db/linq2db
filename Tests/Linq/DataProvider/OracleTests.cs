@@ -2415,7 +2415,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(typeof(string)        , pms[21].Value.GetType());
 				Assert.AreEqual(typeof(string)        , pms[22].Value.GetType());
 				Assert.AreEqual(typeof(byte[])        , pms[23].Value.GetType());
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleBFileType, pms[24].Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleBFileType, pms[24].Value.GetType());
 				Assert.AreEqual(typeof(byte[])        , pms[25].Value.GetType());
 				Assert.AreEqual(typeof(string)        , pms[26].Value.GetType());
 

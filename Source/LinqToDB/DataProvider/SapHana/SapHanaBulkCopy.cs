@@ -24,13 +24,11 @@ namespace LinqToDB.DataProvider.SapHana
 			if (!(table?.DataContext is DataConnection dataConnection))
 				throw new ArgumentNullException(nameof(dataConnection));
 
-			SapHanaWrappers.Initialize();
-
-			var connection = _provider.TryConvertConnection(SapHanaWrappers.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 			var transaction = dataConnection.Transaction;
 			if (connection != null && transaction != null)
-				transaction = _provider.TryConvertTransaction(SapHanaWrappers.TransactionType, transaction, dataConnection.MappingSchema);
+				transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
 
 			if (connection != null && (dataConnection.Transaction == null || transaction != null))
 			{
@@ -39,12 +37,12 @@ namespace LinqToDB.DataProvider.SapHana
 				var rc      = new BulkCopyRowsCopied();
 
 
-				var hanaOptions = SapHanaWrappers.HanaBulkCopyOptions.Default;
+				var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
 
-				if (options.KeepIdentity == true) hanaOptions |= SapHanaWrappers.HanaBulkCopyOptions.KeepIdentity;
+				if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
 
 
-				using (var bc = SapHanaWrappers.NewHanaBulkCopy(connection, hanaOptions, transaction))
+				using (var bc = _provider.Adapter.CreateBulkCopy(connection, hanaOptions, transaction))
 				{
 					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					{
@@ -68,7 +66,7 @@ namespace LinqToDB.DataProvider.SapHana
 					bc.DestinationTableName = tableName;
 
 					for (var i = 0; i < columns.Count; i++)
-						bc.ColumnMappings.Add(SapHanaWrappers.NewHanaBulkCopyColumnMapping(i, columns[i].ColumnName));
+						bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
 
 					var rd = new BulkCopyReader(dataConnection, columns, source);
 

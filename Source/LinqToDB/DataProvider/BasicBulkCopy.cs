@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Text;
-
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
-	using Expressions;
 	using SqlProvider;
 
 	public class BasicBulkCopy
@@ -79,79 +74,6 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region ProviderSpecific Support
-
-		protected Func<IDbConnection,int,IDisposable> CreateBulkCopyCreator(
-			Type connectionType, Type bulkCopyType, Type bulkCopyOptionType)
-		{
-			var p1 = Expression.Parameter(typeof(IDbConnection), "pc");
-			var p2 = Expression.Parameter(typeof(int),           "po");
-			var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
-				Expression.Convert(
-					Expression.New(
-						bulkCopyType.GetConstructor(new[] { connectionType, bulkCopyOptionType }),
-						Expression.Convert(p1, connectionType),
-						Expression.Convert(p2, bulkCopyOptionType)),
-					typeof(IDisposable)),
-				p1, p2);
-
-			return l.Compile();
-		}
-
-		protected Func<int,string,object> CreateColumnMappingCreator(Type columnMappingType)
-		{
-			var p1 = Expression.Parameter(typeof(int),    "p1");
-			var p2 = Expression.Parameter(typeof(string), "p2");
-			var l  = Expression.Lambda<Func<int,string,object>>(
-				Expression.Convert(
-					Expression.New(
-						columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
-						new Expression[] { p1, p2 }),
-					typeof(object)),
-				p1, p2);
-
-			return l.Compile();
-		}
-
-		protected Action<object,Action<object>> CreateBulkCopySubscriber(object bulkCopy, string eventName)
-		{
-			var eventInfo   = bulkCopy.GetType().GetEventEx(eventName);
-			var handlerType = eventInfo.EventHandlerType;
-			var eventParams = handlerType.GetMethodEx("Invoke").GetParameters();
-
-			// Expression<Func<Action<object>,Delegate>> lambda =
-			//     actionParameter => Delegate.CreateDelegate(
-			//         typeof(int),
-			//         (Action<object,DB2RowsCopiedEventArgs>)((o,e) => actionParameter(e)),
-			//         "Invoke",
-			//         false);
-
-			var actionParameter = Expression.Parameter(typeof(Action<object>), "p1");
-			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
-			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
-
-			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object?)null, "", false));
-
-			var lambda = Expression.Lambda<Func<Action<object>,Delegate>>(
-				Expression.Call(
-					null,
-					mi,
-					new Expression[]
-					{
-						Expression.Constant(handlerType, typeof(Type)),
-						//Expression.Convert(
-							Expression.Lambda(
-								Expression.Invoke(actionParameter, new Expression[] { argsParameter }),
-								new[] { senderParameter, argsParameter }),
-						//	typeof(Action<object, EventArgs>)),
-						Expression.Constant("Invoke", typeof(string)),
-						Expression.Constant(false, typeof(bool))
-					}),
-				new[] { actionParameter });
-
-			var dgt = lambda.Compile();
-
-			return (obj,action) => eventInfo.AddEventHandler(obj, dgt(action));
-		}
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{

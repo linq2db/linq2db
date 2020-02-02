@@ -18,10 +18,6 @@ namespace Tests
 		{
 		}
 
-		public override string    ConnectionNamespace => "System.Data.SQLite";
-		protected override string ConnectionTypeName  => "System.Data.SQLite.SQLiteConnection, System.Data.SQLite";
-		protected override string DataReaderTypeName  => "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite";
-
 		public override MappingSchema MappingSchema => Name == TestProvName.SQLiteClassicMiniProfilerMapped
 			? MappingSchemaInstance.MappedMappingSchema
 			: MappingSchemaInstance.UnmappedMappingSchema;

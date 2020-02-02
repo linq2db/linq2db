@@ -67,21 +67,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Wrapper.Value.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Wrapper.Value.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Wrapper.Value.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Wrapper.Value.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Wrapper.Value.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Wrapper.Value.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Wrapper.Value.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Wrapper.Value.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Wrapper.Value.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Wrapper.Value.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Wrapper.Value.NpgsqlTimeSpanType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Wrapper.Value.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Wrapper.Value.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Wrapper.Value.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Wrapper.Value.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName       });
@@ -419,18 +419,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "timestamp"                   :
 				case "timestamptz"                 :
 				case "timestamp with time zone"    :
-				case "timestamp without time zone" : return _provider.Wrapper.Value.NpgsqlDateTimeType.Name;
-				case "date"                        : return _provider.Wrapper.Value.NpgsqlDateType    .Name;
-				case "point"                       : return _provider.Wrapper.Value.NpgsqlPointType   .Name;
-				case "lseg"                        : return _provider.Wrapper.Value.NpgsqlLSegType    .Name;
-				case "box"                         : return _provider.Wrapper.Value.NpgsqlBoxType     .Name;
-				case "circle"                      : return _provider.Wrapper.Value.NpgsqlCircleType  .Name;
-				case "path"                        : return _provider.Wrapper.Value.NpgsqlPathType    .Name;
-				case "polygon"                     : return _provider.Wrapper.Value.NpgsqlPolygonType .Name;
-				case "line"                        : return _provider.Wrapper.Value.NpgsqlLineType    .Name;
+				case "timestamp without time zone" : return _provider.Adapter.NpgsqlDateTimeType.Name;
+				case "date"                        : return _provider.Adapter.NpgsqlDateType    .Name;
+				case "point"                       : return _provider.Adapter.NpgsqlPointType   .Name;
+				case "lseg"                        : return _provider.Adapter.NpgsqlLSegType    .Name;
+				case "box"                         : return _provider.Adapter.NpgsqlBoxType     .Name;
+				case "circle"                      : return _provider.Adapter.NpgsqlCircleType  .Name;
+				case "path"                        : return _provider.Adapter.NpgsqlPathType    .Name;
+				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType .Name;
+				case "line"                        : return _provider.Adapter.NpgsqlLineType    .Name;
 				case "cidr"                        :
-				case "inet"                        : return _provider.Wrapper.Value.NpgsqlInetType    .Name;
-				case "geometry "                   : return "PostgisGeometry";
+				case "inet"                        : return _provider.Adapter.NpgsqlInetType    .Name;
+				case "geometry"                    : return "PostgisGeometry";
 			}
 
 			return base.GetProviderSpecificType(dataType);

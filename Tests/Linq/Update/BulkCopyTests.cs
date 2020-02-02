@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 			bool notSupported = false;
 			if (context.Contains(ProviderName.Informix))
 			{
-				notSupported = !((InformixDataProvider)db.DataProvider).Wrapper.Value.IsIDSProvider
+				notSupported = !((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider
 					|| copyType == BulkCopyType.MultipleRows;
 			}
 

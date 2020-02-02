@@ -774,40 +774,29 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopProvider : DynamicDataProviderBase
+	internal class TestNoopProviderAdapter : IDynamicProviderAdapter
+	{
+		Type IDynamicProviderAdapter.ConnectionType => typeof(TestNoopConnection);
+
+		Type IDynamicProviderAdapter.DataReaderType => typeof(TestNoopDataReader);
+
+		Type IDynamicProviderAdapter.ParameterType => typeof(TestNoopDbParameter);
+
+		Type IDynamicProviderAdapter.CommandType => typeof(TestNoopDbCommand);
+
+		Type IDynamicProviderAdapter.TransactionType => throw new NotImplementedException();
+	}
+
+	internal class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
 		public TestNoopProvider()
-			: base(TestProvName.NoopProvider, new MappingSchema())
+			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())
 		{
 		}
 
 		static TestNoopProvider()
 		{
 			DataConnection.AddDataProvider(new TestNoopProvider());
-		}
-
-		public override string ConnectionNamespace
-		{
-			get
-			{
-				return "Tests";
-			}
-		}
-
-		protected override string ConnectionTypeName
-		{
-			get
-			{
-				return "Tests.TestNoopConnection, " + GetType().Assembly.FullName;
-			}
-		}
-
-		protected override string DataReaderTypeName
-		{
-			get
-			{
-				return "Tests.TestNoopDataReader, " + GetType().Assembly.FullName;
-			}
 		}
 
 		public static void Init()
@@ -828,10 +817,6 @@ namespace Tests
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
 			return TestNoopSqlOptimizer.Instance;
-		}
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
 		}
 	}
 

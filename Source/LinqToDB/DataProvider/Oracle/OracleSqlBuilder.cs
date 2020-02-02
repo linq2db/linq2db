@@ -496,9 +496,9 @@ END;",
 		{
 			if (_provider != null)
 			{
-				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Wrapper.Value.TypeGetter(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

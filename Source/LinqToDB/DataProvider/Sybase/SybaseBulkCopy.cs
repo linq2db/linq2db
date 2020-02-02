@@ -22,16 +22,16 @@ namespace LinqToDB.DataProvider.Sybase
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (table.DataContext is DataConnection dataConnection && _provider.Wrapper.Value.BulkCopy != null)
+			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
 				// provider will call sp_oledb_columns which creates temp table
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryConvertTransaction(_provider.Wrapper.Value.TransactionType, transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -39,17 +39,17 @@ namespace LinqToDB.DataProvider.Sybase
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
 					var rd      = new BulkCopyReader(dataConnection, columns, source);
-					var sqlopt  = SybaseWrappers.AseBulkCopyOptions.Default;
+					var sqlopt  = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
 
-					if (options.CheckConstraints       == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.CheckConstraints;
-					if (options.KeepIdentity           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepIdentity;
-					if (options.TableLock              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.TableLock;
-					if (options.KeepNulls              == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.KeepNulls;
-					if (options.FireTriggers           == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.FireTriggers;
-					if (options.UseInternalTransaction == true) sqlopt |= SybaseWrappers.AseBulkCopyOptions.UseInternalTransaction;
+					if (options.CheckConstraints       == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.CheckConstraints;
+					if (options.KeepIdentity           == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.KeepIdentity;
+					if (options.TableLock              == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.TableLock;
+					if (options.KeepNulls              == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.KeepNulls;
+					if (options.FireTriggers           == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.FireTriggers;
+					if (options.UseInternalTransaction == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.UseInternalTransaction;
 
-					using (var bc = _provider.Wrapper.Value.BulkCopy.CreateBulkCopy(connection, sqlopt, transaction))
+					using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt, transaction))
 					{
 						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Sybase
 						bc.DestinationTableName = GetDestinationTableName(sb, options, table);
 
 						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Wrapper.Value.BulkCopy.CreateBulkCopyColumnMapping(columns[i].ColumnName, columns[i].ColumnName));
+							bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(columns[i].ColumnName, columns[i].ColumnName));
 
 						TraceAction(
 							dataConnection,

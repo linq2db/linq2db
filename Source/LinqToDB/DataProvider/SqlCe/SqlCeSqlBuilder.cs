@@ -170,11 +170,9 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (_provider != null)
 			{
-				SqlCeWrappers.Initialize();
-
-				var param = _provider.TryConvertParameter(SqlCeWrappers.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return SqlCeWrappers.TypeGetter(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

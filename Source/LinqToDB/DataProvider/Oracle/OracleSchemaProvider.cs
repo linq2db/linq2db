@@ -21,20 +21,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDataSourceName(DataConnection dataConnection)
 		{
-			var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Wrapper.Value.HostNameGetter(connection);
+			return _provider.Adapter.GetHostName(connection);
 		}
 
 		protected override string GetDatabaseName(DataConnection dataConnection)
 		{
-			var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Wrapper.Value.DatabaseNameGetter(connection);
+			return _provider.Adapter.GetDatabaseName(connection);
 		}
 
 		private string? _currentUser;

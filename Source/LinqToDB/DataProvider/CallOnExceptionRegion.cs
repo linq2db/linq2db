@@ -3,6 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace LinqToDB
 {
+	/// <summary>
+	/// Implements disposable region, which will call provided action, if region execution terminated due to
+	/// exception.
+	/// </summary>
 	internal class CallOnExceptionRegion : IDisposable
 	{
 		private readonly Action _action;

@@ -142,7 +142,9 @@ namespace LinqToDB.DataProvider.Access
 		/// </summary>
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
-		// TODO: V3 - maybe we should remove bulk copy methods from tools? don't see any value in having them
+		// TODO: V3 - maybe we should remove bulk copy methods from tools?
+		// If user has DataConnection - he can call BulkCopy directly and Tools methods only provide some
+		// defaults for parameters
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection,
 			IEnumerable<T> source,
@@ -153,8 +155,8 @@ namespace LinqToDB.DataProvider.Access
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType = BulkCopyType.MultipleRows,
-					MaxBatchSize = maxBatchSize,
+					BulkCopyType       = BulkCopyType.MultipleRows,
+					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
 		}

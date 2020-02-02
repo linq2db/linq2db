@@ -55,8 +55,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}

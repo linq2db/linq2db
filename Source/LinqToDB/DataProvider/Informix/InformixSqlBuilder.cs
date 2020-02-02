@@ -257,12 +257,12 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (_provider != null)
 			{
-				var param = _provider.TryConvertParameter(_provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					if (_provider.Name == ProviderName.Informix)
-						return _provider.Wrapper.Value.IfxTypeGetter!(param).ToString();
+					if (_provider.Adapter.GetIfxType != null)
+						return _provider.Adapter.GetIfxType(param).ToString();
 					else
-						return _provider.Wrapper.Value.DB2TypeGetter!(param).ToString();
+						return _provider.Adapter.GetDB2Type!(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

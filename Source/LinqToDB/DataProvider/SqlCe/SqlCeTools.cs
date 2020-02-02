@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void ResolveSqlCe(string path)
 		{
-			new AssemblyResolver(path, SqlCeWrappers.AssemblyName);
+			new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSqlCe(Assembly assembly)
@@ -65,13 +65,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
-			SqlCeWrappers.Initialize();
-
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
 				dbName =>
 				{
-					using (var engine = SqlCeWrappers.NewSqlCeEngine("Data Source=" + dbName))
+					using (var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName))
 						engine.CreateDatabase();
 				});
 		}

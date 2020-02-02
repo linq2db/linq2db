@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlProvider;
 
-	public class FirebirdDataProvider : DynamicDataProviderBase
+	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
 		public FirebirdDataProvider()
 			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, FirebirdProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -47,14 +47,6 @@ namespace LinqToDB.DataProvider.Firebird
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
 			return value;
-		}
-
-		public    override string ConnectionNamespace => "FirebirdSql.Data.FirebirdClient";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.FbConnection, {ConnectionNamespace}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.FbDataReader, {ConnectionNamespace}";
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)

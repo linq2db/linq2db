@@ -42,13 +42,13 @@ namespace LinqToDB.DataProvider.Firebird
 		public static void ResolveFirebird(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, FirebirdWrappers.AssemblyName);
+			new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, FirebirdWrappers.AssemblyName);
+			new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		#region CreateDataConnection
@@ -94,12 +94,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region ClearAllPools
 
-		public static void ClearAllPools()
-		{
-			FirebirdWrappers.Initialize();
-
-			FirebirdWrappers.ClearAllPools();
-		}
+		public static void ClearAllPools() => FirebirdProviderAdapter.GetInstance().ClearAllPools();
 
 		#endregion
 	}

@@ -4,22 +4,26 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Data;
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlProvider;
 	using Tools;
-	using System.Linq.Expressions;
 
-	public class MySqlDataProvider : DynamicDataProviderBase
+	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
 		public MySqlDataProvider(string name)
-			: this(name, null!)
+			: this(name, null)
 		{
 		}
 
-		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
+			: base(
+				  name,
+				  mappingSchema != null
+					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
+					: MappingSchemaInstance.Get(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
+				  MySqlProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -28,50 +32,22 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
-		}
 
-		private bool _customReadersConfigured = false;
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			if (!_customReadersConfigured)
+			// configure provider-specific data readers
+			if (Adapter.GetMySqlDecimalMethodName != null)
 			{
-				var wrapper = MySqlWrappers.Initialize(this);
-
-				// configure provider-specific data readers
-				if (wrapper.GetMySqlDecimalMethodName != null)
-				{
-					// SetProviderField is not needed for this type
-					SetToTypeField  (wrapper.MySqlDecimalType!, wrapper.GetMySqlDecimalMethodName, wrapper.DataReaderType);
-				}
-
-				if (wrapper.GetDateTimeOffsetMethodName != null)
-				{
-					SetProviderField(typeof(DateTimeOffset), wrapper.GetDateTimeOffsetMethodName, wrapper.DataReaderType);
-					SetToTypeField  (typeof(DateTimeOffset), wrapper.GetDateTimeOffsetMethodName, wrapper.DataReaderType);
-				}
-
-				SetProviderField(wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
-				SetToTypeField  (wrapper.MySqlDateTimeType, wrapper.GetMySqlDateTimeMethodName, wrapper.DataReaderType);
-
-				_customReadersConfigured = true;
+				// SetProviderField is not needed for this type
+				SetToTypeField(Adapter.MySqlDecimalType!, Adapter.GetMySqlDecimalMethodName, Adapter.DataReaderType);
 			}
 
-			return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-		}
+			if (Adapter.GetDateTimeOffsetMethodName != null)
+			{
+				SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+				SetToTypeField  (typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+			}
 
-
-		public    override string ConnectionNamespace => "MySql.Data.MySqlClient";
-		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
-			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
-			: $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
-
-		protected override string DataReaderTypeName  => Name == ProviderName.MySqlConnector
-			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
-			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
+			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
+			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -86,13 +62,18 @@ namespace LinqToDB.DataProvider.MySql
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MySqlMappingSchema.MySqlOfficialMappingSchema MySqlOfficialMappingSchema   = new MySqlMappingSchema.MySqlOfficialMappingSchema();
-			public static readonly MySqlMappingSchema.MySqlConnectorMappingSchema MySqlConnectorMappingSchema = new MySqlMappingSchema.MySqlConnectorMappingSchema();
-		}
+			public static readonly MappingSchema MySqlOfficialMappingSchema  = new MySqlMappingSchema.MySqlOfficialMappingSchema();
+			public static readonly MappingSchema MySqlConnectorMappingSchema = new MySqlMappingSchema.MySqlConnectorMappingSchema();
 
-		public override MappingSchema MappingSchema => Name == ProviderName.MySqlConnector
-			? MappingSchemaInstance.MySqlConnectorMappingSchema
-			: MappingSchemaInstance.MySqlOfficialMappingSchema as MappingSchema;
+			public static MappingSchema Get(string name, MappingSchema providerSchema)
+			{
+				switch (name)
+				{
+					case ProviderName.MySqlConnector: return new MappingSchema(MySqlConnectorMappingSchema, providerSchema);
+					default                         : return new MappingSchema(MySqlOfficialMappingSchema , providerSchema);
+				}
+			}
+		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -110,14 +91,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			var wrapper = MySqlWrappers.Initialize(this);
-
 			switch (dataType.DataType)
 			{
 				case DataType.Decimal    :
 				case DataType.VarNumeric :
-					if (wrapper.MySqlDecimalGetter != null && value != null && value.GetType() == wrapper.MySqlDecimalType)
-						value = wrapper.MySqlDecimalGetter(value);
+					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
+						value = Adapter.MySqlDecimalGetter(value);
 					break;
 			}
 
@@ -144,7 +123,7 @@ namespace LinqToDB.DataProvider.MySql
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException("Source is null!", nameof(source));
+				throw new ArgumentException(nameof(source));
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)

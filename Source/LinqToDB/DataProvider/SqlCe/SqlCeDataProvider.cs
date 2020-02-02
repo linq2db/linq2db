@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SqlCeDataProvider : DynamicDataProviderBase
+	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
 		public SqlCeDataProvider()
 			: this(ProviderName.SqlCe, new SqlCeMappingSchema())
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		protected SqlCeDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, SqlCeProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsSubQueryColumnSupported            = false;
 			SqlProviderFlags.IsCountSubQuerySupported             = false;
@@ -39,18 +39,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
-		}
-
-		public    override string ConnectionNamespace => "System.Data.SqlServerCe";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
-
-#if !NETSTANDARD2_0
-		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
-#endif
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
 		}
 
 		#region Overrides
@@ -107,11 +95,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (type != null)
 			{
-				SqlCeWrappers.Initialize();
-				var param = TryConvertParameter(SqlCeWrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					SqlCeWrappers.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}

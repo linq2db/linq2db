@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SqlServerDataProvider : DynamicDataProviderBase
+	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
 		#region Init
 
@@ -25,9 +25,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
-			: base(name, null!)
+			: base(
+				  name,
+				  MappingSchemaInstance.Get(version),
+				  SqlServerProviderAdapter.GetInstance(provider))
 		{
-			Version = version;
+			Version  = version;
 			Provider = provider;
 
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
@@ -78,98 +81,34 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetField<IDataReader, decimal>("smallmoney", (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
 			SetField<IDataReader, decimal>("decimal"   , (r, i) => SqlServerTools.DataReaderGetDecimal(r, i));
 
-			Wrapper = new Lazy<SqlServerWrappers.ISqlServerWrapper>(() => Initialize(), true);
-		}
-
-		private SqlServerWrappers.ISqlServerWrapper Initialize()
-		{
-			var wrapper =  SqlServerWrappers.Initialize(Provider, MappingSchema);
-
 			// missing:
 			// GetSqlBytes
 			// GetSqlChars
-			SetProviderField<SqlBinary  , SqlBinary  >("GetSqlBinary"  , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlBoolean , SqlBoolean >("GetSqlBoolean" , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlByte    , SqlByte    >("GetSqlByte"    , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlDateTime, SqlDateTime>("GetSqlDateTime", dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlDecimal , SqlDecimal >("GetSqlDecimal" , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlDouble  , SqlDouble  >("GetSqlDouble"  , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlGuid    , SqlGuid    >("GetSqlGuid"    , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlInt16   , SqlInt16   >("GetSqlInt16"   , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlInt32   , SqlInt32   >("GetSqlInt32"   , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlInt64   , SqlInt64   >("GetSqlInt64"   , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlMoney   , SqlMoney   >("GetSqlMoney"   , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlSingle  , SqlSingle  >("GetSqlSingle"  , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlString  , SqlString  >("GetSqlString"  , dataReaderType: wrapper.DataReaderType);
-			SetProviderField<SqlXml     , SqlXml     >("GetSqlXml"     , dataReaderType: wrapper.DataReaderType);
+			SetProviderField<SqlBinary  , SqlBinary  >("GetSqlBinary"  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlBoolean , SqlBoolean >("GetSqlBoolean" , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlByte    , SqlByte    >("GetSqlByte"    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDateTime, SqlDateTime>("GetSqlDateTime", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDecimal , SqlDecimal >("GetSqlDecimal" , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDouble  , SqlDouble  >("GetSqlDouble"  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlGuid    , SqlGuid    >("GetSqlGuid"    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt16   , SqlInt16   >("GetSqlInt16"   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt32   , SqlInt32   >("GetSqlInt32"   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt64   , SqlInt64   >("GetSqlInt64"   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlMoney   , SqlMoney   >("GetSqlMoney"   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlSingle  , SqlSingle  >("GetSqlSingle"  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlString  , SqlString  >("GetSqlString"  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlXml     , SqlXml     >("GetSqlXml"     , dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DateTimeOffset>("GetDateTimeOffset", dataReaderType: wrapper.DataReaderType);
-			SetProviderField<TimeSpan>      ("GetTimeSpan"      , dataReaderType: wrapper.DataReaderType);
+			SetProviderField<DateTimeOffset>("GetDateTimeOffset", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<TimeSpan>      ("GetTimeSpan"      , dataReaderType: Adapter.DataReaderType);
 
 			// non-specific fallback
 			SetProviderField<IDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
-
-			return wrapper;
 		}
-
-		internal readonly Lazy<SqlServerWrappers.ISqlServerWrapper> Wrapper;
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			// TODO: lazy initialization (will be refactored-out later)
-			var _ = Wrapper.Value;
-
-			return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-		}
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-		}
-
-		// TODO: will be refactored later
-#if NET45 || NET46
-		Type? _dataReaderType;
-		public override Type DataReaderType
-		{
-			get
-			{
-				if (_dataReaderType != null)
-					return _dataReaderType;
-
-				if (Provider == SqlServerProvider.SystemDataSqlClient)
-				{
-					_dataReaderType = typeof(System.Data.SqlClient.SqlDataReader);
-					return _dataReaderType;
-				}
-
-				return base.DataReaderType;
-			}
-		}
-
-		Type? _connectionType;
-		protected internal override Type GetConnectionType()
-		{
-			if (_connectionType != null)
-				return _connectionType;
-
-			_connectionType = Wrapper.Value.ConnectionType;
-			OnConnectionTypeCreated(_connectionType);
-			return _connectionType;
-		}
-#endif
 
 		#endregion
 
 		#region Public Properties
-
-		public             string AssemblyName          => Provider == SqlServerProvider.SystemDataSqlClient    ? "System.Data.SqlClient" : "Microsoft.Data.SqlClient";
-		public    override string ConnectionNamespace   => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
-		protected override string ConnectionTypeName    => $"{ConnectionNamespace}.SqlConnection, {AssemblyName}";
-		protected override string DataReaderTypeName    => $"{ConnectionNamespace}.SqlDataReader, {AssemblyName}";
-
-#if !NETSTANDARD2_0
-		public override string DbFactoryProviderName => Provider == SqlServerProvider.MicrosoftDataSqlClient ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient";
-#endif
 
 		public SqlServerVersion Version { get; }
 
@@ -181,27 +120,23 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static readonly SqlServer2000MappingSchema SqlServer2000MappingSchema = new SqlServer2000MappingSchema();
-			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
-			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
-			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
-			public static readonly SqlServer2017MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
-		}
+			public static readonly MappingSchema SqlServer2000MappingSchema = new SqlServer2000MappingSchema();
+			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
+			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
+			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
 
-		public override MappingSchema MappingSchema
-		{
-			get
+			public static MappingSchema Get(SqlServerVersion version)
 			{
-				switch (Version)
+				switch (version)
 				{
-					case SqlServerVersion.v2000 : return MappingSchemaInstance.SqlServer2000MappingSchema;
-					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
-					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
-					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
-					case SqlServerVersion.v2017 : return MappingSchemaInstance.SqlServer2017MappingSchema;
+					case SqlServerVersion.v2000: return SqlServer2000MappingSchema;
+					case SqlServerVersion.v2005: return SqlServer2005MappingSchema;
+					default:
+					case SqlServerVersion.v2008: return SqlServer2008MappingSchema;
+					case SqlServerVersion.v2012: return SqlServer2012MappingSchema;
+					case SqlServerVersion.v2017: return SqlServer2017MappingSchema;
 				}
-
-				return base.MappingSchema;
 			}
 		}
 
@@ -242,7 +177,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (!_marsFlags.TryGetValue(connectionString, out var flag))
 						{
-							flag = Wrapper.Value.CreateConnectionStringBuilder(connectionString).MultipleActiveResultSets;
+							flag = Adapter.CreateConnectionStringBuilder(connectionString).MultipleActiveResultSets;
 							_marsFlags[connectionString] = flag;
 						}
 
@@ -257,7 +192,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			var param = TryConvertParameter(Wrapper.Value.ParameterType, parameter, MappingSchema);
+			var param = TryGetProviderParameter(parameter, MappingSchema);
 
 			switch (dataType.DataType)
 			{
@@ -266,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (param    != null
 							&& value != null
 							&& _udtTypes.TryGetValue(value.GetType(), out var s))
-							Wrapper.Value.UdtTypeNameSetter(param, s);
+							Adapter.SetUdtTypeName(param, s);
 					}
 
 					break;
@@ -297,7 +232,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
-							|| value.GetType().IsEnumerableTType(Wrapper.Value.SqlDataRecordType)))
+							|| value.GetType().IsEnumerableTType(Adapter.SqlDataRecordType)))
 					{
 						dataType = dataType.WithDataType(DataType.Structured);
 					}
@@ -310,12 +245,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (param != null)
 			{
 				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
-				switch (Wrapper.Value.TypeGetter(param))
+				switch (Adapter.GetDbType(param))
 				{
 					case SqlDbType.Structured:
 						{
 							if (!dataType.DbType.IsNullOrEmpty())
-								Wrapper.Value.TypeNameSetter(param, dataType.DbType);
+								Adapter.SetTypeName(param, dataType.DbType);
 
 							// TVP doesn't support DBNull
 							if (parameter.Value is DBNull)
@@ -386,10 +321,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (type != null)
 			{
-				var param = TryConvertParameter(Wrapper.Value.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					Wrapper.Value.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}

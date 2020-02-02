@@ -65,15 +65,13 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						try
 						{
-							// TODO: mapping schema parameter will be removed by next commit
-							DB2Wrappers.Initialize(new Mapping.MappingSchema());
 							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = DB2Wrappers.CreateDB2Connection(cs))
+							using (var conn = DB2ProviderAdapter.GetInstance().CreateConnection(cs))
 							{
 								conn.Open();
 
-								var iszOS = conn.eServerType == DB2Wrappers.DB2ServerTypes.DB2_390;
+								var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
 
 								return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
 							}
@@ -99,12 +97,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static void ResolveDB2(string path)
 		{
-			new AssemblyResolver(path, DB2Wrappers.AssemblyName);
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, DB2Wrappers.AssemblyName);
+			new AssemblyResolver(assembly, DB2ProviderAdapter.AssemblyName);
 		}
 
 		#region CreateDataConnection

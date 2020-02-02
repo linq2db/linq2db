@@ -1087,7 +1087,7 @@ namespace Tests
 				return true;
 
 			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
-				return ((InformixDataProvider)dc.DataProvider).Wrapper.Value.IsIDSProvider;
+				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
 		}
 	}
 

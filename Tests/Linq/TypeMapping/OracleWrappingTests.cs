@@ -3,6 +3,7 @@ using System.Data;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using NUnit.Framework;
@@ -87,7 +88,7 @@ namespace Tests.TypeMapping
 		{
 			var prov = DataConnection.GetDataProvider(ProviderName.OracleManaged);
 
-			var connectionType = ((DynamicDataProviderBase)prov).GetConnectionType();
+			var connectionType = ((OracleDataProvider)prov).Adapter.ConnectionType;
 
 			var oracleParameter  = GetDynamicType("OracleParameter", connectionType);
 			var oracleDbType     = GetDynamicType("OracleDbType", connectionType);

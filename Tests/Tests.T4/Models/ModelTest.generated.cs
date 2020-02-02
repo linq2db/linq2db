@@ -842,20 +842,7 @@ namespace Tests.T4.Model
 
 			if (propertyChanged != null)
 			{
-#if SILVERLIGHT
-				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-				else
-					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() =>
-						{
-							var pc = PropertyChanged;
-							if (pc != null)
-								pc(this, new PropertyChangedEventArgs(propertyName));
-						});
-#else
 				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-#endif
 			}
 		}
 
@@ -865,20 +852,7 @@ namespace Tests.T4.Model
 
 			if (propertyChanged != null)
 			{
-#if SILVERLIGHT
-				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					propertyChanged(this, arg);
-				else
-					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() =>
-						{
-							var pc = PropertyChanged;
-							if (pc != null)
-								pc(this, arg);
-						});
-#else
 				propertyChanged(this, arg);
-#endif
 			}
 		}
 
@@ -897,20 +871,7 @@ namespace Tests.T4.Model
 
 			if (propertyChanging != null)
 			{
-#if SILVERLIGHT
-				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					propertyChanging(this, new PropertyChangingEventArgs(propertyName));
-				else
-					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() =>
-						{
-							var pc = PropertyChanging;
-							if (pc != null)
-								pc(this, new PropertyChangingEventArgs(propertyName));
-						});
-#else
 				propertyChanging(this, new PropertyChangingEventArgs(propertyName));
-#endif
 			}
 		}
 
@@ -920,20 +881,7 @@ namespace Tests.T4.Model
 
 			if (propertyChanging != null)
 			{
-#if SILVERLIGHT
-				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					propertyChanging(this, arg);
-				else
-					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() =>
-						{
-							var pc = PropertyChanging;
-							if (pc != null)
-								pc(this, arg);
-						});
-#else
 				propertyChanging(this, arg);
-#endif
 			}
 		}
 

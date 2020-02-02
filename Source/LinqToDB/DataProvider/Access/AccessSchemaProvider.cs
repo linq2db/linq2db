@@ -140,16 +140,14 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			Wrappers.Mappers.OleDb.Initialize();
-
-			var connection = _provider.TryConvertConnection(Wrappers.Mappers.OleDb.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
 				return Array<ForeignKeyInfo>.Empty;
 
 			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23
 			// we cannot do anything about it as it is not exception you can handle without hacks (and it doesn't make sense anyways)
-			var data = Wrappers.Mappers.OleDb.OleDbSchemaTableGetter(connection, Wrappers.Mappers.OleDb.OleDbSchemaGuid.Foreign_Keys, null);
+			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo

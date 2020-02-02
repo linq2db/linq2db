@@ -34,7 +34,7 @@ namespace Tests.DataProvider
 			{
 				// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
 				// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
-				var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Wrapper.Value.IsIDSProvider;
+				var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Adapter.IsIDSProvider;
 
 				Assert.That(TestType<long?>       (conn, "bigintDataType",   DataType.Int64),     Is.EqualTo(1000000L));
 				Assert.That(TestType<long?>       (conn, "int8DataType",     DataType.Int64),     Is.EqualTo(1000001L));
@@ -269,7 +269,7 @@ namespace Tests.DataProvider
 				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
 
 				var keepIdentity = bulkCopyType == BulkCopyType.ProviderSpecific
-					&& ((InformixDataProvider)db.DataProvider).Wrapper.Value.IsIDSProvider;
+					&& ((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider;
 
 				db.BulkCopy(
 					new BulkCopyOptions

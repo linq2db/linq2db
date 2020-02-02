@@ -481,11 +481,11 @@ namespace Tests.Data
 
 				// test connection server type property
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = DB2Wrappers.CreateDB2Connection(cs))
+				using (var cn = DB2ProviderAdapter.GetInstance().CreateConnection(cs))
 				{
 					cn.Open();
 
-					Assert.AreEqual(DB2Wrappers.DB2ServerTypes.DB2_UW, cn.eServerType);
+					Assert.AreEqual(DB2ProviderAdapter.DB2ServerTypes.DB2_UW, cn.eServerType);
 				}
 			}
 		}
@@ -585,7 +585,7 @@ namespace Tests.Data
 
 				// test server version
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = ((SqlServerDataProvider)db.DataProvider).Wrapper.Value.CreateSqlConnection(cs))
+				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
 
@@ -723,7 +723,7 @@ namespace Tests.Data
 
 				// test server version
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = ((SqlServerDataProvider)db.DataProvider).Wrapper.Value.CreateSqlConnection(cs))
+				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
 
@@ -924,7 +924,7 @@ namespace Tests.Data
 				Assert.True(trace.Contains("DECLARE @p Clob("));
 
 				// provider-specific type classes
-				if (!provider.Wrapper.Value.IsIDSProvider)
+				if (!provider.Adapter.IsIDSProvider)
 				{
 					var ifxTSVal = db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType IS NOT NULL");
 					Assert.AreEqual(ifxTSVal, db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time)));
@@ -942,7 +942,7 @@ namespace Tests.Data
 				}
 
 				// bulk copy (transaction not supported)
-				if (provider.Wrapper.Value.IsIDSProvider)
+				if (provider.Adapter.IsIDSProvider)
 					TestBulkCopy();
 
 
@@ -1013,7 +1013,7 @@ namespace Tests.Data
 				Assert.AreEqual((DateTime)dateTimeValue, rawValue);
 
 				// bulk copy (transaction not supported)
-				if (provider.Wrapper.Value.DB2BulkCopy != null)
+				if (provider.Adapter.DB2BulkCopy != null)
 					TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
@@ -1077,7 +1077,7 @@ namespace Tests.Data
 				var dtoVal = DateTimeOffset.Now;
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
@@ -1094,7 +1094,7 @@ namespace Tests.Data
 				// clean instance
 				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.CommandType, cmd.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
 				var bindByName = cmd.BindByName;
 				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
 				var arrayBindCount = cmd.ArrayBindCount;
@@ -1172,7 +1172,7 @@ namespace Tests.Data
 				var dtoVal = DateTimeOffset.Now;
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
@@ -1185,7 +1185,7 @@ namespace Tests.Data
 				// clean instance
 				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Wrapper.Value.CommandType, cmd.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
 				var bindByName = cmd.BindByName;
 				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
 				var arrayBindCount = cmd.ArrayBindCount;
@@ -1274,7 +1274,7 @@ namespace Tests.Data
 				// test server version
 				var parts = db.Execute<string>("SHOW server_version;").Split('.').Select(int.Parse).ToArray();
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = ((PostgreSQLDataProvider)db.DataProvider).Wrapper.Value.CreateNpgsqlConnection(cs))
+				using (var cn = ((PostgreSQLDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
 

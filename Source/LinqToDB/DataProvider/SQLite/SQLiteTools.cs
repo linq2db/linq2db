@@ -12,9 +12,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
-		internal static readonly string SQLiteClassicAssemblyName = "System.Data.SQLite";
-		internal static readonly string SQLiteMSAssemblyName      = "Microsoft.Data.Sqlite";
-
 		private static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new SQLiteDataProvider(ProviderName.SQLiteClassic);
@@ -112,8 +109,8 @@ namespace LinqToDB.DataProvider.SQLite
 			new AssemblyResolver(
 				path,
 				DetectedProviderName == ProviderName.SQLiteClassic
-						? SQLiteClassicAssemblyName
-						: SQLiteMSAssemblyName);
+						? SQLiteProviderAdapter.SystemDataSQLiteAssemblyName
+						: SQLiteProviderAdapter.MicrosoftDataSQLiteAssemblyName);
 		}
 
 		public static void ResolveSQLite(Assembly assembly)

@@ -33,6 +33,7 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Data.SqlTypes;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -169,23 +170,23 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			{
 				case "varbinary"        :
 				case "rowversion"       :
-				case "image"            : return "SqlBinary";
-				case "binary"           : return "SqlBinary";
-				case "tinyint"          : return "SqlByte";
-				case "datetime"         : return "SqlDateTime";
-				case "bit"              : return "SqlBoolean";
-				case "smallint"         : return "SqlInt16";
+				case "image"            :
+				case "binary"           : return nameof(SqlBinary);
+				case "tinyint"          : return nameof(SqlByte);
+				case "datetime"         : return nameof(SqlDateTime);
+				case "bit"              : return nameof(SqlBoolean);
+				case "smallint"         : return nameof(SqlInt16);
 				case "numeric"          :
-				case "decimal"          : return "SqlDecimal";
-				case "int"              : return "SqlInt32";
-				case "real"             : return "SqlSingle";
-				case "float"            : return "SqlDouble";
-				case "money"            : return "SqlMoney";
-				case "bigint"           : return "SqlInt64";
+				case "decimal"          : return nameof(SqlDecimal);
+				case "int"              : return nameof(SqlInt32);
+				case "real"             : return nameof(SqlSingle);
+				case "float"            : return nameof(SqlDouble);
+				case "money"            : return nameof(SqlMoney);
+				case "bigint"           : return nameof(SqlInt64);
 				case "nvarchar"         :
 				case "nchar"            :
-				case "ntext"            : return "SqlString";
-				case "uniqueidentifier" : return "SqlGuid";
+				case "ntext"            : return nameof(SqlString);
+				case "uniqueidentifier" : return nameof(SqlGuid);
 			}
 
 			return base.GetProviderSpecificType(dataType);

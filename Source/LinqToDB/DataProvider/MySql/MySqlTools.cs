@@ -89,8 +89,8 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				var path = typeof(MySqlTools).Assembly.GetPath();
 
-				if (!File.Exists(Path.Combine(path, $"{MySqlWrappers.MySqlDataAssemblyName}.dll")))
-					if (File.Exists(Path.Combine(path, $"{MySqlWrappers.MySqlConnectorAssemblyName}.dll")))
+				if (!File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlDataAssemblyName}.dll")))
+					if (File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlConnectorAssemblyName}.dll")))
 						return ProviderName.MySqlConnector;
 			}
 			catch (Exception)
@@ -107,8 +107,8 @@ namespace LinqToDB.DataProvider.MySql
 				path,
 				assemblyName
 					?? (DetectedProviderName == ProviderName.MySqlOfficial
-						? MySqlWrappers.MySqlDataAssemblyName
-						: MySqlWrappers.MySqlConnectorAssemblyName));
+						? MySqlProviderAdapter.MySqlDataAssemblyName
+						: MySqlProviderAdapter.MySqlConnectorAssemblyName));
 		}
 
 		public static void ResolveMySql(Assembly assembly)

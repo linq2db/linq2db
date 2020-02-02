@@ -63,23 +63,11 @@ namespace LinqToDB.DataProvider
 			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
 			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
 			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
-
-			MaxRetryCount = DefaultMaxRetryCount;
 		}
 
 		#endregion
 
 		#region Public Members
-		/// <summary>
-		///   The default number of retry attempts.
-		/// </summary>
-		protected static readonly int DefaultMaxRetryCount = 5;
-
-		/// <summary>
-		///     The maximum number of retry attempts.
-		/// </summary>
-		protected virtual int MaxRetryCount { get; }
-
 		public          string           Name                { get; }
 		public abstract string           ConnectionNamespace { get; }
 		public abstract Type             DataReaderType      { get; }

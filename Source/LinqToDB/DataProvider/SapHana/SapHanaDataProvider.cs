@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD2_0
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -10,7 +11,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlProvider;
 
-	public class SapHanaDataProvider : DynamicDataProviderBase
+	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
 		public SapHanaDataProvider()
 			: this(ProviderName.SapHanaNative)
@@ -18,11 +19,11 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public SapHanaDataProvider(string name)
-			: this(name, null)
+			: this(name, MappingSchemaInstance)
 		{
 		}
-		protected SapHanaDataProvider(string name, MappingSchema? mappingSchema)
-			: base(name, mappingSchema!)
+		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -46,18 +47,6 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsUpdateFromSupported     = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
-		}
-
-		public    override string ConnectionNamespace => "Sap.Data.Hana";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaWrappers.AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaWrappers.AssemblyName}";
-
-#if !NETSTANDARD2_0
-		public override string DbFactoryProviderName => "Sap.Data.Hana";
-#endif
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -120,20 +109,19 @@ namespace LinqToDB.DataProvider.SapHana
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			SapHanaWrappers.HanaDbType? type = null;
+			SapHanaProviderAdapter.HanaDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Text : type = SapHanaWrappers.HanaDbType.Text; break;
-				case DataType.Image: type = SapHanaWrappers.HanaDbType.Blob; break;
+				case DataType.Text : type = SapHanaProviderAdapter.HanaDbType.Text; break;
+				case DataType.Image: type = SapHanaProviderAdapter.HanaDbType.Blob; break;
 			}
 
 			if (type != null)
 			{
-				SapHanaWrappers.Initialize();
-				var param = TryConvertParameter(SapHanaWrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					SapHanaWrappers.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}
@@ -167,20 +155,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return true;
 		}
 
-		static class MappingSchemaInstance
-		{
-#if !NETSTANDARD2_0
-			public static readonly SapHanaMappingSchema.NativeMappingSchema NativeMappingSchema = new SapHanaMappingSchema.NativeMappingSchema();
-#endif
-			public static readonly SapHanaMappingSchema.OdbcMappingSchema   OdbcMappingSchema   = new SapHanaMappingSchema.OdbcMappingSchema();
-		}
-
-#if !NETSTANDARD2_0
-		public override MappingSchema MappingSchema => Name == ProviderName.SapHanaOdbc
-			? MappingSchemaInstance.OdbcMappingSchema as MappingSchema
-			: MappingSchemaInstance.NativeMappingSchema;
-#else
-		public override MappingSchema MappingSchema => MappingSchemaInstance.OdbcMappingSchema;
-#endif
+		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
 	}
 }
+#endif

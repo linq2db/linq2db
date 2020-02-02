@@ -11,10 +11,14 @@ namespace LinqToDB.DataProvider.DB2
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class DB2DataProvider : DynamicDataProviderBase
+	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
 		public DB2DataProvider(string name, DB2Version version)
-			: base(name, null!)
+						: base(
+				  name,
+				  MappingSchemaInstance.Get(version, DB2ProviderAdapter.GetInstance().MappingSchema),
+				  DB2ProviderAdapter.GetInstance())
+
 		{
 			Version = version;
 
@@ -28,80 +32,44 @@ namespace LinqToDB.DataProvider.DB2
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
+
+			SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , "GetDB2Int64"       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , "GetDB2Int32"       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Int16Type       , typeof(short)   , "GetDB2Int16"       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DecimalType     , typeof(decimal) , "GetDB2Decimal"     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DecimalFloatType, typeof(decimal) , "GetDB2DecimalFloat", dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2RealType        , typeof(float)   , "GetDB2Real"        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Real370Type     , typeof(float)   , "GetDB2Real370"     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DoubleType      , typeof(double)  , "GetDB2Double"      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2StringType      , typeof(string)  , "GetDB2String"      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2ClobType        , typeof(string)  , "GetDB2Clob"        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2BinaryType      , typeof(byte[])  , "GetDB2Binary"      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2BlobType        , typeof(byte[])  , "GetDB2Blob"        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DateType        , typeof(DateTime), "GetDB2Date"        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2TimeType        , typeof(TimeSpan), "GetDB2Time"        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2TimeStampType   , typeof(DateTime), "GetDB2TimeStamp"   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2XmlType         , typeof(string)  , "GetDB2Xml"         , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2RowIdType       , typeof(byte[])  , "GetDB2RowId"       , dataReaderType: Adapter.DataReaderType);
+
+			if (Adapter.DB2DateTimeType != null)
+				SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), "GetDB2DateTime"    , dataReaderType: Adapter.DataReaderType);
 		}
-
-		private bool _customReadersConfigured = false;
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			if (!_customReadersConfigured)
-			{
-				DB2Wrappers.Initialize(MappingSchema);
-
-				SetProviderField(DB2Wrappers.DB2Int64Type       , typeof(long)    , "GetDB2Int64"       , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2Int32Type       , typeof(int)     , "GetDB2Int32"       , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2Int16Type       , typeof(short)   , "GetDB2Int16"       , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2DecimalType     , typeof(decimal) , "GetDB2Decimal"     , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2DecimalFloatType, typeof(decimal) , "GetDB2DecimalFloat", dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2RealType        , typeof(float)   , "GetDB2Real"        , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2Real370Type     , typeof(float)   , "GetDB2Real370"     , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2DoubleType      , typeof(double)  , "GetDB2Double"      , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2StringType      , typeof(string)  , "GetDB2String"      , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2ClobType        , typeof(string)  , "GetDB2Clob"        , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2BinaryType      , typeof(byte[])  , "GetDB2Binary"      , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2BlobType        , typeof(byte[])  , "GetDB2Blob"        , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2DateType        , typeof(DateTime), "GetDB2Date"        , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2TimeType        , typeof(TimeSpan), "GetDB2Time"        , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2TimeStampType   , typeof(DateTime), "GetDB2TimeStamp"   , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2XmlType         , typeof(string)  , "GetDB2Xml"         , dataReaderType: DB2Wrappers.DataReaderType);
-				SetProviderField(DB2Wrappers.DB2RowIdType       , typeof(byte[])  , "GetDB2RowId"       , dataReaderType: DB2Wrappers.DataReaderType);
-
-				if (DB2Wrappers.DB2DateTimeType != null)
-					SetProviderField(DB2Wrappers.DB2DateTimeType, typeof(DateTime), "GetDB2DateTime"    , dataReaderType: DB2Wrappers.DataReaderType);
-
-				_customReadersConfigured = true;
-			}
-
-			return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-		}
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-		}
-
-#if NET45 || NET46
-		public string AssemblyName => "IBM.Data.DB2";
-#else
-		public string AssemblyName => "IBM.Data.DB2.Core";
-#endif
-
-		public    override string ConnectionNamespace => AssemblyName;
-		protected override string ConnectionTypeName  => AssemblyName + ".DB2Connection, " + AssemblyName;
-		protected override string DataReaderTypeName  => AssemblyName + ".DB2DataReader, " + AssemblyName;
-
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
-		public override string DbFactoryProviderName => "IBM.Data.DB2";
-#endif
 
 		public DB2Version Version { get; }
 
 		static class MappingSchemaInstance
 		{
-			public static readonly DB2LUWMappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
-			public static readonly DB2zOSMappingSchema DB2zOSMappingSchema = new DB2zOSMappingSchema();
-		}
+			public static readonly MappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
+			public static readonly MappingSchema DB2zOSMappingSchema = new DB2zOSMappingSchema();
 
-		public override MappingSchema MappingSchema
-		{
-			get
+			public static MappingSchema Get(DB2Version version, MappingSchema providerSchema)
 			{
-				switch (Version)
+				switch (version)
 				{
-					case DB2Version.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
-					case DB2Version.zOS : return MappingSchemaInstance.DB2zOSMappingSchema;
+					default:
+					case DB2Version.LUW: return new MappingSchema(DB2LUWMappingSchema, providerSchema);
+					case DB2Version.zOS: return new MappingSchema(DB2zOSMappingSchema, providerSchema);
 				}
-
-				return base.MappingSchema;
 			}
 		}
 
@@ -186,12 +154,11 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.VarBinary  :
 					{
 						if (value is Guid g) value = g.ToByteArray();
-						else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
-						{
-							dynamic v = value;
-							if (v.IsNull)
+
+						else if (parameter.Size == 0 && value != null
+							&& value.GetType() == Adapter.DB2BinaryType
+							&& Adapter.IsDB2BinaryNull(value))
 								value = DBNull.Value;
-						}
 						break;
 					}
 			}
@@ -202,19 +169,18 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
-			DB2Wrappers.DB2Type? type = null;
+			DB2ProviderAdapter.DB2Type? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Blob: type = DB2Wrappers.DB2Type.Blob; break;
+				case DataType.Blob: type = DB2ProviderAdapter.DB2Type.Blob; break;
 			}
 
 			if (type != null)
 			{
-				DB2Wrappers.Initialize(MappingSchema);
-				var param = TryConvertParameter(DB2Wrappers.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					DB2Wrappers.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}

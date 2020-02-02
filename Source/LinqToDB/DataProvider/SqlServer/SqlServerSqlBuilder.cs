@@ -237,7 +237,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							return value;
 
 					if (Provider != null)
-						return Provider.Wrapper.Value.QuoteIdentifier(value);
+						return Provider.Adapter.QuoteIdentifier(value);
 					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.NameToServer:
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					//							value = string.Join("].[", value.Split('.'));
 
 					if (Provider != null)
-						return Provider.Wrapper.Value.QuoteIdentifier(value);
+						return Provider.Adapter.QuoteIdentifier(value);
 					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.SprocParameterToName:
@@ -360,9 +360,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (Provider != null)
 			{
-				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Wrapper.Value.TypeNameGetter(param);
+					return Provider.Adapter.GetTypeName(param);
 			}
 
 			return base.GetTypeName(parameter);
@@ -372,9 +372,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (Provider != null)
 			{
-				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Wrapper.Value.UdtTypeNameGetter(param);
+					return Provider.Adapter.GetUdtTypeName(param);
 			}
 
 			return base.GetUdtTypeName(parameter);
@@ -384,9 +384,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (Provider != null)
 			{
-				var param = Provider.TryConvertParameter(Provider.Wrapper.Value.ParameterType, parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Wrapper.Value.TypeGetter(param).ToString();
+					return Provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

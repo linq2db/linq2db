@@ -6,7 +6,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Data;
 	using Configuration;
 	using System;
-	using LinqToDB.DataProvider.Wrappers;
 
 	public static class SapHanaTools
 	{
@@ -36,9 +35,9 @@ namespace LinqToDB.DataProvider.SapHana
 				path,
 #if !NETSTANDARD2_0
 			DetectedProviderName == ProviderName.SapHanaNative
-						? SapHanaWrappers.AssemblyName :
+						? SapHanaProviderAdapter.AssemblyName :
 #endif
-						Mappers.ODBC.AssemblyName);
+						OdbcProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSapHana(Assembly assembly)
@@ -49,9 +48,9 @@ namespace LinqToDB.DataProvider.SapHana
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
 #if !NETSTANDARD2_0
-			if (assemblyName == SapHanaWrappers.AssemblyName) return _hanaDataProvider.Value;
+			if (assemblyName == SapHanaProviderAdapter.AssemblyName) return _hanaDataProvider.Value;
 #endif
-			if (assemblyName == Mappers.ODBC.AssemblyName)    return _hanaOdbcDataProvider.Value;
+			if (assemblyName == OdbcProviderAdapter.AssemblyName)    return _hanaOdbcDataProvider.Value;
 
 
 			switch (providerName)

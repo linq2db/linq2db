@@ -24,11 +24,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
-				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryConvertTransaction(_provider.Wrapper.Value.TransactionType, transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -36,17 +36,17 @@ namespace LinqToDB.DataProvider.SqlServer
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
 					var rd      = new BulkCopyReader(dataConnection, columns, source);
-					var sqlopt  = SqlServerWrappers.SqlBulkCopyOptions.Default;
+					var sqlopt  = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
 
-					if (options.CheckConstraints       == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.CheckConstraints;
-					if (options.KeepIdentity           == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.KeepIdentity;
-					if (options.TableLock              == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.TableLock;
-					if (options.KeepNulls              == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.KeepNulls;
-					if (options.FireTriggers           == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.FireTriggers;
-					if (options.UseInternalTransaction == true) sqlopt |= SqlServerWrappers.SqlBulkCopyOptions.UseInternalTransaction;
+					if (options.CheckConstraints       == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.CheckConstraints;
+					if (options.KeepIdentity           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepIdentity;
+					if (options.TableLock              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.TableLock;
+					if (options.KeepNulls              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepNulls;
+					if (options.FireTriggers           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.FireTriggers;
+					if (options.UseInternalTransaction == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.UseInternalTransaction;
 
-					using (var bc = _provider.Wrapper.Value.CreateBulkCopy(connection, sqlopt, transaction))
+					using (var bc = _provider.Adapter.CreateBulkCopy(connection, sqlopt, transaction))
 					{
 						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						bc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Wrapper.Value.CreateBulkCopyColumnMapping(i, sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField)));
+							bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
 						TraceAction(
 							dataConnection,

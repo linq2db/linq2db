@@ -176,9 +176,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							// TODO: mapping schema parameter will be removed in next commit
-							var wrapper = SqlServerWrappers.Initialize(provider, new Mapping.MappingSchema());
-							using (var conn = wrapper.CreateSqlConnection(cs))
+							using (var conn = SqlServerProviderAdapter.GetInstance(provider).CreateConnection(cs))
 							{
 								conn.Open();
 

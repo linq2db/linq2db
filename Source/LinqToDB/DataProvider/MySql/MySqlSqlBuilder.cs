@@ -471,11 +471,9 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (_provider != null)
 		{
-				var wrapper = MySqlWrappers.Initialize(_provider);
-
-				var param = _provider.TryConvertParameter(wrapper.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return wrapper.GetParameterType(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

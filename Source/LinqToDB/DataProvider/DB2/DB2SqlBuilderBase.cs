@@ -253,11 +253,9 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (Provider != null)
 			{
-				DB2Wrappers.Initialize(Provider.MappingSchema);
-
-				var param = Provider.TryConvertParameter(DB2Wrappers.ParameterType, parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return DB2Wrappers.TypeGetter(param).ToString();
+					return Provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

@@ -10,15 +10,15 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlProvider;
 
-	public class SapHanaOdbcDataProvider : DynamicDataProviderBase
+	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
 		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHanaOdbc, new SapHanaMappingSchema())
+			: this(ProviderName.SapHanaOdbc, MappingSchemaInstance)
 		{
 		}
 
 		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
 		{
 			//supported flags
 			SqlProviderFlags.IsParameterOrderDependent = true;
@@ -41,33 +41,6 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
-		}
-
-#if NET45 || NET46
-		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient (netfx only)
-		public override Type DataReaderType => typeof(System.Data.Odbc.OdbcDataReader);
-
-		Type? _connectionType;
-		protected internal override Type GetConnectionType()
-		{
-			if (_connectionType != null)
-				return _connectionType;
-
-			_connectionType = typeof(System.Data.Odbc.OdbcConnection);
-			OnConnectionTypeCreated(_connectionType);
-			return _connectionType;
-		}
-#endif
-
-		public string AssemblyName => "System.Data.Odbc";
-
-		public    override string ConnectionNamespace => "System.Data.Odbc";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.OdbcConnection, {AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.OdbcDataReader, {AssemblyName}";
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			// noop as we don't need any Odbc-specific API currently
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -151,5 +124,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
+
+		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
 	}
 }

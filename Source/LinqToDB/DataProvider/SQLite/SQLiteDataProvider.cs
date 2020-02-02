@@ -13,15 +13,15 @@ namespace LinqToDB.DataProvider.SQLite
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SQLiteDataProvider : DynamicDataProviderBase
+	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		public SQLiteDataProvider(string name)
-			: this(name, null!)
+			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}
 
 		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, SQLiteProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
@@ -41,16 +41,6 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace => Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite"
-			: "Microsoft.Data.Sqlite";
-		protected override string ConnectionTypeName  => Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"
-			: "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite";
-		protected override string DataReaderTypeName   =>Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
-			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
-
 		protected override string? NormalizeTypeName(string? typeName)
 		{
 			if (typeName == null)
@@ -65,18 +55,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		// workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
-		// needed only for Microsoft.Data.Sqlite 3.0.0
-		private bool _needsCommandDisposeOnError;
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			_needsCommandDisposeOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
-		}
-
 		public override IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
-			if (_needsCommandDisposeOnError)
+			if (Adapter.DisposeCommandOnError)
 				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
 
 			return base.ExecuteScope(dataConnection);
@@ -89,13 +70,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static class MappingSchemaInstance
 		{
-			public static readonly SQLiteMappingSchema.ClassicMappingSchema   ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
-			public static readonly SQLiteMappingSchema.MicrosoftMappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
-		}
+			public static readonly MappingSchema ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
+			public static readonly MappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
 
-		public override MappingSchema MappingSchema => Name == ProviderName.SQLiteClassic
-			? MappingSchemaInstance.ClassicMappingSchema as MappingSchema
-			: MappingSchemaInstance.MicrosoftMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.SQLiteClassic ? ClassicMappingSchema : MicrosoftMappingSchema;
+		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 

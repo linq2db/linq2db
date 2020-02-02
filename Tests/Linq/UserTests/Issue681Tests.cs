@@ -94,7 +94,7 @@ namespace Tests.UserTests
 					if (throwsSqlException)
 						// https://www.youtube.com/watch?v=Qji5x8gBVX4
 						Assert.Throws(
-							((SqlServerDataProvider)((DataConnection)db).DataProvider).Wrapper.Value.SqlExceptionType,
+							((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
 							() => table.ToList());
 					else
 						Assert.Throws<LinqToDBException>(() => table.ToList());

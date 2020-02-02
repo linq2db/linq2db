@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using LinqToDB.Extensions;
 
-	public class SybaseDataProvider : DynamicDataProviderBase
+	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
 		public SybaseDataProvider(string name)
-			: base(name, null!)
+			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -40,18 +40,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r, i));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
-
-			Wrapper = new Lazy<SybaseWrappers.ISybaseWrapper>(() => Initialize(), true);
 		}
-
-		public             string AssemblyName        => Name == ProviderName.Sybase ? SybaseWrappers.NativeAssemblyName : SybaseWrappers.ManagedAssemblyName;
-		public    override string ConnectionNamespace => Name == ProviderName.Sybase ? "Sybase.Data.AseClient" : "AdoNetCore.AseClient";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
-
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
-		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
-#endif
 
 		static DateTime GetDateTimeAsTime(IDataReader dr, int idx)
 		{
@@ -61,15 +50,6 @@ namespace LinqToDB.DataProvider.Sybase
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
 			return value;
-		}
-
-		internal readonly Lazy<SybaseWrappers.ISybaseWrapper> Wrapper;
-
-		private SybaseWrappers.ISybaseWrapper Initialize() => SybaseWrappers.Initialize(this);
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			
 		}
 
 		#endregion
@@ -101,13 +81,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static class MappingSchemaInstance
 		{
-			public static readonly SybaseMappingSchema.NativeMappingSchema  NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
-			public static readonly SybaseMappingSchema.ManagedMappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
-		}
+			public static readonly MappingSchema NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			public static readonly MappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-		public override MappingSchema MappingSchema => Name == ProviderName.Sybase
-			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
-			: MappingSchemaInstance.ManagedMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? NativeMappingSchema : ManagedMappingSchema;
+		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -168,26 +146,26 @@ namespace LinqToDB.DataProvider.Sybase
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			SybaseWrappers.AseDbType? type = null;
+			SybaseProviderAdapter.AseDbType? type = null;
 
 			switch (dataType.DataType)
 			{
-				case DataType.Text          : type = SybaseWrappers.AseDbType.Text;             break;
-				case DataType.NText         : type = SybaseWrappers.AseDbType.Unitext;          break;
+				case DataType.Text          : type = SybaseProviderAdapter.AseDbType.Text;             break;
+				case DataType.NText         : type = SybaseProviderAdapter.AseDbType.Unitext;          break;
 				case DataType.Blob          :
-				case DataType.VarBinary     : type = SybaseWrappers.AseDbType.VarBinary;        break;
-				case DataType.Image         : type = SybaseWrappers.AseDbType.Image;            break;
-				case DataType.SmallMoney    : type = SybaseWrappers.AseDbType.SmallMoney;       break;
-				case DataType.SmallDateTime : type = SybaseWrappers.AseDbType.SmallDateTime;    break;
-				case DataType.Timestamp     : type = SybaseWrappers.AseDbType.TimeStamp;        break;
+				case DataType.VarBinary     : type = SybaseProviderAdapter.AseDbType.VarBinary;        break;
+				case DataType.Image         : type = SybaseProviderAdapter.AseDbType.Image;            break;
+				case DataType.SmallMoney    : type = SybaseProviderAdapter.AseDbType.SmallMoney;       break;
+				case DataType.SmallDateTime : type = SybaseProviderAdapter.AseDbType.SmallDateTime;    break;
+				case DataType.Timestamp     : type = SybaseProviderAdapter.AseDbType.TimeStamp;        break;
 			}
 
 			if (type != null)
 			{
-				var param = TryConvertParameter(Wrapper.Value.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					Wrapper.Value.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}

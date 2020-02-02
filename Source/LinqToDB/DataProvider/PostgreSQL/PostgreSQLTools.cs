@@ -74,8 +74,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// TODO: use provider wrapper
 							var cs                = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							var wrapper = PostgreSQLWrappers.Initialize();
-							using (var conn = wrapper.CreateNpgsqlConnection(cs))
+							using (var conn = NpgsqlProviderAdapter.GetInstance().CreateConnection(cs))
 							{
 								conn.Open();
 
@@ -118,7 +117,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static void ResolvePostgreSQL(string path)
 		{
-			new AssemblyResolver(path, PostgreSQLWrappers.AssemblyName);
+			new AssemblyResolver(path, NpgsqlProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolvePostgreSQL(Assembly assembly)

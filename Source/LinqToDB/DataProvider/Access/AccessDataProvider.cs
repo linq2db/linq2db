@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using OleDbType = LinqToDB.DataProvider.Wrappers.Mappers.OleDb.OleDbType;
+using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class AccessDataProvider : DynamicDataProviderBase
+	public class AccessDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
 		public AccessDataProvider()
 			: this(ProviderName.Access, new AccessMappingSchema())
@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		protected AccessDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, OleDbProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -52,32 +52,6 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-#if NET45 || NET46
-		// for some unknown reason, dynamic load doesn't work for System.Data providers: OleDb, Odbc and SqlClient (netfx only)
-		public             override Type DataReaderType      => typeof(System.Data.OleDb.OleDbDataReader);
-
-		Type? _connectionType;
-		protected internal override Type GetConnectionType()
-		{
-			if (_connectionType != null)
-				return _connectionType;
-
-			_connectionType = typeof(System.Data.OleDb.OleDbConnection);
-			OnConnectionTypeCreated(_connectionType);
-			return _connectionType;
-		}
-#endif
-
-		public string AssemblyName => "System.Data.OleDb";
-
-		public    override string ConnectionNamespace   => "System.Data.OleDb";
-		protected override string ConnectionTypeName => $"{ConnectionNamespace}.OleDbConnection, {AssemblyName}";
-		protected override string DataReaderTypeName => $"{ConnectionNamespace}.OleDbDataReader, {AssemblyName}";
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-		}
-
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return new AccessSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
@@ -108,11 +82,10 @@ namespace LinqToDB.DataProvider.Access
 
 			if (type != null)
 			{
-				Wrappers.Mappers.OleDb.Initialize();
-				var param = TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
 				if (param != null)
 				{
-					Wrappers.Mappers.OleDb.TypeSetter(param, type.Value);
+					Adapter.SetDbType(param, type.Value);
 					return;
 				}
 			}

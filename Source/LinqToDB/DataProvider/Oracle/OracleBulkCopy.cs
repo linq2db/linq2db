@@ -2,12 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Configuration;
 	using Data;
 	using SqlProvider;
 
@@ -25,9 +23,9 @@ namespace LinqToDB.DataProvider.Oracle
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null && _provider.Wrapper.Value.BulkCopy != null)
+			if (table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				if (connection != null)
 				{
@@ -35,13 +33,13 @@ namespace LinqToDB.DataProvider.Oracle
 					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb        = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
 					var rd        = new BulkCopyReader(dataConnection, columns, source);
-					var sqlopt    = OracleWrappers.OracleBulkCopyOptions.Default;
+					var sqlopt    = OracleProviderAdapter.OracleBulkCopyOptions.Default;
 					var rc        = new BulkCopyRowsCopied();
 					var tableName = GetTableName(sb, options, table);
 
-					if (options.UseInternalTransaction == true) sqlopt |= OracleWrappers.OracleBulkCopyOptions.UseInternalTransaction;
+					if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
 
-					using (var bc = _provider.Wrapper.Value.BulkCopy.CreateBulkCopy(connection, sqlopt))
+					using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt))
 					{
 						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
 							? options.MaxBatchSize.Value
@@ -66,7 +64,7 @@ namespace LinqToDB.DataProvider.Oracle
 						bc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Wrapper.Value.BulkCopy.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
+							bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
 
 						TraceAction(
 							dataConnection,

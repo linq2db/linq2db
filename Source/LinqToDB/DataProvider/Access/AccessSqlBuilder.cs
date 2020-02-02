@@ -424,11 +424,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (_provider != null)
 		{
-				Wrappers.Mappers.OleDb.Initialize();
-
-				var param = _provider.TryConvertParameter(Wrappers.Mappers.OleDb.ParameterType, parameter, MappingSchema);
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Wrappers.Mappers.OleDb.TypeGetter(param).ToString();
+					return _provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

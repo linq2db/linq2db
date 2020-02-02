@@ -35,12 +35,12 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (css.ProviderName)
 			{
-				case SybaseWrappers.ManagedAssemblyName:
+				case SybaseProviderAdapter.ManagedAssemblyName:
 				case ProviderName.SybaseManaged        : return _sybaseManagedDataProvider.Value;
 #if NET45 || NET46
 				case "Sybase.Native"                   :
 				case "Sybase.Data.AseClient"           :
-				case SybaseWrappers.NativeAssemblyName : return _sybaseNativeDataProvider.Value;
+				case SybaseProviderAdapter.NativeAssemblyName : return _sybaseNativeDataProvider.Value;
 #endif
 				case ""                                :
 				case null                              :
@@ -77,8 +77,8 @@ namespace LinqToDB.DataProvider.Sybase
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
 #if NET45 || NET46
-			if (assemblyName == SybaseWrappers.NativeAssemblyName)  return _sybaseNativeDataProvider.Value;
-			if (assemblyName == SybaseWrappers.ManagedAssemblyName) return _sybaseManagedDataProvider.Value;
+			if (assemblyName == SybaseProviderAdapter.NativeAssemblyName)  return _sybaseNativeDataProvider.Value;
+			if (assemblyName == SybaseProviderAdapter.ManagedAssemblyName) return _sybaseManagedDataProvider.Value;
 
 			switch (providerName)
 			{
@@ -98,8 +98,8 @@ namespace LinqToDB.DataProvider.Sybase
 			new AssemblyResolver(
 				path,
 				DetectedProviderName == ProviderName.Sybase
-					? SybaseWrappers.NativeAssemblyName
-					: SybaseWrappers.ManagedAssemblyName);
+					? SybaseProviderAdapter.NativeAssemblyName
+					: SybaseProviderAdapter.ManagedAssemblyName);
 		}
 
 		public static void ResolveSybase(Assembly assembly)

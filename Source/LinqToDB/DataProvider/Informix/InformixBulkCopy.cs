@@ -22,20 +22,20 @@ namespace LinqToDB.DataProvider.Informix
 			BulkCopyOptions options,
 			IEnumerable<T> source)
 		{
-			if (_provider.Wrapper.Value.IsIDSProvider && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryConvertConnection(_provider.Wrapper.Value.ConnectionType, dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				if (connection != null)
 				{
-					if (_provider.Name == ProviderName.Informix)
+					if (_provider.Adapter.InformixBulkCopy != null)
 						return IDSProviderSpecificCopy(
 							table,
 							options,
 							source,
 							dataConnection,
 							connection,
-							_provider.Wrapper.Value.IFXBulkCopy!);
+							_provider.Adapter.InformixBulkCopy);
 					else
 						return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
 							table,
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.Informix
 							source,
 							dataConnection,
 							connection,
-							_provider.Wrapper.Value.DB2BulkCopy!,
+							_provider.Adapter.DB2BulkCopy!,
 							TraceAction);
 				}
 			}
@@ -52,24 +52,24 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
-			ITable<T>                            table,
-			BulkCopyOptions                      options,
-			IEnumerable<T>                       source,
-			DataConnection                       dataConnection,
-			IDbConnection                        connection,
-			InformixWrappers.IIFXBulkCopyWrapper bulkCopy)
+			ITable<T>                               table,
+			BulkCopyOptions                         options,
+			IEnumerable<T>                          source,
+			DataConnection                          dataConnection,
+			IDbConnection                           connection,
+			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
 		{
 			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var rd      = new BulkCopyReader(dataConnection, columns, source);
-			var sqlopt  = InformixWrappers.IfxBulkCopyOptions.Default;
+			var sqlopt  = InformixProviderAdapter.IfxBulkCopyOptions.Default;
 			var rc      = new BulkCopyRowsCopied();
 
-			if (options.KeepIdentity == true) sqlopt |= InformixWrappers.IfxBulkCopyOptions.KeepIdentity;
-			if (options.TableLock    == true) sqlopt |= InformixWrappers.IfxBulkCopyOptions.TableLock;
+			if (options.KeepIdentity == true) sqlopt |= InformixProviderAdapter.IfxBulkCopyOptions.KeepIdentity;
+			if (options.TableLock    == true) sqlopt |= InformixProviderAdapter.IfxBulkCopyOptions.TableLock;
 
-			using (var bc = bulkCopy.CreateBulkCopy(connection, sqlopt))
+			using (var bc = bulkCopy.Create(connection, sqlopt))
 			{
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				{
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Informix
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateBulkCopyColumnMapping(i, sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField)));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
 				TraceAction(
 					dataConnection,

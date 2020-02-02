@@ -775,6 +775,7 @@ namespace LinqToDB.Data
 					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken });
 					await task.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
+					// Task<T>.Result
 					var value = ((dynamic)task).Result;
 
 					member.SetValue(result, value);
