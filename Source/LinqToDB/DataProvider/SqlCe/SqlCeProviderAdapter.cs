@@ -54,22 +54,16 @@ namespace LinqToDB.DataProvider.SqlCe
 				{
 					if (_instance == null)
 					{
-						var assembly = Type.GetType($"System.Data.SqlServerCe.SqlCeConnection, {AssemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-							?? DbProviderFactories.GetFactory("System.Data.SqlServerCe.4.0").GetType().Assembly
-#endif
-							;
-
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, "System.Data.SqlServerCe.4.0");
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType("System.Data.SqlServerCe.SqlCeConnection", true);
-						var dataReaderType  = assembly.GetType("System.Data.SqlServerCe.SqlCeDataReader", true);
-						var parameterType   = assembly.GetType("System.Data.SqlServerCe.SqlCeParameter", true);
-						var commandType     = assembly.GetType("System.Data.SqlServerCe.SqlCeCommand", true);
+						var connectionType  = assembly.GetType("System.Data.SqlServerCe.SqlCeConnection" , true);
+						var dataReaderType  = assembly.GetType("System.Data.SqlServerCe.SqlCeDataReader" , true);
+						var parameterType   = assembly.GetType("System.Data.SqlServerCe.SqlCeParameter"  , true);
+						var commandType     = assembly.GetType("System.Data.SqlServerCe.SqlCeCommand"    , true);
 						var transactionType = assembly.GetType("System.Data.SqlServerCe.SqlCeTransaction", true);
-
-						var sqlCeEngine     = assembly.GetType("System.Data.SqlServerCe.SqlCeEngine", true);
+						var sqlCeEngine     = assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"     , true);
 
 						var typeMapper = new TypeMapper(parameterType, sqlCeEngine);
 						typeMapper.RegisterWrapper<SqlCeEngine>();

@@ -100,33 +100,28 @@ namespace LinqToDB.DataProvider.Sybase
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)
 		{
-			var assembly = Type.GetType($"{clientNamespace}.AseConnection, {assemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-							?? (dbFactoryName != null ? DbProviderFactories.GetFactory(dbFactoryName).GetType().Assembly : null)
-#endif
-							;
-
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection", true);
-			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand", true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.AseParameter", true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.AseDataReader", true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true);
+			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true);
+			var parameterType   = assembly.GetType($"{clientNamespace}.AseParameter"  , true);
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.AseDataReader" , true);
 			var transactionType = assembly.GetType($"{clientNamespace}.AseTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.AseDbType", true);
+			var dbType          = assembly.GetType($"{clientNamespace}.AseDbType"     , true);
 
 			TypeMapper       typeMapper;
 			BulkCopyAdapter? bulkCopy = null;
 
 			if (supportsBulkCopy)
 			{
-				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.AseBulkCopy", true);
-				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.AseBulkCopyOptions", true);
-				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventHandler", true);
-				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMapping", true);
+				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.AseBulkCopy"                       , true);
+				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.AseBulkCopyOptions"                , true);
+				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventHandler"         , true);
+				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMapping"          , true);
 				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMappingCollection", true);
-				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventArgs", true);
+				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventArgs"            , true);
 
 				typeMapper = new TypeMapper(
 					connectionType, parameterType, transactionType, dbType,

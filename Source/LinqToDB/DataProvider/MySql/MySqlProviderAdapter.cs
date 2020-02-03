@@ -131,14 +131,18 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
-				var connectionType    = Type.GetType("MySql.Data.MySqlClient.MySqlConnection, MySql.Data", true);
-				var dataReaderType    = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader", true);
-				var parameterType     = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlParameter", true);
-				var commandType       = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlCommand", true);
-				var transactionType   = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
-				var dbType            = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlDbType", true);
-				var mySqlDecimalType  = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDecimal", true);
-				var mySqlDateTimeType = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
+				var assembly = Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
+				if (assembly == null)
+					throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
+
+				var connectionType    = assembly.GetType("MySql.Data.MySqlClient.MySqlConnection" , true);
+				var dataReaderType    = assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader" , true);
+				var parameterType     = assembly.GetType("MySql.Data.MySqlClient.MySqlParameter"  , true);
+				var commandType       = assembly.GetType("MySql.Data.MySqlClient.MySqlCommand"    , true);
+				var transactionType   = assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
+				var dbType            = assembly.GetType("MySql.Data.MySqlClient.MySqlDbType"     , true);
+				var mySqlDecimalType  = assembly.GetType("MySql.Data.Types.MySqlDecimal"          , true);
+				var mySqlDateTimeType = assembly.GetType("MySql.Data.Types.MySqlDateTime"         , true);
 
 				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType, mySqlDecimalType);
 
@@ -235,13 +239,17 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
-				var connectionType    = Type.GetType("MySql.Data.MySqlClient.MySqlConnection, MySqlConnector", true);
-				var dataReaderType    = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader", true);
-				var parameterType     = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlParameter", true);
-				var commandType       = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlCommand", true);
-				var transactionType   = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
-				var dbType            = connectionType.Assembly.GetType("MySql.Data.MySqlClient.MySqlDbType", true);
-				var mySqlDateTimeType = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
+				var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
+				if (assembly == null)
+					throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
+
+				var connectionType    = assembly.GetType("MySql.Data.MySqlClient.MySqlConnection" , true);
+				var dataReaderType    = assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader" , true);
+				var parameterType     = assembly.GetType("MySql.Data.MySqlClient.MySqlParameter"  , true);
+				var commandType       = assembly.GetType("MySql.Data.MySqlClient.MySqlCommand"    , true);
+				var transactionType   = assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
+				var dbType            = assembly.GetType("MySql.Data.MySqlClient.MySqlDbType"     , true);
+				var mySqlDateTimeType = assembly.GetType("MySql.Data.Types.MySqlDateTime"         , true);
 
 				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType);
 

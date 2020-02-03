@@ -222,28 +222,28 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					if (_instance == null)
 					{
-						var assembly = Type.GetType("Npgsql.NpgsqlConnection, Npgsql", true).Assembly;
+						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
+						if (assembly == null)
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType     = assembly.GetType("Npgsql.NpgsqlConnection", true);
-						var parameterType      = assembly.GetType("Npgsql.NpgsqlParameter", true);
-						var dataReaderType     = assembly.GetType("Npgsql.NpgsqlDataReader", true);
-						var commandType        = assembly.GetType("Npgsql.NpgsqlCommand", true);
-						var transactionType    = assembly.GetType("Npgsql.NpgsqlTransaction", true);
-
-						var dbType             = assembly.GetType("NpgsqlTypes.NpgsqlDbType", true);
-						
-						var npgsqlDateType     = assembly.GetType("NpgsqlTypes.NpgsqlDate", true);
-						var npgsqlPointType    = assembly.GetType("NpgsqlTypes.NpgsqlPoint", true);
-						var npgsqlLSegType     = assembly.GetType("NpgsqlTypes.NpgsqlLSeg", true);
-						var npgsqlBoxType      = assembly.GetType("NpgsqlTypes.NpgsqlBox", true);
-						var npgsqlCircleType   = assembly.GetType("NpgsqlTypes.NpgsqlCircle", true);
-						var npgsqlPathType     = assembly.GetType("NpgsqlTypes.NpgsqlPath", true);
-						var npgsqlPolygonType  = assembly.GetType("NpgsqlTypes.NpgsqlPolygon", true);
-						var npgsqlLineType     = assembly.GetType("NpgsqlTypes.NpgsqlLine", true);
-						var npgsqlInetType     = assembly.GetType("NpgsqlTypes.NpgsqlInet", true);
+						var connectionType     = assembly.GetType("Npgsql.NpgsqlConnection"   , true);
+						var parameterType      = assembly.GetType("Npgsql.NpgsqlParameter"    , true);
+						var dataReaderType     = assembly.GetType("Npgsql.NpgsqlDataReader"   , true);
+						var commandType        = assembly.GetType("Npgsql.NpgsqlCommand"      , true);
+						var transactionType    = assembly.GetType("Npgsql.NpgsqlTransaction"  , true);
+						var dbType             = assembly.GetType("NpgsqlTypes.NpgsqlDbType"  , true);
+						var npgsqlDateType     = assembly.GetType("NpgsqlTypes.NpgsqlDate"    , true);
+						var npgsqlPointType    = assembly.GetType("NpgsqlTypes.NpgsqlPoint"   , true);
+						var npgsqlLSegType     = assembly.GetType("NpgsqlTypes.NpgsqlLSeg"    , true);
+						var npgsqlBoxType      = assembly.GetType("NpgsqlTypes.NpgsqlBox"     , true);
+						var npgsqlCircleType   = assembly.GetType("NpgsqlTypes.NpgsqlCircle"  , true);
+						var npgsqlPathType     = assembly.GetType("NpgsqlTypes.NpgsqlPath"    , true);
+						var npgsqlPolygonType  = assembly.GetType("NpgsqlTypes.NpgsqlPolygon" , true);
+						var npgsqlLineType     = assembly.GetType("NpgsqlTypes.NpgsqlLine"    , true);
+						var npgsqlInetType     = assembly.GetType("NpgsqlTypes.NpgsqlInet"    , true);
 						var npgsqlTimeSpanType = assembly.GetType("NpgsqlTypes.NpgsqlTimeSpan", true);
 						var npgsqlDateTimeType = assembly.GetType("NpgsqlTypes.NpgsqlDateTime", true);
-						var npgsqlRangeTType   = assembly.GetType("NpgsqlTypes.NpgsqlRange`1", true);
+						var npgsqlRangeTType   = assembly.GetType("NpgsqlTypes.NpgsqlRange`1" , true);
 
 						var npgsqlBinaryImporterType = assembly.GetType("Npgsql.NpgsqlBinaryImporter", true);
 

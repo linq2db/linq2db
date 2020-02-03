@@ -48,13 +48,16 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					if (_instance == null)
 					{
-						var connectionType  = Type.GetType($"FirebirdSql.Data.FirebirdClient.FbConnection, {AssemblyName}", true);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+						if (assembly == null)
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var dataReaderType  = connectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDataReader" , true);
-						var parameterType   = connectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbParameter"  , true);
-						var commandType     = connectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbCommand"    , true);
-						var transactionType = connectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbTransaction", true);
-						var dbType          = connectionType.Assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDbType"     , true);
+						var connectionType  = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbConnection" , true);
+						var dataReaderType  = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDataReader" , true);
+						var parameterType   = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbParameter"  , true);
+						var commandType     = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbCommand"    , true);
+						var transactionType = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbTransaction", true);
+						var dbType          = assembly.GetType("FirebirdSql.Data.FirebirdClient.FbDbType"     , true);
 
 						var typeMapper = new TypeMapper(connectionType, parameterType, dbType);
 

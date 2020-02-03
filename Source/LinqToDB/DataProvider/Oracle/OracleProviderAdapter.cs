@@ -220,33 +220,20 @@ namespace LinqToDB.DataProvider.Oracle
 			var typesNamespace = assemblyName + ".Types";
 
 			var isNative = false;
-			Assembly? assembly;
 #if NET45 || NET46
 			isNative = assemblyName == NativeAssemblyName;
-			if (isNative)
-			{
-				assembly = Type.GetType($"{clientNamespace}.OracleConnection, {assemblyName}", false)?.Assembly
-						?? DbProviderFactories.GetFactory("Oracle.DataAccess.Client").GetType().Assembly;
-			}
-			else
 #endif
-			{
-				assembly = Type.GetType($"{clientNamespace}.OracleConnection, {assemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-					?? (factoryName == null ? null : DbProviderFactories.GetFactory(factoryName).GetType().Assembly)
-#endif
-					;
-			}
 
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection", true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter", true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.OracleDataReader", true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection" , true);
+			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter"  , true);
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.OracleDataReader" , true);
 			var transactionType = assembly.GetType($"{clientNamespace}.OracleTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType", true);
-			var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand", true);
+			var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType"     , true);
+			var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand"    , true);
 
 			var mappingSchema = new MappingSchema();
 

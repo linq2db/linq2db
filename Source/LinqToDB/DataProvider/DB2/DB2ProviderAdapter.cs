@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using System.Data.Common;
 	using System.Linq.Expressions;
+	using System.Reflection;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
@@ -157,21 +158,16 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						var clientNamespace = AssemblyName;
 
-						var assembly = Type.GetType($"{clientNamespace}.DB2Connection, {AssemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-					?? DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly
-#endif
-					;
-
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, "IBM.Data.DB2");
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{clientNamespace}.DB2Connection", true);
-						var parameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter", true);
-						var dataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader", true);
+						var connectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true);
+						var parameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true);
+						var dataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader" , true);
 						var transactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true);
-						var commandType     = assembly.GetType($"{clientNamespace}.DB2Command", true);
-						var dbType          = assembly.GetType($"{clientNamespace}.DB2Type", true);
+						var commandType     = assembly.GetType($"{clientNamespace}.DB2Command"    , true);
+						var dbType          = assembly.GetType($"{clientNamespace}.DB2Type"       , true);
 						var serverTypesType = assembly.GetType($"{clientNamespace}.DB2ServerTypes", true);
 
 						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy", true);

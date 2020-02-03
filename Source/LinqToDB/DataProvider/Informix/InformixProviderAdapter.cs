@@ -187,21 +187,16 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			const string clientNamespace = IfxAssemblyName;
 
-			var assembly = Type.GetType($"{clientNamespace}.IfxConnection, {IfxAssemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-					?? DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly
-#endif
-					;
-
+			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, "IBM.Data.Informix");
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.IfxConnection", true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.IfxParameter", true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.IfxDataReader", true);
-			var commandType     = assembly.GetType($"{clientNamespace}.IfxCommand", true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.IfxConnection" , true);
+			var parameterType   = assembly.GetType($"{clientNamespace}.IfxParameter"  , true);
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.IfxDataReader" , true);
+			var commandType     = assembly.GetType($"{clientNamespace}.IfxCommand"    , true);
 			var transactionType = assembly.GetType($"{clientNamespace}.IfxTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.IfxType", true);
+			var dbType          = assembly.GetType($"{clientNamespace}.IfxType"       , true);
 
 			var mappingSchema = new MappingSchema();
 			var blobType      = loadType("IfxBlob", DataType.VarBinary)!;
@@ -217,11 +212,11 @@ namespace LinqToDB.DataProvider.Informix
 			var bulkCopyType = assembly.GetType($"{clientNamespace}.IfxBulkCopy", false);
 			if (bulkCopyType != null)
 			{
-				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.IfxBulkCopyOptions", true);
-				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventHandler", true);
-				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.IfxBulkCopyColumnMapping", true);
+				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.IfxBulkCopyOptions"                , true);
+				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventHandler"         , true);
+				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.IfxBulkCopyColumnMapping"          , true);
 				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.IfxBulkCopyColumnMappingCollection", true);
-				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventArgs", true);
+				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventArgs"            , true);
 
 				if (timeSpanType != null)
 					typeMapper = new TypeMapper(

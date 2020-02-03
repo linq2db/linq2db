@@ -153,26 +153,22 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Type.GetType($"{clientNamespace}.SqlConnection, ${assemblyName}", false)?.Assembly
-#if !NETSTANDARD2_0
-					?? DbProviderFactories.GetFactory(factoryName).GetType().Assembly
-#endif
-					;
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection", true);
-			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter", true);
-			var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader", true);
-			var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction", true);
-			var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand", true);
-			var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder", true);
+			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true);
+			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true);
+			var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader"             , true);
+			var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction"            , true);
+			var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand"                , true);
+			var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder"         , true);
 			var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true);
-			var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException", true);
-			var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection", true);
-			var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError", true);
+			var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException"              , true);
+			var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection"        , true);
+			var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError"                  , true);
 
 			var sqlDataRecordType = connectionType.Assembly.GetType(
 				isSystem
@@ -180,12 +176,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					: "Microsoft.Data.SqlClient.Server.SqlDataRecord",
 				true);
 
-			var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy", true);
-			var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions", true);
-			var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler", true);
-			var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping", true);
+			var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy"                       , true);
+			var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions"                , true);
+			var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler"         , true);
+			var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping"          , true);
 			var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true);
-			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs", true);
+			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true);
 
 			var typeMapper = new TypeMapper(
 				connectionType, parameterType, transactionType,
