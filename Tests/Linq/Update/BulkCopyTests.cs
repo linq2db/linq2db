@@ -57,8 +57,6 @@ namespace Tests.xUpdate
 			if (context == ProviderName.OracleNative && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
-			List<TestTable1> list = null;
-
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
 			//using (db.BeginTransaction())
@@ -66,7 +64,6 @@ namespace Tests.xUpdate
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
 				try
 				{
-					list = db.GetTable<TestTable1>().ToList();
 					var options = new BulkCopyOptions()
 					{
 						KeepIdentity = keepIdentity,
@@ -113,9 +110,6 @@ namespace Tests.xUpdate
 				{
 					// cleanup
 					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
-					if (list != null)
-						foreach (var item in list)
-							db.Insert(item);
 				}
 			}
 		}
@@ -128,8 +122,6 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
-			List<TestTable1> list = null;
-
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
 			//using (db.BeginTransaction())
@@ -137,9 +129,6 @@ namespace Tests.xUpdate
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
 				try
 				{
-					list = db.GetTable<TestTable1>().ToList();
-					db.GetTable<TestTable1>().Delete();
-
 					var options = new BulkCopyOptions()
 					{
 						KeepIdentity = keepIdentity,
@@ -185,10 +174,7 @@ namespace Tests.xUpdate
 				finally
 				{
 					// cleanup
-					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
-					if (list != null)
-						foreach (var item in list)
-							db.Insert(item);
+					db.GetTable<TestTable1>().Delete(_ => _.ID >= lastId);
 				}
 			}
 		}
