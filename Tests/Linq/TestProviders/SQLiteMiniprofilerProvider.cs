@@ -1,9 +1,7 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
+using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using StackExchange.Profiling;
@@ -13,12 +11,14 @@ namespace Tests
 {
 	internal class SQLiteMiniprofilerProvider : SQLiteDataProvider
 	{
-		public SQLiteMiniprofilerProvider(string name)
-			: base(name)
+		private readonly bool _mapped;
+		public SQLiteMiniprofilerProvider(bool mapped)
+			: base(ProviderName.SQLiteClassic)
 		{
+			_mapped = mapped;
 		}
 
-		public override MappingSchema MappingSchema => Name == TestProvName.SQLiteClassicMiniProfilerMapped
+		public override MappingSchema MappingSchema => _mapped
 			? MappingSchemaInstance.MappedMappingSchema
 			: MappingSchemaInstance.UnmappedMappingSchema;
 
@@ -63,8 +63,8 @@ namespace Tests
 			MiniProfiler.DefaultOptions.StartProfiler();
 #endif
 
-			DataConnection.AddDataProvider(new SQLiteMiniprofilerProvider(TestProvName.SQLiteClassicMiniProfilerMapped));
-			DataConnection.AddDataProvider(new SQLiteMiniprofilerProvider(TestProvName.SQLiteClassicMiniProfilerUnmapped));
+			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMiniprofilerProvider(true));
+			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerUnmapped, new SQLiteMiniprofilerProvider(false));
 		}
 	}
 }

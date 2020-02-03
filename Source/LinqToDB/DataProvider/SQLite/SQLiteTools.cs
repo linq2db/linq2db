@@ -62,6 +62,14 @@ namespace LinqToDB.DataProvider.SQLite
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();
+				case var providerName when providerName.Contains("SQLite"):
+					if (css.ProviderName.Contains("MS") || css.ProviderName.Contains("Microsoft"))
+						return _SQLiteMSDataProvider.Value;
+
+					if (css.ProviderName.Contains("Classic"))
+						return _SQLiteClassicDataProvider.Value;
+
+					return GetDataProvider();
 			}
 
 			return null;

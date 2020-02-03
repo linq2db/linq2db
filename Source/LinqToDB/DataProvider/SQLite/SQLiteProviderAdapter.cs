@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.SQLite
 					{
 						if (_microsoftDataSQLite == null)
 						{
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, "Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite");
+							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, "Microsoft.Data.Sqlite", "Sqlite");
 						}
 					}
 				}
