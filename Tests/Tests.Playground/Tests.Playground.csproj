@@ -25,6 +25,7 @@
 		</None>
 
 		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>
