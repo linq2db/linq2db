@@ -11,9 +11,6 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
-		Dictionary<ISqlExpression, SqlField> FieldsByExpression { get; } = new Dictionary<ISqlExpression, SqlField>();
-		Dictionary<string, SqlField>         FieldByName        { get; } = new Dictionary<string, SqlField>();
-
 		SqlField[] _fields = new SqlField[0];
 
 		public static int CteIDCounter;
@@ -97,17 +94,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public SqlField RegisterFieldMapping(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
+		public SqlField RegisterFieldMapping(int index, Func<SqlField> fieldFactory)
 		{
 			if (Fields.Length > index && Fields[index] != null)
 				return Fields[index];
-
-			if (expression != null && FieldsByExpression.TryGetValue(expression, out var value))
-				return value;
-
-			var baseField = baseExpression as SqlField;
-			if (baseField != null && FieldByName.TryGetValue(baseField.Name, out value))
-				return value;
 
 			var newField = fieldFactory();
 
@@ -122,17 +112,7 @@ namespace LinqToDB.SqlQuery
 
 			Fields[index] = newField;
 
-			if (expression != null && !FieldsByExpression.ContainsKey(expression))
-				FieldsByExpression.Add(expression, newField);
-			if (baseField != null)
-				FieldByName.Add(baseField.Name, newField);
-			else
-			{
-				if (expression is SqlField field && !FieldByName.ContainsKey(field.Name))
-					FieldByName.Add(field.Name, newField);
-			}
 			return newField;
-
 		}
 	}
 }
