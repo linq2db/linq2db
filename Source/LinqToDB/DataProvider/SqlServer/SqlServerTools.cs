@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name == "SqlServer")
 						goto case ProviderName.SqlServer;
 					break;
-				case var providerName when providerName.Contains("SqlServer") || providerName.Contains("SqlClient"):
+				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
 					if (css.Name.Contains("2000") || css.ProviderName?.Contains("2000") == true) return GetDataProvider(SqlServerVersion.v2000, provider);
 					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);

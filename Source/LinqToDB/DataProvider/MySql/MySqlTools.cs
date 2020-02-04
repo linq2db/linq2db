@@ -60,6 +60,14 @@ namespace LinqToDB.DataProvider.MySql
 						return _mySqlDataProvider.Value;
 
 					return GetDataProvider();
+				case var providerName when providerName.Contains("MySql"):
+					if (providerName.Contains("MySqlConnector"))
+						return _mySqlConnectorDataProvider.Value;
+
+					if (providerName.Contains("MySql.Data"))
+						return _mySqlDataProvider.Value;
+
+					return GetDataProvider();
 			}
 
 			return null;
