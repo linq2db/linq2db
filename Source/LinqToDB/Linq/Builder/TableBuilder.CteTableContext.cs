@@ -188,6 +188,23 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
+			void UpdateMissingFields()
+			{
+				// Collecting missed fields which has field in query. Should never happen.
+
+				if (_cteQueryContext != null)
+				{
+					for (int i = 0; i < _cte.Fields.Length; i++)
+					{
+						if (_cte.Fields[i] == null)
+						{
+							var column = _cte.Body.Select.Columns[i];
+							_cte.Fields[i] = new SqlField { Name = column.Alias, PhysicalName = column.Alias };
+						}
+					}
+				}
+			}
+
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				if (context == _cteQueryContext)
@@ -197,6 +214,8 @@ namespace LinqToDB.Linq.Builder
 					var field       = RegisterCteField(null, queryColumn, index, alias);
 
 					index = SelectQuery.Select.Add(field);
+
+					UpdateMissingFields();
 				}
 
 				return base.ConvertToParentIndex(index, context);
@@ -206,20 +225,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-				var cteField = _cte.RegisterFieldMapping(baseExpression, expression, index, () =>
-						{
-							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
+				var cteField = _cte.RegisterFieldMapping(index, () =>
+				{
+					var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
-							var newField = f == null
-								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = alias }
-								: new SqlField(f);
+					var newField = f == null
+						? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = alias }
+						: new SqlField(f);
 
-							if (alias != null)
-								newField.Name = alias;
+					if (alias != null)
+						newField.Name = alias;
 
-							newField.PhysicalName = newField.Name;
-							return newField;
-						});
+					newField.PhysicalName = newField.Name;
+					return newField;
+				});
 
 				if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
 				{
