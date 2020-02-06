@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.DB2
 	public static class DB2Tools
 	{
 		public static string? AssemblyName;
-		public static bool    IsCore;
+		public static bool   IsCore;
 
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
 		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
@@ -140,9 +140,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region OnInitialized
 
-		private static  bool                   _isInitialized;
-		static readonly object                 _syncAfterInitialized    = new object();
-		private static  ConcurrentBag<Action>? _afterInitializedActions = new ConcurrentBag<Action>();
+		private static  bool                  _isInitialized;
+		static readonly object                _syncAfterInitialized    = new object();
+		private static  ConcurrentQueue<Action>? _afterInitializedActions = new ConcurrentQueue<Action>();
 
 		internal static void Initialized()
 		{
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 					}
 					else
 					{
-						_afterInitializedActions!.Add(action);
+						_afterInitializedActions!.Enqueue(action);
 					}
 				}
 			}
@@ -225,9 +225,9 @@ namespace LinqToDB.DataProvider.DB2
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
@@ -241,11 +241,11 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int?                        bulkCopyTimeout    = null,
-			bool                        keepIdentity       = false,
-			int                         notifyAfter        = 0,
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       bulkCopyTimeout    = null,
+			bool                       keepIdentity       = false,
+			int                        notifyAfter        = 0,
 			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{

@@ -177,8 +177,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
+							var memberInfo = ((MemberExpression)levelExpression).Member;
+
 							var memberExpression = GetMemberExpression(
-								((MemberExpression)levelExpression).Member,
+								memberInfo,
 								ReferenceEquals(levelExpression, expression),
 								levelExpression.Type,
 								expression);
@@ -229,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+								return Builder.BuildExpression(this, memberExpression, enforceServerSide, memberInfo.Name);
 							}
 
 							{

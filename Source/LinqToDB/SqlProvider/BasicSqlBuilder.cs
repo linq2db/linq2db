@@ -390,7 +390,7 @@ namespace LinqToDB.SqlProvider
 
 				ConvertTableName(StringBuilder, null, null, null, cte.Name);
 
-				if (cte.Fields.Count > 3)
+				if (cte.Fields.Length > 3)
 				{
 					StringBuilder.AppendLine();
 					AppendIndent(); StringBuilder.AppendLine("(");
@@ -400,7 +400,7 @@ namespace LinqToDB.SqlProvider
 					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
-							StringBuilder.AppendLine(", ");
+							StringBuilder.AppendLine(",");
 						firstField = false;
 						AppendIndent();
 						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
@@ -410,7 +410,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.AppendLine();
 					AppendIndent(); StringBuilder.AppendLine(")");
 				}
-				else if (cte.Fields.Count > 0)
+				else if (cte.Fields.Length > 0)
 				{
 					StringBuilder.Append(" (");
 
@@ -423,6 +423,10 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 					}
 					StringBuilder.AppendLine(")");
+				}
+				else
+				{
+					StringBuilder.Append(' ');
 				}
 
 				AppendIndent();
