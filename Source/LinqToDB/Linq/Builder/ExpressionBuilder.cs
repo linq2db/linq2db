@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 			Expression           = ConvertExpressionTree(expression);
 			_visitedExpressions  = null;
 
-			DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
+			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
 		#endregion

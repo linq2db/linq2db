@@ -13,13 +13,21 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		private readonly OracleDataProvider? _provider;
 
-		public OracleSqlBuilder(OracleDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public OracleSqlBuilder(
+			OracleDataProvider? provider,
+			MappingSchema       mappingSchema,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
-		public OracleSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		// remote context
+		public OracleSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

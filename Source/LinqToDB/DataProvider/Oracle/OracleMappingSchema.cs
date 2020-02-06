@@ -128,12 +128,22 @@ namespace LinqToDB.DataProvider.Oracle
 				: base(ProviderName.OracleNative, Instance)
 			{
 			}
+
+			public NativeMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 
 		public class ManagedMappingSchema : MappingSchema
 		{
 			public ManagedMappingSchema()
 				: base(ProviderName.OracleManaged, Instance)
+			{
+			}
+
+			public ManagedMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}

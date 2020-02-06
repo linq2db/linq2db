@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public OracleDataProvider(string name)
 			: base(
 				  name,
-				  MappingSchemaInstance.Get(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
+				  GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
 				  OracleProviderAdapter.GetInstance(name))
 		{
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
@@ -73,17 +73,13 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		static class MappingSchemaInstance
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			public static readonly MappingSchema NativeMappingSchema  = new OracleMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema ManagedMappingSchema = new OracleMappingSchema.ManagedMappingSchema();
-
-			public static MappingSchema Get(string name, MappingSchema providerSchema)
+			switch (name)
 			{
-				if (name == ProviderName.OracleNative)
-					return new MappingSchema(NativeMappingSchema, providerSchema);
-
-				return new MappingSchema(ManagedMappingSchema, providerSchema);
+				default                        :
+				case ProviderName.OracleManaged: return new OracleMappingSchema.ManagedMappingSchema(providerSchema);
+				case ProviderName.OracleNative : return new OracleMappingSchema.NativeMappingSchema (providerSchema);
 			}
 		}
 

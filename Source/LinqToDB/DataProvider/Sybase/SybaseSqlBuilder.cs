@@ -12,13 +12,21 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		private readonly SybaseDataProvider? _provider;
 
-		public SybaseSqlBuilder(SybaseDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SybaseSqlBuilder(
+			SybaseDataProvider? provider,
+			MappingSchema       mappingSchema,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
-		public SybaseSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		// remote context
+		public SybaseSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

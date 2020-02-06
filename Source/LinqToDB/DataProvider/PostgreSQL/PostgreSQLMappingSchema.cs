@@ -14,7 +14,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		protected PostgreSQLMappingSchema(string configuration) : base(configuration)
+		public PostgreSQLMappingSchema(params MappingSchema[] schemas) : this(ProviderName.PostgreSQL, schemas)
+		{
+		}
+
+		protected PostgreSQLMappingSchema(string configuration, params MappingSchema[] schemas)
+			: base(configuration, schemas)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -27,8 +32,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 		}
-
-		internal static MappingSchema Instance = new PostgreSQLMappingSchema();
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
@@ -84,30 +87,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
-		}
-	}
-
-	public class PostgreSQL92MappingSchema : MappingSchema
-	{
-		public PostgreSQL92MappingSchema()
-			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
-		{
-		}
-	}
-
-	public class PostgreSQL93MappingSchema : MappingSchema
-	{
-		public PostgreSQL93MappingSchema()
-			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
-		{
-		}
-	}
-
-	public class PostgreSQL95MappingSchema : MappingSchema
-	{
-		public PostgreSQL95MappingSchema()
-			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
-		{
 		}
 	}
 }

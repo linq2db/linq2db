@@ -11,13 +11,21 @@ namespace LinqToDB.DataProvider.SqlCe
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
 		private readonly SqlCeDataProvider? _provider;
-		public SqlCeSqlBuilder(SqlCeDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlCeSqlBuilder(
+			SqlCeDataProvider? provider,
+			MappingSchema      mappingSchema,
+			ISqlOptimizer      sqlOptimizer,
+			SqlProviderFlags   sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
-		public SqlCeSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		// remote context
+		public SqlCeSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

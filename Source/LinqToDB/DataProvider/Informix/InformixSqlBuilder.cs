@@ -14,13 +14,21 @@ namespace LinqToDB.DataProvider.Informix
 	{
 		private readonly InformixDataProvider? _provider;
 
-		public InformixSqlBuilder(InformixDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public InformixSqlBuilder(
+			InformixDataProvider? provider,
+			MappingSchema         mappingSchema,
+			ISqlOptimizer         sqlOptimizer,
+			SqlProviderFlags      sqlProviderFlags)
 			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
-		public InformixSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		// remote context
+		public InformixSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

@@ -73,13 +73,12 @@ namespace LinqToDB.ServiceModel
 		{
 			using (var ctx = CreateDataContext(configuration))
 			{
-				return new LinqServiceInfo
+				return new LinqServiceInfo()
 				{
-					MappingSchemaType = ctx.DataProvider.MappingSchema.     GetType().AssemblyQualifiedName,
+					MappingSchemaType = ctx.DataProvider.MappingSchema                      .GetType().AssemblyQualifiedName,
 					SqlBuilderType    = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName,
-					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer(). GetType().AssemblyQualifiedName,
-					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
-					ConfigurationList = ctx.MappingSchema.ConfigurationList,
+					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer()                  .GetType().AssemblyQualifiedName,
+					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags
 				};
 			}
 		}

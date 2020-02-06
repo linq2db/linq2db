@@ -22,9 +22,10 @@ namespace LinqToDB.DataProvider.MySql
 				  name,
 				  mappingSchema != null
 					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: MappingSchemaInstance.Get(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
+					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
 				  MySqlProviderAdapter.GetInstance(name))
 		{
+
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -60,18 +61,13 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		static class MappingSchemaInstance
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			public static readonly MappingSchema MySqlOfficialMappingSchema  = new MySqlMappingSchema.MySqlOfficialMappingSchema();
-			public static readonly MappingSchema MySqlConnectorMappingSchema = new MySqlMappingSchema.MySqlConnectorMappingSchema();
-
-			public static MappingSchema Get(string name, MappingSchema providerSchema)
+			switch (name)
 			{
-				switch (name)
-				{
-					case ProviderName.MySqlConnector: return new MappingSchema(MySqlConnectorMappingSchema, providerSchema);
-					default                         : return new MappingSchema(MySqlOfficialMappingSchema , providerSchema);
-				}
+				case ProviderName.MySqlConnector: return new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
+				default                         :
+				case ProviderName.MySqlOfficial : return new MySqlMappingSchema.MySqlOfficialMappingSchema (providerSchema);
 			}
 		}
 

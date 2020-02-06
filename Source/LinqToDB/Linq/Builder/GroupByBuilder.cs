@@ -317,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 							new[] { context.Builder.DataReaderLocal },
 							new[]
 							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
+								Expression.Assign(dataReaderLocal, ExpressionBuilder.DataReaderParam),
 								keyExpr
 							});
 					}

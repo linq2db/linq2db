@@ -78,19 +78,12 @@ namespace LinqToDB.Linq
 
 					oldVariable = null;
 					newVariable = null;
-					var replace = context.DataReaderType != dataReaderType;
 					var mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
 						e => {
 							if (e is ConvertFromDataReaderExpression ex)
-								if (replace)
-									return ex.Reduce(dataReader, newVariable).Transform(replaceVariable);
-								else
-									return ex.Reduce(dataReader);
+								return ex.Reduce(dataReader, newVariable).Transform(replaceVariable);
 
-							if (replace)
-								return replaceVariable(e);
-
-							return e;
+							return replaceVariable(e);
 						});
 
 					var qr = QueryRunner;
@@ -127,8 +120,7 @@ namespace LinqToDB.Linq
 
 					oldVariable = null;
 					newVariable = null;
-					var replace = context.DataReaderType != dataReaderType;
-					var expression = !replace ? _expression : (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
+					var expression = (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
 						if (e is ConvertFromDataReaderExpression ex)
 							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable, ex.DataContext);
 

@@ -26,7 +26,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var provider = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
 
-			DataConnection.AddDataProvider(ProviderName.DB2, provider);
 			DataConnection.AddDataProvider(provider);
 
 			return provider;

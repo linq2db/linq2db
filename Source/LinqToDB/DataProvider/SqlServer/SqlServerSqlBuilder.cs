@@ -14,7 +14,11 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		protected readonly SqlServerDataProvider? Provider;
 
-		protected SqlServerSqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected SqlServerSqlBuilder(
+			SqlServerDataProvider? provider,
+			MappingSchema          mappingSchema,
+			ISqlOptimizer          sqlOptimizer,
+			SqlProviderFlags       sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			Provider = provider;

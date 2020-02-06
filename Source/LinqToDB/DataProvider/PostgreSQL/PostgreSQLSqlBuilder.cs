@@ -17,14 +17,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		private readonly PostgreSQLDataProvider? _provider;
 
-		public PostgreSQLSqlBuilder(PostgreSQLDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public PostgreSQLSqlBuilder(
+			PostgreSQLDataProvider? provider,
+			MappingSchema           mappingSchema,
+			ISqlOptimizer           sqlOptimizer,
+			SqlProviderFlags        sqlProviderFlags)
 			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			_provider = provider;
 		}
 
-		// used by linq service
-		public PostgreSQLSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		// remote context
+		public PostgreSQLSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

@@ -18,9 +18,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 			DataConnection.AddDataProvider(provider);
 
-			if (DetectedProviderName == ProviderName.SQLiteClassic)
-				DataConnection.AddDataProvider(ProviderName.SQLite, provider);
-
 			return provider;
 		}, true);
 
@@ -29,9 +26,6 @@ namespace LinqToDB.DataProvider.SQLite
 			var provider = new SQLiteDataProvider(ProviderName.SQLiteMS);
 
 			DataConnection.AddDataProvider(provider);
-
-			if (DetectedProviderName == ProviderName.SQLiteMS)
-				DataConnection.AddDataProvider(ProviderName.SQLite, provider);
 
 			return provider;
 		}, true);

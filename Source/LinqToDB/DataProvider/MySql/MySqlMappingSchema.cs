@@ -1,9 +1,9 @@
-﻿using System;
+﻿using System.Data.Linq;
 using System.Text;
-using System.Data.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlQuery;
 
@@ -15,8 +15,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected MySqlMappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
@@ -56,12 +56,17 @@ namespace LinqToDB.DataProvider.MySql
 				stringBuilder.Append(b.ToString("X2"));
 		}
 
-		internal static readonly MySqlMappingSchema Instance = new MySqlMappingSchema();
+		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
 
 		public class MySqlOfficialMappingSchema : MappingSchema
 		{
 			public MySqlOfficialMappingSchema()
 				: base(ProviderName.MySqlOfficial, Instance)
+			{
+			}
+
+			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}
@@ -70,6 +75,11 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			public MySqlConnectorMappingSchema()
 				: base(ProviderName.MySqlConnector, Instance)
+			{
+			}
+
+			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}

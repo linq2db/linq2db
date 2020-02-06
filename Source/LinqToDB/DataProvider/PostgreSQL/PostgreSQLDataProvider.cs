@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public PostgreSQLDataProvider(string name, PostgreSQLVersion version = PostgreSQLVersion.v92)
 			: base(
 				  name,
-				  MappingSchemaInstance.Get(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
+				  new PostgreSQLMappingSchema(NpgsqlProviderAdapter.GetInstance().MappingSchema),
 				  NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
@@ -38,19 +38,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			switch (version)
-			{
-				case PostgreSQLVersion.v92:
-					_sqlOptimizer = new PostgreSQLSql92Optimizer(SqlProviderFlags);
-					break;
-				case PostgreSQLVersion.v93:
-					_sqlOptimizer = new PostgreSQLSql93Optimizer(SqlProviderFlags);
-					break;
-				default:
-				case PostgreSQLVersion.v95:
-					_sqlOptimizer = new PostgreSQLSql95Optimizer(SqlProviderFlags);
-					break;
-			}
+			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
 		}
@@ -422,24 +410,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return null;
-		}
-
-		static class MappingSchemaInstance
-		{
-			public static readonly MappingSchema PostgreSQL92MappingSchema = new PostgreSQL92MappingSchema();
-			public static readonly MappingSchema PostgreSQL93MappingSchema = new PostgreSQL93MappingSchema();
-			public static readonly MappingSchema PostgreSQL95MappingSchema = new PostgreSQL95MappingSchema();
-
-			public static MappingSchema Get(PostgreSQLVersion version, MappingSchema providerSchema)
-			{
-				switch (version)
-				{
-					case PostgreSQLVersion.v92: return new MappingSchema(PostgreSQL92MappingSchema, providerSchema);
-					case PostgreSQLVersion.v93: return new MappingSchema(PostgreSQL93MappingSchema, providerSchema);
-					default:
-					case PostgreSQLVersion.v95: return new MappingSchema(PostgreSQL95MappingSchema, providerSchema);
-				}
-			}
 		}
 	}
 }

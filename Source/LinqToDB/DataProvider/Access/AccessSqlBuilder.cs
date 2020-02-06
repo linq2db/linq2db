@@ -25,10 +25,10 @@ namespace LinqToDB.DataProvider.Access
 			_provider = provider;
 		}
 
-		// for remote context
+		// remote context
 		public AccessSqlBuilder(
-			MappingSchema mappingSchema,
-			ISqlOptimizer sqlOptimizer,
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
 			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{

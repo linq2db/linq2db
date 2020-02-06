@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -16,7 +15,7 @@ namespace LinqToDB.DataProvider.DB2
 		public DB2DataProvider(string name, DB2Version version)
 						: base(
 				  name,
-				  MappingSchemaInstance.Get(version, DB2ProviderAdapter.GetInstance().MappingSchema),
+				  GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
 				  DB2ProviderAdapter.GetInstance())
 
 		{
@@ -57,19 +56,13 @@ namespace LinqToDB.DataProvider.DB2
 
 		public DB2Version Version { get; }
 
-		static class MappingSchemaInstance
+		private static MappingSchema GetMappingSchema(DB2Version version, MappingSchema providerSchema)
 		{
-			public static readonly MappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
-			public static readonly MappingSchema DB2zOSMappingSchema = new DB2zOSMappingSchema();
-
-			public static MappingSchema Get(DB2Version version, MappingSchema providerSchema)
+			switch (version)
 			{
-				switch (version)
-				{
-					default:
-					case DB2Version.LUW: return new MappingSchema(DB2LUWMappingSchema, providerSchema);
-					case DB2Version.zOS: return new MappingSchema(DB2zOSMappingSchema, providerSchema);
-				}
+				case DB2Version.zOS: return new DB2zOSMappingSchema(providerSchema);
+				default            :
+				case DB2Version.LUW: return new DB2LUWMappingSchema(providerSchema);
 			}
 		}
 

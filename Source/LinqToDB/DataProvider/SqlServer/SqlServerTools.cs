@@ -47,7 +47,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (Provider == SqlServerProvider.SystemDataSqlClient)
 			{
-				DataConnection.AddDataProvider(ProviderName.SqlServer, provider);
 				DataConnection.AddDataProvider(provider);
 			}
 
@@ -105,7 +104,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
 			{
-				DataConnection.AddDataProvider(ProviderName.SqlServer, provider);
 				DataConnection.AddDataProvider(provider);
 			}
 

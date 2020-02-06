@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -82,12 +83,22 @@ namespace LinqToDB.DataProvider.DB2
 			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
 		{
 		}
+
+		public DB2zOSMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		{
+		}
 	}
 
 	public class DB2LUWMappingSchema : MappingSchema
 	{
 		public DB2LUWMappingSchema()
 			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
+		{
+		}
+
+		public DB2LUWMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
 		{
 		}
 	}

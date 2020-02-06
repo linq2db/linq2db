@@ -26,9 +26,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			DataConnection.AddDataProvider(provider);
 
-			if (DetectedProviderName == ProviderName.OracleNative)
-				DataConnection.AddDataProvider(ProviderName.Oracle, provider);
-
 			return provider;
 		}, true);
 #endif
@@ -38,9 +35,6 @@ namespace LinqToDB.DataProvider.Oracle
 			var provider = new OracleDataProvider(ProviderName.OracleManaged);
 
 			DataConnection.AddDataProvider(provider);
-
-			if (DetectedProviderName == ProviderName.OracleManaged)
-				DataConnection.AddDataProvider(ProviderName.Oracle, provider);
 
 			return provider;
 		}, true);

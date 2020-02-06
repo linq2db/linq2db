@@ -778,36 +778,27 @@ namespace LinqToDB.Data
 				var configuration            = css.Name;
 				var providerName             = css.ProviderName;
 
-				IDataProvider? dataProvider = null;
-
-				// don't go through all detection logic, if we have provider already registered
-				if (!string.IsNullOrEmpty(providerName))
-					_dataProviders.TryGetValue(providerName, out dataProvider);
+				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
-					dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
+					var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
 
-					if (dataProvider == null)
+					if (string.IsNullOrEmpty(providerName))
+						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+					else if (_dataProviders.ContainsKey(providerName))
+						dataProvider = _dataProviders[providerName];
+					else if (_dataProviders.ContainsKey(configuration))
+						dataProvider = _dataProviders[configuration];
+					else
 					{
-						var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
+						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
-						if (string.IsNullOrEmpty(providerName))
-							dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-						else if (_dataProviders.ContainsKey(providerName))
-							dataProvider = _dataProviders[providerName];
-						else if (_dataProviders.ContainsKey(configuration))
-							dataProvider = _dataProviders[configuration];
-						else
+						switch (providers.Count)
 						{
-							var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
-
-							switch (providers.Count)
-							{
-								case 0  : dataProvider = defaultDataProvider;                                        break;
-								case 1  : dataProvider = providers[0].Value;                                         break;
-								default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
-							}
+							case 0  : dataProvider = defaultDataProvider;                                        break;
+							case 1  : dataProvider = providers[0].Value;                                         break;
+							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
 						}
 					}
 				}

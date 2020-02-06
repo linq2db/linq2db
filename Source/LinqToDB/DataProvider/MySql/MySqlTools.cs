@@ -18,9 +18,6 @@ namespace LinqToDB.DataProvider.MySql
 
 			DataConnection.AddDataProvider(provider);
 
-			if (DetectedProviderName == ProviderName.MySqlOfficial)
-				DataConnection.AddDataProvider(ProviderName.MySql, provider);
-
 			return provider;
 		}, true);
 
@@ -29,9 +26,6 @@ namespace LinqToDB.DataProvider.MySql
 			var provider = new MySqlDataProvider(ProviderName.MySqlConnector);
 
 			DataConnection.AddDataProvider(provider);
-
-			if (DetectedProviderName == ProviderName.MySqlConnector)
-				DataConnection.AddDataProvider(ProviderName.MySql, provider);
 
 			return provider;
 		}, true);

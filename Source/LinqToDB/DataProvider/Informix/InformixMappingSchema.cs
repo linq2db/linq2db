@@ -4,6 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Informix
 {
 	using System.Globalization;
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlQuery;
 
@@ -100,12 +101,22 @@ namespace LinqToDB.DataProvider.Informix
 				: base(ProviderName.Informix, Instance)
 			{
 			}
+
+			public IfxMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 
 		public class DB2MappingSchema : MappingSchema
 		{
 			public DB2MappingSchema()
 				: base(ProviderName.InformixDB2, Instance)
+			{
+			}
+
+			public DB2MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}

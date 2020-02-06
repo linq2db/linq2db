@@ -13,7 +13,11 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		protected DB2DataProvider? Provider { get; }
 
-		protected DB2SqlBuilderBase(DB2DataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected DB2SqlBuilderBase(
+			DB2DataProvider? provider,
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 			Provider = provider;
