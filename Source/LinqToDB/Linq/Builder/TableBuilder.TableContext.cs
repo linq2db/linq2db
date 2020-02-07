@@ -749,11 +749,11 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field == null)
 							{
 								// Handling case with Associations. Needs refactoring
-								if (table.Table != this)
+								if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
 								{
-									return table.Table.ConvertToSql(null, level, flags);
+									return association._innerContext.ConvertToSql(null, level, flags);
 								}
-
+								
 								var fields = table.Table.SqlTable.Fields.Values
 										.Where(f => !f.IsDynamic)
 										.Select(f =>
@@ -774,9 +774,9 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field == null)
 							{
 								// Handling case with Associations. Needs refactoring
-								if (table.Table != this)
+								if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
 								{
-									return table.Table.ConvertToSql(null, level, flags);
+									return association._innerContext.ConvertToSql(null, level, flags);
 								}
 
 								var q =

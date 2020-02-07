@@ -576,5 +576,122 @@ namespace Tests.Linq
 			}
 		}
 
+
+		class TakeSkipClass
+		{
+			[Column(DataType = DataType.VarChar, Length = 10)]
+			public string Value { get; set; }
+
+			protected bool Equals(TakeSkipClass other)
+			{
+				return Value == other.Value;
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (ReferenceEquals(null, obj)) return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != this.GetType()) return false;
+				return Equals((TakeSkipClass)obj);
+			}
+
+			public override int GetHashCode()
+			{
+				return (Value != null ? Value.GetHashCode() : 0);
+			}
+		}
+
+		[Test]
+		public void GroupTakeAnyTest([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PIPPO" }, 
+				new TakeSkipClass { Value = "PLUTO" }, 
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.GroupBy(item => item.Value)
+					.Where(group => group.Count() > 1)
+					.Select(item => item.Key)
+					.Take(1)
+					.Any();
+
+				var expected = testData
+					.GroupBy(item => item.Value)
+					.Where(group => group.Count() > 1)
+					.Select(item => item.Key)
+					.Take(1)
+					.Any();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+
+		[Test]
+		public void DistinctTakeTest([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" }, 
+				new TakeSkipClass { Value = "PIPPO" }, 
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.Distinct()
+					.Take(3)
+					.ToArray();
+
+				var expected = testData
+					.Distinct()
+					.Take(3)
+					.ToArray();
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void OrderByTakeTest([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" }, 
+				new TakeSkipClass { Value = "PIPPO" }, 
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.OrderBy(t => t.Value)
+					.Take(2)
+					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Take(2)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
 	}
 }
