@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Dictionary<ISqlExpression, SqlField> _replaceMap;
-			IBuildContext                        _innerContext;
+			internal IBuildContext               _innerContext;
 
 			public AssociatedTableContext(
 				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,

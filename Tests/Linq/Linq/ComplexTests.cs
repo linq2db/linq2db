@@ -452,5 +452,65 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Table("T1")]
+		public class T1
+		{
+			[PrimaryKey] public int InstrumentId { get; set; }
+			[Column] public string InstrumentCode { get; set; }
+			[Column] public DateTime CreateDate { get; set; }
+			[Column] public string SourceInstrumentCode { get; set; }
+		}
+
+		[Table("T2")]
+		public class T2
+		{
+			[Column] public int InstrumentId { get; set; }
+			[Column] public int IndexId { get; set; }
+
+		}
+
+		[Table("T3")]
+		public class T3
+		{
+			[Column] public int InstrumentId { get; set; }
+			[Column] public int IndexId { get; set; }
+		}
+
+		[Test]
+		public void Issue413Test([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateTempTable<T1>())
+			using (db.CreateTempTable<T2>())
+			using (db.CreateTempTable<T3>())
+			{
+				string cond = "aaa";
+				DateTime uptoDate = DateTime.Now;
+
+				db.Insert(new T3() { IndexId = 1, InstrumentId = 1 });
+				db.Insert(new T3() { IndexId = 1, InstrumentId = 2 });
+				db.Insert(new T3() { IndexId = 1, InstrumentId = 3 });
+				db.Insert(new T2() { IndexId = 1, InstrumentId = 1 });
+				db.Insert(new T2() { IndexId = 1, InstrumentId = 2 });
+
+				db.Insert(new T1() { InstrumentId = 1, CreateDate = DateTime.Now.AddDays(-1), InstrumentCode = "aaa1", SourceInstrumentCode = "NOTNULL" });
+				db.Insert(new T1() { InstrumentId = 2, CreateDate = DateTime.Now.AddDays(-1), InstrumentCode = "aaa2", SourceInstrumentCode = null });
+
+				var res = db.GetTable<T1>()
+									.Where(_ => _.InstrumentCode.StartsWith(cond) && _.CreateDate <= uptoDate)
+									.Join(db.GetTable<T2>(), _ => _.InstrumentId, _ => _.InstrumentId, (ins, idx) => idx.IndexId)
+									.Join(db.GetTable<T3>(), _ => _, _ => _.IndexId, (idx, w) => w.InstrumentId)
+									.Join(db.GetTable<T1>(), _ => _, _ => _.InstrumentId
+										, (w, ins) => ins.SourceInstrumentCode)
+									.Where(_ => _ != null)
+									.Distinct()
+									.OrderBy(_ => _)
+									.ToList();
+
+				Assert.That(res.Count, Is.EqualTo(1));
+			}
+		}
+
 	}
 }

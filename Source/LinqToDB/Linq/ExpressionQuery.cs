@@ -37,9 +37,6 @@ namespace LinqToDB.Linq
 
 		#region Public Members
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		string _sqlTextHolder;
-
 		// This property is helpful in Debug Mode.
 		//
 		[UsedImplicitly]
@@ -50,22 +47,11 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var hasQueryHints = DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0;
+				var expression = Expression;
+				var info       = GetQuery(ref expression, true);
+				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, Preambles, 0);
 
-				if (_sqlTextHolder == null || hasQueryHints)
-				{
-					var expression = Expression;
-					var info       = GetQuery(ref expression, true);
-					Expression     = expression;
-					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, Preambles, 0);
-
-					if (hasQueryHints)
-						return sqlText;
-
-					_sqlTextHolder = sqlText;
-				}
-
-				return _sqlTextHolder;
+				return sqlText;
 			}
 		}
 

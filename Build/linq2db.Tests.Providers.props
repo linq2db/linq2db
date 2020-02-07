@@ -59,6 +59,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.6.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.0.10" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->

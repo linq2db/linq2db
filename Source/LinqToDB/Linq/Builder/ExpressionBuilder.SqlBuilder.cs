@@ -677,7 +677,7 @@ namespace LinqToDB.Linq.Builder
 						return expr.Bindings
 							.Where  (b => b is MemberAssignment)
 							.Cast<MemberAssignment>()
-							.OrderBy(b => dic[b.Member])
+							.OrderBy(b => dic[expr.Type.GetMemberEx(b.Member)])
 							.Select (a =>
 							{
 								var mi = a.Member;
@@ -1237,6 +1237,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsQueryMember(Expression expr)
 		{
+			expr = expr.Unwrap();
 			if (expr != null) switch (expr.NodeType)
 			{
 				case ExpressionType.Parameter    : return true;
@@ -3065,6 +3066,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetContext([JetBrains.Annotations.NotNull] IBuildContext current, Expression expression)
 		{
 			var root = expression.GetRootObject(MappingSchema);
+			root = root.Unwrap();
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)

@@ -1057,5 +1057,52 @@ namespace Tests.Linq
 			}
 		}
 
+
+		class NestingA
+		{
+			public string Property1 { get; set; }
+		}
+
+		class NestingB : NestingA
+		{
+			public string Property2 { get; set; }
+		}
+
+		class NestingC : NestingB
+		{
+			public string Property3 { get; set; }
+		}
+
+		[Test]
+		public void TestNesting([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<NestingA>())
+			using (db.CreateLocalTable<NestingB>())
+			using (db.CreateLocalTable<NestingC>())
+			{
+				var cte1 = db.GetTable<NestingC>().Select(a => new NestingB { Property1 = a.Property2 }).AsCte();
+				var cte2 =
+					from c1 in cte1
+					from t in db.GetTable<NestingC>()
+					select new NestingB
+					{
+						Property1 = c1.Property1,
+						Property2 = t.Property2
+					};
+				var cte3 =
+					from c2 in cte2
+					from t in db.GetTable<NestingC>()
+					select new NestingC
+					{
+						Property1 = c2.Property1,
+						Property2 = t.Property2,
+						Property3 = t.Property3
+					};
+
+				var sql = cte3.ToArray();
+			}
+		}
+
 	}
 }
