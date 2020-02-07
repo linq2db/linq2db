@@ -123,6 +123,37 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
 
+			// materialized views supported starting from pgsql 9.3
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+			if (version >= 90300)
+			{
+				// materialized views are not exposed to information_schema
+				sql += @"
+			UNION ALL
+				SELECT
+					v.schemaname || '.' || v.matviewname                                       as TableID,
+					NULL                                                                       as CatalogName,
+					v.schemaname                                                               as SchemaName,
+					v.matviewname                                                              as TableName,
+					v.schemaname = 'public'                                                    as IsDefaultSchema,
+					true                                                                       as IsView,
+					(
+						SELECT pgd.description
+							FROM pg_catalog.pg_class
+								INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
+								INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
+						WHERE pg_class.relkind = 'm' AND pgd.objsubid = 0 AND pg_namespace.nspname = v.schemaname AND pg_class.relname = v.matviewname
+						LIMIT 1
+					)                                                                          as Description,
+					false                                                                      as IsProviderSpecific
+				FROM pg_matviews v";
+
+				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
+					sql += @"
+				WHERE
+					v.schemaname NOT IN ('pg_catalog','information_schema')";
+			}
+
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
@@ -138,8 +169,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						pg_attribute
 							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
-							JOIN pg_class ON pg_class.oid = pg_constraint.conrelid
-								JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
+							JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
+							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
 						pg_constraint.contype = 'p'")
 				.ToList();
@@ -178,6 +209,50 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sql += @"
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";
+
+			// materialized views supported starting from pgsql 9.3
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+			if (version >= 90300)
+			{
+				// materialized views are not exposed to information_schema
+				// NOTE: looks like IsNullable always true for mat.views (or I dunno where to look for it)
+				sql += @"
+				UNION ALL
+					SELECT
+						pg_namespace.nspname || '.' || pg_class.relname                           as TableID,
+						pg_attribute.attname                                                      as Name,
+						pg_attribute.attnotnull <> true                                           as IsNullable,
+						pg_attribute.attnum                                                       as Ordinal,
+						pg_type.typname                                                           as DataType,
+						CASE WHEN pg_attribute.atttypmod = -1
+							THEN NULL
+							ELSE pg_attribute.atttypmod - 4
+						END                                                                       as Length,
+						COALESCE(
+							information_schema._pg_numeric_precision(pg_type.oid, pg_attribute.atttypmod),
+							information_schema._pg_datetime_precision(pg_type.oid, pg_attribute.atttypmod))
+																								  as Precision,
+						information_schema._pg_numeric_scale(pg_type.oid, pg_attribute.atttypmod) as Scale,
+						false                                                                     as IsIdentity,
+						true                                                                      as SkipOnInsert,
+						true                                                                      as SkipOnUpdate,
+						(
+							SELECT pgd.description
+								FROM pg_catalog.pg_class
+									INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
+									INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
+								WHERE pg_class.relkind = 'm' AND pgd.objsubid = pg_attribute.attnum AND pg_namespace.nspname = pg_namespace.nspname AND pg_class.relname = pg_class.relname
+								LIMIT 1
+					)                                                                             as Description
+						FROM pg_catalog.pg_class
+							INNER JOIN pg_catalog.pg_namespace ON pg_class.relnamespace = pg_namespace.oid
+							INNER JOIN pg_catalog.pg_attribute ON pg_class.oid = pg_attribute.attrelid
+							INNER JOIN pg_catalog.pg_type      ON pg_attribute.atttypid = pg_type.oid
+						WHERE pg_class.relkind = 'm' AND pg_attribute.attnum >= 1";
+
+				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
+					sql += @" AND pg_namespace.nspname NOT IN ('pg_catalog','information_schema')";
+			}
 
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}

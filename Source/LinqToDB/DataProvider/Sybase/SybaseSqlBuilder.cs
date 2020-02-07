@@ -129,10 +129,10 @@ namespace LinqToDB.DataProvider.Sybase
 				if (value != null)
 				{
 					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
-					var ntext = text.Replace("[", "[[]");
+					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)

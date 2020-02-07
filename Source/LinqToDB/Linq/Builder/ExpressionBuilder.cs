@@ -764,10 +764,10 @@ namespace LinqToDB.Linq.Builder
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "With"                 : return new TransformInfo(expr);
 							}
 						}
-						else
-						{
+
 							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
 
 							if (l != null)
@@ -781,7 +781,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var attr = GetTableFunctionAttribute(call.Method);
 
-								if (attr == null)
+							if (attr == null && !call.IsQueryable())
 								{
 									var ex = ConvertIQueryable(expr);
 
@@ -789,7 +789,6 @@ namespace LinqToDB.Linq.Builder
 										return new TransformInfo(ConvertExpressionTree(ex));
 								}
 							}
-						}
 
 						return new TransformInfo(ConvertSubquery(expr));
 					}
@@ -1593,7 +1592,20 @@ namespace LinqToDB.Linq.Builder
 				var exas = expression.GetExpressionAccessors(p);
 				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
-				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
+				var allowedParameters = new HashSet<ParameterExpression>() { p };
+
+				if (null != expr.Find(e => {
+					if (e is LambdaExpression lambda)
+					{
+						// allow parameters, declared inside expr
+						foreach (var param in lambda.Parameters)
+							allowedParameters.Add(param);
+					}
+					else if (e is ParameterExpression pe)
+						return !allowedParameters.Contains(pe);
+
+					return false;
+				}))
 					return expression;
 
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });

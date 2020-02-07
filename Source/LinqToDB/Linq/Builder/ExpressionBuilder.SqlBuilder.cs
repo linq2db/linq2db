@@ -2,11 +2,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -234,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
 
-			if (ctx.SelectQuery.Select.Columns.Count == 0)
+			if (ctx.SelectQuery.Select.Columns.Count == 0) 
 			{
 				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
@@ -674,7 +676,7 @@ namespace LinqToDB.Linq.Builder
 						return expr.Bindings
 							.Where  (b => b is MemberAssignment)
 							.Cast<MemberAssignment>()
-							.OrderBy(b => dic[b.Member])
+							.OrderBy(b => dic[expr.Type.GetMemberEx(b.Member)])
 							.Select (a =>
 							{
 								var mi = a.Member;
@@ -685,6 +687,26 @@ namespace LinqToDB.Linq.Builder
 							})
 							.SelectMany(si => si)
 							.ToArray();
+					}
+				case ExpressionType.Call         :
+					{
+						var callCtx = GetContext(context, expression);
+						if (callCtx != null)
+						{
+							var mc = (MethodCallExpression)expression;
+							if (IsSubQuery(callCtx, mc))
+							{
+								var subQueryContextInfo = GetSubQueryContext(callCtx, mc);
+								if (subQueryContextInfo.Context.IsExpression(null, 0, RequestFor.Object).Result)
+								{
+									var info = subQueryContextInfo.Context.ConvertToSql(null, 0, ConvertFlags.All);
+									return info;
+								}
+
+								return new[] { new SqlInfo { Sql = subQueryContextInfo.Context.SelectQuery } };
+							}
+						}						
+						break;
 					}
 			}
 
@@ -711,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 				Expression preparedExpression;
 				if (expression.NodeType == ExpressionType.Call)
 					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
-				else
+				else 
 					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression);
 			}
@@ -1214,6 +1236,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsQueryMember(Expression expr)
 		{
+			expr = expr.Unwrap();
 			if (expr != null) switch (expr.NodeType)
 			{
 				case ExpressionType.Parameter    : return true;
@@ -1417,9 +1440,9 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			foreach (var accessor in _parameters)
+				foreach (var accessor in _parameters)
 					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
-					p = accessor.Value;
+						p = accessor.Value;
 
 			if (p == null)
 			{
@@ -1784,7 +1807,7 @@ namespace LinqToDB.Linq.Builder
 				default: throw new InvalidOperationException();
 			}
 
-			if (left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert)
+			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context, left, op, right);
 				if (p != null)
@@ -2461,8 +2484,8 @@ namespace LinqToDB.Linq.Builder
 					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
 
 				return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0?
-					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'));
+					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, false):
+					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'), false);
 			}
 
 			if (a is SqlParameter p)
@@ -2489,7 +2512,7 @@ namespace LinqToDB.Linq.Builder
 
 				CurrentSqlParameters.Add(ep);
 
-				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'));
+				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), false);
 			}
 
 			var mi = MemberHelper.MethodOf(() => "".Replace("", ""));
@@ -2510,7 +2533,7 @@ namespace LinqToDB.Linq.Builder
 			if (!string.IsNullOrEmpty(end))
 				expr = new SqlBinaryExpression(typeof(string), expr, "+", new SqlValue("%"));
 
-			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'));
+			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'), false);
 		}
 
 		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
@@ -2524,7 +2547,7 @@ namespace LinqToDB.Linq.Builder
 			if (e.Arguments.Count == 3)
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
-			return new SqlPredicate.Like(a1, false, a2, a3);
+			return new SqlPredicate.Like(a1, false, a2, a3, true);
 		}
 
 		static string EscapeLikeText(string text)
@@ -3042,6 +3065,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetContext([JetBrains.Annotations.NotNull] IBuildContext current, Expression expression)
 		{
 			var root = expression.GetRootObject(MappingSchema);
+			root = root.Unwrap();
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
@@ -3131,6 +3155,34 @@ namespace LinqToDB.Linq.Builder
 
 		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
+			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
+			{
+				var pms = method.GetParameters();
+
+				var typeMembers = TypeAccessor.GetAccessor(forType).Members;
+
+				for (var i = 0; i < pms.Length; i++)
+				{
+					var param = pms[i];
+					var foundMember = typeMembers.Find(tm => tm.Name == param.Name);
+					if (foundMember == null)
+						foundMember = typeMembers.Find(tm =>
+							tm.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+					if (foundMember == null)
+						continue;
+
+					if (members.ContainsKey(foundMember.MemberInfo))
+						continue;
+
+					var converted = arguments[i].Transform(e => RemoveNullPropagation(e));
+
+					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
+						continue;
+
+					members.Add(foundMember.MemberInfo, converted);
+				}
+			}
+
 			switch (expression.NodeType)
 			{
 				// new { ... }
@@ -3139,13 +3191,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = (NewExpression)expression;
 
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-						if (expr.Members == null)
-							return false;
-// ReSharper restore HeuristicUnreachableCode
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
+						if (expr.Members != null)
+						{
 						for (var i = 0; i < expr.Members.Count; i++)
 						{
 							var member = expr.Members[i];
@@ -3156,8 +3203,12 @@ namespace LinqToDB.Linq.Builder
 							if (member is MethodInfo info)
 								members.Add(info.GetPropertyInfo(), converted);
 						}
+						}
 
-						return true;
+						if (!MappingSchema.IsScalarType(expr.Type))
+							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
+
+						return members.Count > 0;
 					}
 
 				// new MyObject { ... }
@@ -3165,7 +3216,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberInit :
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
+						var typeMembers = TypeAccessor.GetAccessor(expr.Type).Members;
+
+						var dic  = typeMembers
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
@@ -3179,6 +3232,18 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return true;
+					}
+
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expression;
+
+						// process fabric methods
+
+						if (!MappingSchema.IsScalarType(mc.Type))
+							CollectParameters(mc.Type, mc.Method, mc.Arguments);
+
+						return members.Count > 0;
 					}
 
 				// .Select(p => everything else)

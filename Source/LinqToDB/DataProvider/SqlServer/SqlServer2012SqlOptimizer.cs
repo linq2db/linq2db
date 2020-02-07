@@ -7,7 +7,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2012SqlOptimizer : SqlServer2008SqlOptimizer
 	{
-		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
+		{
+		}
+
+		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
 		{
 		}
 

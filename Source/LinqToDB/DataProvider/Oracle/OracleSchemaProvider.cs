@@ -321,8 +321,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case "FLOAT"                  : return DataType.Decimal;
 				case "INTERVAL DAY TO SECOND" : return DataType.Time;
 				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
-				case "LONG"                   : return DataType.Text;
-				case "LONG RAW"               : return DataType.Binary;
+				case "LONG"                   : return DataType.Long;
+				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
 				case "NCLOB"                  : return DataType.NText;
 				case "NUMBER"                 : return DataType.Decimal;

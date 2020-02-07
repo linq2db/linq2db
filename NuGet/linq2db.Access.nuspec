@@ -19,11 +19,11 @@
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                  version="3.0.0"/>
-				<dependency id="System.Data.OleDb"        version="4.6.0" />
+				<dependency id="System.Data.OleDb"        version="4.7.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="linq2db"                  version="3.0.0"/>
-				<dependency id="System.Data.OleDb"        version="4.6.0" />
+				<dependency id="System.Data.OleDb"        version="4.7.0" />
 			</group>
 		</dependencies>
 		<contentFiles>

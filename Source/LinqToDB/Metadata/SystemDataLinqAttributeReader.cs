@@ -40,8 +40,8 @@ namespace LinqToDB.Metadata
 								case 0  : break;
 								case 1  : attr.Name = names[0]; break;
 								case 2  :
-									attr.Name   = names[0];
-									attr.Schema = names[1];
+									attr.Name   = names[1];
+									attr.Schema = names[0];
 									break;
 								default :
 									throw new MetadataException(string.Format(

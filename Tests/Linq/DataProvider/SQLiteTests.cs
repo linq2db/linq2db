@@ -562,7 +562,7 @@ namespace Tests.DataProvider
 			switch (context)
 			{
 				case ProviderName.SQLiteClassic:
-					expectedVersion = "3.28.0";
+					expectedVersion = "3.30.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET46

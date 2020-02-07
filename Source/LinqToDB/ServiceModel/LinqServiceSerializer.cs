@@ -911,7 +911,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsNot);
 							Append(elem.Expr2);
 							Append(elem.Escape);
-
+							Append(elem.IsSqlLike);
 							break;
 						}
 
@@ -1657,8 +1657,8 @@ namespace LinqToDB.ServiceModel
 							var isNot  = ReadBool();
 							var expr2  = Read<ISqlExpression>();
 							var escape = Read<ISqlExpression>();
-
-							obj = new SqlPredicate.Like(expr1, isNot, expr2, escape);
+							var isSqlLike = ReadBool();
+							obj = new SqlPredicate.Like(expr1, isNot, expr2, escape, isSqlLike);
 
 							break;
 						}

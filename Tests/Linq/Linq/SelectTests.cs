@@ -10,7 +10,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1113,6 +1114,68 @@ namespace Tests.Linq
 			}
 		}
 
+		class ParentResult
+		{
+			public ParentResult(int parentID, int? value1)
+			{
+				ParentID = parentID;
+				Value1 = value1;
+			}
+
+			public int? Value1 { get; }
+			public int ParentID { get; }
+		}
+
+		[Test]
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Value1 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Value1 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery, ComparerBuilder.GetEqualityComparer<ParentResult>());
+			}
+		}
+
+		[Test]
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Item2 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Item2 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery);
+			}
+		}
+
 
 		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value
@@ -1269,5 +1332,75 @@ namespace Tests.Linq
 					results);
 			}
 		}
+
+		[Test]
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// TODO: eager loading
+			// using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c1 in db.Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = db.Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				query = query
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID);
+
+
+				var expectedQuery = 
+					from p in Parent
+					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				var actual = query.ToArray();
+
+				var expected = expectedQuery
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID)
+					.ToArray();
+
+				AreEqual(expected, actual);
+			}
+		}
+		
+		[Test]
+		public void ToStringTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from p in db.GetTable<Parent>()
+					where p.ParentID == id
+					select p;
+
+				var sql1 = query.ToString();
+
+				id = 2;
+
+				var sql2 = query.ToString();
+				
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
+			}
+		}
+
 	}
 }

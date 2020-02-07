@@ -12,12 +12,16 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
-		Dictionary<ISqlExpression, Tuple<SqlField, int>> FieldIndexes { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
-		Dictionary<string, Tuple<SqlField, int>> FieldIndexesByName   { get; } = new Dictionary<string, Tuple<SqlField, int>>();
+		SqlField[] _fields = new SqlField[0];
 
 		public static int CteIDCounter;
 
-		public List<SqlField>               Fields { get; } = new List<SqlField>();
+		public SqlField[] Fields
+		{
+			get => _fields;
+			private set => _fields = value;
+		}
+
 		public int                          CteID  { get; } = Interlocked.Increment(ref CteIDCounter);
 
 		public string      Name        { get; set; }
@@ -49,10 +53,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType  = objectType;
 			IsRecursive = isRecursive;
 
-			foreach (var field in fields)
-			{
-				Fields.Add(field);
-			}
+			Fields      = fields.ToArray();
 		}
 
 		internal CteClause(
@@ -70,11 +71,7 @@ namespace LinqToDB.SqlQuery
 			[JetBrains.Annotations.NotNull]   ICollection<SqlField> fields)
 		{
 			Body       = body;
-
-			foreach (var field in fields)
-			{
-				Fields.Add(field);
-			}
+			Fields     = fields.ToArray();
 		}
 
 		public QueryElementType ElementType => QueryElementType.CteClause;
@@ -87,7 +84,7 @@ namespace LinqToDB.SqlQuery
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			var newClause = new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
-			newClause.Fields.AddRange(Fields.Select(f => (SqlField)f.Clone(objectTree, doClone)));
+			newClause.Fields = Fields?.Select(f => (SqlField)f.Clone(objectTree, doClone)).ToArray();
 			return newClause;
 		}
 
@@ -98,36 +95,25 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public SqlField RegisterFieldMapping(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
+		public SqlField RegisterFieldMapping(int index, Func<SqlField> fieldFactory)
 		{
-			var baseField = baseExpression as SqlField;
-			if (baseField != null && FieldIndexesByName.TryGetValue(baseField.Name, out var value))
-				return value.Item1;
-
-			if (baseField == null && expression != null && FieldIndexes.TryGetValue(expression, out value))
-				return value.Item1;
+			if (Fields.Length > index && Fields[index] != null)
+				return Fields[index];
 
 			var newField = fieldFactory();
 
-			Utils.MakeUniqueNames(new[] { newField }, FieldIndexes.Values.Select(t => t.Item1.Name), f => f.Name, (f, n) =>
+			Utils.MakeUniqueNames(new[] { newField }, Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n) =>
 			{
 				f.Name = n;
 				f.PhysicalName = n;
 			}, f => (string.IsNullOrEmpty(f.Name) ? "cte_field" : f.Name) + "_1");
 
-			Fields.Insert(index, newField);
+			if (Fields.Length < index + 1)
+				Array.Resize(ref _fields, index + 1);
 
-			if (expression != null && !FieldIndexes.ContainsKey(expression))
-				FieldIndexes.Add(expression, Tuple.Create(newField, index));
-			if (baseField != null)
-				FieldIndexesByName.Add(baseField.Name, Tuple.Create(newField, index));
-			else
-			{
-				if (expression is SqlField field && !FieldIndexesByName.ContainsKey(field.Name))
-					FieldIndexesByName.Add(field.Name, Tuple.Create(newField, index));
-			}
+			Fields[index] = newField;
+
 			return newField;
-
 		}
 	}
 }

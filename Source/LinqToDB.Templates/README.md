@@ -24,6 +24,8 @@ After package installing you will see new `LinqToDB.Templates` folder in your pr
 
 To create a data model template copy `CopyMe.<DB_NAME>.tt.txt` file from `LinqToDB.Templates` project folder to desired location and rename it to file with `.tt` extension, e.g. `MyModel.tt`. For SDK projects see important notes below.
 
+Make sure that custom tool for your `tt` file set to `TextTemplatingFileGenerator`, otherwise it will not run or will give you error like `error : Failed to resolve include text for file ...ttinclude`
+
 Next you need to edit content of your `.tt` file. It contains following main sections:
 
 1. Configuration of database structure load process (`GetSchemaOptions` object properties, read more about it below)
@@ -260,7 +262,11 @@ SingularizeDataContextPropertyNames = false;
 // Enables normalization of of type and member names.
 // Default normalization removes underscores and capitalize first letter.
 // Could be overriden using ToValidName option below.
-NormalizeNames                                 = false;
+// By default doesn't normalize names without underscores.
+// see NormalizeNamesWithoutUnderscores setting
+NormalizeNames                                 = true;
+// enables normalization of names without underscores.
+NormalizeNamesWithoutUnderscores               = false;
 // Defines logic to convert type/member name, derived from database object name, to C# identifier.
 Func<string, bool, string> ToValidName         = ToValidNameDefault;
 // Makes C# identifier valid by removing unsupported symbols and calling ToValidName

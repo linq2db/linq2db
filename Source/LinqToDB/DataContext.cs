@@ -189,6 +189,35 @@ namespace LinqToDB
 		/// </summary>
 		internal int LockDbManagerCounter;
 
+
+		private int? _commandTimeout;
+
+		/// <summary>
+		/// Gets or sets command execution timeout in seconds.
+		/// Negative timeout value means that default timeout will be used.
+		/// 0 timeout value corresponds to infinite timeout.
+		/// By default timeout is not set and default value for current provider used.
+		/// </summary>
+		public  int   CommandTimeout
+		{
+			get => _commandTimeout ?? -1;
+			set
+			{
+				if (value < 0)
+				{
+					_commandTimeout = null;
+					if (_dataConnection != null)
+						_dataConnection.CommandTimeout = -1;
+				}
+				else
+				{
+					_commandTimeout = value;
+					if (_dataConnection != null)
+						_dataConnection.CommandTimeout = value;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Underlying active database connection.
 		/// </summary>
@@ -208,6 +237,9 @@ namespace LinqToDB
 				_dataConnection = ConnectionString != null
 					? new DataConnection(DataProvider, ConnectionString)
 					: new DataConnection(ConfigurationString);
+
+				if (_commandTimeout != null)
+					_dataConnection.CommandTimeout = CommandTimeout;
 
 				if (_queryHints != null && _queryHints.Count > 0)
 				{

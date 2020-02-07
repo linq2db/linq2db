@@ -10,16 +10,16 @@
 		<PackageReference Include="System.Memory" Version="4.5.3" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
 
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
 		<PackageReference Include="MySql.Data" Version="8.0.18" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.60.2" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.61.0" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.1.1" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.15.0" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.16.0" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.0" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
@@ -56,9 +56,10 @@
 		</Reference>
 
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.5.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.6.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.0.10" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->
@@ -70,16 +71,9 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.50" />
-		<PackageReference Include="Microsoft.Data.SQLite" Version="3.0.0" />
-		<PackageReference Include="Npgsql" Version="4.1.1" />
-		<!--
-		TEMPORARY EXPLICIT TRANSIENT DEPENDENCY FROM Microsoft.Data.SQLite 3.0.0
-		REMOVE WHEN dependency updated to 2.0.1+ (expected in 3.1.0)
-		Needed because 2.0.0 has this bug which fails TestBinary test
-		https://github.com/aspnet/EntityFrameworkCore/issues/17494
-		-->
-		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.1" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.60" />
+		<PackageReference Include="Microsoft.Data.SQLite" Version="3.1.0" />
+		<PackageReference Include="Npgsql" Version="4.1.2" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.1.0" />
 
 		<!--magic-->

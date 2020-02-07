@@ -411,7 +411,9 @@ namespace LinqToDB.SqlQuery
 								var isRootQuery = query.ParentSelect == null;
 
 								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
+									n => !ReservedWords.IsReserved(n), 
+									c => c.Alias, 
+									(c, n) =>
 									{
 										if (isRootQuery)
 											allAliases.Add(n);
@@ -458,14 +460,18 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							tablesVisited.Add(table);
+							if (tablesVisited.Add(table))
+							{
+								if (table.Source is SqlTable sqlTable)
+									allAliases.Add(sqlTable.PhysicalName);
+							}
 							break;
 						}
 				}
 			});
 
 			Utils.MakeUniqueNames(tablesVisited,
-				n => !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
+				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
 				{
 					allAliases.Add(n);
 					ts.Alias = n;

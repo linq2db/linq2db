@@ -91,7 +91,7 @@ public class MySettings : ILinqToDBSettings
             yield return
                 new ConnectionStringSettings
                 {
-                    Name = "SqlServer",
+                    Name = "Northwind",
                     ProviderName = "SqlServer",
                     ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
                 };
@@ -527,7 +527,7 @@ public class DbDataContext : DataConnection
   private static IDataProvider GetDataProvider()
   {
     // you can move this line to other place, but it should be
-    // allways set before LINQ to DB provider instance creation
+    // always set before LINQ to DB provider instance creation
     LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
 
     return new SqlServerDataProvider("", SqlServerVersion.v2012);

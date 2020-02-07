@@ -1381,6 +1381,7 @@ namespace LinqToDB.SqlQuery
 			if (_visitedElements.TryGetValue(element, out var newElement))
 				return newElement;
 
+			using (Scope(element)) 
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -1637,7 +1638,7 @@ namespace LinqToDB.SqlQuery
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
 
 						break;
 					}
@@ -2489,15 +2490,35 @@ namespace LinqToDB.SqlQuery
 				_visitedElements[element] = newElement;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IQueryElement GetCurrentReplaced(IQueryElement element)
+		{
+			if (_visitedElements.TryGetValue(element, out var replaced))
+			{
+				if (replaced != null && replaced != element)
+				{
+					while (replaced != null && _visitedElements.TryGetValue(replaced, out var another))
+					{
+						if (replaced == another)
+							break;
+						replaced = another;
+					}
+				}
+				return replaced;
+			}
+
+			return null;
+		}
+		
 		IQueryElement ConvertImmutableInternal(IQueryElement element)
 		{
 			if (element == null)
 				return null;
 
-			IQueryElement newElement = null;
 			// if element manually added outside to VisistedElements as null, it will be processed continuously.
 			// Useful when we have to duplicate such items, especially parameters
-			if (_visitedElements.TryGetValue(element, out newElement) && newElement != null)
+			var newElement = GetCurrentReplaced(element);
+			if (newElement != null)
 				return newElement;
 
 			using (Scope(element))
@@ -2621,7 +2642,7 @@ namespace LinqToDB.SqlQuery
 
 						List<ISqlExpression[]> uk = null;
 							if (table.HasUniqueKeys)
-								uk = ConvertListArray(table.UniqueKeys, null);
+								uk = ConvertImmutableListArray(table.UniqueKeys, null);
 
 							if (source != null && !ReferenceEquals(source, table.Source) ||
 							joins  != null && !ReferenceEquals(table.Joins, joins))
@@ -2713,7 +2734,7 @@ namespace LinqToDB.SqlQuery
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
 
 						break;
 					}
@@ -3333,7 +3354,7 @@ namespace LinqToDB.SqlQuery
 						{
 							// non-recursive
 							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
-							var fields = ConvertImmutableSafe(cte.Fields);
+							var fields = ConvertImmutable(cte.Fields);
 
 							if (body   != null && !ReferenceEquals(cte.Body, body) ||
 								fields != null && !ReferenceEquals(cte.Fields, fields))
@@ -3353,7 +3374,7 @@ namespace LinqToDB.SqlQuery
 							_visitedElements.Add(cte, newCte);
 
 							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
-							var fields = ConvertImmutableSafe(cte.Fields);
+							var fields = ConvertImmutable(cte.Fields);
 
 							newCte.Init(body ?? cte.Body, fields ?? cte.Fields);
 

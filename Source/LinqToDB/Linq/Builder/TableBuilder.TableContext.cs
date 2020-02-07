@@ -321,7 +321,22 @@ namespace LinqToDB.Linq.Builder
 					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
 					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
 					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
-					var context             = new SelectContext(Parent, selectorLambda, this);
+
+					IBuildContext context;
+					var buildInfo = new BuildInfo(this, selectorLambda.Body, new SelectQuery());
+
+					if (Builder.IsSequence(buildInfo))
+					{
+						var expressionCtx = new ExpressionContext(Parent, this, selectorLambda);
+						buildInfo         = new BuildInfo(expressionCtx, selectorLambda.Body, new SelectQuery());
+						context           = Builder.BuildSequence(buildInfo);
+						Builder.ReplaceParent(expressionCtx, this);
+					}
+					else
+					{
+						context = new SelectContext(Parent, selectorLambda, this);
+					}
+
 					var expression          = context.BuildExpression(null, 0, false);
 
 					expressions.Add(Expression.Assign(accessExpression, expression));
@@ -752,6 +767,12 @@ namespace LinqToDB.Linq.Builder
 
 								if (!IsScalarType(OriginalType))
 								{
+									// Handling case with Associations. Needs refactoring
+									if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
+									{
+										return association._innerContext.ConvertToSql(null, level, flags);
+									}
+								
 									result = table.Table.SqlTable.Fields.Values
 										.Where(f => !f.IsDynamic)
 										.Select(f =>
@@ -759,6 +780,7 @@ namespace LinqToDB.Linq.Builder
 												? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
 												: new SqlInfo { Sql = f })
 										.ToArray();
+
 								}
 								else
 								{
@@ -786,6 +808,12 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 							{
+								// Handling case with Associations. Needs refactoring
+								if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
+								{
+									return association._innerContext.ConvertToSql(null, level, flags);
+								}
+
 								var q =
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
@@ -1320,9 +1348,9 @@ namespace LinqToDB.Linq.Builder
 												Builder.MappingSchema,
 												new ColumnAttribute(fieldName),
 												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor)))
-											{
+												{
 													IsDynamic        = true,
-											};
+												};
 
 											SqlTable.Add(newField);
 										}

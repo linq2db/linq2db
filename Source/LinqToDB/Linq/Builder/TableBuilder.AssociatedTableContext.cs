@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 				q.SelectMany(i => new int [0], (i, c) => i)).GetGenericMethodDefinition();
 
 			Dictionary<ISqlExpression, SqlField> _replaceMap;
-			IBuildContext                        _innerContext;
+			internal IBuildContext               _innerContext;
 
 			public AssociatedTableContext(
 				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
@@ -88,8 +88,13 @@ namespace LinqToDB.Linq.Builder
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
-					_innerContext = builder.BuildSequence(new BuildInfo(this, selectManyMethod, new SelectQuery())
-					{ IsAssociationBuilt = true });
+					var buildInfo = new BuildInfo(this, selectManyMethod, new SelectQuery()) { IsAssociationBuilt = true };
+					_innerContext = builder.BuildSequence(buildInfo);
+
+					if (Association.CanBeNull)
+					{
+						_innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, _innerContext, null);
+					}
 
 					var associationQuery = _innerContext.SelectQuery;
 
@@ -142,6 +147,9 @@ namespace LinqToDB.Linq.Builder
 
 					// add rest of tables
 					SelectQuery.From.Tables.AddRange(associationQuery.Select.From.Tables.Where(t => t != sourceToReplace));
+
+					//TODO: Change AssociatedTableContext base class
+					//SqlTable = null;
 				}
 				else
 				{

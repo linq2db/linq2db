@@ -37,6 +37,10 @@ namespace PostreSQLDataContext
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
+		/// <summary>
+		/// This is the Issue2023 matview
+		/// </summary>
+		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
@@ -56,7 +60,7 @@ namespace PostreSQLDataContext
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
 		public ITable<Transaction>                    Transactions              { get { return this.GetTable<Transaction>(); } }
 
-		partial void InitMappingSchema()
+		protected void InitMappingSchema()
 		{
 			MappingSchema.SetConvertExpression<object?[], pg_control_checkpointResult>(tuple => new pg_control_checkpointResult() { checkpoint_location = (object?)tuple[0], prior_location = (object?)tuple[1], redo_location = (object?)tuple[2], redo_wal_file = (string?)tuple[3], timeline_id = (int?)tuple[4], prev_timeline_id = (int?)tuple[5], full_page_writes = (bool?)tuple[6], next_xid = (string?)tuple[7], next_oid = (int?)tuple[8], next_multixact_id = (int?)tuple[9], next_multi_offset = (int?)tuple[10], oldest_xid = (int?)tuple[11], oldest_xid_dbid = (int?)tuple[12], oldest_active_xid = (int?)tuple[13], oldest_multi_xid = (int?)tuple[14], oldest_multi_dbid = (int?)tuple[15], oldest_commit_ts_xid = (int?)tuple[16], newest_commit_ts_xid = (int?)tuple[17], checkpoint_time = (DateTimeOffset?)tuple[18] });
 			MappingSchema.SetConvertExpression<object?[], pg_control_initResult>(tuple => new pg_control_initResult() { max_data_alignment = (int?)tuple[0], database_block_size = (int?)tuple[1], blocks_per_segment = (int?)tuple[2], wal_block_size = (int?)tuple[3], bytes_per_wal_segment = (int?)tuple[4], max_identifier_length = (int?)tuple[5], max_index_columns = (int?)tuple[6], max_toast_chunk_size = (int?)tuple[7], large_object_chunk_size = (int?)tuple[8], bigint_timestamps = (bool?)tuple[9], float4_pass_by_value = (bool?)tuple[10], float8_pass_by_value = (bool?)tuple[11], data_page_checksum_version = (int?)tuple[12] });
@@ -75,22 +79,6 @@ namespace PostreSQLDataContext
 			MappingSchema.SetConvertExpression<object?[], pg_xlogfile_name_offsetResult>(tuple => new pg_xlogfile_name_offsetResult() { file_name = (string?)tuple[0], file_offset = (int?)tuple[1] });
 			MappingSchema.SetConvertExpression<object?[], TestFunctionParametersResult>(tuple => new TestFunctionParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
 		}
-
-		public TestdbDB()
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestdbDB(string configuration)
-			: base(configuration)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
 
 		#region Table Functions
 
@@ -1221,7 +1209,6 @@ namespace PostreSQLDataContext
 			public TimeSpan?        timeDataType        { get; set; }
 			public DateTimeOffset?  timeTZDataType      { get; set; }
 			public TimeSpan?        intervalDataType    { get; set; }
-			public TimeSpan?        intervalDataType2   { get; set; }
 			public char?            charDataType        { get; set; }
 			public string?          char20DataType      { get; set; }
 			public string?          varcharDataType     { get; set; }
@@ -1505,7 +1492,6 @@ namespace PostreSQLDataContext
 		[Column("timeDataType",        DataType=DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?        TimeDataType        { get; set; } // time (6) without time zone
 		[Column("timeTZDataType",      DataType=DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?  TimeTZDataType      { get; set; } // time (6) with time zone
 		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?        IntervalDataType    { get; set; } // interval(6)
-		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?        IntervalDataType2   { get; set; } // interval(6)
 		[Column("charDataType",        DataType=DataType.NChar,          Length=1),              Nullable            ] public char?            CharDataType        { get; set; } // character(1)
 		[Column("char20DataType",      DataType=DataType.NChar,          Length=20),             Nullable            ] public string?          Char20DataType      { get; set; } // character(20)
 		[Column("varcharDataType",     DataType=DataType.NVarChar,       Length=20),             Nullable            ] public string?          VarcharDataType     { get; set; } // character varying(20)
@@ -1591,6 +1577,22 @@ namespace PostreSQLDataContext
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // integer
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
 		[Column(DataType=DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
+	}
+
+	/// <summary>
+	/// This is the Issue2023 matview
+	/// </summary>
+	[Table(Schema="public", Name="Issue2023", IsView=true)]
+	public partial class Issue2023
+	{
+		/// <summary>
+		/// This is the Issue2023.PersonID column
+		/// </summary>
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0, SkipOnInsert=true, SkipOnUpdate=true), Nullable] public int?    PersonID   { get; set; } // int4
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? FirstName  { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? LastName   { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? MiddleName { get; set; } // character varying(50)
+		[Column(DataType=DataType.NChar,    Length=1, SkipOnInsert=true, SkipOnUpdate=true),              Nullable] public char?   Gender     { get; set; } // character(1)
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]

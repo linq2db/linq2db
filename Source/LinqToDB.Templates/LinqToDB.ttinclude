@@ -156,17 +156,17 @@ void GenerateTypesFromMetadata()
 
 			DataContextObject.Members.Add(c);
 		}
-	}
 
-	DataContextObject.Members.Add(new MemberGroup
-	{
-		IsCompact = true,
-		Members   =
+		DataContextObject.Members.Add(new MemberGroup
 		{
-			new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
-			new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
-		}
-	});
+			IsCompact = true,
+			Members   =
+			{
+				new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
+				new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
+			}
+		});
+	}
 
 	if (Tables.Count > 0)
 		DataContextObject.Members.Insert(0, defProps);

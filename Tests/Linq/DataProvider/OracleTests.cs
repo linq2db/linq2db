@@ -2480,5 +2480,23 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void TestUpdateAliases([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from child in db.Child
+					from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID && parent.ParentID < 5)
+					select child;
+
+				var countRecords = query.Count();
+
+				var recordsAffected = query.Set(child => child.ParentID, child => child.ParentID)
+					.Update();
+				
+				Assert.That(recordsAffected, Is.EqualTo(countRecords));
+			}
+		}
+
 	}
 }
