@@ -335,6 +335,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -840,6 +841,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -1347,6 +1349,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -3399,10 +3402,11 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlField    :
-				case QueryElementType.SqlParameter:
-				case QueryElementType.SqlValue    :
-				case QueryElementType.SqlDataType :
+				case QueryElementType.SqlField           :
+				case QueryElementType.SqlParameter       :
+				case QueryElementType.SqlValue           :
+				case QueryElementType.SqlDataType        :
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:

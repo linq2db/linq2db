@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 		SqlValue,
 		SqlDataType,
 		SqlTable,
+		SqlAliasPlaceholder,
 
 		ExprPredicate,
 		NotExprPredicate,

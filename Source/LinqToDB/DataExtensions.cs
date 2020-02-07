@@ -950,13 +950,13 @@ namespace LinqToDB
 		///     </para>
 		///     <para>
 		///         If the database provider supports composing on the supplied SQL, you can compose on top of the raw SQL query using
-		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b =&gt; b.Name)</code>.
+		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b =&gt; b.Name);</code>
 		///     </para>
 		///     <para>
 		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
 		///         attack. You can include interpolated parameter place holders in the SQL query string. Any interpolated parameter values
 		///         you supply will automatically be converted to a DbParameter -
-		///         <code>context.FromSql&lt;Blogs&gt;($"SELECT * FROM [dbo].[SearchBlogs]({userSuppliedSearchTerm})")</code>.
+		///         <code>context.FromSql&lt;Blogs&gt;($"SELECT * FROM [dbo].[SearchBlogs]({userSuppliedSearchTerm})");</code>
 		///     </para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
@@ -988,17 +988,17 @@ namespace LinqToDB
 		///     </para>
 		///     <para>
 		///         If the database provider supports composing on the supplied SQL, you can compose on top of the raw SQL query using
-		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b => b.Name)</code>.
+		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b => b.Name);</code>
 		///     </para>
 		///     <para>
 		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
-		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm)</code>.
+		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>
 		///     </para>
 		///     <para>
 		///         This overload also accepts DbParameter instances as parameter values.
-		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", new DataParameter("@searchTerm", userSuppliedSearchTerm, DataType.Int64))</code>
+		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", new DataParameter("@searchTerm", userSuppliedSearchTerm, DataType.Int64));</code>
 		///     </para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
