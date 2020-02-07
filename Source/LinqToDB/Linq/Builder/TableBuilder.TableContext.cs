@@ -363,7 +363,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal)
 					}
 				).ToList();
 
@@ -515,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal)
 						}
 					).ToList()).ToList();
 

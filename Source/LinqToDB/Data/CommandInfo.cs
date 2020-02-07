@@ -1499,7 +1499,7 @@ namespace LinqToDB.Data
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
+					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection, dataReader));
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -1510,7 +1510,7 @@ namespace LinqToDB.Data
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
+				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection));
 
 			_objectReaders[key] = func;
 

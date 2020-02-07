@@ -77,7 +77,7 @@ namespace LinqToDB.Data
 			return _variable = BuildVariable(expr);
 		}
 
-		public ParameterExpression BuildVariable(Expression expr, string name = null)
+		private ParameterExpression BuildVariable(Expression expr, string name = null)
 		{
 			if (name == null)
 				name = expr.Type.Name + ++_varIndex;
@@ -299,7 +299,7 @@ namespace LinqToDB.Data
 			return lambda.Compile();
 		}
 
-		public Expression BuildReaderExpression()
+		private Expression BuildReaderExpression()
 		{
 			if (MappingSchema.IsScalarType(ObjectType))
 			{
@@ -354,7 +354,6 @@ namespace LinqToDB.Data
 
 				if (dindex >= 0)
 				{
-
 					Expression testExpr;
 
 					var isNullExpr = Expression.Call(
@@ -395,7 +394,7 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		public Expression BuildBlock(Expression expression)
+		private Expression BuildBlock(Expression expression)
 		{
 			if (BlockExpressions.Count == 0)
 				return expression;

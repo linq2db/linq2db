@@ -7,7 +7,6 @@ using System.Data.SqlTypes;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Linq.Expressions;
 	using Common;
 	using Data;
 	using LinqToDB.Extensions;

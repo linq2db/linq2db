@@ -309,18 +309,6 @@ namespace LinqToDB.Linq.Builder
 
 					var itemReader      = CompiledQuery.Compile(lambda);
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
-					var dataReaderLocal = context.Builder.DataReaderLocal;
-
-					if (keyExpr.Find(e => e == dataReaderLocal) != null)
-					{
-						keyExpr = Expression.Block(
-							new[] { context.Builder.DataReaderLocal },
-							new[]
-							{
-								Expression.Assign(dataReaderLocal, ExpressionBuilder.DataReaderParam),
-								keyExpr
-							});
-					}
 
 					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey>>(
 						keyExpr,

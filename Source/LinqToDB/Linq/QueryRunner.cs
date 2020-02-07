@@ -81,7 +81,7 @@ namespace LinqToDB.Linq
 					var mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
 						e => {
 							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(dataReader, newVariable).Transform(replaceVariable);
+								return ex.Reduce(context, dataReader, newVariable).Transform(replaceVariable);
 
 							return replaceVariable(e);
 						});
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq
 					newVariable = null;
 					var expression = (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
 						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable, ex.DataContext);
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable, context);
 
 						return replaceVariable(e);
 					});
