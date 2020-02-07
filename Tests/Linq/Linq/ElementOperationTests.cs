@@ -148,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, TestProvName.AllSapHana)]
+		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, TestProvName.AllSapHana, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

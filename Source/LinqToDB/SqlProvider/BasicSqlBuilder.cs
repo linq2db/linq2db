@@ -185,16 +185,16 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                                            break;
-				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                                            break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
 				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false);                 break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);                                    break;
-				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                                       break;
-				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
-				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false); break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
 				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
-				default                      : BuildUnknownQuery();                                                                                   break;
+				default                      : BuildUnknownQuery();        break;
 			}
 		}
 
@@ -1294,27 +1294,28 @@ namespace LinqToDB.SqlProvider
 
 		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		protected void BuildPhysicalTable(ISqlTableSource table, string alias)
+		protected bool? BuildPhysicalTable(ISqlTableSource table, string alias)
 		{
+			bool? buildAlias = null;
 			switch (table.ElementType)
 			{
-				case QueryElementType.SqlTable        :
-				case QueryElementType.TableSource     :
+				case QueryElementType.SqlTable   :
+				case QueryElementType.TableSource:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlQuery        :
+				case QueryElementType.SqlQuery   :
 					StringBuilder.Append("(").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.SqlCteTable     :
+				case QueryElementType.SqlCteTable  :
 				case QueryElementType.MergeSourceTable:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlRawSqlTable  :
+				case QueryElementType.SqlRawSqlTable :
 
 					var rawSqlTable = (SqlRawSqlTable)table;
 
@@ -1326,7 +1327,17 @@ namespace LinqToDB.SqlProvider
 					if (multiLine)
 						StringBuilder.AppendLine();
 
-					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), rawSqlTable.Parameters, () => Precedence.Primary);
+					var parameters = rawSqlTable.Parameters;
+					if (rawSqlTable.Parameters.Any(e => e.ElementType == QueryElementType.SqlAliasPlaceholder))
+					{
+						buildAlias = false;
+						var aliasExpr = new SqlExpression((string)Convert(alias, ConvertType.NameToQueryTableAlias), Precedence.Primary);
+						parameters = rawSqlTable.Parameters.Select(e =>
+								e.ElementType == QueryElementType.SqlAliasPlaceholder ? aliasExpr : e)
+							.ToArray();
+					}
+
+					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, () => Precedence.Primary);
 
 					if (multiLine)
 						StringBuilder.AppendLine();
@@ -1335,9 +1346,11 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
-				default:
+				default                          :
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
+
+			return buildAlias;
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
@@ -1345,7 +1358,9 @@ namespace LinqToDB.SqlProvider
 			if (buildName)
 			{
 				var alias = GetTableAlias(ts);
-				BuildPhysicalTable(ts.Source, alias);
+				var isBuildAlias = BuildPhysicalTable(ts.Source, alias);
+				if (isBuildAlias == false)
+					buildAlias = false;
 			}
 
 			if (buildAlias)
@@ -2311,6 +2326,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlTable:
+				case QueryElementType.SqlRawSqlTable:
 				case QueryElementType.TableSource:
 					{
 						var table = (ISqlTableSource) expr;
@@ -2551,7 +2567,7 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.Append(type.DataType);
+				StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');
@@ -2958,30 +2974,43 @@ namespace LinqToDB.SqlProvider
 			return Statement?.GetTempAliases(n, defaultAlias) ?? Array<string>.Empty;
 		}
 
-		protected static string GetTableAlias(ISqlTableSource table)
+		protected string GetTableAlias(ISqlTableSource table)
 		{
 			switch (table.ElementType)
 			{
 				case QueryElementType.TableSource:
 					{
-						var ts    = (SqlTableSource)table;
-						var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+					var ts    = (SqlTableSource)table;
+					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}
-				case QueryElementType.SqlTable        :
-				case QueryElementType.SqlCteTable     :
-				case QueryElementType.SqlRawSqlTable  :
+				case QueryElementType.SqlTable:
+				case QueryElementType.SqlCteTable:
 					{
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}	
+				case QueryElementType.SqlRawSqlTable:
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(table);
+						if (ts == null)
+							ts = Statement.GetTableSource(table);
+
+						if (ts != null)
+							return GetTableAlias(ts);
+						else
+						{
+							var alias = ((SqlTable)table).Alias;
+							return alias != "$" && alias != "$F" ? alias : null;
+						}
+					}
 				case QueryElementType.MergeSourceTable:
 					return null;
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
-		}
+			}
 
 		protected virtual string GetTableServerName(SqlTable table)
 		{

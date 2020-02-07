@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
+			var expr   = BuildExpression(null, 0, Sequence.Length == 0);
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);

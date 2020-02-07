@@ -395,6 +395,14 @@ namespace LinqToDB
 			}
 		}
 
+		private class TableSourceBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlAliasPlaceholder();
+			}
+		}
+
 		private class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -559,6 +567,27 @@ namespace LinqToDB
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 		{
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
+		}
+
+		/// <summary>
+		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
+		/// </summary>
+		/// <remarks>
+		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>, 
+		///		automatic alias for the query will be not generated.
+		/// </remarks>
+		/// <returns>ISqlExpression which is Alias Placeholder.</returns>
+		/// <example>
+		/// The following <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> calls are equivalent.
+		/// <code>
+		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA {Sql.AliasExpr()}")
+		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
+		/// </code>
+		/// </example>
+		[Sql.Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
+		public static ISqlExpression AliasExpr()
+		{
+			return new SqlAliasPlaceholder();
 		}
 
 		class CustomExtensionAttribute : Sql.ExtensionAttribute

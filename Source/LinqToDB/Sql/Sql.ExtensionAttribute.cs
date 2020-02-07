@@ -512,7 +512,7 @@ namespace LinqToDB
 								arguments  = call.Arguments.ToArray();
 
 								if (call.Method.IsStatic)
-									next = call.Arguments.First();
+									next = call.Arguments.FirstOrDefault();
 								else
 									next = call.Object;
 
