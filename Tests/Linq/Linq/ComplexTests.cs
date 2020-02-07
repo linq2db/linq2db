@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue414Test([DataSources(false)] string context)
+		public void Issue413Test([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateTempTable<T1>())
