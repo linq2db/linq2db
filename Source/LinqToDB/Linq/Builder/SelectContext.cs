@@ -980,7 +980,15 @@ namespace LinqToDB.Linq.Builder
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
 			Func<int,IBuildContext,Expression,int,Expression,T> action)
 		{
-			var memberExpression = Members[levelExpression.Member];
+			if (!Members.TryGetValue(levelExpression.Member, out var memberExpression))
+			{
+				if (Body != null)
+					Members.TryGetValue(Body.Type.GetMemberEx(levelExpression.Member), out memberExpression);
+
+				if (memberExpression == null)
+					throw new LinqToDBException($"Member '{levelExpression.Member.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+			}
+
 			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
 			var sequence         = GetSequence  (expression, level);
 			var nextLevel        = 1;
