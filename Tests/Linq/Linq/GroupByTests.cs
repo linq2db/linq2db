@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using LinqToDB.Mapping;
 	using Model;
 
@@ -1886,7 +1887,7 @@ namespace Tests.Linq
 		public void GroupByGuard([DataSources] string context)
 		{
 			using(new AllowMultipleQuery())
-			using(new GuardGrouping())
+			using(new GuardGrouping(true))
 			using (var db = GetDataContext(context))
 			{
 				// group on client
@@ -1966,9 +1967,11 @@ namespace Tests.Linq
 			[Column, Nullable] public string ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
+		[ActiveIssue]
 		[Test]
-		public void Issue672Test([DataSources] string context)
+		public void Issue672Test([DataSources] string context, [Values] bool enableGroupByguard)
 		{
+			using (new GuardGrouping(enableGroupByguard))
 			using (var db = GetDataContext(context))
 			using (db.CreateTempTable<Stone>())
 			{
