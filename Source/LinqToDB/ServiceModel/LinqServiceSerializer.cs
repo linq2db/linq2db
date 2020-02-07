@@ -61,7 +61,7 @@ namespace LinqToDB.ServiceModel
 		class SerializerBase
 		{
 			private   readonly MappingSchema _ms;
-			protected readonly StringBuilder Builder        = new StringBuilder();
+			protected readonly StringBuilder             Builder        = new StringBuilder();
 			protected readonly Dictionary<object,int>    ObjectIndices  = new Dictionary<object,int>();
 			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
 			protected int                                Index;
@@ -489,7 +489,7 @@ namespace LinqToDB.ServiceModel
 				}
 
 				return SerializationConverter.Deserialize(_ms, type, ReadString());
-				
+
 			}
 
 			protected readonly List<string> UnresolvedTypes = new List<string>();
@@ -597,8 +597,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var fld = (SqlField)e;
 
-							if (fld != fld.Table?.All)
-								GetType(fld.SystemType);
+							// All could have type for scalar subqueries
+							//if (fld != fld.Table?.All)
+							GetType(fld.SystemType);
 
 							break;
 						}
@@ -1280,6 +1281,12 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+
+					case QueryElementType.SqlAliasPlaceholder:
+						{
+							break;
+						};
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -2068,6 +2075,12 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.SqlAliasPlaceholder :
+						{
+							obj = new SqlAliasPlaceholder();
+							break;
+						}
+
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
@@ -2121,7 +2134,7 @@ namespace LinqToDB.ServiceModel
 				foreach (var data in result.Data)
 				{
 					foreach (var str in data)
-						Append(str);
+							Append(str);
 
 					Builder.AppendLine();
 				}
@@ -2167,7 +2180,7 @@ namespace LinqToDB.ServiceModel
 					var data = new string[fieldCount];
 
 					for (var i = 0; i < fieldCount; i++)
-						data[i] = ReadString();
+								data[i] = ReadString();
 
 					result.Data.Add(data);
 

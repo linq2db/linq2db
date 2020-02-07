@@ -335,6 +335,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -840,6 +841,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -1347,6 +1349,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:
@@ -2487,15 +2490,35 @@ namespace LinqToDB.SqlQuery
 				_visitedElements[element] = newElement;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IQueryElement GetCurrentReplaced(IQueryElement element)
+		{
+			if (_visitedElements.TryGetValue(element, out var replaced))
+			{
+				if (replaced != null && replaced != element)
+				{
+					while (replaced != null && _visitedElements.TryGetValue(replaced, out var another))
+					{
+						if (replaced == another)
+							break;
+						replaced = another;
+					}
+				}
+				return replaced;
+			}
+
+			return null;
+		}
+		
 		IQueryElement ConvertImmutableInternal(IQueryElement element)
 		{
 			if (element == null)
 				return null;
 
-			IQueryElement newElement = null;
 			// if element manually added outside to VisistedElements as null, it will be processed continuously.
 			// Useful when we have to duplicate such items, especially parameters
-			if (_visitedElements.TryGetValue(element, out newElement) && newElement != null)
+			var newElement = GetCurrentReplaced(element);
+			if (newElement != null)
 				return newElement;
 
 			using (Scope(element))
@@ -3379,10 +3402,11 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlField    :
-				case QueryElementType.SqlParameter:
-				case QueryElementType.SqlValue    :
-				case QueryElementType.SqlDataType :
+				case QueryElementType.SqlField           :
+				case QueryElementType.SqlParameter       :
+				case QueryElementType.SqlValue           :
+				case QueryElementType.SqlDataType        :
+				case QueryElementType.SqlAliasPlaceholder:
 					break;
 
 				default:

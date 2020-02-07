@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
+			var expr   = BuildExpression(null, 0, Sequence.Length == 0);
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -344,6 +344,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						{
 							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							levelExpression = levelExpression.Unwrap();
 
 							switch (levelExpression.NodeType)
 							{
@@ -983,7 +984,15 @@ namespace LinqToDB.Linq.Builder
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
 			Func<int,IBuildContext,Expression,int,Expression,T> action)
 		{
-			var memberExpression = Members[levelExpression.Member];
+			if (!Members.TryGetValue(levelExpression.Member, out var memberExpression))
+			{
+				if (Body != null)
+					Members.TryGetValue(Body.Type.GetMemberEx(levelExpression.Member), out memberExpression);
+
+				if (memberExpression == null)
+					throw new LinqToDBException($"Member '{levelExpression.Member.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+			}
+
 			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
 			var sequence         = GetSequence  (expression, level);
 			var nextLevel        = 1;
@@ -1046,6 +1055,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+				levelExpression = levelExpression.Unwrap();
 
 				switch (levelExpression.NodeType)
 				{
@@ -1063,7 +1073,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter :
 						{
-							root = expression.GetRootObject(Builder.MappingSchema);
+							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
 							break;
 						}
 				}

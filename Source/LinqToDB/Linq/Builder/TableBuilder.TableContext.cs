@@ -337,7 +337,7 @@ namespace LinqToDB.Linq.Builder
 						context = new SelectContext(Parent, selectorLambda, this);
 					}
 
-					var expression = context.BuildExpression(null, 0, false);
+					var expression          = context.BuildExpression(null, 0, false);
 
 					expressions.Add(Expression.Assign(accessExpression, expression));
 				}
@@ -560,6 +560,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				SqlInfo[] info;
 
+				var isScalar = IsScalarType(tableType);
+				if (isScalar)
+				{
+					info = ConvertToIndex(null, 0, ConvertFlags.All);
+					if (info.Length != 1)
+						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
+					var parentIndex = ConvertToParentIndex(info[0].Index, null);
+					return Builder.BuildSql(tableType, parentIndex);
+				}
+
 				if (ObjectType == tableType)
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
@@ -619,23 +629,23 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
-						var dindex          =
-							(
-								from f in SqlTable.Fields.Values
-								where f.Name == InheritanceMapping[0].DiscriminatorName
-								select ConvertToParentIndex(_indexes[f].Index, null)
-							).First();
+					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
+					var dindex          =
+						(
+							from f in SqlTable.Fields.Values
+							where f.Name == InheritanceMapping[0].DiscriminatorName
+							select ConvertToParentIndex(_indexes[f].Index, null)
+						).First();
 
-						expr = Expression.Convert(
-							Expression.Call(null, exceptionMethod,
-								Expression.Call(
-									ExpressionBuilder.DataReaderParam,
-									ReflectionHelper.DataReader.GetValue,
-									Expression.Constant(dindex)),
-								Expression.Constant(ObjectType)),
-							ObjectType);
-					}
+					expr = Expression.Convert(
+						Expression.Call(null, exceptionMethod,
+							Expression.Call(
+								ExpressionBuilder.DataReaderParam,
+								ReflectionHelper.DataReader.GetValue,
+								Expression.Constant(dindex)),
+							Expression.Constant(ObjectType)),
+						ObjectType);
+				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
@@ -683,6 +693,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return expr;
+			}
+
+			private bool IsScalarType(Type tableType)
+			{
+				return tableType.IsArray || Builder.MappingSchema.IsScalarType(tableType);
 			}
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -748,13 +763,17 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 							{
-								// Handling case with Associations. Needs refactoring
-								if (table.Table != this)
-								{
-									return table.Table.ConvertToSql(null, level, flags);
-								}
+								SqlInfo[] result;
 
-								var fields = table.Table.SqlTable.Fields.Values
+								if (!IsScalarType(OriginalType))
+								{
+									// Handling case with Associations. Needs refactoring
+									if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
+									{
+										return association._innerContext.ConvertToSql(null, level, flags);
+									}
+								
+									result = table.Table.SqlTable.Fields.Values
 										.Where(f => !f.IsDynamic)
 										.Select(f =>
 											f.ColumnDescriptor != null
@@ -762,7 +781,23 @@ namespace LinqToDB.Linq.Builder
 												: new SqlInfo { Sql = f })
 										.ToArray();
 
-								return fields;
+								}
+								else
+								{
+									ISqlExpression sql = SqlTable;
+									if (SqlTable is SqlRawSqlTable)
+									{
+										sql                        = SqlTable.All;
+										((SqlField)sql).SystemType = OriginalType;
+									}
+
+									result = new[]
+									{
+										new SqlInfo(Enumerable.Empty<MemberInfo>()) { Sql = sql }
+									};
+								}
+
+								return result;
 							}
 							break;
 						}
@@ -774,9 +809,9 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field == null)
 							{
 								// Handling case with Associations. Needs refactoring
-								if (table.Table != this)
+								if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
 								{
-									return table.Table.ConvertToSql(null, level, flags);
+									return association._innerContext.ConvertToSql(null, level, flags);
 								}
 
 								var q =
@@ -811,7 +846,7 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return new[]
 								{
-									new SqlInfo { Sql = table.Table.SqlTable.All }
+									new SqlInfo { Sql = IsScalarType(OriginalType) ? (ISqlExpression)SqlTable : table.Table.SqlTable.All }
 								};
 
 							break;

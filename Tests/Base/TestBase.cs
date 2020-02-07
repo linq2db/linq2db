@@ -1147,14 +1147,16 @@ namespace Tests
 
 	public class GuardGrouping : IDisposable
 	{
-		public GuardGrouping()
+		private readonly bool _oldValue = Configuration.Linq.GuardGrouping;
+
+		public GuardGrouping(bool enable)
 		{
-			Configuration.Linq.GuardGrouping = true;
+			Configuration.Linq.GuardGrouping = enable;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.GuardGrouping = false;
+			Configuration.Linq.GuardGrouping = _oldValue;
 		}
 	}
 

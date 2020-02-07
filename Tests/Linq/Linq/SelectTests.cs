@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
@@ -1380,5 +1381,26 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+		
+		[Test]
+		public void ToStringTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from p in db.GetTable<Parent>()
+					where p.ParentID == id
+					select p;
+
+				var sql1 = query.ToString();
+
+				id = 2;
+
+				var sql2 = query.ToString();
+				
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
+			}
+		}
+
 	}
 }

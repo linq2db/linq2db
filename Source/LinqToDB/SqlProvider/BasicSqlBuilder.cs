@@ -26,13 +26,13 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlStatement           Statement = null!;
 		protected readonly MappingSchema MappingSchema;
-		protected int                    Indent;
-		protected Step                   BuildStep;
-		protected ISqlOptimizer          SqlOptimizer;
-		protected SqlProviderFlags       SqlProviderFlags;
+		protected int                 Indent;
+		protected Step                BuildStep;
+		protected ISqlOptimizer       SqlOptimizer;
+		protected SqlProviderFlags    SqlProviderFlags;
 		protected ValueToSqlConverter    ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected StringBuilder          StringBuilder = null!;
-		protected bool                   SkipAlias;
+		protected bool                SkipAlias;
 
 		#endregion
 
@@ -1294,8 +1294,9 @@ namespace LinqToDB.SqlProvider
 
 		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		protected void BuildPhysicalTable(ISqlTableSource table, string? alias)
+		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias)
 		{
+			bool? buildAlias = null;
 			switch (table.ElementType)
 			{
 				case QueryElementType.SqlTable        :
@@ -1326,7 +1327,17 @@ namespace LinqToDB.SqlProvider
 					if (multiLine)
 						StringBuilder.AppendLine();
 
-					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), rawSqlTable.Parameters, () => Precedence.Primary);
+					var parameters = rawSqlTable.Parameters;
+					if (rawSqlTable.Parameters.Any(e => e.ElementType == QueryElementType.SqlAliasPlaceholder))
+					{
+						buildAlias = false;
+						var aliasExpr = new SqlExpression((string)Convert(alias, ConvertType.NameToQueryTableAlias), Precedence.Primary);
+						parameters = rawSqlTable.Parameters.Select(e =>
+								e.ElementType == QueryElementType.SqlAliasPlaceholder ? aliasExpr : e)
+							.ToArray();
+					}
+
+					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, () => Precedence.Primary);
 
 					if (multiLine)
 						StringBuilder.AppendLine();
@@ -1338,6 +1349,8 @@ namespace LinqToDB.SqlProvider
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
+
+			return buildAlias;
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
@@ -1345,7 +1358,9 @@ namespace LinqToDB.SqlProvider
 			if (buildName)
 			{
 				var alias = GetTableAlias(ts);
-				BuildPhysicalTable(ts.Source, alias);
+				var isBuildAlias = BuildPhysicalTable(ts.Source, alias);
+				if (isBuildAlias == false)
+					buildAlias = false;
 			}
 
 			if (buildAlias)
@@ -1580,14 +1595,14 @@ namespace LinqToDB.SqlProvider
 
 		#region Skip/Take
 
-		protected virtual bool    SkipFirst    => true;
+		protected virtual bool   SkipFirst    => true;
 		protected virtual string? SkipFormat   => null;
 		protected virtual string? FirstFormat  (SelectQuery selectQuery) => null;
 		protected virtual string? LimitFormat  (SelectQuery selectQuery) => null;
 		protected virtual string? OffsetFormat (SelectQuery selectQuery) => null;
-		protected virtual bool    OffsetFirst  => false;
-		protected virtual string  TakePercent  => "PERCENT";
-		protected virtual string  TakeTies     => "WITH TIES";
+		protected virtual bool   OffsetFirst  => false;
+		protected virtual string TakePercent  => "PERCENT";
+		protected virtual string TakeTies     => "WITH TIES";
 
 		protected bool NeedSkip(SelectQuery selectQuery)
 			=> selectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery);
@@ -2311,6 +2326,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlTable:
+				case QueryElementType.SqlRawSqlTable:
 				case QueryElementType.TableSource:
 					{
 						var table = (ISqlTableSource) expr;
@@ -2958,7 +2974,7 @@ namespace LinqToDB.SqlProvider
 			return Statement?.GetTempAliases(n, defaultAlias) ?? Array<string>.Empty;
 		}
 
-		protected static string? GetTableAlias(ISqlTableSource table)
+		protected string? GetTableAlias(ISqlTableSource table)
 		{
 			switch (table.ElementType)
 			{
@@ -2970,11 +2986,24 @@ namespace LinqToDB.SqlProvider
 					}
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
-				case QueryElementType.SqlRawSqlTable  :
 					{
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}	
+				case QueryElementType.SqlRawSqlTable  :
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(table);
+						if (ts == null)
+							ts = Statement.GetTableSource(table);
+
+						if (ts != null)
+							return GetTableAlias(ts);
+						else
+						{
+						var alias = ((SqlTable)table).Alias;
+						return alias != "$" && alias != "$F" ? alias : null;
+					}	
+					}
 				case QueryElementType.MergeSourceTable:
 					return null;
 

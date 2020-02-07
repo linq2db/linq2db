@@ -42,38 +42,51 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			statement = CorrectSkip(statement);
+			statement = CorrectSkipAndColumns(statement);
 
 			return statement;
 		}
 
-		public static SqlStatement CorrectSkip(SqlStatement statement)
+		public static SqlStatement CorrectSkipAndColumns(SqlStatement statement)
 		{
 			new QueryVisitor().Visit(statement, e =>
 			{
-				if (!(e is SelectQuery q))
-					return;
-
-				if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				switch (e.ElementType)
 				{
-					if (q.Select.Columns.Count == 0)
-					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
+					case QueryElementType.SqlQuery:
 						{
-							q.Select.AddNew(key);
+							var q = (SelectQuery)e;
+
+							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+							{
+								if (q.Select.Columns.Count == 0)
+								{
+									var source = q.Select.From.Tables[0].Source;
+									var keys   = source.GetKeys(true);
+
+									foreach (var key in keys)
+									{
+										q.Select.AddNew(key);
+									}
+								}
+
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
+
+								if (q.OrderBy.IsEmpty)
+								{
+									throw new LinqToDBException("Order by required for Skip operation.");
+								}
+							}
+
+							// looks like SqlCE do not allow '*' for grouped records
+							if (!q.GroupBy.IsEmpty && q.Select.Columns.Count == 0)
+							{
+								q.Select.Add(new SqlValue(1));
+							}
+
+							break;
 						}
-					}
-
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
-
-					if (q.OrderBy.IsEmpty)
-					{
-						throw new LinqToDBException("Order by required for Skip operation.");
-					}
 				}
 			});
 
