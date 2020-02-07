@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -25,7 +23,7 @@ namespace LinqToDB
 
 		readonly object                _sync = new object();
 		readonly LambdaExpression      _query;
-		volatile Func<object[],object[],object> _compiledQuery;
+		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
 		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
@@ -67,9 +65,9 @@ namespace LinqToDB
 			}
 		}
 
-		static Func<object?[],object?[],object?> CompileQuery(LambdaExpression query)
+		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps       = Expression.Parameter(typeof(object[]), "ps");
+			var ps        = Expression.Parameter(typeof(object[]), "ps");
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
 			var info = query.Body.Transform(pi =>
@@ -133,7 +131,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object?[],object?[],object?>>(Expression.Convert(info, typeof(object)), ps, preambles).Compile();
+			return Expression.Lambda<Func<object?[],object?[]?,object?>>(Expression.Convert(info, typeof(object)), ps, preambles).Compile();
 		}
 
 		#region Invoke

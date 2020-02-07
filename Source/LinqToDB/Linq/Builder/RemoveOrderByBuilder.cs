@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(
+		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
 		{
 			return null;

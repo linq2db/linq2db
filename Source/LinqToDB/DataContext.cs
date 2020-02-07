@@ -501,7 +501,7 @@ namespace LinqToDB
 			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
 			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
 			public object?[]    Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
-			public object?[]    Preambles        { get => _queryRunner.Preambles;        set => _queryRunner!.Preambles        = value; }
+			public object?[]    Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }
 			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }

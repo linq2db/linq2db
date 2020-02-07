@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿#nullable disable
+using System.Diagnostics;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -19,11 +20,11 @@ namespace LinqToDB.Linq.Builder
 
 		public KDH(TKey key, TData data)
 		{
-			Key = key;
+			Key  = key;
 			Data = data;
 		}
 
-		public TKey  Key { get; set; }
+		public TKey  Key  { get; set; }
 		public TData Data { get; set; }
 	}
 
@@ -36,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 
 		public FKDH(TKey key, TData data)
 		{
-			Key = key;
+			Key  = key;
 			Data = data;
 		}
 

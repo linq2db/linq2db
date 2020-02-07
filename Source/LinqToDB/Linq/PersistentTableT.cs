@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+// TODO: violates ITable nullability contract: review contract, suppress errors or fix them
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
