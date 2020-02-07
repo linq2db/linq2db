@@ -570,15 +570,15 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, FormattableString)"/> method.
+		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
 		/// </summary>
 		/// <remarks>
-		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, FormattableString)"/> contains at least one <see cref="AliasExpr"/>, 
+		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>, 
 		///		automatic alias for the query will be not generated.
 		/// </remarks>
 		/// <returns>ISqlExpression which is Alias Placeholder.</returns>
 		/// <example>
-		/// The following <see cref="DataExtensions.FromSql{TEntity}(IDataContext, FormattableString)"/> calls are equivalent.
+		/// The following <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> calls are equivalent.
 		/// <code>
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA {Sql.AliasExpr()}")
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
