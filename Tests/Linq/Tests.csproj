@@ -59,6 +59,7 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.3.0" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
 	</ItemGroup>
 
 
@@ -91,6 +92,8 @@
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
 		<Compile Remove="UserTests\Issue1925Tests.cs" />
+		<Compile Remove="Microsoft\MicrosoftODataTests.cs" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>
+
 </Project>

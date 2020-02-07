@@ -341,6 +341,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						{
 							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							levelExpression = levelExpression.Unwrap();
 
 							switch (levelExpression.NodeType)
 							{
@@ -1051,6 +1052,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+				levelExpression = levelExpression.Unwrap();
 
 				switch (levelExpression.NodeType)
 				{
@@ -1068,7 +1070,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter :
 						{
-							root = expression.GetRootObject(Builder.MappingSchema);
+							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
 							break;
 						}
 				}
