@@ -438,6 +438,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue("Sybase doesn't support TOP in subqueries", Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void LetTest9([DataSources] string context)
 		{

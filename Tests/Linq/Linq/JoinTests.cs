@@ -546,8 +546,9 @@ namespace Tests.Linq
 		}
 
 		// Access has strange order strategy
+		// Informix move constant column value from left-joined subquery to top level even for null records
 		[Test]
-		public void GroupJoin9([DataSources(ProviderName.Access)] string context)
+		public void GroupJoin9([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
