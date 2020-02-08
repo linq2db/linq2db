@@ -297,7 +297,8 @@ stages:
 ###################################
   - job: test_win2016_netcoreapp21_job
     pool:
-      vmImage: 'vs2017-win2016'
+#      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
@@ -360,7 +361,8 @@ stages:
 ###################################
   - job: test_win2016_netcoreapp21_job_x86
     pool:
-      vmImage: 'vs2017-win2016'
+#      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
@@ -410,10 +412,9 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: linq2db.Tests.dll
-        platform: 'x86'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
-        testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1,/Platform:x86'
+        testRunTitle: 'Windows / NETCOREAPP2.1 (x86) / $(title)'
       displayName: '$(title)'
 

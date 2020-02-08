@@ -406,8 +406,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							npgsqlBinaryImporterType,
 							beginBinaryImport);
 
-						
-
 						void AddUdtType(Type type)
 						{
 							if (!type.IsValueType)

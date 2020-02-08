@@ -312,12 +312,14 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -347,7 +349,7 @@ namespace Tests.DataProvider
 
 				var table = db.CreateTable<AllType>();
 
-				var list = table.ToList();
+				table.ToList();
 
 				db.DropTable<AllType>();
 			}

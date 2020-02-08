@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using LinqToDB.Common;
 	using LinqToDB.SqlQuery;
 	using Mapping;
 	using System.Data.Linq;
@@ -87,6 +88,47 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+		}
+
+		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
+	}
+
+	public class PostgreSQL92MappingSchema : MappingSchema
+	{
+		public PostgreSQL92MappingSchema()
+			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
+		}
+	}
+
+	public class PostgreSQL93MappingSchema : MappingSchema
+	{
+		public PostgreSQL93MappingSchema()
+			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
+		}
+	}
+
+	public class PostgreSQL95MappingSchema : MappingSchema
+	{
+		public PostgreSQL95MappingSchema()
+			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
 		}
 	}
 }
