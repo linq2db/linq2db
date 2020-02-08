@@ -603,7 +603,7 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
-		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var testData = new[]
 			{

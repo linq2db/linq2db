@@ -219,8 +219,9 @@ namespace Tests.xUpdate
 			return true;
 		}
 
+		// DB2: 
 		[Test]
-		public void ReuseOptionTest([DataSources(false)]string context)
+		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

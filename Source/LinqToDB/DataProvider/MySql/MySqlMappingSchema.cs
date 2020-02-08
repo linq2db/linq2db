@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.MySql
 			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

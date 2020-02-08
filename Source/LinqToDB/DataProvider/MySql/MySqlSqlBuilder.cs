@@ -94,17 +94,17 @@ namespace LinqToDB.DataProvider.MySql
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-			switch (type.DataType)
-			{
+				switch (type.DataType)
+				{
 					case DataType.Boolean       :
 					case DataType.SByte         :
-				case DataType.Int16         :
-				case DataType.Int32         :
+					case DataType.Int16         :
+					case DataType.Int32         :
 					case DataType.Int64         : StringBuilder.Append("SIGNED");        break;
 					case DataType.BitArray      : // wild guess
-				case DataType.Byte          :
-				case DataType.UInt16        :
-				case DataType.UInt32        :
+					case DataType.Byte          :
+					case DataType.UInt16        :
+					case DataType.UInt32        :
 					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");      break;
 					case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)"); break;
 					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)"); break;
@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						StringBuilder.Append("LONGTEXT");
 					break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                                     break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);                       break;
 			}
 		}
 

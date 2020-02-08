@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
-using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
@@ -19,7 +18,6 @@ using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 using Microsoft.SqlServer.Types;
-using SqlServerTypes;
 
 using NUnit.Framework;
 

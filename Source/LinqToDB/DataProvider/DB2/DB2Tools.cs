@@ -146,9 +146,9 @@ namespace LinqToDB.DataProvider.DB2
 		/// <summary>
 		/// Default bulk copy mode, used for DB2 by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
 		/// methods, if mode is not specified explicitly.
-		/// Default value: <see cref="BulkCopyType.ProviderSpecific"/>.
+		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
+		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection,

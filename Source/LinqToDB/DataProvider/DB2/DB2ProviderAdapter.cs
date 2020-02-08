@@ -202,6 +202,7 @@ namespace LinqToDB.DataProvider.DB2
 						var db2TimeSpanType     = loadType("DB2TimeSpan", DataType.Timestamp, true, true);
 
 						var typeMapper = new TypeMapper(connectionType, parameterType, dbType, serverTypesType, transactionType,
+							db2BinaryType,
 							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
 
 						typeMapper.RegisterWrapper<DB2ServerTypes>();
@@ -209,6 +210,7 @@ namespace LinqToDB.DataProvider.DB2
 						typeMapper.RegisterWrapper<DB2Parameter>();
 						typeMapper.RegisterWrapper<DB2Type>();
 						typeMapper.RegisterWrapper<DB2Transaction>();
+						typeMapper.RegisterWrapper<DB2Binary>();
 
 						// bulk copy types
 						typeMapper.RegisterWrapper<DB2BulkCopy>();

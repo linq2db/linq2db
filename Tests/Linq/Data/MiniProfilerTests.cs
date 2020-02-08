@@ -1336,7 +1336,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string csExtra = null)
 		{
-			var ms = new MappingSchema();
+			var ms = new MappingSchema(context);
 			DataConnection db = null;
 			db = new DataConnection(provider, () =>
 			{
