@@ -104,8 +104,6 @@ namespace Tests
 #endif
 
 #if AZURE
-#warning "Azure configuration detected."
-
 			Console.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif

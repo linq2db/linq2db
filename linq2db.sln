@@ -286,6 +286,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp21", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\netcoreapp21\access.ace.json = Build\Azure\netcoreapp21\access.ace.json
+		Build\Azure\netcoreapp21\access.json = Build\Azure\netcoreapp21\access.json
 		Build\Azure\netcoreapp21\db2.json = Build\Azure\netcoreapp21\db2.json
 		Build\Azure\netcoreapp21\firebird25.json = Build\Azure\netcoreapp21\firebird25.json
 		Build\Azure\netcoreapp21\firebird3.json = Build\Azure\netcoreapp21\firebird3.json
