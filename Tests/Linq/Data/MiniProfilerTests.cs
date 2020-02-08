@@ -1272,14 +1272,22 @@ namespace Tests.Data
 					Assert.True(trace.Contains("\"Column\" circle     NULL"));
 
 				// test server version
-				var parts = db.Execute<string>("SHOW server_version;").Split('.').Select(int.Parse).ToArray();
-				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = ((PostgreSQLDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
+				var serverVersion = db.Execute<string>("SHOW server_version;");
+				try
 				{
-					cn.Open();
+					var parts = serverVersion.Split('.').Select(int.Parse).ToArray();
+					var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+					using (var cn = ((PostgreSQLDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
+					{
+						cn.Open();
 
-					Assert.AreEqual(parts[0], cn.PostgreSqlVersion.Major);
-					Assert.AreEqual(parts[1], cn.PostgreSqlVersion.Minor);
+						Assert.AreEqual(parts[0], cn.PostgreSqlVersion.Major);
+						Assert.AreEqual(parts[1], cn.PostgreSqlVersion.Minor);
+					}
+				}
+				catch
+				{
+					Assert.Fail($"Debug: {serverVersion}");
 				}
 
 				void TestBulkCopy()

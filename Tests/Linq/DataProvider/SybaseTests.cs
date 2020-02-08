@@ -859,12 +859,14 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
