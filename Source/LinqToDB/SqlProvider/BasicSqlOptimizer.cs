@@ -598,7 +598,7 @@ namespace LinqToDB.SqlProvider
 							{
 								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
 
-								if (len <= 0)
+								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
@@ -613,7 +613,7 @@ namespace LinqToDB.SqlProvider
 							{
 								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
 
-								if (len <= 0)
+								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
@@ -1174,10 +1174,10 @@ namespace LinqToDB.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
-		protected virtual int GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
-		protected virtual int GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
-		protected virtual int GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
+		protected virtual int? GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
+		protected virtual int? GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
+		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
+		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
@@ -1190,7 +1190,7 @@ namespace LinqToDB.SqlProvider
 			if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
+				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength.Value) : to.Length;
 
 				if (to.Length != newLength)
 					to = new SqlDataType(to.DataType, to.Type, newLength, null, null, to.DbType);
