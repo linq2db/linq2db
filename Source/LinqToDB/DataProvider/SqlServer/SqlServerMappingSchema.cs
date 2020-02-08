@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), int.MaxValue));
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
 			AddMetadataReader(new SystemDataSqlServerAttributeReader());
 		}

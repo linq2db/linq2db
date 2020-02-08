@@ -2342,6 +2342,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[SkipCI("TODO: BFile field requires configuration on CI")]
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{

@@ -56,7 +56,7 @@ namespace LinqToDB.Mapping
 				if (dataType.Precision != null) columnAttribute.Precision = dataType.Precision.Value;
 				if (dataType.Scale     != null) columnAttribute.Scale     = dataType.Scale.Value;
 			}
-			else
+			else if (columnAttribute.DataType == dataType.DataType)
 			{
 				if (dataType.Length    != null && !columnAttribute.HasLength())    columnAttribute.Length    = dataType.Length.Value;
 				if (dataType.Precision != null && !columnAttribute.HasPrecision()) columnAttribute.Precision = dataType.Precision.Value;

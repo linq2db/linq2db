@@ -49,7 +49,7 @@
 				case DataType.Xml            : StringBuilder.Append("NText");    return;
 				case DataType.NVarChar       :
 
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)
@@ -62,7 +62,7 @@
 				case DataType.VarChar        :
 				case DataType.VarBinary      :
 
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 8000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)

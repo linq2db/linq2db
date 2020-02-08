@@ -301,11 +301,18 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    #condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
         Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ACE_x64:
           title: 'Access ACE (x64)'
           config: 'access.ace'
           script: 'access.ace.x64.cmd'
@@ -346,3 +353,4 @@ stages:
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
+

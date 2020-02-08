@@ -75,10 +75,8 @@ namespace LinqToDB.DataProvider.DB2
 								return ex;
 						}
 
-						if (func.Parameters[0] is SqlDataType)
+						if (func.Parameters[0] is SqlDataType type)
 						{
-							var type = (SqlDataType)func.Parameters[0];
-
 							if (type.Type == typeof(string) && func.Parameters[1].SystemType != typeof(string))
 								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", func.Parameters[1]));
 
@@ -86,15 +84,13 @@ namespace LinqToDB.DataProvider.DB2
 								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Length));
 
 							if (type.Precision > 0)
-								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale));
+								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale ?? 0));
 
 							return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1]);
 						}
 
-						if (func.Parameters[0] is SqlFunction)
+						if (func.Parameters[0] is SqlFunction f)
 						{
-							var f = (SqlFunction)func.Parameters[0];
-
 							return
 								f.Name == "Char" ?
 									new SqlFunction(func.SystemType, f.Name, func.Parameters[1]) :

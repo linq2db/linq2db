@@ -1331,7 +1331,7 @@ namespace LinqToDB.SqlProvider
 					if (rawSqlTable.Parameters.Any(e => e.ElementType == QueryElementType.SqlAliasPlaceholder))
 					{
 						buildAlias = false;
-						var aliasExpr = new SqlExpression((string)Convert(alias, ConvertType.NameToQueryTableAlias), Precedence.Primary);
+						var aliasExpr = new SqlExpression(Convert(alias!, ConvertType.NameToQueryTableAlias), Precedence.Primary);
 						parameters = rawSqlTable.Parameters.Select(e =>
 								e.ElementType == QueryElementType.SqlAliasPlaceholder ? aliasExpr : e)
 							.ToArray();
