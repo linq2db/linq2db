@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using LinqToDB.Expressions;
@@ -20,8 +19,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
 
-		public const string SystemAssemblyName    = "System.Data.SqlClient";
-		public const string MicrosoftAssemblyName = "Microsoft.Data.SqlClient";
+		public const string SystemAssemblyName           = "System.Data.SqlClient";
+		public const string SystemClientNamespace        = "System.Data.SqlClient";
+		public const string SystemProviderFactoryName    = "System.Data.SqlClient";
+
+		public const string MicrosoftAssemblyName        = "Microsoft.Data.SqlClient";
+		public const string MicrosoftClientNamespace     = "Microsoft.Data.SqlClient";
+		public const string MicrosoftProviderFactoryName = "Microsoft.Data.SqlClient";
 
 		private SqlServerProviderAdapter(
 			Type connectionType,
@@ -79,6 +83,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public Type SqlDataRecordType { get; }
 		public Type SqlExceptionType  { get; }
 
+		public string GetSqlXmlReaderMethod         => "GetSqlXml";
+		public string GetDateTimeOffsetReaderMethod => "GetDateTimeOffset";
+		public string GetTimeSpanReaderMethod       => "GetTimeSpan";
+
 		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
 		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
 
@@ -111,30 +119,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (provider == SqlServerProvider.SystemDataSqlClient)
 			{
 				if (_systemAdapter == null)
-				{
 					lock (_sysSyncRoot)
-					{
 						if (_systemAdapter == null)
-						{
-							_systemAdapter = CreateAdapter(SystemAssemblyName, "System.Data.SqlClient", "System.Data.SqlClient");
-						}
-					}
-				}
+							_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 
 				return _systemAdapter;
 			}
 			else
 			{
 				if (_microsoftAdapter == null)
-				{
 					lock (_msSyncRoot)
-					{
 						if (_microsoftAdapter == null)
-						{
-							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, "Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient");
-						}
-					}
-				}
+							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 
 				return _microsoftAdapter;
 			}

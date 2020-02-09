@@ -32,26 +32,26 @@ namespace LinqToDB.DataProvider.DB2
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 
-			SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , "GetDB2Int64"       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , "GetDB2Int32"       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Int16Type       , typeof(short)   , "GetDB2Int16"       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DecimalType     , typeof(decimal) , "GetDB2Decimal"     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DecimalFloatType, typeof(decimal) , "GetDB2DecimalFloat", dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2RealType        , typeof(float)   , "GetDB2Real"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Real370Type     , typeof(float)   , "GetDB2Real370"     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DoubleType      , typeof(double)  , "GetDB2Double"      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2StringType      , typeof(string)  , "GetDB2String"      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2ClobType        , typeof(string)  , "GetDB2Clob"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2BinaryType      , typeof(byte[])  , "GetDB2Binary"      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2BlobType        , typeof(byte[])  , "GetDB2Blob"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DateType        , typeof(DateTime), "GetDB2Date"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2TimeType        , typeof(TimeSpan), "GetDB2Time"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2TimeStampType   , typeof(DateTime), "GetDB2TimeStamp"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2XmlType         , typeof(string)  , "GetDB2Xml"         , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2RowIdType       , typeof(byte[])  , "GetDB2RowId"       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , Adapter.GetDB2Int64ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , Adapter.GetDB2Int32ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Int16Type       , typeof(short)   , Adapter.GetDB2Int16ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DecimalType     , typeof(decimal) , Adapter.GetDB2DecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DecimalFloatType, typeof(decimal) , Adapter.GetDB2DecimalFloatReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2RealType        , typeof(float)   , Adapter.GetDB2RealReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2Real370Type     , typeof(float)   , Adapter.GetDB2Real370ReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DoubleType      , typeof(double)  , Adapter.GetDB2DoubleReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2StringType      , typeof(string)  , Adapter.GetDB2StringReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2ClobType        , typeof(string)  , Adapter.GetDB2ClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2BinaryType      , typeof(byte[])  , Adapter.GetDB2BinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2BlobType        , typeof(byte[])  , Adapter.GetDB2BlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2DateType        , typeof(DateTime), Adapter.GetDB2DateReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2TimeType        , typeof(TimeSpan), Adapter.GetDB2TimeReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2TimeStampType   , typeof(DateTime), Adapter.GetDB2TimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2XmlType         , typeof(string)  , Adapter.GetDB2XmlReaderMethod         , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.DB2RowIdType       , typeof(byte[])  , Adapter.GetDB2RowIdReaderMethod       , dataReaderType: Adapter.DataReaderType);
 
 			if (Adapter.DB2DateTimeType != null)
-				SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), "GetDB2DateTime"    , dataReaderType: Adapter.DataReaderType);
+				SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), Adapter.GetDB2DateTimeReaderMethod!   , dataReaderType: Adapter.DataReaderType);
 		}
 
 		public DB2Version Version { get; }
@@ -68,9 +68,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Version == DB2Version.zOS ?
-				new DB2zOSSchemaProvider() :
-				new DB2LUWSchemaProvider();
+			return Version == DB2Version.zOS  ?
+				new DB2zOSSchemaProvider(this):
+				new DB2LUWSchemaProvider(this);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)

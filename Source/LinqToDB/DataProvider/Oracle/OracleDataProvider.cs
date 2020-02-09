@@ -36,23 +36,23 @@ namespace LinqToDB.DataProvider.Oracle
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 
-			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , "GetOracleBFile"       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , "GetOracleBinary"      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleBlobType        , Adapter.OracleBlobType        , "GetOracleBlob"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleClobType        , Adapter.OracleClobType        , "GetOracleClob"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleDateType        , Adapter.OracleDateType        , "GetOracleDate"        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleDecimalType     , Adapter.OracleDecimalType     , "GetOracleDecimal"     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleIntervalDSType  , Adapter.OracleIntervalDSType  , "GetOracleIntervalDS"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleIntervalYMType  , Adapter.OracleIntervalYMType  , "GetOracleIntervalYM"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleStringType      , Adapter.OracleStringType      , "GetOracleString"      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampType   , Adapter.OracleTimeStampType   , "GetOracleTimeStamp"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampLTZType, Adapter.OracleTimeStampLTZType, "GetOracleTimeStampLTZ", dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampTZType , Adapter.OracleTimeStampTZType , "GetOracleTimeStampTZ" , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleXmlTypeType     , Adapter.OracleXmlTypeType     , "GetOracleXmlType"     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleBlobType        , Adapter.OracleBlobType        , Adapter.GetOracleBlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleClobType        , Adapter.OracleClobType        , Adapter.GetOracleClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleDateType        , Adapter.OracleDateType        , Adapter.GetOracleDateReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleDecimalType     , Adapter.OracleDecimalType     , Adapter.GetOracleDecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleIntervalDSType  , Adapter.OracleIntervalDSType  , Adapter.GetOracleIntervalDSReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleIntervalYMType  , Adapter.OracleIntervalYMType  , Adapter.GetOracleIntervalYMReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleStringType      , Adapter.OracleStringType      , Adapter.GetOracleStringReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampType   , Adapter.OracleTimeStampType   , Adapter.GetOracleTimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampLTZType, Adapter.OracleTimeStampLTZType, Adapter.GetOracleTimeStampLTZReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampTZType , Adapter.OracleTimeStampTZType , Adapter.GetOracleTimeStampTZReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleXmlTypeType     , Adapter.OracleXmlTypeType     , Adapter.GetOracleXmlTypeReaderMethod     , dataReaderType: Adapter.DataReaderType);
 
 			// native provider only
 			if (Adapter.OracleRefType != null)
-				SetProviderField(Adapter.OracleRefType     , Adapter.OracleRefType     , "GetOracleRef"    , dataReaderType: Adapter.DataReaderType);
+				SetProviderField(Adapter.OracleRefType     , Adapter.OracleRefType         , Adapter.GetOracleRefReaderMethod!        , dataReaderType: Adapter.DataReaderType);
 
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampTZType, DataReaderType = Adapter.DataReaderType }]
 				= Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;

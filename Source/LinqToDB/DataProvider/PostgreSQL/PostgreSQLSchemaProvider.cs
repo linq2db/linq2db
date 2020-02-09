@@ -409,7 +409,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "NpgsqlTypes";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)

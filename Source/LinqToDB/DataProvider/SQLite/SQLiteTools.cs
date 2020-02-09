@@ -39,16 +39,17 @@ namespace LinqToDB.DataProvider.SQLite
 
 			switch (css.ProviderName)
 			{
-				case "System.Data.SQLite"              :
-				case ProviderName.SQLiteClassic        : return _SQLiteClassicDataProvider.Value;
-				case "Microsoft.Data.SQLite"           :
-				case ProviderName.SQLiteMS             : return _SQLiteMSDataProvider.Value;
-				case ""                                :
-				case null                              :
-					if (css.Name.Contains("SQLite"))
+				case SQLiteProviderAdapter.SystemDataSQLiteClientNamespace   :
+				case ProviderName.SQLiteClassic                              : return _SQLiteClassicDataProvider.Value;
+				case SQLiteProviderAdapter.MicrosoftDataSQLiteClientNamespace:
+				case "Microsoft.Data.SQLite"                                 :
+				case ProviderName.SQLiteMS                                   : return _SQLiteMSDataProvider.Value;
+				case ""                                                      :
+				case null                                                    :
+					if (css.Name.Contains("SQLite") || css.Name.Contains("Sqlite"))
 						goto case ProviderName.SQLite;
 					break;
-				case ProviderName.SQLite               :
+				case ProviderName.SQLite                                     :
 					if (css.Name.Contains("MS") || css.Name.Contains("Microsoft"))
 						return _SQLiteMSDataProvider.Value;
 
@@ -56,7 +57,7 @@ namespace LinqToDB.DataProvider.SQLite
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();
-				case var providerName when providerName.Contains("SQLite"):
+				case var providerName when providerName.Contains("SQLite") || providerName.Contains("Sqlite"):
 					if (css.ProviderName.Contains("MS") || css.ProviderName.Contains("Microsoft"))
 						return _SQLiteMSDataProvider.Value;
 
@@ -80,8 +81,8 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				var path = typeof(SQLiteTools).Assembly.GetPath();
 
-				if (!File.Exists(Path.Combine(path, "System.Data.SQLite.dll")))
-					if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
+				if (   !File.Exists(Path.Combine(path, $"{SQLiteProviderAdapter.SystemDataSQLiteAssemblyName}.dll")))
+					if (File.Exists(Path.Combine(path, $"{SQLiteProviderAdapter.MicrosoftDataSQLiteAssemblyName}.dll")))
 						return ProviderName.SQLiteMS;
 			}
 			catch

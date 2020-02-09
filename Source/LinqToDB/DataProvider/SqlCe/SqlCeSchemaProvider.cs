@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Data;
 
 /*
 
@@ -159,10 +159,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return "System.Data.SqlTypes";
-		}
+		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{

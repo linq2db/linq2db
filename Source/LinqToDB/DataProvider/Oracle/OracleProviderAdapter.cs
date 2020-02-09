@@ -3,9 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Data.Common;
 	using System.Linq.Expressions;
-	using System.Reflection;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
@@ -15,12 +13,21 @@ namespace LinqToDB.DataProvider.Oracle
 
 #if NET45 || NET46
 		private static readonly object _nativeSyncRoot = new object();
-		public const string NativeAssemblyName = "Oracle.DataAccess";
+
+		public const string NativeAssemblyName        = "Oracle.DataAccess";
+		public const string NativeProviderFactoryName = "Oracle.DataAccess.Client";
+		public const string NativeClientNamespace     = "Oracle.DataAccess.Client";
+		public const string NativeTypesNamespace      = "Oracle.DataAccess.Types";
+
 		private static OracleProviderAdapter? _nativeAdapter;
 #endif
 
 		private static readonly object _managedSyncRoot = new object();
-		public const string ManagedAssemblyName = "Oracle.ManagedDataAccess";
+
+		public const string ManagedAssemblyName    = "Oracle.ManagedDataAccess";
+		public const string ManagedClientNamespace = "Oracle.ManagedDataAccess.Client";
+		public const string ManagedTypesNamespace  = "Oracle.ManagedDataAccess.Types";
+
 		private static OracleProviderAdapter? _managedAdapter;
 
 		private OracleProviderAdapter(
@@ -48,6 +55,8 @@ namespace LinqToDB.DataProvider.Oracle
 			Type oracleXmlStreamType,
 			Type oracleRefCursorType,
 			Type? oracleRefType,
+
+			string typesNamespace,
 
 			Action<IDbDataParameter, OracleDbType> dbTypeSetter,
 			Func  <IDbDataParameter, OracleDbType> dbTypeGetter,
@@ -94,6 +103,8 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleXmlStreamType    = oracleXmlStreamType;
 			OracleRefCursorType    = oracleRefCursorType;
 			OracleRefType          = oracleRefType;
+
+			ProviderTypesNamespace = typesNamespace;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
@@ -142,6 +153,23 @@ namespace LinqToDB.DataProvider.Oracle
 		public Type  OracleRefCursorType    { get; }
 		public Type? OracleRefType          { get; }
 
+		public string  GetOracleBFileReaderMethod        => "GetOracleBFile";
+		public string  GetOracleBinaryReaderMethod       => "GetOracleBinary";
+		public string  GetOracleBlobReaderMethod         => "GetOracleBlob";
+		public string  GetOracleClobReaderMethod         => "GetOracleClob";
+		public string  GetOracleDateReaderMethod         => "GetOracleDate";
+		public string  GetOracleDecimalReaderMethod      => "GetOracleDecimal";
+		public string  GetOracleIntervalDSReaderMethod   => "GetOracleIntervalDS";
+		public string  GetOracleIntervalYMReaderMethod   => "GetOracleIntervalYM";
+		public string  GetOracleStringReaderMethod       => "GetOracleString";
+		public string  GetOracleTimeStampReaderMethod    => "GetOracleTimeStamp";
+		public string  GetOracleTimeStampLTZReaderMethod => "GetOracleTimeStampLTZ";
+		public string  GetOracleTimeStampTZReaderMethod  => "GetOracleTimeStampTZ";
+		public string  GetOracleXmlTypeReaderMethod      => "GetOracleXmlType";
+		public string? GetOracleRefReaderMethod          => OracleRefType == null ? null : "GetOracleRef";
+
+		public string ProviderTypesNamespace { get; }
+
 		public Action<IDbDataParameter, OracleDbType> SetDbType { get; }
 		public Func  <IDbDataParameter, OracleDbType> GetDbType { get; }
 
@@ -184,15 +212,9 @@ namespace LinqToDB.DataProvider.Oracle
 			if (name == ProviderName.OracleNative)
 			{
 				if (_nativeAdapter == null)
-				{
 					lock (_nativeSyncRoot)
-					{
 						if (_nativeAdapter == null)
-						{
-							_nativeAdapter = CreateAdapter(NativeAssemblyName, "Oracle.DataAccess.Client");
-						}
-					}
-				}
+							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName);
 
 				return _nativeAdapter;
 			}
@@ -200,25 +222,16 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 			{
 				if (_managedAdapter == null)
-				{
 					lock (_managedSyncRoot)
-					{
 						if (_managedAdapter == null)
-						{
-							_managedAdapter = CreateAdapter(ManagedAssemblyName, null);
-						}
-					}
-				}
+							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null);
 
 				return _managedAdapter;
 			}
 		}
 
-		private static OracleProviderAdapter CreateAdapter(string assemblyName, string? factoryName)
+		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
-			var clientNamespace = assemblyName + ".Client";
-			var typesNamespace = assemblyName + ".Types";
-
 			var isNative = false;
 #if NET45 || NET46
 			isNative = assemblyName == NativeAssemblyName;
@@ -238,22 +251,22 @@ namespace LinqToDB.DataProvider.Oracle
 			var mappingSchema = new MappingSchema();
 
 			// do not set default conversion for BFile as it could be converted to file name, byte[], Stream and we don't know what user needs
-			var oracleBFileType        = loadType("OracleBFile", DataType.BFile, skipConvertExpression: true)!;
-			var oracleBinaryType       = loadType("OracleBinary", DataType.VarBinary)!;
-			var oracleBlobType         = loadType("OracleBlob", DataType.Blob)!;
-			var oracleClobType         = loadType("OracleClob", DataType.NText)!;
-			var oracleDateType         = loadType("OracleDate", DataType.DateTime)!;
-			var oracleDecimalType      = loadType("OracleDecimal", DataType.Decimal)!;
-			var oracleIntervalDSType   = loadType("OracleIntervalDS", DataType.Time)!;
-			var oracleIntervalYMType   = loadType("OracleIntervalYM", DataType.Date)!;
-			var oracleStringType       = loadType("OracleString", DataType.NVarChar)!;
-			var oracleTimeStampType    = loadType("OracleTimeStamp", DataType.DateTime2)!;
+			var oracleBFileType        = loadType("OracleBFile"       , DataType.BFile, skipConvertExpression: true)!;
+			var oracleBinaryType       = loadType("OracleBinary"      , DataType.VarBinary)!;
+			var oracleBlobType         = loadType("OracleBlob"        , DataType.Blob)!;
+			var oracleClobType         = loadType("OracleClob"        , DataType.NText)!;
+			var oracleDateType         = loadType("OracleDate"        , DataType.DateTime)!;
+			var oracleDecimalType      = loadType("OracleDecimal"     , DataType.Decimal)!;
+			var oracleIntervalDSType   = loadType("OracleIntervalDS"  , DataType.Time)!;
+			var oracleIntervalYMType   = loadType("OracleIntervalYM"  , DataType.Date)!;
+			var oracleStringType       = loadType("OracleString"      , DataType.NVarChar)!;
+			var oracleTimeStampType    = loadType("OracleTimeStamp"   , DataType.DateTime2)!;
 			var oracleTimeStampLTZType = loadType("OracleTimeStampLTZ", DataType.DateTimeOffset)!;
-			var oracleTimeStampTZType  = loadType("OracleTimeStampTZ", DataType.DateTimeOffset)!;
-			var oracleXmlTypeType      = loadType("OracleXmlType", DataType.Xml)!;
-			var oracleXmlStreamType    = loadType("OracleXmlStream", DataType.Xml, true, false)!;
-			var oracleRefCursorType    = loadType("OracleRefCursor", DataType.Binary, hasValue: false)!;
-			var oracleRefType          = loadType("OracleRef", DataType.Binary, true);
+			var oracleTimeStampTZType  = loadType("OracleTimeStampTZ" , DataType.DateTimeOffset)!;
+			var oracleXmlTypeType      = loadType("OracleXmlType"     , DataType.Xml)!;
+			var oracleXmlStreamType    = loadType("OracleXmlStream"   , DataType.Xml, true, false)!;
+			var oracleRefCursorType    = loadType("OracleRefCursor"   , DataType.Binary, hasValue: false)!;
+			var oracleRefType          = loadType("OracleRef"         , DataType.Binary, true);
 
 			BulkCopyAdapter? bulkCopy = null;
 			TypeMapper typeMapper;
@@ -401,6 +414,8 @@ namespace LinqToDB.DataProvider.Oracle
 				oracleXmlStreamType,
 				oracleRefCursorType,
 				oracleRefType,
+
+				typesNamespace,
 
 				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 				dbTypeBuilder.BuildGetter<IDbDataParameter>(),

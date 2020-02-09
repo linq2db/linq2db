@@ -239,9 +239,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return DataType.Undefined;
 		}
 
-		protected override string? GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 	}
 }

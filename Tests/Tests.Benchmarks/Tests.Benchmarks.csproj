@@ -7,6 +7,7 @@
 		<TargetFrameworks>net462;netcoreapp2.1</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<Nullable>disable</Nullable>
+		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.0" />

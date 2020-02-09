@@ -35,19 +35,19 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (css.ProviderName)
 			{
-				case SybaseProviderAdapter.ManagedAssemblyName:
-				case ProviderName.SybaseManaged        : return _sybaseManagedDataProvider.Value;
+				case SybaseProviderAdapter.ManagedClientNamespace:
+				case ProviderName.SybaseManaged                  : return _sybaseManagedDataProvider.Value;
 #if NET45 || NET46
-				case "Sybase.Native"                   :
-				case "Sybase.Data.AseClient"           :
-				case SybaseProviderAdapter.NativeAssemblyName : return _sybaseNativeDataProvider.Value;
+				case "Sybase.Native"                             :
+				case SybaseProviderAdapter.NativeClientNamespace :
+				case SybaseProviderAdapter.NativeAssemblyName    : return _sybaseNativeDataProvider.Value;
 #endif
-				case ""                                :
-				case null                              :
+				case ""                                          :
+				case null                                        :
 					if (css.Name.Contains("Sybase"))
 						goto case ProviderName.Sybase;
 					break;
-				case ProviderName.Sybase               :
+				case ProviderName.Sybase                         :
 					if (css.Name.Contains("Managed"))
 						return _sybaseManagedDataProvider.Value;
 #if NET45 || NET46
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var path = typeof(SybaseTools).Assembly.GetPath();
 
-			if (File.Exists(Path.Combine(path, "AdoNetCore.AseClient.dll")))
+			if (File.Exists(Path.Combine(path, $"{SybaseProviderAdapter.ManagedAssemblyName}.dll")))
 				return ProviderName.SybaseManaged;
 
 			return ProviderName.Sybase;

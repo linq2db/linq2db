@@ -11,13 +11,6 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
-		public SybaseSchemaProvider(string providerName)
-		{
-			_providerName = providerName;
-		}
-
-		private readonly string _providerName;
-
 		// sybase provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
@@ -60,10 +53,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return _providerName == ProviderName.SybaseManaged ? "AdoNetCore.AseClient" : "Sybase.Data.AseClient";
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{

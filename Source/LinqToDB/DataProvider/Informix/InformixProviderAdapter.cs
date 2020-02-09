@@ -17,7 +17,10 @@ namespace LinqToDB.DataProvider.Informix
 	// actulally IDS provider creates issue for us by deprecating IFxTimeSpan type
 	public class InformixProviderAdapter : IDynamicProviderAdapter
 	{
-		public const string IfxAssemblyName = "IBM.Data.Informix";
+		public const string IfxAssemblyName        = "IBM.Data.Informix";
+		public const string IfxClientNamespace     = "IBM.Data.Informix";
+		public const string IfxProviderFactoryName = "IBM.Data.Informix";
+		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
 		private static object _ifxSyncRoot = new object();
 		private static object _db2SyncRoot = new object();
@@ -71,6 +74,9 @@ namespace LinqToDB.DataProvider.Informix
 			GetDecimalReaderMethod  = "GetIfxDecimal";
 			GetDateTimeReaderMethod = "GetIfxDateTime";
 			GetTimeSpanReaderMethod = "GetIfxTimeSpan";
+			GetBigIntReaderMethod   = IsIDSProvider ? null : "GetBigInt";
+
+			ProviderTypesNamespace  = IfxTypesNamespace;
 		}
 
 		private InformixProviderAdapter(DB2ProviderAdapter db2Adapter)
@@ -99,6 +105,9 @@ namespace LinqToDB.DataProvider.Informix
 			GetDecimalReaderMethod  = null;
 			GetDateTimeReaderMethod = "GetDB2DateTime";
 			GetTimeSpanReaderMethod = "GetDB2TimeSpan";
+			GetBigIntReaderMethod   = null;
+
+			ProviderTypesNamespace  = db2Adapter.ProviderTypesNamespace;
 		}
 
 		public Type ConnectionType  { get; }
@@ -134,6 +143,10 @@ namespace LinqToDB.DataProvider.Informix
 		public string? GetDecimalReaderMethod  { get; }
 		public string  GetDateTimeReaderMethod { get; }
 		public string  GetTimeSpanReaderMethod { get; }
+		// SQLI informix provider only
+		public string? GetBigIntReaderMethod   { get; }
+
+		public string ProviderTypesNamespace   { get; }
 
 		public class BulkCopyAdapter
 		{
@@ -154,30 +167,18 @@ namespace LinqToDB.DataProvider.Informix
 			if (name == ProviderName.Informix)
 			{
 				if (_ifxAdapter == null)
-				{
 					lock (_ifxSyncRoot)
-					{
 						if (_ifxAdapter == null)
-						{
 							_ifxAdapter = CreateIfxAdapter();
-						}
-					}
-				}
 
 				return _ifxAdapter;
 			}
 			else
 			{
 				if (_db2Adapter == null)
-				{
 					lock (_db2SyncRoot)
-					{
 						if (_db2Adapter == null)
-						{
 							_db2Adapter = new InformixProviderAdapter(DB2ProviderAdapter.GetInstance());
-						}
-					}
-				}
 
 				return _db2Adapter;
 			}
@@ -185,38 +186,36 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			const string clientNamespace = IfxAssemblyName;
-
-			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, "IBM.Data.Informix");
+			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.IfxConnection" , true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.IfxParameter"  , true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.IfxDataReader" , true);
-			var commandType     = assembly.GetType($"{clientNamespace}.IfxCommand"    , true);
-			var transactionType = assembly.GetType($"{clientNamespace}.IfxTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.IfxType"       , true);
+			var connectionType  = assembly.GetType($"{IfxClientNamespace}.IfxConnection" , true);
+			var parameterType   = assembly.GetType($"{IfxClientNamespace}.IfxParameter"  , true);
+			var dataReaderType  = assembly.GetType($"{IfxClientNamespace}.IfxDataReader" , true);
+			var commandType     = assembly.GetType($"{IfxClientNamespace}.IfxCommand"    , true);
+			var transactionType = assembly.GetType($"{IfxClientNamespace}.IfxTransaction", true);
+			var dbType          = assembly.GetType($"{IfxClientNamespace}.IfxType"       , true);
 
 			var mappingSchema = new MappingSchema();
-			var blobType      = loadType("IfxBlob", DataType.VarBinary)!;
-			var clobType      = loadType("IfxClob", DataType.Text)!;
+			var blobType      = loadType("IfxBlob"    , DataType.VarBinary)!;
+			var clobType      = loadType("IfxClob"    , DataType.Text)!;
 			var dateTimeType  = loadType("IfxDateTime", DataType.DateTime2)!;
 			// those two types obsoleted in recent providers
-			var decimalType   = loadType("IfxDecimal", DataType.Decimal)!;
+			var decimalType   = loadType("IfxDecimal" , DataType.Decimal)!;
 			var timeSpanType  = loadType("IfxTimeSpan", DataType.Time, true, true);
 
 			// bulk copy exists only for IDS provider version
 			BulkCopyAdapter? bulkCopy = null;
 			TypeMapper typeMapper;
-			var bulkCopyType = assembly.GetType($"{clientNamespace}.IfxBulkCopy", false);
+			var bulkCopyType = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopy", false);
 			if (bulkCopyType != null)
 			{
-				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.IfxBulkCopyOptions"                , true);
-				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventHandler"         , true);
-				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.IfxBulkCopyColumnMapping"          , true);
-				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.IfxBulkCopyColumnMappingCollection", true);
-				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.IfxRowsCopiedEventArgs"            , true);
+				var bulkCopyOptionsType                 = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopyOptions"                , true);
+				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{IfxClientNamespace}.IfxRowsCopiedEventHandler"         , true);
+				var bulkCopyColumnMappingType           = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopyColumnMapping"          , true);
+				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopyColumnMappingCollection", true);
+				var rowsCopiedEventArgsType             = assembly.GetType($"{IfxClientNamespace}.IfxRowsCopiedEventArgs"            , true);
 
 				if (timeSpanType != null)
 					typeMapper = new TypeMapper(
@@ -288,7 +287,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 			{
-				var type = assembly!.GetType($"{clientNamespace}.{typeName}", !optional);
+				var type = assembly!.GetType($"{IfxTypesNamespace}.{typeName}", !optional);
 				if (type == null)
 					return null;
 

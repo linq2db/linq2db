@@ -22,7 +22,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private static readonly object _syncRoot = new object();
 		private static NpgsqlProviderAdapter? _instance;
 
-		public const string AssemblyName = "Npgsql";
+		public const string AssemblyName    = "Npgsql";
+		public const string ClientNamespace = "Npgsql";
+		public const string TypesNamespace  = "NpgsqlTypes";
 
 		private readonly TypeMapper _typeMapper;
 		
@@ -130,6 +132,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public Type NpgsqlDateTimeType { get; }
 		public Type NpgsqlRangeTType   { get; }
 
+		public string GetIntervalReaderMethod => "GetInterval";
+		public string GetTimeStampReaderMethod => "GetTimeStamp";
+		public string GetDateReaderMethod => "GetDate";
+
+		public string ProviderTypesNamespace => TypesNamespace;
+
 		public Action<IDbDataParameter, NpgsqlDbType> SetDbType { get; }
 		public Func  <IDbDataParameter, NpgsqlDbType> GetDbType { get; }
 
@@ -217,35 +225,33 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static NpgsqlProviderAdapter GetInstance()
 		{
 			if (_instance == null)
-			{
 				lock (_syncRoot)
-				{
 					if (_instance == null)
 					{
 						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType     = assembly.GetType("Npgsql.NpgsqlConnection"   , true);
-						var parameterType      = assembly.GetType("Npgsql.NpgsqlParameter"    , true);
-						var dataReaderType     = assembly.GetType("Npgsql.NpgsqlDataReader"   , true);
-						var commandType        = assembly.GetType("Npgsql.NpgsqlCommand"      , true);
-						var transactionType    = assembly.GetType("Npgsql.NpgsqlTransaction"  , true);
-						var dbType             = assembly.GetType("NpgsqlTypes.NpgsqlDbType"  , true);
-						var npgsqlDateType     = assembly.GetType("NpgsqlTypes.NpgsqlDate"    , true);
-						var npgsqlPointType    = assembly.GetType("NpgsqlTypes.NpgsqlPoint"   , true);
-						var npgsqlLSegType     = assembly.GetType("NpgsqlTypes.NpgsqlLSeg"    , true);
-						var npgsqlBoxType      = assembly.GetType("NpgsqlTypes.NpgsqlBox"     , true);
-						var npgsqlCircleType   = assembly.GetType("NpgsqlTypes.NpgsqlCircle"  , true);
-						var npgsqlPathType     = assembly.GetType("NpgsqlTypes.NpgsqlPath"    , true);
-						var npgsqlPolygonType  = assembly.GetType("NpgsqlTypes.NpgsqlPolygon" , true);
-						var npgsqlLineType     = assembly.GetType("NpgsqlTypes.NpgsqlLine"    , true);
-						var npgsqlInetType     = assembly.GetType("NpgsqlTypes.NpgsqlInet"    , true);
-						var npgsqlTimeSpanType = assembly.GetType("NpgsqlTypes.NpgsqlTimeSpan", true);
-						var npgsqlDateTimeType = assembly.GetType("NpgsqlTypes.NpgsqlDateTime", true);
-						var npgsqlRangeTType   = assembly.GetType("NpgsqlTypes.NpgsqlRange`1" , true);
+						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true);
+						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true);
+						var dataReaderType     = assembly.GetType($"{ClientNamespace}.NpgsqlDataReader"  , true);
+						var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true);
+						var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true);
+						var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true);
+						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , true);
+						var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true);
+						var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true);
+						var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true);
+						var npgsqlCircleType   = assembly.GetType($"{TypesNamespace}.NpgsqlCircle"       , true);
+						var npgsqlPathType     = assembly.GetType($"{TypesNamespace}.NpgsqlPath"         , true);
+						var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true);
+						var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true);
+						var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true);
+						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , true);
+						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , true);
+						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true);
 
-						var npgsqlBinaryImporterType = assembly.GetType("Npgsql.NpgsqlBinaryImporter", true);
+						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true);
 
 						var typeMapper = new TypeMapper(
 							connectionType, parameterType, dbType, dataReaderType,
@@ -417,8 +423,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							}
 						}
 					}
-				}
-			}
 
 			return _instance;
 		}

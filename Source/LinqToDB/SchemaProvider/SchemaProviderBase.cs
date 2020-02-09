@@ -22,12 +22,12 @@ namespace LinqToDB.SchemaProvider
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
 		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection) => null;
 
-		protected HashSet<string>    IncludedSchemas = null!;
-		protected HashSet<string>    ExcludedSchemas = null!;
+		protected HashSet<string>    IncludedSchemas  = null!;
+		protected HashSet<string>    ExcludedSchemas  = null!;
 		protected HashSet<string>    IncludedCatalogs = null!;
 		protected HashSet<string>    ExcludedCatalogs = null!;
 		protected bool               GenerateChar1AsString;
-		protected DataTable          DataTypesSchema = null!;
+		protected DataTable          DataTypesSchema  = null!;
 
 		private Dictionary<string, DataTypeInfo> DataTypesDic = null!;
 		private Dictionary<string, DataTypeInfo> ProviderSpecificDataTypesDic = null!;

@@ -44,16 +44,16 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (css.ProviderName)
 			{
 #if NET45 || NET46
-				case "Oracle.DataAccess"              :
-				case "Oracle.DataAccess.Client"       :
-				case ProviderName.OracleNative        : return _oracleNativeDataProvider.Value;
+				case OracleProviderAdapter.NativeAssemblyName    :
+				case OracleProviderAdapter.NativeClientNamespace :
+				case ProviderName.OracleNative                   : return _oracleNativeDataProvider.Value;
 #endif
-				case "Oracle.ManagedDataAccess"       :
-				case "Oracle.ManagedDataAccess.Core"  :
-				case "Oracle.ManagedDataAccess.Client":
-				case ProviderName.OracleManaged       : return _oracleManagedDataProvider.Value;
-				case ""                               :
-				case null                             :
+				case OracleProviderAdapter.ManagedAssemblyName   :
+				case OracleProviderAdapter.ManagedClientNamespace:
+				case "Oracle.ManagedDataAccess.Core"             :
+				case ProviderName.OracleManaged                  : return _oracleManagedDataProvider.Value;
+				case ""                                          :
+				case null                                        :
 
 					if (css.Name.Contains("Oracle"))
 						goto case ProviderName.Oracle;
@@ -84,8 +84,8 @@ namespace LinqToDB.DataProvider.Oracle
 			try
 			{
 				var path = typeof(OracleTools).Assembly.GetPath();
-				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
-					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
+				if (!File.Exists(Path.Combine(path, $"{OracleProviderAdapter.NativeAssemblyName}.dll")))
+					if (File.Exists(Path.Combine(path, $"{OracleProviderAdapter.ManagedAssemblyName}.dll")))
 						return ProviderName.OracleManaged;
 			}
 			catch

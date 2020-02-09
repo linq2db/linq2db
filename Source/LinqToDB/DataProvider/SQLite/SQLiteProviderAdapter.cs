@@ -10,8 +10,11 @@ namespace LinqToDB.DataProvider.SQLite
 		private static SQLiteProviderAdapter? _systemDataSQLite;
 		private static SQLiteProviderAdapter? _microsoftDataSQLite;
 
-		public const string SystemDataSQLiteAssemblyName    = "System.Data.SQLite";
-		public const string MicrosoftDataSQLiteAssemblyName = "Microsoft.Data.Sqlite";
+		public const string SystemDataSQLiteAssemblyName       = "System.Data.SQLite";
+		public const string SystemDataSQLiteClientNamespace    = "System.Data.SQLite";
+
+		public const string MicrosoftDataSQLiteAssemblyName    = "Microsoft.Data.Sqlite";
+		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
 			Type connectionType,
@@ -70,30 +73,18 @@ namespace LinqToDB.DataProvider.SQLite
 			if (name == ProviderName.SQLiteClassic)
 			{
 				if (_systemDataSQLite == null)
-				{
 					lock (_systemSyncRoot)
-					{
 						if (_systemDataSQLite == null)
-						{
-							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, "System.Data.SQLite", "SQLite");
-						}
-					}
-				}
+							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
 
 				return _systemDataSQLite;
 			}
 			else
 			{
 				if (_microsoftDataSQLite == null)
-				{
 					lock (_msSyncRoot)
-					{
 						if (_microsoftDataSQLite == null)
-						{
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, "Microsoft.Data.Sqlite", "Sqlite");
-						}
-					}
-				}
+							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
 
 				return _microsoftDataSQLite;
 			}

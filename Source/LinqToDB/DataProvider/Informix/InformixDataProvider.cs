@@ -44,8 +44,8 @@ namespace LinqToDB.DataProvider.Informix
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 
-			// present only in SQLI provider
-			SetField(typeof(long), "BIGINT", "GetBigInt", false, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.GetBigIntReaderMethod != null)
+				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);
 
 			if (Name == ProviderName.Informix && Adapter.DecimalType != null)
 											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new InformixSchemaProvider();
+			return new InformixSchemaProvider(this);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)

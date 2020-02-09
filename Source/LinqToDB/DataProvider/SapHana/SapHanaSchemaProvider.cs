@@ -449,10 +449,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return "Sap.Data.Hana";
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
 		protected override void LoadProcedureTableSchema(DataConnection dataConnection, GetSchemaOptions options, ProcedureSchema procedure, string commandText,
 			List<TableSchema> tables)

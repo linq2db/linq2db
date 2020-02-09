@@ -7,7 +7,8 @@ namespace LinqToDB.DataProvider
 		private static readonly object _syncRoot = new object();
 		private static OdbcProviderAdapter? _instance;
 
-		public const string AssemblyName = "System.Data.Odbc";
+		public const string AssemblyName    = "System.Data.Odbc";
+		public const string ClientNamespace = "System.Data.Odbc";
 
 		private OdbcProviderAdapter(
 			Type connectionType,
@@ -32,9 +33,7 @@ namespace LinqToDB.DataProvider
 		public static OdbcProviderAdapter GetInstance()
 		{
 			if (_instance == null)
-			{
 				lock (_syncRoot)
-				{
 					if (_instance == null)
 					{
 #if NET45 || NET46
@@ -45,11 +44,11 @@ namespace LinqToDB.DataProvider
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
-						var connectionType  = assembly.GetType("System.Data.Odbc.OdbcConnection" , true);
-						var dataReaderType  = assembly.GetType("System.Data.Odbc.OdbcDataReader" , true);
-						var parameterType   = assembly.GetType("System.Data.Odbc.OdbcParameter"  , true);
-						var commandType     = assembly.GetType("System.Data.Odbc.OdbcCommand"    , true);
-						var transactionType = assembly.GetType("System.Data.Odbc.OdbcTransaction", true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.OdbcConnection" , true);
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OdbcDataReader" , true);
+						var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true);
+						var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true);
+						var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true);
 
 						_instance = new OdbcProviderAdapter(
 							connectionType,
@@ -58,8 +57,6 @@ namespace LinqToDB.DataProvider
 							commandType,
 							transactionType);
 					}
-				}
-			}
 
 			return _instance;
 		}

@@ -32,21 +32,21 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsDistinctOrderBySupported       = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
-			SqlProviderFlags.IsUpdateFromSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported            = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
-				SqlProviderFlags.AcceptsTakeAsParameter = false;
-				SqlProviderFlags.IsSkipSupported = false;
+				SqlProviderFlags.AcceptsTakeAsParameter   = false;
+				SqlProviderFlags.IsSkipSupported          = false;
 				SqlProviderFlags.IsCountSubQuerySupported = false;
 			}
 			else
 			{
-				SqlProviderFlags.IsApplyJoinSupported = true;
-				SqlProviderFlags.TakeHintsSupported = TakeHints.Percent | TakeHints.WithTies;
+				SqlProviderFlags.IsApplyJoinSupported              = true;
+				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
 				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 			}
 
@@ -83,23 +83,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			// missing:
 			// GetSqlBytes
 			// GetSqlChars
-			SetProviderField<SqlBinary  , SqlBinary  >("GetSqlBinary"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlBoolean , SqlBoolean >("GetSqlBoolean" , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlByte    , SqlByte    >("GetSqlByte"    , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlDateTime, SqlDateTime>("GetSqlDateTime", dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlDecimal , SqlDecimal >("GetSqlDecimal" , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlDouble  , SqlDouble  >("GetSqlDouble"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlGuid    , SqlGuid    >("GetSqlGuid"    , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt16   , SqlInt16   >("GetSqlInt16"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt32   , SqlInt32   >("GetSqlInt32"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt64   , SqlInt64   >("GetSqlInt64"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlMoney   , SqlMoney   >("GetSqlMoney"   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlSingle  , SqlSingle  >("GetSqlSingle"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlString  , SqlString  >("GetSqlString"  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlXml     , SqlXml     >("GetSqlXml"     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlBinary  , SqlBinary  >(SqlTypes.GetSqlBinaryReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlBoolean , SqlBoolean >(SqlTypes.GetSqlBooleanReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlByte    , SqlByte    >(SqlTypes.GetSqlByteReaderMethod    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDateTime, SqlDateTime>(SqlTypes.GetSqlDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDecimal , SqlDecimal >(SqlTypes.GetSqlDecimalReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDouble  , SqlDouble  >(SqlTypes.GetSqlDoubleReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlGuid    , SqlGuid    >(SqlTypes.GetSqlGuidReaderMethod    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt16   , SqlInt16   >(SqlTypes.GetSqlInt16ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt32   , SqlInt32   >(SqlTypes.GetSqlInt32ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt64   , SqlInt64   >(SqlTypes.GetSqlInt64ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlMoney   , SqlMoney   >(SqlTypes.GetSqlMoneyReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlSingle  , SqlSingle  >(SqlTypes.GetSqlSingleReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlString  , SqlString  >(SqlTypes.GetSqlStringReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlXml     , SqlXml     >(Adapter.GetSqlXmlReaderMethod      , dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DateTimeOffset>("GetDateTimeOffset", dataReaderType: Adapter.DataReaderType);
-			SetProviderField<TimeSpan>      ("GetTimeSpan"      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
 			// non-specific fallback
 			SetProviderField<IDataReader, SqlString, SqlString>((r, i) => r.GetString(i));

@@ -110,21 +110,19 @@ namespace LinqToDB.DataProvider.SapHana
 			switch (css.ProviderName)
 			{
 #if !NETSTANDARD2_0
-				case "Sap.Data.Hana"           :
-				case "Sap.Data.Hana.v4.5"      :
-				case "Sap.Data.Hana.Core"      :
-				case "Sap.Data.Hana.Core.v2.1" :
-				case ProviderName.SapHanaNative: return _hanaDataProvider.Value;
+				case SapHanaProviderAdapter.ClientNamespace:
+				case "Sap.Data.Hana.v4.5"                  :
+				case "Sap.Data.Hana.Core"                  :
+				case "Sap.Data.Hana.Core.v2.1"             :
+				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
 #endif
-				case ProviderName.SapHanaOdbc  : return _hanaOdbcDataProvider.Value;
-
-				case ""                        :
-				case null                      :
+				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
+				case ""                                    :
+				case null                                  :
 					if (css.Name.Contains("Hana"))
 						goto case ProviderName.SapHana;
 					break;
-
-				case ProviderName.SapHana      :
+				case ProviderName.SapHana                  :
 					if (css.Name.IndexOf("ODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 

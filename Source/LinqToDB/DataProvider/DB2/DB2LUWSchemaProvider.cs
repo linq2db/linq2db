@@ -12,6 +12,13 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
+		private readonly DB2DataProvider _provider;
+
+		public DB2LUWSchemaProvider(DB2DataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		readonly HashSet<string> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
 				StringComparer.OrdinalIgnoreCase);
@@ -318,41 +325,41 @@ WHERE
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "IBM.Data.DB2Types";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
-				case "XML"                       : return "DB2Xml";
-				case "DECFLOAT"                  : return "DB2DecimalFloat";
+				case "XML"                       : return _provider.Adapter.DB2XmlType         .Name;
+				case "DECFLOAT"                  : return _provider.Adapter.DB2DecimalFloatType.Name;
 				case "DBCLOB"                    :
-				case "CLOB"                      : return "DB2Clob";
-				case "BLOB"                      : return "DB2Blob";
-				case "BIGINT"                    : return "DB2Int64";
+				case "CLOB"                      : return _provider.Adapter.DB2ClobType        .Name;
+				case "BLOB"                      : return _provider.Adapter.DB2BlobType        .Name;
+				case "BIGINT"                    : return _provider.Adapter.DB2Int64Type       .Name;
 				case "LONG VARCHAR FOR BIT DATA" :
 				case "VARCHAR () FOR BIT DATA"   :
 				case "VARBIN"                    :
 				case "BINARY"                    :
-				case "CHAR () FOR BIT DATA"      : return "DB2Binary";
+				case "CHAR () FOR BIT DATA"      : return _provider.Adapter.DB2BinaryType      .Name;
 				case "LONG VARGRAPHIC"           :
 				case "VARGRAPHIC"                :
 				case "GRAPHIC"                   :
 				case "LONG VARCHAR"              :
 				case "CHARACTER"                 :
 				case "VARCHAR"                   :
-				case "CHAR"                      : return "DB2String";
-				case "DECIMAL"                   : return "DB2Decimal";
-				case "INTEGER"                   : return "DB2Int32";
-				case "SMALLINT"                  : return "DB2Int16";
-				case "REAL"                      : return "DB2Real";
-				case "DOUBLE"                    : return "DB2Double";
-				case "DATE"                      : return "DB2Date";
-				case "TIME"                      : return "DB2Time";
+				case "CHAR"                      : return _provider.Adapter.DB2StringType      .Name;
+				case "DECIMAL"                   : return _provider.Adapter.DB2DecimalType     .Name;
+				case "INTEGER"                   : return _provider.Adapter.DB2Int32Type       .Name;
+				case "SMALLINT"                  : return _provider.Adapter.DB2Int16Type       .Name;
+				case "REAL"                      : return _provider.Adapter.DB2RealType        .Name;
+				case "DOUBLE"                    : return _provider.Adapter.DB2DoubleType      .Name;
+				case "DATE"                      : return _provider.Adapter.DB2DateType        .Name;
+				case "TIME"                      : return _provider.Adapter.DB2TimeType        .Name;
 				case "TIMESTMP"                  :
-				case "TIMESTAMP"                 : return "DB2TimeStamp";
-				case "ROWID"                     : return "DB2RowId";
+				case "TIMESTAMP"                 : return _provider.Adapter.DB2TimeStampType   .Name;
+				case "ROWID"                     : return _provider.Adapter.DB2RowIdType       .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new MySqlSchemaProvider();
+			return new MySqlSchemaProvider(this);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)

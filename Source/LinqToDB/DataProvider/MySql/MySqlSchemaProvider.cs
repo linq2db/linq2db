@@ -11,6 +11,13 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
+		private readonly MySqlDataProvider _provider;
+
+		public MySqlSchemaProvider(MySqlDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return base.GetDataTypes(dataConnection)
@@ -324,19 +331,19 @@ SELECT
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "MySql.Data.Types";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType.ToLower())
 			{
-				case "geometry"  : return "MySqlGeometry";
-				case "decimal"   : return "MySqlDecimal";
+				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
+				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
 				case "date"      :
 				case "newdate"   :
 				case "datetime"  :
-				case "timestamp" : return "MySqlDateTime";
+				case "timestamp" : return _provider.Adapter.MySqlDateTimeType.Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

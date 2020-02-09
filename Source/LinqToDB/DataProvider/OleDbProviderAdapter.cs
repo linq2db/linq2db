@@ -9,7 +9,8 @@ namespace LinqToDB.DataProvider
 		private static readonly object _syncRoot = new object();
 		private static OleDbProviderAdapter? _instance;
 
-		public const string AssemblyName = "System.Data.OleDb";
+		public const string AssemblyName    = "System.Data.OleDb";
+		public const string ClientNamespace = "System.Data.OleDb";
 
 		private OleDbProviderAdapter(
 			Type connectionType,
@@ -47,9 +48,7 @@ namespace LinqToDB.DataProvider
 		public static OleDbProviderAdapter GetInstance()
 		{
 			if (_instance == null)
-			{
 				lock (_syncRoot)
-				{
 					if (_instance == null)
 					{
 #if NET45 || NET46
@@ -60,12 +59,12 @@ namespace LinqToDB.DataProvider
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
-						var connectionType  = assembly.GetType("System.Data.OleDb.OleDbConnection" , true);
-						var dataReaderType  = assembly.GetType("System.Data.OleDb.OleDbDataReader" , true);
-						var parameterType   = assembly.GetType("System.Data.OleDb.OleDbParameter"  , true);
-						var commandType     = assembly.GetType("System.Data.OleDb.OleDbCommand"    , true);
-						var transactionType = assembly.GetType("System.Data.OleDb.OleDbTransaction", true);
-						var dbType          = assembly.GetType("System.Data.OleDb.OleDbType"       , true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true);
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OleDbDataReader" , true);
+						var parameterType   = assembly.GetType($"{ClientNamespace}.OleDbParameter"  , true);
+						var commandType     = assembly.GetType($"{ClientNamespace}.OleDbCommand"    , true);
+						var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true);
+						var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true);
 
 						var typeMapper = new TypeMapper(connectionType, parameterType, dbType);
 						typeMapper.RegisterWrapper<OleDbType>();
@@ -88,8 +87,6 @@ namespace LinqToDB.DataProvider
 							typeGetter,
 							oleDbSchemaTableGetter);
 					}
-				}
-			}
 
 			return _instance;
 		}

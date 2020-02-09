@@ -14,8 +14,12 @@ namespace LinqToDB.DataProvider.Sybase
 		private static SybaseProviderAdapter? _nativeInstance;
 		private static SybaseProviderAdapter? _managedInstance;
 
-		public const string NativeAssemblyName  = "Sybase.AdoNet45.AseClient";
-		public const string ManagedAssemblyName = "AdoNetCore.AseClient";
+		public const string NativeAssemblyName        = "Sybase.AdoNet45.AseClient";
+		public const string NativeClientNamespace     = "Sybase.Data.AseClient";
+		public const string NativeProviderFactoryName = "Sybase.Data.AseClient";
+
+		public const string ManagedAssemblyName    = "AdoNetCore.AseClient";
+		public const string ManagedClientNamespace = "AdoNetCore.AseClient";
 
 		private SybaseProviderAdapter(
 			Type connectionType,
@@ -69,30 +73,18 @@ namespace LinqToDB.DataProvider.Sybase
 			if (name == ProviderName.Sybase)
 			{
 				if (_nativeInstance == null)
-				{
 					lock (_nativeSyncRoot)
-					{
 						if (_nativeInstance == null)
-						{
-							_nativeInstance = CreateAdapter(NativeAssemblyName, "Sybase.Data.AseClient", "Sybase.Data.AseClient", true);
-						}
-					}
-				}
+							_nativeInstance = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
 
 				return _nativeInstance;
 			}
 			else
 			{
 				if (_managedInstance == null)
-				{
 					lock (_managedSyncRoot)
-					{
 						if (_managedInstance == null)
-						{
-							_managedInstance = CreateAdapter(ManagedAssemblyName, "AdoNetCore.AseClient", null, false);
-						}
-					}
-				}
+							_managedInstance = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
 
 				return _managedInstance;
 			}
@@ -154,10 +146,6 @@ namespace LinqToDB.DataProvider.Sybase
 
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
-
-			if (supportsBulkCopy)
-			{
-			}
 
 			return new SybaseProviderAdapter(
 				connectionType,

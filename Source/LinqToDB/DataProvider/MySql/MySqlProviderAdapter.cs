@@ -14,8 +14,12 @@ namespace LinqToDB.DataProvider.MySql
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
 
-		public const string MySqlConnectorAssemblyName = "MySqlConnector";
-		public const string MySqlDataAssemblyName      = "MySql.Data";
+		public const string MySqlConnectorAssemblyName    = "MySqlConnector";
+		public const string MySqlDataAssemblyName         = "MySql.Data";
+
+		// shared by both providers
+		public const string ClientNamespace = "MySql.Data.MySqlClient";
+		public const string TypesNamespace  = "MySql.Data.Types";
 
 
 		private MySqlProviderAdapter(
@@ -27,6 +31,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			Type? mySqlDecimalType,
 			Type mySqlDateTimeType,
+			Type mySqlGeometryType,
 
 			Func<object, decimal>? mySqlDecimalGetter,
 
@@ -45,6 +50,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			MySqlDecimalType  = mySqlDecimalType;
 			MySqlDateTimeType = mySqlDateTimeType;
+			MySqlGeometryType = mySqlGeometryType;
 
 			MySqlDecimalGetter = mySqlDecimalGetter;
 
@@ -70,6 +76,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// </summary>
 		public Type? MySqlDecimalType { get; }
 		public Type MySqlDateTimeType { get; }
+		public Type MySqlGeometryType { get; }
 
 		/// <summary>
 		/// Not supported by MySqlConnector.
@@ -86,7 +93,9 @@ namespace LinqToDB.DataProvider.MySql
 		/// </summary>
 		public string? GetDateTimeOffsetMethodName { get; }
 
-		public string GetMySqlDateTimeMethodName { get; }
+		public string GetMySqlDateTimeMethodName   { get; }
+
+		public string ProviderTypesNamespace => TypesNamespace;
 
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
@@ -98,30 +107,18 @@ namespace LinqToDB.DataProvider.MySql
 			if (name == ProviderName.MySqlConnector)
 			{
 				if (_mysqlConnectorInstance == null)
-				{
 					lock (_mysqlConnectorSyncRoot)
-					{
 						if (_mysqlConnectorInstance == null)
-						{
 							_mysqlConnectorInstance = MySqlConnector.CreateAdapter();
-						}
-					}
-				}
 
 				return _mysqlConnectorInstance;
 			}
 			else
 			{
 				if (_mysqlDataInstance == null)
-				{
 					lock (_mysqlDataSyncRoot)
-					{
 						if (_mysqlDataInstance == null)
-						{
 							_mysqlDataInstance = MySqlData.CreateAdapter();
-						}
-					}
-				}
 
 				return _mysqlDataInstance;
 			}
@@ -135,14 +132,15 @@ namespace LinqToDB.DataProvider.MySql
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
 
-				var connectionType    = assembly.GetType("MySql.Data.MySqlClient.MySqlConnection" , true);
-				var dataReaderType    = assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader" , true);
-				var parameterType     = assembly.GetType("MySql.Data.MySqlClient.MySqlParameter"  , true);
-				var commandType       = assembly.GetType("MySql.Data.MySqlClient.MySqlCommand"    , true);
-				var transactionType   = assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
-				var dbType            = assembly.GetType("MySql.Data.MySqlClient.MySqlDbType"     , true);
-				var mySqlDecimalType  = assembly.GetType("MySql.Data.Types.MySqlDecimal"          , true);
-				var mySqlDateTimeType = assembly.GetType("MySql.Data.Types.MySqlDateTime"         , true);
+				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true);
+				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true);
+				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true);
+				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true);
+				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true);
+				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true);
+				var mySqlDecimalType  = assembly.GetType($"{TypesNamespace}.MySqlDecimal"     , true);
+				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true);
+				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true);
 
 				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType, mySqlDecimalType);
 
@@ -163,6 +161,7 @@ namespace LinqToDB.DataProvider.MySql
 					transactionType,
 					mySqlDecimalType,
 					mySqlDateTimeType,
+					mySqlGeometryType,
 					decimalGetter,
 					p => dbTypeGetter(p),
 					"GetMySqlDecimal",
@@ -243,13 +242,14 @@ namespace LinqToDB.DataProvider.MySql
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
 
-				var connectionType    = assembly.GetType("MySql.Data.MySqlClient.MySqlConnection" , true);
-				var dataReaderType    = assembly.GetType("MySql.Data.MySqlClient.MySqlDataReader" , true);
-				var parameterType     = assembly.GetType("MySql.Data.MySqlClient.MySqlParameter"  , true);
-				var commandType       = assembly.GetType("MySql.Data.MySqlClient.MySqlCommand"    , true);
-				var transactionType   = assembly.GetType("MySql.Data.MySqlClient.MySqlTransaction", true);
-				var dbType            = assembly.GetType("MySql.Data.MySqlClient.MySqlDbType"     , true);
-				var mySqlDateTimeType = assembly.GetType("MySql.Data.Types.MySqlDateTime"         , true);
+				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true);
+				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true);
+				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true);
+				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true);
+				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true);
+				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true);
+				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true);
+				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true);
 
 				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType);
 
@@ -268,6 +268,7 @@ namespace LinqToDB.DataProvider.MySql
 					transactionType,
 					null,
 					mySqlDateTimeType,
+					mySqlGeometryType,
 					null,
 					p => typeGetter(p),
 					null,

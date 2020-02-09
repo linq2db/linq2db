@@ -363,7 +363,7 @@ stages:
     pool:
 #      vmImage: 'vs2017-win2016'
       vmImage: 'windows-2019'
-    displayName: 'Tests: Win / NETCOREAPP2.1 / '
+    displayName: 'Tests: Win / NETCOREAPP2.1 (x86) / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
     #condition: eq(variables['Build.SourceBranchName'], 'fake')
@@ -414,7 +414,7 @@ stages:
         testAssemblyVer2: linq2db.Tests.dll
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1,/Platform:x86'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 /Platform:x86'
         testRunTitle: 'Windows / NETCOREAPP2.1 (x86) / $(title)'
       displayName: '$(title)'
 

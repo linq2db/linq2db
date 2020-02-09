@@ -44,9 +44,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public static FirebirdProviderAdapter GetInstance()
 		{
 			if (_instance == null)
-			{
 				lock (_syncRoot)
-				{
 					if (_instance == null)
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
@@ -78,8 +76,6 @@ namespace LinqToDB.DataProvider.Firebird
 							typeGetter,
 							clearAllPools);
 					}
-				}
-			}
 
 			return _instance;
 		}

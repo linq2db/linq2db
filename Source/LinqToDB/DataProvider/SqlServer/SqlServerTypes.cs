@@ -10,12 +10,19 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	internal static class SqlServerTypes
 	{
+		public const string AssemblyName   = "Microsoft.SqlServer.Types";
+		public const string TypesNamespace = "Microsoft.SqlServer.Types";
+
+		public const string SqlHierarchyIdType = "SqlHierarchyId";
+		public const string SqlGeographyType   = "SqlGeography";
+		public const string SqlGeometryType    = "SqlGeometry";
+
 		private static readonly Lazy<TypeInfo[]> _types = new Lazy<TypeInfo[]>(() =>
 		{
 			Assembly? assembly = null;
 			try
 			{
-				assembly = Assembly.Load("Microsoft.SqlServer.Types");
+				assembly = Assembly.Load(AssemblyName);
 			}
 			catch { }
 
@@ -24,15 +31,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			var types = new List<TypeInfo>();
 
-			loadType("SqlHierarchyId", SqlServerTools.SqlHierarchyIdType);
-			loadType("SqlGeography"  , SqlServerTools.SqlGeographyType);
-			loadType("SqlGeometry"   , SqlServerTools.SqlGeometryType);
+			loadType(SqlHierarchyIdType, SqlServerTools.SqlHierarchyIdType);
+			loadType(SqlGeographyType  , SqlServerTools.SqlGeographyType);
+			loadType(SqlGeometryType   , SqlServerTools.SqlGeometryType);
 
 			return types.ToArray();
 
 			void loadType(string typeName, Type? type)
 			{
-				type ??= assembly?.GetType($"Microsoft.SqlServer.Types.{typeName}", false);
+				type ??= assembly?.GetType($"{TypesNamespace}.{typeName}", false);
 				if (type == null)
 					return;
 

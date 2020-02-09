@@ -145,9 +145,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var provider = Provider;
 
-			if (css.ProviderName == "Microsoft.Data.SqlClient")
+			if (css.ProviderName      == SqlServerProviderAdapter.MicrosoftClientNamespace)
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
-			else if (css.ProviderName == "System.Data.SqlClient")
+			else if (css.ProviderName == SqlServerProviderAdapter.SystemClientNamespace)
 				provider = SqlServerProvider.SystemDataSqlClient;
 
 			switch (css.ProviderName)
@@ -157,6 +157,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name == "SqlServer")
 						goto case ProviderName.SqlServer;
 					break;
+					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
 					if (css.Name.Contains("2000") || css.ProviderName?.Contains("2000") == true) return GetDataProvider(SqlServerVersion.v2000, provider);
@@ -281,7 +282,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static void ResolveSqlTypes(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, "Microsoft.SqlServer.Types");
+			new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 		}
 
 		/// <summary>
@@ -293,9 +294,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var types = assembly.GetTypes();
 
-			SqlHierarchyIdType = types.First(t => t.Name == "SqlHierarchyId");
-			SqlGeographyType   = types.First(t => t.Name == "SqlGeography");
-			SqlGeometryType    = types.First(t => t.Name == "SqlGeometry");
+			SqlHierarchyIdType = types.First(t => t.Name == SqlServerTypes.SqlHierarchyIdType);
+			SqlGeographyType   = types.First(t => t.Name == SqlServerTypes.SqlGeographyType);
+			SqlGeometryType    = types.First(t => t.Name == SqlServerTypes.SqlGeometryType);
 		}
 
 		internal static Type? SqlHierarchyIdType;

@@ -250,7 +250,6 @@ namespace LinqToDB.DataProvider.Oracle
 				var dataType = column.DataType == DataType.Undefined
 					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).DataType
 					: column.DataType;
-				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(helper.DataConnection.MappingSchema, o)).ToArray(), dataType, column.DbType)
 				{

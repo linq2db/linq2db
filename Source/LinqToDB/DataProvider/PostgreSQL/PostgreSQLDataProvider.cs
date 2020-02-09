@@ -113,10 +113,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("oidvector"               , NpgsqlProviderAdapter.NpgsqlDbType.Oidvector);
 			mapType("int2vector"              , NpgsqlProviderAdapter.NpgsqlDbType.Int2Vector);
 
-			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, "GetInterval"             , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, "GetTimeStamp"            , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlInetType    , Adapter.NpgsqlInetType    , "GetProviderSpecificValue", dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , "GetDate"                 , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlInetType    , Adapter.NpgsqlInetType    , GetProviderSpecificValueReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod         , dataReaderType: Adapter.DataReaderType);
 
 			bool mapType(string dbType, NpgsqlProviderAdapter.NpgsqlDbType type)
 			{

@@ -348,32 +348,32 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return _provider.Name == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
-				case "BFILE"                          : return "OracleBFile";
+				case "BFILE"                          : return _provider.Adapter.OracleBFileType       .Name;
 				case "RAW"                            :
-				case "LONG RAW"                       : return "OracleBinary";
-				case "BLOB"                           : return "OracleBlob";
-				case "CLOB"                           : return "OracleClob";
-				case "DATE"                           : return "OracleDate";
+				case "LONG RAW"                       : return _provider.Adapter.OracleBinaryType      .Name;
+				case "BLOB"                           : return _provider.Adapter.OracleBlobType        .Name;
+				case "CLOB"                           : return _provider.Adapter.OracleClobType        .Name;
+				case "DATE"                           : return _provider.Adapter.OracleDateType        .Name;
 				case "BINARY_DOUBLE"                  :
 				case "BINARY_FLOAT"                   :
-				case "NUMBER"                         : return "OracleDecimal";
-				case "INTERVAL DAY TO SECOND"         : return "OracleIntervalDS";
-				case "INTERVAL YEAR TO MONTH"         : return "OracleIntervalYM";
+				case "NUMBER"                         : return _provider.Adapter.OracleDecimalType     .Name;
+				case "INTERVAL DAY TO SECOND"         : return _provider.Adapter.OracleIntervalDSType  .Name;
+				case "INTERVAL YEAR TO MONTH"         : return _provider.Adapter.OracleIntervalYMType  .Name;
 				case "NCHAR"                          :
 				case "LONG"                           :
 				case "ROWID"                          :
-				case "CHAR"                           : return "OracleString";
-				case "TIMESTAMP"                      : return "OracleTimeStamp";
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return "OracleTimeStampLTZ";
-				case "TIMESTAMP WITH TIME ZONE"       : return "OracleTimeStampTZ";
-				case "XMLTYPE"                        : return "OracleXmlType";
+				case "CHAR"                           : return _provider.Adapter.OracleStringType      .Name;
+				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType   .Name;
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType.Name;
+				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType .Name;
+				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType     .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

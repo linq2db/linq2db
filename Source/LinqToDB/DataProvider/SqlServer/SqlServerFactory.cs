@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var version      = attributes.FirstOrDefault(_ => _.Name == "version");
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
 
-			if (assemblyName == "Microsoft.Data.SqlClient")
+			if (assemblyName == SqlServerProviderAdapter.MicrosoftAssemblyName)
 			{
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
 			}

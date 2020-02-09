@@ -9,6 +9,10 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
+		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
+		{
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new List<DataTypeInfo>

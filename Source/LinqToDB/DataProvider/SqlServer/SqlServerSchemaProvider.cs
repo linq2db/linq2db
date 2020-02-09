@@ -379,7 +379,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace() => "System.Data.SqlTypes";
+		// TODO: we should support multiple namespaces, as e.g. sql server also could have
+		// spatial types (which is handled by T4 template for now)
+		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
@@ -413,9 +415,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "ntext"            : return nameof(SqlString);
 				case "uniqueidentifier" : return nameof(SqlGuid);
 				case "xml"              : return nameof(SqlXml);
-				case "hierarchyid"      : return "Microsoft.SqlServer.Types.SqlHierarchyId";
-				case "geography"        : return "Microsoft.SqlServer.Types.SqlGeography";
-				case "geometry"         : return "Microsoft.SqlServer.Types.SqlGeometry";
+				case "hierarchyid"      : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}";
+				case "geography"        : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}";
+				case "geometry"         : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}";
 			}
 
 			return base.GetProviderSpecificType(dataType);

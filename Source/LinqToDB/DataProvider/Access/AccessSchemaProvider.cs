@@ -163,10 +163,7 @@ namespace LinqToDB.DataProvider.Access
 			return q.ToList();
 		}
 
-		protected override string? GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
 		List<ProcedureInfo>? _procedures;
 

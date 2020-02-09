@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (@from           != to          &&
 				@from.FullName  == to.FullName &&
-				@from.Namespace == "Microsoft.SqlServer.Types")
+				@from.Namespace == SqlServerTypes.TypesNamespace)
 			{
 				var p = Expression.Parameter(@from);
 

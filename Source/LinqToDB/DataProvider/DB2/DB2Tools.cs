@@ -52,8 +52,8 @@ namespace LinqToDB.DataProvider.DB2
 					break;
 
 				case ProviderName.DB2    :
-				case "IBM.Data.DB2"      :
-				case "IBM.Data.DB2.Core" :
+				case DB2ProviderAdapter.NetFxClientNamespace:
+				case DB2ProviderAdapter.CoreClientNamespace :
 
 					if (css.Name.Contains("LUW"))
 						return _db2DataProviderLUW.Value;

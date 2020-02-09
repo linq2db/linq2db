@@ -54,8 +54,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (css.Name == "PostgreSQL")
 						goto case "Npgsql";
 					break;
-				case "Npgsql"                                                 :
-				case var providerName when providerName.Contains("PostgreSQL"):
+				case NpgsqlProviderAdapter.ClientNamespace                    :
+				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
 					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
 						return _postgreSQLDataProvider92.Value;
 
@@ -71,8 +71,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						try
 						{
-							// TODO: use provider wrapper
-							var cs                = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
 							using (var conn = NpgsqlProviderAdapter.GetInstance().CreateConnection(cs))
 							{

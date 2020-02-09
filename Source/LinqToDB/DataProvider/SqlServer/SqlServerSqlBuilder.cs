@@ -251,9 +251,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-					//						if (value.IndexOf('.') > 0)
-					//							value = string.Join("].[", value.Split('.'));
-
 					if (Provider != null)
 						return Provider.Adapter.QuoteIdentifier(value);
 					return SqlServerTools.BasicQuoteIdentifier(value);

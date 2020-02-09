@@ -10,6 +10,13 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixSchemaProvider : SchemaProviderBase
 	{
+		private readonly InformixDataProvider _provider;
+
+		public InformixSchemaProvider(InformixDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new[]
@@ -83,18 +90,16 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			// TODO: DB2 provider support
-			return "IBM.Data.Informix";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
 		protected override string? GetProviderSpecificType(string dataType)
 		{
-			// TODO: DB2 provider support
 			switch (dataType)
 			{
-				case "DATETIME" : return "IfxDateTime";
-				case "INTERVAL" : return "IfxTimeSpan";
-				case "DECIMAL"  : return "IfxDecimal";
+				case "DATETIME" : return _provider.Adapter.DateTimeType?.Name;
+				case "INTERVAL" : return _provider.Adapter.TimeSpanType?.Name;
+				case "DECIMAL"  : return _provider.Adapter.DecimalType? .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

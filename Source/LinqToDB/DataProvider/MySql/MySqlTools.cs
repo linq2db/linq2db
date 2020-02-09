@@ -37,31 +37,32 @@ namespace LinqToDB.DataProvider.MySql
 
 			switch (css.ProviderName)
 			{
-				case ProviderName.MySqlOfficial :
-				case "MySql.Data"               : return _mySqlDataProvider.Value;
-				case ProviderName.MySqlConnector: return _mySqlConnectorDataProvider.Value;
+				case ProviderName.MySqlOfficial                :
+				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
+				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
 
 				case ""                         :
 				case null                       :
 					if (css.Name.Contains("MySql"))
 						goto case ProviderName.MySql;
 					break;
-				case ProviderName.MySql         :
-					if (css.Name.Contains("MySqlConnector"))
+				case MySqlProviderAdapter.ClientNamespace:
+				case ProviderName.MySql                  :
+					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
 						return _mySqlConnectorDataProvider.Value;
 
-					if (css.Name.Contains("MySql.Data"))
+					if (css.Name.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
 						return _mySqlDataProvider.Value;
 
 					return GetDataProvider();
 				case var providerName when providerName.Contains("MySql"):
-					if (providerName.Contains("MySqlConnector"))
+					if (providerName.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
 						return _mySqlConnectorDataProvider.Value;
 
-					if (providerName.Contains("MySql.Data"))
+					if (providerName.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
 						return _mySqlDataProvider.Value;
 
-					return GetDataProvider();
+					goto case ProviderName.MySql;
 			}
 
 			return null;

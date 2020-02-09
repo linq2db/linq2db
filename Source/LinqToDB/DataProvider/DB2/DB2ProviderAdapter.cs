@@ -3,18 +3,23 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using System.Linq.Expressions;
-	using System.Reflection;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
 	{
+		public const string ProviderFactoryName  = "IBM.Data.DB2";
+		public const string TypesNamespace       = "IBM.Data.DB2Types";
+		public const string NetFxClientNamespace = "IBM.Data.DB2";
+		public const string CoreClientNamespace  = "IBM.Data.DB2.Core";
+
 #if NET45 || NET46
-		public const string AssemblyName = "IBM.Data.DB2";
+		public const string AssemblyName         = "IBM.Data.DB2";
+		public const string ClientNamespace      = "IBM.Data.DB2";
 #else
-		public const string AssemblyName = "IBM.Data.DB2.Core";
+		public const string AssemblyName         = "IBM.Data.DB2.Core";
+		public const string ClientNamespace      = "IBM.Data.DB2.Core";
 #endif
 
 		private static readonly object _syncRoot = new object();
@@ -125,6 +130,27 @@ namespace LinqToDB.DataProvider.DB2
 		// optional, because recent provider version contains it as obsolete stub
 		public Type? DB2TimeSpanType     { get; }
 
+		public string  GetDB2Int64ReaderMethod        => "GetDB2Int64";
+		public string  GetDB2Int32ReaderMethod        => "GetDB2Int32";
+		public string  GetDB2Int16ReaderMethod        => "GetDB2Int16";
+		public string  GetDB2DecimalReaderMethod      => "GetDB2Decimal";
+		public string  GetDB2DecimalFloatReaderMethod => "GetDB2DecimalFloat";
+		public string  GetDB2RealReaderMethod         => "GetDB2Real";
+		public string  GetDB2Real370ReaderMethod      => "GetDB2Real370";
+		public string  GetDB2DoubleReaderMethod       => "GetDB2Double";
+		public string  GetDB2StringReaderMethod       => "GetDB2String";
+		public string  GetDB2ClobReaderMethod         => "GetDB2Clob";
+		public string  GetDB2BinaryReaderMethod       => "GetDB2Binary";
+		public string  GetDB2BlobReaderMethod         => "GetDB2Blob";
+		public string  GetDB2DateReaderMethod         => "GetDB2Date";
+		public string  GetDB2TimeReaderMethod         => "GetDB2Time";
+		public string  GetDB2TimeStampReaderMethod    => "GetDB2TimeStamp";
+		public string  GetDB2XmlReaderMethod          => "GetDB2Xml";
+		public string  GetDB2RowIdReaderMethod        => "GetDB2RowId";
+		public string? GetDB2DateTimeReaderMethod     => DB2DateTimeType == null ? null : "GetDB2DateTime";
+
+		public string ProviderTypesNamespace => TypesNamespace;
+
 		public Action<IDbDataParameter, DB2Type> SetDbType { get; }
 		public Func  <IDbDataParameter, DB2Type> GetDbType { get; }
 
@@ -151,55 +177,51 @@ namespace LinqToDB.DataProvider.DB2
 		public static DB2ProviderAdapter GetInstance()
 		{
 			if (_instance == null)
-			{
 				lock (_syncRoot)
-				{
 					if (_instance == null)
 					{
-						var clientNamespace = AssemblyName;
-
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, "IBM.Data.DB2");
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true);
-						var parameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true);
-						var dataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader" , true);
-						var transactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true);
-						var commandType     = assembly.GetType($"{clientNamespace}.DB2Command"    , true);
-						var dbType          = assembly.GetType($"{clientNamespace}.DB2Type"       , true);
-						var serverTypesType = assembly.GetType($"{clientNamespace}.DB2ServerTypes", true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.DB2Connection" , true);
+						var parameterType   = assembly.GetType($"{ClientNamespace}.DB2Parameter"  , true);
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.DB2DataReader" , true);
+						var transactionType = assembly.GetType($"{ClientNamespace}.DB2Transaction", true);
+						var commandType     = assembly.GetType($"{ClientNamespace}.DB2Command"    , true);
+						var dbType          = assembly.GetType($"{ClientNamespace}.DB2Type"       , true);
+						var serverTypesType = assembly.GetType($"{ClientNamespace}.DB2ServerTypes", true);
 
-						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy", true);
-						var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.DB2BulkCopyOptions", true);
-						var bulkCopyColumnMappingType       = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMapping", true);
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventHandler", true);
-						var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs", true);
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true);
+						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.DB2BulkCopy"                       , true);
+						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.DB2BulkCopyOptions"                , true);
+						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMapping"          , true);
+						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventHandler"         , true);
+						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventArgs"            , true);
+						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMappingCollection", true);
 
 
 						var mappingSchema = new MappingSchema();
 
-						var db2BinaryType       = loadType("DB2Binary", DataType.VarBinary)!;
-						var db2BlobType         = loadType("DB2Blob", DataType.Blob)!;
-						var db2ClobType         = loadType("DB2Clob", DataType.NText)!;
-						var db2DateType         = loadType("DB2Date", DataType.Date)!;
-						var db2DateTimeType     = loadType("DB2DateTime", DataType.DateTime, true);
-						var db2DecimalType      = loadType("DB2Decimal", DataType.Decimal)!;
+						var db2BinaryType       = loadType("DB2Binary"      , DataType.VarBinary)!;
+						var db2BlobType         = loadType("DB2Blob"        , DataType.Blob)!;
+						var db2ClobType         = loadType("DB2Clob"        , DataType.NText)!;
+						var db2DateType         = loadType("DB2Date"        , DataType.Date)!;
+						var db2DateTimeType     = loadType("DB2DateTime"    , DataType.DateTime , true);
+						var db2DecimalType      = loadType("DB2Decimal"     , DataType.Decimal)!;
 						var db2DecimalFloatType = loadType("DB2DecimalFloat", DataType.Decimal)!;
-						var db2DoubleType       = loadType("DB2Double", DataType.Double)!;
-						var db2Int16Type        = loadType("DB2Int16", DataType.Int16)!;
-						var db2Int32Type        = loadType("DB2Int32", DataType.Int32)!;
-						var db2Int64Type        = loadType("DB2Int64", DataType.Int64)!;
-						var db2RealType         = loadType("DB2Real", DataType.Single)!;
-						var db2Real370Type      = loadType("DB2Real370", DataType.Single)!;
-						var db2RowIdType        = loadType("DB2RowId", DataType.VarBinary)!;
-						var db2StringType       = loadType("DB2String", DataType.NVarChar)!;
-						var db2TimeType         = loadType("DB2Time", DataType.Time)!;
-						var db2TimeStampType    = loadType("DB2TimeStamp", DataType.DateTime2)!;
-						var db2XmlType          = loadType("DB2Xml", DataType.Xml)!;
+						var db2DoubleType       = loadType("DB2Double"      , DataType.Double)!;
+						var db2Int16Type        = loadType("DB2Int16"       , DataType.Int16)!;
+						var db2Int32Type        = loadType("DB2Int32"       , DataType.Int32)!;
+						var db2Int64Type        = loadType("DB2Int64"       , DataType.Int64)!;
+						var db2RealType         = loadType("DB2Real"        , DataType.Single)!;
+						var db2Real370Type      = loadType("DB2Real370"     , DataType.Single)!;
+						var db2RowIdType        = loadType("DB2RowId"       , DataType.VarBinary)!;
+						var db2StringType       = loadType("DB2String"      , DataType.NVarChar)!;
+						var db2TimeType         = loadType("DB2Time"        , DataType.Time)!;
+						var db2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
+						var db2XmlType          = loadType("DB2Xml"         , DataType.Xml)!;
 						// TODO: register only for Informix
-						var db2TimeSpanType     = loadType("DB2TimeSpan", DataType.Timestamp, true, true);
+						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 
 						var typeMapper = new TypeMapper(connectionType, parameterType, dbType, serverTypesType, transactionType,
 							db2BinaryType,
@@ -271,7 +293,7 @@ namespace LinqToDB.DataProvider.DB2
 
 						Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 						{
-							var type = assembly!.GetType($"IBM.Data.DB2Types.{typeName}", !optional);
+							var type = assembly!.GetType($"{TypesNamespace}.{typeName}", !optional);
 							if (type == null)
 								return null;
 
@@ -287,8 +309,6 @@ namespace LinqToDB.DataProvider.DB2
 							return type;
 						}
 					}
-				}
-			}
 
 			return _instance;
 		}

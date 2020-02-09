@@ -14,6 +14,9 @@ namespace LinqToDB.DataProvider
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
 		where TProviderMappings : IDynamicProviderAdapter
 	{
+		// DbDataReader method
+		protected const string GetProviderSpecificValueReaderMethod = "GetProviderSpecificValue";
+
 		protected DynamicDataProviderBase(string name, MappingSchema mappingSchema, TProviderMappings providerMappings)
 			: base(name, mappingSchema)
 		{

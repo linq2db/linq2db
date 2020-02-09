@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using LinqToDB.Common;
 	using LinqToDB.Configuration;
+	using LinqToDB.DataProvider.DB2;
 
 	public static class InformixTools
 	{
@@ -33,20 +34,20 @@ namespace LinqToDB.DataProvider.Informix
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			// NOTE: IBM.Data.DB2.Core already mapped to DB2 provider
 			switch (css.ProviderName)
 			{
 				case ProviderName.InformixDB2:
 					return _informixDB2DataProvider.Value;
 #if NET45 || NET46
-				case "IBM.Data.Informix"     :
+				case InformixProviderAdapter.IfxClientNamespace:
 					return _informixDataProvider.Value;
 #endif
 				case ""                      :
 				case null                    :
-				case "IBM.Data.DB2"          :
-				case "IBM.Data.DB2.Core"     :
+				case DB2ProviderAdapter.NetFxClientNamespace:
+				case DB2ProviderAdapter.CoreClientNamespace :
 
+					// this check used by both Informix and DB2 providers to avoid conflicts
 					if (css.Name.Contains("Informix"))
 						goto case ProviderName.Informix;
 					break;
@@ -69,7 +70,7 @@ namespace LinqToDB.DataProvider.Informix
 #if NET45 || NET46
 			var path = typeof(InformixTools).Assembly.GetPath();
 
-			if (File.Exists(Path.Combine(path, "IBM.Data.Informix.dll")))
+			if (File.Exists(Path.Combine(path, $"{InformixProviderAdapter.IfxAssemblyName}.dll")))
 				return ProviderName.Informix;
 #endif
 
