@@ -8,14 +8,13 @@ docker ps -a
 
 retries=0
 status="1"
-until docker logs oracle | grep -q 'Database ready to use. Enjoy'; do
+until docker logs oracle | grep -q 'DATABASE IS READY TO USE!'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for oracle to start
     if [ $retries -gt 100 ]; then
         echo oracle not started or takes too long to start
-        docker logs oracle
-        exit 0
+        exit 1
     fi;
 done
 
