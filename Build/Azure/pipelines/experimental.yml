@@ -229,6 +229,7 @@ stages:
           title: 'Oracle 12c'
           config: 'oracle12'
           script: 'oracle12.sh'
+          docker: 'true'
 
     steps:
     - checkout: none

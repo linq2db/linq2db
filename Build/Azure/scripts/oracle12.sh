@@ -14,7 +14,7 @@ until docker logs oracle | grep -q 'Database ready to use. Enjoy'; do
     echo waiting for oracle to start
     if [ $retries -gt 100 ]; then
         echo oracle not started or takes too long to start
-        exit 1
+        #exit 1
     fi;
 done
 
