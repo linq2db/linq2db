@@ -60,6 +60,8 @@ namespace LinqToDB.DataProvider.Oracle
 			return provider;
 		}, true);
 
+		public static bool AutoDetectProvider { get; set; } = true;
+
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			switch (css.ProviderName)
@@ -67,12 +69,12 @@ namespace LinqToDB.DataProvider.Oracle
 #if NET45 || NET46
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
-				case ProviderName.OracleNative                   : return GetVersionedDataProvider(DefaultVersion, false);
+				case ProviderName.OracleNative                   : return GetDataProvider(css, connectionString, false);
 #endif
 				case OracleProviderAdapter.ManagedAssemblyName   :
 				case OracleProviderAdapter.ManagedClientNamespace:
 				case "Oracle.ManagedDataAccess.Core"             :
-				case ProviderName.OracleManaged                  : return GetVersionedDataProvider(DefaultVersion, true);
+				case ProviderName.OracleManaged                  : return GetDataProvider(css, connectionString, true);
 				case ""                                          :
 				case null                                        :
 
@@ -85,7 +87,7 @@ namespace LinqToDB.DataProvider.Oracle
 					{
 						if (css.Name.Contains("11"))
 							return _oracleNativeDataProvider11.Value;
-						return GetVersionedDataProvider(DefaultVersion, false);
+						return GetDataProvider(css, connectionString, false);
 					}
 #endif
 
@@ -93,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 					{
 						if (css.Name.Contains("11"))
 							return _oracleManagedDataProvider11.Value;
-						return GetVersionedDataProvider(DefaultVersion, true);
+						return GetDataProvider(css, connectionString, true);
 					}
 
 					return GetDataProvider();
@@ -148,6 +150,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static string? _detectedProviderName;
 
+		private static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString, bool managed)
+		{
+			var version = DefaultVersion;
+			if (AutoDetectProvider)
+				version = DetectProviderVersion(css, connectionString, managed);
+
+			return GetVersionedDataProvider(version, managed);
+		}
+
 		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
 #if NET45 || NET46
@@ -174,7 +185,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
-		static string DetectProviderName()
+		private static string DetectProviderName()
 		{
 #if NET45 || NET46
 			try
