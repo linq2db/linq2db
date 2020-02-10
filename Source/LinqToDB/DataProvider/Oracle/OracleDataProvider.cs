@@ -14,18 +14,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		public OracleDataProvider(string name)
+		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{ }
+
+		public OracleDataProvider(string name, OracleVersion version)
 			: base(
 				  name,
 				  GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
 				  OracleProviderAdapter.GetInstance(name))
 		{
+			Version = version;
+
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+
+			if (version != OracleVersion.v11)
+			{
+				SqlProviderFlags.IsCrossJoinSupported = true;
+			}
 
 			SqlProviderFlags.MaxInListValuesCount              = 1000;
 
@@ -34,7 +44,10 @@ namespace LinqToDB.DataProvider.Oracle
 			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
-			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+			if (version == OracleVersion.v11)
+				_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+			else
+				_sqlOptimizer = new OracleSqlOptimizerV12(SqlProviderFlags);
 
 			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
@@ -64,6 +77,8 @@ namespace LinqToDB.DataProvider.Oracle
 			ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
+
+		public OracleVersion Version { get; private set; }
 
 		// TODO: remove? both managed and unmanaged providers support it
 		public             bool   IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
