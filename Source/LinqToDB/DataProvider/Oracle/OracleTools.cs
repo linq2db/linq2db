@@ -115,8 +115,9 @@ namespace LinqToDB.DataProvider.Oracle
 				if (!managed)
 					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
 				else
-					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
 #endif
+					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
+
 				using (var conn = providerAdapter.CreateConnection(cs))
 				{
 					conn.Open();
