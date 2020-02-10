@@ -12,7 +12,8 @@ until docker logs oracle | grep -q 'DATABASE IS READY TO USE!'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for oracle to start
-    if [ $retries -gt 100 ]; then
+    # 300 retries, as oracle image is really slow to start
+    if [ $retries -gt 300 ]; then
         echo oracle not started or takes too long to start
         docker logs oracle
         exit 1
