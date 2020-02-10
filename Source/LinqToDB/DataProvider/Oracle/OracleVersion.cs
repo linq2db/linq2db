@@ -6,6 +6,6 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		v11,
 		v12,
-		latest
+		Latest
 	}
 }

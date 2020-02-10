@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
-			if (version != OracleVersion.v11)
+			if (version >= OracleVersion.v12)
 			{
 				SqlProviderFlags.IsCrossJoinSupported = true;
 			}

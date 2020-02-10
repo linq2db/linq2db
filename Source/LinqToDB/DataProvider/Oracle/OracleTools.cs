@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return null;
 		}
 
-		public static OracleVersion DefaultVersion = OracleVersion.latest;
+		public static OracleVersion DefaultVersion = OracleVersion.Latest;
 
 		static string? _detectedProviderName;
 
