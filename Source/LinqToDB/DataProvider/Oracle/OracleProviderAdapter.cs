@@ -286,9 +286,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 				bulkCopy = new BulkCopyAdapter(
 					(IDbConnection connection, OracleBulkCopyOptions options)
-					=> typeMapper.CreateAndWrap(() => new OracleBulkCopy((OracleConnection)connection, options))!,
+						=> typeMapper.CreateAndWrap(() => new OracleBulkCopy((OracleConnection)connection, options))!,
 					(int source, string destination)
-					=> typeMapper.CreateAndWrap(() => new OracleBulkCopyColumnMapping(source, destination))!);
+						=> typeMapper.CreateAndWrap(() => new OracleBulkCopyColumnMapping(source, destination))!);
 
 			}
 			else
@@ -495,9 +495,9 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		internal class OracleDataReader
 		{
-			public OracleTimeStampTZ GetOracleTimeStampTZ(int i) => throw new NotImplementedException();
+			public OracleTimeStampTZ  GetOracleTimeStampTZ(int i)  => throw new NotImplementedException();
 			public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
-			public OracleDecimal GetOracleDecimal(int i) => throw new NotImplementedException();
+			public OracleDecimal      GetOracleDecimal(int i)      => throw new NotImplementedException();
 		}
 
 		[Wrapper]
@@ -694,7 +694,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper, Flags]
 		public enum OracleBulkCopyOptions
 		{
-			Default = 0,
+			Default                = 0,
 			UseInternalTransaction = 1
 		}
 

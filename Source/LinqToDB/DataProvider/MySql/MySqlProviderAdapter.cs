@@ -30,8 +30,8 @@ namespace LinqToDB.DataProvider.MySql
 			Type transactionType,
 
 			Type? mySqlDecimalType,
-			Type mySqlDateTimeType,
-			Type mySqlGeometryType,
+			Type  mySqlDateTimeType,
+			Type  mySqlGeometryType,
 
 			Func<object, decimal>? mySqlDecimalGetter,
 
@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			string? getMySqlDecimalMethodName,
 			string? getDateTimeOffsetMethodName,
-			string getMySqlDateTimeMethodName,
+			string  getMySqlDateTimeMethodName,
 			MappingSchema mappingSchema)
 		{
 			ConnectionType  = connectionType;
@@ -75,8 +75,8 @@ namespace LinqToDB.DataProvider.MySql
 		/// Not supported by MySqlConnector.
 		/// </summary>
 		public Type? MySqlDecimalType { get; }
-		public Type MySqlDateTimeType { get; }
-		public Type MySqlGeometryType { get; }
+		public Type  MySqlDateTimeType { get; }
+		public Type  MySqlGeometryType { get; }
 
 		/// <summary>
 		/// Not supported by MySqlConnector.
