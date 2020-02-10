@@ -56,6 +56,8 @@ namespace LinqToDB.DataProvider.Oracle
 			Type oracleRefCursorType,
 			Type? oracleRefType,
 
+			Func<string, OracleConnection> connectionCreator,
+
 			string typesNamespace,
 
 			Action<IDbDataParameter, OracleDbType> dbTypeSetter,
@@ -103,6 +105,8 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleXmlStreamType    = oracleXmlStreamType;
 			OracleRefCursorType    = oracleRefCursorType;
 			OracleRefType          = oracleRefType;
+
+			_connectionCreator = connectionCreator;
 
 			ProviderTypesNamespace = typesNamespace;
 
@@ -189,6 +193,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private readonly Func<DateTimeOffset, string, object> _createOracleTimeStampTZ;
 		public object CreateOracleTimeStampTZ(DateTimeOffset dto, string offset) => _createOracleTimeStampTZ(dto, offset);
+
+		private readonly Func<string, OracleConnection> _connectionCreator;
+		public OracleConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
 
 		public BulkCopyAdapter? BulkCopy { get; }
 
@@ -415,6 +422,8 @@ namespace LinqToDB.DataProvider.Oracle
 				oracleRefCursorType,
 				oracleRefType,
 
+				connectionString => typeMapper.CreateAndWrap(() => new OracleConnection(connectionString))!,
+
 				typesNamespace,
 
 				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
@@ -562,10 +571,17 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		[Wrapper]
-		public class OracleConnection : TypeWrapper
+		public class OracleConnection : TypeWrapper, IDisposable
 		{
+			public OracleConnection(string connectionString) => throw new NotImplementedException();
+
 			public string HostName => this.Wrap(t => t.HostName);
+
 			public string DatabaseName => this.Wrap(t => t.DatabaseName);
+
+			public void Open() => this.WrapAction(c => c.Open());
+
+			public void Dispose() => this.WrapAction(t => t.Dispose());
 		}
 
 		[Wrapper]

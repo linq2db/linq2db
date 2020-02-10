@@ -102,7 +102,48 @@ namespace LinqToDB.DataProvider.Oracle
 			return null;
 		}
 
-		public static OracleVersion DefaultVersion = OracleVersion.Latest;
+
+		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
+		{
+
+			OracleProviderAdapter providerAdapter;
+			try
+			{
+				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+
+#if NET45 || NET46
+				if (!managed)
+					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
+				else
+					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
+#endif
+				using (var conn = providerAdapter.CreateConnection(cs))
+				{
+					conn.Open();
+
+					var command = ((IDbConnection)conn).CreateCommand();
+					command.CommandText =
+						"select VERSION from PRODUCT_COMPONENT_VERSION\r\nwhere PRODUCT like 'PL/SQL%';";
+					var result = command.ExecuteScalar() as string;
+					var version = int.Parse(result.Split('.')[0]);
+					if (version <= 11)
+						return OracleVersion.v11;
+					if (version == 12)
+						return OracleVersion.v12;
+					if (version == 18)
+						return OracleVersion.v18;
+					if (version >= 19)
+						return OracleVersion.v19;
+					return DefaultVersion;
+				}
+			}
+			catch
+			{
+				return DefaultVersion;
+			}
+		}
+
+		public static OracleVersion DefaultVersion = OracleVersion.v19;
 
 		static string? _detectedProviderName;
 
