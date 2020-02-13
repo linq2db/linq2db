@@ -243,11 +243,11 @@ namespace LinqToDB.DataProvider.DB2
 						typeMapper.RegisterWrapper<DB2BulkCopyColumnMapping>();
 
 						var db2BinaryBuilder = typeMapper.Type<DB2Binary>().Member(p => p.IsNull);
-						var isDB2BinaryNull = db2BinaryBuilder.BuildGetter<object>();
+						var isDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
 
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
-						var typeSetter = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 
 
 						var bulkCopy = new BulkCopyAdapter(

@@ -3,7 +3,6 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Data.Common;
 	using LinqToDB.Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter

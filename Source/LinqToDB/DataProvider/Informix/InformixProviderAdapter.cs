@@ -3,7 +3,6 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.DataProvider.DB2;
 	using LinqToDB.Expressions;
@@ -37,10 +36,10 @@ namespace LinqToDB.DataProvider.Informix
 
 			MappingSchema mappingSchema,
 
-			Type ifxBlobType,
-			Type ifxClobType,
-			Type ifxDecimalType,
-			Type ifxDateTimeType,
+			Type  ifxBlobType,
+			Type  ifxClobType,
+			Type  ifxDecimalType,
+			Type  ifxDateTimeType,
 			Type? ifxTimeSpanType,
 
 			Action<IDbDataParameter, IfxType> ifxTypeSetter,

@@ -122,15 +122,14 @@ stages:
       displayName: Publish linq2db.Tools build results
 
 #################################################
-#### delete it
 
   - job: test_linux_netcoreapp21_job
     pool:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: ne(variables['Build.SourceBranchName'], 'release')
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: ne(variables['Build.SourceBranchName'], 'release')
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -139,12 +138,16 @@ stages:
 #          config: 'informix'
 #          script: 'informix12.sh'
 #          nuget: 'IBM.Data.DB2.Core-lnx'
-        SAPHANA2:
-          title: 'SAP HANA 2 SPS 04r40'
-          config: 'hana2'
-          script: 'mac.hana2.sh'
-          docker: 'true'
-          docker_login: 'true'
+#        SAPHANA2:
+#          title: 'SAP HANA 2 SPS 04r40'
+#          config: 'hana2'
+#          script: 'mac.hana2.sh'
+#          docker: 'true'
+#          docker_login: 'true'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
     steps:
     - checkout: none
 
@@ -205,8 +208,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -216,12 +219,17 @@ stages:
 #          script: 'mac.informix12.sh'
 #          docker: 'true'
 #          nuget: 'IBM.Data.DB2.Core-osx'
-        SAPHANA2:
-          title: 'SAP HANA 2 SPS 04r40'
-          config: 'hana2'
-          script: 'mac.hana2.sh'
+#        SAPHANA2:
+#          title: 'SAP HANA 2 SPS 04r40'
+#          config: 'hana2'
+#          script: 'mac.hana2.sh'
+#          docker: 'true'
+#          docker_login: 'true'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
           docker: 'true'
-          docker_login: 'true'
 
     steps:
     - checkout: none
@@ -301,8 +309,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    #condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -365,8 +373,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 (x86) / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    #condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
