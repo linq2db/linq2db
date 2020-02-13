@@ -2,8 +2,7 @@
 
 echo "##vso[task.setvariable variable=TZ]CET"
 
-#docker run -d --name oracle -e ORACLE_PWD=oracle -e ORACLE_SID=ORC12 -p 1521:1521 datagrip/oracle:12.2.0.1-se2-directio
-docker run -d --name oracle -e ORACLE_PWD=oracle -e ORACLE_SID=ORC12 -p 1521:1521 docker pull babim/oracledatabase:12cR2ee
+docker run -d --name oracle -e ORACLE_PWD=oracle -e ORACLE_SID=ORC12 -p 1521:1521 datagrip/oracle:12.2.0.1-se2-directio
 
 docker ps -a
 
