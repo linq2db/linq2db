@@ -17,6 +17,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using System.Threading;
 
 #if !NETSTANDARD1_6
 using Microsoft.SqlServer.Types;
@@ -1236,6 +1237,90 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(Person.Count(), db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update());
 				Assert.AreEqual(Person.Count(), db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = "Dummy",
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParamAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = "Dummy",
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
+
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParamGeneric([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = "Dummy",
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public async Task ExecProcedureAsyncTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = "Async",
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
+
+				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
 
