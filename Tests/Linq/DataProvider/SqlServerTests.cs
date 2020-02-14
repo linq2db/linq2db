@@ -1262,7 +1262,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ExecProcedureTestAnonymParamAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public async Task ExecProcedureTestAnonymParamAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1276,7 +1276,7 @@ namespace Tests.DataProvider
 					Gender = "M"
 				};
 
-				var ret = db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
 
 				Assert.That(ret, Is.GreaterThan(0));
 			}
