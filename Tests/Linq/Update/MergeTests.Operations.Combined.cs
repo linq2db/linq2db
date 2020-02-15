@@ -45,8 +45,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertDelete([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionDelete([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -113,7 +113,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
-			ProviderName.OracleManaged, ProviderName.OracleNative, TestProvName.AllInformix,
+			TestProvName.AllOracle, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
 			string context)
 		{
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
 			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -311,7 +311,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			TestProvName.SqlAzure, TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -345,7 +345,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteInsert([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -379,7 +379,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionUpdate([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -442,7 +442,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -510,7 +510,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void InsertDeleteWithConditionUpdate([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -547,7 +547,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionInsertDeleteWithCondition([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -584,7 +584,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionInsert([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -621,7 +621,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionUpdateWithConditionInsert([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -658,7 +658,7 @@ namespace Tests.xUpdate
 		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionInsertUpdateWithCondition([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)

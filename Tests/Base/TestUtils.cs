@@ -94,6 +94,8 @@ namespace Tests
 				case ProviderName.Oracle:
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
+				case TestProvName.Oracle11Native:
+				case TestProvName.Oracle11Managed:
 				case ProviderName.PostgreSQL:
 				case ProviderName.PostgreSQL92:
 				case ProviderName.PostgreSQL93:
@@ -167,6 +169,8 @@ namespace Tests
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
+				case TestProvName.Oracle11Native:
+				case TestProvName.Oracle11Managed:
 				case ProviderName.Informix:
 				case ProviderName.InformixDB2:
 					return db.Select(() => ServerName());

@@ -281,6 +281,7 @@ namespace Tests
 #if !NETCOREAPP2_1
 			ProviderName.Sybase,
 			ProviderName.OracleNative,
+			TestProvName.Oracle11Native,
 			ProviderName.Informix,
 #endif
 			ProviderName.SqlCe,
@@ -292,6 +293,7 @@ namespace Tests
 			TestProvName.SQLiteClassicMiniProfilerUnmapped,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
+			TestProvName.Oracle11Managed,
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,

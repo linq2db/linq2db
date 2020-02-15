@@ -144,6 +144,10 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
+        Oracle11:
+          title: 'Oracle 11g XE'
+          config: 'oracle11'
+          script: 'oracle11.sh'
         Oracle12:
           title: 'Oracle 12c'
           config: 'oracle12'
@@ -225,6 +229,11 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
+        Oracle11:
+          title: 'Oracle 11g XE'
+          config: 'oracle11'
+          script: 'oracle11.sh'
+          docker: 'true'
         Oracle12:
           title: 'Oracle 12c'
           config: 'oracle12'
