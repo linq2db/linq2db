@@ -10,13 +10,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// optimizations for others (npgsql)
 	public class BuildSetterBenchmarks
 	{
-		private Mapped.TestClass _classInstance = new Mapped.TestClass();
+		private Original.TestClass _classInstance = new Original.TestClass();
 		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Mapped.TestClass), typeof(Mapped.TestEnum));
+			var typeMapper = new TypeMapper(typeof(Original.TestClass), typeof(Original.TestEnum));
 			typeMapper.RegisterWrapper<Wrapped.TestClass>();
 			typeMapper.RegisterWrapper<Wrapped.TestEnum>();
 
@@ -33,7 +33,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[Benchmark(Baseline = true)]
 		public void DirectAccess()
 		{
-			_classInstance.EnumProperty = Mapped.TestEnum.Three;
+			_classInstance.EnumProperty = Original.TestEnum.Three;
 		}
 	}
 }

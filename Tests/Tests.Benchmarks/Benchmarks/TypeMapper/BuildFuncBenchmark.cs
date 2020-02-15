@@ -9,13 +9,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// benchmark shows expected performance degradation due to indirect call
 	public class BuildFuncBenchmark
 	{
-		private Mapped.TestClass _classInstance = new Mapped.TestClass();
+		private Original.TestClass _classInstance = new Original.TestClass();
 		private Func<ITestClass, Guid, object[], DataTable> _functionCall;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Mapped.TestClass));
+			var typeMapper = new TypeMapper(typeof(Original.TestClass));
 			typeMapper.RegisterWrapper<Wrapped.TestClass>();
 
 			_functionCall = typeMapper.BuildFunc<ITestClass, Guid, object[], DataTable>(typeMapper.MapLambda((Wrapped.TestClass conn, Guid schema, object[] restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
