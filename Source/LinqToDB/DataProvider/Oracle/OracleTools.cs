@@ -131,12 +131,8 @@ namespace LinqToDB.DataProvider.Oracle
 					var version = int.Parse(result.Split('.')[0]);
 					if (version <= 11)
 						return OracleVersion.v11;
-					if (version == 12)
+					if (version >= 12)
 						return OracleVersion.v12;
-					if (version == 18)
-						return OracleVersion.v18;
-					if (version >= 19)
-						return OracleVersion.v19;
 					return DefaultVersion;
 				}
 			}
@@ -146,7 +142,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public static OracleVersion DefaultVersion = OracleVersion.v19;
+		public static OracleVersion DefaultVersion = OracleVersion.v12;
 
 		static string? _detectedProviderName;
 
