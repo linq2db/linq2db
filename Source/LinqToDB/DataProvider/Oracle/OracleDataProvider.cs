@@ -45,9 +45,9 @@ namespace LinqToDB.DataProvider.Oracle
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
 			if (version == OracleVersion.v11)
-				_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
 			else
-				_sqlOptimizer = new OracleSqlOptimizerV12(SqlProviderFlags);
+				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
 
 			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
