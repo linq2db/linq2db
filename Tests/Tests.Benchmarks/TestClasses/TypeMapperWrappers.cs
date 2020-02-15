@@ -29,6 +29,24 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			public static void ClearAllPools() { }
 		}
 
+		public class TestClass2 : IDisposable
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public TestClass2(string connectionString)
+			{
+			}
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public void CreateDatabase()
+			{
+			}
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public void Dispose()
+			{
+			}
+		}
+
 		public enum TestEnum
 		{
 			One   = 1,
@@ -46,6 +64,19 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public DataTable GetOleDbSchemaTable(Guid schema, object[] restrictions) => throw new NotImplementedException();
 			public static void ClearAllPools() => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		public class TestClass2 : TypeWrapper, IDisposable
+		{
+			public TestClass2(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
+			public TestClass2(string connectionString) => throw new NotImplementedException();
+
+			public void CreateDatabase() => this.WrapAction(t => t.CreateDatabase());
+			public void Dispose() => this.WrapAction(t => t.Dispose());
 		}
 
 		[Wrapper]
