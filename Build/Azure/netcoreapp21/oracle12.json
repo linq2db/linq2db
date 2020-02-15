@@ -2,12 +2,6 @@
 	"CORE21.Azure": {
 		"Providers": [
 			"Oracle.Managed"
-		],
-		"Connections": {
-			"Oracle.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
-			}
-		}
+		]
 	}
 }

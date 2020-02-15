@@ -889,8 +889,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRankOracle([IncludeDataSources(true,
-			ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -918,8 +917,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRegrOracle([IncludeDataSources(
-			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRegrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1074,8 +1072,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true,
-			ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1266,7 +1263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{

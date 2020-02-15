@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test]
-		public void MergeWithEmptySource([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative, TestProvName.AllSybase)] string context)
+		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

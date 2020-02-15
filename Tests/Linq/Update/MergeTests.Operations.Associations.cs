@@ -194,9 +194,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInDeletePredicate([MergeDataContextSource(
 			false,
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSybase, TestProvName.AllInformix,
+			TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -227,7 +227,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -277,7 +277,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -617,7 +617,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
 			false,
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -650,7 +650,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -702,7 +702,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{

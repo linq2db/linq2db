@@ -54,7 +54,7 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
-			if (context == ProviderName.OracleNative && copyType == BulkCopyType.ProviderSpecific)
+			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
@@ -79,8 +79,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.OracleNative
-						|| context == ProviderName.OracleManaged;
+						|| context.Contains("Oracle");
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
@@ -115,7 +114,7 @@ namespace Tests.xUpdate
 		}
 
 		//[ActiveIssue("Sybase: Bulk insert failed. Null value is not allowed in not null column.", Configuration = ProviderName.Sybase)]
-		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { ProviderName.OracleNative , ProviderName.Sybase } )]
+		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { TestProvName.AllOracleNative , ProviderName.Sybase } )]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,
@@ -144,8 +143,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.OracleNative
-						|| context == ProviderName.OracleManaged;
+						|| context.Contains("Oracle");
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);

@@ -172,13 +172,21 @@
 				"Provider": "MySql.Data.MySqlClient",
 				"ConnectionString": "Server=DBHost;Port=3307;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;"
 			},
-			"Oracle.Native": {
+			"Oracle.11.Native": {
 				"Provider": "Oracle.DataAccess.Client",
 				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;"
 			},
-			"Oracle.Managed": {
+			"Oracle.11.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
 				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;"
+			},
+			"Oracle.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
+			},
+			"Oracle.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
 			},
 			"PostgreSQL": {
 				"Provider": "Npgsql",

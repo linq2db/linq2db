@@ -55,8 +55,9 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
+		// TODO: disabled providers lacks connections
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
 		{
 			const int recordsCount = 20;
 
