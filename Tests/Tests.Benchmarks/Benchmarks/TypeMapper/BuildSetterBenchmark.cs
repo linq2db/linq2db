@@ -8,7 +8,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// benchmark shows big difference in performance and shows memory allocations due to use of Enum.Parse by wrapper
 	// TODO: we should update enum mapper to use value cast for enums with fixed values and probably add some
 	// optimizations for others (npgsql)
-	public class BuildSetterBenchmarks
+	public class BuildSetterBenchmark
 	{
 		private Original.TestClass _classInstance = new Original.TestClass();
 		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter;

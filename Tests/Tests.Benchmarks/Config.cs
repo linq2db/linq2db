@@ -25,7 +25,7 @@ namespace LinqToDB.Benchmarks
 				.With(ConfigOptions.DisableLogFile)
 				.With(MarkdownExporter.GitHub)
 				.With(MemoryDiagnoser.Default)
-				.WithArtifactsPath(@"..\..\..\Results")
+				.WithArtifactsPath(@"..\..\..")
 				.With(net462, core21, core31);
 		}
 

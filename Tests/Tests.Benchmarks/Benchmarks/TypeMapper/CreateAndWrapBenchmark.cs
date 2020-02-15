@@ -6,7 +6,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 {
 	// Notes:
 	// benchmark shows huge performance and memory impact due to build of constructor expression on each call
-	public class CreateAndWrapBenchmarks
+	public class CreateAndWrapBenchmark
 	{
 		private static readonly string Parameter = "TestString";
 
