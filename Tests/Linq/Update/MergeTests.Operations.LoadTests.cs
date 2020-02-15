@@ -36,8 +36,10 @@ namespace Tests.xUpdate
 
 				// big query makes Oracle to heavy eat memory
 				// this will affect other servers
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative : batchSize = 100; break;
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native :
+				case ProviderName.OracleManaged  :
+				case ProviderName.OracleNative   : batchSize = 100; break;
 			}
 
 			RunTest(context, batchSize);

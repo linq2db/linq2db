@@ -1,7 +1,7 @@
 ﻿{
 	"CORE21.Azure": {
 		"Providers": [
-			"Oracle.Managed"
+			"Oracle.11.Managed"
 		]
 	}
 }

@@ -17,6 +17,8 @@
 		public const string NorthwindSQLiteMS = "Northwind.SQLite.MS";
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
+		public const string Oracle11Native    = "Oracle.11.Native";
+		public const string Oracle11Managed   = "Oracle.11.Managed";
 
 		/// <summary>
 		/// SQLite classic provider wrapped into MiniProfiler without mappings to provider types configured.
@@ -48,7 +50,10 @@
 		public const string AllPostgreSQL93Plus   = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQL95Plus   = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQL10Plus   = "PostgreSQL.10,PostgreSQL.11";
-		public const string AllOracle             = "Oracle.Native,Oracle.Managed";
+		public const string AllOracle             = "Oracle.Native,Oracle.Managed,Oracle.11.Native,Oracle.11.Managed";
+		public const string AllOracleManaged      = "Oracle.Managed,Oracle.11.Managed";
+		public const string AllOracleNative       = "Oracle.Native,Oracle.11.Native";
+		public const string AllOracle12           = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird           = "Firebird,Firebird3";
 		public const string AllSQLite             = "SQLite.Classic,SQLite.MS,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";
 		public const string AllSQLiteClassic      = "SQLite.Classic,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";

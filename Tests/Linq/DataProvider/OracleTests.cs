@@ -431,7 +431,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestOracleManagedTypes([IncludeDataSources(ProviderName.OracleManaged)] string context)
+		public void TestOracleManagedTypes([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -450,7 +450,7 @@ namespace Tests.DataProvider
 #if NET46
 
 		[Test]
-		public void TestOracleNativeTypes([IncludeDataSources(ProviderName.OracleNative)] string context)
+		public void TestOracleNativeTypes([IncludeDataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				var xmlExpected = GetProviderName(context, out var _) == ProviderName.OracleNative ? "<xml/>\n" : "<xml/>";
+				var xmlExpected = GetProviderName(context, out var _).Contains("Native") ? "<xml/>\n" : "<xml/>";
 				Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo(xmlExpected));
 				Assert.That(conn.Execute<XDocument>  (PathThroughSql, DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>(PathThroughSql, DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
@@ -722,7 +722,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SelectDateTime([IncludeDataSources(ProviderName.OracleNative)] string context)
+		public void SelectDateTime([IncludeDataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -905,7 +905,7 @@ namespace Tests.DataProvider
 								.IsNotColumn()
 						;
 
-					if (GetProviderName(context, out var _) == ProviderName.OracleNative)
+					if (GetProviderName(context, out var _).Contains("Native"))
 					{
 						ms.GetFluentMappingBuilder()
 							.Entity<LinqDataTypes>()
@@ -1165,7 +1165,7 @@ namespace Tests.DataProvider
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
-				if (context == ProviderName.OracleNative && bulkCopyType == BulkCopyType.ProviderSpecific)
+				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
 					var ms = new MappingSchema();
 
@@ -1713,7 +1713,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void OverflowTest2([IncludeDataSources(ProviderName.OracleManaged)] string context)
+		public void OverflowTest2([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
 			try
@@ -2048,6 +2048,13 @@ namespace Tests.DataProvider
 
 				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
 
+				if (!context.Contains("11"))
+				{
+					// v12 fix: ORA-65096: invalid common user or role name
+					// http://www.dba-oracle.com/t_ora_65096_create_user_12c_without_c_prefix.htm
+					db.Execute("alter session set \"_ORACLE_SCRIPT\"=true;");
+				}
+
 				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 
 				try
@@ -2176,7 +2183,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CustomMappingNonstandardTypeTest([IncludeDataSources(ProviderName.OracleManaged)] string context)
+		public void CustomMappingNonstandardTypeTest([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			var dataProvider = (DataProviderBase)DataConnection.GetDataProvider(context);
 
@@ -2275,7 +2282,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BooleanMappingTests([IncludeDataSources(ProviderName.OracleManaged)] string context)
+		public void BooleanMappingTests([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -2346,7 +2353,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			var isNative = GetProviderName(context, out var _) == ProviderName.OracleNative;
+			var isNative = GetProviderName(context, out var _).Contains("Native");
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var pms = new[]

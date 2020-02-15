@@ -1048,7 +1048,7 @@ namespace Tests.Data
 
 #if NET46
 		[Test]
-		public void TestOracleNative([IncludeDataSources(ProviderName.OracleNative)] string context, [Values] ConnectionType type)
+		public void TestOracleNative([IncludeDataSources(TestProvName.AllOracleNative)] string context, [Values] ConnectionType type)
 		{
 			var wrapped = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
@@ -1143,7 +1143,7 @@ namespace Tests.Data
 #endif
 
 		[Test]
-		public void TestOracleManaged([IncludeDataSources(ProviderName.OracleManaged)] string context, [Values] ConnectionType type)
+		public void TestOracleManaged([IncludeDataSources(TestProvName.AllOracleManaged)] string context, [Values] ConnectionType type)
 		{
 			var wrapped = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;

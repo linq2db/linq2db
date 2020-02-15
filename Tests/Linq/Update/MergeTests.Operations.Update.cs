@@ -163,7 +163,7 @@ namespace Tests.xUpdate
 		// Firebird: update of match key leads to incorrect update
 		[Test]
 		public void SameSourceUpdateWithUpdate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+			TestProvName.AllOracle, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

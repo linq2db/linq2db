@@ -92,7 +92,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
-			TestProvName.AllInformix, ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllInformix, TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{

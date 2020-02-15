@@ -36,8 +36,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -324,8 +325,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var db = new DataConnection(context))

@@ -67,7 +67,7 @@ namespace Tests._Create
 						if (DataConnection.TraceSwitch.TraceInfo)
 							Console.WriteLine(command);
 
-						if (configString == ProviderName.OracleNative)
+						if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
 						{
 							// we need this to avoid errors in trigger creation when native provider
 							// recognize ":NEW" as parameter
@@ -260,6 +260,7 @@ namespace Tests._Create
 				case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.OracleManaged                    : RunScript(context,          "\n/\n",   "Oracle");                         break;
+				case TestProvName.Oracle11Managed                  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 				case ProviderName.SybaseManaged                    : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
 				case ProviderName.SQLiteClassic                    : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
@@ -277,6 +278,7 @@ namespace Tests._Create
 #if !NETCOREAPP2_1
 				case ProviderName.Sybase                           : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.OracleNative                     : RunScript(context,          "\n/\n",   "Oracle");                         break;
+				case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default                                            : throw new InvalidOperationException(context);
 			}

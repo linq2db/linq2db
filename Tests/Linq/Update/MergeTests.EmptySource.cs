@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void MergeEmptyLocalSourceSameType([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
+		public void MergeEmptyLocalSourceSameType([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeEmptyLocalSourceDifferentTypes([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
+		public void MergeEmptyLocalSourceDifferentTypes([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

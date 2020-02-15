@@ -345,7 +345,7 @@ namespace Tests.xUpdate
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
 		// Sybase: need to configure sybase docker image to use utf8 character set
-		[ActiveIssue("ORA-22053: overflow error", Configurations = new [] { ProviderName.OracleNative, TestProvName.AllSybase })]
+		[ActiveIssue("ORA-22053: overflow error", Configurations = new [] { TestProvName.AllOracleNative, TestProvName.AllSybase })]
 		[Test]
 		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{
@@ -416,8 +416,7 @@ namespace Tests.xUpdate
 			if (   provider != ProviderName.SqlServer2000
 				&& provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
-				&& provider != ProviderName.OracleManaged
-				&& provider != ProviderName.OracleNative)
+				&& !provider.Contains("Oracle"))
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
 
 			AssertTime(expected.FieldTime, actual.FieldTime, provider);
@@ -450,8 +449,7 @@ namespace Tests.xUpdate
 		private static void AssertBinary(byte[] expected, byte[] actual, string provider)
 		{
 			if (provider.Contains(ProviderName.Informix)
-				|| provider == ProviderName.OracleManaged
-				|| provider == ProviderName.OracleNative
+				|| provider.Contains("Oracle")
 				|| provider == ProviderName.Firebird
 				|| provider == TestProvName.Firebird3)
 				return;
@@ -475,7 +473,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider == ProviderName.OracleManaged || provider == ProviderName.OracleNative)
+				if (provider.Contains("Oracle"))
 				{
 					var trimmable = expected.Value.Ticks % 10;
 					if (trimmable >= 5)
@@ -575,8 +573,7 @@ namespace Tests.xUpdate
 					|| provider == ProviderName.MySqlConnector
 					|| provider == TestProvName.MariaDB
 					|| provider == TestProvName.MySql55
-					|| provider == ProviderName.OracleManaged
-					|| provider == ProviderName.OracleNative)
+					|| provider.Contains("Oracle"))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 
@@ -607,8 +604,7 @@ namespace Tests.xUpdate
 		{
 			if (   provider == ProviderName.SqlServer2000
 				|| provider == ProviderName.SqlServer2005
-				|| provider == ProviderName.OracleManaged
-				|| provider == ProviderName.OracleNative
+				|| provider.Contains("Oracle")
 				|| provider == ProviderName.SqlCe
 				|| provider == ProviderName.SQLiteClassic
 				|| provider == TestProvName.SQLiteClassicMiniProfilerMapped
