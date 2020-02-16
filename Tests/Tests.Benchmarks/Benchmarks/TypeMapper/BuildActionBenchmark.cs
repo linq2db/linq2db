@@ -4,8 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// Notes:
-	// benchmark shows expected performance degradation due to indirect call
+	// benchmark shows expected slight performance degradation due to indirect call
 	public class BuildActionBenchmark
 	{
 		private Action _action;

@@ -307,9 +307,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		internal class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
-			public string UdtTypeName { get; set; } = null!;
-			public string TypeName { get; set; } = null!;
-			public SqlDbType SqlDbType { get; set; }
+			public string    UdtTypeName { get; set; } = null!;
+			public string    TypeName    { get; set; } = null!;
+			public SqlDbType SqlDbType   { get; set; }
 		}
 
 		[Wrapper]

@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.DB2
 		internal class DB2Binary
 		{
 			public static readonly DB2Binary Null = null!;
-			public bool IsNull { get; }
+			public                 bool      IsNull { get; }
 		}
 
 		[Wrapper] internal class DB2Blob         { public static readonly DB2Blob         Null = null!; }
@@ -490,7 +490,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			public event DB2RowsCopiedEventHandler DB2RowsCopied
 			{
-				add => Events.AddHandler(nameof(DB2RowsCopied), value);
+				add    => Events.AddHandler   (nameof(DB2RowsCopied), value);
 				remove => Events.RemoveHandler(nameof(DB2RowsCopied), value);
 			}
 		}

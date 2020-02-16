@@ -564,7 +564,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		public class OracleConnection : TypeWrapper
 		{
-			public string HostName => this.Wrap(t => t.HostName);
+			public string HostName     => this.Wrap(t => t.HostName);
 			public string DatabaseName => this.Wrap(t => t.DatabaseName);
 		}
 
@@ -647,14 +647,11 @@ namespace LinqToDB.DataProvider.Oracle
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
-			public OracleBulkCopyColumnMappingCollection ColumnMappings
-			{
-				get => this.Wrap(t => t.ColumnMappings);
-			}
+			public OracleBulkCopyColumnMappingCollection ColumnMappings => this.Wrap(t => t.ColumnMappings);
 
 			public event OracleRowsCopiedEventHandler OracleRowsCopied
 			{
-				add => Events.AddHandler(nameof(OracleRowsCopied), value);
+				add    => Events.AddHandler   (nameof(OracleRowsCopied), value);
 				remove => Events.RemoveHandler(nameof(OracleRowsCopied), value);
 			}
 		}

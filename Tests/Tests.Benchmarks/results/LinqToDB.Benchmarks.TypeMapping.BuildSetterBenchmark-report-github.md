@@ -12,11 +12,23 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|       Method |       Runtime |         Mean |       Error |      StdDev |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |-------------:|------------:|------------:|-------:|--------:|-------:|------:|------:|----------:|
-|   TypeMapper |    .NET 4.6.2 | 1,560.114 ns | 266.3912 ns | 176.2013 ns | 949.39 |   83.02 | 0.0534 |     - |     - |     225 B |
-| DirectAccess |    .NET 4.6.2 |     1.727 ns |   0.0736 ns |   0.0327 ns |   1.00 |    0.00 |      - |     - |     - |         - |
-|   TypeMapper | .NET Core 2.1 |   563.707 ns |  48.0687 ns |  31.7945 ns | 333.04 |   22.33 | 0.0114 |     - |     - |      48 B |
-| DirectAccess | .NET Core 2.1 |     1.706 ns |   0.0669 ns |   0.0443 ns |   1.00 |    0.03 |      - |     - |     - |         - |
-|   TypeMapper | .NET Core 3.1 |   294.065 ns |  14.5145 ns |   9.6004 ns | 170.16 |    8.01 | 0.0114 |     - |     - |      48 B |
-| DirectAccess | .NET Core 3.1 |     1.590 ns |   0.1086 ns |   0.0718 ns |   0.92 |    0.05 |      - |     - |     - |         - |
+|                  Method |       Runtime |         Mean |       Error |     StdDev |    Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------------------ |-------------- |-------------:|------------:|-----------:|---------:|--------:|-------:|------:|------:|----------:|
+|        TypeMapperAsEnum |    .NET 4.6.2 | 2,363.907 ns | 146.9142 ns | 97.1746 ns | 1,528.09 |   90.48 | 0.0534 |     - |     - |     225 B |
+|      DirectAccessAsEnum |    .NET 4.6.2 |     1.550 ns |   0.1233 ns |  0.0816 ns |     1.00 |    0.00 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum |    .NET 4.6.2 |    16.096 ns |   1.6214 ns |  1.0725 ns |    10.39 |    0.60 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum |    .NET 4.6.2 |     1.304 ns |   0.1321 ns |  0.0874 ns |     0.84 |    0.04 |      - |     - |     - |         - |
+|      TypeMapperAsString |    .NET 4.6.2 |    12.945 ns |   0.3641 ns |  0.2408 ns |     8.37 |    0.47 |      - |     - |     - |         - |
+|    DirectAccessAsString |    .NET 4.6.2 |     3.611 ns |   0.1039 ns |  0.0687 ns |     2.33 |    0.10 |      - |     - |     - |         - |
+|        TypeMapperAsEnum | .NET Core 2.1 |   462.193 ns |  59.8644 ns | 39.5966 ns |   299.47 |   36.41 | 0.0114 |     - |     - |      48 B |
+|      DirectAccessAsEnum | .NET Core 2.1 |     1.847 ns |   0.3482 ns |  0.2303 ns |     1.19 |    0.14 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum | .NET Core 2.1 |     4.121 ns |   0.8837 ns |  0.5845 ns |     2.66 |    0.33 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum | .NET Core 2.1 |     2.100 ns |   0.1910 ns |  0.1263 ns |     1.36 |    0.13 |      - |     - |     - |         - |
+|      TypeMapperAsString | .NET Core 2.1 |     9.260 ns |   0.6355 ns |  0.4204 ns |     5.98 |    0.32 |      - |     - |     - |         - |
+|    DirectAccessAsString | .NET Core 2.1 |     6.600 ns |   0.2846 ns |  0.1883 ns |     4.27 |    0.23 |      - |     - |     - |         - |
+|        TypeMapperAsEnum | .NET Core 3.1 |   317.986 ns |  13.1327 ns |  8.6865 ns |   205.80 |   14.93 | 0.0114 |     - |     - |      48 B |
+|      DirectAccessAsEnum | .NET Core 3.1 |     1.725 ns |   0.0761 ns |  0.0338 ns |     1.11 |    0.06 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum | .NET Core 3.1 |     4.325 ns |   0.3520 ns |  0.2328 ns |     2.79 |    0.14 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum | .NET Core 3.1 |     1.623 ns |   0.0639 ns |  0.0334 ns |     1.05 |    0.06 |      - |     - |     - |         - |
+|      TypeMapperAsString | .NET Core 3.1 |     6.356 ns |   0.4558 ns |  0.3015 ns |     4.11 |    0.34 |      - |     - |     - |         - |
+|    DirectAccessAsString | .NET Core 3.1 |     3.466 ns |   0.1561 ns |  0.0929 ns |     2.24 |    0.16 |      - |     - |     - |         - |
