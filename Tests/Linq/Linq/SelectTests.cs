@@ -1334,7 +1334,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12)] string context)
 		{
 			// TODO: eager loading
 			// using (new AllowMultipleQuery())
