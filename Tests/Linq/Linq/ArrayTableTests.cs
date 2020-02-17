@@ -12,7 +12,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		public void ApplyJoinArray(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)]
 			string context)
 		{
 			var doe = "Doe";

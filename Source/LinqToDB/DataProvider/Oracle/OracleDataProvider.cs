@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (version >= OracleVersion.v12)
 			{
-				SqlProviderFlags.IsCrossJoinSupported = true;
+				SqlProviderFlags.IsApplyJoinSupported          = true;
 			}
 
 			SqlProviderFlags.MaxInListValuesCount              = 1000;
