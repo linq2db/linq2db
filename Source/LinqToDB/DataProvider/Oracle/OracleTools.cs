@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 #if NET45 || NET46
 		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative);
+			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
 
 			DataConnection.AddDataProvider(provider);
 
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged);
+			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
 
 			DataConnection.AddDataProvider(provider);
 
