@@ -124,9 +124,9 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					conn.Open();
 
-					var command = ((IDbConnection)conn).CreateCommand();
+					var command = conn.CreateCommand();
 					command.CommandText =
-						"select VERSION from PRODUCT_COMPONENT_VERSION\r\nwhere PRODUCT like 'PL/SQL%';";
+						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%';";
 					var result = command.ExecuteScalar() as string;
 					var version = int.Parse(result.Split('.')[0]);
 					if (version <= 11)

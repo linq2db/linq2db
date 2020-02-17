@@ -573,6 +573,10 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		public class OracleConnection : TypeWrapper, IDisposable
 		{
+			public OracleConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			{
+			}
+
 			public OracleConnection(string connectionString) => throw new NotImplementedException();
 
 			public string HostName => this.Wrap(t => t.HostName);
@@ -580,6 +584,8 @@ namespace LinqToDB.DataProvider.Oracle
 			public string DatabaseName => this.Wrap(t => t.DatabaseName);
 
 			public void Open() => this.WrapAction(c => c.Open());
+
+			public IDbCommand CreateCommand() => this.Wrap(c => c.CreateCommand());
 
 			public void Dispose() => this.WrapAction(t => t.Dispose());
 		}
