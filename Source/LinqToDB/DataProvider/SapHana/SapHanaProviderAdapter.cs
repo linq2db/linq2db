@@ -243,9 +243,9 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper, Flags]
 		public enum HanaBulkCopyOptions
 		{
-			Default = 0,
-			KeepIdentity = 1,
-			TableLock = 2,
+			Default                = 0,
+			KeepIdentity           = 1,
+			TableLock              = 2,
 			UseInternalTransaction = 4
 		}
 

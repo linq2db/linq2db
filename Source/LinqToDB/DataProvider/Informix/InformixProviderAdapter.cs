@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.Informix
 				typeMapper.RegisterWrapper<IfxRowsCopiedEventArgs>();
 			}
 
-			var paramMapper = typeMapper.Type<IfxParameter>();
+			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
 
 			Func<TimeSpan, object>? timespanFactory = null;

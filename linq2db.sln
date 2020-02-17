@@ -223,7 +223,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite", "SQLite", "{FCE717
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Base", "Tests\Base\Tests.Base.csproj", "{8581F094-7096-4041-8072-029EF3E4EE17}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Benchmarks", "Tests\Tests.Benchmarks\Tests.Benchmarks.csproj", "{C1283235-3533-488C-9313-2DAF3A9AD9DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "linq2db.Benchmarks", "Tests\Tests.Benchmarks\linq2db.Benchmarks.csproj", "{C1283235-3533-488C-9313-2DAF3A9AD9DF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.T4", "Tests\Tests.T4\Tests.T4.csproj", "{7FEE7809-27BB-432A-8920-D0DC56F13A62}"
 	ProjectSection(ProjectDependencies) = postProject

@@ -578,8 +578,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void Dispose() => this.WrapAction(t => t.Dispose());
 
 			public void StartRow() => this.WrapAction(t => t.StartRow());
-
-			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => this.WrapAction(t => t.Write(value, npgsqlDbType));
 		}
 
 		#endregion

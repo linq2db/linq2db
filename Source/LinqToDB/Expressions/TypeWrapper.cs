@@ -23,7 +23,7 @@ namespace LinqToDB.Expressions
 
 		private EventHandlerList? _events;
 
-		internal EventHandlerList Events
+		public EventHandlerList Events
 		{
 			get
 			{
