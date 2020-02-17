@@ -128,11 +128,14 @@ namespace LinqToDB.DataProvider.Oracle
 					command.CommandText =
 						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
 					var result = command.ExecuteScalar() as string;
-					var version = int.Parse(result.Split('.')[0]);
-					if (version <= 11)
-						return OracleVersion.v11;
-					if (version >= 12)
-						return OracleVersion.v12;
+					if (result != null)
+					{
+						var version = int.Parse(result.Split('.')[0]);
+						if (version <= 11)
+							return OracleVersion.v11;
+						if (version >= 12)
+							return OracleVersion.v12;
+					}
 					return DefaultVersion;
 				}
 			}
