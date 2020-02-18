@@ -1590,7 +1590,7 @@ namespace Tests.DataProvider
 		#endregion
 
 		[Test]
-		public void TestOrderByFirst1([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestOrderByFirst1([IncludeDataSources(TestProvName.Oracle11Managed)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1635,7 +1635,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestOrderByFirst3([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestOrderByFirst3([IncludeDataSources(TestProvName.Oracle11Managed)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
