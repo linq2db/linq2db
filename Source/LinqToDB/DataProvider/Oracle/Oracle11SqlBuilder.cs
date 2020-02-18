@@ -9,11 +9,11 @@ namespace LinqToDB.DataProvider.Oracle
 	using System.Text;
 	using LinqToDB.Mapping;
 
-	partial class OracleSqlBuilder : BasicSqlBuilder
+	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		private readonly OracleDataProvider? _provider;
+		protected readonly OracleDataProvider? _provider;
 
-		public OracleSqlBuilder(
+		public Oracle11SqlBuilder(
 			OracleDataProvider? provider,
 			MappingSchema       mappingSchema,
 			ISqlOptimizer       sqlOptimizer,
@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		// remote context
-		public OracleSqlBuilder(
+		public Oracle11SqlBuilder(
 			MappingSchema    mappingSchema,
 			ISqlOptimizer    sqlOptimizer,
 			SqlProviderFlags sqlProviderFlags)
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle11SqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
