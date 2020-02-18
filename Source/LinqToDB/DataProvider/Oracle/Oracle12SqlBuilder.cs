@@ -36,8 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			return
-				selectQuery.Where.SearchCondition.Conditions.Count != 0;
+			return BasiSqlBuilderBuildWhere(selectQuery);
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)

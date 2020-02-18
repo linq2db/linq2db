@@ -13,6 +13,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
+			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
+				statement = ReplaceTakeSkipWithRowNum(statement, false);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
