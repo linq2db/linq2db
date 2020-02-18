@@ -34,9 +34,15 @@ namespace LinqToDB.DataProvider.Oracle
 			return new Oracle12SqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
+		protected override bool BuildWhere(SelectQuery selectQuery)
+		{
+			return
+				selectQuery.Where.SearchCondition.Conditions.Count != 0;
+		}
+
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
+			return "FETCH NEXT {0} ROWS ONLY";
 		}
 
 		protected override string OffsetFormat(SelectQuery selectQuery)
