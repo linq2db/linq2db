@@ -97,12 +97,6 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildPredicate(predicate);
 		}
 
-		protected bool BasiSqlBuilderBuildWhere(SelectQuery selectQuery)
-		{
-			return
-				base.BuildWhere(selectQuery);
-		}
-
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
 			return
