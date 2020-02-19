@@ -12,11 +12,11 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|       Method |       Runtime |              Mean |             Error |          StdDev |            Median | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |------------------:|------------------:|----------------:|------------------:|------:|--------:|-------:|------:|------:|----------:|
-|   TypeMapper |    .NET 4.6.2 | 2,542,309.1600 ns | 1,137,943.0211 ns | 752,678.8515 ns | 2,628,880.3800 ns |     ? |       ? |      - |     - |     - |   73728 B |
-| DirectAccess |    .NET 4.6.2 |         0.1158 ns |         0.1730 ns |       0.1144 ns |         0.0796 ns |     ? |       ? |      - |     - |     - |         - |
-|   TypeMapper | .NET Core 2.1 |   912,096.4237 ns |    35,623.3154 ns |  21,198.8636 ns |   912,142.1376 ns |     ? |       ? | 1.9531 |     - |     - |   17999 B |
-| DirectAccess | .NET Core 2.1 |         0.0830 ns |         0.1402 ns |       0.0927 ns |         0.0500 ns |     ? |       ? |      - |     - |     - |         - |
-|   TypeMapper | .NET Core 3.1 |   872,226.9584 ns |    58,833.3920 ns |  38,914.6461 ns |   875,193.2785 ns |     ? |       ? | 1.9531 |     - |     - |   17589 B |
-| DirectAccess | .NET Core 3.1 |         0.0856 ns |         0.1923 ns |       0.1272 ns |         0.0000 ns |     ? |       ? |      - |     - |     - |         - |
+|       Method |       Runtime |       Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------- |-------------- |-----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
+|   TypeMapper |    .NET 4.6.2 | 56.9878 ns | 1.2233 ns | 0.3177 ns |     ? |       ? | 0.0114 |     - |     - |      48 B |
+| DirectAccess |    .NET 4.6.2 |  0.0000 ns | 0.0000 ns | 0.0000 ns |     ? |       ? |      - |     - |     - |         - |
+|   TypeMapper | .NET Core 2.1 | 49.5689 ns | 1.0320 ns | 0.3680 ns |     ? |       ? | 0.0114 |     - |     - |      48 B |
+| DirectAccess | .NET Core 2.1 |  0.0000 ns | 0.0000 ns | 0.0000 ns |     ? |       ? |      - |     - |     - |         - |
+|   TypeMapper | .NET Core 3.1 | 46.5452 ns | 0.7986 ns | 0.2074 ns |     ? |       ? | 0.0114 |     - |     - |      48 B |
+| DirectAccess | .NET Core 3.1 |  0.0136 ns | 0.0440 ns | 0.0114 ns |     ? |       ? |      - |     - |     - |         - |

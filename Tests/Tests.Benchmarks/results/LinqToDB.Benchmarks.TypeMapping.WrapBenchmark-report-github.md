@@ -12,23 +12,23 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|                      Method |       Runtime |             Mean |           Error |         StdDev |           Median |        Ratio |    RatioSD |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------------------------- |-------------- |-----------------:|----------------:|---------------:|-----------------:|-------------:|-----------:|-------:|-------:|------:|----------:|
-|            TypeMapperString |    .NET 4.6.2 |    32,342.093 ns |   4,051.7151 ns |  2,679.9586 ns |    33,254.280 ns |    22,151.18 |   3,197.57 | 0.6714 | 0.1831 |     - |    4382 B |
-|          DirectAccessString |    .NET 4.6.2 |         1.475 ns |       0.2194 ns |      0.1451 ns |         1.479 ns |         1.00 |       0.00 |      - |      - |     - |         - |
-|   TypeMapperWrappedInstance |    .NET 4.6.2 | 1,602,064.210 ns | 114,336.8937 ns | 75,626.7759 ns | 1,615,330.166 ns | 1,097,399.03 | 147,064.14 | 9.7656 | 1.9531 |     - |   64542 B |
-| DirectAccessWrappedInstance |    .NET 4.6.2 |         1.194 ns |       0.9124 ns |      0.6035 ns |         1.467 ns |         0.83 |       0.43 |      - |      - |     - |         - |
-|     TypeMapperGetEnumerator |    .NET 4.6.2 |    25,365.174 ns |   1,099.3381 ns |    727.1441 ns |    25,458.787 ns |    17,367.73 |   2,050.65 | 0.5493 | 0.1526 |     - |    3411 B |
-|   DirectAccessGetEnumerator |    .NET 4.6.2 |       218.457 ns |      13.2225 ns |      7.8685 ns |       216.713 ns |       149.44 |      20.15 | 0.0134 |      - |     - |      56 B |
-|            TypeMapperString | .NET Core 2.1 |    28,512.294 ns |   2,005.8150 ns |  1,193.6283 ns |    28,216.524 ns |    19,469.87 |   2,376.31 | 0.4578 | 0.1526 |     - |    2976 B |
-|          DirectAccessString | .NET Core 2.1 |         3.652 ns |       0.3789 ns |      0.2506 ns |         3.698 ns |         2.50 |       0.35 |      - |      - |     - |         - |
-|   TypeMapperWrappedInstance | .NET Core 2.1 |   933,218.004 ns |  43,427.2795 ns | 28,724.4565 ns |   928,305.013 ns |   639,711.26 |  84,308.07 | 2.9297 | 0.9766 |     - |   24521 B |
-| DirectAccessWrappedInstance | .NET Core 2.1 |         1.166 ns |       0.2298 ns |      0.1368 ns |         1.170 ns |         0.79 |       0.10 |      - |      - |     - |         - |
-|     TypeMapperGetEnumerator | .NET Core 2.1 |    15,362.072 ns |     863.0960 ns |    513.6146 ns |    15,439.658 ns |    10,485.12 |   1,174.06 | 0.3357 | 0.0916 |     - |    2120 B |
-|   DirectAccessGetEnumerator | .NET Core 2.1 |       208.476 ns |       9.6204 ns |      6.3633 ns |       209.392 ns |       142.61 |      15.80 | 0.0074 |      - |     - |      32 B |
-|            TypeMapperString | .NET Core 3.1 |    15,496.097 ns |   1,383.3052 ns |    823.1827 ns |    15,202.430 ns |    10,593.10 |   1,395.41 | 0.4578 | 0.1678 |     - |    2904 B |
-|          DirectAccessString | .NET Core 3.1 |         1.650 ns |       0.2050 ns |      0.1356 ns |         1.604 ns |         1.13 |       0.19 |      - |      - |     - |         - |
-|   TypeMapperWrappedInstance | .NET Core 3.1 |   800,490.614 ns |  65,079.0008 ns | 38,727.4695 ns |   790,121.360 ns |   544,915.84 |  46,014.78 | 2.9297 | 0.9766 |     - |   24049 B |
-| DirectAccessWrappedInstance | .NET Core 3.1 |         1.136 ns |       0.2099 ns |      0.1388 ns |         1.124 ns |         0.78 |       0.14 |      - |      - |     - |         - |
-|     TypeMapperGetEnumerator | .NET Core 3.1 |    10,051.892 ns |     284.9953 ns |    169.5961 ns |    10,039.447 ns |     6,866.89 |     806.63 | 0.3357 | 0.0916 |     - |    2080 B |
-|   DirectAccessGetEnumerator | .NET Core 3.1 |       149.275 ns |      10.1630 ns |      6.7222 ns |       147.695 ns |       102.18 |      12.28 | 0.0076 |      - |     - |      32 B |
+|                      Method |       Runtime |       Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------------------- |-------------- |-----------:|----------:|----------:|-------:|--------:|-------:|------:|------:|----------:|
+|            TypeMapperString |    .NET 4.6.2 |  14.410 ns | 0.4590 ns | 0.3036 ns |  10.95 |    0.54 |      - |     - |     - |         - |
+|          DirectAccessString |    .NET 4.6.2 |   1.324 ns | 0.1135 ns | 0.0594 ns |   1.00 |    0.00 |      - |     - |     - |         - |
+|   TypeMapperWrappedInstance |    .NET 4.6.2 |  71.036 ns | 3.0906 ns | 2.0442 ns |  53.29 |    3.36 | 0.0114 |     - |     - |      48 B |
+| DirectAccessWrappedInstance |    .NET 4.6.2 |   1.375 ns | 0.1151 ns | 0.0685 ns |   1.04 |    0.06 |      - |     - |     - |         - |
+|     TypeMapperGetEnumerator |    .NET 4.6.2 | 154.666 ns | 3.0641 ns | 1.0927 ns | 116.50 |    6.55 | 0.0134 |     - |     - |      56 B |
+|   DirectAccessGetEnumerator |    .NET 4.6.2 | 132.434 ns | 2.6537 ns | 1.5792 ns | 100.18 |    3.58 | 0.0134 |     - |     - |      56 B |
+|            TypeMapperString | .NET Core 2.1 |   7.625 ns | 0.2666 ns | 0.1764 ns |   5.79 |    0.31 |      - |     - |     - |         - |
+|          DirectAccessString | .NET Core 2.1 |   2.597 ns | 0.2025 ns | 0.1205 ns |   1.98 |    0.14 |      - |     - |     - |         - |
+|   TypeMapperWrappedInstance | .NET Core 2.1 |  52.904 ns | 1.0051 ns | 0.6648 ns |  40.10 |    1.95 | 0.0114 |     - |     - |      48 B |
+| DirectAccessWrappedInstance | .NET Core 2.1 |   1.356 ns | 0.1063 ns | 0.0472 ns |   1.02 |    0.06 |      - |     - |     - |         - |
+|     TypeMapperGetEnumerator | .NET Core 2.1 | 167.252 ns | 2.9601 ns | 1.0556 ns | 125.96 |    6.57 | 0.0074 |     - |     - |      32 B |
+|   DirectAccessGetEnumerator | .NET Core 2.1 | 173.455 ns | 8.3952 ns | 5.5529 ns | 129.87 |    6.80 | 0.0074 |     - |     - |      32 B |
+|            TypeMapperString | .NET Core 3.1 |   5.717 ns | 0.1520 ns | 0.0395 ns |   4.35 |    0.22 |      - |     - |     - |         - |
+|          DirectAccessString | .NET Core 3.1 |   1.069 ns | 0.0644 ns | 0.0167 ns |   0.81 |    0.04 |      - |     - |     - |         - |
+|   TypeMapperWrappedInstance | .NET Core 3.1 |  55.964 ns | 1.6618 ns | 1.0992 ns |  42.32 |    1.76 | 0.0114 |     - |     - |      48 B |
+| DirectAccessWrappedInstance | .NET Core 3.1 |   1.566 ns | 0.2960 ns | 0.1958 ns |   1.14 |    0.16 |      - |     - |     - |         - |
+|     TypeMapperGetEnumerator | .NET Core 3.1 | 129.809 ns | 8.2881 ns | 5.4821 ns |  99.43 |    5.40 | 0.0076 |     - |     - |      32 B |
+|   DirectAccessGetEnumerator | .NET Core 3.1 | 123.024 ns | 1.1010 ns | 0.2859 ns |  93.60 |    4.81 | 0.0076 |     - |     - |      32 B |

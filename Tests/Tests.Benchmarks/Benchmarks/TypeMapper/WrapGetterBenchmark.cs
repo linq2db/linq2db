@@ -1,10 +1,13 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact due to build of expression recompilation
+	// benchmark shows big performance degradation and memory allocations for enum accessors
+	// due to use of Enum.Parse and boxing. Other types are fine
+	// FIX:
+	// we should update enum mapper to use value cast for enums with fixed values and probably add some
+	// optimizations for others (npgsql)
 	public class WrapGetterBenchmark
 	{
 		private Original.TestClass2 _originalInstance;
@@ -13,9 +16,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass2), typeof(Original.TestEventHandler));
-			typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
 			_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());

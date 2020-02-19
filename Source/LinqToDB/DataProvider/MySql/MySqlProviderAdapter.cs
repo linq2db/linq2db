@@ -142,7 +142,12 @@ namespace LinqToDB.DataProvider.MySql
 				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true);
 				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true);
 
-				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType, mySqlDecimalType);
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
+				typeMapper.RegisterTypeWrapper<MySqlDbType>(dbType);
+				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
+				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
+				typeMapper.FinalizeMappings();
 
 				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
 				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
@@ -171,19 +176,19 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			[Wrapper]
-			internal class MySqlDateTime
+			private class MySqlDateTime
 			{
 				public DateTime GetDateTime() => throw new NotImplementedException();
 			}
 
 			[Wrapper]
-			internal class MySqlDecimal
+			private class MySqlDecimal
 			{
 				public decimal Value { get; }
 			}
 
 			[Wrapper]
-			internal class MySqlParameter
+			private class MySqlParameter
 			{
 				public MySqlDbType MySqlDbType { get; set; }
 			}
@@ -251,7 +256,11 @@ namespace LinqToDB.DataProvider.MySql
 				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true);
 				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true);
 
-				var typeMapper = new TypeMapper(connectionType, parameterType, dbType, mySqlDateTimeType);
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
+				typeMapper.RegisterTypeWrapper<MySqlDbType>(dbType);
+				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
+				typeMapper.FinalizeMappings();
 
 				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
@@ -278,13 +287,13 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			[Wrapper]
-			internal class MySqlDateTime
+			private class MySqlDateTime
 			{
 				public DateTime GetDateTime() => throw new NotImplementedException();
 			}
 
 			[Wrapper]
-			internal class MySqlParameter
+			private class MySqlParameter
 			{
 				public MySqlDbType MySqlDbType { get; set; }
 			}

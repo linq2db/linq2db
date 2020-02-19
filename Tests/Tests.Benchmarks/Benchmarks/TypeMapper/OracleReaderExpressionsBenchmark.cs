@@ -117,16 +117,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(
-				typeof(Original.OracleDataReader),
-				typeof(Original.OracleTimeStampTZ),
-				typeof(Original.OracleTimeStampLTZ),
-				typeof(Original.OracleDecimal));
+			var typeMapper = new TypeMapper();
 
-			typeMapper.RegisterWrapper<Wrapped.OracleDataReader>();
-			typeMapper.RegisterWrapper<Wrapped.OracleTimeStampTZ>();
-			typeMapper.RegisterWrapper<Wrapped.OracleTimeStampLTZ>();
-			typeMapper.RegisterWrapper<Wrapped.OracleDecimal>();
+			typeMapper.RegisterTypeWrapper<Wrapped.OracleDataReader>(typeof(Original.OracleDataReader));
+			typeMapper.RegisterTypeWrapper<Wrapped.OracleTimeStampTZ>(typeof(Original.OracleTimeStampTZ));
+			typeMapper.RegisterTypeWrapper<Wrapped.OracleTimeStampLTZ>(typeof(Original.OracleTimeStampLTZ));
+			typeMapper.RegisterTypeWrapper<Wrapped.OracleDecimal>(typeof(Original.OracleDecimal));
+
+			typeMapper.FinalizeMappings();
 
 			// _readDateTimeOffsetFromOracleTimeStampTZ
 			var generator = new ExpressionGenerator(typeMapper);

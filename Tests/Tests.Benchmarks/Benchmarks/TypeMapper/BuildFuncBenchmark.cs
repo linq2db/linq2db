@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
@@ -14,8 +13,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass));
-			typeMapper.RegisterWrapper<Wrapped.TestClass>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_functionCall = typeMapper.BuildFunc<ITestClass, Guid, object[], DataTable>(typeMapper.MapLambda((Wrapped.TestClass conn, Guid schema, object[] restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 		}

@@ -3,7 +3,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact
+	// benchmark shows expected extra allocation and time penalty for wrapper instance creation
 	public class WrapInstanceBenchmark
 	{
 		private Original.TestClass2 _originalInstance;
@@ -12,9 +12,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			_typeMapper = new TypeMapper(typeof(Original.TestClass2), typeof(Original.TestEventHandler));
-			_typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			_typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
+			_typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
 		}

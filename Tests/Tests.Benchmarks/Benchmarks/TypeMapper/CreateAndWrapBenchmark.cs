@@ -1,10 +1,9 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact due to build of expression recompilation
+	// FIX: benchmark shows huge performance and memory impact due to current events implmentation
 	public class CreateAndWrapBenchmark
 	{
 		private static readonly int IntParameter = -1;
@@ -29,15 +28,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(
-				typeof(Original.TestClass),
-				typeof(Original.TestClass2),
-				typeof(Original.TestEnum),
-				typeof(Original.TestEventHandler));
-			typeMapper.RegisterWrapper<Wrapped.TestClass>();
-			typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			typeMapper.RegisterWrapper<Wrapped.TestEnum>();
-			typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_factoryParameterless = () => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());
 			_factoryOneParameterString = (string connectionString) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(connectionString));

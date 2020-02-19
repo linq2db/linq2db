@@ -116,35 +116,62 @@ namespace Tests
 
 		class SampleClass : TypeWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get Id
+				(Expression<Func<SampleClass, int>>)((SampleClass this_) => this_.Id),
+				// [1]: get Value
+				(Expression<Func<SampleClass, int>>)((SampleClass this_) => this_.Value),
+				// [2]: GetOtherAnother
+				(Expression<Func<SampleClass, int, OtherClass>>)((SampleClass this_, int idx) => this_.GetOtherAnother(idx)),
+				// [3]: SomeAction
+				(Expression<Action<SampleClass>>)((SampleClass this_) => this_.SomeAction()),
+				// [4]: GetRegularEnum
+				(Expression<Func<SampleClass, int, RegularEnum>>)((SampleClass this_, int raw) => this_.GetRegularEnum(raw)),
+				// [5]: GetFlagsEnum
+				(Expression<Func<SampleClass, int, FlagsEnum>>)((SampleClass this_, int raw) => this_.GetFlagsEnum(raw)),
+				// [6]: SetRegularEnum
+				(Expression<Func<SampleClass, RegularEnum, int>>)((SampleClass this_, RegularEnum val) => this_.SetRegularEnum(val)),
+				// [7]: SetFlagsEnum
+				(Expression<Func<SampleClass, FlagsEnum, int>>)((SampleClass this_, FlagsEnum val) => this_.SetFlagsEnum(val)),
+				// [8]: get RegularEnumProperty
+				(Expression<Func<SampleClass, RegularEnum>>)((SampleClass this_) => this_.RegularEnumProperty),
+				// [9]: get FlagsEnumProperty
+				(Expression<Func<SampleClass, FlagsEnum>>)((SampleClass this_) => this_.FlagsEnumProperty),
+				// [10]: Fire
+				(Expression<Action<SampleClass, bool>>)((SampleClass this_,bool withHandlers) => this_.Fire(withHandlers)),
+			};
+
 			private bool _event1Wrapped;
 			private bool _event2Wrapped;
-			public int Id    => this.Wrap(t => t.Id);
-			public int Value => this.Wrap(t => t.Value);
+			public int Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
+			public int Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
 			public string StrValue { get; set; }
 			public OtherClass GetOther(int idx) => throw new NotImplementedException();
-			public OtherClass GetOtherAnother(int idx) => this.Wrap(t => t.GetOtherAnother(idx));
+			public OtherClass GetOtherAnother(int idx) => ((Func<SampleClass, int, OtherClass>)CompiledWrappers[2])(this, idx);
 
-			public void SomeAction() => this.WrapAction(t => t.SomeAction());
+			public void SomeAction() => ((Action<SampleClass>)CompiledWrappers[3])(this);
 
-			public RegularEnum GetRegularEnum(int raw) => this.Wrap(t => t.GetRegularEnum(raw));
-			public FlagsEnum   GetFlagsEnum  (int raw) => this.Wrap(t => t.GetFlagsEnum(raw));
+			public RegularEnum GetRegularEnum(int raw) => ((Func<SampleClass, int, RegularEnum>)CompiledWrappers[4])(this, raw);
+			public FlagsEnum   GetFlagsEnum  (int raw) => ((Func<SampleClass, int, FlagsEnum>)CompiledWrappers[5])(this, raw);
 
-			public int SetRegularEnum(RegularEnum val) => this.Wrap(t => t.SetRegularEnum(val));
-			public int SetFlagsEnum  (FlagsEnum   val) => this.Wrap(t => t.SetFlagsEnum(val));
+			public int SetRegularEnum(RegularEnum val) => ((Func<SampleClass, RegularEnum, int>)CompiledWrappers[6])(this, val);
+			public int SetFlagsEnum  (FlagsEnum   val) => ((Func<SampleClass, FlagsEnum, int>)CompiledWrappers[7])(this, val);
 
 			public RegularEnum RegularEnumProperty
 			{
-				get => this.Wrap        (t => t.RegularEnumProperty);
+				get => ((Func<SampleClass, RegularEnum>)CompiledWrappers[8])(this);
 				set => this.SetPropValue(t => t.RegularEnumProperty, value);
 			}
 
 			public FlagsEnum FlagsEnumProperty
 			{
-				get => this.Wrap        (t => t.FlagsEnumProperty);
+				get => ((Func<SampleClass, FlagsEnum>)CompiledWrappers[9])(this);
 				set => this.SetPropValue(t => t.FlagsEnumProperty, value);
 			}
 
-			public void Fire(bool withHandlers) => this.WrapAction(t => t.Fire(withHandlers));
+			public void Fire(bool withHandlers) => ((Action<SampleClass, bool>)CompiledWrappers[10])(this, withHandlers);
 
 			public event SimpleDelegate               SimpleDelegateEvent
 			{
@@ -182,7 +209,7 @@ namespace Tests
 				Events.AddHandler(eventName, handler);
 			}
 
-			public SampleClass(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
+			public SampleClass(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
 			{
 				this.WrapEvent<SampleClass, SimpleDelegate>(nameof(SimpleDelegateEvent));
 				this.WrapEvent<SampleClass, SimpleDelegateWithMapping>(nameof(SimpleDelegateWithMappingEvent));
@@ -201,24 +228,38 @@ namespace Tests
 
 		class OtherClass : TypeWrapper
 		{
-			public string OtherStrProp => this.Wrap(t => t.OtherStrProp);
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get OtherStrProp
+				(Expression<Func<OtherClass, string>>)((OtherClass this_) => this_.OtherStrProp),
+			};
 
-			public OtherClass(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
+			public string OtherStrProp => ((Func<OtherClass, string>)CompiledWrappers[0])(this);
+
+			public OtherClass(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
 			{
 			}
 		}
 
 		class CollectionSample : TypeWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<CollectionSample, SampleClass, SampleClass>>)((CollectionSample this_, SampleClass item) => this_.Add(item)),
+			};
+
 			public CollectionSample()
 			{
 			}
 
-			public CollectionSample(object instance, [NotNull] TypeMapper mapper) : base(instance, mapper)
+			public CollectionSample(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
 			{
 			}
 
-			public SampleClass Add(SampleClass sample) => this.Wrap(t => t.Add(sample));
+			public SampleClass Add(SampleClass sample) => ((Func<CollectionSample, SampleClass, SampleClass>)CompiledWrappers[0])(this, sample);
 		}
 
 		[Wrapper]
@@ -240,18 +281,25 @@ namespace Tests
 		[TestFixture]
 		public class MappingTests : TestBase
 		{
-			private TypeMapper _typeMapper = new TypeMapper(
-				typeof(Dynamic.SampleClass), 
-				typeof(Dynamic.OtherClass), 
-				typeof(Dynamic.SampleClassExtensions),
-				typeof(Dynamic.CollectionSample),
-				typeof(Dynamic.SimpleDelegate),
-				typeof(Dynamic.SimpleDelegateWithMapping),
-				typeof(Dynamic.ReturningDelegate),
-				typeof(Dynamic.ReturningDelegateWithMapping),
-				typeof(Dynamic.RegularEnum),
-				typeof(Dynamic.FlagsEnum)
-				);
+			private TypeMapper CreateTypeMapper()
+			{
+				var typeMapper = new TypeMapper();
+
+				typeMapper.RegisterTypeWrapper<SampleClass>(typeof(Dynamic.SampleClass));
+				typeMapper.RegisterTypeWrapper<OtherClass>(typeof(Dynamic.OtherClass));
+				typeMapper.RegisterTypeWrapper(typeof(SampleClassExtensions), typeof(Dynamic.SampleClassExtensions));
+				typeMapper.RegisterTypeWrapper<CollectionSample>(typeof(Dynamic.CollectionSample));
+				typeMapper.RegisterTypeWrapper<SimpleDelegate>(typeof(Dynamic.SimpleDelegate));
+				typeMapper.RegisterTypeWrapper<SimpleDelegateWithMapping>(typeof(Dynamic.SimpleDelegateWithMapping));
+				typeMapper.RegisterTypeWrapper<ReturningDelegate>(typeof(Dynamic.ReturningDelegate));
+				typeMapper.RegisterTypeWrapper<ReturningDelegateWithMapping>(typeof(Dynamic.ReturningDelegateWithMapping));
+				typeMapper.RegisterTypeWrapper<RegularEnum>(typeof(Dynamic.RegularEnum));
+				typeMapper.RegisterTypeWrapper<FlagsEnum>(typeof(Dynamic.FlagsEnum));
+
+				typeMapper.FinalizeMappings();
+
+				return typeMapper;
+			}
 
 			[Test]
 			public void WrappingTests()
@@ -259,10 +307,12 @@ namespace Tests
 
 				var concrete = new Dynamic.SampleClass{ Id = 1, Value = 33 };
 
-				var l1 = _typeMapper.MapLambda((SampleClass s) => s.Value);
-				var l2 = _typeMapper.MapLambda((SampleClass s) => s.Id);
-				var l3 = _typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i));
-				var l4 = _typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
+				var typeMapper = CreateTypeMapper();
+
+				var l1 = typeMapper.MapLambda((SampleClass s) => s.Value);
+				var l2 = typeMapper.MapLambda((SampleClass s) => s.Id);
+				var l3 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i));
+				var l4 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
 
 
 				var cl1 = (Func<Dynamic.SampleClass, int>)l1.Compile();
@@ -277,16 +327,16 @@ namespace Tests
 
 				var dynamicInstance = (object)concrete;
 
-				var value1 = _typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(1).OtherStrProp);
+				var value1 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(1).OtherStrProp);
 				Assert.That(value1, Is.EqualTo("OtherStrValue1"));
 
-				var value2 = _typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(2).OtherStrProp);
+				var value2 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(2).OtherStrProp);
 				Assert.That(value2, Is.EqualTo("OtherStrValue2"));
 
-				var value11 = _typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOtherStr(3));
+				var value11 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOtherStr(3));
 				Assert.That(value11, Is.EqualTo("OtherStrValue3"));
 
-				var wrapper = _typeMapper.Wrap<SampleClass>(dynamicInstance);
+				var wrapper = typeMapper.Wrap<SampleClass>(dynamicInstance);
 
 				var str1 = wrapper.GetOtherAnother(5).OtherStrProp;
 				Assert.That(str1, Is.EqualTo("OtherAnotherStrValue5"));
@@ -300,7 +350,9 @@ namespace Tests
 			[Test]
 			public void TestNew()
 			{
-				var newExpression = _typeMapper.MapExpression(() => new SampleClass(55, 77));
+				var typeMapper = CreateTypeMapper();
+
+				var newExpression = typeMapper.MapExpression(() => new SampleClass(55, 77));
 				
 				var newLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
 				var instance = newLambda.Compile()();
@@ -312,7 +364,9 @@ namespace Tests
 			[Test]
 			public void TestMemberInit()
 			{
-				var newMemberInit = _typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
+				var typeMapper = CreateTypeMapper();
+
+				var newMemberInit = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
 				var memberInitLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newMemberInit);
 
 				var instance = memberInitLambda.Compile()();
@@ -325,8 +379,10 @@ namespace Tests
 			[Test]
 			public void TestMapFunc()
 			{
-				var newMemberInit = _typeMapper.MapLambda((int i) => new SampleClass(i + 55, i + 77) {StrValue = "Str"});
-				var func = _typeMapper.BuildFunc<byte, object>(newMemberInit);
+				var typeMapper = CreateTypeMapper();
+
+				var newMemberInit = typeMapper.MapLambda((int i) => new SampleClass(i + 55, i + 77) {StrValue = "Str"});
+				var func = typeMapper.BuildFunc<byte, object>(newMemberInit);
 				
 				var instance = (Dynamic.SampleClass)func(1);
 
@@ -338,7 +394,9 @@ namespace Tests
 			[Test]
 			public void TesWrapper()
 			{
-				var wrapper = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var typeMapper = CreateTypeMapper();
+
+				var wrapper = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 
 				wrapper.SomeAction();
 				Assert.That(wrapper.Value, Is.EqualTo(3));
@@ -347,8 +405,10 @@ namespace Tests
 			[Test]
 			public void TesCollection()
 			{
-				var collection = _typeMapper.CreateAndWrap(() => new CollectionSample());
-				var obj = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var typeMapper = CreateTypeMapper();
+
+				var collection = typeMapper.CreateAndWrap(() => new CollectionSample());
+				var obj = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 
 				var same = collection.Add(obj);
 
@@ -359,7 +419,8 @@ namespace Tests
 			[Test]
 			public void TestEvents()
 			{
-				var wrapper  = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var typeMapper = CreateTypeMapper();
+				var wrapper  = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// no subscribers
@@ -404,11 +465,9 @@ namespace Tests
 			[Test]
 			public void TestEnums()
 			{
-				var wrapper  = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
-				// TODO: probably we need to change wrappers registration to require caller to register both
-				// original type and wrapper to avoid issues due to missing registration
-				_typeMapper.RegisterWrapper<RegularEnum>();
-				_typeMapper.RegisterWrapper<FlagsEnum>();
+				var typeMapper = CreateTypeMapper();
+
+				var wrapper  = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 
 				// test in methods
 				//
@@ -444,7 +503,7 @@ namespace Tests
 				Assert.AreEqual(FlagsEnum.Bits24, wrapper.FlagsEnumProperty);
 
 				// using setters/getters
-				var typeBuilder = _typeMapper.Type<SampleClass>();
+				var typeBuilder = typeMapper.Type<SampleClass>();
 				var regularEnumBuilder = typeBuilder.Member(p => p.RegularEnumProperty);
 				var flagsEnumBuilder   = typeBuilder.Member(p => p.FlagsEnumProperty);
 
@@ -455,7 +514,7 @@ namespace Tests
 				var flagsGetter = flagsEnumBuilder.BuildGetter<Dynamic.SampleClass>();
 
 				// reset instance
-				wrapper = _typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				wrapper = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// non-flags enum mapping

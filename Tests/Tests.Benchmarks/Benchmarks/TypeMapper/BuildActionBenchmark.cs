@@ -1,6 +1,5 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
@@ -12,8 +11,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass));
-			typeMapper.RegisterWrapper<Wrapped.TestClass>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_action = typeMapper.BuildAction(typeMapper.MapActionLambda(() => Wrapped.TestClass.ClearAllPools()));
 		}

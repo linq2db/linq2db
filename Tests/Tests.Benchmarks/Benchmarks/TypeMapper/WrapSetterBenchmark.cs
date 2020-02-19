@@ -1,9 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact
+	// FIX: benchmark shows huge performance and memory impact (not yet migrated to new wrapper infra)
 	public class WrapSetterBenchmark
 	{
 		private static readonly string StringParameter = "TestString";
@@ -16,9 +15,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass2), typeof(Original.TestEventHandler));
-			typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
 			_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());

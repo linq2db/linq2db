@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
@@ -102,7 +103,12 @@ namespace LinqToDB.DataProvider.Sybase
 			var transactionType = assembly.GetType($"{clientNamespace}.AseTransaction", true);
 			var dbType          = assembly.GetType($"{clientNamespace}.AseDbType"     , true);
 
-			TypeMapper       typeMapper;
+			var typeMapper = new TypeMapper();
+			typeMapper.RegisterTypeWrapper<AseConnection>(connectionType);
+			typeMapper.RegisterTypeWrapper<AseParameter>(parameterType);
+			typeMapper.RegisterTypeWrapper<AseDbType>(dbType);
+			typeMapper.RegisterTypeWrapper<AseTransaction>(transactionType);
+
 			BulkCopyAdapter? bulkCopy = null;
 
 			if (supportsBulkCopy)
@@ -114,27 +120,13 @@ namespace LinqToDB.DataProvider.Sybase
 				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMappingCollection", true);
 				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventArgs"            , true);
 
-				typeMapper = new TypeMapper(
-					connectionType, parameterType, transactionType, dbType,
-					bulkCopyType, bulkCopyOptionsType, bulkRowsCopiedEventHandlerType, bulkCopyColumnMappingType, bulkCopyColumnMappingCollectionType, rowsCopiedEventArgsType);
-			}
-			else
-				typeMapper = new TypeMapper(connectionType, parameterType, transactionType, dbType);
-
-			typeMapper.RegisterWrapper<AseConnection>();
-			typeMapper.RegisterWrapper<AseParameter>();
-			typeMapper.RegisterWrapper<AseDbType>();
-			typeMapper.RegisterWrapper<AseTransaction>();
-
-			if (supportsBulkCopy)
-			{
-				// bulk copy types
-				typeMapper.RegisterWrapper<AseBulkCopy>();
-				typeMapper.RegisterWrapper<AseBulkCopyOptions>();
-				typeMapper.RegisterWrapper<AseRowsCopiedEventHandler>();
-				typeMapper.RegisterWrapper<AseBulkCopyColumnMapping>();
-				typeMapper.RegisterWrapper<AseBulkCopyColumnMappingCollection>();
-				typeMapper.RegisterWrapper<AseRowsCopiedEventArgs>();
+				typeMapper.RegisterTypeWrapper<AseBulkCopy>(bulkCopyType);
+				typeMapper.RegisterTypeWrapper<AseBulkCopyOptions>(bulkCopyOptionsType);
+				typeMapper.RegisterTypeWrapper<AseRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+				typeMapper.RegisterTypeWrapper<AseBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+				typeMapper.RegisterTypeWrapper<AseBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollectionType);
+				typeMapper.RegisterTypeWrapper<AseRowsCopiedEventArgs>(rowsCopiedEventArgsType);
+				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
 					(IDbConnection connection, AseBulkCopyOptions options, IDbTransaction? transaction)
@@ -142,6 +134,8 @@ namespace LinqToDB.DataProvider.Sybase
 					(string source, string destination)
 						=> typeMapper.CreateAndWrap(() => new AseBulkCopyColumnMapping(source, destination))!);
 			}
+			else
+				typeMapper.FinalizeMappings();
 
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
@@ -158,7 +152,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		[Wrapper]
-		internal class AseParameter
+		private class AseParameter
 		{
 			public AseDbType AseDbType { get; set; }
 		}
@@ -214,49 +208,65 @@ namespace LinqToDB.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopy : TypeWrapper, IDisposable
 		{
-			public AseBulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Dispose
+				(Expression<Action<AseBulkCopy>>)((AseBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				// [1]: WriteToServer
+				(Expression<Action<AseBulkCopy, IDataReader>>)((AseBulkCopy this_, IDataReader dataReader) => this_.WriteToServer(dataReader)),
+				// [2]: get NotifyAfter
+				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.NotifyAfter),
+				// [3]: get BatchSize
+				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.BatchSize),
+				// [4]: get BulkCopyTimeout
+				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.BulkCopyTimeout),
+				// [5]: get DestinationTableName
+				(Expression<Func<AseBulkCopy, string?>>)((AseBulkCopy this_) => this_.DestinationTableName),
+				// [6]: get ColumnMappings
+				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)((AseBulkCopy this_) => this_.ColumnMappings),
+			};
+
+			public AseBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 				this.WrapEvent<AseBulkCopy, AseRowsCopiedEventHandler>(nameof(AseRowsCopied));
 			}
 
 			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
 
-			void IDisposable.Dispose() => this.WrapAction(t => ((IDisposable)t).Dispose());
+			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
-			public void WriteToServer(IDataReader dataReader) => this.WrapAction(t => t.WriteToServer(dataReader));
+			public void WriteToServer(IDataReader dataReader) => ((Action<AseBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 
 			public int NotifyAfter
 			{
-				get => this.Wrap(t => t.NotifyAfter);
+				get => ((Func<AseBulkCopy, int>)CompiledWrappers[2])(this);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BatchSize
 			{
-				get => this.Wrap(t => t.BatchSize);
+				get => ((Func<AseBulkCopy, int>)CompiledWrappers[3])(this);
 				set => this.SetPropValue(t => t.BatchSize, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap(t => t.BulkCopyTimeout);
+				get => ((Func<AseBulkCopy, int>)CompiledWrappers[4])(this);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap(t => t.DestinationTableName);
+				get => ((Func<AseBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
-			public AseBulkCopyColumnMappingCollection ColumnMappings
-			{
-				get => this.Wrap(t => t.ColumnMappings);
-			}
+			public AseBulkCopyColumnMappingCollection ColumnMappings => ((Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
 			public event AseRowsCopiedEventHandler AseRowsCopied
 			{
-				add => Events.AddHandler(nameof(AseRowsCopied), value);
+				add    => Events.AddHandler(nameof(AseRowsCopied), value);
 				remove => Events.RemoveHandler(nameof(AseRowsCopied), value);
 			}
 		}
@@ -264,20 +274,29 @@ namespace LinqToDB.DataProvider.Sybase
 		[Wrapper]
 		public class AseRowsCopiedEventArgs : TypeWrapper
 		{
-			public AseRowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get RowCopied
+				(Expression<Func<AseRowsCopiedEventArgs, int>>)((AseRowsCopiedEventArgs this_) => this_.RowCopied),
+				// [1]: get Abort
+				(Expression<Func<AseRowsCopiedEventArgs, bool>>)((AseRowsCopiedEventArgs this_) => this_.Abort),
+			};
+
+			public AseRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			// sic! Row, not Rows
 			public int RowCopied
 			{
-				get => this.Wrap(t => t.RowCopied);
+				get => ((Func<AseRowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
 				set => this.SetPropValue(t => t.RowCopied, value);
 			}
 
 			public bool Abort
 			{
-				get => this.Wrap(t => t.Abort);
+				get => ((Func<AseRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
@@ -288,11 +307,18 @@ namespace LinqToDB.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopyColumnMappingCollection : TypeWrapper
 		{
-			public AseBulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, AseBulkCopyColumnMapping>>)((AseBulkCopyColumnMappingCollection this_, AseBulkCopyColumnMapping column) => this_.Add(column)),
+			};
+
+			public AseBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public AseBulkCopyColumnMapping Add(AseBulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
+			public AseBulkCopyColumnMapping Add(AseBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, AseBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]
@@ -313,11 +339,9 @@ namespace LinqToDB.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopyColumnMapping : TypeWrapper
 		{
-			public AseBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
+			public AseBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
-
-			public AseBulkCopyColumnMapping(int source, int destination) => throw new NotImplementedException();
 
 			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
 		}

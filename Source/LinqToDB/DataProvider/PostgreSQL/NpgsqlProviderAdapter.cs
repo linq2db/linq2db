@@ -253,15 +253,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true);
 
-						var typeMapper = new TypeMapper(
-							connectionType, parameterType, dbType, dataReaderType,
-							npgsqlBinaryImporterType);
-
-						typeMapper.RegisterWrapper<NpgsqlConnection>();
-						typeMapper.RegisterWrapper<NpgsqlParameter>();
-						typeMapper.RegisterWrapper<NpgsqlDbType>();
-
-						typeMapper.RegisterWrapper<NpgsqlBinaryImporter>();
+						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<NpgsqlConnection>(connectionType);
+						typeMapper.RegisterTypeWrapper<NpgsqlParameter>(parameterType);
+						typeMapper.RegisterTypeWrapper<NpgsqlDbType>(dbType);
+						typeMapper.RegisterTypeWrapper<NpgsqlBinaryImporter>(npgsqlBinaryImporterType);
+						typeMapper.FinalizeMappings();
 
 						var paramMapper   = typeMapper.Type<NpgsqlParameter>();
 						var dbTypeBuilder = paramMapper.Member(p => p.NpgsqlDbType);
@@ -273,7 +270,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								typeMapper.MapExpression((IDbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
 							.Compile();
-
 
 						// create mapping schema
 						var mappingSchema = new MappingSchema();
@@ -430,7 +426,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region Wrappers
 
 		[Wrapper]
-		internal class NpgsqlParameter
+		private class NpgsqlParameter
 		{
 			public NpgsqlDbType NpgsqlDbType { get; set; }
 		}
@@ -541,43 +537,62 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Wrapper]
 		public class NpgsqlConnection : TypeWrapper, IDisposable
 		{
-			public NpgsqlConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get PostgreSqlVersion
+				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),
+				// [1]: Open
+				(Expression<Action<NpgsqlConnection>>)((NpgsqlConnection this_) => this_.Open()),
+				// [2]: Dispose
+				(Expression<Action<NpgsqlConnection>>)((NpgsqlConnection this_) => this_.Dispose()),
+			};
+
+			public NpgsqlConnection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public NpgsqlConnection(string connectionString) => throw new NotImplementedException();
 
-			public Version PostgreSqlVersion => this.Wrap(t => t.PostgreSqlVersion);
-
-			public void Open() => this.WrapAction(c => c.Open());
-
-			public void Dispose() => this.WrapAction(t => t.Dispose());
+			public Version PostgreSqlVersion => ((Func<NpgsqlConnection, Version>)CompiledWrappers[0])(this);
+			public void    Open()            => ((Action<NpgsqlConnection>)CompiledWrappers[1])(this);
+			public void    Dispose()         => ((Action<NpgsqlConnection>)CompiledWrappers[2])(this);
 
 			// not implemented, as it is not called from wrapper
-			public NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
 		}
 
 		#region BulkCopy
 		[Wrapper]
 		public class NpgsqlBinaryImporter : TypeWrapper
 		{
-			public NpgsqlBinaryImporter(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers {get;}
+				= new LambdaExpression[]
+			{
+				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null
+				// [0]: Cancel
+				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Cancel()),
+				// [1]: Complete
+				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()),
+				// [2]: Dispose
+				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Dispose()),
+				// [3]: StartRow
+				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
+			};
+
+			public NpgsqlBinaryImporter(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			/// <summary>
-			/// Npgsql 3.x.
-			/// </summary>
-			public void Cancel() => this.WrapAction(t => t.Cancel());
-			/// <summary>
-			/// Npgsql 4.x.
+			/// Npgsql 3.x provides Cancel method.
+			/// Npgsql 4.x uses Complete method.
 			/// https://github.com/npgsql/npgsql/issues/1646.
 			/// </summary>
-			public void Complete() => this.WrapAction(t => t.Complete());
-
-			public void Dispose() => this.WrapAction(t => t.Dispose());
-
-			public void StartRow() => this.WrapAction(t => t.StartRow());
+			public void Cancel()   => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[0])(this);
+			public void Complete() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[1])(this);
+			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[2])(this);
+			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 		}
 
 		#endregion

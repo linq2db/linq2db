@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -179,28 +181,25 @@ namespace LinqToDB.DataProvider.SqlServer
 			var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true);
 			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true);
 
-			var typeMapper = new TypeMapper(
-				connectionType, parameterType, transactionType,
-				sqlCommandBuilderType, sqlConnectionStringBuilderType,
-				sqlExceptionType, sqlErrorCollectionType, sqlErrorType,
-				bulkCopyType, bulkCopyOptionsType, bulkRowsCopiedEventHandlerType, bulkCopyColumnMappingType, bulkCopyColumnMappingCollectionType, rowsCopiedEventArgsType);
+			var typeMapper = new TypeMapper();
 
-			typeMapper.RegisterWrapper<SqlConnection>();
-			typeMapper.RegisterWrapper<SqlParameter>();
-			typeMapper.RegisterWrapper<SqlTransaction>();
-			typeMapper.RegisterWrapper<SqlCommandBuilder>();
-			typeMapper.RegisterWrapper<SqlException>();
-			typeMapper.RegisterWrapper<SqlErrorCollection>();
-			typeMapper.RegisterWrapper<SqlError>();
-			typeMapper.RegisterWrapper<SqlConnectionStringBuilder>();
+			typeMapper.RegisterTypeWrapper<SqlConnection>(connectionType);
+			typeMapper.RegisterTypeWrapper<SqlParameter>(parameterType);
+			typeMapper.RegisterTypeWrapper<SqlTransaction>(transactionType);
+			typeMapper.RegisterTypeWrapper<SqlCommandBuilder>(sqlCommandBuilderType);
+			typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
+			typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
+			typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
+			typeMapper.RegisterTypeWrapper<SqlConnectionStringBuilder>(sqlConnectionStringBuilderType);
 
 			// bulk copy types
-			typeMapper.RegisterWrapper<SqlBulkCopy>();
-			typeMapper.RegisterWrapper<SqlBulkCopyOptions>();
-			typeMapper.RegisterWrapper<SqlRowsCopiedEventHandler>();
-			typeMapper.RegisterWrapper<SqlBulkCopyColumnMapping>();
-			typeMapper.RegisterWrapper<SqlBulkCopyColumnMappingCollection>();
-			typeMapper.RegisterWrapper<SqlRowsCopiedEventArgs>();
+			typeMapper.RegisterTypeWrapper<SqlBulkCopy>(bulkCopyType);
+			typeMapper.RegisterTypeWrapper<SqlBulkCopyOptions>(bulkCopyOptionsType);
+			typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+			typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+			typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollectionType);
+			typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventArgs>(rowsCopiedEventArgsType);
+			typeMapper.FinalizeMappings();
 
 			var paramMapper        = typeMapper.Type<SqlParameter>();
 			var dbTypeBuilder      = paramMapper.Member(p => p.SqlDbType);
@@ -246,24 +245,35 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		internal class SqlException : TypeWrapper
 		{
-			public SqlException(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get Errors
+				(Expression<Func<SqlException, SqlErrorCollection>>)((SqlException this_) => this_.Errors),
+			};
+
+			public SqlException(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public SqlErrorCollection Errors
-			{
-				get => this.Wrap(t => t.Errors);
-			}
+			public SqlErrorCollection Errors => ((Func<SqlException, SqlErrorCollection>)CompiledWrappers[0])(this);
 		}
 
 		[Wrapper]
 		internal class SqlErrorCollection : TypeWrapper
 		{
-			public SqlErrorCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: GetEnumerator
+				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
+			};
+
+			public SqlErrorCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public IEnumerator GetEnumerator() => this.Wrap(t => t.GetEnumerator());
+			public IEnumerator GetEnumerator() => ((Func<SqlErrorCollection, IEnumerator>)CompiledWrappers[0])(this);
 
 			public IEnumerable<SqlError> Errors
 			{
@@ -280,31 +290,42 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		internal class SqlError : TypeWrapper
 		{
-			public SqlError(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get Number
+				(Expression<Func<SqlError, int>>)((SqlError this_) => this_.Number),
+			};
+
+			public SqlError(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public int Number
-			{
-				get => this.Wrap(t => t.Number);
-			}
+			public int Number => ((Func<SqlError, int>)CompiledWrappers[0])(this);
 		}
 		#endregion
 
 		[Wrapper]
 		internal class SqlCommandBuilder : TypeWrapper
 		{
-			public SqlCommandBuilder(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: QuoteIdentifier
+				(Expression<Func<SqlCommandBuilder, string, string>>)((SqlCommandBuilder this_, string identifier) => this_.QuoteIdentifier(identifier)),
+			};
+
+			public SqlCommandBuilder(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public SqlCommandBuilder() => throw new NotImplementedException();
 
-			public string QuoteIdentifier(string unquotedIdentifier) => this.Wrap(t => t.QuoteIdentifier(unquotedIdentifier));
+			public string QuoteIdentifier(string unquotedIdentifier) => ((Func<SqlCommandBuilder, string, string>)CompiledWrappers[0])(this, unquotedIdentifier);
 		}
 
 		[Wrapper]
-		internal class SqlParameter
+		private class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
 			public string    UdtTypeName { get; set; } = null!;
@@ -315,7 +336,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlConnectionStringBuilder : TypeWrapper
 		{
-			public SqlConnectionStringBuilder(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get MultipleActiveResultSets
+				(Expression<Func<SqlConnectionStringBuilder, bool>>)((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
+			};
+
+			public SqlConnectionStringBuilder(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
@@ -323,7 +351,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public bool MultipleActiveResultSets
 			{
-				get => this.Wrap(t => t.MultipleActiveResultSets);
+				get => ((Func<SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
 				set => this.SetPropValue(t => t.MultipleActiveResultSets, value);
 			}
 		}
@@ -331,19 +359,29 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlConnection : TypeWrapper, IDisposable
 		{
-			public SqlConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get ServerVersion
+				(Expression<Func<SqlConnection, string>>)((SqlConnection this_) => this_.ServerVersion),
+				// [1]: CreateCommand
+				(Expression<Func<SqlConnection, IDbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
+				// [2]: Open
+				(Expression<Action<SqlConnection>>)((SqlConnection this_) => this_.Open()),
+				// [3]: Dispose
+				(Expression<Action<SqlConnection>>)((SqlConnection this_) => this_.Dispose()),
+			};
+
+			public SqlConnection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public SqlConnection(string connectionString) => throw new NotImplementedException();
 
-			public IDbCommand CreateCommand() => this.Wrap(t => t.CreateCommand());
-
-			public string ServerVersion => this.Wrap(t => t.ServerVersion);
-
-			public void Open() => this.WrapAction(c => c.Open());
-
-			public void Dispose() => this.WrapAction(t => t.Dispose());
+			public string     ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
+			public IDbCommand CreateCommand() => ((Func<SqlConnection, IDbCommand>)CompiledWrappers[1])(this);
+			public void       Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
+			public void       Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
 		}
 
 		[Wrapper]
@@ -355,49 +393,64 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlBulkCopy : TypeWrapper, IDisposable
 		{
-			public SqlBulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Dispose
+				(Expression<Action<SqlBulkCopy>>)((SqlBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				// [1]: WriteToServer
+				(Expression<Action<SqlBulkCopy, IDataReader>>)((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				// [2]: get NotifyAfter
+				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.NotifyAfter),
+				// [3]: get BatchSize
+				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.BatchSize),
+				// [4]: get BulkCopyTimeout
+				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.BulkCopyTimeout),
+				// [5]: get DestinationTableName
+				(Expression<Func<SqlBulkCopy, string?>>)((SqlBulkCopy this_) => this_.DestinationTableName),
+				// [6]: get ColumnMappings
+				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_) => this_.ColumnMappings),
+			};
+
+			public SqlBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 				this.WrapEvent<SqlBulkCopy, SqlRowsCopiedEventHandler>(nameof(SqlRowsCopied));
 			}
 
 			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
 
-			void IDisposable.Dispose() => this.WrapAction(t => ((IDisposable)t).Dispose());
-
-			public void WriteToServer(IDataReader dataReader) => this.WrapAction(t => t.WriteToServer(dataReader));
+			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
+			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 
 			public int NotifyAfter
 			{
-				get => this.Wrap(t => t.NotifyAfter);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[2])(this);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BatchSize
 			{
-				get => this.Wrap(t => t.BatchSize);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[3])(this);
 				set => this.SetPropValue(t => t.BatchSize, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap(t => t.BulkCopyTimeout);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[4])(this);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap(t => t.DestinationTableName);
+				get => ((Func<SqlBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
-			public SqlBulkCopyColumnMappingCollection ColumnMappings
-			{
-				get => this.Wrap(t => t.ColumnMappings);
-			}
+			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
 
 			public event SqlRowsCopiedEventHandler SqlRowsCopied
 			{
-				add => Events.AddHandler(nameof(SqlRowsCopied), value);
+				add    => Events.AddHandler(nameof(SqlRowsCopied), value);
 				remove => Events.RemoveHandler(nameof(SqlRowsCopied), value);
 			}
 		}
@@ -405,18 +458,24 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlRowsCopiedEventArgs : TypeWrapper
 		{
-			public SqlRowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get RowsCopied
+				(Expression<Func<SqlRowsCopiedEventArgs, long>>)((SqlRowsCopiedEventArgs this_) => this_.RowsCopied),
+				// [1]: get Abort
+				(Expression<Func<SqlRowsCopiedEventArgs, bool>>)((SqlRowsCopiedEventArgs this_) => this_.Abort),
+			};
+
+			public SqlRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public long RowsCopied
-			{
-				get => this.Wrap(t => t.RowsCopied);
-			}
+			public long RowsCopied => ((Func<SqlRowsCopiedEventArgs, long>)CompiledWrappers[0])(this);
 
 			public bool Abort
 			{
-				get => this.Wrap(t => t.Abort);
+				get => ((Func<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
@@ -427,11 +486,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlBulkCopyColumnMappingCollection : TypeWrapper
 		{
-			public SqlBulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>>)((SqlBulkCopyColumnMappingCollection this_, SqlBulkCopyColumnMapping column) => this_.Add(column)),
+			};
+
+			public SqlBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public SqlBulkCopyColumnMapping Add(SqlBulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
+			public SqlBulkCopyColumnMapping Add(SqlBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]
@@ -450,7 +516,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlBulkCopyColumnMapping : TypeWrapper
 		{
-			public SqlBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
+			public SqlBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
 

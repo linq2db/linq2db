@@ -223,24 +223,24 @@ namespace LinqToDB.DataProvider.DB2
 						// TODO: register only for Informix
 						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 
-						var typeMapper = new TypeMapper(connectionType, parameterType, dbType, serverTypesType, transactionType,
-							db2BinaryType,
-							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
+						var typeMapper = new TypeMapper();
 
-						typeMapper.RegisterWrapper<DB2ServerTypes>();
-						typeMapper.RegisterWrapper<DB2Connection>();
-						typeMapper.RegisterWrapper<DB2Parameter>();
-						typeMapper.RegisterWrapper<DB2Type>();
-						typeMapper.RegisterWrapper<DB2Transaction>();
-						typeMapper.RegisterWrapper<DB2Binary>();
+						typeMapper.RegisterTypeWrapper<DB2ServerTypes>(serverTypesType);
+						typeMapper.RegisterTypeWrapper<DB2Connection>(connectionType);
+						typeMapper.RegisterTypeWrapper<DB2Parameter>(parameterType);
+						typeMapper.RegisterTypeWrapper<DB2Type>(dbType);
+						typeMapper.RegisterTypeWrapper<DB2Transaction>(transactionType);
+						typeMapper.RegisterTypeWrapper<DB2Binary>(db2BinaryType);
 
 						// bulk copy types
-						typeMapper.RegisterWrapper<DB2BulkCopy>();
-						typeMapper.RegisterWrapper<DB2RowsCopiedEventArgs>();
-						typeMapper.RegisterWrapper<DB2RowsCopiedEventHandler>();
-						typeMapper.RegisterWrapper<DB2BulkCopyColumnMappingCollection>();
-						typeMapper.RegisterWrapper<DB2BulkCopyOptions>();
-						typeMapper.RegisterWrapper<DB2BulkCopyColumnMapping>();
+						typeMapper.RegisterTypeWrapper<DB2BulkCopy>(bulkCopyType);
+						typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventArgs>(rowsCopiedEventArgs);
+						typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventHandler>(rowsCopiedEventHandlerType);
+						typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
+						typeMapper.RegisterTypeWrapper<DB2BulkCopyOptions>(bulkCopyOptionsType);
+						typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMapping>(bulkCopyColumnMappingType);
+
+						typeMapper.FinalizeMappings();
 
 						var db2BinaryBuilder = typeMapper.Type<DB2Binary>().Member(p => p.IsNull);
 						var isDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
@@ -316,33 +316,10 @@ namespace LinqToDB.DataProvider.DB2
 		#region Wrappers
 
 		[Wrapper]
-		internal class DB2Binary
+		private class DB2Binary
 		{
-			public static readonly DB2Binary Null = null!;
-			public                 bool      IsNull { get; }
+			public bool IsNull { get; }
 		}
-
-		[Wrapper] internal class DB2Blob         { public static readonly DB2Blob         Null = null!; }
-		[Wrapper] internal class DB2Clob         { public static readonly DB2Clob         Null = null!; }
-		[Wrapper] internal class DB2Date         { public static readonly DB2Date         Null = null!; }
-		[Wrapper] internal class DB2DateTime     { public static readonly DB2DateTime     Null = null!; }
-		[Wrapper] internal class DB2Decimal      { public static readonly DB2Decimal      Null = null!; }
-		[Wrapper] internal class DB2DecimalFloat { public static readonly DB2DecimalFloat Null = null!; }
-		[Wrapper] internal class DB2Double       { public static readonly DB2Double       Null = null!; }
-		[Wrapper] internal class DB2Int16        { public static readonly DB2Int16        Null = null!; }
-		[Wrapper] internal class DB2Int32        { public static readonly DB2Int32        Null = null!; }
-		[Wrapper] internal class DB2Int64        { public static readonly DB2Int64        Null = null!; }
-		[Wrapper] internal class DB2Real         { public static readonly DB2Real         Null = null!; }
-		[Wrapper] internal class DB2Real370      { public static readonly DB2Real370      Null = null!; }
-		[Wrapper] internal class DB2RowId        { public static readonly DB2RowId        Null = null!; }
-		[Wrapper] internal class DB2String       { public static readonly DB2String       Null = null!; }
-		[Wrapper] internal class DB2Time         { public static readonly DB2Time         Null = null!; }
-		[Wrapper] internal class DB2TimeStamp    { public static readonly DB2TimeStamp    Null = null!; }
-		[Wrapper] internal class DB2Xml          { public static readonly DB2Xml          Null = null!; }
-
-		// not used now types
-		//[Wrapper] internal class DB2TimeStampOffset { }
-		//[Wrapper] internal class DB2XsrObjectId { } (don't have Null field)
 
 		[Wrapper]
 		public enum DB2ServerTypes
@@ -360,22 +337,31 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2Connection : TypeWrapper, IDisposable
 		{
-			public DB2Connection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get eServerType
+				(Expression<Func<DB2Connection, DB2ServerTypes>>)((DB2Connection this_) => this_.eServerType),
+				// [1]: Open
+				(Expression<Action<DB2Connection>>)((DB2Connection this_) => this_.Open()),
+				// [2]: Dispose
+				(Expression<Action<DB2Connection>>)((DB2Connection this_) => this_.Dispose()),
+			};
+
+			public DB2Connection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public DB2Connection(string connectionString) => throw new NotImplementedException();
 
 			// internal actually
-			public DB2ServerTypes eServerType => this.Wrap(t => t.eServerType);
-
-			public void Open() => this.WrapAction(c => c.Open());
-
-			public void Dispose() => this.WrapAction(t => t.Dispose());
+			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
+			public void           Open()      => ((Action<DB2Connection>)CompiledWrappers[1])(this);
+			public void           Dispose()   => ((Action<DB2Connection>)CompiledWrappers[2])(this);
 		}
 
 		[Wrapper]
-		internal class DB2Parameter
+		private class DB2Parameter
 		{
 			public DB2Type DB2Type { get; set; }
 		}
@@ -453,38 +439,54 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopy : TypeWrapper, IDisposable
 		{
-			public DB2BulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Dispose
+				(Expression<Action<DB2BulkCopy>>)((DB2BulkCopy this_) => ((IDisposable)this_).Dispose()),
+				// [1]: WriteToServer
+				(Expression<Action<DB2BulkCopy, IDataReader>>)((DB2BulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				// [2]: get NotifyAfter
+				(Expression<Func<DB2BulkCopy, int>>)((DB2BulkCopy this_) => this_.NotifyAfter),
+				// [3]: get BulkCopyTimeout
+				(Expression<Func<DB2BulkCopy, int>>)((DB2BulkCopy this_) => this_.BulkCopyTimeout),
+				// [4]: get DestinationTableName
+				(Expression<Func<DB2BulkCopy, string?>>)((DB2BulkCopy this_) => this_.DestinationTableName),
+				// [5]: get ColumnMappings
+				(Expression<Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>>)((DB2BulkCopy this_) => this_.ColumnMappings),
+			};
+
+			public DB2BulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 				this.WrapEvent<DB2BulkCopy, DB2RowsCopiedEventHandler>(nameof(DB2RowsCopied));
 			}
 
 			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
 
-			public void Dispose() => this.WrapAction(t => t.Dispose());
-
-			public void WriteToServer(IDataReader dataReader) => this.WrapAction(t => t.WriteToServer(dataReader));
+			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
+			public void WriteToServer(IDataReader dataReader) => ((Action<DB2BulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 
 			public int NotifyAfter
 			{
-				get => this.Wrap(t => t.NotifyAfter);
+				get => ((Func<DB2BulkCopy, int>)CompiledWrappers[2])(this);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap(t => t.BulkCopyTimeout);
+				get => ((Func<DB2BulkCopy, int>)CompiledWrappers[3])(this);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap(t => t.DestinationTableName);
+				get => ((Func<DB2BulkCopy, string?>)CompiledWrappers[4])(this);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
 			public DB2BulkCopyColumnMappingCollection ColumnMappings
 			{
-				get => this.Wrap(t => t.ColumnMappings);
+				get => ((Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
 				set => this.SetPropValue(t => t.ColumnMappings, value);
 			}
 
@@ -498,18 +500,24 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2RowsCopiedEventArgs : TypeWrapper
 		{
-			public DB2RowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get RowsCopied
+				(Expression<Func<DB2RowsCopiedEventArgs, int>>)((DB2RowsCopiedEventArgs this_) => this_.RowsCopied),
+				// [1]: get Abort
+				(Expression<Func<DB2RowsCopiedEventArgs, bool>>)((DB2RowsCopiedEventArgs this_) => this_.Abort),
+			};
+
+			public DB2RowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public int RowsCopied
-			{
-				get => this.Wrap(t => t.RowsCopied);
-			}
+			public int RowsCopied => ((Func<DB2RowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
 
 			public bool Abort
 			{
-				get => this.Wrap(t => t.Abort);
+				get => ((Func<DB2RowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
@@ -520,11 +528,18 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopyColumnMappingCollection : TypeWrapper
 		{
-			public DB2BulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<DB2BulkCopyColumnMappingCollection, DB2BulkCopyColumnMapping, DB2BulkCopyColumnMapping>>)((DB2BulkCopyColumnMappingCollection this_, DB2BulkCopyColumnMapping column) => this_.Add(column)),
+			};
+
+			public DB2BulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public DB2BulkCopyColumnMapping Add(DB2BulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
+			public DB2BulkCopyColumnMapping Add(DB2BulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<DB2BulkCopyColumnMappingCollection, DB2BulkCopyColumnMapping, DB2BulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]
@@ -539,7 +554,7 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopyColumnMapping : TypeWrapper
 		{
-			public DB2BulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
+			public DB2BulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
 

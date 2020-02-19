@@ -204,9 +204,16 @@ namespace LinqToDB.DataProvider.Informix
 			var decimalType   = loadType("IfxDecimal" , DataType.Decimal)!;
 			var timeSpanType  = loadType("IfxTimeSpan", DataType.Time, true, true);
 
+			var typeMapper = new TypeMapper();
+			typeMapper.RegisterTypeWrapper<IfxConnection>(connectionType);
+			typeMapper.RegisterTypeWrapper<IfxParameter>(parameterType);
+			typeMapper.RegisterTypeWrapper<IfxType>(dbType);
+
+			if (timeSpanType != null)
+				typeMapper.RegisterTypeWrapper<IfxTimeSpan>(timeSpanType);
+
 			// bulk copy exists only for IDS provider version
 			BulkCopyAdapter? bulkCopy = null;
-			TypeMapper typeMapper;
 			var bulkCopyType = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopy", false);
 			if (bulkCopyType != null)
 			{
@@ -216,15 +223,14 @@ namespace LinqToDB.DataProvider.Informix
 				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{IfxClientNamespace}.IfxBulkCopyColumnMappingCollection", true);
 				var rowsCopiedEventArgsType             = assembly.GetType($"{IfxClientNamespace}.IfxRowsCopiedEventArgs"            , true);
 
-				if (timeSpanType != null)
-					typeMapper = new TypeMapper(
-						connectionType, parameterType, transactionType, dbType,
-						timeSpanType,
-						bulkCopyType, bulkCopyOptionsType, bulkRowsCopiedEventHandlerType, bulkCopyColumnMappingType, bulkCopyColumnMappingCollectionType, rowsCopiedEventArgsType);
-				else
-					typeMapper = new TypeMapper(
-						connectionType, parameterType, transactionType, dbType,
-						bulkCopyType, bulkCopyOptionsType, bulkRowsCopiedEventHandlerType, bulkCopyColumnMappingType, bulkCopyColumnMappingCollectionType, rowsCopiedEventArgsType);
+				typeMapper.RegisterTypeWrapper<IfxBulkCopy>(bulkCopyType);
+				typeMapper.RegisterTypeWrapper<IfxBulkCopyOptions>(bulkCopyOptionsType);
+				typeMapper.RegisterTypeWrapper<IfxRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+				typeMapper.RegisterTypeWrapper<IfxBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+				typeMapper.RegisterTypeWrapper<IfxBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollectionType);
+				typeMapper.RegisterTypeWrapper<IfxRowsCopiedEventArgs>(rowsCopiedEventArgsType);
+
+				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
 					(IDbConnection connection, IfxBulkCopyOptions options)
@@ -233,32 +239,7 @@ namespace LinqToDB.DataProvider.Informix
 						=> typeMapper.CreateAndWrap(() => new IfxBulkCopyColumnMapping(source, destination))!);
 			}
 			else
-			{
-				if (timeSpanType != null)
-					typeMapper = new TypeMapper(connectionType, parameterType, transactionType, dbType,
-						timeSpanType);
-				else
-					typeMapper = new TypeMapper(connectionType, parameterType, transactionType, dbType);
-			}
-
-			typeMapper.RegisterWrapper<IfxConnection>();
-			typeMapper.RegisterWrapper<IfxParameter>();
-			typeMapper.RegisterWrapper<IfxType>();
-			typeMapper.RegisterWrapper<IfxTransaction>();
-
-			if (timeSpanType != null)
-				typeMapper.RegisterWrapper<IfxTimeSpan>();
-
-			if (bulkCopyType != null)
-			{
-				// bulk copy types
-				typeMapper.RegisterWrapper<IfxBulkCopy>();
-				typeMapper.RegisterWrapper<IfxBulkCopyOptions>();
-				typeMapper.RegisterWrapper<IfxRowsCopiedEventHandler>();
-				typeMapper.RegisterWrapper<IfxBulkCopyColumnMapping>();
-				typeMapper.RegisterWrapper<IfxBulkCopyColumnMappingCollection>();
-				typeMapper.RegisterWrapper<IfxRowsCopiedEventArgs>();
-			}
+				typeMapper.FinalizeMappings();
 
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
@@ -306,7 +287,7 @@ namespace LinqToDB.DataProvider.Informix
 		#region Wrappers
 
 		[Wrapper]
-		internal class IfxParameter
+		private class IfxParameter
 		{
 			public IfxType IfxType { get; set; }
 		}
@@ -378,47 +359,58 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		[Wrapper]
-		internal class IfxTransaction
-		{
-		}
-
 		#region BulkCopy
 		[Wrapper]
 		public class IfxBulkCopy : TypeWrapper, IDisposable
 		{
-			public IfxBulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Dispose
+				(Expression<Action<IfxBulkCopy>>)((IfxBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				// [1]: WriteToServer
+				(Expression<Action<IfxBulkCopy, IDataReader>>)((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				// [2]: get NotifyAfter
+				(Expression<Func<IfxBulkCopy, int>>)((IfxBulkCopy this_) => this_.NotifyAfter),
+				// [3]: get BulkCopyTimeout
+				(Expression<Func<IfxBulkCopy, int>>)((IfxBulkCopy this_) => this_.BulkCopyTimeout),
+				// [4]: get DestinationTableName
+				(Expression<Func<IfxBulkCopy, string?>>)((IfxBulkCopy this_) => this_.DestinationTableName),
+				// [5]: get ColumnMappings
+				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_) => this_.ColumnMappings),
+			};
+
+			public IfxBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 				this.WrapEvent<IfxBulkCopy, IfxRowsCopiedEventHandler>(nameof(IfxRowsCopied));
 			}
 
 			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
 
-			void IDisposable.Dispose() => this.WrapAction(t => ((IDisposable)t).Dispose());
-
-			public void WriteToServer(IDataReader dataReader) => this.WrapAction(t => t.WriteToServer(dataReader));
+			void IDisposable.Dispose ()                       => ((Action<IfxBulkCopy>)CompiledWrappers[0])(this);
+			public void WriteToServer(IDataReader dataReader) => ((Action<IfxBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 
 			public int NotifyAfter
 			{
-				get => this.Wrap(t => t.NotifyAfter);
+				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[2])(this);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap(t => t.BulkCopyTimeout);
+				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[3])(this);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap(t => t.DestinationTableName);
+				get => ((Func<IfxBulkCopy, string?>)CompiledWrappers[4])(this);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
 			public IfxBulkCopyColumnMappingCollection ColumnMappings
 			{
-				get => this.Wrap(t => t.ColumnMappings);
+				get => ((Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
 				set => this.SetPropValue(t => t.ColumnMappings, value);
 			}
 
@@ -432,18 +424,24 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		public class IfxRowsCopiedEventArgs : TypeWrapper
 		{
-			public IfxRowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get RowsCopied
+				(Expression<Func<IfxRowsCopiedEventArgs, int>>)((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
+				// [1]: get Abort
+				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
+			};
+
+			public IfxRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public int RowsCopied
-			{
-				get => this.Wrap(t => t.RowsCopied);
-			}
+			public int RowsCopied => ((Func<IfxRowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
 
 			public bool Abort
 			{
-				get => this.Wrap(t => t.Abort);
+				get => ((Func<IfxRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
@@ -454,11 +452,18 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		public class IfxBulkCopyColumnMappingCollection : TypeWrapper
 		{
-			public IfxBulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column)),
+			};
+
+			public IfxBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public IfxBulkCopyColumnMapping Add(IfxBulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
+			public IfxBulkCopyColumnMapping Add(IfxBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]
@@ -473,7 +478,7 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		public class IfxBulkCopyColumnMapping : TypeWrapper
 		{
-			public IfxBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
+			public IfxBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
 
@@ -483,7 +488,7 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		internal class IfxTimeSpan : TypeWrapper
 		{
-			public IfxTimeSpan(object instance, TypeMapper mapper) : base(instance, mapper)
+			public IfxTimeSpan(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
 

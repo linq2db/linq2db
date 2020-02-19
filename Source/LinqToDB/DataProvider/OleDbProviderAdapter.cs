@@ -66,10 +66,11 @@ namespace LinqToDB.DataProvider
 						var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true);
 						var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true);
 
-						var typeMapper = new TypeMapper(connectionType, parameterType, dbType);
-						typeMapper.RegisterWrapper<OleDbType>();
-						typeMapper.RegisterWrapper<OleDbParameter>();
-						typeMapper.RegisterWrapper<OleDbConnection>();
+						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<OleDbConnection>(connectionType);
+						typeMapper.RegisterTypeWrapper<OleDbType>(dbType);
+						typeMapper.RegisterTypeWrapper<OleDbParameter>(parameterType);
+						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<OleDbParameter>().Member(p => p.OleDbType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
@@ -94,19 +95,19 @@ namespace LinqToDB.DataProvider
 		#region Wrappers
 
 		// not wrapper, just copy of constant
-		public static class OleDbSchemaGuid
+		internal static class OleDbSchemaGuid
 		{
 			public static readonly Guid Foreign_Keys = new Guid(3367314116, 23795, 4558, 173, 229, 0, 170, 0, 68, 119, 61);
 		}
 
 		[Wrapper]
-		internal class OleDbParameter
+		private class OleDbParameter
 		{
 			public OleDbType OleDbType { get; set; }
 		}
 
 		[Wrapper]
-		internal class OleDbConnection
+		private class OleDbConnection
 		{
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}

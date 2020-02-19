@@ -12,53 +12,53 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|                  Method |       Runtime |         Mean |       Error |     StdDev |    Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------------------ |-------------- |-------------:|------------:|-----------:|---------:|--------:|-------:|------:|------:|----------:|
-|        TypeMapperAsEnum |    .NET 4.6.2 | 1,384.613 ns |  97.5650 ns | 51.0284 ns | 1,089.41 |   87.67 | 0.0420 |     - |     - |     177 B |
-|      DirectAccessAsEnum |    .NET 4.6.2 |     1.273 ns |   0.1247 ns |  0.0825 ns |     1.00 |    0.00 |      - |     - |     - |         - |
-|      TypeMapperAsObject |    .NET 4.6.2 | 1,370.331 ns | 106.6670 ns | 70.5536 ns | 1,080.19 |   90.31 | 0.0477 |     - |     - |     201 B |
-|    DirectAccessAsObject |    .NET 4.6.2 |     8.626 ns |   1.4476 ns |  0.9575 ns |     6.81 |    1.00 | 0.0057 |     - |     - |      24 B |
-|     TypeMapperAsDecimal |    .NET 4.6.2 |    17.464 ns |   1.3479 ns |  0.8916 ns |    13.76 |    1.00 |      - |     - |     - |         - |
-|   DirectAccessAsDecimal |    .NET 4.6.2 |     2.461 ns |   0.2921 ns |  0.1932 ns |     1.95 |    0.27 |      - |     - |     - |         - |
-|     TypeMapperAsBoolean |    .NET 4.6.2 |    14.176 ns |   0.7884 ns |  0.5215 ns |    11.17 |    0.79 |      - |     - |     - |         - |
-|   DirectAccessAsBoolean |    .NET 4.6.2 |     1.765 ns |   0.1111 ns |  0.0735 ns |     1.39 |    0.13 |      - |     - |     - |         - |
-|      TypeMapperAsString |    .NET 4.6.2 |    13.648 ns |   1.4580 ns |  0.9644 ns |    10.77 |    1.21 |      - |     - |     - |         - |
-|    DirectAccessAsString |    .NET 4.6.2 |     1.936 ns |   0.2249 ns |  0.1488 ns |     1.53 |    0.18 |      - |     - |     - |         - |
-|         TypeMapperAsInt |    .NET 4.6.2 |    15.947 ns |   1.8039 ns |  1.1932 ns |    12.58 |    1.42 |      - |     - |     - |         - |
-|       DirectAccessAsInt |    .NET 4.6.2 |     1.703 ns |   0.2294 ns |  0.1517 ns |     1.34 |    0.14 |      - |     - |     - |         - |
-|        TypeMapperAsBool |    .NET 4.6.2 |    11.210 ns |   0.5037 ns |  0.2997 ns |     8.89 |    0.72 |      - |     - |     - |         - |
-|      DirectAccessAsBool |    .NET 4.6.2 |     1.564 ns |   0.1593 ns |  0.1054 ns |     1.23 |    0.12 |      - |     - |     - |         - |
-|   TypeMapperAsKnownEnum |    .NET 4.6.2 |    11.468 ns |   0.7755 ns |  0.5129 ns |     9.04 |    0.69 |      - |     - |     - |         - |
-| DirectAccessAsKnownEnum |    .NET 4.6.2 |     1.553 ns |   0.1217 ns |  0.0805 ns |     1.22 |    0.09 |      - |     - |     - |         - |
-|        TypeMapperAsEnum | .NET Core 2.1 |   669.150 ns |  61.8915 ns | 36.8306 ns |   530.16 |   43.60 | 0.0296 |     - |     - |     128 B |
-|      DirectAccessAsEnum | .NET Core 2.1 |     1.554 ns |   0.1177 ns |  0.0779 ns |     1.23 |    0.10 |      - |     - |     - |         - |
-|      TypeMapperAsObject | .NET Core 2.1 |   697.225 ns |  27.1428 ns | 16.1523 ns |   552.77 |   41.85 | 0.0353 |     - |     - |     152 B |
-|    DirectAccessAsObject | .NET Core 2.1 |     6.340 ns |   0.7997 ns |  0.4759 ns |     5.02 |    0.47 | 0.0057 |     - |     - |      24 B |
-|     TypeMapperAsDecimal | .NET Core 2.1 |     5.225 ns |   0.1230 ns |  0.0546 ns |     4.11 |    0.33 |      - |     - |     - |         - |
-|   DirectAccessAsDecimal | .NET Core 2.1 |     1.821 ns |   0.1071 ns |  0.0708 ns |     1.44 |    0.12 |      - |     - |     - |         - |
-|     TypeMapperAsBoolean | .NET Core 2.1 |     3.034 ns |   0.1795 ns |  0.1068 ns |     2.40 |    0.16 |      - |     - |     - |         - |
-|   DirectAccessAsBoolean | .NET Core 2.1 |     1.621 ns |   0.1349 ns |  0.0892 ns |     1.28 |    0.10 |      - |     - |     - |         - |
-|      TypeMapperAsString | .NET Core 2.1 |     2.467 ns |   0.5203 ns |  0.3441 ns |     1.94 |    0.28 |      - |     - |     - |         - |
-|    DirectAccessAsString | .NET Core 2.1 |     2.546 ns |   0.1468 ns |  0.0971 ns |     2.01 |    0.18 |      - |     - |     - |         - |
-|         TypeMapperAsInt | .NET Core 2.1 |     3.561 ns |   0.1758 ns |  0.1163 ns |     2.81 |    0.23 |      - |     - |     - |         - |
-|       DirectAccessAsInt | .NET Core 2.1 |     1.698 ns |   0.1228 ns |  0.0812 ns |     1.34 |    0.14 |      - |     - |     - |         - |
-|        TypeMapperAsBool | .NET Core 2.1 |     3.555 ns |   0.2603 ns |  0.1722 ns |     2.80 |    0.21 |      - |     - |     - |         - |
-|      DirectAccessAsBool | .NET Core 2.1 |     1.779 ns |   0.1635 ns |  0.1081 ns |     1.40 |    0.15 |      - |     - |     - |         - |
-|   TypeMapperAsKnownEnum | .NET Core 2.1 |     3.254 ns |   0.2964 ns |  0.1961 ns |     2.57 |    0.27 |      - |     - |     - |         - |
-| DirectAccessAsKnownEnum | .NET Core 2.1 |     1.718 ns |   0.2110 ns |  0.1396 ns |     1.35 |    0.15 |      - |     - |     - |         - |
-|        TypeMapperAsEnum | .NET Core 3.1 |   272.143 ns |  29.2554 ns | 19.3506 ns |   213.87 |   10.12 | 0.0114 |     - |     - |      48 B |
-|      DirectAccessAsEnum | .NET Core 3.1 |     1.535 ns |   0.1286 ns |  0.0851 ns |     1.21 |    0.12 |      - |     - |     - |         - |
-|      TypeMapperAsObject | .NET Core 3.1 |   239.297 ns |  10.6954 ns |  6.3647 ns |   189.58 |   12.71 | 0.0172 |     - |     - |      72 B |
-|    DirectAccessAsObject | .NET Core 3.1 |     6.494 ns |   0.8894 ns |  0.5883 ns |     5.12 |    0.57 | 0.0057 |     - |     - |      24 B |
-|     TypeMapperAsDecimal | .NET Core 3.1 |     5.339 ns |   0.6951 ns |  0.4598 ns |     4.21 |    0.51 |      - |     - |     - |         - |
-|   DirectAccessAsDecimal | .NET Core 3.1 |     1.669 ns |   0.0491 ns |  0.0175 ns |     1.31 |    0.11 |      - |     - |     - |         - |
-|     TypeMapperAsBoolean | .NET Core 3.1 |     2.670 ns |   0.1811 ns |  0.1198 ns |     2.10 |    0.14 |      - |     - |     - |         - |
-|   DirectAccessAsBoolean | .NET Core 3.1 |     1.194 ns |   0.0906 ns |  0.0599 ns |     0.94 |    0.08 |      - |     - |     - |         - |
-|      TypeMapperAsString | .NET Core 3.1 |     2.687 ns |   0.4201 ns |  0.2779 ns |     2.12 |    0.23 |      - |     - |     - |         - |
-|    DirectAccessAsString | .NET Core 3.1 |     1.140 ns |   0.1689 ns |  0.1117 ns |     0.90 |    0.11 |      - |     - |     - |         - |
-|         TypeMapperAsInt | .NET Core 3.1 |     2.706 ns |   0.2073 ns |  0.1371 ns |     2.13 |    0.19 |      - |     - |     - |         - |
-|       DirectAccessAsInt | .NET Core 3.1 |     1.205 ns |   0.1267 ns |  0.0838 ns |     0.95 |    0.09 |      - |     - |     - |         - |
-|        TypeMapperAsBool | .NET Core 3.1 |     3.267 ns |   0.8124 ns |  0.5374 ns |     2.58 |    0.47 |      - |     - |     - |         - |
-|      DirectAccessAsBool | .NET Core 3.1 |     1.373 ns |   0.1609 ns |  0.1065 ns |     1.08 |    0.08 |      - |     - |     - |         - |
-|   TypeMapperAsKnownEnum | .NET Core 3.1 |    21.189 ns |   0.4282 ns |  0.2833 ns |    16.71 |    1.29 |      - |     - |     - |         - |
-| DirectAccessAsKnownEnum | .NET Core 3.1 |     1.698 ns |   0.1545 ns |  0.1022 ns |     1.34 |    0.13 |      - |     - |     - |         - |
+|                  Method |       Runtime |         Mean |      Error |     StdDev |    Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------------------ |-------------- |-------------:|-----------:|-----------:|---------:|--------:|-------:|------:|------:|----------:|
+|        TypeMapperAsEnum |    .NET 4.6.2 | 1,134.013 ns | 27.0269 ns | 16.0833 ns | 1,019.92 |   37.58 | 0.0420 |     - |     - |     177 B |
+|      DirectAccessAsEnum |    .NET 4.6.2 |     1.109 ns |  0.0637 ns |  0.0421 ns |     1.00 |    0.00 |      - |     - |     - |         - |
+|      TypeMapperAsObject |    .NET 4.6.2 | 1,239.722 ns | 46.3369 ns | 27.5744 ns | 1,114.35 |   21.05 | 0.0477 |     - |     - |     201 B |
+|    DirectAccessAsObject |    .NET 4.6.2 |     4.149 ns |  0.3084 ns |  0.1835 ns |     3.73 |    0.16 | 0.0057 |     - |     - |      24 B |
+|     TypeMapperAsDecimal |    .NET 4.6.2 |    10.487 ns |  0.6207 ns |  0.4106 ns |     9.45 |    0.15 |      - |     - |     - |         - |
+|   DirectAccessAsDecimal |    .NET 4.6.2 |     1.528 ns |  0.0770 ns |  0.0509 ns |     1.38 |    0.08 |      - |     - |     - |         - |
+|     TypeMapperAsBoolean |    .NET 4.6.2 |     9.726 ns |  0.4556 ns |  0.2711 ns |     8.74 |    0.15 |      - |     - |     - |         - |
+|   DirectAccessAsBoolean |    .NET 4.6.2 |     1.111 ns |  0.1385 ns |  0.0916 ns |     1.00 |    0.09 |      - |     - |     - |         - |
+|      TypeMapperAsString |    .NET 4.6.2 |     9.108 ns |  0.2606 ns |  0.0677 ns |     8.01 |    0.25 |      - |     - |     - |         - |
+|    DirectAccessAsString |    .NET 4.6.2 |     1.139 ns |  0.1552 ns |  0.1027 ns |     1.03 |    0.08 |      - |     - |     - |         - |
+|         TypeMapperAsInt |    .NET 4.6.2 |     9.537 ns |  0.1547 ns |  0.0402 ns |     8.39 |    0.29 |      - |     - |     - |         - |
+|       DirectAccessAsInt |    .NET 4.6.2 |     1.137 ns |  0.1488 ns |  0.0984 ns |     1.03 |    0.10 |      - |     - |     - |         - |
+|        TypeMapperAsBool |    .NET 4.6.2 |     9.436 ns |  0.3591 ns |  0.2375 ns |     8.52 |    0.41 |      - |     - |     - |         - |
+|      DirectAccessAsBool |    .NET 4.6.2 |     1.144 ns |  0.0770 ns |  0.0200 ns |     1.01 |    0.04 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum |    .NET 4.6.2 |     9.245 ns |  0.4670 ns |  0.3089 ns |     8.34 |    0.36 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum |    .NET 4.6.2 |     1.144 ns |  0.1230 ns |  0.0814 ns |     1.03 |    0.10 |      - |     - |     - |         - |
+|        TypeMapperAsEnum | .NET Core 2.1 |   492.696 ns |  9.0395 ns |  2.3475 ns |   433.29 |   13.46 | 0.0296 |     - |     - |     128 B |
+|      DirectAccessAsEnum | .NET Core 2.1 |     1.345 ns |  0.0196 ns |  0.0051 ns |     1.18 |    0.04 |      - |     - |     - |         - |
+|      TypeMapperAsObject | .NET Core 2.1 |   532.107 ns | 10.9054 ns |  5.7037 ns |   476.72 |   22.20 | 0.0353 |     - |     - |     152 B |
+|    DirectAccessAsObject | .NET Core 2.1 |     5.265 ns |  0.5466 ns |  0.3616 ns |     4.75 |    0.31 | 0.0057 |     - |     - |      24 B |
+|     TypeMapperAsDecimal | .NET Core 2.1 |     4.061 ns |  0.2589 ns |  0.1712 ns |     3.66 |    0.17 |      - |     - |     - |         - |
+|   DirectAccessAsDecimal | .NET Core 2.1 |     1.513 ns |  0.0604 ns |  0.0215 ns |     1.34 |    0.05 |      - |     - |     - |         - |
+|     TypeMapperAsBoolean | .NET Core 2.1 |     2.467 ns |  0.0731 ns |  0.0261 ns |     2.18 |    0.08 |      - |     - |     - |         - |
+|   DirectAccessAsBoolean | .NET Core 2.1 |     1.392 ns |  0.0699 ns |  0.0462 ns |     1.26 |    0.07 |      - |     - |     - |         - |
+|      TypeMapperAsString | .NET Core 2.1 |     2.751 ns |  0.3305 ns |  0.2186 ns |     2.48 |    0.17 |      - |     - |     - |         - |
+|    DirectAccessAsString | .NET Core 2.1 |     1.365 ns |  0.0797 ns |  0.0207 ns |     1.20 |    0.05 |      - |     - |     - |         - |
+|         TypeMapperAsInt | .NET Core 2.1 |     2.618 ns |  0.1185 ns |  0.0784 ns |     2.36 |    0.12 |      - |     - |     - |         - |
+|       DirectAccessAsInt | .NET Core 2.1 |     1.534 ns |  0.1923 ns |  0.1272 ns |     1.39 |    0.15 |      - |     - |     - |         - |
+|        TypeMapperAsBool | .NET Core 2.1 |     2.652 ns |  0.2451 ns |  0.1621 ns |     2.39 |    0.08 |      - |     - |     - |         - |
+|      DirectAccessAsBool | .NET Core 2.1 |     1.329 ns |  0.0609 ns |  0.0270 ns |     1.18 |    0.04 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum | .NET Core 2.1 |     2.505 ns |  0.0701 ns |  0.0311 ns |     2.23 |    0.08 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum | .NET Core 2.1 |     1.413 ns |  0.0851 ns |  0.0563 ns |     1.28 |    0.07 |      - |     - |     - |         - |
+|        TypeMapperAsEnum | .NET Core 3.1 |   190.149 ns |  5.9872 ns |  3.1314 ns |   170.27 |    5.80 | 0.0114 |     - |     - |      48 B |
+|      DirectAccessAsEnum | .NET Core 3.1 |     1.083 ns |  0.0559 ns |  0.0145 ns |     0.95 |    0.04 |      - |     - |     - |         - |
+|      TypeMapperAsObject | .NET Core 3.1 |   193.225 ns |  3.6366 ns |  2.4054 ns |   174.39 |    6.36 | 0.0169 |     - |     - |      72 B |
+|    DirectAccessAsObject | .NET Core 3.1 |     4.823 ns |  0.2156 ns |  0.1283 ns |     4.34 |    0.23 | 0.0057 |     - |     - |      24 B |
+|     TypeMapperAsDecimal | .NET Core 3.1 |     4.491 ns |  0.4107 ns |  0.2716 ns |     4.06 |    0.36 |      - |     - |     - |         - |
+|   DirectAccessAsDecimal | .NET Core 3.1 |     1.316 ns |  0.0624 ns |  0.0277 ns |     1.17 |    0.04 |      - |     - |     - |         - |
+|     TypeMapperAsBoolean | .NET Core 3.1 |     2.741 ns |  0.0829 ns |  0.0368 ns |     2.44 |    0.07 |      - |     - |     - |         - |
+|   DirectAccessAsBoolean | .NET Core 3.1 |     1.071 ns |  0.0689 ns |  0.0179 ns |     0.94 |    0.04 |      - |     - |     - |         - |
+|      TypeMapperAsString | .NET Core 3.1 |     3.082 ns |  0.3447 ns |  0.2280 ns |     2.79 |    0.28 |      - |     - |     - |         - |
+|    DirectAccessAsString | .NET Core 3.1 |     1.006 ns |  0.0856 ns |  0.0222 ns |     0.89 |    0.04 |      - |     - |     - |         - |
+|         TypeMapperAsInt | .NET Core 3.1 |     2.234 ns |  0.0920 ns |  0.0608 ns |     2.02 |    0.11 |      - |     - |     - |         - |
+|       DirectAccessAsInt | .NET Core 3.1 |     1.160 ns |  0.0616 ns |  0.0408 ns |     1.05 |    0.06 |      - |     - |     - |         - |
+|        TypeMapperAsBool | .NET Core 3.1 |     2.408 ns |  0.2581 ns |  0.0670 ns |     2.12 |    0.12 |      - |     - |     - |         - |
+|      DirectAccessAsBool | .NET Core 3.1 |     1.162 ns |  0.1452 ns |  0.0960 ns |     1.05 |    0.09 |      - |     - |     - |         - |
+|   TypeMapperAsKnownEnum | .NET Core 3.1 |     2.758 ns |  0.0887 ns |  0.0230 ns |     2.43 |    0.08 |      - |     - |     - |         - |
+| DirectAccessAsKnownEnum | .NET Core 3.1 |     1.069 ns |  0.0346 ns |  0.0090 ns |     0.94 |    0.04 |      - |     - |     - |         - |

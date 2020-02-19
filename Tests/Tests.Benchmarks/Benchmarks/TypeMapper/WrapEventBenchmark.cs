@@ -1,25 +1,22 @@
 ﻿using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: mapped event shows strange numbers...
+	// FIX: mapped event should be reimplemented
 	public class WrapEventBenchmark
 	{
-		private Original.TestClass2 _originalInstance;
-		private Original.TestClass2 _originalWrappedInstance;
-		private Wrapped.TestClass2 _wrapperInstance;
+		private Original.TestEventClass _originalInstance;
+		private Original.TestEventClass _originalWrappedInstance;
+		private Wrapped.TestEventClass _wrapperInstance;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass2), typeof(Original.TestEventHandler));
-			typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
-			_originalInstance = new Original.TestClass2();
-			_originalWrappedInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.Wrap<Wrapped.TestClass2>(_originalWrappedInstance);
+			_originalInstance = new Original.TestEventClass();
+			_originalWrappedInstance = new Original.TestEventClass();
+			_wrapperInstance = typeMapper.Wrap<Wrapped.TestEventClass>(_originalWrappedInstance);
 		}
 
 		[Benchmark]
@@ -50,10 +47,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			_originalInstance.TestEvent -= OriginalHandler;
 		}
 
-		private void WrappedHandler(object sender, Wrapped.TestClass2 e)
+		private void WrappedHandler(object sender, Wrapped.TestEventClass e)
 		{ }
 
-		private void OriginalHandler(object sender, Original.TestClass2 e)
+		private void OriginalHandler(object sender, Original.TestEventClass e)
 		{ }
 	}
 }
