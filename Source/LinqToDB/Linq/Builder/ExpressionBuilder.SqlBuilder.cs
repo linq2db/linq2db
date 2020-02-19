@@ -2005,6 +2005,23 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertObjectComparison
 
+		static Expression ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
+		{
+			Expression result = ob;
+			foreach (var memberInfo in memberPath)
+			{
+				if (!memberInfo.DeclaringType.IsAssignableFrom(result.Type))
+				{
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
+					return null;
+				}
+				result = Expression.MakeMemberAccess(result, memberInfo);
+			}
+
+			return result;
+		}
+		
 		public ISqlPredicate ConvertObjectComparison(
 			ExpressionType nodeType,
 			IBuildContext  leftContext,
@@ -2096,7 +2113,10 @@ namespace LinqToDB.Linq.Builder
 				var lmember = lcol.MemberChain[lcol.MemberChain.Count - 1];
 
 				if (sr)
-					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
+				{
+					var memeberPath = ConstructMemberPath(lcol.MemberChain.Skip(1), right, true);
+					rcol = ConvertToSql(rightContext, memeberPath);
+				}	
 				else if (rmembers.Count != 0)
 					rcol = ConvertToSql(rightContext, rmembers[lmember]);
 

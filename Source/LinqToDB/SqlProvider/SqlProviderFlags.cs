@@ -66,6 +66,11 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
+		/// <summary>
+		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
+		/// </summary>
+		public bool IsCountDistinctSupported              { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
