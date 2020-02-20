@@ -690,8 +690,7 @@ namespace LinqToDB.Linq.Builder
 						if (EntityDescriptor != null &&
 							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
-							throw new LinqException("Member '{0}.{1}' is not a table column.",
-								memberExpression.Member.DeclaringType?.Name, memberExpression.Member.Name);
+							return new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
 						}
 					}
 
@@ -1212,16 +1211,28 @@ namespace LinqToDB.Linq.Builder
 
 								if (sameType || InheritanceMapping.Count > 0)
 								{
+									string pathName = null;
 									foreach (var field in SqlTable.Fields.Values)
 									{
 										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
+											if (pathName == null)
+											{
+												var suffix = string.Empty;
+												for (var ex = (MemberExpression)expression;
+													ex != levelMember;
+													ex = (MemberExpression)ex.Expression)
+												{
+													suffix = string.IsNullOrEmpty(suffix)
+														? ex.Member.Name
+														: ex.Member.Name + "." + suffix;
+												}
 
-											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
-												name += "." + ex.Member.Name;
-
-											if (field.Name == name)
+												pathName = !string.IsNullOrEmpty(suffix) ? name + "." + suffix : name;
+											}
+											
+											if (field.Name == pathName)
 												return field;
 										}
 										else if (field.Name == name)

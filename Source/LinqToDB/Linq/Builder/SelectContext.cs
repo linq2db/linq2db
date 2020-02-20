@@ -219,10 +219,17 @@ namespace LinqToDB.Linq.Builder
 									if (!IsExpression(me, 0, RequestFor.Object).Result &&
 										!IsExpression(me, 0, RequestFor.Field). Result)
 									{
-										var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-										var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
+										if (IsExpression(expression, level, RequestFor.Field).Result)
+										{
+											var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
+											var idx = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
-										return Builder.BuildSql(expression.Type, idx);
+											return Builder.BuildSql(expression.Type, idx);
+										}
+										else
+										{
+											return new DefaultValueExpression(Builder.MappingSchema, expression.Type);
+										}
 									}
 								}
 
