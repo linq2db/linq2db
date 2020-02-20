@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Data;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using LinqToDB.Expressions;
 
@@ -173,7 +174,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 			}
+		}
 
+		public class TestEventClass
+		{
 			public event TestEventHandler TestEvent;
 
 			public void Fire()
@@ -182,7 +186,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		public delegate void TestEventHandler(object sender, TestClass2 e);
+		public delegate void TestEventHandler(object sender, TestEventClass e);
 
 		public enum TestEnum
 		{
@@ -194,6 +198,24 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 	namespace Wrapped
 	{
+		public static class Helper
+		{
+			public static TypeMapper CreateTypeMapper()
+			{
+				var typeMapper = new TypeMapper();
+
+				typeMapper.RegisterTypeWrapper<TestClass>(typeof(Original.TestClass));
+				typeMapper.RegisterTypeWrapper<TestEventHandler>(typeof(Original.TestEventHandler));
+				typeMapper.RegisterTypeWrapper<TestEventClass>(typeof(Original.TestEventClass));
+				typeMapper.RegisterTypeWrapper<TestClass2>(typeof(Original.TestClass2));
+				typeMapper.RegisterTypeWrapper<TestEnum>(typeof(Original.TestEnum));
+
+				typeMapper.FinalizeMappings();
+
+				return typeMapper;
+			}
+		}
+
 		[Wrapper]
 		public class TestClass
 		{
@@ -209,20 +231,59 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Wrapper]
-		public delegate void TestEventHandler(object sender, TestClass2 e);
+		public delegate void TestEventHandler(object sender, TestEventClass e);
 
 		[Wrapper]
-		public class TestClass2 : TypeWrapper, IDisposable
+		public class TestEventClass : TypeWrapper
 		{
-			public TestClass2(object instance, TypeMapper mapper) : base(instance, mapper)
+			public TestEventClass(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
-				this.WrapEvent<TestClass2, TestEventHandler>(nameof(TestEvent));
+				this.WrapEvent<TestEventClass, TestEventHandler>(nameof(TestEvent));
 			}
 
 			public event TestEventHandler TestEvent
 			{
 				add => Events.AddHandler(nameof(TestEvent), value);
 				remove => Events.RemoveHandler(nameof(TestEvent), value);
+			}
+		}
+
+		[Wrapper]
+		public class TestClass2 : TypeWrapper, IDisposable
+		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: QuoteIdentifier
+				(Expression<Func<TestClass2, string, string>>)((TestClass2 this_, string identifier) => this_.QuoteIdentifier(identifier)),
+				// [1]: Add
+				(Expression<Func<TestClass2, TestClass2, TestClass2>>)((TestClass2 this_, TestClass2 item) => this_.Add(item)),
+				// [2]: GetEnumerator
+				(Expression<Func<TestClass2, IEnumerable>>)((TestClass2 this_) => this_.GetEnumerator()),
+				// [3]: CreateDatabase
+				(Expression<Action<TestClass2>>)((TestClass2 this_) => this_.CreateDatabase()),
+				// [4]: Dispose
+				(Expression<Action<TestClass2>>)((TestClass2 this_) => this_.Dispose()),
+				// [5]: WriteToServer
+				(Expression<Action<TestClass2, IDataReader>>)((TestClass2 this_, IDataReader rd) => this_.WriteToServer(rd)),
+				// [6]: get IntProperty
+				(Expression<Func<TestClass2, int>>)((TestClass2 this_) => this_.IntProperty),
+				// [7]: get StringProperty
+				(Expression<Func<TestClass2, string>>)((TestClass2 this_) => this_.StringProperty),
+				// [8]: get BooleanProperty
+				(Expression<Func<TestClass2, bool>>)((TestClass2 this_) => this_.BooleanProperty),
+				// [9]: get WrapperProperty
+				(Expression<Func<TestClass2, TestClass2>>)((TestClass2 this_) => this_.WrapperProperty),
+				// [10]: get EnumProperty
+				(Expression<Func<TestClass2, TestEnum>>)((TestClass2 this_) => this_.EnumProperty),
+				// [11]: get VersionProperty
+				(Expression<Func<TestClass2, Version>>)((TestClass2 this_) => this_.VersionProperty),
+				// [12]: get LongProperty
+				(Expression<Func<TestClass2, long>>)((TestClass2 this_) => this_.LongProperty),
+			};
+
+			public TestClass2(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			{
 			}
 
 			public TestClass2() => throw new NotImplementedException();
@@ -243,47 +304,47 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public TestClass2(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
 
-			public void CreateDatabase() => this.WrapAction(t => t.CreateDatabase());
+			public void CreateDatabase() => ((Action<TestClass2>)CompiledWrappers[3])(this);
 
-			public void Dispose() => this.WrapAction(t => ((IDisposable)t).Dispose());
+			public void Dispose() => ((Action<TestClass2>)CompiledWrappers[4])(this);
 
-			public string QuoteIdentifier(string identitier) => this.Wrap(t => t.QuoteIdentifier(identitier));
+			public string QuoteIdentifier(string identifier) => ((Func<TestClass2, string, string>)CompiledWrappers[0])(this, identifier);
 
-			public void WriteToServer(IDataReader rd) => this.WrapAction(t => t.WriteToServer(rd));
+			public void WriteToServer(IDataReader rd) => ((Action<TestClass2, IDataReader>)CompiledWrappers[5])(this, rd);
 
-			public TestClass2 Add(TestClass2 p) => this.Wrap(t => t.Add(p));
+			public TestClass2 Add(TestClass2 p) => ((Func<TestClass2, TestClass2, TestClass2>)CompiledWrappers[1])(this, p);
 
-			public IEnumerable GetEnumerator() => this.Wrap(t => t.GetEnumerator());
+			public IEnumerable GetEnumerator() => ((Func<TestClass2, IEnumerable>)CompiledWrappers[2])(this);
 
 			public int IntProperty
 			{
-				get => this.Wrap(t => t.IntProperty);
+				get => ((Func<TestClass2, int>)CompiledWrappers[6])(this);
 				set => this.SetPropValue(t => t.IntProperty, value);
 			}
 
 			public string StringProperty
 			{
-				get => this.Wrap(t => t.StringProperty);
+				get => ((Func<TestClass2, string>)CompiledWrappers[7])(this);
 				set => this.SetPropValue(t => t.StringProperty, value);
 			}
 
 			public bool BooleanProperty
 			{
-				get => this.Wrap(t => t.BooleanProperty);
+				get => ((Func<TestClass2, bool>)CompiledWrappers[8])(this);
 				set => this.SetPropValue(t => t.BooleanProperty, value);
 			}
 
 			public TestClass2 WrapperProperty
 			{
-				get => this.Wrap(t => t.WrapperProperty);
+				get => ((Func<TestClass2, TestClass2>)CompiledWrappers[9])(this);
 				set => this.SetPropValue(t => t.WrapperProperty, value);
 			}
 
-			public TestEnum EnumProperty => this.Wrap(t => t.EnumProperty);
+			public TestEnum EnumProperty => ((Func<TestClass2, TestEnum>) CompiledWrappers[10])(this);
 
-			public Version VersionProperty => this.Wrap(t => t.VersionProperty);
+			public Version VersionProperty => ((Func<TestClass2, Version>)CompiledWrappers[11])(this);
 
-			public long LongProperty => this.Wrap(t => t.LongProperty);
+			public long LongProperty => ((Func<TestClass2, long>)CompiledWrappers[12])(this);
 		}
 
 		[Wrapper]

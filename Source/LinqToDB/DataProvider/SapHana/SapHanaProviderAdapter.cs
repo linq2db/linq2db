@@ -5,6 +5,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.SapHana
 {
 	using System.Data.Common;
+	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
@@ -81,21 +82,22 @@ namespace LinqToDB.DataProvider.SapHana
 						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventArgs"            , true);
 						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMappingCollection", true);
 
-						var typeMapper = new TypeMapper(connectionType, parameterType, dbType, transactionType,
-							bulkCopyType, bulkCopyOptionsType, rowsCopiedEventHandlerType, rowsCopiedEventArgs, bulkCopyColumnMappingCollection, bulkCopyColumnMappingType);
+						var typeMapper = new TypeMapper();
 
-						typeMapper.RegisterWrapper<HanaConnection>();
-						typeMapper.RegisterWrapper<HanaTransaction>();
-						typeMapper.RegisterWrapper<HanaParameter>();
-						typeMapper.RegisterWrapper<HanaDbType>();
+						typeMapper.RegisterTypeWrapper<HanaConnection>(connectionType);
+						typeMapper.RegisterTypeWrapper<HanaTransaction>(transactionType);
+						typeMapper.RegisterTypeWrapper<HanaParameter>(parameterType);
+						typeMapper.RegisterTypeWrapper<HanaDbType>(dbType);
 
 						// bulk copy types
-						typeMapper.RegisterWrapper<HanaBulkCopy>();
-						typeMapper.RegisterWrapper<HanaRowsCopiedEventArgs>();
-						typeMapper.RegisterWrapper<HanaRowsCopiedEventHandler>();
-						typeMapper.RegisterWrapper<HanaBulkCopyColumnMappingCollection>();
-						typeMapper.RegisterWrapper<HanaBulkCopyOptions>();
-						typeMapper.RegisterWrapper<HanaBulkCopyColumnMapping>();
+						typeMapper.RegisterTypeWrapper<HanaBulkCopy>(bulkCopyType);
+						typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventArgs>(rowsCopiedEventArgs);
+						typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventHandler>(rowsCopiedEventHandlerType);
+						typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
+						typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
+						typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+
+						typeMapper.FinalizeMappings();
 
 						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<IDbDataParameter>();
 
@@ -124,7 +126,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		internal class HanaParameter
+		private class HanaParameter
 		{
 			public HanaDbType HanaDbType { get; set; }
 		}
@@ -161,45 +163,60 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopy : TypeWrapper, IDisposable
 		{
-			public HanaBulkCopy(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Dispose
+				(Expression<Action<HanaBulkCopy>>)((HanaBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				// [1]: WriteToServer
+				(Expression<Action<HanaBulkCopy, IDataReader>>)((HanaBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				// [2]: get NotifyAfter
+				(Expression<Func<HanaBulkCopy, int>>)((HanaBulkCopy this_) => this_.NotifyAfter),
+				// [3]: get BatchSize
+				(Expression<Func<HanaBulkCopy, int>>)((HanaBulkCopy this_) => this_.BatchSize),
+				// [4]: get BulkCopyTimeout
+				(Expression<Func<HanaBulkCopy, int>>)((HanaBulkCopy this_) => this_.BulkCopyTimeout),
+				// [5]: get DestinationTableName
+				(Expression<Func<HanaBulkCopy, string?>>)((HanaBulkCopy this_) => this_.DestinationTableName),
+				// [6]: get ColumnMappings
+				(Expression<Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>>)((HanaBulkCopy this_) => this_.ColumnMappings),
+			};
+
+			public HanaBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 				this.WrapEvent<HanaBulkCopy, HanaRowsCopiedEventHandler>(nameof(HanaRowsCopied));
 			}
 
 			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
 
-			public void Dispose() => this.WrapAction(t => t.Dispose());
-
-			public void WriteToServer(IDataReader dataReader) => this.WrapAction(t => t.WriteToServer(dataReader));
+			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
+			public void WriteToServer(IDataReader dataReader) => ((Action<HanaBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 
 			public int NotifyAfter
 			{
-				get => this.Wrap(t => t.NotifyAfter);
+				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[2])(this);
 				set => this.SetPropValue(t => t.NotifyAfter, value);
 			}
 
 			public int BatchSize
 			{
-				get => this.Wrap(t => t.BatchSize);
+				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[3])(this);
 				set => this.SetPropValue(t => t.BatchSize, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => this.Wrap(t => t.BulkCopyTimeout);
+				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[4])(this);
 				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => this.Wrap(t => t.DestinationTableName);
+				get => ((Func<HanaBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => this.SetPropValue(t => t.DestinationTableName, value);
 			}
 
-			public HanaBulkCopyColumnMappingCollection ColumnMappings
-			{
-				get => this.Wrap(t => t.ColumnMappings);
-			}
+			public HanaBulkCopyColumnMappingCollection ColumnMappings => ((Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
 			public event HanaRowsCopiedEventHandler HanaRowsCopied
 			{
@@ -211,18 +228,24 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaRowsCopiedEventArgs : TypeWrapper
 		{
-			public HanaRowsCopiedEventArgs(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: get RowsCopied
+				(Expression<Func<HanaRowsCopiedEventArgs, long>>)((HanaRowsCopiedEventArgs this_) => this_.RowsCopied),
+				// [1]: get Abort
+				(Expression<Func<HanaRowsCopiedEventArgs, bool>>)((HanaRowsCopiedEventArgs this_) => this_.Abort),
+			};
+
+			public HanaRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public long RowsCopied
-			{
-				get => this.Wrap(t => t.RowsCopied);
-			}
+			public long RowsCopied => ((Func<HanaRowsCopiedEventArgs, long>)CompiledWrappers[0])(this);
 
 			public bool Abort
 			{
-				get => this.Wrap(t => t.Abort);
+				get => ((Func<HanaRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => this.SetPropValue(t => t.Abort, value);
 			}
 		}
@@ -233,11 +256,18 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopyColumnMappingCollection : TypeWrapper
 		{
-			public HanaBulkCopyColumnMappingCollection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: Add
+				(Expression<Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>>)((HanaBulkCopyColumnMappingCollection this_, HanaBulkCopyColumnMapping column) => this_.Add(column)),
+			};
+
+			public HanaBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
-			public HanaBulkCopyColumnMapping Add(HanaBulkCopyColumnMapping bulkCopyColumnMapping) => this.Wrap(t => t.Add(bulkCopyColumnMapping));
+			public HanaBulkCopyColumnMapping Add(HanaBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]
@@ -252,7 +282,7 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopyColumnMapping : TypeWrapper
 		{
-			public HanaBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper)
+			public HanaBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
 			}
 

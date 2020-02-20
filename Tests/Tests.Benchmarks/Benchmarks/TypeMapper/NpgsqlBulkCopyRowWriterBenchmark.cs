@@ -54,13 +54,18 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			[Wrapper]
 			public class NpgsqlBinaryImporter : TypeWrapper
 			{
-				public NpgsqlBinaryImporter(object instance, TypeMapper mapper) : base(instance, mapper)
+				private static LambdaExpression[] Wrappers { get; }
+					= new LambdaExpression[]
+				{
+					// [0]: StartRow
+					(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
+				};
+
+				public NpgsqlBinaryImporter(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 				{
 				}
 
-				public void StartRow() => this.WrapAction(t => t.StartRow());
-
-				public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => this.WrapAction(t => t.Write(value, npgsqlDbType));
+				public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[0])(this);
 			}
 
 			[Wrapper]
@@ -73,10 +78,12 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.NpgsqlBinaryImporter), typeof(Original.NpgsqlDbType));
+			var typeMapper = new TypeMapper();
 
-			typeMapper.RegisterWrapper<Wrapped.NpgsqlBinaryImporter>();
-			typeMapper.RegisterWrapper<Wrapped.NpgsqlDbType>();
+			typeMapper.RegisterTypeWrapper<Wrapped.NpgsqlBinaryImporter>(typeof(Original.NpgsqlBinaryImporter));
+			typeMapper.RegisterTypeWrapper<Wrapped.NpgsqlDbType>(typeof(Original.NpgsqlDbType));
+
+			typeMapper.FinalizeMappings();
 
 			_wrappedImporter = typeMapper.Wrap<Wrapped.NpgsqlBinaryImporter>(_originalImporter);
 

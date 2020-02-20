@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Data;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact due to build of expression recompilation
+	// benchmark shows expected slight performance degradation due to indirect call
 	public class WrapActionBenchmark
 	{
 		private static readonly string Parameter = "TestString";
@@ -17,13 +16,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(
-				typeof(Original.TestClass2),
-				typeof(Original.TestEventHandler),
-				typeof(Original.TestEnum));
-			typeMapper.RegisterWrapper<Wrapped.TestClass2>();
-			typeMapper.RegisterWrapper<Wrapped.TestEventHandler>();
-			typeMapper.RegisterWrapper<Wrapped.TestEnum>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2(Parameter);
 			// TODO: FIXME: direct call crashes right now

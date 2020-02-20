@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
@@ -64,9 +65,10 @@ namespace LinqToDB.DataProvider.SqlCe
 						var transactionType = assembly.GetType($"{ClientNamespace}.SqlCeTransaction", true);
 						var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true);
 
-						var typeMapper = new TypeMapper(parameterType, sqlCeEngine);
-						typeMapper.RegisterWrapper<SqlCeEngine>();
-						typeMapper.RegisterWrapper<SqlCeParameter>();
+						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);
+						typeMapper.RegisterTypeWrapper<SqlCeParameter>(parameterType);
+						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<SqlCeParameter>().Member(p => p.SqlDbType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
@@ -91,18 +93,27 @@ namespace LinqToDB.DataProvider.SqlCe
 		[Wrapper]
 		public class SqlCeEngine : TypeWrapper, IDisposable
 		{
-			public SqlCeEngine(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: CreateDatabase
+				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.CreateDatabase()),
+				// [1]: Dispose
+				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.Dispose()),
+			};
+
+			public SqlCeEngine(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public SqlCeEngine(string connectionString) => throw new NotImplementedException();
 
-			public void CreateDatabase() => this.WrapAction(t => t.CreateDatabase());
-			public void Dispose()        => this.WrapAction(t => t.Dispose());
+			public void CreateDatabase() => ((Action<SqlCeEngine>)CompiledWrappers[0])(this);
+			public void Dispose()        => ((Action<SqlCeEngine>)CompiledWrappers[1])(this);
 		}
 
 		[Wrapper]
-		internal class SqlCeParameter
+		private class SqlCeParameter
 		{
 			public SqlDbType SqlDbType { get; set; }
 		}

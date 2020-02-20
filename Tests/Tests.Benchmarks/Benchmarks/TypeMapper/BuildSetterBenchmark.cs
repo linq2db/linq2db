@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
@@ -22,9 +21,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = new TypeMapper(typeof(Original.TestClass), typeof(Original.TestEnum));
-			typeMapper.RegisterWrapper<Wrapped.TestClass>();
-			typeMapper.RegisterWrapper<Wrapped.TestEnum>();
+			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			var typeBuilder = typeMapper.Type<Wrapped.TestClass>();
 			_enumPropertySetter = typeBuilder.Member(p => p.EnumProperty).BuildSetter<ITestClass>();

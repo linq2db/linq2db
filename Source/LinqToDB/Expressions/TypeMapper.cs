@@ -13,25 +13,98 @@ namespace LinqToDB.Expressions
 
 	public sealed class TypeMapper
 	{
-		public Type[] Types { get; }
+		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(TypeMapper) };
+		private static readonly Type[] _wrapperContructorParameters3 = new[] { typeof(object), typeof(TypeMapper), typeof(Delegate[]) };
 
+		// [type name] = originalType
+		private readonly IDictionary<string, Type>              _types                   = new Dictionary<string, Type>();
+
+		// [wrapperType] = originalType?
 		readonly Dictionary<Type, Type?>                        _typeMappingCache        = new Dictionary<Type, Type?>();
+		// [originalType] = wrapperType
 		readonly Dictionary<Type, Type>                         _typeMappingReverseCache = new Dictionary<Type, Type>();
 		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache      = new Dictionary<LambdaExpression, LambdaExpression>();
+		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache     = new Dictionary<Type, Func<object, object>>();
 
-		public TypeMapper([NotNull] params Type[] types)
+		private bool _finalized;
+
+		public void RegisterTypeWrapper<TWrapper>(Type originalType)
 		{
-			Types = types ?? throw new ArgumentNullException(nameof(types));
+			RegisterTypeWrapper(typeof(TWrapper), originalType);
 		}
 
-		public Type? FindReplacement(Type type)
+		public void RegisterTypeWrapper(Type wrapperType, Type originalType)
 		{
-			return Types.FirstOrDefault(t => t.Name == type.Name);
+			if (_finalized)
+				throw new LinqToDBException($"Wrappers registration is not allowed after {nameof(FinalizeMappings)}() call");
+
+			if (wrapperType.Name != originalType.Name)
+				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
+			if (_types.ContainsKey(originalType.Name))
+				throw new LinqToDBException($"Type with name {originalType.Name} already registered in mapper");
+
+			_types                  .Add(originalType.Name, originalType);
+			_typeMappingCache       .Add(wrapperType      , originalType);
+			_typeMappingReverseCache.Add(originalType     , wrapperType);
+
+			if (typeof(TypeWrapper).IsSameOrParentOf(wrapperType))
+			{
+			}
+			else if (wrapperType.GetCustomAttributes(typeof(WrapperAttribute), true).Any())
+			{
+			}
+			else
+				throw new LinqToDBException($"Type {wrapperType} should inherit from {typeof(TypeWrapper)} or marked with {typeof(WrapperAttribute)} attribute");
 		}
 
-		public bool RegisterWrapper<TWrapper>()
+		public void FinalizeMappings()
 		{
-			return TryMapType(typeof(TWrapper), out var _);
+			if (_finalized)
+				throw new LinqToDBException($"{nameof(FinalizeMappings)}() cannot be called multiple times");
+
+			foreach (var wrapperType in _typeMappingCache.Keys.Where(t => typeof(TypeWrapper).IsSameOrParentOf(t)).ToList())
+			{
+				// pre-build delegates
+				var wrappers = wrapperType.GetProperty("Wrappers", BindingFlags.Static | BindingFlags.NonPublic);
+				Delegate[]? delegates = null;
+				if (wrappers != null)
+					delegates = ((LambdaExpression[])wrappers.GetValue(null)).Select(expr =>
+					{
+						try
+						{
+							return BuildWrapper(expr);
+						}
+						catch
+						{
+							// right now it is valid case (see npgsql BinaryImporter)
+							// probably we should make it more explicit by providing canFail flag for lambda
+							return null!;
+						}
+					}).ToArray();
+
+				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
+				var types = wrappers != null ? _wrapperContructorParameters3 : _wrapperContructorParameters2;
+				var ctor = wrapperType.GetConstructor(types);
+
+				if (ctor == null)
+					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+
+				var pInstance = Expression.Parameter(typeof(object));
+
+				var factory = Expression
+					.Lambda<Func<object, object>>(
+						wrappers != null
+							? Expression.New(ctor, pInstance, Expression.Constant(this), Expression.Constant(delegates))
+							: Expression.New(ctor, pInstance, Expression.Constant(this)),
+						pInstance)
+					.Compile();
+
+				_wrapperFactoryCache.Add(wrapperType, factory);
+			}
+
+			// TODO: add enum mappers generation
+
+			_finalized = true;
 		}
 
 		private bool TryMapType(Type type, [NotNullWhen(true)] out Type? replacement)
@@ -39,18 +112,8 @@ namespace LinqToDB.Expressions
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
-			if (typeof(TypeWrapper).IsSameOrParentOf(type) || type.GetCustomAttributes(typeof(WrapperAttribute), true).Any())
-			{
-				replacement = FindReplacement(type);
-				if (replacement == null)
-					throw new LinqToDBException($"Not registered replacement for type {type.Name}");
-				else
-					_typeMappingReverseCache.Add(replacement, type);
-			}
-
-			_typeMappingCache.Add(type, replacement);
-			
-			return replacement != null;
+			_typeMappingCache.Add(type, null);
+			return false;
 		}
 
 		private bool TryMapValue(object? value, [NotNullWhen(true)] out object? replacement)
@@ -74,7 +137,8 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		private static MethodInfo _getNameMethodInfo = MemberHelper.MethodOf(() => Enum.GetName(null, null));
+		private static MethodInfo _getNameMethodInfo      = MemberHelper.MethodOf(() => Enum.GetName(null, null));
+		private static MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
 
 		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
 		{
@@ -782,6 +846,76 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+		#region BuildWrapFunc
+
+		private static readonly object _wraperLock = new object();
+
+		public void BuildWrapFunc<TI, TR>(ref Func<TI, TR>? func, Expression<Func<TI, TR>> wrapper)
+			where TI : TypeWrapper
+		{
+			if (func == null)
+				lock (_wraperLock)
+					if (func == null)
+						func = (Func<TI, TR>)BuildWrapper(wrapper);
+		}
+
+		public void BuildWrapFunc<TI, T1, TR>(ref Func<TI, T1, TR>? func, Expression<Func<TI, T1, TR>> wrapper)
+			where TI : TypeWrapper
+		{
+			if (func == null)
+				lock (_wraperLock)
+					if (func == null)
+						func = (Func<TI, T1, TR>)BuildWrapper(wrapper);
+		}
+
+		private Delegate BuildWrapper(LambdaExpression lambda)
+		{
+			// TODO: here are two optimizations that could be done to make generated action a bit faster:
+			// 1. require caller to pass unwrapped instance, so we don't need to generate instance_ property access
+			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
+			if (!TryMapType(lambda.Parameters[0].Type, out var targetType))
+				throw new LinqToDBException($"Wrapper type {lambda.Parameters[0].Type} is not registered");
+
+			var pInstance = Expression.Parameter(typeof(object));
+			var instance = Expression.Convert(pInstance, targetType);
+
+			var mappedLambda = MapLambdaInternal(lambda, true);
+			
+			var parametersMap = new Dictionary<Expression, Expression>();
+			for (var i = 0; i < lambda.Parameters.Count; i++)
+			{
+				var oldParameter = lambda.Parameters[i];
+				if (typeof(TypeWrapper).IsSameOrParentOf(oldParameter.Type) && TryMapType(oldParameter.Type, out var mappedType))
+					parametersMap.Add(mappedLambda.Parameters[i], Expression.Convert(Expression.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
+			}
+
+			var expr = mappedLambda.Body.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter && parametersMap.TryGetValue(e, out var replacement))
+					return replacement;
+
+				return e;
+			});
+
+			if (typeof(TypeWrapper).IsSameOrParentOf(lambda.ReturnType) && TryMapType(lambda.ReturnType, out var returnType))
+			{
+				expr = expr.Transform(e =>
+				{
+					if (e.Type == returnType)
+						return Expression.Convert(Expression.Call(
+							Expression.Constant(this),
+							_wrapInstanceMethodInfo,
+							Expression.Constant(lambda.ReturnType),
+							e), lambda.ReturnType);
+
+					return e;
+				});
+			}
+
+			return Expression.Lambda(expr, lambda.Parameters).Compile();
+		}
+
+		#endregion
 
 		[return: MaybeNull]
 		public TR Wrap<T, TR>(T instance, Expression<Func<T, TR>> func)
@@ -796,8 +930,7 @@ namespace LinqToDB.Expressions
 
 			if (typeof(TypeWrapper).IsSameOrParentOf(typeof(TR)))
 			{
-				var wrapper = (TR)Activator.CreateInstance(typeof(TR), result, instance.mapper_);
-				return wrapper;
+				return (TR)Wrap(typeof(TR), result);
 			}
 
 			return (TR)result;
@@ -836,27 +969,29 @@ namespace LinqToDB.Expressions
 			var expr     = MapExpressionInternal(newFunc, true);
 			var instance = expr.EvaluateExpression();
 
-			// https://github.com/dotnet/roslyn/issues/36039
-			return Wrap<TR>(instance)!;
+			return Wrap<TR>(instance);
 		}
 
-		[return: MaybeNull]
-		public TR Wrap<TR>(object? instance)
+		[return: NotNullIfNotNull("instance")]
+		public TR? Wrap<TR>(object? instance)
 			where TR: TypeWrapper
 		{
 			if (instance == null)
-				return null!;
+				return null;
 
-			var wrapper = (TR)Activator.CreateInstance(typeof(TR), instance, this);
-			return wrapper;
+			return (TR)Wrap(typeof(TR), instance);
 		}
 
+		[return: NotNullIfNotNull("instance")]
 		private object? Wrap(Type wrapperType, object? instance)
 		{
 			if (instance == null)
 				return null;
 
-			return Activator.CreateInstance(wrapperType, instance, this);
+			if (!_wrapperFactoryCache.TryGetValue(wrapperType, out var factory))
+				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
+
+			return factory(instance);
 		}
 
 		public object? Evaluate<T>(object? instance, Expression<Func<T, object?>> func)

@@ -12,11 +12,11 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|       Method |       Runtime |     Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |---------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
-|   TypeMapper |    .NET 4.6.2 | 274.9 ns | 21.34 ns | 14.11 ns |  1.30 |    0.08 | 0.0057 |     - |     - |      24 B |
-| DirectAccess |    .NET 4.6.2 | 211.4 ns | 10.22 ns |  6.76 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
-|   TypeMapper | .NET Core 2.1 | 154.1 ns |  4.93 ns |  3.26 ns |  0.73 |    0.02 | 0.0055 |     - |     - |      24 B |
-| DirectAccess | .NET Core 2.1 | 159.3 ns |  7.57 ns |  5.01 ns |  0.75 |    0.04 | 0.0055 |     - |     - |      24 B |
-|   TypeMapper | .NET Core 3.1 | 138.6 ns | 11.95 ns |  7.90 ns |  0.66 |    0.05 | 0.0057 |     - |     - |      24 B |
-| DirectAccess | .NET Core 3.1 | 164.4 ns |  8.46 ns |  5.60 ns |  0.78 |    0.04 | 0.0057 |     - |     - |      24 B |
+|       Method |       Runtime |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------- |-------------- |----------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
+|   TypeMapper |    .NET 4.6.2 | 156.92 ns | 9.490 ns | 6.277 ns |  1.19 |    0.05 | 0.0057 |     - |     - |      24 B |
+| DirectAccess |    .NET 4.6.2 | 132.32 ns | 3.264 ns | 2.159 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
+|   TypeMapper | .NET Core 2.1 |  92.03 ns | 1.648 ns | 0.428 ns |  0.69 |    0.01 | 0.0056 |     - |     - |      24 B |
+| DirectAccess | .NET Core 2.1 | 107.32 ns | 2.058 ns | 0.914 ns |  0.81 |    0.02 | 0.0056 |     - |     - |      24 B |
+|   TypeMapper | .NET Core 3.1 |  88.92 ns | 1.619 ns | 0.719 ns |  0.67 |    0.01 | 0.0057 |     - |     - |      24 B |
+| DirectAccess | .NET Core 3.1 | 107.48 ns | 3.032 ns | 2.005 ns |  0.81 |    0.02 | 0.0057 |     - |     - |      24 B |

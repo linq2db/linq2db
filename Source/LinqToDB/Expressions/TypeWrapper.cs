@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
@@ -11,19 +12,23 @@ namespace LinqToDB.Expressions
 		public TypeMapper mapper_   { get; } = null!;
 		// ReSharper restore InconsistentNaming
 
-		public TypeWrapper()
+		protected Delegate[] CompiledWrappers { get; } = null!;
+
+		// never called
+		protected TypeWrapper()
 		{
 		}
 
-		public TypeWrapper(object? instance, TypeMapper mapper)
+		public TypeWrapper(object? instance, TypeMapper mapper, Delegate[]? wrappers)
 		{
-			instance_ = instance;
-			mapper_   = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			instance_        = instance;
+			mapper_          = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
 		}
 
 		private EventHandlerList? _events;
 
-		public EventHandlerList Events
+		protected internal EventHandlerList Events
 		{
 			get
 			{

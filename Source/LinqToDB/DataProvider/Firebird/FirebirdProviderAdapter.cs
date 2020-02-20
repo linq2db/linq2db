@@ -58,11 +58,13 @@ namespace LinqToDB.DataProvider.Firebird
 						var transactionType = assembly.GetType($"{ClientNamespace}.FbTransaction", true);
 						var dbType          = assembly.GetType($"{ClientNamespace}.FbDbType"     , true);
 
-						var typeMapper = new TypeMapper(connectionType, parameterType, dbType);
+						var typeMapper = new TypeMapper();
 
-						typeMapper.RegisterWrapper<FbConnection>();
-						typeMapper.RegisterWrapper<FbParameter>();
-						typeMapper.RegisterWrapper<FbDbType>();
+						typeMapper.RegisterTypeWrapper<FbConnection>(connectionType);
+						typeMapper.RegisterTypeWrapper<FbParameter>(parameterType);
+						typeMapper.RegisterTypeWrapper<FbDbType>(dbType);
+
+						typeMapper.FinalizeMappings();
 
 						var typeGetter    = typeMapper.Type<FbParameter>().Member(p => p.FbDbType).BuildGetter<IDbDataParameter>();
 						var clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
@@ -82,13 +84,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region Wrappers
 		[Wrapper]
-		internal class FbConnection
+		private class FbConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		internal class FbParameter
+		private class FbParameter
 		{
 			public FbDbType FbDbType { get; set; }
 		}

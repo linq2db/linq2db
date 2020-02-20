@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Data;
-using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -59,12 +56,6 @@ namespace Tests.TypeMapping
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
 		}
-
-		[Wrapper]
-		internal class GetOracleDate
-		{
-
-		}
 	}
 
 	[TestFixture]
@@ -96,10 +87,12 @@ namespace Tests.TypeMapping
 
 			var oracleDate = GetDynamicTypesType("OracleDate", connectionType);
 
-			var oracleMapper = new TypeMapper(oracleParameter, oracleDbType, oracleDataReader, oracleDate);
+			var oracleMapper = new TypeMapper();
+			oracleMapper.RegisterTypeWrapper<OracleParameter>(oracleParameter);
+			oracleMapper.RegisterTypeWrapper<OracleDbType>(oracleDbType);
+			oracleMapper.RegisterTypeWrapper<OracleDataReader>(oracleDataReader);
 
-
-//			oracleMapper.MapSetter<OracleParameter>(p => p.OracleDbType, () => OracleDbType.Date);
+			oracleMapper.FinalizeMappings();
 
 			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
 
