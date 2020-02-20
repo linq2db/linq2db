@@ -14,18 +14,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		public OracleDataProvider(string name)
+		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{ }
+
+		public OracleDataProvider(string name, OracleVersion version)
 			: base(
 				  name,
 				  GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
 				  OracleProviderAdapter.GetInstance(name))
 		{
+			Version = version;
+
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+
+			if (version >= OracleVersion.v12)
+			{
+				SqlProviderFlags.IsApplyJoinSupported          = true;
+			}
 
 			SqlProviderFlags.MaxInListValuesCount              = 1000;
 
@@ -34,7 +44,10 @@ namespace LinqToDB.DataProvider.Oracle
 			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
-			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+			if (version == OracleVersion.v11)
+				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
+			else
+				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
 
 			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
@@ -65,12 +78,20 @@ namespace LinqToDB.DataProvider.Oracle
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
+		public OracleVersion Version { get; private set; }
+
 		// TODO: remove? both managed and unmanaged providers support it
 		public             bool   IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new OracleSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			switch (Version)
+			{
+				case OracleVersion.v11: return new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				case OracleVersion.v12: return new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			}
+
+			throw new InvalidOperationException();
 		}
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)

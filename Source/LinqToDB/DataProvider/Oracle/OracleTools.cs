@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.DataProvider.SapHana;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -20,9 +21,9 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleTools
 	{
 #if NET45 || NET46
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative);
+			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
 
 			DataConnection.AddDataProvider(provider);
 
@@ -30,14 +31,36 @@ namespace LinqToDB.DataProvider.Oracle
 		}, true);
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged);
+			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
 
 			DataConnection.AddDataProvider(provider);
 
 			return provider;
 		}, true);
+
+#if NET45 || NET46
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+#endif
+
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		public static bool AutoDetectProvider { get; set; } = true;
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
@@ -46,12 +69,12 @@ namespace LinqToDB.DataProvider.Oracle
 #if NET45 || NET46
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
-				case ProviderName.OracleNative                   : return _oracleNativeDataProvider.Value;
+				case ProviderName.OracleNative                   : return GetDataProvider(css, connectionString, false);
 #endif
 				case OracleProviderAdapter.ManagedAssemblyName   :
 				case OracleProviderAdapter.ManagedClientNamespace:
 				case "Oracle.ManagedDataAccess.Core"             :
-				case ProviderName.OracleManaged                  : return _oracleManagedDataProvider.Value;
+				case ProviderName.OracleManaged                  : return GetDataProvider(css, connectionString, true);
 				case ""                                          :
 				case null                                        :
 
@@ -61,11 +84,19 @@ namespace LinqToDB.DataProvider.Oracle
 				case ProviderName.Oracle              :
 #if NET45 || NET46
 					if (css.Name.Contains("Native"))
-						return _oracleNativeDataProvider.Value;
+					{
+						if (css.Name.Contains("11"))
+							return _oracleNativeDataProvider11.Value;
+						return GetDataProvider(css, connectionString, false);
+					}
 #endif
 
 					if (css.Name.Contains("Managed"))
-						return _oracleManagedDataProvider.Value;
+					{
+						if (css.Name.Contains("11"))
+							return _oracleManagedDataProvider11.Value;
+						return GetDataProvider(css, connectionString, true);
+					}
 
 					return GetDataProvider();
 			}
@@ -73,12 +104,87 @@ namespace LinqToDB.DataProvider.Oracle
 			return null;
 		}
 
+
+		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
+		{
+
+			OracleProviderAdapter providerAdapter;
+			try
+			{
+				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+
+#if NET45 || NET46
+				if (!managed)
+					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
+				else
+#endif
+					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
+
+				using (var conn = providerAdapter.CreateConnection(cs))
+				{
+					conn.Open();
+
+					var command = conn.CreateCommand();
+					command.CommandText =
+						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
+					var result = command.ExecuteScalar() as string;
+					if (result != null)
+					{
+						var version = int.Parse(result.Split('.')[0]);
+						if (version <= 11)
+							return OracleVersion.v11;
+						if (version >= 12)
+							return OracleVersion.v12;
+					}
+					return DefaultVersion;
+				}
+			}
+			catch
+			{
+				return DefaultVersion;
+			}
+		}
+
+		public static OracleVersion DefaultVersion = OracleVersion.v12;
+
 		static string? _detectedProviderName;
+
+		private static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString, bool managed)
+		{
+			var version = DefaultVersion;
+			if (AutoDetectProvider)
+				version = DetectProviderVersion(css, connectionString, managed);
+
+			return GetVersionedDataProvider(version, managed);
+		}
+
+		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
+		{
+#if NET45 || NET46
+			if (!managed)
+			{
+				switch (version)
+				{
+					case OracleVersion.v11:
+						return _oracleNativeDataProvider11.Value;
+				}
+
+				return _oracleNativeDataProvider12.Value;
+			}
+#endif
+			switch (version)
+			{
+				case OracleVersion.v11:
+					return _oracleManagedDataProvider11.Value;
+			}
+
+			return _oracleManagedDataProvider12.Value;
+		}
 
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
-		static string DetectProviderName()
+		private static string DetectProviderName()
 		{
 #if NET45 || NET46
 			try
@@ -101,20 +207,20 @@ namespace LinqToDB.DataProvider.Oracle
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
 #if NET45 || NET46
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName)  return _oracleManagedDataProvider.Value;
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return _oracleManagedDataProvider.Value;
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName)  return GetVersionedDataProvider(DefaultVersion, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
 
 			switch (providerName)
 			{
-				case ProviderName.OracleNative : return _oracleNativeDataProvider.Value;
-				case ProviderName.OracleManaged: return _oracleManagedDataProvider.Value;
+				case ProviderName.OracleNative : return GetVersionedDataProvider(DefaultVersion, false);
+				case ProviderName.OracleManaged: return GetVersionedDataProvider(DefaultVersion, true);
 			}
 
 			return DetectedProviderName == ProviderName.OracleNative
-				? _oracleNativeDataProvider.Value
-				: _oracleManagedDataProvider.Value;
+				? GetVersionedDataProvider(DefaultVersion, false)
+				: GetVersionedDataProvider(DefaultVersion, true);
 #else
-			return _oracleManagedDataProvider.Value;
+			return GetVersionedDataProvider(DefaultVersion, true);
 #endif
 		}
 
