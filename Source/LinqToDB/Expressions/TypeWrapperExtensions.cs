@@ -52,12 +52,12 @@ namespace LinqToDB.Expressions
 		//	instance.mapper_.WrapAction(instance, action);
 		//}
 
-		public static void SetPropValue<T, TV>(this T instance, Expression<Func<T, TV>> propExpression,
-			TV value)
-			where T: TypeWrapper
-		{
-			instance.mapper_.SetValue(instance.instance_, propExpression, value);
-		}
+		//public static void SetPropValue<T, TV>(this T instance, Expression<Func<T, TV>> propExpression,
+		//	TV value)
+		//	where T: TypeWrapper
+		//{
+		//	instance.mapper_.SetValue(instance.instance_, propExpression, value);
+		//}
 
 		public static void WrapEvent<T, TDelegate>(this T instance, string eventName)
 			where T         : TypeWrapper

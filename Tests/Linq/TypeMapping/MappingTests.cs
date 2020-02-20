@@ -141,6 +141,10 @@ namespace Tests
 				(Expression<Func<SampleClass, FlagsEnum>>)((SampleClass this_) => this_.FlagsEnumProperty),
 				// [10]: Fire
 				(Expression<Action<SampleClass, bool>>)((SampleClass this_,bool withHandlers) => this_.Fire(withHandlers)),
+				// [11]: set RegularEnumProperty
+				PropertySetter((SampleClass this_) => this_.RegularEnumProperty),
+				// [12]: set FlagsEnumProperty
+				PropertySetter((SampleClass this_) => this_.FlagsEnumProperty),
 			};
 
 			private bool _event1Wrapped;
@@ -162,13 +166,13 @@ namespace Tests
 			public RegularEnum RegularEnumProperty
 			{
 				get => ((Func<SampleClass, RegularEnum>)CompiledWrappers[8])(this);
-				set => this.SetPropValue(t => t.RegularEnumProperty, value);
+				set => ((Action<SampleClass, RegularEnum>)CompiledWrappers[11])(this, value);
 			}
 
 			public FlagsEnum FlagsEnumProperty
 			{
 				get => ((Func<SampleClass, FlagsEnum>)CompiledWrappers[9])(this);
-				set => this.SetPropValue(t => t.FlagsEnumProperty, value);
+				set => ((Action<SampleClass, FlagsEnum>)CompiledWrappers[12])(this, value);
 			}
 
 			public void Fire(bool withHandlers) => ((Action<SampleClass, bool>)CompiledWrappers[10])(this, withHandlers);

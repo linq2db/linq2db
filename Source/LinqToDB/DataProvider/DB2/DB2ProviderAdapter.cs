@@ -454,6 +454,14 @@ namespace LinqToDB.DataProvider.DB2
 				(Expression<Func<DB2BulkCopy, string?>>)((DB2BulkCopy this_) => this_.DestinationTableName),
 				// [5]: get ColumnMappings
 				(Expression<Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>>)((DB2BulkCopy this_) => this_.ColumnMappings),
+				// [6]: set NotifyAfter
+				PropertySetter((DB2BulkCopy this_) => this_.NotifyAfter),
+				// [7]: set BulkCopyTimeout
+				PropertySetter((DB2BulkCopy this_) => this_.BulkCopyTimeout),
+				// [8]: set DestinationTableName
+				PropertySetter((DB2BulkCopy this_) => this_.DestinationTableName),
+				// [9]: set ColumnMappings
+				PropertySetter((DB2BulkCopy this_) => this_.ColumnMappings),
 			};
 
 			public DB2BulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -469,25 +477,25 @@ namespace LinqToDB.DataProvider.DB2
 			public int NotifyAfter
 			{
 				get => ((Func<DB2BulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<DB2BulkCopy, int>)CompiledWrappers[6])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<DB2BulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<DB2BulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<DB2BulkCopy, string?>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<DB2BulkCopy, string?>)CompiledWrappers[8])(this, value);
 			}
 
 			public DB2BulkCopyColumnMappingCollection ColumnMappings
 			{
 				get => ((Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.ColumnMappings, value);
+				set => ((Action<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>)CompiledWrappers[9])(this, value);
 			}
 
 			public event DB2RowsCopiedEventHandler DB2RowsCopied
@@ -507,6 +515,8 @@ namespace LinqToDB.DataProvider.DB2
 				(Expression<Func<DB2RowsCopiedEventArgs, int>>)((DB2RowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<DB2RowsCopiedEventArgs, bool>>)((DB2RowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set Abort
+				PropertySetter((DB2RowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public DB2RowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -518,7 +528,7 @@ namespace LinqToDB.DataProvider.DB2
 			public bool Abort
 			{
 				get => ((Func<DB2RowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<DB2RowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
 

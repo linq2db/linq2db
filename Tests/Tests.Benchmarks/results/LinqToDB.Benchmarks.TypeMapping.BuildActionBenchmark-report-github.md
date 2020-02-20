@@ -12,11 +12,11 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|       Method |       Runtime |     Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |---------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
-|  BuildAction |    .NET 4.6.2 | 8.432 ns | 0.1801 ns | 0.1072 ns |  7.43 |    0.26 |     - |     - |     - |         - |
-| DirectAccess |    .NET 4.6.2 | 1.134 ns | 0.0573 ns | 0.0379 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-|  BuildAction | .NET Core 2.1 | 1.607 ns | 0.0677 ns | 0.0354 ns |  1.42 |    0.07 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 2.1 | 1.161 ns | 0.1093 ns | 0.0723 ns |  1.02 |    0.04 |     - |     - |     - |         - |
-|  BuildAction | .NET Core 3.1 | 1.627 ns | 0.0418 ns | 0.0108 ns |  1.46 |    0.05 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 3.1 | 1.091 ns | 0.0573 ns | 0.0300 ns |  0.96 |    0.03 |     - |     - |     - |         - |
+|       Method |       Runtime |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------- |-------------- |----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
+|  BuildAction |    .NET 4.6.2 | 10.638 ns | 1.2407 ns | 0.7383 ns |  8.70 |    0.79 |     - |     - |     - |         - |
+| DirectAccess |    .NET 4.6.2 |  1.228 ns | 0.0790 ns | 0.0522 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+|  BuildAction | .NET Core 2.1 |  1.669 ns | 0.1720 ns | 0.1023 ns |  1.37 |    0.12 |     - |     - |     - |         - |
+| DirectAccess | .NET Core 2.1 |  1.198 ns | 0.0585 ns | 0.0306 ns |  0.97 |    0.05 |     - |     - |     - |         - |
+|  BuildAction | .NET Core 3.1 |  1.768 ns | 0.0743 ns | 0.0491 ns |  1.44 |    0.07 |     - |     - |     - |         - |
+| DirectAccess | .NET Core 3.1 |  1.080 ns | 0.0798 ns | 0.0475 ns |  0.88 |    0.05 |     - |     - |     - |         - |

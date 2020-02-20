@@ -280,6 +280,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				(Expression<Func<TestClass2, Version>>)((TestClass2 this_) => this_.VersionProperty),
 				// [12]: get LongProperty
 				(Expression<Func<TestClass2, long>>)((TestClass2 this_) => this_.LongProperty),
+				// [13]: set IntProperty
+				PropertySetter((TestClass2 this_) => this_.IntProperty),
+				// [14]: set StringProperty
+				PropertySetter((TestClass2 this_) => this_.StringProperty),
+				// [15]: set BooleanProperty
+				PropertySetter((TestClass2 this_) => this_.BooleanProperty),
+				// [16]: set WrapperProperty
+				PropertySetter((TestClass2 this_) => this_.WrapperProperty),
 			};
 
 			public TestClass2(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -319,25 +327,25 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			public int IntProperty
 			{
 				get => ((Func<TestClass2, int>)CompiledWrappers[6])(this);
-				set => this.SetPropValue(t => t.IntProperty, value);
+				set => ((Action<TestClass2, int>)CompiledWrappers[13])(this, value);
 			}
 
 			public string StringProperty
 			{
 				get => ((Func<TestClass2, string>)CompiledWrappers[7])(this);
-				set => this.SetPropValue(t => t.StringProperty, value);
+				set => ((Action<TestClass2, string>)CompiledWrappers[14])(this, value);
 			}
 
 			public bool BooleanProperty
 			{
 				get => ((Func<TestClass2, bool>)CompiledWrappers[8])(this);
-				set => this.SetPropValue(t => t.BooleanProperty, value);
+				set => ((Action<TestClass2, bool>)CompiledWrappers[15])(this, value);
 			}
 
 			public TestClass2 WrapperProperty
 			{
 				get => ((Func<TestClass2, TestClass2>)CompiledWrappers[9])(this);
-				set => this.SetPropValue(t => t.WrapperProperty, value);
+				set => ((Action<TestClass2, TestClass2>)CompiledWrappers[16])(this, value);
 			}
 
 			public TestEnum EnumProperty => ((Func<TestClass2, TestEnum>) CompiledWrappers[10])(this);

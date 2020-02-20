@@ -14,9 +14,9 @@ MinIterationCount=5  WarmupCount=2
 ```
 |       Method |       Runtime |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |------------- |-------------- |----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
-|    BuildFunc |    .NET 4.6.2 | 10.985 ns | 0.5437 ns | 0.2844 ns |  5.85 |    0.22 |     - |     - |     - |         - |
-| DirectAccess |    .NET 4.6.2 |  1.880 ns | 0.1253 ns | 0.0746 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-|    BuildFunc | .NET Core 2.1 |  5.909 ns | 0.3062 ns | 0.2025 ns |  3.15 |    0.16 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 2.1 |  3.570 ns | 0.1578 ns | 0.1044 ns |  1.91 |    0.10 |     - |     - |     - |         - |
-|    BuildFunc | .NET Core 3.1 |  4.499 ns | 0.3030 ns | 0.2004 ns |  2.39 |    0.12 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 3.1 |  1.906 ns | 0.1077 ns | 0.0280 ns |  1.01 |    0.04 |     - |     - |     - |         - |
+|    BuildFunc |    .NET 4.6.2 | 11.969 ns | 0.7799 ns | 0.5158 ns |  5.04 |    0.35 |     - |     - |     - |         - |
+| DirectAccess |    .NET 4.6.2 |  2.379 ns | 0.1995 ns | 0.1319 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+|    BuildFunc | .NET Core 2.1 |  7.633 ns | 1.0665 ns | 0.7054 ns |  3.21 |    0.26 |     - |     - |     - |         - |
+| DirectAccess | .NET Core 2.1 |  3.802 ns | 0.6659 ns | 0.4405 ns |  1.60 |    0.22 |     - |     - |     - |         - |
+|    BuildFunc | .NET Core 3.1 |  4.989 ns | 0.2764 ns | 0.1829 ns |  2.10 |    0.15 |     - |     - |     - |         - |
+| DirectAccess | .NET Core 3.1 |  2.410 ns | 0.3146 ns | 0.2081 ns |  1.02 |    0.11 |     - |     - |     - |         - |

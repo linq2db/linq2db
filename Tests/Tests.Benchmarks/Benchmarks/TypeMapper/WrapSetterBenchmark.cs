@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact (not yet migrated to new wrapper infra)
+	// // benchmark shows expected time penalty for indirect call
 	public class WrapSetterBenchmark
 	{
 		private static readonly string StringParameter = "TestString";

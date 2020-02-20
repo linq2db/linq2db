@@ -611,6 +611,14 @@ namespace LinqToDB.DataProvider.Oracle
 				(Expression<Func<OracleBulkCopy, string?>>)((OracleBulkCopy this_) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
 				(Expression<Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>>)((OracleBulkCopy this_) => this_.ColumnMappings),
+				// [7]: set NotifyAfter
+				PropertySetter((OracleBulkCopy this_) => this_.NotifyAfter),
+				// [8]: set BatchSize
+				PropertySetter((OracleBulkCopy this_) => this_.BatchSize),
+				// [9]: set BulkCopyTimeout
+				PropertySetter((OracleBulkCopy this_) => this_.BulkCopyTimeout),
+				// [10]: set DestinationTableName
+				PropertySetter((OracleBulkCopy this_) => this_.DestinationTableName),
 			};
 
 			public OracleBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -626,25 +634,25 @@ namespace LinqToDB.DataProvider.Oracle
 			public int NotifyAfter
 			{
 				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
 				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BatchSize, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<OracleBulkCopy, string?>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<OracleBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
 			public OracleBulkCopyColumnMappingCollection ColumnMappings => ((Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
@@ -666,6 +674,8 @@ namespace LinqToDB.DataProvider.Oracle
 				(Expression<Func<OracleRowsCopiedEventArgs, long>>)((OracleRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<OracleRowsCopiedEventArgs, bool>>)((OracleRowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set Abort
+				PropertySetter((OracleRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public OracleRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -677,7 +687,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public bool Abort
 			{
 				get => ((Func<OracleRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<OracleRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
 

@@ -180,6 +180,14 @@ namespace LinqToDB.DataProvider.SapHana
 				(Expression<Func<HanaBulkCopy, string?>>)((HanaBulkCopy this_) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
 				(Expression<Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>>)((HanaBulkCopy this_) => this_.ColumnMappings),
+				// [7]: set NotifyAfter
+				PropertySetter((HanaBulkCopy this_) => this_.NotifyAfter),
+				// [8]: set BatchSize
+				PropertySetter((HanaBulkCopy this_) => this_.BatchSize),
+				// [9]: set BulkCopyTimeout
+				PropertySetter((HanaBulkCopy this_) => this_.BulkCopyTimeout),
+				// [10]: set DestinationTableName
+				PropertySetter((HanaBulkCopy this_) => this_.DestinationTableName),
 			};
 
 			public HanaBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -195,25 +203,25 @@ namespace LinqToDB.DataProvider.SapHana
 			public int NotifyAfter
 			{
 				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<HanaBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
 				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BatchSize, value);
+				set => ((Action<HanaBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<HanaBulkCopy, int>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<HanaBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<HanaBulkCopy, string?>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<HanaBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
 			public HanaBulkCopyColumnMappingCollection ColumnMappings => ((Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
@@ -235,6 +243,8 @@ namespace LinqToDB.DataProvider.SapHana
 				(Expression<Func<HanaRowsCopiedEventArgs, long>>)((HanaRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<HanaRowsCopiedEventArgs, bool>>)((HanaRowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set Abort
+				PropertySetter((HanaRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public HanaRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -246,7 +256,7 @@ namespace LinqToDB.DataProvider.SapHana
 			public bool Abort
 			{
 				get => ((Func<HanaRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<HanaRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
 

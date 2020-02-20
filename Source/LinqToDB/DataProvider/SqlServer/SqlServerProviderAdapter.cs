@@ -341,6 +341,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				// [0]: get MultipleActiveResultSets
 				(Expression<Func<SqlConnectionStringBuilder, bool>>)((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
+				// [1]: set MultipleActiveResultSets
+				PropertySetter((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
 			};
 
 			public SqlConnectionStringBuilder(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -352,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public bool MultipleActiveResultSets
 			{
 				get => ((Func<SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
-				set => this.SetPropValue(t => t.MultipleActiveResultSets, value);
+				set => ((Action<SqlConnectionStringBuilder, bool>)CompiledWrappers[1])(this, value);
 			}
 		}
 
@@ -410,6 +412,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				(Expression<Func<SqlBulkCopy, string?>>)((SqlBulkCopy this_) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
 				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_) => this_.ColumnMappings),
+				// [7]: set NotifyAfter
+				PropertySetter((SqlBulkCopy this_) => this_.NotifyAfter),
+				// [8]: set BatchSize
+				PropertySetter((SqlBulkCopy this_) => this_.BatchSize),
+				// [9]: set BulkCopyTimeout
+				PropertySetter((SqlBulkCopy this_) => this_.BulkCopyTimeout),
+				// [10]: set DestinationTableName
+				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
 			};
 
 			public SqlBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -425,25 +435,25 @@ namespace LinqToDB.DataProvider.SqlServer
 			public int NotifyAfter
 			{
 				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
 				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BatchSize, value);
+				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<SqlBulkCopy, string?>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<SqlBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
 			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
@@ -465,6 +475,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				(Expression<Func<SqlRowsCopiedEventArgs, long>>)((SqlRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<SqlRowsCopiedEventArgs, bool>>)((SqlRowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set Abort
+				PropertySetter((SqlRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public SqlRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -476,7 +488,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public bool Abort
 			{
 				get => ((Func<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
 

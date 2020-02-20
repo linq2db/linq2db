@@ -225,6 +225,14 @@ namespace LinqToDB.DataProvider.Sybase
 				(Expression<Func<AseBulkCopy, string?>>)((AseBulkCopy this_) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
 				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)((AseBulkCopy this_) => this_.ColumnMappings),
+				// [7]: set NotifyAfter
+				PropertySetter((AseBulkCopy this_) => this_.NotifyAfter),
+				// [8]: set BatchSize
+				PropertySetter((AseBulkCopy this_) => this_.BatchSize),
+				// [9]: set BulkCopyTimeout
+				PropertySetter((AseBulkCopy this_) => this_.BulkCopyTimeout),
+				// [10]: set DestinationTableName
+				PropertySetter((AseBulkCopy this_) => this_.DestinationTableName),
 			};
 
 			public AseBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -241,25 +249,25 @@ namespace LinqToDB.DataProvider.Sybase
 			public int NotifyAfter
 			{
 				get => ((Func<AseBulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<AseBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
 				get => ((Func<AseBulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BatchSize, value);
+				set => ((Action<AseBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<AseBulkCopy, int>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<AseBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<AseBulkCopy, string?>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<AseBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
 			public AseBulkCopyColumnMappingCollection ColumnMappings => ((Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
@@ -281,6 +289,10 @@ namespace LinqToDB.DataProvider.Sybase
 				(Expression<Func<AseRowsCopiedEventArgs, int>>)((AseRowsCopiedEventArgs this_) => this_.RowCopied),
 				// [1]: get Abort
 				(Expression<Func<AseRowsCopiedEventArgs, bool>>)((AseRowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set RowCopied
+				PropertySetter((AseRowsCopiedEventArgs this_) => this_.RowCopied),
+				// [3]: set Abort
+				PropertySetter((AseRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public AseRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -291,13 +303,13 @@ namespace LinqToDB.DataProvider.Sybase
 			public int RowCopied
 			{
 				get => ((Func<AseRowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
-				set => this.SetPropValue(t => t.RowCopied, value);
+				set => ((Action<AseRowsCopiedEventArgs, int>)CompiledWrappers[2])(this, value);
 			}
 
 			public bool Abort
 			{
 				get => ((Func<AseRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<AseRowsCopiedEventArgs, bool>)CompiledWrappers[3])(this, value);
 			}
 		}
 

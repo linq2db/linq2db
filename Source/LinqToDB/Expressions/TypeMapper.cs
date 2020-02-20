@@ -76,9 +76,10 @@ namespace LinqToDB.Expressions
 						}
 						catch
 						{
+							throw;
 							// right now it is valid case (see npgsql BinaryImporter)
 							// probably we should make it more explicit by providing canFail flag for lambda
-							return null!;
+							//return null!;
 						}
 					}).ToArray();
 
@@ -885,8 +886,21 @@ namespace LinqToDB.Expressions
 			for (var i = 0; i < lambda.Parameters.Count; i++)
 			{
 				var oldParameter = lambda.Parameters[i];
-				if (typeof(TypeWrapper).IsSameOrParentOf(oldParameter.Type) && TryMapType(oldParameter.Type, out var mappedType))
-					parametersMap.Add(mappedLambda.Parameters[i], Expression.Convert(Expression.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
+
+				if (TryMapType(oldParameter.Type, out var mappedType))
+				{
+					if (typeof(TypeWrapper).IsSameOrParentOf(oldParameter.Type))
+						parametersMap.Add(mappedLambda.Parameters[i], Expression.Convert(Expression.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
+					else if (oldParameter.Type.IsEnum)
+						parametersMap.Add(mappedLambda.Parameters[i], Expression.Convert(
+							Expression.Call(
+								typeof(Enum),
+								nameof(Enum.Parse),
+								Array<Type>.Empty,
+								Expression.Constant(mappedType),
+								Expression.Call(oldParameter, nameof(Enum.ToString), Array<Type>.Empty)),
+							mappedType));
+				}
 			}
 
 			var expr = mappedLambda.Body.Transform(e =>

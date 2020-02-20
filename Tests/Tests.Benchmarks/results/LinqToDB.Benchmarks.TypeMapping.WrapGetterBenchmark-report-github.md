@@ -12,47 +12,47 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=10
 MinIterationCount=5  WarmupCount=2  
 
 ```
-|              Method |       Runtime |          Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|-------------------- |-------------- |--------------:|----------:|----------:|-------:|--------:|-------:|------:|------:|----------:|
-|    TypeMapperString |    .NET 4.6.2 |    13.8224 ns | 0.3409 ns | 0.2255 ns |  13.27 |    0.37 |      - |     - |     - |         - |
-|  DirectAccessString |    .NET 4.6.2 |     1.0442 ns | 0.0932 ns | 0.0414 ns |   1.00 |    0.00 |      - |     - |     - |         - |
-|       TypeMapperInt |    .NET 4.6.2 |    14.3010 ns | 0.5072 ns | 0.3355 ns |  13.74 |    0.55 |      - |     - |     - |         - |
-|     DirectAccessInt |    .NET 4.6.2 |     1.2577 ns | 0.1738 ns | 0.1150 ns |   1.16 |    0.11 |      - |     - |     - |         - |
-|      TypeMapperLong |    .NET 4.6.2 |    14.6610 ns | 0.9504 ns | 0.6286 ns |  14.30 |    0.62 |      - |     - |     - |         - |
-|    DirectAccessLong |    .NET 4.6.2 |     1.0777 ns | 0.0610 ns | 0.0404 ns |   1.03 |    0.06 |      - |     - |     - |         - |
-|   TypeMapperBoolean |    .NET 4.6.2 |    14.1574 ns | 0.5757 ns | 0.3808 ns |  13.59 |    0.73 |      - |     - |     - |         - |
-| DirectAccessBoolean |    .NET 4.6.2 |     1.0784 ns | 0.0159 ns | 0.0041 ns |   1.03 |    0.04 |      - |     - |     - |         - |
-|   TypeMapperWrapper |    .NET 4.6.2 |    22.2686 ns | 2.0246 ns | 1.3392 ns |  21.44 |    0.87 |      - |     - |     - |         - |
-| DirectAccessWrapper |    .NET 4.6.2 |     1.0639 ns | 0.1077 ns | 0.0563 ns |   1.01 |    0.05 |      - |     - |     - |         - |
-|      TypeMapperEnum |    .NET 4.6.2 | 1,027.8619 ns | 9.2174 ns | 2.3937 ns | 984.93 |   41.91 | 0.0420 |     - |     - |     177 B |
-|    DirectAccessEnum |    .NET 4.6.2 |     1.3551 ns | 0.0521 ns | 0.0135 ns |   1.30 |    0.05 |      - |     - |     - |         - |
-|   TypeMapperVersion |    .NET 4.6.2 |    14.1643 ns | 0.4856 ns | 0.2890 ns |  13.51 |    0.54 |      - |     - |     - |         - |
-| DirectAccessVersion |    .NET 4.6.2 |     0.8705 ns | 0.0821 ns | 0.0213 ns |   0.83 |    0.04 |      - |     - |     - |         - |
-|    TypeMapperString | .NET Core 2.1 |     5.3554 ns | 0.2729 ns | 0.1805 ns |   5.10 |    0.08 |      - |     - |     - |         - |
-|  DirectAccessString | .NET Core 2.1 |     1.3819 ns | 0.0407 ns | 0.0106 ns |   1.32 |    0.06 |      - |     - |     - |         - |
-|       TypeMapperInt | .NET Core 2.1 |     5.3844 ns | 0.0569 ns | 0.0148 ns |   5.16 |    0.21 |      - |     - |     - |         - |
-|     DirectAccessInt | .NET Core 2.1 |     1.3403 ns | 0.0613 ns | 0.0405 ns |   1.29 |    0.08 |      - |     - |     - |         - |
-|      TypeMapperLong | .NET Core 2.1 |     5.6063 ns | 0.2219 ns | 0.1468 ns |   5.41 |    0.31 |      - |     - |     - |         - |
-|    DirectAccessLong | .NET Core 2.1 |     1.3951 ns | 0.0416 ns | 0.0108 ns |   1.34 |    0.07 |      - |     - |     - |         - |
-|   TypeMapperBoolean | .NET Core 2.1 |     5.4640 ns | 0.1428 ns | 0.0371 ns |   5.24 |    0.22 |      - |     - |     - |         - |
-| DirectAccessBoolean | .NET Core 2.1 |     1.4621 ns | 0.0663 ns | 0.0347 ns |   1.40 |    0.05 |      - |     - |     - |         - |
-|   TypeMapperWrapper | .NET Core 2.1 |    12.1789 ns | 0.2924 ns | 0.1740 ns |  11.71 |    0.59 |      - |     - |     - |         - |
-| DirectAccessWrapper | .NET Core 2.1 |     1.3699 ns | 0.1019 ns | 0.0452 ns |   1.31 |    0.05 |      - |     - |     - |         - |
-|      TypeMapperEnum | .NET Core 2.1 |   478.4662 ns | 8.6847 ns | 2.2554 ns | 458.41 |   17.42 | 0.0296 |     - |     - |     128 B |
-|    DirectAccessEnum | .NET Core 2.1 |     1.3378 ns | 0.0608 ns | 0.0158 ns |   1.28 |    0.06 |      - |     - |     - |         - |
-|   TypeMapperVersion | .NET Core 2.1 |     5.3713 ns | 0.6145 ns | 0.4064 ns |   5.28 |    0.33 |      - |     - |     - |         - |
-| DirectAccessVersion | .NET Core 2.1 |     1.0287 ns | 0.1296 ns | 0.0337 ns |   0.99 |    0.05 |      - |     - |     - |         - |
-|    TypeMapperString | .NET Core 3.1 |     5.2166 ns | 0.2285 ns | 0.1512 ns |   4.97 |    0.20 |      - |     - |     - |         - |
-|  DirectAccessString | .NET Core 3.1 |     0.9935 ns | 0.1010 ns | 0.0528 ns |   0.96 |    0.03 |      - |     - |     - |         - |
-|       TypeMapperInt | .NET Core 3.1 |     5.7110 ns | 0.4925 ns | 0.3258 ns |   5.63 |    0.43 |      - |     - |     - |         - |
-|     DirectAccessInt | .NET Core 3.1 |     1.0145 ns | 0.0505 ns | 0.0224 ns |   0.97 |    0.03 |      - |     - |     - |         - |
-|      TypeMapperLong | .NET Core 3.1 |     5.9914 ns | 0.2721 ns | 0.1800 ns |   5.73 |    0.18 |      - |     - |     - |         - |
-|    DirectAccessLong | .NET Core 3.1 |     1.3926 ns | 0.0447 ns | 0.0116 ns |   1.33 |    0.05 |      - |     - |     - |         - |
-|   TypeMapperBoolean | .NET Core 3.1 |     5.4006 ns | 0.3280 ns | 0.2170 ns |   5.10 |    0.31 |      - |     - |     - |         - |
-| DirectAccessBoolean | .NET Core 3.1 |     1.1671 ns | 0.1298 ns | 0.0859 ns |   1.14 |    0.12 |      - |     - |     - |         - |
-|   TypeMapperWrapper | .NET Core 3.1 |    11.3460 ns | 0.2775 ns | 0.1651 ns |  10.92 |    0.42 |      - |     - |     - |         - |
-| DirectAccessWrapper | .NET Core 3.1 |     1.3841 ns | 0.0528 ns | 0.0137 ns |   1.33 |    0.06 |      - |     - |     - |         - |
-|      TypeMapperEnum | .NET Core 3.1 |   190.2484 ns | 2.8136 ns | 1.0034 ns | 183.52 |    8.26 | 0.0114 |     - |     - |      48 B |
-|    DirectAccessEnum | .NET Core 3.1 |     1.2081 ns | 0.0834 ns | 0.0551 ns |   1.18 |    0.05 |      - |     - |     - |         - |
-|   TypeMapperVersion | .NET Core 3.1 |     5.7323 ns | 0.1312 ns | 0.0341 ns |   5.49 |    0.20 |      - |     - |     - |         - |
-| DirectAccessVersion | .NET Core 3.1 |     1.3703 ns | 0.1003 ns | 0.0261 ns |   1.31 |    0.06 |      - |     - |     - |         - |
+|              Method |       Runtime |          Mean |      Error |     StdDev |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|-------------------- |-------------- |--------------:|-----------:|-----------:|-------:|--------:|-------:|------:|------:|----------:|
+|    TypeMapperString |    .NET 4.6.2 |    13.8750 ns |  0.6128 ns |  0.3647 ns |  11.85 |    0.69 |      - |     - |     - |         - |
+|  DirectAccessString |    .NET 4.6.2 |     1.1816 ns |  0.1087 ns |  0.0719 ns |   1.00 |    0.00 |      - |     - |     - |         - |
+|       TypeMapperInt |    .NET 4.6.2 |    14.8257 ns |  0.9200 ns |  0.6085 ns |  12.59 |    1.01 |      - |     - |     - |         - |
+|     DirectAccessInt |    .NET 4.6.2 |     1.1851 ns |  0.1552 ns |  0.1026 ns |   1.01 |    0.11 |      - |     - |     - |         - |
+|      TypeMapperLong |    .NET 4.6.2 |    14.1721 ns |  0.6861 ns |  0.4538 ns |  12.03 |    0.67 |      - |     - |     - |         - |
+|    DirectAccessLong |    .NET 4.6.2 |     1.0932 ns |  0.0588 ns |  0.0210 ns |   0.95 |    0.06 |      - |     - |     - |         - |
+|   TypeMapperBoolean |    .NET 4.6.2 |    14.3591 ns |  0.2664 ns |  0.1585 ns |  12.27 |    0.81 |      - |     - |     - |         - |
+| DirectAccessBoolean |    .NET 4.6.2 |     1.1888 ns |  0.0556 ns |  0.0144 ns |   1.03 |    0.07 |      - |     - |     - |         - |
+|   TypeMapperWrapper |    .NET 4.6.2 |    20.4755 ns |  0.4698 ns |  0.2086 ns |  17.82 |    1.05 |      - |     - |     - |         - |
+| DirectAccessWrapper |    .NET 4.6.2 |     1.0291 ns |  0.1049 ns |  0.0624 ns |   0.88 |    0.06 |      - |     - |     - |         - |
+|      TypeMapperEnum |    .NET 4.6.2 | 1,043.6252 ns | 20.6760 ns | 12.3040 ns | 892.18 |   59.47 | 0.0420 |     - |     - |     177 B |
+|    DirectAccessEnum |    .NET 4.6.2 |     1.1197 ns |  0.0518 ns |  0.0135 ns |   0.97 |    0.06 |      - |     - |     - |         - |
+|   TypeMapperVersion |    .NET 4.6.2 |    15.1972 ns |  1.0231 ns |  0.6767 ns |  12.89 |    0.64 |      - |     - |     - |         - |
+| DirectAccessVersion |    .NET 4.6.2 |     1.0200 ns |  0.1062 ns |  0.0632 ns |   0.87 |    0.07 |      - |     - |     - |         - |
+|    TypeMapperString | .NET Core 2.1 |     5.2015 ns |  0.0429 ns |  0.0111 ns |   4.52 |    0.31 |      - |     - |     - |         - |
+|  DirectAccessString | .NET Core 2.1 |     1.0113 ns |  0.1116 ns |  0.0738 ns |   0.86 |    0.09 |      - |     - |     - |         - |
+|       TypeMapperInt | .NET Core 2.1 |     5.6434 ns |  0.3933 ns |  0.2601 ns |   4.79 |    0.28 |      - |     - |     - |         - |
+|     DirectAccessInt | .NET Core 2.1 |     1.0659 ns |  0.0460 ns |  0.0164 ns |   0.93 |    0.06 |      - |     - |     - |         - |
+|      TypeMapperLong | .NET Core 2.1 |     5.3354 ns |  0.1551 ns |  0.1026 ns |   4.53 |    0.24 |      - |     - |     - |         - |
+|    DirectAccessLong | .NET Core 2.1 |     1.0864 ns |  0.0452 ns |  0.0161 ns |   0.95 |    0.06 |      - |     - |     - |         - |
+|   TypeMapperBoolean | .NET Core 2.1 |     5.3584 ns |  0.1166 ns |  0.0303 ns |   4.65 |    0.32 |      - |     - |     - |         - |
+| DirectAccessBoolean | .NET Core 2.1 |     0.9231 ns |  0.0554 ns |  0.0246 ns |   0.80 |    0.04 |      - |     - |     - |         - |
+|   TypeMapperWrapper | .NET Core 2.1 |    12.2121 ns |  0.3448 ns |  0.2052 ns |  10.43 |    0.52 |      - |     - |     - |         - |
+| DirectAccessWrapper | .NET Core 2.1 |     1.1372 ns |  0.1367 ns |  0.0904 ns |   0.96 |    0.09 |      - |     - |     - |         - |
+|      TypeMapperEnum | .NET Core 2.1 |   545.6388 ns | 15.4351 ns | 10.2093 ns | 463.35 |   29.64 | 0.0296 |     - |     - |     128 B |
+|    DirectAccessEnum | .NET Core 2.1 |     1.5094 ns |  0.1579 ns |  0.1044 ns |   1.28 |    0.11 |      - |     - |     - |         - |
+|   TypeMapperVersion | .NET Core 2.1 |     5.3717 ns |  0.1947 ns |  0.1288 ns |   4.57 |    0.37 |      - |     - |     - |         - |
+| DirectAccessVersion | .NET Core 2.1 |     1.0200 ns |  0.1227 ns |  0.0811 ns |   0.87 |    0.10 |      - |     - |     - |         - |
+|    TypeMapperString | .NET Core 3.1 |     5.5237 ns |  0.1709 ns |  0.0894 ns |   4.76 |    0.33 |      - |     - |     - |         - |
+|  DirectAccessString | .NET Core 3.1 |     1.4679 ns |  0.3826 ns |  0.2530 ns |   1.25 |    0.27 |      - |     - |     - |         - |
+|       TypeMapperInt | .NET Core 3.1 |     5.7885 ns |  0.8730 ns |  0.5774 ns |   4.94 |    0.76 |      - |     - |     - |         - |
+|     DirectAccessInt | .NET Core 3.1 |     1.0521 ns |  0.0676 ns |  0.0175 ns |   0.91 |    0.07 |      - |     - |     - |         - |
+|      TypeMapperLong | .NET Core 3.1 |     6.1002 ns |  0.2238 ns |  0.1480 ns |   5.18 |    0.32 |      - |     - |     - |         - |
+|    DirectAccessLong | .NET Core 3.1 |     1.5780 ns |  0.2239 ns |  0.1481 ns |   1.35 |    0.20 |      - |     - |     - |         - |
+|   TypeMapperBoolean | .NET Core 3.1 |     5.4221 ns |  0.1321 ns |  0.0691 ns |   4.67 |    0.25 |      - |     - |     - |         - |
+| DirectAccessBoolean | .NET Core 3.1 |     1.0832 ns |  0.0357 ns |  0.0093 ns |   0.94 |    0.07 |      - |     - |     - |         - |
+|   TypeMapperWrapper | .NET Core 3.1 |    11.6892 ns |  0.3445 ns |  0.2279 ns |   9.92 |    0.55 |      - |     - |     - |         - |
+| DirectAccessWrapper | .NET Core 3.1 |     1.5818 ns |  0.4345 ns |  0.2874 ns |   1.34 |    0.22 |      - |     - |     - |         - |
+|      TypeMapperEnum | .NET Core 3.1 |   191.9637 ns |  6.2252 ns |  4.1176 ns | 163.07 |   11.46 | 0.0114 |     - |     - |      48 B |
+|    DirectAccessEnum | .NET Core 3.1 |     1.3535 ns |  0.0490 ns |  0.0175 ns |   1.18 |    0.07 |      - |     - |     - |         - |
+|   TypeMapperVersion | .NET Core 3.1 |     5.8034 ns |  0.2504 ns |  0.1656 ns |   4.93 |    0.29 |      - |     - |     - |         - |
+| DirectAccessVersion | .NET Core 3.1 |     1.4195 ns |  0.1013 ns |  0.0450 ns |   1.23 |    0.04 |      - |     - |     - |         - |

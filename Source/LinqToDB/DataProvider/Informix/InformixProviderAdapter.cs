@@ -378,6 +378,14 @@ namespace LinqToDB.DataProvider.Informix
 				(Expression<Func<IfxBulkCopy, string?>>)((IfxBulkCopy this_) => this_.DestinationTableName),
 				// [5]: get ColumnMappings
 				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_) => this_.ColumnMappings),
+				// [6]: set NotifyAfter
+				PropertySetter((IfxBulkCopy this_) => this_.NotifyAfter),
+				// [7]: set BulkCopyTimeout
+				PropertySetter((IfxBulkCopy this_) => this_.BulkCopyTimeout),
+				// [8]: set DestinationTableName
+				PropertySetter((IfxBulkCopy this_) => this_.DestinationTableName),
+				// [9]: set ColumnMappings
+				PropertySetter((IfxBulkCopy this_) => this_.ColumnMappings),
 			};
 
 			public IfxBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -393,25 +401,25 @@ namespace LinqToDB.DataProvider.Informix
 			public int NotifyAfter
 			{
 				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[2])(this);
-				set => this.SetPropValue(t => t.NotifyAfter, value);
+				set => ((Action<IfxBulkCopy, int>)CompiledWrappers[6])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[3])(this);
-				set => this.SetPropValue(t => t.BulkCopyTimeout, value);
+				set => ((Action<IfxBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func<IfxBulkCopy, string?>)CompiledWrappers[4])(this);
-				set => this.SetPropValue(t => t.DestinationTableName, value);
+				set => ((Action<IfxBulkCopy, string?>)CompiledWrappers[8])(this, value);
 			}
 
 			public IfxBulkCopyColumnMappingCollection ColumnMappings
 			{
 				get => ((Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
-				set => this.SetPropValue(t => t.ColumnMappings, value);
+				set => ((Action<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[9])(this, value);
 			}
 
 			public event IfxRowsCopiedEventHandler IfxRowsCopied
@@ -431,6 +439,8 @@ namespace LinqToDB.DataProvider.Informix
 				(Expression<Func<IfxRowsCopiedEventArgs, int>>)((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
+				// [2]: set Abort
+				PropertySetter((IfxRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
 			public IfxRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -442,7 +452,7 @@ namespace LinqToDB.DataProvider.Informix
 			public bool Abort
 			{
 				get => ((Func<IfxRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => this.SetPropValue(t => t.Abort, value);
+				set => ((Action<IfxRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
 
