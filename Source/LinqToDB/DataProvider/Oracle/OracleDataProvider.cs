@@ -78,20 +78,19 @@ namespace LinqToDB.DataProvider.Oracle
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
-		public OracleVersion Version { get; private set; }
+		public OracleVersion Version { get; }
 
 		// TODO: remove? both managed and unmanaged providers support it
-		public             bool   IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
+		public bool          IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			switch (Version)
 			{
 				case OracleVersion.v11: return new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				default               :
 				case OracleVersion.v12: return new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 			}
-
-			throw new InvalidOperationException();
 		}
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)

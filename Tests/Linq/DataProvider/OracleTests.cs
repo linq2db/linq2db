@@ -1590,7 +1590,7 @@ namespace Tests.DataProvider
 		#endregion
 
 		[Test]
-		public void TestOrderByFirst1([IncludeDataSources(TestProvName.Oracle11Managed)] string context)
+		public void TestOrderByFirst1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1608,7 +1608,7 @@ namespace Tests.DataProvider
 				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
 					n++;
 
-				Assert.That(n, Is.EqualTo(2));
+				Assert.That(n, Is.EqualTo(context.Contains("11") ? 2 : 1));
 			}
 		}
 
@@ -1635,7 +1635,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestOrderByFirst3([IncludeDataSources(TestProvName.Oracle11Managed)] string context)
+		public void TestOrderByFirst3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1653,7 +1653,7 @@ namespace Tests.DataProvider
 				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
 					n++;
 
-				Assert.That(n, Is.EqualTo(3));
+				Assert.That(n, Is.EqualTo(context.Contains("11") ? 3 : 1));
 			}
 		}
 

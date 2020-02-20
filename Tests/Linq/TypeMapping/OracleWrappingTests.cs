@@ -88,9 +88,9 @@ namespace Tests.TypeMapping
 			var oracleDate = GetDynamicTypesType("OracleDate", connectionType);
 
 			var oracleMapper = new TypeMapper();
-			oracleMapper.RegisterTypeWrapper<OracleParameter>(oracleParameter);
-			oracleMapper.RegisterTypeWrapper<OracleDbType>(oracleDbType);
-			oracleMapper.RegisterTypeWrapper<OracleDataReader>(oracleDataReader);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleParameter>(oracleParameter);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDbType>(oracleDbType);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDataReader>(oracleDataReader);
 
 			oracleMapper.FinalizeMappings();
 

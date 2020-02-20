@@ -1,13 +1,8 @@
-﻿using System.Data;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using SqlQuery;
-	using SqlProvider;
-	using System.Text;
 	using LinqToDB.Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class Oracle12SqlBuilder : Oracle11SqlBuilder
 	{
@@ -31,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new Oracle12SqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
@@ -49,6 +44,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return "OFFSET {0} ROWS";
 		}
 
-		protected override bool OffsetFirst { get { return true; } }
+		protected override bool OffsetFirst => true;
 	}
 }

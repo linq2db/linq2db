@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		protected readonly OracleDataProvider? _provider;
+		protected OracleDataProvider? Provider { get; }
 
 		public Oracle11SqlBuilder(
 			OracleDataProvider? provider,
@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags    sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
+			Provider = provider;
 		}
 
 		// remote context
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new Oracle11SqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -502,11 +502,11 @@ END;",
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider != null)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return Provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

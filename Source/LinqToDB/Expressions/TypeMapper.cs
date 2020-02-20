@@ -76,10 +76,9 @@ namespace LinqToDB.Expressions
 						}
 						catch
 						{
-							throw;
 							// right now it is valid case (see npgsql BinaryImporter)
 							// probably we should make it more explicit by providing canFail flag for lambda
-							//return null!;
+							return null!;
 						}
 					}).ToArray();
 
