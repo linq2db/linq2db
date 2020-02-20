@@ -560,21 +560,36 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		public class OracleConnection : TypeWrapper, IDisposable
 		{
-			public OracleConnection(object instance, TypeMapper mapper) : base(instance, mapper)
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: HostName
+				(Expression<Func<OracleConnection, string>>)((OracleConnection this_) => this_.HostName),
+				// [1]: DatabaseName
+				(Expression<Func<OracleConnection, string>>)((OracleConnection this_) => this_.DatabaseName),
+				// [2]: Open
+				(Expression<Action<OracleConnection>>)((OracleConnection this_) => this_.Open()),
+				// [3]: CreateCommand
+				(Expression<Func<OracleConnection, IDbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
+				// [4]: Dispose
+				(Expression<Action<OracleConnection>>)((OracleConnection this_) => this_.Dispose()),
+			};
+
+			public OracleConnection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
 			}
 
 			public OracleConnection(string connectionString) => throw new NotImplementedException();
 
-			public string HostName => this.Wrap(t => t.HostName);
+			public string HostName => ((Func<OracleConnection, string>)CompiledWrappers[0])(this);
 
-			public string DatabaseName => this.Wrap(t => t.DatabaseName);
+			public string DatabaseName => ((Func<OracleConnection, string>)CompiledWrappers[1])(this);
 
-			public void Open() => this.WrapAction(c => c.Open());
+			public void Open() => ((Action<OracleConnection>)CompiledWrappers[2])(this);
 
-			public IDbCommand CreateCommand() => this.Wrap(c => c.CreateCommand());
+			public IDbCommand CreateCommand() => ((Func<OracleConnection, IDbCommand>)CompiledWrappers[3])(this);
 
-			public void Dispose() => this.WrapAction(t => t.Dispose());
+			public void Dispose() => ((Action<OracleConnection>)CompiledWrappers[4])(this);
 		}
 
 		[Wrapper]
