@@ -122,6 +122,24 @@ GO
 GRANT EXEC ON Person_SelectByKey TO PUBLIC
 GO
 
+-- Person_SelectByKeyLowercase
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectByKeyLowercase')
+BEGIN DROP Procedure Person_SelectByKey
+END
+GO
+
+CREATE Procedure Person_SelectByKeyLowercase
+	@id int
+AS
+
+SELECT id, firstname FROM Person WHERE PersonID = @id
+
+GO
+
+GRANT EXEC ON Person_SelectByKeyLowercase TO PUBLIC
+GO
+
 -- Person_SelectAll
 
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectAll')

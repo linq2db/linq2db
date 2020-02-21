@@ -19,7 +19,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerMappingSchema()
 			: base(ProviderName.SqlServer)
 		{
-			SetConvertExpression<SqlXml,XmlReader>(
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+			SetConvertExpression<SqlXml, XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),
 				s => s.CreateReader());
 
@@ -239,6 +241,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2000MappingSchema()
 			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
@@ -252,6 +255,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2005MappingSchema()
 			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
@@ -265,6 +269,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2008MappingSchema()
 			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
@@ -279,6 +284,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
@@ -293,6 +299,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2017MappingSchema()
 			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
