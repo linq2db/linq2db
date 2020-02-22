@@ -2037,6 +2037,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			// v12 fix: ORA-65096: invalid common user or role name
+			// http://www.dba-oracle.com/t_ora_65096_create_user_12c_without_c_prefix.htm
+
 			var ms = new MappingSchema();
 			using (var db = (DataConnection)GetDataContext(context, ms))
 			{
@@ -2046,48 +2049,41 @@ namespace Tests.DataProvider
 				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
 
-				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
+				try {db.Execute("DROP USER C##Issue723Schema CASCADE");} catch { }
 
-				if (!context.Contains("11"))
-				{
-					// v12 fix: ORA-65096: invalid common user or role name
-					// http://www.dba-oracle.com/t_ora_65096_create_user_12c_without_c_prefix.htm
-					db.Execute("alter session set \"_ORACLE_SCRIPT\"=true;");
-				}
-
-				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
+				db.Execute("CREATE USER C##Issue723Schema IDENTIFIED BY password");
 
 				try
 				{
 
-					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
-					db.Execute($"ALTER USER Issue723Schema quota unlimited on {tableSpace}");
+					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'C##ISSUE723SCHEMA'");
+					db.Execute($"ALTER USER C##Issue723Schema quota unlimited on {tableSpace}");
 
-					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
-					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+					db.CreateTable<Issue723Table>(schemaName: "C##Issue723Schema");
+					Assert.That(db.LastQuery.Contains("C##Issue723Schema.Issue723Table"));
 
 					try
 					{
 
 						db.MappingSchema.GetFluentMappingBuilder()
 							.Entity<Issue723Table>()
-							.HasSchemaName("Issue723Schema");
+							.HasSchemaName("C##Issue723Schema");
 
 						for (var i = 1; i < 3; i++)
 						{
 							var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
 							Assert.AreEqual(i, id);
 						}
-						Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+						Assert.That(db.LastQuery.Contains("C##Issue723Schema.Issue723Table"));
 					}
 					finally
 					{
-						db.DropTable<Issue723Table>(schemaName: "Issue723Schema");
+						db.DropTable<Issue723Table>(schemaName: "C##Issue723Schema");
 					}
 				}
 				finally
 				{
-					db.Execute("DROP USER Issue723Schema CASCADE");
+					db.Execute("DROP USER C##Issue723Schema CASCADE");
 				}
 			}
 		}
