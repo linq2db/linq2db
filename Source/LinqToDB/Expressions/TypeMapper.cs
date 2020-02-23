@@ -80,8 +80,8 @@ namespace LinqToDB.Expressions
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().ToDictionary(_ => _.ToString(), _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().ToDictionary(_ => _.ToString(), _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString(), _ => _);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString(), _ => _);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -1175,19 +1175,32 @@ namespace LinqToDB.Expressions
 				return e;
 			});
 
-			if (wrapResult && typeof(TypeWrapper).IsSameOrParentOf(lambda.ReturnType) && TryMapType(lambda.ReturnType, out var returnType))
+			if (typeof(TypeWrapper).IsSameOrParentOf(lambda.ReturnType) && TryMapType(lambda.ReturnType, out var returnType))
 			{
-				expr = expr.Transform(e =>
+				if (wrapResult)
 				{
-					if (e.Type == returnType)
-						return Expression.Convert(Expression.Call(
-							Expression.Constant(this),
-							_wrapInstanceMethodInfo,
-							Expression.Constant(lambda.ReturnType),
-							e), lambda.ReturnType);
+					expr = expr.Transform(e =>
+					{
+						if (e.Type == returnType)
+							return Expression.Convert(Expression.Call(
+								Expression.Constant(this),
+								_wrapInstanceMethodInfo,
+								Expression.Constant(lambda.ReturnType),
+								e), lambda.ReturnType);
 
-					return e;
-				});
+						return e;
+					});
+				}
+				else
+				{
+					expr = expr.Transform(e =>
+					{
+						if (e.Type == returnType)
+							return Expression.Convert(e, typeof(object));
+
+						return e;
+					});
+				}
 			}
 
 			return Expression.Lambda(expr, lambda.Parameters).Compile();
@@ -1258,19 +1271,6 @@ namespace LinqToDB.Expressions
 				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
 
 			return factory(instance);
-		}
-
-		public object? Evaluate<T>(object? instance, Expression<Func<T, object?>> func)
-		{
-			var expr = MapExpressionInternal(func, Expression.Constant(instance));
-			return expr.EvaluateExpression();
-		}
-
-		public object? Evaluate<T>(T instance, Expression<Func<T, object?>> func)
-			where T: TypeWrapper
-		{
-			var expr = MapExpressionInternal(func, Expression.Constant(instance.instance_));
-			return expr.EvaluateExpression();
 		}
 	}
 }

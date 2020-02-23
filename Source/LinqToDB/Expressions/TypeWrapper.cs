@@ -1,30 +1,55 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	/// <summary>
+	/// Implements base class for typed wrappers over provider-specific type.
+	/// </summary>
 	public class TypeWrapper
 	{
 		// ReSharper disable InconsistentNaming
 		// Names mangled to do not create collision with Wrapped class
-		public object?    instance_ { get; }
-		public TypeMapper mapper_   { get; } = null!;
+		/// <summary>
+		/// Gets underlying provider-specific object, used by wrapper.
+		/// </summary>
+		public object    instance_ { get; } = null!;
+		/// <summary>
+		/// Gets instance of <see cref="TypeMapper"/> class, used to create this wrapper.
+		/// </summary>
+		public TypeMapper mapper_  { get; } = null!;
 		// ReSharper restore InconsistentNaming
 
+		/// <summary>
+		/// Provides access to delegates, created from expressions, defined in wrapper class using
+		/// following property and type mappings, configured for <see cref="TypeMapper"/>:
+		/// <code>
+		/// private static LambdaExpression[] Wrappers { get; }
+		/// </code>
+		/// If wrapper doesn't need any wrapper delegates, this property could be ommited.
+		/// </summary>
 		protected Delegate[] CompiledWrappers { get; } = null!;
 
-		// never called
+		/// <summary>
+		/// This constructor is never called and used only as base constructor for constructor signatures
+		/// in child class.
+		/// </summary>
 		protected TypeWrapper()
 		{
 		}
 
-		public TypeWrapper(object? instance, TypeMapper mapper, Delegate[]? wrappers)
+		/// <summary>
+		/// This is real constructor for wrapper class.
+		/// </summary>
+		/// <param name="instance">Instance of wrapped provider-specific type.</param>
+		/// <param name="mapper"><see cref="TypeMapper"/> instance, associated with current wrapper.</param>
+		/// <param name="wrappers">Built delegates for wrapper to call base wrapped type functionality.</param>
+		protected TypeWrapper(object instance, TypeMapper mapper, Delegate[]? wrappers)
 		{
 			instance_        = instance;
-			mapper_          = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			mapper_          = mapper;
 			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
 		}
 

@@ -369,24 +369,12 @@ namespace Tests
 
 				var dynamicInstance = (object)concrete;
 
-				var value1 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(1).OtherStrProp);
-				Assert.That(value1, Is.EqualTo("OtherStrValue1"));
-
-				var value2 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOther(2).OtherStrProp);
-				Assert.That(value2, Is.EqualTo("OtherStrValue2"));
-
-				var value11 = typeMapper.Evaluate<SampleClass>(dynamicInstance, s => s.GetOtherStr(3));
-				Assert.That(value11, Is.EqualTo("OtherStrValue3"));
-
 				var wrapper = typeMapper.Wrap<SampleClass>(dynamicInstance);
 
 				var str1 = wrapper.GetOtherAnother(5).OtherStrProp;
 				Assert.That(str1, Is.EqualTo("OtherAnotherStrValue5"));
 
 				Assert.Throws<NotImplementedException>(() => wrapper.GetOther(10));
-
-				var obj = (Dynamic.OtherClass)wrapper.Evaluate(w => w.GetOther(10));
-				Assert.That(obj.GetType(), Is.EqualTo(typeof(Dynamic.OtherClass)));
 			}
 
 			[Test]
