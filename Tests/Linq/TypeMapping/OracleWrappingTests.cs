@@ -96,11 +96,6 @@ namespace Tests.TypeMapping
 
 			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
 
-			oracleMapper.SetValue<OracleParameter>(instance, p => p.OracleDbType, OracleDbType.Date);
-
-			var action = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>(OracleDbType.Single);
-			action(instance);
-
 			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>();
 			setterAction(instance, OracleDbType.Blob);
 

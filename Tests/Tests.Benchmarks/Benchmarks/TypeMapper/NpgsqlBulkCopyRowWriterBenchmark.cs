@@ -61,7 +61,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 					(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
 				};
 
-				public NpgsqlBinaryImporter(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+				public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
 				}
 

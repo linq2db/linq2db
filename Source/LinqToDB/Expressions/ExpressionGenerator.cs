@@ -12,7 +12,7 @@ namespace LinqToDB.Expressions
 
 		public ExpressionGenerator(TypeMapper mapper)
 		{
-			_mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			_mapper = mapper;
 		}
 
 		public ExpressionGenerator() : this(new TypeMapper())
@@ -155,45 +155,27 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
 			=> _mapper.MapExpression(func, p1, p2, p3, p4, p5);
 
-		public Expression MapExpression<TR>(Expression<Func<TR>> func, bool mapConvert)
-			=> _mapper.MapExpression(func, mapConvert);
-
-		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, bool mapConvert, Expression p)
-			=> _mapper.MapExpression(func, mapConvert, p);
-
-		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, bool mapConvert, Expression p1, Expression p2)
-			=> _mapper.MapExpression(func, mapConvert, p1, p2);
-
-		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3)
-			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3);
-
-		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
-			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3, p4);
-
-		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
-			=> _mapper.MapExpression(func, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
 		#region MapAction
 		public Expression MapAction(Expression<Action> action)
-			=> _mapper.MapAction(action, true);
+			=> _mapper.MapAction(action);
 
 		public Expression MapAction<T>(Expression<Action<T>> action, Expression p)
-			=> _mapper.MapAction(action, true, p);
+			=> _mapper.MapAction(action, p);
 
 		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, Expression p1, Expression p2)
-			=> _mapper.MapAction(action, true, p1, p2);
+			=> _mapper.MapAction(action, p1, p2);
 
 		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, Expression p1, Expression p2, Expression p3)
-			=> _mapper.MapAction(action, true, p1, p2, p3);
+			=> _mapper.MapAction(action, p1, p2, p3);
 
 		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, Expression p1, Expression p2, Expression p3, Expression p4)
-			=> _mapper.MapAction(action, true, p1, p2, p3, p4);
+			=> _mapper.MapAction(action, p1, p2, p3, p4);
 
 		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
-			=> _mapper.MapAction(action, true, p1, p2, p3, p4, p5);
+			=> _mapper.MapAction(action, p1, p2, p3, p4, p5);
 		#endregion
-
 
 	}
 }

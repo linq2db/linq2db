@@ -568,7 +568,7 @@ namespace LinqToDB.DataProvider.Oracle
 				(Expression<Action<OracleConnection>>)((OracleConnection this_) => this_.Dispose()),
 			};
 
-			public OracleConnection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -605,7 +605,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		private class OracleTimeStampTZ : TypeWrapper
 		{
-			public OracleTimeStampTZ(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public OracleTimeStampTZ(object instance) : base(instance, null)
 			{
 			}
 
@@ -660,7 +660,7 @@ namespace LinqToDB.DataProvider.Oracle
 				nameof(OracleRowsCopied)
 			};
 
-			public OracleBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public OracleBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -717,7 +717,7 @@ namespace LinqToDB.DataProvider.Oracle
 				PropertySetter((OracleRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
-			public OracleRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public OracleRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -743,7 +743,7 @@ namespace LinqToDB.DataProvider.Oracle
 				(Expression<Func<OracleBulkCopyColumnMappingCollection, OracleBulkCopyColumnMapping, OracleBulkCopyColumnMapping>>)((OracleBulkCopyColumnMappingCollection this_, OracleBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
-			public OracleBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public OracleBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -760,7 +760,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		public class OracleBulkCopyColumnMapping : TypeWrapper
 		{
-			public OracleBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public OracleBulkCopyColumnMapping(object instance) : base(instance, null)
 			{
 			}
 

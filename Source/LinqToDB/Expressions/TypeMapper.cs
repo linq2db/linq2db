@@ -11,10 +11,13 @@ namespace LinqToDB.Expressions
 	using Common;
 	using LinqToDB.Extensions;
 
+	/// <summary>
+	/// Implements typed mappings support for dynamically loaded types.
+	/// </summary>
 	public sealed class TypeMapper
 	{
-		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(TypeMapper) };
-		private static readonly Type[] _wrapperContructorParameters3 = new[] { typeof(object), typeof(TypeMapper), typeof(Delegate[]) };
+		private static readonly Type[] _wrapperContructorParameters1 = new[] { typeof(object) };
+		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
 
 		// [type name] = originalType
 		private readonly IDictionary<string, Type>              _types                   = new Dictionary<string, Type>();
@@ -193,7 +196,7 @@ namespace LinqToDB.Expressions
 				var eventsHandler = BuildWrapperEvents (wrapperType);
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
-				var types = delegates != null ? _wrapperContructorParameters3 : _wrapperContructorParameters2;
+				var types = delegates != null ? _wrapperContructorParameters2 : _wrapperContructorParameters1;
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
@@ -202,8 +205,8 @@ namespace LinqToDB.Expressions
 				var pInstance = Expression.Parameter(typeof(object));
 
 				Expression factoryBody = delegates != null
-					? Expression.New(ctor, pInstance, Expression.Constant(this), Expression.Constant(delegates))
-					: Expression.New(ctor, pInstance, Expression.Constant(this));
+					? Expression.New(ctor, pInstance, Expression.Constant(delegates))
+					: Expression.New(ctor, pInstance);
 
 				if (eventsHandler != null)
 				{
@@ -211,10 +214,7 @@ namespace LinqToDB.Expressions
 					factoryBody = Expression.Block(
 						new[] { instance },
 						Expression.Assign(instance, factoryBody),
-						Expression.Call(
-							Expression.Constant(eventsHandler),
-							typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke)),
-							Expression.NewArrayInit(typeof(object), instance)),
+						Expression.Invoke(Expression.Constant(eventsHandler), instance),
 						instance);
 				}
 
@@ -366,7 +366,6 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		private static MethodInfo _getNameMethodInfo      = MemberHelper.MethodOf(() => Enum.GetName(null, null));
 		private static MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
 
 		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
@@ -397,7 +396,7 @@ namespace LinqToDB.Expressions
 			return TryMapType(type, out var replacement) ? replacement : type;
 		}
 
-		LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false, bool convertResult = true)
+		private LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false, bool convertResult = true)
 		{
 			if (_lambdaMappingCache.TryGetValue(lambda, out var mappedLambda))
 				return mappedLambda;
@@ -658,15 +657,10 @@ namespace LinqToDB.Expressions
 
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, params Expression[] parameters)
 		{
-			return MapExpressionInternal(lambdaExpression, true, parameters);
-		}
-
-		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, bool mapConvert, params Expression[] parameters)
-		{
 			if (lambdaExpression.Parameters.Count != parameters.Length)
 				throw new LinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
 
-			var lambda = MapLambdaInternal(lambdaExpression, mapConvert);
+			var lambda = MapLambdaInternal(lambdaExpression, true);
 			var expr   = lambda.Body.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
@@ -682,7 +676,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, Type? resultType, params Type[] paramTypes)
+		private LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, Type? resultType, params Type[] paramTypes)
 		{
 			if (lambda.Parameters.Count != paramTypes.Length)
 				throw new LinqToDBException("Invalid count of types.");
@@ -737,44 +731,27 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
 			=> MapExpressionInternal(func, p1, p2, p3, p4, p5);
 
-		public Expression MapExpression<TR>(Expression<Func<TR>> func, bool mapConvert)
-			=> MapExpressionInternal(func, mapConvert);
-
-		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, bool mapConvert, Expression p)
-			=> MapExpressionInternal(func, mapConvert, p);
-
-		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, bool mapConvert, Expression p1, Expression p2)
-			=> MapExpressionInternal(func, mapConvert, p1, p2);
-
-		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3)
-			=> MapExpressionInternal(func, mapConvert, p1, p2, p3);
-
-		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
-			=> MapExpressionInternal(func, mapConvert, p1, p2, p3, p4);
-
-		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
-			=> MapExpressionInternal(func, mapConvert, p1, p2, p3, p4, p5);
 		#endregion
 
 		#region MapAction
 
-		public Expression MapAction(Expression<Action> action, bool mapConvert)
-			=> MapExpressionInternal(action, mapConvert);
+		public Expression MapAction(Expression<Action> action)
+			=> MapExpressionInternal(action);
 
-		public Expression MapAction<T>(Expression<Action<T>> action, bool mapConvert, Expression p)
-			=> MapExpressionInternal(action, mapConvert, p);
+		public Expression MapAction<T>(Expression<Action<T>> action, Expression p)
+			=> MapExpressionInternal(action, p);
 
-		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, bool mapConvert, Expression p1, Expression p2)
-			=> MapExpressionInternal(action, mapConvert, p1, p2);
+		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, Expression p1, Expression p2)
+			=> MapExpressionInternal(action, p1, p2);
 
-		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, bool mapConvert, Expression p1, Expression p2, Expression p3)
-			=> MapExpressionInternal(action, mapConvert, p1, p2, p3);
+		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, Expression p1, Expression p2, Expression p3)
+			=> MapExpressionInternal(action, p1, p2, p3);
 
-		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4)
-			=> MapExpressionInternal(action, mapConvert, p1, p2, p3, p4);
+		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> MapExpressionInternal(action, p1, p2, p3, p4);
 
-		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, bool mapConvert, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
-			=> MapExpressionInternal(action, mapConvert, p1, p2, p3, p4, p5);
+		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> MapExpressionInternal(action, p1, p2, p3, p4, p5);
 		#endregion
 
 		#region MapLambda
@@ -842,100 +819,20 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		#region MemberAccess
-
-		public MemberExpression MemberAccess<T>(Expression<Func<T, object?>> memberExpression, Expression obj)
-		{
-			var expr = MapExpression(memberExpression, obj).Unwrap();
-			return (MemberExpression)expr;
-		}
-
-		#endregion
-
 		#region Setters
-
-		public LambdaExpression MapSetter<T>(Expression<Func<T, object?>> propExpression,
-			Expression<Func<object?>> valueExpression)
-		{
-			var propLambda  = MapLambdaInternal(propExpression);
-
-			var valueLambda = MapLambdaInternal(valueExpression);
-
-			var left  = propLambda.Body.Unwrap();
-			var right = valueLambda.Body.Unwrap();
-
-			if (right.Type != left.Type)
-				right = Expression.Convert(right, left.Type);
-
-			var assign = Expression.Assign(left, right);
-			return Expression.Lambda(assign, propLambda.Parameters);
-		}
-
-		public LambdaExpression MapSetterValue<T, TV>(Expression<Func<T, TV>> propExpression, TV value)
-		{
-			var left = propExpression.Body.Unwrap();
-			var right = (Expression)Expression.Constant(value);
-
-			if (right.Type != left.Type)
-				right = Expression.Convert(right, left.Type);
-
-			var assign = Expression.Assign(left, right);
-			return MapLambdaInternal(Expression.Lambda(assign, propExpression.Parameters));
-		}
-
-		public void SetValue<T>(object? instance, Expression<Func<T, object?>> propExpression, object? value)
-		{
-			var setterExpression = MapSetterValue(propExpression, value);
-			setterExpression.Compile().DynamicInvoke(instance);
-		}
-
-		public void SetValue<T, TV>(object? instance, Expression<Func<T, TV>> propExpression, TV value)
-		{
-			var setterExpression = MapSetterValue(propExpression, value);
-			setterExpression.Compile().DynamicInvoke(instance);
-		}
 
 		public class MemberBuilder<T, TV>
 		{
 			private readonly TypeMapper _mapper;
 			private readonly Expression<Func<T, TV>> _memberExpression;
 
-			public MemberBuilder(TypeMapper mapper, Expression<Func<T, TV>> memberExpression)
+			internal MemberBuilder(TypeMapper mapper, Expression<Func<T, TV>> memberExpression)
 			{
 				_mapper = mapper;
 				_memberExpression = memberExpression;
 			}
 
-			public Expression<Action<TBase>> BuildSetterExpression<TBase>(TV value)
-			{
-				var setterExpression = _mapper.MapSetterValue(_memberExpression, value);
-
-				var generator = new ExpressionGenerator(_mapper);
-
-				var convertedType = setterExpression.Parameters[0].Type;
-
-				var newParameter     = Expression.Parameter(typeof(TBase), setterExpression.Parameters[0].Name);
-				var requiredVariable = generator.DeclareVariable(convertedType, "v");
-
-				var replacedBody = setterExpression.GetBody(requiredVariable).Unwrap();
-
-				generator.Assign(requiredVariable, newParameter);
-				generator.AddExpression(replacedBody);
-
-				var block = generator.Build();
-
-				var resultExpression = Expression.Lambda<Action<TBase>>(block, newParameter);
-				return resultExpression;
-			}
-
-			public Action<TBase> BuildSetter<TBase>(TV value)
-			{
-				var setterExpression = BuildSetterExpression<TBase>(value);
-
-				return setterExpression.Compile();
-			}
-
-			public Expression<Action<TBase, TV>> BuildSetterExpression<TBase>()
+			private Expression<Action<TBase, TV>> BuildSetterExpression<TBase>()
 			{
 				var generator = new ExpressionGenerator(_mapper);
 
@@ -962,7 +859,7 @@ namespace LinqToDB.Expressions
 				return resultLambda;
 			}
 
-			public Expression<Func<TBase, TV>> BuildGetterExpression<TBase>()
+			private Expression<Func<TBase, TV>> BuildGetterExpression<TBase>()
 			{
 				var generator = new ExpressionGenerator(_mapper);
 
@@ -1001,19 +898,13 @@ namespace LinqToDB.Expressions
 
 				return resultLambda.Compile();
 			}
-
-			public Expression GetAccess(Expression instance)
-			{
-				var propLambda  = _mapper.MapLambdaInternal(_memberExpression);
-				return propLambda.GetBody(instance);
-			}
 		}
 
 		public class TypeBuilder<T>
 		{
 			private readonly TypeMapper _mapper;
 
-			public TypeBuilder(TypeMapper mapper)
+			internal TypeBuilder(TypeMapper mapper)
 			{
 				_mapper = mapper;
 			}
@@ -1029,26 +920,9 @@ namespace LinqToDB.Expressions
 			return new TypeBuilder<T>(this);
 		}
 
-
 		#endregion
 
-		#region Throw
-
-		private UnaryExpression MapThrowExpression(LambdaExpression lambdaExpression, params Expression[] parameters)
-		{
-			var exp = MapExpressionInternal(lambdaExpression, parameters);
-
-			return Expression.Throw(exp);
-		}
-
-		public Expression Throw<TR>(Expression<Func<TR>> newExpr) => MapThrowExpression(newExpr);
-		public Expression Throw<T1, TR>(Expression<Func<T1, TR>> newExpr, Expression p) => MapThrowExpression(newExpr, p);
-		public Expression Throw<T1, T2, TR>(Expression<Func<T1, T2, TR>> newExpr, Expression p1, Expression p2) => MapThrowExpression(newExpr, p1, p2);
-		public Expression Throw<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> newExpr, Expression p1, Expression p2, Expression p3) => MapThrowExpression(newExpr, p1, p2, p3);
-
-		#endregion
-
-		#region
+		#region Wrapper factories
 
 		public Func<TR> BuildWrappedFactory<TR>(Expression<Func<TR>> newFunc)
 			where TR : TypeWrapper
@@ -1102,26 +976,6 @@ namespace LinqToDB.Expressions
 
 		#region BuildWrapFunc
 
-		private static readonly object _wraperLock = new object();
-
-		public void BuildWrapFunc<TI, TR>(ref Func<TI, TR>? func, Expression<Func<TI, TR>> wrapper)
-			where TI : TypeWrapper
-		{
-			if (func == null)
-				lock (_wraperLock)
-					if (func == null)
-						func = (Func<TI, TR>)BuildWrapper(wrapper);
-		}
-
-		public void BuildWrapFunc<TI, T1, TR>(ref Func<TI, T1, TR>? func, Expression<Func<TI, T1, TR>> wrapper)
-			where TI : TypeWrapper
-		{
-			if (func == null)
-				lock (_wraperLock)
-					if (func == null)
-						func = (Func<TI, T1, TR>)BuildWrapper(wrapper);
-		}
-
 		private Delegate BuildFactoryImpl<T>(LambdaExpression lambda, bool wrapResult)
 		{
 			// TODO: here are two optimizations that could be done to make generated action a bit faster:
@@ -1136,12 +990,6 @@ namespace LinqToDB.Expressions
 
 		private Delegate BuildWrapper(LambdaExpression lambda)
 		{
-			// TODO: here are two optimizations that could be done to make generated action a bit faster:
-			// 1. require caller to pass unwrapped instance, so we don't need to generate instance_ property access
-			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
-			if (!TryMapType(lambda.Parameters[0].Type, out var _))
-				throw new LinqToDBException($"Wrapper type {lambda.Parameters[0].Type} is not registered");
-
 			return BuildWrapperImpl(lambda, true);
 		}
 
@@ -1207,49 +1055,6 @@ namespace LinqToDB.Expressions
 		}
 
 		#endregion
-
-		[return: MaybeNull]
-		public TR Wrap<T, TR>(T instance, Expression<Func<T, TR>> func)
-			where T: TypeWrapper
-		{
-			var expr = MapExpressionInternal(func, Expression.Constant(instance.instance_));
-
-			var result = expr.EvaluateExpression();
-
-			if (result == null)
-				return default!;
-
-			if (typeof(TypeWrapper).IsSameOrParentOf(typeof(TR)))
-			{
-				return (TR)Wrap(typeof(TR), result);
-			}
-
-			return (TR)result;
-		}
-
-		public void WrapAction<T>(T instance, Expression<Action<T>> action)
-			where T: TypeWrapper
-		{
-			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
-
-			expr.EvaluateExpression();
-		}
-
-		public void WrapAction<T, T1>(T instance, Expression<Action<T, T1>> action)
-			where T: TypeWrapper
-		{
-			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
-
-			expr.EvaluateExpression();
-		}
-
-		public void WrapAction<T, T1, T2>(T instance, Expression<Action<T, T1, T2>> action)
-			where T: TypeWrapper
-		{
-			var expr = MapExpressionInternal(action, Expression.Constant(instance.instance_));
-
-			expr.EvaluateExpression();
-		}
 
 		[return: NotNullIfNotNull("instance")]
 		public TR? Wrap<TR>(object? instance)

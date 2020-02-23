@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using LinqToDB.Expressions;
@@ -120,6 +122,28 @@ namespace Tests
 			Bit1   = 1,
 			Bit3   = 4,
 			Bits24 = 10
+		}
+
+		internal class SqlError
+		{
+			public SqlError()
+			{
+			}
+		}
+
+		[Wrapper]
+		internal class SqlErrorCollection : IEnumerable
+		{
+			private List<object> _errors = new List<object>()
+			{
+				new SqlError(),
+				new SqlError()
+			};
+
+			public IEnumerator GetEnumerator()
+			{
+				return _errors.GetEnumerator();
+			}
 		}
 	}
 	
@@ -244,7 +268,7 @@ namespace Tests
 				remove => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Remove (_ReturningDelegateWithMappingEvent, value);
 			}
 
-			public SampleClass(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
+			public SampleClass(object instance, Delegate[] delegates) : base(instance, delegates)
 			{
 			}
 
@@ -268,7 +292,7 @@ namespace Tests
 
 			public string OtherStrProp => ((Func<OtherClass, string>)CompiledWrappers[0])(this);
 
-			public OtherClass(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
+			public OtherClass(object instance, Delegate[] delegates) : base(instance, delegates)
 			{
 			}
 		}
@@ -286,11 +310,54 @@ namespace Tests
 			{
 			}
 
-			public CollectionSample(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
+			public CollectionSample(object instance, Delegate[] delegates) : base(instance, delegates)
 			{
 			}
 
 			public SampleClass Add(SampleClass sample) => ((Func<CollectionSample, SampleClass, SampleClass>)CompiledWrappers[0])(this, sample);
+		}
+
+		[Wrapper]
+		internal class SqlError : TypeWrapper
+		{
+			public SqlError(object instance) : base(instance, null)
+			{
+			}
+		}
+
+		[Wrapper]
+		internal class SqlErrorCollection : TypeWrapper
+		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: GetEnumerator
+				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
+				// [1]: SqlError wrapper
+				(Expression<Func<object, SqlError>>)((object error) => (SqlError)error),
+			};
+
+			public SqlErrorCollection()
+			{
+			}
+
+			public SqlErrorCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public IEnumerator GetEnumerator() => ((Func<SqlErrorCollection, IEnumerator>)CompiledWrappers[0])(this);
+
+			public IEnumerable<SqlError> Errors
+			{
+				get
+				{
+					var wrapper = (Func<object, SqlError>)CompiledWrappers[1];
+					var e = GetEnumerator();
+
+					while (e.MoveNext())
+						yield return wrapper(e.Current);
+				}
+			}
 		}
 
 		// same values
@@ -337,6 +404,8 @@ namespace Tests
 				typeMapper.RegisterTypeWrapper<RegularEnum1>(typeof(Dynamic.RegularEnum1));
 				typeMapper.RegisterTypeWrapper<RegularEnum2>(typeof(Dynamic.RegularEnum2));
 				typeMapper.RegisterTypeWrapper<FlagsEnum>(typeof(Dynamic.FlagsEnum));
+				typeMapper.RegisterTypeWrapper<SqlError>(typeof(Dynamic.SqlError));
+				typeMapper.RegisterTypeWrapper<SqlErrorCollection>(typeof(Dynamic.SqlErrorCollection));
 
 				typeMapper.FinalizeMappings();
 
@@ -571,6 +640,18 @@ namespace Tests
 				Assert.AreEqual(FlagsEnum.Bit3, flagsGetter(instance));
 				flagsSetter(instance, FlagsEnum.Bits24);
 				Assert.AreEqual(FlagsEnum.Bits24, flagsGetter(instance));
+			}
+
+			[Test]
+			public void TestSqlErrorCollectionMapping()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var wrapped = typeMapper.BuildWrappedFactory(() => new SqlErrorCollection())();
+
+				var errors = wrapped.Errors.ToArray();
+
+				Assert.AreEqual(2, errors.Length);
 			}
 		}
 	}

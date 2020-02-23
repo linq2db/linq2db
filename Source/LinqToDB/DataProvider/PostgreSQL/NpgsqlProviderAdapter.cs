@@ -548,7 +548,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				(Expression<Action<NpgsqlConnection>>)((NpgsqlConnection this_) => this_.Dispose()),
 			};
 
-			public NpgsqlConnection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public NpgsqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -580,7 +580,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
 			};
 
-			public NpgsqlBinaryImporter(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 

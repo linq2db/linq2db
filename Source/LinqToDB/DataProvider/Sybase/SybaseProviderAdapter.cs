@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.Sybase
 				nameof(AseRowsCopied)
 			};
 
-			public AseBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public AseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -299,7 +299,7 @@ namespace LinqToDB.DataProvider.Sybase
 				PropertySetter((AseRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
-			public AseRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public AseRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -330,7 +330,7 @@ namespace LinqToDB.DataProvider.Sybase
 				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, AseBulkCopyColumnMapping>>)((AseBulkCopyColumnMappingCollection this_, AseBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
-			public AseBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public AseBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopyColumnMapping : TypeWrapper
 		{
-			public AseBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public AseBulkCopyColumnMapping(object instance) : base(instance, null)
 			{
 			}
 

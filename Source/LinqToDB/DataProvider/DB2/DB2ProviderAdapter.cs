@@ -346,7 +346,7 @@ namespace LinqToDB.DataProvider.DB2
 				(Expression<Action<DB2Connection>>)((DB2Connection this_) => this_.Dispose()),
 			};
 
-			public DB2Connection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public DB2Connection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -468,7 +468,7 @@ namespace LinqToDB.DataProvider.DB2
 				nameof(DB2RowsCopied)
 			};
 
-			public DB2BulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public DB2BulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -523,7 +523,7 @@ namespace LinqToDB.DataProvider.DB2
 				PropertySetter((DB2RowsCopiedEventArgs this_) => this_.Abort),
 			};
 
-			public DB2RowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public DB2RowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -549,7 +549,7 @@ namespace LinqToDB.DataProvider.DB2
 				(Expression<Func<DB2BulkCopyColumnMappingCollection, DB2BulkCopyColumnMapping, DB2BulkCopyColumnMapping>>)((DB2BulkCopyColumnMappingCollection this_, DB2BulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
-			public DB2BulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public DB2BulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -568,7 +568,7 @@ namespace LinqToDB.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopyColumnMapping : TypeWrapper
 		{
-			public DB2BulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public DB2BulkCopyColumnMapping(object instance) : base(instance, null)
 			{
 			}
 

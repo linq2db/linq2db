@@ -12,11 +12,11 @@ Jit=RyuJit  Platform=X64  MaxIterationCount=5
 MinIterationCount=3  WarmupCount=2  
 
 ```
-|       Method |       Runtime |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |----------:|---------:|---------:|------:|--------:|-------:|------:|------:|----------:|
-|   TypeMapper |    .NET 4.6.2 | 144.77 ns | 2.019 ns | 0.524 ns |  1.12 |    0.01 | 0.0057 |     - |     - |      24 B |
-| DirectAccess |    .NET 4.6.2 | 129.15 ns | 3.030 ns | 0.787 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
-|   TypeMapper | .NET Core 2.1 |  91.74 ns | 2.158 ns | 0.560 ns |  0.71 |    0.01 | 0.0056 |     - |     - |      24 B |
-| DirectAccess | .NET Core 2.1 | 108.18 ns | 9.453 ns | 2.455 ns |  0.84 |    0.02 | 0.0056 |     - |     - |      24 B |
-|   TypeMapper | .NET Core 3.1 |  88.59 ns | 0.986 ns | 0.256 ns |  0.69 |    0.00 | 0.0057 |     - |     - |      24 B |
-| DirectAccess | .NET Core 3.1 | 103.23 ns | 1.200 ns | 0.066 ns |  0.80 |    0.00 | 0.0057 |     - |     - |      24 B |
+|       Method |       Runtime |      Mean |     Error |   StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------- |-------------- |----------:|----------:|---------:|------:|--------:|-------:|------:|------:|----------:|
+|   TypeMapper |    .NET 4.6.2 | 147.79 ns |  3.384 ns | 0.879 ns |  1.13 |    0.01 | 0.0057 |     - |     - |      24 B |
+| DirectAccess |    .NET 4.6.2 | 131.16 ns |  6.468 ns | 1.680 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
+|   TypeMapper | .NET Core 2.1 |  92.83 ns |  1.484 ns | 0.385 ns |  0.71 |    0.01 | 0.0056 |     - |     - |      24 B |
+| DirectAccess | .NET Core 2.1 | 108.12 ns |  1.919 ns | 0.297 ns |  0.83 |    0.01 | 0.0056 |     - |     - |      24 B |
+|   TypeMapper | .NET Core 3.1 |  96.88 ns | 13.830 ns | 3.592 ns |  0.74 |    0.03 | 0.0057 |     - |     - |      24 B |
+| DirectAccess | .NET Core 3.1 | 107.76 ns |  4.037 ns | 1.049 ns |  0.82 |    0.02 | 0.0057 |     - |     - |      24 B |

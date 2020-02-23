@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.Dispose()),
 			};
 
-			public SqlCeEngine(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public SqlCeEngine(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 

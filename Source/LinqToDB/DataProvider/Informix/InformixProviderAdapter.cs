@@ -396,7 +396,7 @@ namespace LinqToDB.DataProvider.Informix
 				nameof(IfxRowsCopied)
 			};
 
-			public IfxBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public IfxBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -451,7 +451,7 @@ namespace LinqToDB.DataProvider.Informix
 				PropertySetter((IfxRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
-			public IfxRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public IfxRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -477,7 +477,7 @@ namespace LinqToDB.DataProvider.Informix
 				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
-			public IfxBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public IfxBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -496,7 +496,7 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		public class IfxBulkCopyColumnMapping : TypeWrapper
 		{
-			public IfxBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public IfxBulkCopyColumnMapping(object instance) : base(instance, null)
 			{
 			}
 
@@ -506,7 +506,7 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		internal class IfxTimeSpan : TypeWrapper
 		{
-			public IfxTimeSpan(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public IfxTimeSpan(object instance) : base(instance, null)
 			{
 			}
 

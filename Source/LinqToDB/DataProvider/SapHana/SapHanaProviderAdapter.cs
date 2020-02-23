@@ -196,7 +196,7 @@ namespace LinqToDB.DataProvider.SapHana
 				nameof(HanaRowsCopied)
 			};
 
-			public HanaBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public HanaBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider.SapHana
 				PropertySetter((HanaRowsCopiedEventArgs this_) => this_.Abort),
 			};
 
-			public HanaRowsCopiedEventArgs(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public HanaRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.SapHana
 				(Expression<Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>>)((HanaBulkCopyColumnMappingCollection this_, HanaBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
-			public HanaBulkCopyColumnMappingCollection(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public HanaBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
@@ -298,7 +298,7 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopyColumnMapping : TypeWrapper
 		{
-			public HanaBulkCopyColumnMapping(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public HanaBulkCopyColumnMapping(object instance) : base(instance, null)
 			{
 			}
 

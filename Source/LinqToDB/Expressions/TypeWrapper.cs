@@ -15,11 +15,7 @@ namespace LinqToDB.Expressions
 		/// <summary>
 		/// Gets underlying provider-specific object, used by wrapper.
 		/// </summary>
-		public object    instance_ { get; } = null!;
-		/// <summary>
-		/// Gets instance of <see cref="TypeMapper"/> class, used to create this wrapper.
-		/// </summary>
-		public TypeMapper mapper_  { get; } = null!;
+		public object instance_ { get; } = null!;
 		// ReSharper restore InconsistentNaming
 
 		/// <summary>
@@ -44,18 +40,16 @@ namespace LinqToDB.Expressions
 		/// This is real constructor for wrapper class.
 		/// </summary>
 		/// <param name="instance">Instance of wrapped provider-specific type.</param>
-		/// <param name="mapper"><see cref="TypeMapper"/> instance, associated with current wrapper.</param>
 		/// <param name="wrappers">Built delegates for wrapper to call base wrapped type functionality.</param>
-		protected TypeWrapper(object instance, TypeMapper mapper, Delegate[]? wrappers)
+		protected TypeWrapper(object instance, Delegate[]? wrappers)
 		{
 			instance_        = instance;
-			mapper_          = mapper;
 			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
 		}
 
 		/// <summary>
-		/// Creates property setter expression grom property getter.
-		/// Limitation - property should have getter.
+		/// Creates property setter expression from property getter.
+		/// Limitation: property should have getter.
 		/// </summary>
 		protected static Expression<Action<TI, TP>> PropertySetter<TI, TP>(Expression<Func<TI, TP>> getter)
 		{

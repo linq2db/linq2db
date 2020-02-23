@@ -266,7 +266,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				nameof(TestEvent)
 			};
 
-			public TestEventClass(object instance, TypeMapper mapper) : base(instance, mapper, null)
+			public TestEventClass(object instance) : base(instance, null)
 			{
 			}
 
@@ -326,7 +326,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((TestClass2 this_, TestEnum3 value) => this_.TestEnum3Convert(value)),
 			};
 
-			public TestClass2(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
+			public TestClass2(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 

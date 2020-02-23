@@ -14,21 +14,21 @@ MinIterationCount=3  WarmupCount=2
 ```
 |                          Method |       Runtime |       Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |-------------------------------- |-------------- |-----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
-|                TypeMapperAction |    .NET 4.6.2 | 13.4855 ns | 0.3079 ns | 0.0800 ns | 12.58 |    0.11 |     - |     - |     - |         - |
-|              DirectAccessAction |    .NET 4.6.2 |  1.0720 ns | 0.0329 ns | 0.0085 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-|        TypeMapperActionWithCast |    .NET 4.6.2 |  7.0541 ns | 0.3864 ns | 0.1003 ns |  6.58 |    0.08 |     - |     - |     - |         - |
-|      DirectAccessActionWithCast |    .NET 4.6.2 |  1.1146 ns | 0.0417 ns | 0.0108 ns |  1.04 |    0.01 |     - |     - |     - |         - |
-|   TypeMapperActionWithParameter |    .NET 4.6.2 | 13.5041 ns | 0.2877 ns | 0.0747 ns | 12.60 |    0.12 |     - |     - |     - |         - |
-| DirectAccessActionWithParameter |    .NET 4.6.2 |  1.0624 ns | 0.0402 ns | 0.0062 ns |  0.99 |    0.01 |     - |     - |     - |         - |
-|                TypeMapperAction | .NET Core 2.1 |  5.8097 ns | 0.6057 ns | 0.1573 ns |  5.42 |    0.14 |     - |     - |     - |         - |
-|              DirectAccessAction | .NET Core 2.1 |  1.0693 ns | 0.0467 ns | 0.0072 ns |  1.00 |    0.01 |     - |     - |     - |         - |
-|        TypeMapperActionWithCast | .NET Core 2.1 |  5.7446 ns | 0.5030 ns | 0.1306 ns |  5.36 |    0.11 |     - |     - |     - |         - |
-|      DirectAccessActionWithCast | .NET Core 2.1 |  1.0763 ns | 0.0534 ns | 0.0083 ns |  1.01 |    0.01 |     - |     - |     - |         - |
-|   TypeMapperActionWithParameter | .NET Core 2.1 |  5.6961 ns | 0.4692 ns | 0.1218 ns |  5.31 |    0.16 |     - |     - |     - |         - |
-| DirectAccessActionWithParameter | .NET Core 2.1 |  1.0667 ns | 0.0362 ns | 0.0094 ns |  1.00 |    0.01 |     - |     - |     - |         - |
-|                TypeMapperAction | .NET Core 3.1 |  5.1341 ns | 0.1338 ns | 0.0073 ns |  4.80 |    0.05 |     - |     - |     - |         - |
-|              DirectAccessAction | .NET Core 3.1 |  1.0789 ns | 0.0325 ns | 0.0050 ns |  1.01 |    0.01 |     - |     - |     - |         - |
-|        TypeMapperActionWithCast | .NET Core 3.1 |  3.8421 ns | 0.1157 ns | 0.0301 ns |  3.58 |    0.05 |     - |     - |     - |         - |
-|      DirectAccessActionWithCast | .NET Core 3.1 |  0.5288 ns | 0.0328 ns | 0.0085 ns |  0.49 |    0.01 |     - |     - |     - |         - |
-|   TypeMapperActionWithParameter | .NET Core 3.1 |  6.0232 ns | 0.6562 ns | 0.1704 ns |  5.62 |    0.20 |     - |     - |     - |         - |
-| DirectAccessActionWithParameter | .NET Core 3.1 |  1.1216 ns | 0.0426 ns | 0.0111 ns |  1.05 |    0.01 |     - |     - |     - |         - |
+|                TypeMapperAction |    .NET 4.6.2 | 13.5992 ns | 0.3704 ns | 0.0962 ns | 12.80 |    0.13 |     - |     - |     - |         - |
+|              DirectAccessAction |    .NET 4.6.2 |  1.0626 ns | 0.0358 ns | 0.0020 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+|        TypeMapperActionWithCast |    .NET 4.6.2 |  7.2937 ns | 0.5711 ns | 0.1483 ns |  6.89 |    0.11 |     - |     - |     - |         - |
+|      DirectAccessActionWithCast |    .NET 4.6.2 |  1.0908 ns | 0.0459 ns | 0.0071 ns |  1.03 |    0.01 |     - |     - |     - |         - |
+|   TypeMapperActionWithParameter |    .NET 4.6.2 | 13.6657 ns | 0.2603 ns | 0.0676 ns | 12.88 |    0.06 |     - |     - |     - |         - |
+| DirectAccessActionWithParameter |    .NET 4.6.2 |  1.0664 ns | 0.0324 ns | 0.0050 ns |  1.01 |    0.01 |     - |     - |     - |         - |
+|                TypeMapperAction | .NET Core 2.1 |  5.6799 ns | 0.0962 ns | 0.0250 ns |  5.35 |    0.02 |     - |     - |     - |         - |
+|              DirectAccessAction | .NET Core 2.1 |  1.0721 ns | 0.0536 ns | 0.0029 ns |  1.01 |    0.00 |     - |     - |     - |         - |
+|        TypeMapperActionWithCast | .NET Core 2.1 |  5.6430 ns | 0.0718 ns | 0.0111 ns |  5.31 |    0.01 |     - |     - |     - |         - |
+|      DirectAccessActionWithCast | .NET Core 2.1 |  1.0881 ns | 0.1210 ns | 0.0314 ns |  1.04 |    0.01 |     - |     - |     - |         - |
+|   TypeMapperActionWithParameter | .NET Core 2.1 |  5.8532 ns | 0.5997 ns | 0.1557 ns |  5.53 |    0.21 |     - |     - |     - |         - |
+| DirectAccessActionWithParameter | .NET Core 2.1 |  1.0737 ns | 0.0488 ns | 0.0027 ns |  1.01 |    0.00 |     - |     - |     - |         - |
+|                TypeMapperAction | .NET Core 3.1 |  5.1541 ns | 0.0830 ns | 0.0128 ns |  4.85 |    0.02 |     - |     - |     - |         - |
+|              DirectAccessAction | .NET Core 3.1 |  1.0723 ns | 0.0193 ns | 0.0030 ns |  1.01 |    0.00 |     - |     - |     - |         - |
+|        TypeMapperActionWithCast | .NET Core 3.1 |  3.8556 ns | 0.0817 ns | 0.0212 ns |  3.63 |    0.02 |     - |     - |     - |         - |
+|      DirectAccessActionWithCast | .NET Core 3.1 |  0.5219 ns | 0.1310 ns | 0.0340 ns |  0.49 |    0.04 |     - |     - |     - |         - |
+|   TypeMapperActionWithParameter | .NET Core 3.1 |  5.8099 ns | 0.0487 ns | 0.0027 ns |  5.47 |    0.01 |     - |     - |     - |         - |
+| DirectAccessActionWithParameter | .NET Core 3.1 |  1.1341 ns | 0.0200 ns | 0.0031 ns |  1.07 |    0.01 |     - |     - |     - |         - |
