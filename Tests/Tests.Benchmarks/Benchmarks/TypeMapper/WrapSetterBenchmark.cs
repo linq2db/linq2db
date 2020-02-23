@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// // benchmark shows expected time penalty for indirect call
+	// shows small performance degradation due to indirect call
 	public class WrapSetterBenchmark
 	{
 		private static readonly string StringParameter = "TestString";
@@ -18,7 +18,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());
+			_wrapperInstance = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
 		}
 
 		[Benchmark]

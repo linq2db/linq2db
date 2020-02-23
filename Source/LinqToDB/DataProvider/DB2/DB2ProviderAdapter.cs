@@ -251,10 +251,8 @@ namespace LinqToDB.DataProvider.DB2
 
 
 						var bulkCopy = new BulkCopyAdapter(
-							(IDbConnection connection, DB2BulkCopyOptions options)
-								=> typeMapper.CreateAndWrap(() => new DB2BulkCopy((DB2Connection)connection, options))!,
-							(int source, string destination)
-								=> typeMapper.CreateAndWrap(() => new DB2BulkCopyColumnMapping(source, destination))!);
+							typeMapper.BuildWrappedFactory((IDbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)connection, options)),
+							typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
 
 						_instance = new DB2ProviderAdapter(
@@ -287,7 +285,7 @@ namespace LinqToDB.DataProvider.DB2
 							mappingSchema,
 							typeSetter,
 							typeGetter,
-							(string connectionString) => typeMapper.CreateAndWrap(() => new DB2Connection(connectionString))!,
+							typeMapper.BuildWrappedFactory((string connectionString) => new DB2Connection(connectionString)),
 							isDB2BinaryNull,
 							bulkCopy);
 
@@ -464,9 +462,14 @@ namespace LinqToDB.DataProvider.DB2
 				PropertySetter((DB2BulkCopy this_) => this_.ColumnMappings),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(DB2RowsCopied)
+			};
+
 			public DB2BulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<DB2BulkCopy, DB2RowsCopiedEventHandler>(nameof(DB2RowsCopied));
 			}
 
 			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
@@ -498,10 +501,11 @@ namespace LinqToDB.DataProvider.DB2
 				set => ((Action<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>)CompiledWrappers[9])(this, value);
 			}
 
-			public event DB2RowsCopiedEventHandler DB2RowsCopied
+			private      DB2RowsCopiedEventHandler? _DB2RowsCopied;
+			public event DB2RowsCopiedEventHandler   DB2RowsCopied
 			{
-				add    => Events.AddHandler   (nameof(DB2RowsCopied), value);
-				remove => Events.RemoveHandler(nameof(DB2RowsCopied), value);
+				add    => _DB2RowsCopied = (DB2RowsCopiedEventHandler)Delegate.Combine(_DB2RowsCopied, value);
+				remove => _DB2RowsCopied = (DB2RowsCopiedEventHandler)Delegate.Remove (_DB2RowsCopied, value);
 			}
 		}
 

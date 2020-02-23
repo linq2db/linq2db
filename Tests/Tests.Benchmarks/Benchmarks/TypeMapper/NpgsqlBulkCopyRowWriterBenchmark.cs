@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows that mapper could even have better performance due to unwrapped loop(?)
+	// benchmark shows that mapper could even have better performance (due to unwrapped loop?)
 	public class NpgsqlBulkCopyRowWriterBenchmark
 	{
 		private static readonly MappingSchema MappingSchema = new MappingSchema();

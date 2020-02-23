@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var udtTypeNameBuilder = paramMapper.Member(p => p.UdtTypeName);
 			var typeNameBuilder    = paramMapper.Member(p => p.TypeName);
 
-			var builder = typeMapper.CreateAndWrap(() => new SqlCommandBuilder())!;
+			var builder = typeMapper.BuildWrappedFactory(() => new SqlCommandBuilder());
 
 			Func<Exception, IEnumerable<int>> exceptionErrorsGettter = (Exception ex)
 				=> typeMapper.Wrap<SqlException>(ex)!.Errors.Errors.Select(err => err.Number);
@@ -229,14 +229,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeNameBuilder.BuildSetter<IDbDataParameter>(),
 				typeNameBuilder.BuildGetter<IDbDataParameter>(),
 
-				(string connectionString) => typeMapper.CreateAndWrap(() => new SqlConnectionStringBuilder(connectionString))!,
-				builder.QuoteIdentifier,
-				(string connectionString) => typeMapper.CreateAndWrap(() => new SqlConnection(connectionString))!,
+				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
+				builder().QuoteIdentifier,
+				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
 
-				(IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction)
-					=> typeMapper.CreateAndWrap(() => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction))!,
-				(int source, string destination)
-					=> typeMapper.CreateAndWrap(() => new SqlBulkCopyColumnMapping(source, destination))!);
+				typeMapper.BuildWrappedFactory((IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction) => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction)),
+				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
 		}
 
 		#region Wrappers
@@ -422,9 +420,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(SqlRowsCopied)
+			};
+
 			public SqlBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<SqlBulkCopy, SqlRowsCopiedEventHandler>(nameof(SqlRowsCopied));
 			}
 
 			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
@@ -458,10 +461,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
 
-			public event SqlRowsCopiedEventHandler SqlRowsCopied
+			private      SqlRowsCopiedEventHandler? _SqlRowsCopied;
+			public event SqlRowsCopiedEventHandler   SqlRowsCopied
 			{
-				add    => Events.AddHandler(nameof(SqlRowsCopied), value);
-				remove => Events.RemoveHandler(nameof(SqlRowsCopied), value);
+				add    => _SqlRowsCopied = (SqlRowsCopiedEventHandler)Delegate.Combine(_SqlRowsCopied, value);
+				remove => _SqlRowsCopied = (SqlRowsCopiedEventHandler)Delegate.Remove (_SqlRowsCopied, value);
 			}
 		}
 

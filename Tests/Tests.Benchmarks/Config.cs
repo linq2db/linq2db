@@ -34,8 +34,8 @@ namespace LinqToDB.Benchmarks
 			return job.With(Jit.RyuJit)
 				.With(Platform.X64)
 				.WithWarmupCount(2)
-				.WithMinIterationCount(5)
-				.WithMaxIterationCount(10);
+				.WithMinIterationCount(3)
+				.WithMaxIterationCount(5);
 		}
 	}
 }

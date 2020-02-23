@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using LinqToDB.Expressions;
@@ -30,11 +31,16 @@ namespace Tests
 			public event ReturningDelegate            ReturningDelegateEvent;
 			public event ReturningDelegateWithMapping ReturningDelegateWithMappingEvent;
 
+			public void DebugFire()
+			{
+				SimpleDelegateEvent?.Invoke(null);
+			}
+
 			public void Fire(bool withHandlers)
 			{
 				// https://www.youtube.com/watch?v=r32LcBqiv7I
 				SimpleDelegateEvent?.Invoke("param1");
-				SimpleDelegateWithMappingEvent?.Invoke(this);
+				SimpleDelegateWithMappingEvent?.Invoke(new SampleClass() { Id = 5 });
 				var strResult  = ReturningDelegateEvent?.Invoke("event1");
 				var thisResult = ReturningDelegateWithMappingEvent?.Invoke(this);
 
@@ -60,13 +66,16 @@ namespace Tests
 				Value = value;
 			}
 
-			public RegularEnum GetRegularEnum(int raw) => (RegularEnum)raw;
+			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
+			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
 			public FlagsEnum   GetFlagsEnum  (int raw) => (FlagsEnum)raw;
 
-			public int SetRegularEnum(RegularEnum val) => (int)val;
+			public int SetRegularEnum1(RegularEnum1 val) => (int)val;
+			public int SetRegularEnum2(RegularEnum2 val) => (int)val;
 			public int SetFlagsEnum  (FlagsEnum val  ) => (int)val;
 
-			public RegularEnum RegularEnumProperty { get; set; } = RegularEnum.Two;
+			public RegularEnum1 RegularEnum1Property { get; set; } = RegularEnum1.Two;
+			public RegularEnum2 RegularEnum2Property { get; set; } = RegularEnum2.Two;
 			public FlagsEnum   FlagsEnumProperty   { get; set; } = FlagsEnum  .Bit3;
 		}
 
@@ -91,10 +100,17 @@ namespace Tests
 			}
 		}
 
-		public enum RegularEnum
+		public enum RegularEnum1
 		{
 			One   = 1,
 			Two   = 2,
+			Three = 3
+		}
+
+		public enum RegularEnum2
+		{
+			One = 1,
+			Two = 2,
 			Three = 3
 		}
 
@@ -127,28 +143,43 @@ namespace Tests
 				(Expression<Func<SampleClass, int, OtherClass>>)((SampleClass this_, int idx) => this_.GetOtherAnother(idx)),
 				// [3]: SomeAction
 				(Expression<Action<SampleClass>>)((SampleClass this_) => this_.SomeAction()),
-				// [4]: GetRegularEnum
-				(Expression<Func<SampleClass, int, RegularEnum>>)((SampleClass this_, int raw) => this_.GetRegularEnum(raw)),
+				// [4]: GetRegularEnum1
+				(Expression<Func<SampleClass, int, RegularEnum1>>)((SampleClass this_, int raw) => this_.GetRegularEnum1(raw)),
 				// [5]: GetFlagsEnum
 				(Expression<Func<SampleClass, int, FlagsEnum>>)((SampleClass this_, int raw) => this_.GetFlagsEnum(raw)),
-				// [6]: SetRegularEnum
-				(Expression<Func<SampleClass, RegularEnum, int>>)((SampleClass this_, RegularEnum val) => this_.SetRegularEnum(val)),
+				// [6]: SetRegularEnum1
+				(Expression<Func<SampleClass, RegularEnum1, int>>)((SampleClass this_, RegularEnum1 val) => this_.SetRegularEnum1(val)),
 				// [7]: SetFlagsEnum
 				(Expression<Func<SampleClass, FlagsEnum, int>>)((SampleClass this_, FlagsEnum val) => this_.SetFlagsEnum(val)),
-				// [8]: get RegularEnumProperty
-				(Expression<Func<SampleClass, RegularEnum>>)((SampleClass this_) => this_.RegularEnumProperty),
+				// [8]: get RegularEnum1Property
+				(Expression<Func<SampleClass, RegularEnum1>>)((SampleClass this_) => this_.RegularEnum1Property),
 				// [9]: get FlagsEnumProperty
 				(Expression<Func<SampleClass, FlagsEnum>>)((SampleClass this_) => this_.FlagsEnumProperty),
 				// [10]: Fire
 				(Expression<Action<SampleClass, bool>>)((SampleClass this_,bool withHandlers) => this_.Fire(withHandlers)),
-				// [11]: set RegularEnumProperty
-				PropertySetter((SampleClass this_) => this_.RegularEnumProperty),
+				// [11]: set RegularEnum1Property
+				PropertySetter((SampleClass this_) => this_.RegularEnum1Property),
 				// [12]: set FlagsEnumProperty
 				PropertySetter((SampleClass this_) => this_.FlagsEnumProperty),
+				// [13]: GetRegularEnum2
+				(Expression<Func<SampleClass, int, RegularEnum2>>)((SampleClass this_, int raw) => this_.GetRegularEnum2(raw)),
+				// [14]: SetRegularEnum2
+				(Expression<Func<SampleClass, RegularEnum2, int>>)((SampleClass this_, RegularEnum2 val) => this_.SetRegularEnum2(val)),
+				// [15]: get RegularEnum2Property
+				(Expression<Func<SampleClass, RegularEnum2>>)((SampleClass this_) => this_.RegularEnum2Property),
+				// [16]: set RegularEnum2Property
+				PropertySetter((SampleClass this_) => this_.RegularEnum2Property),
 			};
 
-			private bool _event1Wrapped;
-			private bool _event2Wrapped;
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(SimpleDelegateEvent),
+				nameof(SimpleDelegateWithMappingEvent),
+				nameof(ReturningDelegateEvent),
+				nameof(ReturningDelegateWithMappingEvent),
+			};
+
 			public int Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
 			public int Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
 			public string StrValue { get; set; }
@@ -157,16 +188,24 @@ namespace Tests
 
 			public void SomeAction() => ((Action<SampleClass>)CompiledWrappers[3])(this);
 
-			public RegularEnum GetRegularEnum(int raw) => ((Func<SampleClass, int, RegularEnum>)CompiledWrappers[4])(this, raw);
+			public RegularEnum1 GetRegularEnum1(int raw) => ((Func<SampleClass, int, RegularEnum1>)CompiledWrappers[4])(this, raw);
+			public RegularEnum2 GetRegularEnum2(int raw) => ((Func<SampleClass, int, RegularEnum2>)CompiledWrappers[13])(this, raw);
 			public FlagsEnum   GetFlagsEnum  (int raw) => ((Func<SampleClass, int, FlagsEnum>)CompiledWrappers[5])(this, raw);
 
-			public int SetRegularEnum(RegularEnum val) => ((Func<SampleClass, RegularEnum, int>)CompiledWrappers[6])(this, val);
+			public int SetRegularEnum1(RegularEnum1 val) => ((Func<SampleClass, RegularEnum1, int>)CompiledWrappers[6])(this, val);
+			public int SetRegularEnum2(RegularEnum2 val) => ((Func<SampleClass, RegularEnum2, int>)CompiledWrappers[14])(this, val);
 			public int SetFlagsEnum  (FlagsEnum   val) => ((Func<SampleClass, FlagsEnum, int>)CompiledWrappers[7])(this, val);
 
-			public RegularEnum RegularEnumProperty
+			public RegularEnum1 RegularEnum1Property
 			{
-				get => ((Func<SampleClass, RegularEnum>)CompiledWrappers[8])(this);
-				set => ((Action<SampleClass, RegularEnum>)CompiledWrappers[11])(this, value);
+				get => ((Func<SampleClass, RegularEnum1>)CompiledWrappers[8])(this);
+				set => ((Action<SampleClass, RegularEnum1>)CompiledWrappers[11])(this, value);
+			}
+
+			public RegularEnum2 RegularEnum2Property
+			{
+				get => ((Func<SampleClass, RegularEnum2>)CompiledWrappers[15])(this);
+				set => ((Action<SampleClass, RegularEnum2>)CompiledWrappers[16])(this, value);
 			}
 
 			public FlagsEnum FlagsEnumProperty
@@ -177,48 +216,36 @@ namespace Tests
 
 			public void Fire(bool withHandlers) => ((Action<SampleClass, bool>)CompiledWrappers[10])(this, withHandlers);
 
-			public event SimpleDelegate               SimpleDelegateEvent
+			private      SimpleDelegate _SimpleDelegateEvent;
+			public event SimpleDelegate  SimpleDelegateEvent
 			{
-				add    => Events.AddHandler(nameof(SimpleDelegateEvent), value);
-				remove => Events.RemoveHandler(nameof(SimpleDelegateEvent), value);
-			}
-			public event SimpleDelegateWithMapping    SimpleDelegateWithMappingEvent
-			{
-				add    => Events.AddHandler(nameof(SimpleDelegateWithMappingEvent), value);
-				remove => Events.RemoveHandler(nameof(SimpleDelegateWithMappingEvent), value);
-			}
-			public event ReturningDelegate            ReturningDelegateEvent
-			{
-				add    => AddHandlerDelayed(nameof(ReturningDelegateEvent), value, ref _event1Wrapped);
-				remove => Events.RemoveHandler(nameof(ReturningDelegateEvent), value);
-			}
-			public event ReturningDelegateWithMapping ReturningDelegateWithMappingEvent
-			{
-				add => AddHandlerDelayed(nameof(ReturningDelegateWithMappingEvent), value, ref _event2Wrapped);
-				remove => Events.RemoveHandler(nameof(ReturningDelegateWithMappingEvent), value);
+				add    => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Combine(_SimpleDelegateEvent, value);
+				remove => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Remove (_SimpleDelegateEvent, value);
 			}
 
-			private void AddHandlerDelayed<TDelegate>(string eventName, TDelegate handler, ref bool wrapped)
-				where TDelegate : Delegate
+			private      SimpleDelegateWithMapping _SimpleDelegateWithMappingEvent;
+			public event SimpleDelegateWithMapping  SimpleDelegateWithMappingEvent
 			{
-				// wrap event only when handler added to avoid base event fired for empty handler
-				// this is needed only for events with return value to work properly
-				// (if `properly` word could even applied to such events, more like to make tests work)
-				if (!wrapped)
-				{
-					this.WrapEvent<SampleClass, TDelegate>(eventName);
-					wrapped = true;
-				}
+				add    => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Combine(_SimpleDelegateWithMappingEvent, value);
+				remove => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Remove (_SimpleDelegateWithMappingEvent, value);
+			}
 
-				Events.AddHandler(eventName, handler);
+			private      ReturningDelegate _ReturningDelegateEvent;
+			public event ReturningDelegate  ReturningDelegateEvent
+			{
+				add    => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Combine(_ReturningDelegateEvent, value);
+				remove => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Remove (_ReturningDelegateEvent, value);
+			}
+
+			private      ReturningDelegateWithMapping _ReturningDelegateWithMappingEvent;
+			public event ReturningDelegateWithMapping  ReturningDelegateWithMappingEvent
+			{
+				add    => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Combine(_ReturningDelegateWithMappingEvent, value);
+				remove => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Remove (_ReturningDelegateWithMappingEvent, value);
 			}
 
 			public SampleClass(object instance, [NotNull] TypeMapper mapper, Delegate[] delegates) : base(instance, mapper, delegates)
 			{
-				this.WrapEvent<SampleClass, SimpleDelegate>(nameof(SimpleDelegateEvent));
-				this.WrapEvent<SampleClass, SimpleDelegateWithMapping>(nameof(SimpleDelegateWithMappingEvent));
-				//this.WrapEvent<SampleClass, ReturningDelegate>(nameof(ReturningDelegateEvent));
-				//this.WrapEvent<SampleClass, ReturningDelegateWithMapping>(nameof(ReturningDelegateWithMappingEvent));
 			}
 
 			public SampleClass(int id, int value) => throw new NotImplementedException();
@@ -266,8 +293,18 @@ namespace Tests
 			public SampleClass Add(SampleClass sample) => ((Func<CollectionSample, SampleClass, SampleClass>)CompiledWrappers[0])(this, sample);
 		}
 
+		// same values
 		[Wrapper]
-		public enum RegularEnum
+		public enum RegularEnum1
+		{
+			One = 1,
+			Two = 2,
+			Three = 3
+		}
+
+		// different values
+		[Wrapper]
+		public enum RegularEnum2
 		{
 			One   = 3,
 			Two   = 1,
@@ -277,9 +314,9 @@ namespace Tests
 		[Wrapper, Flags]
 		public enum FlagsEnum
 		{
-			Bit1   = 4,
-			Bit3   = 10,
-			Bits24 = 1
+			Bit1   = 1,
+			Bit3   = 4,
+			Bits24 = 10
 		}
 
 		[TestFixture]
@@ -297,7 +334,8 @@ namespace Tests
 				typeMapper.RegisterTypeWrapper<SimpleDelegateWithMapping>(typeof(Dynamic.SimpleDelegateWithMapping));
 				typeMapper.RegisterTypeWrapper<ReturningDelegate>(typeof(Dynamic.ReturningDelegate));
 				typeMapper.RegisterTypeWrapper<ReturningDelegateWithMapping>(typeof(Dynamic.ReturningDelegateWithMapping));
-				typeMapper.RegisterTypeWrapper<RegularEnum>(typeof(Dynamic.RegularEnum));
+				typeMapper.RegisterTypeWrapper<RegularEnum1>(typeof(Dynamic.RegularEnum1));
+				typeMapper.RegisterTypeWrapper<RegularEnum2>(typeof(Dynamic.RegularEnum2));
 				typeMapper.RegisterTypeWrapper<FlagsEnum>(typeof(Dynamic.FlagsEnum));
 
 				typeMapper.FinalizeMappings();
@@ -400,7 +438,7 @@ namespace Tests
 			{
 				var typeMapper = CreateTypeMapper();
 
-				var wrapper = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var wrapper = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				wrapper.SomeAction();
 				Assert.That(wrapper.Value, Is.EqualTo(3));
@@ -411,8 +449,8 @@ namespace Tests
 			{
 				var typeMapper = CreateTypeMapper();
 
-				var collection = typeMapper.CreateAndWrap(() => new CollectionSample());
-				var obj = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var collection = typeMapper.BuildWrappedFactory(() => new CollectionSample())();
+				var obj = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				var same = collection.Add(obj);
 
@@ -424,7 +462,7 @@ namespace Tests
 			public void TestEvents()
 			{
 				var typeMapper = CreateTypeMapper();
-				var wrapper  = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var wrapper  = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// no subscribers
@@ -440,7 +478,7 @@ namespace Tests
 				wrapper.Fire(true);
 
 				Assert.AreEqual("param1", strValue1);
-				Assert.AreEqual(instance, (Dynamic.SampleClass)thisValue1.instance_);
+				Assert.AreEqual(5, ((Dynamic.SampleClass)thisValue1.instance_).Id);
 
 
 				wrapper.SimpleDelegateEvent                    -= handler1;
@@ -471,17 +509,23 @@ namespace Tests
 			{
 				var typeMapper = CreateTypeMapper();
 
-				var wrapper  = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				var wrapper  = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				// test in methods
 				//
 				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum.One,   wrapper.GetRegularEnum(1));
-				Assert.AreEqual(RegularEnum.Two,   wrapper.GetRegularEnum(2));
-				Assert.AreEqual(RegularEnum.Three, wrapper.GetRegularEnum(3));
-				Assert.AreEqual(1, wrapper.SetRegularEnum(RegularEnum.One));
-				Assert.AreEqual(2, wrapper.SetRegularEnum(RegularEnum.Two));
-				Assert.AreEqual(3, wrapper.SetRegularEnum(RegularEnum.Three));
+				Assert.AreEqual(RegularEnum1.One,   wrapper.GetRegularEnum1(1));
+				Assert.AreEqual(RegularEnum1.Two,   wrapper.GetRegularEnum1(2));
+				Assert.AreEqual(RegularEnum1.Three, wrapper.GetRegularEnum1(3));
+				Assert.AreEqual(RegularEnum2.One,   wrapper.GetRegularEnum2(1));
+				Assert.AreEqual(RegularEnum2.Two,   wrapper.GetRegularEnum2(2));
+				Assert.AreEqual(RegularEnum2.Three, wrapper.GetRegularEnum2(3));
+				Assert.AreEqual(1, wrapper.SetRegularEnum1(RegularEnum1.One));
+				Assert.AreEqual(2, wrapper.SetRegularEnum1(RegularEnum1.Two));
+				Assert.AreEqual(3, wrapper.SetRegularEnum1(RegularEnum1.Three));
+				Assert.AreEqual(1, wrapper.SetRegularEnum2(RegularEnum2.One));
+				Assert.AreEqual(2, wrapper.SetRegularEnum2(RegularEnum2.Two));
+				Assert.AreEqual(3, wrapper.SetRegularEnum2(RegularEnum2.Three));
 
 				// flags enum mapping
 				Assert.AreEqual(FlagsEnum.Bit1,                  wrapper.GetFlagsEnum(1));
@@ -497,9 +541,12 @@ namespace Tests
 				// test in properties
 				//
 				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum.Two, wrapper.RegularEnumProperty);
-				wrapper.RegularEnumProperty = RegularEnum.One;
-				Assert.AreEqual(RegularEnum.One, wrapper.RegularEnumProperty);
+				Assert.AreEqual(RegularEnum1.Two, wrapper.RegularEnum1Property);
+				wrapper.RegularEnum1Property = RegularEnum1.One;
+				Assert.AreEqual(RegularEnum1.One, wrapper.RegularEnum1Property);
+				Assert.AreEqual(RegularEnum2.Two, wrapper.RegularEnum2Property);
+				wrapper.RegularEnum2Property = RegularEnum2.One;
+				Assert.AreEqual(RegularEnum2.One, wrapper.RegularEnum2Property);
 
 				// flags enum mapping
 				Assert.AreEqual(FlagsEnum.Bit3, wrapper.FlagsEnumProperty);
@@ -508,23 +555,29 @@ namespace Tests
 
 				// using setters/getters
 				var typeBuilder = typeMapper.Type<SampleClass>();
-				var regularEnumBuilder = typeBuilder.Member(p => p.RegularEnumProperty);
+				var regularEnum1Builder = typeBuilder.Member(p => p.RegularEnum1Property);
+				var regularEnum2Builder = typeBuilder.Member(p => p.RegularEnum2Property);
 				var flagsEnumBuilder   = typeBuilder.Member(p => p.FlagsEnumProperty);
 
-				var regularSetter = regularEnumBuilder.BuildSetter<Dynamic.SampleClass>();
-				var regularGetter = regularEnumBuilder.BuildGetter<Dynamic.SampleClass>();
+				var regular1Setter = regularEnum1Builder.BuildSetter<Dynamic.SampleClass>();
+				var regular1Getter = regularEnum1Builder.BuildGetter<Dynamic.SampleClass>();
+				var regular2Setter = regularEnum2Builder.BuildSetter<Dynamic.SampleClass>();
+				var regular2Getter = regularEnum2Builder.BuildGetter<Dynamic.SampleClass>();
 
 				var flagsSetter = flagsEnumBuilder.BuildSetter<Dynamic.SampleClass>();
 				var flagsGetter = flagsEnumBuilder.BuildGetter<Dynamic.SampleClass>();
 
 				// reset instance
-				wrapper = typeMapper.CreateAndWrap(() => new SampleClass(1, 2));
+				wrapper = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum.Two, regularGetter(instance));
-				regularSetter(instance, RegularEnum.One);
-				Assert.AreEqual(RegularEnum.One, regularGetter(instance));
+				Assert.AreEqual(RegularEnum1.Two, regular1Getter(instance));
+				regular1Setter(instance, RegularEnum1.One);
+				Assert.AreEqual(RegularEnum1.One, regular1Getter(instance));
+				Assert.AreEqual(RegularEnum2.Two, regular2Getter(instance));
+				regular2Setter(instance, RegularEnum2.One);
+				Assert.AreEqual(RegularEnum2.One, regular2Getter(instance));
 
 				// flags enum mapping
 				Assert.AreEqual(FlagsEnum.Bit3, flagsGetter(instance));

@@ -3,7 +3,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows expected extra allocation and time penalty for wrapper instance creation
+	// shows reasonable performance degradation and allcation due to wrapper instance creation
 	public class WrapInstanceBenchmark
 	{
 		private Original.TestClass2 _originalInstance;

@@ -3,7 +3,8 @@ using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows expected extra allocation and time penalty for wrapper instance creation
+	// shows small performance degradation due to indirect call and allocation for wrapper instance
+	// creation in one benchmark
 	public class WrapBenchmark
 	{
 		private static readonly string Parameter = "TestString";
@@ -17,7 +18,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());
+			_wrapperInstance = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
 		}
 
 		[Benchmark]

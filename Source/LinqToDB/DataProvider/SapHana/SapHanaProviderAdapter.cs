@@ -108,8 +108,8 @@ namespace LinqToDB.DataProvider.SapHana
 							commandType,
 							transactionType,
 							typeSetter,
-							(IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => typeMapper.CreateAndWrap(() => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction))!,
-							(int source, string destination) => typeMapper.CreateAndWrap(() => new HanaBulkCopyColumnMapping(source, destination))!);
+							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction)),
+							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
 
 			return _instance;
@@ -190,9 +190,14 @@ namespace LinqToDB.DataProvider.SapHana
 				PropertySetter((HanaBulkCopy this_) => this_.DestinationTableName),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(HanaRowsCopied)
+			};
+
 			public HanaBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<HanaBulkCopy, HanaRowsCopiedEventHandler>(nameof(HanaRowsCopied));
 			}
 
 			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
@@ -226,10 +231,11 @@ namespace LinqToDB.DataProvider.SapHana
 
 			public HanaBulkCopyColumnMappingCollection ColumnMappings => ((Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
-			public event HanaRowsCopiedEventHandler HanaRowsCopied
+			private      HanaRowsCopiedEventHandler? _HanaRowsCopied;
+			public event HanaRowsCopiedEventHandler   HanaRowsCopied
 			{
-				add => Events.AddHandler(nameof(HanaRowsCopied), value);
-				remove => Events.RemoveHandler(nameof(HanaRowsCopied), value);
+				add    => _HanaRowsCopied = (HanaRowsCopiedEventHandler)Delegate.Combine(_HanaRowsCopied, value);
+				remove => _HanaRowsCopied = (HanaRowsCopiedEventHandler)Delegate.Remove (_HanaRowsCopied, value);
 			}
 		}
 

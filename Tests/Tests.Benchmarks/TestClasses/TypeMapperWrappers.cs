@@ -174,6 +174,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 			}
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public TestEnum TestEnumConvert(TestEnum value) => value;
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public TestEnum2 TestEnum2Convert(TestEnum2 value) => value;
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public TestEnum3 TestEnum3Convert(TestEnum3 value) => value;
 		}
 
 		public class TestEventClass
@@ -182,17 +189,32 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public void Fire()
 			{
-				TestEvent?.Invoke(null, this);
+				TestEvent?.Invoke(null, new TestClass2());
 			}
 		}
 
-		public delegate void TestEventHandler(object sender, TestEventClass e);
+		public delegate void TestEventHandler(object sender, TestClass2 e);
 
 		public enum TestEnum
 		{
 			One   = 1,
 			Two   = 2,
 			Three = 3
+		}
+
+		public enum TestEnum2
+		{
+			One = 1,
+			Two = 2,
+			Three = 3
+		}
+
+		[Flags]
+		public enum TestEnum3
+		{
+			One = 1,
+			Two = 2,
+			Four = 4
 		}
 	}
 
@@ -209,6 +231,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				typeMapper.RegisterTypeWrapper<TestEventClass>(typeof(Original.TestEventClass));
 				typeMapper.RegisterTypeWrapper<TestClass2>(typeof(Original.TestClass2));
 				typeMapper.RegisterTypeWrapper<TestEnum>(typeof(Original.TestEnum));
+				typeMapper.RegisterTypeWrapper<TestEnum2>(typeof(Original.TestEnum2));
+				typeMapper.RegisterTypeWrapper<TestEnum3>(typeof(Original.TestEnum3));
 
 				typeMapper.FinalizeMappings();
 
@@ -231,20 +255,26 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Wrapper]
-		public delegate void TestEventHandler(object sender, TestEventClass e);
+		public delegate void TestEventHandler(object sender, TestClass2 e);
 
 		[Wrapper]
 		public class TestEventClass : TypeWrapper
 		{
+			private static string[] Events { get; }
+				= new []
+			{
+				nameof(TestEvent)
+			};
+
 			public TestEventClass(object instance, TypeMapper mapper) : base(instance, mapper, null)
 			{
-				this.WrapEvent<TestEventClass, TestEventHandler>(nameof(TestEvent));
 			}
 
-			public event TestEventHandler TestEvent
+			private      TestEventHandler _TestEvent;
+			public event TestEventHandler  TestEvent
 			{
-				add => Events.AddHandler(nameof(TestEvent), value);
-				remove => Events.RemoveHandler(nameof(TestEvent), value);
+				add    => _TestEvent = (TestEventHandler)Delegate.Combine(_TestEvent, value);
+				remove => _TestEvent = (TestEventHandler)Delegate.Remove (_TestEvent, value);
 			}
 		}
 
@@ -288,6 +318,12 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				PropertySetter((TestClass2 this_) => this_.BooleanProperty),
 				// [16]: set WrapperProperty
 				PropertySetter((TestClass2 this_) => this_.WrapperProperty),
+				// [17]: TestEnumConvert
+				(Expression<Func<TestClass2, TestEnum, TestEnum>>)((TestClass2 this_, TestEnum value) => this_.TestEnumConvert(value)),
+				// [18]: TestEnum2Convert
+				(Expression<Func<TestClass2, TestEnum2, TestEnum2>>)((TestClass2 this_, TestEnum2 value) => this_.TestEnum2Convert(value)),
+				// [19]: TestEnum3Convert
+				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((TestClass2 this_, TestEnum3 value) => this_.TestEnum3Convert(value)),
 			};
 
 			public TestClass2(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
@@ -353,6 +389,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			public Version VersionProperty => ((Func<TestClass2, Version>)CompiledWrappers[11])(this);
 
 			public long LongProperty => ((Func<TestClass2, long>)CompiledWrappers[12])(this);
+
+			public TestEnum  TestEnumConvert (TestEnum  value) => ((Func<TestClass2, TestEnum , TestEnum >)CompiledWrappers[17])(this, value);
+			public TestEnum2 TestEnum2Convert(TestEnum2 value) => ((Func<TestClass2, TestEnum2, TestEnum2>)CompiledWrappers[18])(this, value);
+			public TestEnum3 TestEnum3Convert(TestEnum3 value) => ((Func<TestClass2, TestEnum3, TestEnum3>)CompiledWrappers[19])(this, value);
 		}
 
 		[Wrapper]
@@ -360,7 +400,27 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			One   = 3,
 			Two   = 2,
-			Three = 1
+			Three = 1,
+			Four = 4
+		}
+
+		[Wrapper]
+		public enum TestEnum2
+		{
+			One = 1,
+			Two = 2,
+			Three = 3,
+			Four = 4
+		}
+
+		[Wrapper]
+		[Flags]
+		public enum TestEnum3
+		{
+			One = 1,
+			Two = 2,
+			Four = 4,
+			Eight = 8
 		}
 	}
 }

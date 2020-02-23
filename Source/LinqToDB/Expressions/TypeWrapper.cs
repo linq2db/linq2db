@@ -28,19 +28,6 @@ namespace LinqToDB.Expressions
 			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
 		}
 
-		private EventHandlerList? _events;
-
-		protected internal EventHandlerList Events
-		{
-			get
-			{
-				if (_events == null)
-					_events = new EventHandlerList();
-
-				return _events;
-			}
-		}
-
 		/// <summary>
 		/// Creates property setter expression grom property getter.
 		/// Limitation - property should have getter.

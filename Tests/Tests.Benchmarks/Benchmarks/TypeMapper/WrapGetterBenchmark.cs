@@ -3,11 +3,8 @@ using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows big performance degradation and memory allocations for enum accessors
-	// due to use of Enum.Parse and boxing. Other types are fine
-	// FIX:
-	// we should update enum mapper to use value cast for enums with fixed values and probably add some
-	// optimizations for others (npgsql)
+	// shows small performance degradation due to indirect call
+	// also one benchmark shows allocation due to boxing in enum coverter edge-case
 	public class WrapGetterBenchmark
 	{
 		private Original.TestClass2 _originalInstance;
@@ -19,7 +16,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());
+			_wrapperInstance = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
 		}
 
 		[Benchmark]

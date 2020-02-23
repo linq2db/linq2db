@@ -129,10 +129,8 @@ namespace LinqToDB.DataProvider.Sybase
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					(IDbConnection connection, AseBulkCopyOptions options, IDbTransaction? transaction)
-						=> typeMapper.CreateAndWrap(() => new AseBulkCopy((AseConnection)connection, options, (AseTransaction?)transaction))!,
-					(string source, string destination)
-						=> typeMapper.CreateAndWrap(() => new AseBulkCopyColumnMapping(source, destination))!);
+					typeMapper.BuildWrappedFactory((IDbConnection connection, AseBulkCopyOptions options, IDbTransaction? transaction) => new AseBulkCopy((AseConnection)connection, options, (AseTransaction?)transaction)),
+					typeMapper.BuildWrappedFactory((string source, string destination) => new AseBulkCopyColumnMapping(source, destination)));
 			}
 			else
 				typeMapper.FinalizeMappings();
@@ -235,9 +233,14 @@ namespace LinqToDB.DataProvider.Sybase
 				PropertySetter((AseBulkCopy this_) => this_.DestinationTableName),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(AseRowsCopied)
+			};
+
 			public AseBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<AseBulkCopy, AseRowsCopiedEventHandler>(nameof(AseRowsCopied));
 			}
 
 			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
@@ -272,10 +275,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 			public AseBulkCopyColumnMappingCollection ColumnMappings => ((Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
-			public event AseRowsCopiedEventHandler AseRowsCopied
+			private      AseRowsCopiedEventHandler? _AseRowsCopied;
+			public event AseRowsCopiedEventHandler   AseRowsCopied
 			{
-				add    => Events.AddHandler(nameof(AseRowsCopied), value);
-				remove => Events.RemoveHandler(nameof(AseRowsCopied), value);
+				add    => _AseRowsCopied = (AseRowsCopiedEventHandler)Delegate.Combine(_AseRowsCopied, value);
+				remove => _AseRowsCopied = (AseRowsCopiedEventHandler)Delegate.Remove (_AseRowsCopied, value);
 			}
 		}
 

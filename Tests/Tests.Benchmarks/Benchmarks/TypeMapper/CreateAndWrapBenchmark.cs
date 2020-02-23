@@ -3,7 +3,8 @@ using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// FIX: benchmark shows huge performance and memory impact due to current events implmentation
+	// shows small performance degradation due to indirect call
+	// benchmaerks with result wrapping also show additional allocation for wrapper instance
 	public class CreateAndWrapBenchmark
 	{
 		private static readonly int IntParameter = -1;
@@ -22,7 +23,6 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private Func<ITestClass2, Wrapped.TestEnum, Wrapped.TestClass2> _factoryThoParametersWrapperEnum;
 		private Func<ITestClass2, string, Wrapped.TestClass2> _factoryThoParametersWrapperString;
 		private Func<ITestClass2, Wrapped.TestEnum, ITestClass, Wrapped.TestClass2> _factoryThreeParameters;
-
 		private Func<DateTimeOffset, string, object> _tstsFactory;
 
 		[GlobalSetup]
@@ -30,17 +30,15 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
-			_factoryParameterless = () => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2());
-			_factoryOneParameterString = (string connectionString) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(connectionString));
-			_factoryOneParameterTimeSpanInstance = (TimeSpan timeSpan) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(timeSpan)).instance_;
-			_factoryTwoParametersIntString = (int src, string dest) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(src, dest));
-			_factoryTwoParametersStringString = (string src, string dest) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(src, dest));
-			_factoryThoParametersWrapperEnum = (ITestClass2 p1, Wrapped.TestEnum p2) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2));
-			_factoryThoParametersWrapperString = (ITestClass2 p1, string p2) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2));
-			_factoryThreeParameters = (ITestClass2 p1, Wrapped.TestEnum p2, ITestClass p3) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2, (Wrapped.TestClass)p3));
-
-			_tstsFactory = (DateTimeOffset dto, string offset)
-				=> typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset)).instance_;
+			_factoryParameterless = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2());
+			_factoryOneParameterString = typeMapper.BuildWrappedFactory((string connectionString) => new Wrapped.TestClass2(connectionString));
+			_factoryOneParameterTimeSpanInstance = typeMapper.BuildFactory((TimeSpan timeSpan) => new Wrapped.TestClass2(timeSpan));
+			_factoryTwoParametersIntString = typeMapper.BuildWrappedFactory((int src, string dest) => new Wrapped.TestClass2(src, dest));
+			_factoryTwoParametersStringString = typeMapper.BuildWrappedFactory((string src, string dest) => new Wrapped.TestClass2(src, dest));
+			_factoryThoParametersWrapperEnum = typeMapper.BuildWrappedFactory((ITestClass2 p1, Wrapped.TestEnum p2) => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2));
+			_factoryThoParametersWrapperString = typeMapper.BuildWrappedFactory((ITestClass2 p1, string p2) => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2));
+			_factoryThreeParameters = typeMapper.BuildWrappedFactory((ITestClass2 p1, Wrapped.TestEnum p2, ITestClass p3) => new Wrapped.TestClass2((Wrapped.TestClass2)p1, p2, (Wrapped.TestClass)p3));
+			_tstsFactory = typeMapper.BuildFactory((DateTimeOffset dto, string offset) => new Wrapped.TestClass2(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset));
 		}
 
 		private const int NanosecondsPerTick = 100;

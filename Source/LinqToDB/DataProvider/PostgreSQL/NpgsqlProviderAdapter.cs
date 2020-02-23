@@ -399,7 +399,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							npgsqlDateTimeType,
 							npgsqlRangeTType,
 
-							connectionString => typeMapper.CreateAndWrap(() => new NpgsqlConnection(connectionString))!,
+							typeMapper.BuildWrappedFactory((string connectionString) => new NpgsqlConnection(connectionString)),
 
 							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 							dbTypeBuilder.BuildGetter<IDbDataParameter>(),

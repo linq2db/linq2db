@@ -4,11 +4,9 @@ using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows big performance degradation and memory allocations for enum accessors
-	// due to use of Enum.Parse and boxing. Other types are fine
-	// FIX:
-	// we should update enum mapper to use value cast for enums with fixed values and probably add some
-	// optimizations for others (npgsql)
+	// shows small performance degradation due to indirect call
+	// two enum benchmarks show extra allocations due to boxing of unknown value in enum converter (edge case)
+	// (could be removed by using known enum value for test or define 0-value in enums)
 	public class BuildGetterBenchmark
 	{
 		private Original.TestClass _classInstance = new Original.TestClass();
@@ -107,7 +105,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			return _intPropertyGetter(_classInstance);
 		}
-		
+
 		[Benchmark]
 		public int DirectAccessAsInt()
 		{

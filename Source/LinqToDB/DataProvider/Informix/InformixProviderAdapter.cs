@@ -233,10 +233,8 @@ namespace LinqToDB.DataProvider.Informix
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					(IDbConnection connection, IfxBulkCopyOptions options)
-						=> typeMapper.CreateAndWrap(() => new IfxBulkCopy((IfxConnection)connection, options))!,
-					(int source, string destination)
-						=> typeMapper.CreateAndWrap(() => new IfxBulkCopyColumnMapping(source, destination))!);
+					typeMapper.BuildWrappedFactory((IDbConnection connection, IfxBulkCopyOptions options) => new IfxBulkCopy((IfxConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((int source, string destination) => new IfxBulkCopyColumnMapping(source, destination)));
 			}
 			else
 				typeMapper.FinalizeMappings();
@@ -246,7 +244,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			Func<TimeSpan, object>? timespanFactory = null;
 			if (timeSpanType != null)
-				timespanFactory = ts => typeMapper.CreateAndWrap(() => new IfxTimeSpan(ts))!.instance_!;
+				timespanFactory = typeMapper.BuildFactory((TimeSpan ts) => new IfxTimeSpan(ts));
 
 			return new InformixProviderAdapter(
 				connectionType,
@@ -295,63 +293,67 @@ namespace LinqToDB.DataProvider.Informix
 		[Wrapper]
 		public enum IfxType
 		{
-			// SQLI and IDS fields (no numbers as they differ)
-			BigInt,
-			BigSerial,
-			Blob,
-			Boolean,
-			Byte,
-			Char,
-			Char1,
-			Clob,
-			Date,
-			DateTime,
-			Decimal,
-			Float,
-			Int8,
-			Integer,
-			IntervalDayFraction,
-			IntervalYearMonth,
-			List,
-			LVarChar,
-			Money,
-			MultiSet,
-			NChar,
-			Null,
-			NVarChar,
-			Other,
-			Row,
-			Serial,
-			Serial8,
-			Set,
-			SmallFloat,
-			SmallInt,
-			SmartLOBLocator,
-			SQLUDTFixed,
-			SQLUDTVar,
-			Text,
-			VarChar,
-
+			// SQLI and IDS field values differ
+			// we will use values from IDS as it is modern (compared to SQLI) provider
+			// so mapping of SQLI values will be a bit slower due to more complex mapping
+			BigInt              = 203,
+			BigSerial           = 230,
+			Blob                = 110,
+			Boolean             = 126,
+			Byte                = 11,
+			Char                = 0,
+			Clob                = 111,
+			Date                = 7,
+			DateTime            = 10,
+			Decimal             = 5,
+			Float               = 3,
+			Int8                = 17,
+			Integer             = 2,
+			LVarChar            = 101,
+			Money               = 8,
+			NChar               = 15,
+			Null                = 9,
+			NVarChar            = 16,
+			Other               = 99,
+			Serial              = 6,
+			Serial8             = 18,
+			SmallFloat          = 4,
+			SmallInt            = 1,
+			Text                = 12,
+			VarChar             = 13,
+			// present on both providers, but obsoleted in IDS
+			Char1               = 1001,
+			IntervalDayFraction = 1499,
+			IntervalYearMonth   = 1400,
+			List                = 21,
+			MultiSet            = 20,
+			Row                 = 22,
+			Set                 = 19,
+			SmartLOBLocator     = 112,
+			SQLUDTFixed         = 41,
+			SQLUDTVar           = 40,
 			// IDS-only types
-			Binary,
-			Datalink,
-			DbClob,
-			Double,
-			DynArray,
-			Graphic,
-			Invalid,
-			LongVarBinary,
-			LongVarChar,
-			LongVarGraphic,
-			Numeric,
-			Real,
-			Real370,
-			RowId,
-			Time,
-			Timestamp,
-			VarBinary,
-			VarGraphic,
-			Xml
+			Binary              = 215,
+			DecimalFloat        = 228,
+			Double              = 205,
+			Invalid             = 200,
+			LongVarBinary       = 217,
+			LongVarChar         = 101,
+			Numeric             = 208,
+			Real                = 4,
+			RowId               = 225,
+			Time                = 210,
+			Timestamp           = 211,
+			VarBinary           = 216,
+			// IDS-only types (oboleted)
+			Datalink            = 224,
+			DbClob              = 223,
+			DynArray            = 229,
+			Graphic             = 218,
+			LongVarGraphic      = 220,
+			Real370             = 227,
+			VarGraphic          = 219,
+			Xml                 = 226,
 		}
 
 		[Wrapper]
@@ -388,9 +390,14 @@ namespace LinqToDB.DataProvider.Informix
 				PropertySetter((IfxBulkCopy this_) => this_.ColumnMappings),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(IfxRowsCopied)
+			};
+
 			public IfxBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<IfxBulkCopy, IfxRowsCopiedEventHandler>(nameof(IfxRowsCopied));
 			}
 
 			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
@@ -422,10 +429,11 @@ namespace LinqToDB.DataProvider.Informix
 				set => ((Action<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[9])(this, value);
 			}
 
-			public event IfxRowsCopiedEventHandler IfxRowsCopied
+			private      IfxRowsCopiedEventHandler? _IfxRowsCopied;
+			public event IfxRowsCopiedEventHandler   IfxRowsCopied
 			{
-				add => Events.AddHandler(nameof(IfxRowsCopied), value);
-				remove => Events.RemoveHandler(nameof(IfxRowsCopied), value);
+				add    => _IfxRowsCopied = (IfxRowsCopiedEventHandler)Delegate.Combine(_IfxRowsCopied, value);
+				remove => _IfxRowsCopied = (IfxRowsCopiedEventHandler)Delegate.Remove (_IfxRowsCopied, value);
 			}
 		}
 

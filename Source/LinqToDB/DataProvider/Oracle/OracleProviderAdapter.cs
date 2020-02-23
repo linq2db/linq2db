@@ -306,10 +306,8 @@ namespace LinqToDB.DataProvider.Oracle
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					(IDbConnection connection, OracleBulkCopyOptions options)
-						=> typeMapper.CreateAndWrap(() => new OracleBulkCopy((OracleConnection)connection, options))!,
-					(int source, string destination)
-						=> typeMapper.CreateAndWrap(() => new OracleBulkCopyColumnMapping(source, destination))!);
+					typeMapper.BuildWrappedFactory((IDbConnection connection, OracleBulkCopyOptions options) => new OracleBulkCopy((OracleConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((int source, string destination) => new OracleBulkCopyColumnMapping(source, destination)));
 			}
 			else
 				typeMapper.FinalizeMappings();
@@ -409,7 +407,7 @@ namespace LinqToDB.DataProvider.Oracle
 				oracleRefCursorType,
 				oracleRefType,
 
-				connectionString => typeMapper.CreateAndWrap(() => new OracleConnection(connectionString))!,
+				typeMapper.BuildWrappedFactory((string connectionString) => new OracleConnection(connectionString)),
 
 				typesNamespace,
 
@@ -424,8 +422,7 @@ namespace LinqToDB.DataProvider.Oracle
 				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<IDbCommand>(),
 				commandMapper.Member(p => p.InitialLONGFetchSize).BuildSetter<IDbCommand>(),
 
-				(DateTimeOffset dto, string offset)
-					=> typeMapper.CreateAndWrap(() => new OracleTimeStampTZ(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset))!.instance_!,
+				typeMapper.BuildFactory((DateTimeOffset dto, string offset) => new OracleTimeStampTZ(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset)),
 
 				readDateTimeOffsetFromOracleTimeStampTZ,
 				readDateTimeOffsetFromOracleTimeStampLTZ,
@@ -657,9 +654,14 @@ namespace LinqToDB.DataProvider.Oracle
 				PropertySetter((OracleBulkCopy this_) => this_.DestinationTableName),
 			};
 
+			private static string[] Events { get; }
+				= new[]
+			{
+				nameof(OracleRowsCopied)
+			};
+
 			public OracleBulkCopy(object instance, TypeMapper mapper, Delegate[] wrappers) : base(instance, mapper, wrappers)
 			{
-				this.WrapEvent<OracleBulkCopy, OracleRowsCopiedEventHandler>(nameof(OracleRowsCopied));
 			}
 
 			public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotImplementedException();
@@ -693,10 +695,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			public OracleBulkCopyColumnMappingCollection ColumnMappings => ((Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
 
-			public event OracleRowsCopiedEventHandler OracleRowsCopied
+			private      OracleRowsCopiedEventHandler? _OracleRowsCopied;
+			public event OracleRowsCopiedEventHandler   OracleRowsCopied
 			{
-				add    => Events.AddHandler   (nameof(OracleRowsCopied), value);
-				remove => Events.RemoveHandler(nameof(OracleRowsCopied), value);
+				add    => _OracleRowsCopied = (OracleRowsCopiedEventHandler)Delegate.Combine(_OracleRowsCopied, value);
+				remove => _OracleRowsCopied = (OracleRowsCopiedEventHandler)Delegate.Remove (_OracleRowsCopied, value);
 			}
 		}
 

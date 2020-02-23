@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.SqlCe
 							transactionType,
 							typeSetter,
 							typeGetter,
-							(string connectionString) => typeMapper.CreateAndWrap(() => new SqlCeEngine(connectionString))!);
+							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!);
 					}
 
 			return _instance;

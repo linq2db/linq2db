@@ -1,10 +1,9 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows expected slight performance degradation due to indirect call
+	// shows small performance degradation due to indirect call
 	public class WrapActionBenchmark
 	{
 		private static readonly string Parameter = "TestString";
@@ -19,9 +18,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2(Parameter);
-			// TODO: FIXME: direct call crashes right now
-			//_wrapperInstance = typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(Parameter));
-			_wrapperInstance = ((Func<string, Wrapped.TestClass2>)((string connectionString) => typeMapper.CreateAndWrap(() => new Wrapped.TestClass2(connectionString))))(Parameter);
+			_wrapperInstance = typeMapper.BuildWrappedFactory((string p) => new Wrapped.TestClass2(p))(Parameter);
 		}
 
 		[Benchmark]

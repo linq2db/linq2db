@@ -6,7 +6,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows expected slight performance degradation
+	// shows small performance degradation due to indirect call
 	public class OracleReaderExpressionsBenchmark
 	{
 		private static readonly int IntParameter = 0;

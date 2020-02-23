@@ -3,7 +3,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	// benchmark shows expected slight performance degradation due to indirect call
+	// shows small performance degradation due to indirect call
 	public class BuildActionBenchmark
 	{
 		private Action _action;
