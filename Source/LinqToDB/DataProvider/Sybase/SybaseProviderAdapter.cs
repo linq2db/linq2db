@@ -327,14 +327,14 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, AseBulkCopyColumnMapping>>)((AseBulkCopyColumnMappingCollection this_, AseBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, int>>)((AseBulkCopyColumnMappingCollection this_, AseBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
 			public AseBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
-			public AseBulkCopyColumnMapping Add(AseBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, AseBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
+			public int Add(AseBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, int>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
 		}
 
 		[Wrapper, Flags]

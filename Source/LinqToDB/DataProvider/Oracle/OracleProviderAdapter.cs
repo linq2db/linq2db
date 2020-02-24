@@ -440,6 +440,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (hasNull)
 				{
+					// if native provider fails here, check that you have ODAC installed properly
 					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
 					mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 				}

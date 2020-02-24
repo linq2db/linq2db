@@ -22,8 +22,11 @@ namespace LinqToDB.Expressions
 		/// Provides access to delegates, created from expressions, defined in wrapper class using
 		/// following property and type mappings, configured for <see cref="TypeMapper"/>:
 		/// <code>
-		/// private static LambdaExpression[] Wrappers { get; }
+		/// private static IEumerable&lt;T&gt; Wrappers { get; }
 		/// </code>
+		/// where T could be <see cref="LambdaExpression"/> or <see>Tuple&lt;LambdaExpression, bool&gt;</see>.
+		/// Boolean flag means that mapping expression compilation allowed to fail if it is set to <c>true</c>.
+		/// This could be used to map optional API, that present only in specific versions of provider.
 		/// If wrapper doesn't need any wrapper delegates, this property could be ommited.
 		/// </summary>
 		protected Delegate[] CompiledWrappers { get; } = null!;

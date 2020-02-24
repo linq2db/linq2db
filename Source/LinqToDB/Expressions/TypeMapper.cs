@@ -340,19 +340,23 @@ namespace LinqToDB.Expressions
 			var wrappers = wrapperType.GetProperty("Wrappers", BindingFlags.Static | BindingFlags.NonPublic);
 
 			if (wrappers != null)
-				return ((LambdaExpression[])wrappers.GetValue(null)).Select(expr =>
-				{
-					try
+				return ((IEnumerable<object>)wrappers.GetValue(null))
+					.Select(e => e is Tuple<LambdaExpression, bool> tuple
+						? new { expr = tuple.Item1, optional = tuple.Item2 }
+						: new { expr = (LambdaExpression)e, optional = false })
+					.Select(e =>
 					{
-						return BuildWrapper(expr);
-					}
-					catch
-					{
-						// right now it is valid case (see npgsql BinaryImporter)
-						// probably we should make it more explicit by providing canFail flag for lambda
-						return null!;
-					}
-				}).ToArray();
+						try
+						{
+							return BuildWrapper(e.expr);
+						}
+						catch
+						{
+							if (!e.optional)
+								throw;
+							return null!;
+						}
+					}).ToArray();
 
 			return null;
 		}

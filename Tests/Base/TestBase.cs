@@ -37,7 +37,7 @@ namespace Tests
 	//	[Order(1000)]
 	public class TestBase
 	{
-		private const int TRACES_LIMIT = 100000;
+		private const int TRACES_LIMIT = 50000;
 
 		static TestBase()
 		{

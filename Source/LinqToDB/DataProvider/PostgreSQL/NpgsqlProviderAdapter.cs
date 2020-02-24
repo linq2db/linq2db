@@ -566,14 +566,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Wrapper]
 		public class NpgsqlBinaryImporter : TypeWrapper
 		{
-			private static LambdaExpression[] Wrappers {get;}
-				= new LambdaExpression[]
+			private static object[] Wrappers {get;}
+				= new object[]
 			{
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null
 				// [0]: Cancel
-				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Cancel()),
+				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Cancel()), true),
 				// [1]: Complete
-				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()),
+				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()), true),
 				// [2]: Dispose
 				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [3]: StartRow
