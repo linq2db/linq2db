@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: this(name, version, SqlServerProvider.SystemDataSqlClient)
+			: this(name, version, SqlServerProvider.MicrosoftDataSqlClient)
 		{
 		}
 

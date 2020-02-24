@@ -21,8 +21,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
 			}
 
-			SqlServerTools.Provider = provider;
-
 			if (version != null)
 			{
 				switch (version.Value)

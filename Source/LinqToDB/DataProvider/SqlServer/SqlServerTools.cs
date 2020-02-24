@@ -15,8 +15,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		private static readonly ConcurrentBag<SqlServerDataProvider> _providers = new ConcurrentBag<SqlServerDataProvider>();
 		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
+		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new ConcurrentQueue<SqlServerDataProvider>();
 
 		// System.Data
 		// and/or
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.SystemDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = new Lazy<IDataProvider>(() =>
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.SystemDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = new Lazy<IDataProvider>(() =>
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				DataConnection.AddDataProvider(provider);
 			}
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = new Lazy<IDataProvider>(() =>
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				DataConnection.AddDataProvider(provider);
 			}
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = new Lazy<IDataProvider>(() =>
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.SystemDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 
@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = new Lazy<IDataProvider>(() =>
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = new Lazy<IDataProvider>(() =>
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				DataConnection.AddDataProvider(provider);
 			}
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = new Lazy<IDataProvider>(() =>
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				DataConnection.AddDataProvider(provider);
 			}
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = new Lazy<IDataProvider>(() =>
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
 				DataConnection.AddDataProvider(provider);
 
-			_providers.Add(provider);
+			_providers.Enqueue(provider);
 			return provider;
 		}, true);
 
