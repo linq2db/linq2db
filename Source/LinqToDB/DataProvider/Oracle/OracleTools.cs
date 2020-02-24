@@ -61,17 +61,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
+			bool? managed = null;
 			switch (css.ProviderName)
 			{
 #if NET45 || NET46
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
-				case ProviderName.OracleNative                   : return GetDataProvider(css, connectionString, false);
+				case ProviderName.OracleNative                   :
+					managed = false;
+					goto case ProviderName.Oracle;
 #endif
 				case OracleProviderAdapter.ManagedAssemblyName   :
 				case OracleProviderAdapter.ManagedClientNamespace:
 				case "Oracle.ManagedDataAccess.Core"             :
-				case ProviderName.OracleManaged                  : return GetDataProvider(css, connectionString, true);
+				case ProviderName.OracleManaged                  :
+					managed = true;
+					goto case ProviderName.Oracle;
 				case ""                                          :
 				case null                                        :
 
@@ -80,17 +85,17 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 				case ProviderName.Oracle                         :
 #if NET45 || NET46
-					if (css.Name.Contains("Native"))
+					if (css.Name.Contains("Native") || managed == false)
 					{
 						if (css.Name.Contains("11"))
 							return _oracleNativeDataProvider11.Value;
-						if (css.Name.Contains("13"))
+						if (css.Name.Contains("12"))
 							return _oracleNativeDataProvider12.Value;
 						return GetDataProvider(css, connectionString, false);
 					}
 #endif
 
-					if (css.Name.Contains("Managed"))
+					if (css.Name.Contains("Managed") || managed == true)
 					{
 						if (css.Name.Contains("11"))
 							return _oracleManagedDataProvider11.Value;
