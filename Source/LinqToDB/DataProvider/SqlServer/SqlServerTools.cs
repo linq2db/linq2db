@@ -262,27 +262,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public static void AddUdtType(Type type, string udtName)
-		{
-			foreach (var provider in _providers)
-				provider.AddUdtType(type, udtName);
-		}
-
-		public static void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
-		{
-			foreach (var provider in _providers)
-				provider.AddUdtType(udtName, nullValue, dataType);
-		}
-
 		/// <summary>
-		/// Loads and registers spatial types assembly (Microsoft.SqlServer.Types) using provided path.
+		/// Tries to load and register spatial types using provided path to types assembly (Microsoft.SqlServer.Types).
 		/// Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
 		/// for additional required configuration steps.
 		/// </summary>
 		public static void ResolveSqlTypes(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
+
 			new AssemblyResolver(path, SqlServerTypes.AssemblyName);
+
+			if (SqlServerTypes.UpdateTypes())
+				foreach (var provider in _providers)
+					SqlServerTypes.Configure(provider);
 		}
 
 		/// <summary>
@@ -292,22 +285,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		public static void ResolveSqlTypes(Assembly assembly)
 		{
-			var types = assembly.GetTypes();
-
-			SqlHierarchyIdType = types.First(t => t.Name == SqlServerTypes.SqlHierarchyIdType);
-			SqlGeographyType   = types.First(t => t.Name == SqlServerTypes.SqlGeographyType);
-			SqlGeometryType    = types.First(t => t.Name == SqlServerTypes.SqlGeometryType);
-		}
-
-		internal static Type? SqlHierarchyIdType;
-		internal static Type? SqlGeographyType;
-		internal static Type? SqlGeometryType;
-
-		public static void SetSqlTypes(Type sqlHierarchyIdType, Type sqlGeographyType, Type sqlGeometryType)
-		{
-			SqlHierarchyIdType = sqlHierarchyIdType;
-			SqlGeographyType   = sqlGeographyType;
-			SqlGeometryType    = sqlGeometryType;
+			if (SqlServerTypes.UpdateTypes(assembly))
+				foreach (var provider in _providers)
+					SqlServerTypes.Configure(provider);
 		}
 
 #endregion

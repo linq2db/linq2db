@@ -430,7 +430,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
+				case "geometry"    : return Provider.GetUdtTypeByName(dataType);
 				case "table type"  : return typeof(DataTable);
 			}
 

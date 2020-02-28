@@ -199,8 +199,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (param    != null
 							&& value != null
-							&& _udtTypes.TryGetValue(value.GetType(), out var s))
-							Adapter.SetUdtTypeName(param, s);
+							&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
+							Adapter.SetUdtTypeName(param, typeName);
 					}
 
 					break;
@@ -359,38 +359,41 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
-		#region Udt support
-
-		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>();
-
-		internal static void SetUdtType(Type type, string udtName)
-		{
-			_udtTypes[type] = udtName;
-		}
-
-		internal static Type? GetUdtType(string udtName)
-		{
-			foreach (var udtType in _udtTypes)
-				if (udtType.Value == udtName)
-					return udtType.Key;
-
-			return null;
-		}
+		#region UDT support
+		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ConcurrentDictionary<Type, string>();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ConcurrentDictionary<string, Type>();
 
 		public void AddUdtType(Type type, string udtName)
 		{
 			MappingSchema.SetScalarType(type);
 
-			_udtTypes[type] = udtName;
+			_udtTypeNames[type] = udtName;
+			_udtTypes[udtName]  = type;
+		}
+
+		public void AddUdtType(Type type, string udtName, object? defaultValue, DataType dataType = DataType.Undefined)
+		{
+			MappingSchema.AddScalarType(type, defaultValue, dataType);
+
+			_udtTypeNames[type] = udtName;
+			_udtTypes[udtName]  = type;
 		}
 
 		public void AddUdtType<T>(string udtName, T defaultValue, DataType dataType = DataType.Undefined)
 		{
 			MappingSchema.AddScalarType(typeof(T), defaultValue, dataType);
 
-			_udtTypes[typeof(T)] = udtName;
+			_udtTypeNames[typeof(T)] = udtName;
+			_udtTypes[udtName]       = typeof(T);
 		}
 
+		internal Type? GetUdtTypeByName(string udtName)
+		{
+			if (_udtTypes.TryGetValue(udtName, out var type))
+				return type;
+
+			return null;
+		}
 		#endregion
 
 		#region BulkCopy

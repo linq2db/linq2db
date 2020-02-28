@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Collections.Generic;
 	using System.Linq.Expressions;
 	using System.Reflection;
 	using LinqToDB.Common;
@@ -17,52 +16,89 @@ namespace LinqToDB.DataProvider.SqlServer
 		public const string SqlGeographyType   = "SqlGeography";
 		public const string SqlGeometryType    = "SqlGeometry";
 
-		private static readonly Lazy<TypeInfo[]> _types = new Lazy<TypeInfo[]>(() =>
+		private static Lazy<TypeInfo[]> _types = new Lazy<TypeInfo[]>(() =>
 		{
-			Assembly? assembly = null;
 			try
 			{
-				assembly = Assembly.Load(AssemblyName);
+				var assembly = Assembly.Load(AssemblyName);
+
+				if (assembly != null)
+					return LoadTypes(assembly);
 			}
 			catch { }
 
-			if (assembly == null)
-				return Array<TypeInfo>.Empty;
+			return Array<TypeInfo>.Empty;
+		}, true);
 
-			var types = new List<TypeInfo>();
-
-			loadType(SqlHierarchyIdType, SqlServerTools.SqlHierarchyIdType);
-			loadType(SqlGeographyType  , SqlServerTools.SqlGeographyType);
-			loadType(SqlGeometryType   , SqlServerTools.SqlGeometryType);
-
-			return types.ToArray();
-
-			void loadType(string typeName, Type? type)
+		public static bool UpdateTypes()
+		{
+			try
 			{
-				type ??= assembly?.GetType($"{TypesNamespace}.{typeName}", false);
-				if (type == null)
-					return;
+				return UpdateTypes(Assembly.Load(AssemblyName));
+			}
+			catch { }
+
+			return false;
+		}
+
+		public static bool UpdateTypes(Assembly assembly)
+		{
+			try
+			{
+				var newTypes = new Lazy<TypeInfo[]>(() => LoadTypes(assembly));
+				if (newTypes.Value.Length > 0)
+				{
+					_types = newTypes;
+					return true;
+				}
+			}
+			catch { }
+
+			return false;
+		}
+
+		private static TypeInfo[] LoadTypes(Assembly assembly)
+		{
+			var types = new TypeInfo[3];
+
+			types[0] = loadType(SqlHierarchyIdType);
+			types[1] = loadType(SqlGeographyType);
+			types[2] = loadType(SqlGeometryType);
+
+			return types;
+
+			TypeInfo loadType(string typeName)
+			{
+				var type = assembly.GetType($"{TypesNamespace}.{typeName}", true);
 
 				var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Property(null, type, "Null"), typeof(object))).Compile();
 
-				SqlServerDataProvider.SetUdtType(type, type.Name.Substring(3).ToLower());
-
-				types.Add(new TypeInfo() { Type = type, Null = getNullValue() });
+				return new TypeInfo()
+				{ 
+					Type     = type,
+					TypeName = type.Name.Substring(3).ToLower(),
+					Null     = getNullValue()
+				};
 			}
-		}, true);
+		}
 
 		class TypeInfo
 		{
-			public Type    Type { get; set; } = null!;
-			public object? Null { get; set; }
+			public string  TypeName { get; set; } = null!;
+			public Type    Type     { get; set; } = null!;
+			public object? Null     { get; set; }
 		}
 
 		internal static void Configure(MappingSchema mappingSchema)
 		{
 			foreach (var type in _types.Value)
-			{
 				mappingSchema.AddScalarType(type.Type, type.Null, true, DataType.Udt);
-			}
+		}
+
+		internal static void Configure(SqlServerDataProvider provider)
+		{
+			foreach (var type in _types.Value)
+				provider.AddUdtType(type.Type, type.TypeName, type.Null, DataType.Udt);
 		}
 	}
 }
