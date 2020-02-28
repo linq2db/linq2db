@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -17,7 +16,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
-		// TODO: update Sybase.sql to use proper type for identity. not it uses INT for most of tables, which
+		// TODO: update Sybase.sql to use proper type for identity. now it uses INT for most of tables, which
 		// is silently treated as non-identity field
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
@@ -59,7 +58,6 @@ namespace Tests.xUpdate
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
-			//using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
 				try
@@ -113,7 +111,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		//[ActiveIssue("Sybase: Bulk insert failed. Null value is not allowed in not null column.", Configuration = ProviderName.Sybase)]
 		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { TestProvName.AllOracleNative , ProviderName.Sybase } )]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
@@ -123,7 +120,6 @@ namespace Tests.xUpdate
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
-			//using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
 				try

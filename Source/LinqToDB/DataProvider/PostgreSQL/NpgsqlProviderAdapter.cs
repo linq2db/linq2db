@@ -543,9 +543,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),
 				// [1]: Open
-				(Expression<Action<NpgsqlConnection>>)((NpgsqlConnection this_) => this_.Open()),
+				(Expression<Action<NpgsqlConnection>>       )((NpgsqlConnection this_) => this_.Open()),
 				// [2]: Dispose
-				(Expression<Action<NpgsqlConnection>>)((NpgsqlConnection this_) => this_.Dispose()),
+				(Expression<Action<NpgsqlConnection>>       )((NpgsqlConnection this_) => this_.Dispose()),
 			};
 
 			public NpgsqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -575,9 +575,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// [1]: Complete
 				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()), true),
 				// [2]: Dispose
-				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Dispose()),
+				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [3]: StartRow
-				(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
+				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
 			};
 
 			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)

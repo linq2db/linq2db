@@ -369,17 +369,17 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<IfxBulkCopy>>)((IfxBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<IfxBulkCopy>>                                  )((IfxBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<IfxBulkCopy, IDataReader>>)((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<IfxBulkCopy, int>>)((IfxBulkCopy this_) => this_.NotifyAfter),
+				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.NotifyAfter),
 				// [3]: get BulkCopyTimeout
-				(Expression<Func<IfxBulkCopy, int>>)((IfxBulkCopy this_) => this_.BulkCopyTimeout),
+				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [4]: get DestinationTableName
-				(Expression<Func<IfxBulkCopy, string?>>)((IfxBulkCopy this_) => this_.DestinationTableName),
+				(Expression<Func<IfxBulkCopy, string?>>                           )((IfxBulkCopy this_                    ) => this_.DestinationTableName),
 				// [5]: get ColumnMappings
-				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_) => this_.ColumnMappings),
+				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_                    ) => this_.ColumnMappings),
 				// [6]: set NotifyAfter
 				PropertySetter((IfxBulkCopy this_) => this_.NotifyAfter),
 				// [7]: set BulkCopyTimeout
@@ -407,25 +407,25 @@ namespace LinqToDB.DataProvider.Informix
 
 			public int NotifyAfter
 			{
-				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[2])(this);
+				get => ((Func  <IfxBulkCopy, int>)CompiledWrappers[2])(this);
 				set => ((Action<IfxBulkCopy, int>)CompiledWrappers[6])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => ((Func<IfxBulkCopy, int>)CompiledWrappers[3])(this);
+				get => ((Func  <IfxBulkCopy, int>)CompiledWrappers[3])(this);
 				set => ((Action<IfxBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => ((Func<IfxBulkCopy, string?>)CompiledWrappers[4])(this);
+				get => ((Func  <IfxBulkCopy, string?>)CompiledWrappers[4])(this);
 				set => ((Action<IfxBulkCopy, string?>)CompiledWrappers[8])(this, value);
 			}
 
 			public IfxBulkCopyColumnMappingCollection ColumnMappings
 			{
-				get => ((Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
+				get => ((Func  <IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[5])(this);
 				set => ((Action<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>)CompiledWrappers[9])(this, value);
 			}
 
@@ -444,7 +444,7 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<IfxRowsCopiedEventArgs, int>>)((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<IfxRowsCopiedEventArgs, int>> )((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
 				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
 				// [2]: set Abort
@@ -459,7 +459,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			public bool Abort
 			{
-				get => ((Func<IfxRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+				get => ((Func  <IfxRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => ((Action<IfxRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}

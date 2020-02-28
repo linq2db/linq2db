@@ -8,6 +8,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	public class BuildFuncBenchmark
 	{
 		private Original.TestClass _classInstance = new Original.TestClass();
+
 		private Func<ITestClass, Guid, object[], DataTable> _functionCall;
 
 		[GlobalSetup]

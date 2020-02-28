@@ -13,7 +13,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private static readonly MappingSchema MappingSchema = new MappingSchema();
 
-		private Wrapped.NpgsqlBinaryImporter _wrappedImporter;
+		private Wrapped.NpgsqlBinaryImporter           _wrappedImporter;
 		private readonly Original.NpgsqlBinaryImporter _originalImporter = new Original.NpgsqlBinaryImporter();
 
 		private ColumnDescriptor[] _columns;
@@ -21,9 +21,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[Table]
 		public class TestEntity
 		{
-			[Column] public int Column1    { get; set; }
+			[Column] public int    Column1 { get; set; }
 			[Column] public string Column2 { get; set; }
-			[Column] public int? Column3   { get; set; }
+			[Column] public int?   Column3 { get; set; }
 
 			public static TestEntity Instance { get; } = new TestEntity();
 		}
@@ -87,17 +87,17 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			_wrappedImporter = typeMapper.Wrap<Wrapped.NpgsqlBinaryImporter>(_originalImporter);
 
-			var ed = MappingSchema.GetEntityDescriptor(typeof(TestEntity));
-			_columns = ed.Columns.ToArray();
+			var ed        = MappingSchema.GetEntityDescriptor(typeof(TestEntity));
+			_columns      = ed.Columns.ToArray();
 
 			var generator = new ExpressionGenerator(typeMapper);
 
-			var pMapping = Expression.Parameter(typeof(MappingSchema));
+			var pMapping  = Expression.Parameter(typeof(MappingSchema));
 			var pWriterIn = Expression.Parameter(typeof(Wrapped.NpgsqlBinaryImporter));
-			var pColumns = Expression.Parameter(typeof(ColumnDescriptor[]));
-			var pEntity = Expression.Parameter(typeof(TestEntity));
+			var pColumns  = Expression.Parameter(typeof(ColumnDescriptor[]));
+			var pEntity   = Expression.Parameter(typeof(TestEntity));
+			var pWriter   = generator.AddVariable(Expression.Parameter(typeof(Original.NpgsqlBinaryImporter)));
 
-			var pWriter = generator.AddVariable(Expression.Parameter(typeof(Original.NpgsqlBinaryImporter)));
 			generator.Assign(pWriter, Expression.Convert(Expression.PropertyOrField(pWriterIn, "instance_"), typeof(Original.NpgsqlBinaryImporter)));
 			generator.AddExpression(generator.MapAction((Wrapped.NpgsqlBinaryImporter importer) => importer.StartRow(), pWriter));
 
@@ -131,9 +131,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			importer.StartRow();
 
 			for (var i = 0; i < _columns.Length; i++)
-			{
 				importer.Write(_columns[i].GetValue(MappingSchema, TestEntity.Instance), Original.NpgsqlDbType.Test);
-			}
 		}
 	}
 }

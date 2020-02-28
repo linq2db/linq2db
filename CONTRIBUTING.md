@@ -27,7 +27,7 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Tests\Model               | Model classes for tests                                                                                                          |
 |.\Tests\Tests.T4            | T4 templates test project                                                                                                        |
 |.\Tests\Tests.Android       | Xamarin Forms for Android test project                                                                                           |
-|.\Tests\Tests.Benchmark     | Benchmark tests                                                                                                                  |
+|.\Tests\Tests.Benchmark     | Benchmarks                                                                                                                       |
 |.\Tests\Tests.PLayground    | Test project for use with linq2db.playground.sln lite test solution<br>Used for work on specific test without full solution load |
 |.\Tests\VisualBasic         | Visual Basic models and tests support                                                                                            |
 
@@ -56,17 +56,17 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | Xamarin.Forms Android v8.1 |
-|---------------------------------------------------:|:-------:|:---------:|:-------------:|:--------------------------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |                            |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |                            |
-| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |                            |
-| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |                            |
-| `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |              √             |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |                            |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |                            |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |                            |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |                            |
+| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | .NET Core 3.1 | Xamarin.Forms Android v8.1 |
+|---------------------------------------------------:|:-------:|:---------:|:-------------:|:-------------:|:--------------------------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |               |                            |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |               |                            |
+| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |               |                            |
+| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |               |                            |
+| `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |               |              √             |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |       √       |                            |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |               |                            |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |               |                            |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |               |                            |
 
 
 Allowed target defines:

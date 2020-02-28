@@ -355,7 +355,7 @@ namespace Tests.Linq
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
+				var actual    = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
 				var expected1 = AggregateStrings(" -> ", data.Select(t => t.Value4));
 				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value4).Reverse());
 

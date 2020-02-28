@@ -179,7 +179,7 @@ namespace Tests.Linq
 			// filter out null-character test cases for servers/providers without support
 			if (context.Contains(ProviderName.PostgreSQL)
 				|| provider == ProviderName.DB2
-				|| context == ProviderName.DB2           + ".LinqService"
+				|| context  == ProviderName.DB2           + ".LinqService"
 				|| context.Contains("SQLite")
 				|| provider == ProviderName.SqlCe
 				|| context.Contains(ProviderName.SapHana))

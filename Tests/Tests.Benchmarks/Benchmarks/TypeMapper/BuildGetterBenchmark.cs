@@ -12,32 +12,29 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private Original.TestClass _classInstance = new Original.TestClass();
 
 		private Func<ITestClass, Wrapped.TestEnum> _enumPropertyGetter;
-		private Func<ITestClass, object> _enumPropertyGetterAsObject;
-		private Func<object, decimal> _decimalPropertyGetter;
-		private Func<object, bool> _booleanPropertyGetter;
-		private Func<ITestClass, SqlDbType> _knownEnumPropertyGetter;
-		private Func<ITestClass, string> _stringPropertyGetter;
-		private Func<ITestClass, bool> _boolPropertyGetter;
-		private Func<ITestClass, int> _intPropertyGetter;
+		private Func<ITestClass, object          > _enumPropertyGetterAsObject;
+		private Func<object    , decimal         > _decimalPropertyGetter;
+		private Func<object    , bool            > _booleanPropertyGetter;
+		private Func<ITestClass, SqlDbType       > _knownEnumPropertyGetter;
+		private Func<ITestClass, string          > _stringPropertyGetter;
+		private Func<ITestClass, bool            > _boolPropertyGetter;
+		private Func<ITestClass, int             > _intPropertyGetter;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = Wrapped.Helper.CreateTypeMapper();
-
-			var typeBuilder = typeMapper.Type<Wrapped.TestClass>();
-
-			var enumPropertyBuilder = typeBuilder.Member(p => p.EnumProperty);
-			_enumPropertyGetter = enumPropertyBuilder.BuildGetter<ITestClass>();
+			var typeMapper              = Wrapped.Helper.CreateTypeMapper();
+			var typeBuilder             = typeMapper.Type<Wrapped.TestClass>();
+			var enumPropertyBuilder     = typeBuilder.Member(p => p.EnumProperty);
+			_enumPropertyGetter         = enumPropertyBuilder.BuildGetter<ITestClass>();
 			_enumPropertyGetterAsObject = p => _enumPropertyGetter(p);
 
-			_decimalPropertyGetter = typeBuilder.Member(p => p.DecimalProperty).BuildGetter<object>();
-			_booleanPropertyGetter = typeBuilder.Member(p => p.BooleanProperty).BuildGetter<object>();
-
-			_knownEnumPropertyGetter = typeBuilder.Member(p => p.KnownEnumProperty).BuildGetter<ITestClass>();
-			_stringPropertyGetter = typeBuilder.Member(p => p.StringProperty).BuildGetter<ITestClass>();
-			_boolPropertyGetter = typeBuilder.Member(p => p.BooleanProperty).BuildGetter<ITestClass>();
-			_intPropertyGetter = typeBuilder.Member(p => p.IntProperty).BuildGetter<ITestClass>();
+			_decimalPropertyGetter      = typeBuilder.Member(p => p.DecimalProperty  ).BuildGetter<object>();
+			_booleanPropertyGetter      = typeBuilder.Member(p => p.BooleanProperty  ).BuildGetter<object>();
+			_knownEnumPropertyGetter    = typeBuilder.Member(p => p.KnownEnumProperty).BuildGetter<ITestClass>();
+			_stringPropertyGetter       = typeBuilder.Member(p => p.StringProperty   ).BuildGetter<ITestClass>();
+			_boolPropertyGetter         = typeBuilder.Member(p => p.BooleanProperty  ).BuildGetter<ITestClass>();
+			_intPropertyGetter          = typeBuilder.Member(p => p.IntProperty      ).BuildGetter<ITestClass>();
 		}
 
 		[Benchmark]

@@ -10,19 +10,20 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private static readonly string Parameter = "TestString";
 
 		private Original.TestClass _classInstance = new Original.TestClass();
+
 		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter;
-		private Action<ITestClass, SqlDbType> _knownEnumPropertySetter;
-		private Action<ITestClass, string> _stringPropertySetter;
+		private Action<ITestClass, SqlDbType       > _knownEnumPropertySetter;
+		private Action<ITestClass, string          > _stringPropertySetter;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = Wrapped.Helper.CreateTypeMapper();
+			var typeMapper           = Wrapped.Helper.CreateTypeMapper();
+			var typeBuilder          = typeMapper.Type<Wrapped.TestClass>();
 
-			var typeBuilder = typeMapper.Type<Wrapped.TestClass>();
-			_enumPropertySetter = typeBuilder.Member(p => p.EnumProperty).BuildSetter<ITestClass>();
+			_enumPropertySetter      = typeBuilder.Member(p => p.EnumProperty     ).BuildSetter<ITestClass>();
 			_knownEnumPropertySetter = typeBuilder.Member(p => p.KnownEnumProperty).BuildSetter<ITestClass>();
-			_stringPropertySetter = typeBuilder.Member(p => p.StringProperty).BuildSetter<ITestClass>();
+			_stringPropertySetter    = typeBuilder.Member(p => p.StringProperty   ).BuildSetter<ITestClass>();
 		}
 
 		[Benchmark]

@@ -619,8 +619,8 @@ namespace Tests.xUpdate
 			{
 				switch (provider)
 				{
-					case ProviderName.Sybase:
-					case ProviderName.SybaseManaged:
+					case ProviderName.Sybase        :
+					case ProviderName.SybaseManaged :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000) * 10000);
 						switch (expected.Value.Milliseconds % 10)
 						{
@@ -643,31 +643,31 @@ namespace Tests.xUpdate
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
 
 						break;
-					case ProviderName.Firebird:
-					case TestProvName.Firebird3:
+					case ProviderName.Firebird      :
+					case TestProvName.Firebird3     :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
-					case ProviderName.InformixDB2:
-					case ProviderName.Informix:
+					case ProviderName.InformixDB2   :
+					case ProviderName.Informix      :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case ProviderName.PostgreSQL:
-					case ProviderName.PostgreSQL92:
-					case ProviderName.PostgreSQL93:
-					case ProviderName.PostgreSQL95:
-					case TestProvName.PostgreSQL10:
-					case TestProvName.PostgreSQL11:
+					case ProviderName.PostgreSQL    :
+					case ProviderName.PostgreSQL92  :
+					case ProviderName.PostgreSQL93  :
+					case ProviderName.PostgreSQL95  :
+					case TestProvName.PostgreSQL10  :
+					case TestProvName.PostgreSQL11  :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
-					case ProviderName.DB2:
-					case ProviderName.Access:
-					case ProviderName.SapHanaNative:
-					case ProviderName.SapHanaOdbc:
-					case TestProvName.MariaDB:
+					case ProviderName.DB2           :
+					case ProviderName.Access        :
+					case ProviderName.SapHanaNative :
+					case ProviderName.SapHanaOdbc   :
+					case TestProvName.MariaDB       :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
 					case ProviderName.MySqlConnector:
-					case ProviderName.MySql:
+					case ProviderName.MySql         :
 						var msecs = expected.Value.Milliseconds;
 						if (msecs > 500)
 						{

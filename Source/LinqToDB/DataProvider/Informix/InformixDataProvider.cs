@@ -18,7 +18,6 @@ namespace LinqToDB.DataProvider.Informix
 				  InformixProviderAdapter.GetInstance(providerName))
 
 		{
-			// TODO: is informix IDS provider also order-dependent?
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;

@@ -245,15 +245,15 @@ namespace Tests.xUpdate
 		{
 			switch (context)
 			{
-				case ProviderName.SapHanaOdbc:
-				case ProviderName.Informix:
-				case ProviderName.InformixDB2:
+				case ProviderName.SapHanaOdbc    :
+				case ProviderName.Informix       :
+				case ProviderName.InformixDB2    :
 					return '?';
-				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaNative  :
 				case TestProvName.Oracle11Managed:
-				case TestProvName.Oracle11Native:
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative:
+				case TestProvName.Oracle11Native :
+				case ProviderName.OracleManaged  :
+				case ProviderName.OracleNative   :
 					return ':';
 			}
 

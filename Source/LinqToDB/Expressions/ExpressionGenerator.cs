@@ -117,7 +117,7 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.Condition(test, ifTrue, ifFalse));
 		}
 
-		public Expression TryCatch(Expression body, CatchBlock[] catchBlocks)
+		public Expression TryCatch(Expression body, params CatchBlock[] catchBlocks)
 		{
 			if (body        == null) throw new ArgumentNullException(nameof(body));
 			if (catchBlocks == null) throw new ArgumentNullException(nameof(catchBlocks));

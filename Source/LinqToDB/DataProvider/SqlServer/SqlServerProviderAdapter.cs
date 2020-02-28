@@ -5,7 +5,6 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -266,7 +265,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				// [0]: GetEnumerator
 				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
 				// [1]: SqlError wrapper
-				(Expression<Func<object, SqlError>>)((object error) => (SqlError)error),
+				(Expression<Func<object, SqlError>>               )((object error            ) => (SqlError)error),
 			};
 
 			public SqlErrorCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -354,7 +353,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public bool MultipleActiveResultSets
 			{
-				get => ((Func<SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
+				get => ((Func  <SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
 				set => ((Action<SqlConnectionStringBuilder, bool>)CompiledWrappers[1])(this, value);
 			}
 		}
@@ -366,13 +365,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get ServerVersion
-				(Expression<Func<SqlConnection, string>>)((SqlConnection this_) => this_.ServerVersion),
+				(Expression<Func<SqlConnection, string>>    )((SqlConnection this_) => this_.ServerVersion),
 				// [1]: CreateCommand
 				(Expression<Func<SqlConnection, IDbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
 				// [2]: Open
-				(Expression<Action<SqlConnection>>)((SqlConnection this_) => this_.Open()),
+				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Open()),
 				// [3]: Dispose
-				(Expression<Action<SqlConnection>>)((SqlConnection this_) => this_.Dispose()),
+				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Dispose()),
 			};
 
 			public SqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -400,19 +399,19 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<SqlBulkCopy>>)((SqlBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<SqlBulkCopy>>                                  )((SqlBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<SqlBulkCopy, IDataReader>>)((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<SqlBulkCopy, IDataReader>>                     )((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.NotifyAfter),
+				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.BatchSize),
+				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<SqlBulkCopy, int>>)((SqlBulkCopy this_) => this_.BulkCopyTimeout),
+				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<SqlBulkCopy, string?>>)((SqlBulkCopy this_) => this_.DestinationTableName),
+				(Expression<Func<SqlBulkCopy, string?>>                           )((SqlBulkCopy this_                    ) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_) => this_.ColumnMappings),
+				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_                    ) => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((SqlBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -440,25 +439,25 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public int NotifyAfter
 			{
-				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[2])(this);
+				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[2])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
-				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[3])(this);
+				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[3])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[4])(this);
+				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[4])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => ((Func<SqlBulkCopy, string?>)CompiledWrappers[5])(this);
+				get => ((Func  <SqlBulkCopy, string?>)CompiledWrappers[5] )(this);
 				set => ((Action<SqlBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
@@ -494,7 +493,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public bool Abort
 			{
-				get => ((Func<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+				get => ((Func  <SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => ((Action<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}

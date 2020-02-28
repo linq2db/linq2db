@@ -146,9 +146,9 @@ namespace LinqToDB.DataProvider.Access
 		// If user has DataConnection - he can call BulkCopy directly and Tools methods only provide some
 		// defaults for parameters
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection,
-			IEnumerable<T> source,
-			int maxBatchSize = 1000,
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int                         maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{

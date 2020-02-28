@@ -112,9 +112,7 @@ namespace LinqToDB.Data
 			IDataProvider? dataProvider;
 
 			if (!_dataProviders.TryGetValue(providerName, out dataProvider))
-			{
 				dataProvider = GetDataProvider(providerName, connectionString);
-			}
 			
 			if (dataProvider == null)
 				throw new LinqToDBException($"DataProvider '{providerName}' not found.");
@@ -148,7 +146,7 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
-			string connectionString)
+			string        connectionString)
 		{
 			InitConfig();
 

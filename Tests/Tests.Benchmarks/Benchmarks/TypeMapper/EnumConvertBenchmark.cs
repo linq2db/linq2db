@@ -7,15 +7,15 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	public class EnumConvertBenchmark
 	{
 		private Original.TestClass2 _originalInstance;
-		private Wrapped.TestClass2 _wrapperInstance;
+		private Wrapped.TestClass2  _wrapperInstance;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = Wrapped.Helper.CreateTypeMapper();
+			var typeMapper    = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
+			_wrapperInstance  = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
 		}
 
 		[Benchmark]

@@ -26,13 +26,13 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlStatement           Statement = null!;
 		protected readonly MappingSchema MappingSchema;
-		protected int                 Indent;
-		protected Step                BuildStep;
-		protected ISqlOptimizer       SqlOptimizer;
-		protected SqlProviderFlags    SqlProviderFlags;
+		protected int                    Indent;
+		protected Step                   BuildStep;
+		protected ISqlOptimizer          SqlOptimizer;
+		protected SqlProviderFlags       SqlProviderFlags;
 		protected ValueToSqlConverter    ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected StringBuilder          StringBuilder = null!;
-		protected bool                SkipAlias;
+		protected bool                   SkipAlias;
 
 		#endregion
 

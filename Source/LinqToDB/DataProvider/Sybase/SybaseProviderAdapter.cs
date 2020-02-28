@@ -210,19 +210,19 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<AseBulkCopy>>)((AseBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<AseBulkCopy>>                                  )((AseBulkCopy this_                        ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<AseBulkCopy, IDataReader>>)((AseBulkCopy this_, IDataReader dataReader) => this_.WriteToServer(dataReader)),
+				(Expression<Action<AseBulkCopy, IDataReader>>                     )((AseBulkCopy this_, IDataReader dataReader) => this_.WriteToServer(dataReader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.NotifyAfter),
+				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.BatchSize),
+				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<AseBulkCopy, int>>)((AseBulkCopy this_) => this_.BulkCopyTimeout),
+				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<AseBulkCopy, string?>>)((AseBulkCopy this_) => this_.DestinationTableName),
+				(Expression<Func<AseBulkCopy, string?>>                           )((AseBulkCopy this_                        ) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)((AseBulkCopy this_) => this_.ColumnMappings),
+				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)((AseBulkCopy this_                        ) => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((AseBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -251,25 +251,25 @@ namespace LinqToDB.DataProvider.Sybase
 
 			public int NotifyAfter
 			{
-				get => ((Func<AseBulkCopy, int>)CompiledWrappers[2])(this);
+				get => ((Func  <AseBulkCopy, int>)CompiledWrappers[2])(this);
 				set => ((Action<AseBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
-				get => ((Func<AseBulkCopy, int>)CompiledWrappers[3])(this);
+				get => ((Func  <AseBulkCopy, int>)CompiledWrappers[3])(this);
 				set => ((Action<AseBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => ((Func<AseBulkCopy, int>)CompiledWrappers[4])(this);
+				get => ((Func  <AseBulkCopy, int>)CompiledWrappers[4])(this);
 				set => ((Action<AseBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => ((Func<AseBulkCopy, string?>)CompiledWrappers[5])(this);
+				get => ((Func  <AseBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => ((Action<AseBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
@@ -290,7 +290,7 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: get RowCopied
-				(Expression<Func<AseRowsCopiedEventArgs, int>>)((AseRowsCopiedEventArgs this_) => this_.RowCopied),
+				(Expression<Func<AseRowsCopiedEventArgs, int>> )((AseRowsCopiedEventArgs this_) => this_.RowCopied),
 				// [1]: get Abort
 				(Expression<Func<AseRowsCopiedEventArgs, bool>>)((AseRowsCopiedEventArgs this_) => this_.Abort),
 				// [2]: set RowCopied
@@ -306,13 +306,13 @@ namespace LinqToDB.DataProvider.Sybase
 			// sic! Row, not Rows
 			public int RowCopied
 			{
-				get => ((Func<AseRowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
+				get => ((Func  <AseRowsCopiedEventArgs, int>)CompiledWrappers[0])(this);
 				set => ((Action<AseRowsCopiedEventArgs, int>)CompiledWrappers[2])(this, value);
 			}
 
 			public bool Abort
 			{
-				get => ((Func<AseRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+				get => ((Func  <AseRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => ((Action<AseRowsCopiedEventArgs, bool>)CompiledWrappers[3])(this, value);
 			}
 		}

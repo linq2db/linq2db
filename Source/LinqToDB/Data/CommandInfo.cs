@@ -1457,8 +1457,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<QueryKey,Delegate>                   _objectReaders       = new ConcurrentDictionary<QueryKey,Delegate>();
-		static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression> _dataReaderConverter = new ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression>();
+		static readonly ConcurrentDictionary<QueryKey,Delegate>                    _objectReaders       = new ConcurrentDictionary<QueryKey,Delegate>();
+		static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?> _dataReaderConverter = new ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?>();
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1531,17 +1531,18 @@ namespace LinqToDB.Data
 			LambdaExpression? converterExpr = null;
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				var converterKey = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				if (!_dataReaderConverter.TryGetValue(converterKey, out converterExpr))
+				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
+				converterExpr = _dataReaderConverter.GetOrAdd(converterKey, _ =>
 				{
-					converterExpr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
-					if (converterExpr != null)
+					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					if (expr != null)
 					{
 						var param = Expression.Parameter(typeof(IDataReader));
-						converterExpr = Expression.Lambda(Expression.Convert(converterExpr.Body, dataConnection.DataProvider.DataReaderType), converterExpr.Parameters);
-						_dataReaderConverter.TryAdd(converterKey, converterExpr);
+						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
 					}
-				}
+
+					return expr;
+				});
 			}
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;

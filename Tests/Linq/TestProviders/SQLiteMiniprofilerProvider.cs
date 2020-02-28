@@ -12,6 +12,7 @@ namespace Tests
 	internal class SQLiteMiniprofilerProvider : SQLiteDataProvider
 	{
 		private readonly bool _mapped;
+
 		public SQLiteMiniprofilerProvider(bool mapped)
 			: base(ProviderName.SQLiteClassic)
 		{
@@ -24,7 +25,7 @@ namespace Tests
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema MappedMappingSchema   = new MappedMappingSchema();
+			public static readonly MappingSchema MappedMappingSchema   = new MappedMappingSchema  ();
 			public static readonly MappingSchema UnmappedMappingSchema = new UnmappedMappingSchema();
 		}
 
@@ -33,10 +34,10 @@ namespace Tests
 			public MappedMappingSchema()
 				: base(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMappingSchema.ClassicMappingSchema())
 			{
-				SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
-				SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
+				SetConvertExpression<ProfiledDbConnection , IDbConnection >(db => db.WrappedConnection );
+				SetConvertExpression<ProfiledDbDataReader , IDataReader   >(db => db.WrappedReader     );
 				SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-				SetConvertExpression<ProfiledDbCommand, IDbCommand>(db => db.InternalCommand);
+				SetConvertExpression<ProfiledDbCommand    , IDbCommand    >(db => db.InternalCommand   );
 			}
 		}
 
@@ -63,7 +64,7 @@ namespace Tests
 			MiniProfiler.DefaultOptions.StartProfiler();
 #endif
 
-			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMiniprofilerProvider(true));
+			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerMapped  , new SQLiteMiniprofilerProvider(true ));
 			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerUnmapped, new SQLiteMiniprofilerProvider(false));
 		}
 	}

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
@@ -19,10 +17,11 @@ namespace Tests
 
 		public class SampleClass
 		{
-			public int Id    { get; set; }
-			public int Value { get; set; }
+			public int    Id       { get; set; }
+			public int    Value    { get; set; }
 			public string StrValue { get; set; }
-			public OtherClass GetOther(int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx };
+
+			public OtherClass GetOther       (int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx        };
 			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
 
 			public void SomeAction() => ++Value;
@@ -70,15 +69,15 @@ namespace Tests
 
 			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
 			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
-			public FlagsEnum   GetFlagsEnum  (int raw) => (FlagsEnum)raw;
+			public FlagsEnum    GetFlagsEnum   (int raw) => (FlagsEnum   )raw;
 
 			public int SetRegularEnum1(RegularEnum1 val) => (int)val;
 			public int SetRegularEnum2(RegularEnum2 val) => (int)val;
-			public int SetFlagsEnum  (FlagsEnum val  ) => (int)val;
+			public int SetFlagsEnum   (FlagsEnum    val) => (int)val;
 
 			public RegularEnum1 RegularEnum1Property { get; set; } = RegularEnum1.Two;
 			public RegularEnum2 RegularEnum2Property { get; set; } = RegularEnum2.Two;
-			public FlagsEnum   FlagsEnumProperty   { get; set; } = FlagsEnum  .Bit3;
+			public FlagsEnum   FlagsEnumProperty     { get; set; } = FlagsEnum   .Bit3;
 		}
 
 		public static class SampleClassExtensions
@@ -111,8 +110,8 @@ namespace Tests
 
 		public enum RegularEnum2
 		{
-			One = 1,
-			Two = 2,
+			One   = 1,
+			Two   = 2,
 			Three = 3
 		}
 
@@ -204,37 +203,38 @@ namespace Tests
 				nameof(ReturningDelegateWithMappingEvent),
 			};
 
-			public int Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
-			public int Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
+			public int    Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
+			public int    Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
 			public string StrValue { get; set; }
-			public OtherClass GetOther(int idx) => throw new NotImplementedException();
+
+			public OtherClass GetOther       (int idx) => throw new NotImplementedException();
 			public OtherClass GetOtherAnother(int idx) => ((Func<SampleClass, int, OtherClass>)CompiledWrappers[2])(this, idx);
 
 			public void SomeAction() => ((Action<SampleClass>)CompiledWrappers[3])(this);
 
 			public RegularEnum1 GetRegularEnum1(int raw) => ((Func<SampleClass, int, RegularEnum1>)CompiledWrappers[4])(this, raw);
 			public RegularEnum2 GetRegularEnum2(int raw) => ((Func<SampleClass, int, RegularEnum2>)CompiledWrappers[13])(this, raw);
-			public FlagsEnum   GetFlagsEnum  (int raw) => ((Func<SampleClass, int, FlagsEnum>)CompiledWrappers[5])(this, raw);
+			public FlagsEnum    GetFlagsEnum   (int raw) => ((Func<SampleClass, int, FlagsEnum>)CompiledWrappers[5])(this, raw);
 
 			public int SetRegularEnum1(RegularEnum1 val) => ((Func<SampleClass, RegularEnum1, int>)CompiledWrappers[6])(this, val);
 			public int SetRegularEnum2(RegularEnum2 val) => ((Func<SampleClass, RegularEnum2, int>)CompiledWrappers[14])(this, val);
-			public int SetFlagsEnum  (FlagsEnum   val) => ((Func<SampleClass, FlagsEnum, int>)CompiledWrappers[7])(this, val);
+			public int SetFlagsEnum   (FlagsEnum    val) => ((Func<SampleClass, FlagsEnum, int>)CompiledWrappers[7])(this, val);
 
 			public RegularEnum1 RegularEnum1Property
 			{
-				get => ((Func<SampleClass, RegularEnum1>)CompiledWrappers[8])(this);
+				get => ((Func<SampleClass, RegularEnum1  >)CompiledWrappers[8])(this);
 				set => ((Action<SampleClass, RegularEnum1>)CompiledWrappers[11])(this, value);
 			}
 
 			public RegularEnum2 RegularEnum2Property
 			{
-				get => ((Func<SampleClass, RegularEnum2>)CompiledWrappers[15])(this);
+				get => ((Func<SampleClass, RegularEnum2  >)CompiledWrappers[15])(this);
 				set => ((Action<SampleClass, RegularEnum2>)CompiledWrappers[16])(this, value);
 			}
 
 			public FlagsEnum FlagsEnumProperty
 			{
-				get => ((Func<SampleClass, FlagsEnum>)CompiledWrappers[9])(this);
+				get => ((Func<SampleClass, FlagsEnum  >)CompiledWrappers[9])(this);
 				set => ((Action<SampleClass, FlagsEnum>)CompiledWrappers[12])(this, value);
 			}
 
@@ -364,8 +364,8 @@ namespace Tests
 		[Wrapper]
 		public enum RegularEnum1
 		{
-			One = 1,
-			Two = 2,
+			One   = 1,
+			Two   = 2,
 			Three = 3
 		}
 
@@ -393,19 +393,19 @@ namespace Tests
 			{
 				var typeMapper = new TypeMapper();
 
-				typeMapper.RegisterTypeWrapper<SampleClass>(typeof(Dynamic.SampleClass));
-				typeMapper.RegisterTypeWrapper<OtherClass>(typeof(Dynamic.OtherClass));
-				typeMapper.RegisterTypeWrapper(typeof(SampleClassExtensions), typeof(Dynamic.SampleClassExtensions));
-				typeMapper.RegisterTypeWrapper<CollectionSample>(typeof(Dynamic.CollectionSample));
-				typeMapper.RegisterTypeWrapper<SimpleDelegate>(typeof(Dynamic.SimpleDelegate));
-				typeMapper.RegisterTypeWrapper<SimpleDelegateWithMapping>(typeof(Dynamic.SimpleDelegateWithMapping));
-				typeMapper.RegisterTypeWrapper<ReturningDelegate>(typeof(Dynamic.ReturningDelegate));
+				typeMapper.RegisterTypeWrapper<SampleClass                 >(typeof(Dynamic.SampleClass));
+				typeMapper.RegisterTypeWrapper<OtherClass                  >(typeof(Dynamic.OtherClass));
+				typeMapper.RegisterTypeWrapper<CollectionSample            >(typeof(Dynamic.CollectionSample));
+				typeMapper.RegisterTypeWrapper<SimpleDelegate              >(typeof(Dynamic.SimpleDelegate));
+				typeMapper.RegisterTypeWrapper<SimpleDelegateWithMapping   >(typeof(Dynamic.SimpleDelegateWithMapping));
+				typeMapper.RegisterTypeWrapper<ReturningDelegate           >(typeof(Dynamic.ReturningDelegate));
 				typeMapper.RegisterTypeWrapper<ReturningDelegateWithMapping>(typeof(Dynamic.ReturningDelegateWithMapping));
-				typeMapper.RegisterTypeWrapper<RegularEnum1>(typeof(Dynamic.RegularEnum1));
-				typeMapper.RegisterTypeWrapper<RegularEnum2>(typeof(Dynamic.RegularEnum2));
-				typeMapper.RegisterTypeWrapper<FlagsEnum>(typeof(Dynamic.FlagsEnum));
-				typeMapper.RegisterTypeWrapper<SqlError>(typeof(Dynamic.SqlError));
-				typeMapper.RegisterTypeWrapper<SqlErrorCollection>(typeof(Dynamic.SqlErrorCollection));
+				typeMapper.RegisterTypeWrapper<RegularEnum1                >(typeof(Dynamic.RegularEnum1));
+				typeMapper.RegisterTypeWrapper<RegularEnum2                >(typeof(Dynamic.RegularEnum2));
+				typeMapper.RegisterTypeWrapper<FlagsEnum                   >(typeof(Dynamic.FlagsEnum));
+				typeMapper.RegisterTypeWrapper<SqlError                    >(typeof(Dynamic.SqlError));
+				typeMapper.RegisterTypeWrapper<SqlErrorCollection          >(typeof(Dynamic.SqlErrorCollection));
+				typeMapper.RegisterTypeWrapper(typeof(SampleClassExtensions), typeof(Dynamic.SampleClassExtensions));
 
 				typeMapper.FinalizeMappings();
 
@@ -452,11 +452,10 @@ namespace Tests
 				var typeMapper = CreateTypeMapper();
 
 				var newExpression = typeMapper.MapExpression(() => new SampleClass(55, 77));
-				
-				var newLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
-				var instance = newLambda.Compile()();
+				var newLambda     = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
+				var instance      = newLambda.Compile()();
 
-				Assert.That(instance.Id, Is.EqualTo(55));
+				Assert.That(instance.Id   , Is.EqualTo(55));
 				Assert.That(instance.Value, Is.EqualTo(77));
 			}
 
@@ -465,13 +464,13 @@ namespace Tests
 			{
 				var typeMapper = CreateTypeMapper();
 
-				var newMemberInit = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
+				var newMemberInit    = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
 				var memberInitLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newMemberInit);
 
 				var instance = memberInitLambda.Compile()();
 
-				Assert.That(instance.Id, Is.EqualTo(55));
-				Assert.That(instance.Value, Is.EqualTo(77));
+				Assert.That(instance.Id      , Is.EqualTo(55));
+				Assert.That(instance.Value   , Is.EqualTo(77));
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
 			}
 
@@ -481,12 +480,12 @@ namespace Tests
 				var typeMapper = CreateTypeMapper();
 
 				var newMemberInit = typeMapper.MapLambda((int i) => new SampleClass(i + 55, i + 77) {StrValue = "Str"});
-				var func = typeMapper.BuildFunc<byte, object>(newMemberInit);
+				var func          = typeMapper.BuildFunc<byte, object>(newMemberInit);
 				
 				var instance = (Dynamic.SampleClass)func(1);
 
-				Assert.That(instance.Id, Is.EqualTo(56));
-				Assert.That(instance.Value, Is.EqualTo(78));
+				Assert.That(instance.Id      , Is.EqualTo(56));
+				Assert.That(instance.Value   , Is.EqualTo(78));
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
 			}
 
@@ -507,11 +506,11 @@ namespace Tests
 				var typeMapper = CreateTypeMapper();
 
 				var collection = typeMapper.BuildWrappedFactory(() => new CollectionSample())();
-				var obj = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+				var obj        = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				var same = collection.Add(obj);
 
-				Assert.That(same.Id,    Is.EqualTo(1));
+				Assert.That(same.Id   , Is.EqualTo(1));
 				Assert.That(same.Value, Is.EqualTo(2));
 			}
 
@@ -519,8 +518,8 @@ namespace Tests
 			public void TestEvents()
 			{
 				var typeMapper = CreateTypeMapper();
-				var wrapper  = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
-				var instance = (Dynamic.SampleClass)wrapper.instance_;
+				var wrapper    = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+				var instance   = (Dynamic.SampleClass)wrapper.instance_;
 
 				// no subscribers
 				wrapper.Fire(false);
@@ -611,10 +610,10 @@ namespace Tests
 				Assert.AreEqual(FlagsEnum.Bits24, wrapper.FlagsEnumProperty);
 
 				// using setters/getters
-				var typeBuilder = typeMapper.Type<SampleClass>();
+				var typeBuilder         = typeMapper.Type<SampleClass>();
 				var regularEnum1Builder = typeBuilder.Member(p => p.RegularEnum1Property);
 				var regularEnum2Builder = typeBuilder.Member(p => p.RegularEnum2Property);
-				var flagsEnumBuilder   = typeBuilder.Member(p => p.FlagsEnumProperty);
+				var flagsEnumBuilder    = typeBuilder.Member(p => p.FlagsEnumProperty);
 
 				var regular1Setter = regularEnum1Builder.BuildSetter<Dynamic.SampleClass>();
 				var regular1Getter = regularEnum1Builder.BuildGetter<Dynamic.SampleClass>();
@@ -625,7 +624,7 @@ namespace Tests
 				var flagsGetter = flagsEnumBuilder.BuildGetter<Dynamic.SampleClass>();
 
 				// reset instance
-				wrapper = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+				wrapper      = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// non-flags enum mapping
@@ -648,8 +647,7 @@ namespace Tests
 				var typeMapper = CreateTypeMapper();
 
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SqlErrorCollection())();
-
-				var errors = wrapped.Errors.ToArray();
+				var errors  = wrapped.Errors.ToArray();
 
 				Assert.AreEqual(2, errors.Length);
 			}

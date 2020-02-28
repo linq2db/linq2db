@@ -60,9 +60,9 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 			ms
 				.GetFluentMappingBuilder()
-				.Entity<DateTimeTestTable>()
-				.Property(t => t.DateTimeField)
-				.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}");
+					.Entity<DateTimeTestTable>()
+						.Property(t => t.DateTimeField)
+							.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}");
 
 			var isIDS = IsIDSProvider(context);
 
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 				{
 					db.InlineParameters = inlineParameters;
 
-					var input = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
+					var input    = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
 					var expected = GetExpectedDatetime(isIDS, input, quantifiers.Item1, quantifiers.Item2);
 
 					db.GetTable<DateTimeTestTable>().Insert(() => new DateTimeTestTable()

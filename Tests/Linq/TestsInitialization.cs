@@ -24,11 +24,11 @@ public class TestsInitialization
 		// https://dejanstojanovic.net/aspnet/2015/january/set-entry-assembly-in-unit-testing-methods/
 		var assembly = Assembly.GetCallingAssembly();
 
-		var manager = new AppDomainManager();
+		var manager            = new AppDomainManager();
 		var entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
 		entryAssemblyfield.SetValue(manager, assembly);
 
-		var domain = AppDomain.CurrentDomain;
+		var domain             = AppDomain.CurrentDomain;
 		var domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
 		domainManagerField.SetValue(domain, manager);
 #endif
@@ -45,8 +45,10 @@ public class TestsInitialization
 		AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
+
 			if (requestedAssembly.Name == "IBM.Data.DB2")
 				return DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly;
+
 			if (requestedAssembly.Name == "IBM.Data.Informix")
 				// chose your red or blue pill carefully
 				//return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
@@ -57,7 +59,7 @@ public class TestsInitialization
 #endif
 
 		// register test providers
-		TestNoopProvider.Init();
+		TestNoopProvider          .Init();
 		SQLiteMiniprofilerProvider.Init();
 	}
 

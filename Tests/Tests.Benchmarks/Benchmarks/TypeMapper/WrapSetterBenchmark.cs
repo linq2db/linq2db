@@ -5,20 +5,19 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class WrapSetterBenchmark
 	{
-		private static readonly string StringParameter = "TestString";
-		private static readonly int IntParameter = 11;
-		private static readonly bool BooleanParameter = true;
+		private static readonly string StringParameter  = "TestString";
+		private static readonly int    IntParameter     = 11;
+		private static readonly bool   BooleanParameter = true;
 
 		private Original.TestClass2 _originalInstance;
-		private Wrapped.TestClass2 _wrapperInstance;
+		private Wrapped.TestClass2  _wrapperInstance;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = Wrapped.Helper.CreateTypeMapper();
-
+			var typeMapper    = Wrapped.Helper.CreateTypeMapper();
 			_originalInstance = new Original.TestClass2();
-			_wrapperInstance = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
+			_wrapperInstance  = typeMapper.BuildWrappedFactory(() => new Wrapped.TestClass2())();
 		}
 
 		[Benchmark]

@@ -13,14 +13,14 @@ namespace LinqToDB.Benchmarks
 
 		private static IConfig Create()
 		{
-			var net462 = Job.Default.With(ClrRuntime.Net462).WithDefault().AsBaseline();
+			var net462 = Job.Default.With(ClrRuntime.Net462 ).WithDefault().AsBaseline();
 			var core21 = Job.Default.With(CoreRuntime.Core21).WithDefault();
 			var core31 = Job.Default.With(CoreRuntime.Core31).WithDefault();
 
 			return new ManualConfig()
-				.With(DefaultConfig.Instance.GetLoggers().ToArray())
-				.With(DefaultConfig.Instance.GetAnalysers().ToArray())
-				.With(DefaultConfig.Instance.GetValidators().ToArray())
+				.With(DefaultConfig.Instance.GetLoggers        ().ToArray())
+				.With(DefaultConfig.Instance.GetAnalysers      ().ToArray())
+				.With(DefaultConfig.Instance.GetValidators     ().ToArray())
 				.With(DefaultConfig.Instance.GetColumnProviders().ToArray())
 				.With(ConfigOptions.DisableLogFile)
 				.With(MarkdownExporter.GitHub)

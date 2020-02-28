@@ -7,13 +7,12 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	public class WrapInstanceBenchmark
 	{
 		private Original.TestClass2 _originalInstance;
-		private TypeMapper _typeMapper;
+		private TypeMapper          _typeMapper;
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			_typeMapper = Wrapped.Helper.CreateTypeMapper();
-
+			_typeMapper       = Wrapped.Helper.CreateTypeMapper();
 			_originalInstance = new Original.TestClass2();
 		}
 

@@ -53,10 +53,10 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(
-			this IDataContext dataContext,
-			object? instance,
-			MethodInfo methodInfo,
-			params object?[] parameters)
+			this   IDataContext dataContext,
+			       object?      instance,
+			       MethodInfo   methodInfo,
+			params object?[]    parameters)
 			where T : class
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));

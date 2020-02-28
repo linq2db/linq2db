@@ -6,7 +6,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class WrapActionBenchmark
 	{
-		private static readonly string Parameter = "TestString";
+		private static readonly string      Parameter            = "TestString";
 		private static readonly IDataReader IDataReaderParameter = null;
 
 		private Original.TestClass2 _originalInstance;
@@ -15,10 +15,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[GlobalSetup]
 		public void Setup()
 		{
-			var typeMapper = Wrapped.Helper.CreateTypeMapper();
+			var typeMapper    = Wrapped.Helper.CreateTypeMapper();
 
 			_originalInstance = new Original.TestClass2(Parameter);
-			_wrapperInstance = typeMapper.BuildWrappedFactory((string p) => new Wrapped.TestClass2(p))(Parameter);
+			_wrapperInstance  = typeMapper.BuildWrappedFactory((string p) => new Wrapped.TestClass2(p))(Parameter);
 		}
 
 		[Benchmark]

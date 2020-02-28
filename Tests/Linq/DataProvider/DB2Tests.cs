@@ -618,11 +618,7 @@ namespace Tests.DataProvider
 			Assert.That(new DB2Time        ().IsNull, Is.True);
 			Assert.That(new DB2TimeStamp   ().IsNull, Is.True);
 			Assert.That(new DB2RowId       ().IsNull, Is.True);
-
-			//if (DB2Types.DB2DateTime.Type != null)
-			{
-				Assert.That(new DB2DateTime().IsNull, Is.True);
-			}
+			Assert.That(new DB2DateTime    ().IsNull, Is.True);
 		}
 	}
 }

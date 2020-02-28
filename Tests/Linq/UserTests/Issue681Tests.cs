@@ -31,8 +31,9 @@ namespace Tests.UserTests
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			var throws = false;
+			var throws             = false;
 			var throwsSqlException = false;
+
 			string serverName;
 			string schemaName;
 			string dbName;

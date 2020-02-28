@@ -489,9 +489,9 @@ namespace LinqToDB.DataProvider.Oracle
 		[Wrapper]
 		private class OracleDataReader
 		{
-			public OracleTimeStampTZ  GetOracleTimeStampTZ(int i)  => throw new NotImplementedException();
+			public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => throw new NotImplementedException();
 			public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
-			public OracleDecimal      GetOracleDecimal(int i)      => throw new NotImplementedException();
+			public OracleDecimal      GetOracleDecimal     (int i) => throw new NotImplementedException();
 		}
 
 		[Wrapper]
@@ -562,11 +562,11 @@ namespace LinqToDB.DataProvider.Oracle
 				= new LambdaExpression[]
 			{
 				// [0]: Open
-				(Expression<Action<OracleConnection>>)((OracleConnection this_) => this_.Open()),
+				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Open()),
 				// [1]: CreateCommand
 				(Expression<Func<OracleConnection, IDbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
 				// [2]: Dispose
-				(Expression<Action<OracleConnection>>)((OracleConnection this_) => this_.Dispose()),
+				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Dispose()),
 			};
 
 			public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -579,9 +579,9 @@ namespace LinqToDB.DataProvider.Oracle
 			public string HostName     => throw new NotImplementedException();
 			public string DatabaseName => throw new NotImplementedException();
 
-			public void       Open         () => ((Action<OracleConnection>)CompiledWrappers[0])(this);
+			public void       Open         () => ((Action<OracleConnection>          )CompiledWrappers[0])(this);
 			public IDbCommand CreateCommand() => ((Func<OracleConnection, IDbCommand>)CompiledWrappers[1])(this);
-			public void       Dispose      () => ((Action<OracleConnection>)CompiledWrappers[2])(this);
+			public void       Dispose      () => ((Action<OracleConnection>          )CompiledWrappers[2])(this);
 		}
 
 		[Wrapper]
@@ -632,19 +632,19 @@ namespace LinqToDB.DataProvider.Oracle
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<OracleBulkCopy>>)((OracleBulkCopy this_) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<OracleBulkCopy>>                                     )((OracleBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<OracleBulkCopy, IDataReader>>)((OracleBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<OracleBulkCopy, IDataReader>>                        )((OracleBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<OracleBulkCopy, int>>)((OracleBulkCopy this_) => this_.NotifyAfter),
+				(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<OracleBulkCopy, int>>)((OracleBulkCopy this_) => this_.BatchSize),
+				(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<OracleBulkCopy, int>>)((OracleBulkCopy this_) => this_.BulkCopyTimeout),
+				(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<OracleBulkCopy, string?>>)((OracleBulkCopy this_) => this_.DestinationTableName),
+				(Expression<Func<OracleBulkCopy, string?>>                              )((OracleBulkCopy this_                    ) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>>)((OracleBulkCopy this_) => this_.ColumnMappings),
+				(Expression<Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>>)((OracleBulkCopy this_                    ) => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((OracleBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -672,25 +672,25 @@ namespace LinqToDB.DataProvider.Oracle
 
 			public int NotifyAfter
 			{
-				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[2])(this);
+				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[2])(this);
 				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
-				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[3])(this);
+				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[3])(this);
 				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => ((Func<OracleBulkCopy, int>)CompiledWrappers[4])(this);
+				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[4])(this);
 				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => ((Func<OracleBulkCopy, string?>)CompiledWrappers[5])(this);
+				get => ((Func  <OracleBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => ((Action<OracleBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
@@ -726,7 +726,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			public bool Abort
 			{
-				get => ((Func<OracleRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+				get => ((Func  <OracleRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => ((Action<OracleRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}

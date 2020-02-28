@@ -15,7 +15,6 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -50,7 +49,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var ctx = CustomTestContext.Get();
+				var ctx   = CustomTestContext.Get();
 				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
 				if (trace == null)
 				{
@@ -87,10 +86,10 @@ namespace Tests
 
 			Environment.CurrentDirectory = assemblyPath;
 
-			var dataProvidersJsonFile = GetFilePath(assemblyPath, @"DataProviders.json");
+			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
 			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
 
-			var dataProvidersJson = File.ReadAllText(dataProvidersJsonFile);
+			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
@@ -109,7 +108,7 @@ namespace Tests
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var databasePath = Path.GetFullPath(Path.Combine("Database"));
-			var dataPath = Path.Combine(databasePath, "Data");
+			var dataPath     = Path.Combine(databasePath, "Data");
 
 			if (Directory.Exists(dataPath))
 				Directory.Delete(dataPath, true);
@@ -123,7 +122,7 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 			SkipCategories = new HashSet<string>(testSettings.Skip ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel = testSettings.TraceLevel;
@@ -216,10 +215,10 @@ namespace Tests
 		}
 
 #if !NETCOREAPP2_1
-		const int IP = 22654;
-		static bool _isHostOpen;
+		const  int         IP        = 22654;
+		static bool        _isHostOpen;
 		static LinqService _service;
-		static object _syncRoot = new object();
+		static object      _syncRoot = new object();
 #endif
 
 		static void OpenHost(MappingSchema ms)
@@ -240,7 +239,7 @@ namespace Tests
 					return;
 				}
 
-				host = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 				_isHostOpen = true;
 			}
 
@@ -252,12 +251,12 @@ namespace Tests
 				new NetTcpBinding(SecurityMode.None)
 				{
 					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize = 10000000,
-					MaxBufferSize = 10000000,
-					CloseTimeout = new TimeSpan(00, 01, 00),
-					OpenTimeout = new TimeSpan(00, 01, 00),
-					ReceiveTimeout = new TimeSpan(00, 10, 00),
-					SendTimeout = new TimeSpan(00, 10, 00),
+					MaxBufferPoolSize      = 10000000,
+					MaxBufferSize          = 10000000,
+					CloseTimeout           = new TimeSpan(00, 01, 00),
+					OpenTimeout            = new TimeSpan(00, 01, 00),
+					ReceiveTimeout         = new TimeSpan(00, 10, 00),
+					SendTimeout            = new TimeSpan(00, 10, 00),
 				},
 				"LinqOverWCF");
 
@@ -326,7 +325,7 @@ namespace Tests
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-				var dx = new TestServiceModelDataContext(IP) { Configuration = str };
+				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -377,7 +376,7 @@ namespace Tests
 			TestPerson(1, "John", persons);
 		}
 
-		private List<LinqDataTypes> _types;
+		private   List<LinqDataTypes>       _types;
 		protected IEnumerable<LinqDataTypes> Types
 		{
 			get
@@ -391,8 +390,8 @@ namespace Tests
 			}
 		}
 
-		private List<LinqDataTypes2> _types2;
-		protected List<LinqDataTypes2> Types2
+		private   List<LinqDataTypes2> _types2;
+		protected List<LinqDataTypes2>  Types2
 		{
 			get
 			{
@@ -407,7 +406,7 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
-		private List<Person> _person;
+		private   List<Person>       _person;
 		protected IEnumerable<Person> Person
 		{
 			get
@@ -426,8 +425,8 @@ namespace Tests
 			}
 		}
 
-		private List<Patient> _patient;
-		protected List<Patient> Patient
+		private   List<Patient> _patient;
+		protected List<Patient>  Patient
 		{
 			get
 			{
@@ -445,8 +444,8 @@ namespace Tests
 			}
 		}
 
-		private List<Doctor> _doctor;
-		protected List<Doctor> Doctor
+		private   List<Doctor> _doctor;
+		protected List<Doctor>  Doctor
 		{
 			get
 			{
@@ -463,7 +462,7 @@ namespace Tests
 
 		#region Parent/Child Model
 
-		private List<Parent> _parent;
+		private   List<Parent>       _parent;
 		protected IEnumerable<Parent> Parent
 		{
 			get
@@ -478,10 +477,10 @@ namespace Tests
 
 						foreach (var p in _parent)
 						{
-							p.ParentTest = p;
-							p.Children = Child.Where(c => c.ParentID == p.ParentID).ToList();
-							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
-							p.Types = Types.FirstOrDefault(t => t.ID == p.ParentID);
+							p.ParentTest    = p;
+							p.Children      = Child         .Where(c => c.ParentID == p.ParentID).ToList();
+							p.GrandChildren = GrandChild    .Where(c => c.ParentID == p.ParentID).ToList();
+							p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
 						}
 					}
 
@@ -489,7 +488,7 @@ namespace Tests
 			}
 		}
 
-		private List<Parent1> _parent1;
+		private   List<Parent1>       _parent1;
 		protected IEnumerable<Parent1> Parent1
 		{
 			get
@@ -501,8 +500,8 @@ namespace Tests
 			}
 		}
 
-		private List<Parent4> _parent4;
-		protected List<Parent4> Parent4
+		private   List<Parent4> _parent4;
+		protected List<Parent4>  Parent4
 		{
 			get
 			{
@@ -510,8 +509,8 @@ namespace Tests
 			}
 		}
 
-		private List<Parent5> _parent5;
-		protected List<Parent5> Parent5
+		private   List<Parent5> _parent5;
+		protected List<Parent5>  Parent5
 		{
 			get
 			{
@@ -527,7 +526,7 @@ namespace Tests
 			}
 		}
 
-		private List<ParentInheritanceBase> _parentInheritance;
+		private   List<ParentInheritanceBase>       _parentInheritance;
 		protected IEnumerable<ParentInheritanceBase> ParentInheritance
 		{
 			get
@@ -543,8 +542,8 @@ namespace Tests
 			}
 		}
 
-		private List<ParentInheritanceValue> _parentInheritanceValue;
-		protected List<ParentInheritanceValue> ParentInheritanceValue
+		private   List<ParentInheritanceValue> _parentInheritanceValue;
+		protected List<ParentInheritanceValue>  ParentInheritanceValue
 		{
 			get
 			{
@@ -553,7 +552,7 @@ namespace Tests
 			}
 		}
 
-		private List<ParentInheritance1> _parentInheritance1;
+		private   List<ParentInheritance1> _parentInheritance1;
 		protected List<ParentInheritance1> ParentInheritance1
 		{
 			get
@@ -563,8 +562,8 @@ namespace Tests
 			}
 		}
 
-		private List<ParentInheritanceBase4> _parentInheritance4;
-		protected List<ParentInheritanceBase4> ParentInheritance4
+		private   List<ParentInheritanceBase4> _parentInheritance4;
+		protected List<ParentInheritanceBase4>  ParentInheritance4
 		{
 			get
 			{
@@ -577,7 +576,7 @@ namespace Tests
 			}
 		}
 
-		protected List<Child> _child;
+		protected List<Child>       _child;
 		protected IEnumerable<Child> Child
 		{
 			get
@@ -592,9 +591,9 @@ namespace Tests
 
 						foreach (var ch in _child)
 						{
-							ch.Parent = Parent.Single(p => p.ParentID == ch.ParentID);
-							ch.Parent1 = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.ParentID2 = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
+							ch.Parent        = Parent .Single(p => p.ParentID == ch.ParentID);
+							ch.Parent1       = Parent1.Single(p => p.ParentID == ch.ParentID);
+							ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
 							ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
 						}
 					}
@@ -604,7 +603,7 @@ namespace Tests
 			}
 		}
 
-		private List<GrandChild> _grandChild;
+		private   List<GrandChild>       _grandChild;
 		protected IEnumerable<GrandChild> GrandChild
 		{
 			get
@@ -624,7 +623,7 @@ namespace Tests
 			}
 		}
 
-		private List<GrandChild1> _grandChild1;
+		private   List<GrandChild1>       _grandChild1;
 		protected IEnumerable<GrandChild1> GrandChild1
 		{
 			get
@@ -638,7 +637,7 @@ namespace Tests
 						foreach (var ch in _grandChild1)
 						{
 							ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+							ch.Child  = Child  .Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
 						}
 					}
 
@@ -650,8 +649,8 @@ namespace Tests
 
 		#region Inheritance Parent/Child Model
 
-		private List<InheritanceParentBase> _inheritanceParent;
-		protected List<InheritanceParentBase> InheritanceParent
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
 		{
 			get
 			{
@@ -666,8 +665,8 @@ namespace Tests
 			}
 		}
 
-		private List<InheritanceChildBase> _inheritanceChild;
-		protected List<InheritanceChildBase> InheritanceChild
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
 		{
 			get
 			{
@@ -746,7 +745,7 @@ namespace Tests
 
 							foreach (var employee in _employee)
 							{
-								employee.Employees = (from e in _employee where e.ReportsTo == employee.EmployeeID select e).ToList();
+								employee.Employees         = (from e in _employee where e.ReportsTo == employee.EmployeeID select e).ToList();
 								employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo select e).SingleOrDefault();
 							}
 						}
@@ -894,16 +893,16 @@ namespace Tests
 				{
 					var copy = new LinqDataTypes2()
 					{
-						ID = record.ID,
-						MoneyValue = record.MoneyValue,
-						DateTimeValue = record.DateTimeValue,
+						ID             = record.ID,
+						MoneyValue     = record.MoneyValue,
+						DateTimeValue  = record.DateTimeValue,
 						DateTimeValue2 = record.DateTimeValue2,
-						BoolValue = record.BoolValue,
-						GuidValue = record.GuidValue,
-						SmallIntValue = record.SmallIntValue,
-						IntValue = record.IntValue,
-						BigIntValue = record.BigIntValue,
-						StringValue = record.StringValue
+						BoolValue      = record.BoolValue,
+						GuidValue      = record.GuidValue,
+						SmallIntValue  = record.SmallIntValue,
+						IntValue       = record.IntValue,
+						BigIntValue    = record.BigIntValue,
+						StringValue    = record.StringValue
 					};
 
 					if (copy.DateTimeValue != null)
@@ -997,12 +996,12 @@ namespace Tests
 			}
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
-			Assert.AreEqual(0, exceptResult, $"Expect Result{Environment.NewLine}{message}");
+			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
 		{
-			var resultList = result.ToList();
+			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
@@ -1020,7 +1019,7 @@ namespace Tests
 
 		protected void AreSame<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			var resultList = result.ToList();
+			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);

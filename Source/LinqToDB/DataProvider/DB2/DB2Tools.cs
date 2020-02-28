@@ -151,37 +151,37 @@ namespace LinqToDB.DataProvider.DB2
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection,
-			IEnumerable<T> source,
-			int maxBatchSize = 1000,
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int                         maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType = BulkCopyType.ProviderSpecific,
-					MaxBatchSize = maxBatchSize,
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
 		}
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection dataConnection,
-			IEnumerable<T> source,
-			int? bulkCopyTimeout = null,
-			bool keepIdentity = false,
-			int notifyAfter = 0,
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int?                        bulkCopyTimeout    = null,
+			bool                        keepIdentity       = false,
+			int                         notifyAfter        = 0,
 			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType = BulkCopyType.ProviderSpecific,
-					BulkCopyTimeout = bulkCopyTimeout,
-					KeepIdentity = keepIdentity,
-					NotifyAfter = notifyAfter,
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					KeepIdentity       = keepIdentity,
+					NotifyAfter        = notifyAfter,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
 		}

@@ -8,15 +8,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private Original.TestEventClass _emptyOriginalInstance;
 		private Original.TestEventClass _emptyOriginalWrappedInstance;
-		private Wrapped.TestEventClass _emptyWrapperInstance;
 
 		private Original.TestEventClass _onOffOriginalInstance;
 		private Original.TestEventClass _onOffOriginalWrappedInstance;
-		private Wrapped.TestEventClass _onOffWrapperInstance;
+		private Wrapped.TestEventClass  _onOffWrapperInstance;
 
 		private Original.TestEventClass _subscribedOriginalInstance;
 		private Original.TestEventClass _subscribedOriginalWrappedInstance;
-		private Wrapped.TestEventClass _subscribedWrapperInstance;
+		private Wrapped.TestEventClass  _subscribedWrapperInstance;
 
 		private TypeMapper _typeMapper;
 
@@ -25,18 +24,18 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			_typeMapper = Wrapped.Helper.CreateTypeMapper();
 
-			_emptyOriginalInstance = new Original.TestEventClass();
-			_emptyOriginalWrappedInstance = new Original.TestEventClass();
-			_emptyWrapperInstance = _typeMapper.Wrap<Wrapped.TestEventClass>(_emptyOriginalWrappedInstance);
+			_emptyOriginalInstance             = new Original.TestEventClass();
+			_emptyOriginalWrappedInstance      = new Original.TestEventClass();
 
-			_onOffOriginalInstance = new Original.TestEventClass();
-			_onOffOriginalWrappedInstance = new Original.TestEventClass();
-			_onOffWrapperInstance = _typeMapper.Wrap<Wrapped.TestEventClass>(_onOffOriginalWrappedInstance);
-
-			_subscribedOriginalInstance = new Original.TestEventClass();
+			_onOffOriginalInstance             = new Original.TestEventClass();
+			_onOffOriginalWrappedInstance      = new Original.TestEventClass();
+			_onOffWrapperInstance              = _typeMapper.Wrap<Wrapped.TestEventClass>(_onOffOriginalWrappedInstance);
+			
+			_subscribedOriginalInstance        = new Original.TestEventClass();
 			_subscribedOriginalWrappedInstance = new Original.TestEventClass();
-			_subscribedWrapperInstance = _typeMapper.Wrap<Wrapped.TestEventClass>(_subscribedOriginalWrappedInstance);
-			_subscribedWrapperInstance.TestEvent += WrappedHandler;
+			_subscribedWrapperInstance         = _typeMapper.Wrap<Wrapped.TestEventClass>(_subscribedOriginalWrappedInstance);
+
+			_subscribedWrapperInstance.TestEvent  += WrappedHandler;
 			_subscribedOriginalInstance.TestEvent += OriginalHandler;
 		}
 

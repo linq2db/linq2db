@@ -17,7 +17,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 	namespace Original
 	{
-		// use NoInlining to prevent JIT cheating with direct calls. We are not interested in such results
+		// use NoInlining used to prevent JIT cheating with direct calls. We are not interested in such results
 		public class TestClass : ITestClass
 		{
 			private static readonly DataTable _GetOleDbSchemaTableResult = new DataTable();
@@ -175,12 +175,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 			}
 
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			public TestEnum TestEnumConvert(TestEnum value) => value;
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			public TestEnum2 TestEnum2Convert(TestEnum2 value) => value;
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			public TestEnum3 TestEnum3Convert(TestEnum3 value) => value;
+			[MethodImpl(MethodImplOptions.NoInlining)] public TestEnum  TestEnumConvert (TestEnum value ) => value;
+			[MethodImpl(MethodImplOptions.NoInlining)] public TestEnum2 TestEnum2Convert(TestEnum2 value) => value;
+			[MethodImpl(MethodImplOptions.NoInlining)] public TestEnum3 TestEnum3Convert(TestEnum3 value) => value;
 		}
 
 		public class TestEventClass
@@ -204,16 +201,16 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		public enum TestEnum2
 		{
-			One = 1,
-			Two = 2,
+			One   = 1,
+			Two   = 2,
 			Three = 3
 		}
 
 		[Flags]
 		public enum TestEnum3
 		{
-			One = 1,
-			Two = 2,
+			One  = 1,
+			Two  = 2,
 			Four = 4
 		}
 	}
@@ -226,13 +223,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			{
 				var typeMapper = new TypeMapper();
 
-				typeMapper.RegisterTypeWrapper<TestClass>(typeof(Original.TestClass));
+				typeMapper.RegisterTypeWrapper<TestClass       >(typeof(Original.TestClass));
 				typeMapper.RegisterTypeWrapper<TestEventHandler>(typeof(Original.TestEventHandler));
-				typeMapper.RegisterTypeWrapper<TestEventClass>(typeof(Original.TestEventClass));
-				typeMapper.RegisterTypeWrapper<TestClass2>(typeof(Original.TestClass2));
-				typeMapper.RegisterTypeWrapper<TestEnum>(typeof(Original.TestEnum));
-				typeMapper.RegisterTypeWrapper<TestEnum2>(typeof(Original.TestEnum2));
-				typeMapper.RegisterTypeWrapper<TestEnum3>(typeof(Original.TestEnum3));
+				typeMapper.RegisterTypeWrapper<TestEventClass  >(typeof(Original.TestEventClass));
+				typeMapper.RegisterTypeWrapper<TestClass2      >(typeof(Original.TestClass2));
+				typeMapper.RegisterTypeWrapper<TestEnum        >(typeof(Original.TestEnum));
+				typeMapper.RegisterTypeWrapper<TestEnum2       >(typeof(Original.TestEnum2));
+				typeMapper.RegisterTypeWrapper<TestEnum3       >(typeof(Original.TestEnum3));
 
 				typeMapper.FinalizeMappings();
 
@@ -243,14 +240,15 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		[Wrapper]
 		public class TestClass
 		{
-			public TestEnum EnumProperty { get; set; }
-			public decimal DecimalProperty { get; }
-			public bool BooleanProperty { get; }
-			public int IntProperty { get; }
-			public string StringProperty { get; set; }
+			public TestEnum  EnumProperty      { get; set; }
+			public decimal   DecimalProperty   { get; }
+			public bool      BooleanProperty   { get; }
+			public int       IntProperty       { get; }
+			public string    StringProperty    { get; set; }
 			public SqlDbType KnownEnumProperty { get; set; }
 
 			public DataTable GetOleDbSchemaTable(Guid schema, object[] restrictions) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
@@ -285,110 +283,95 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				= new LambdaExpression[]
 			{
 				// [0]: QuoteIdentifier
-				(Expression<Func<TestClass2, string, string>>)((TestClass2 this_, string identifier) => this_.QuoteIdentifier(identifier)),
+				(Expression<Func<TestClass2, string, string>>)((TestClass2 this_, string identifier)       => this_.QuoteIdentifier(identifier)),
 				// [1]: Add
 				(Expression<Func<TestClass2, TestClass2, TestClass2>>)((TestClass2 this_, TestClass2 item) => this_.Add(item)),
 				// [2]: GetEnumerator
-				(Expression<Func<TestClass2, IEnumerable>>)((TestClass2 this_) => this_.GetEnumerator()),
+				(Expression<Func<TestClass2, IEnumerable>>)((TestClass2 this_)                             => this_.GetEnumerator()),
 				// [3]: CreateDatabase
-				(Expression<Action<TestClass2>>)((TestClass2 this_) => this_.CreateDatabase()),
+				(Expression<Action<TestClass2>>)((TestClass2 this_)                                        => this_.CreateDatabase()),
 				// [4]: Dispose
-				(Expression<Action<TestClass2>>)((TestClass2 this_) => this_.Dispose()),
+				(Expression<Action<TestClass2>>)((TestClass2 this_)                                        => this_.Dispose()),
 				// [5]: WriteToServer
-				(Expression<Action<TestClass2, IDataReader>>)((TestClass2 this_, IDataReader rd) => this_.WriteToServer(rd)),
+				(Expression<Action<TestClass2, IDataReader>>)((TestClass2 this_, IDataReader rd)           => this_.WriteToServer(rd)),
 				// [6]: get IntProperty
-				(Expression<Func<TestClass2, int>>)((TestClass2 this_) => this_.IntProperty),
+				(Expression<Func<TestClass2, int>>)((TestClass2 this_)                                     => this_.IntProperty),
 				// [7]: get StringProperty
-				(Expression<Func<TestClass2, string>>)((TestClass2 this_) => this_.StringProperty),
+				(Expression<Func<TestClass2, string>>)((TestClass2 this_)                                  => this_.StringProperty),
 				// [8]: get BooleanProperty
-				(Expression<Func<TestClass2, bool>>)((TestClass2 this_) => this_.BooleanProperty),
+				(Expression<Func<TestClass2, bool>>)((TestClass2 this_)                                    => this_.BooleanProperty),
 				// [9]: get WrapperProperty
-				(Expression<Func<TestClass2, TestClass2>>)((TestClass2 this_) => this_.WrapperProperty),
+				(Expression<Func<TestClass2, TestClass2>>)((TestClass2 this_)                              => this_.WrapperProperty),
 				// [10]: get EnumProperty
-				(Expression<Func<TestClass2, TestEnum>>)((TestClass2 this_) => this_.EnumProperty),
+				(Expression<Func<TestClass2, TestEnum>>)((TestClass2 this_)                                => this_.EnumProperty),
 				// [11]: get VersionProperty
-				(Expression<Func<TestClass2, Version>>)((TestClass2 this_) => this_.VersionProperty),
+				(Expression<Func<TestClass2, Version>>)((TestClass2 this_)                                 => this_.VersionProperty),
 				// [12]: get LongProperty
-				(Expression<Func<TestClass2, long>>)((TestClass2 this_) => this_.LongProperty),
+				(Expression<Func<TestClass2, long>>)((TestClass2 this_)                                    => this_.LongProperty),
 				// [13]: set IntProperty
-				PropertySetter((TestClass2 this_) => this_.IntProperty),
+				PropertySetter((TestClass2 this_)                                                          => this_.IntProperty),
 				// [14]: set StringProperty
-				PropertySetter((TestClass2 this_) => this_.StringProperty),
+				PropertySetter((TestClass2 this_)                                                          => this_.StringProperty),
 				// [15]: set BooleanProperty
-				PropertySetter((TestClass2 this_) => this_.BooleanProperty),
+				PropertySetter((TestClass2 this_)                                                          => this_.BooleanProperty),
 				// [16]: set WrapperProperty
-				PropertySetter((TestClass2 this_) => this_.WrapperProperty),
+				PropertySetter((TestClass2 this_)                                                          => this_.WrapperProperty),
 				// [17]: TestEnumConvert
-				(Expression<Func<TestClass2, TestEnum, TestEnum>>)((TestClass2 this_, TestEnum value) => this_.TestEnumConvert(value)),
+				(Expression<Func<TestClass2, TestEnum, TestEnum>>)((TestClass2 this_, TestEnum value)      => this_.TestEnumConvert(value)),
 				// [18]: TestEnum2Convert
-				(Expression<Func<TestClass2, TestEnum2, TestEnum2>>)((TestClass2 this_, TestEnum2 value) => this_.TestEnum2Convert(value)),
+				(Expression<Func<TestClass2, TestEnum2, TestEnum2>>)((TestClass2 this_, TestEnum2 value)   => this_.TestEnum2Convert(value)),
 				// [19]: TestEnum3Convert
-				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((TestClass2 this_, TestEnum3 value) => this_.TestEnum3Convert(value)),
+				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((TestClass2 this_, TestEnum3 value)   => this_.TestEnum3Convert(value)),
 			};
 
 			public TestClass2(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
-			public TestClass2() => throw new NotImplementedException();
-
-			public TestClass2(string connectionString) => throw new NotImplementedException();
-
-			public TestClass2(TimeSpan timeSpan) => throw new NotImplementedException();
-
-			public TestClass2(int p1, string p2) => throw new NotImplementedException();
-
-			public TestClass2(string p1, string p2) => throw new NotImplementedException();
-
-			public TestClass2(TestClass2 p1, TestEnum p2, TestClass p3) => throw new NotImplementedException();
-
-			public TestClass2(TestClass2 p1, TestEnum p2) => throw new NotImplementedException();
-
-			public TestClass2(TestClass2 p1, string p2) => throw new NotImplementedException();
-
+			public TestClass2()                                                                                                => throw new NotImplementedException();
+			public TestClass2(string connectionString)                                                                         => throw new NotImplementedException();
+			public TestClass2(TimeSpan timeSpan)                                                                               => throw new NotImplementedException();
+			public TestClass2(int p1, string p2)                                                                               => throw new NotImplementedException();
+			public TestClass2(string p1, string p2)                                                                            => throw new NotImplementedException();
+			public TestClass2(TestClass2 p1, TestEnum p2, TestClass p3)                                                        => throw new NotImplementedException();
+			public TestClass2(TestClass2 p1, TestEnum p2)                                                                      => throw new NotImplementedException();
+			public TestClass2(TestClass2 p1, string p2)                                                                        => throw new NotImplementedException();
 			public TestClass2(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
 
-			public void CreateDatabase() => ((Action<TestClass2>)CompiledWrappers[3])(this);
-
-			public void Dispose() => ((Action<TestClass2>)CompiledWrappers[4])(this);
-
-			public string QuoteIdentifier(string identifier) => ((Func<TestClass2, string, string>)CompiledWrappers[0])(this, identifier);
-
-			public void WriteToServer(IDataReader rd) => ((Action<TestClass2, IDataReader>)CompiledWrappers[5])(this, rd);
-
-			public TestClass2 Add(TestClass2 p) => ((Func<TestClass2, TestClass2, TestClass2>)CompiledWrappers[1])(this, p);
-
-			public IEnumerable GetEnumerator() => ((Func<TestClass2, IEnumerable>)CompiledWrappers[2])(this);
+			public void        CreateDatabase()                   => ((Action<TestClass2>                      )CompiledWrappers[3])(this);
+			public void        Dispose()                          => ((Action<TestClass2>                      )CompiledWrappers[4])(this);
+			public string      QuoteIdentifier(string identifier) => ((Func<TestClass2, string, string>        )CompiledWrappers[0])(this, identifier);
+			public void        WriteToServer(IDataReader rd)      => ((Action<TestClass2, IDataReader>         )CompiledWrappers[5])(this, rd);
+			public TestClass2  Add(TestClass2 p)                  => ((Func<TestClass2, TestClass2, TestClass2>)CompiledWrappers[1])(this, p);
+			public IEnumerable GetEnumerator()                    => ((Func<TestClass2, IEnumerable>           )CompiledWrappers[2])(this);
 
 			public int IntProperty
 			{
-				get => ((Func<TestClass2, int>)CompiledWrappers[6])(this);
+				get => ((Func<TestClass2, int>)  CompiledWrappers[6])(this);
 				set => ((Action<TestClass2, int>)CompiledWrappers[13])(this, value);
 			}
 
 			public string StringProperty
 			{
-				get => ((Func<TestClass2, string>)CompiledWrappers[7])(this);
+				get => ((Func<TestClass2, string>)  CompiledWrappers[7])(this);
 				set => ((Action<TestClass2, string>)CompiledWrappers[14])(this, value);
 			}
 
 			public bool BooleanProperty
 			{
-				get => ((Func<TestClass2, bool>)CompiledWrappers[8])(this);
+				get => ((Func<TestClass2, bool>)  CompiledWrappers[8])(this);
 				set => ((Action<TestClass2, bool>)CompiledWrappers[15])(this, value);
 			}
 
 			public TestClass2 WrapperProperty
 			{
-				get => ((Func<TestClass2, TestClass2>)CompiledWrappers[9])(this);
+				get => ((Func<TestClass2, TestClass2>)  CompiledWrappers[9])(this);
 				set => ((Action<TestClass2, TestClass2>)CompiledWrappers[16])(this, value);
 			}
 
-			public TestEnum EnumProperty => ((Func<TestClass2, TestEnum>) CompiledWrappers[10])(this);
-
-			public Version VersionProperty => ((Func<TestClass2, Version>)CompiledWrappers[11])(this);
-
-			public long LongProperty => ((Func<TestClass2, long>)CompiledWrappers[12])(this);
+			public TestEnum EnumProperty    => ((Func<TestClass2, TestEnum>)CompiledWrappers[10])(this);
+			public Version  VersionProperty => ((Func<TestClass2, Version> )CompiledWrappers[11])(this);
+			public long     LongProperty    => ((Func<TestClass2, long>    )CompiledWrappers[12])(this);
 
 			public TestEnum  TestEnumConvert (TestEnum  value) => ((Func<TestClass2, TestEnum , TestEnum >)CompiledWrappers[17])(this, value);
 			public TestEnum2 TestEnum2Convert(TestEnum2 value) => ((Func<TestClass2, TestEnum2, TestEnum2>)CompiledWrappers[18])(this, value);
@@ -401,25 +384,25 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			One   = 3,
 			Two   = 2,
 			Three = 1,
-			Four = 4
+			Four  = 4
 		}
 
 		[Wrapper]
 		public enum TestEnum2
 		{
-			One = 1,
-			Two = 2,
+			One   = 1,
+			Two   = 2,
 			Three = 3,
-			Four = 4
+			Four  = 4
 		}
 
 		[Wrapper]
 		[Flags]
 		public enum TestEnum3
 		{
-			One = 1,
-			Two = 2,
-			Four = 4,
+			One   = 1,
+			Two   = 2,
+			Four  = 4,
 			Eight = 8
 		}
 	}

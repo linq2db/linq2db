@@ -20,7 +20,6 @@ namespace LinqToDB.Linq
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	static partial class QueryRunner

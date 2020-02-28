@@ -136,10 +136,11 @@ namespace LinqToDB.DataProvider.Oracle
 					if (result != null)
 					{
 						var version = int.Parse(result.Split('.')[0]);
+
 						if (version <= 11)
 							return OracleVersion.v11;
-						if (version >= 12)
-							return OracleVersion.v12;
+
+						return OracleVersion.v12;
 					}
 					return DefaultVersion;
 				}
