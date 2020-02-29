@@ -1703,74 +1703,13 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert
-				&& left.Type == typeof(int)
-				&& (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
-			{
-				var conv  = (UnaryExpression)left;
-
-				if (conv.Operand.Type == typeof(char))
-				{
-					left  = conv.Operand;
-					right = right.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) right).Value))
-						: ((UnaryExpression) right).Operand;
-				}
-			}
-
-			if (left.NodeType == ExpressionType.Convert
-				&& left.Type == typeof(int?)
-				&& (right.NodeType == ExpressionType.Constant
-					|| (right.NodeType == ExpressionType.Convert
-						&& ((UnaryExpression)right).Operand.NodeType == ExpressionType.Convert)))
-			{
-				var conv = (UnaryExpression)left;
-
-				if (conv.Operand.Type == typeof(char?))
-				{
-					left = conv.Operand;
-					right = right.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value))
-						: ((UnaryExpression)((UnaryExpression)right).Operand).Operand;
-				}
-			}
-
-			if (right.NodeType == ExpressionType.Convert
-				&& right.Type == typeof(int)
-				&& (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
-			{
-				var conv = (UnaryExpression)right;
-
-				if (conv.Operand.Type == typeof(char))
-				{
-					right = conv.Operand;
-					left  = left.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) left).Value))
-						: ((UnaryExpression) left).Operand;
-				}
-			}
-
-			if (right.NodeType == ExpressionType.Convert
-				&& right.Type == typeof(int?)
-				&& (left.NodeType == ExpressionType.Constant
-					|| (left.NodeType == ExpressionType.Convert
-						&& ((UnaryExpression)left).Operand.NodeType == ExpressionType.Convert)))
-			{
-				var conv = (UnaryExpression)right;
-
-				if (conv.Operand.Type == typeof(char?))
-				{
-					right = conv.Operand;
-					left = left.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value))
-						: ((UnaryExpression)((UnaryExpression)left).Operand).Operand;
-				}
-			}
+			if (RestoreCompare(ref left, ref right));
+				RestoreCompare(ref right, ref left);
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal    :
-				case ExpressionType.NotEqual :
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
 
 					var p = ConvertObjectComparison(nodeType, context, left, context, right);
 					if (p != null)
@@ -1798,12 +1737,12 @@ namespace LinqToDB.Linq.Builder
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal             : op = SqlPredicate.Operator.Equal;          break;
-				case ExpressionType.NotEqual          : op = SqlPredicate.Operator.NotEqual;       break;
-				case ExpressionType.GreaterThan       : op = SqlPredicate.Operator.Greater;        break;
+				case ExpressionType.Equal: op = SqlPredicate.Operator.Equal; break;
+				case ExpressionType.NotEqual: op = SqlPredicate.Operator.NotEqual; break;
+				case ExpressionType.GreaterThan: op = SqlPredicate.Operator.Greater; break;
 				case ExpressionType.GreaterThanOrEqual: op = SqlPredicate.Operator.GreaterOrEqual; break;
-				case ExpressionType.LessThan          : op = SqlPredicate.Operator.Less;           break;
-				case ExpressionType.LessThanOrEqual   : op = SqlPredicate.Operator.LessOrEqual;    break;
+				case ExpressionType.LessThan: op = SqlPredicate.Operator.Less; break;
+				case ExpressionType.LessThanOrEqual: op = SqlPredicate.Operator.LessOrEqual; break;
 				default: throw new InvalidOperationException();
 			}
 
@@ -1828,7 +1767,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal   :
+				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
 					if (!context.SelectQuery.IsParameterDependent &&
@@ -1863,6 +1802,62 @@ namespace LinqToDB.Linq.Builder
 				r = Convert(context, new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false)));
 
 			return Convert(context, new SqlPredicate.ExprExpr(l, op, r));
+		}
+
+		// restores original types, lost due to C# compiler optimizations
+		// e.g. see https://github.com/linq2db/linq2db/issues/2041
+		private static bool RestoreCompare(ref Expression op1, ref Expression op2)
+		{
+			if (op1.NodeType == ExpressionType.Convert)
+			{
+				var conv = (UnaryExpression)op1;
+
+				// handle char replaced with int
+				// (int)chr op CONST
+				if (op1.Type == typeof(int) && conv.Operand.Type == typeof(char)
+					&& (op2.NodeType == ExpressionType.Constant || op2.NodeType == ExpressionType.Convert))
+				{
+					op1 = conv.Operand;
+					op2 = op2.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
+						: ((UnaryExpression)op2).Operand;
+					return true;
+				}
+				// (int?)chr? op CONST
+				else if (op1.Type == typeof(int?) && conv.Operand.Type == typeof(char?)
+					&& (op2.NodeType == ExpressionType.Constant
+						|| (op2.NodeType == ExpressionType.Convert && ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Convert)))
+				{
+					op1 = conv.Operand;
+					op2 = op2.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
+						: ((UnaryExpression)((UnaryExpression)op2).Operand).Operand;
+					return true;
+				}
+				// handle enum replaced with integer
+				// here byte/short values replaced with int, int+ values replaced with actual underlying type
+				// (int)enum op const
+				else if (conv.Operand.Type.IsEnumEx()
+					&& op2.NodeType == ExpressionType.Constant
+						&& (op2.Type == Enum.GetUnderlyingType(conv.Operand.Type) || op2.Type == typeof(int)))
+				{
+					op1 = conv.Operand;
+					op2 = Expression.Constant(Enum.ToObject(conv.Operand.Type, ((ConstantExpression)op2).Value), conv.Operand.Type);
+					return true;
+				}
+				// here underlying type used
+				// (int?)enum? op (int?)enum
+				else if (conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(conv.Operand.Type).IsEnumEx()
+					&& op2.NodeType == ExpressionType.Convert
+					&& ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Constant && (((UnaryExpression)op2).Operand).Type == Nullable.GetUnderlyingType(conv.Operand.Type))
+				{
+					op1 = conv.Operand;
+					op2 = Expression.Convert(((UnaryExpression)op2).Operand, conv.Operand.Type);
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		#endregion
