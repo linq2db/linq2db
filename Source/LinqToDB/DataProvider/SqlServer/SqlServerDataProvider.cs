@@ -103,6 +103,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			// non-specific fallback
 			SetProviderField<IDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
+
+			SqlServerTypes.Configure(this);
 		}
 
 		#endregion
