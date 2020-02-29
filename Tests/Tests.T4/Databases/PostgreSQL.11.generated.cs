@@ -37,6 +37,10 @@ namespace PostreSQL11DataContext
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
+		/// <summary>
+		/// This is the Issue2023 matview
+		/// </summary>
+		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
@@ -1703,6 +1707,22 @@ namespace PostreSQL11DataContext
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // integer
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
 		[Column(DataType=DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
+	}
+
+	/// <summary>
+	/// This is the Issue2023 matview
+	/// </summary>
+	[Table(Schema="public", Name="Issue2023", IsView=true)]
+	public partial class Issue2023
+	{
+		/// <summary>
+		/// This is the Issue2023.PersonID column
+		/// </summary>
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0, SkipOnInsert=true, SkipOnUpdate=true), Nullable] public int?    PersonID   { get; set; } // int4
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? FirstName  { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? LastName   { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? MiddleName { get; set; } // character varying(50)
+		[Column(DataType=DataType.NChar,    Length=1, SkipOnInsert=true, SkipOnUpdate=true),              Nullable] public char?   Gender     { get; set; } // character(1)
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]

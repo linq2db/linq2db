@@ -212,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains1([DataSources(
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
 			ProviderName.Access,
@@ -233,7 +233,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
@@ -297,7 +297,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Informix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

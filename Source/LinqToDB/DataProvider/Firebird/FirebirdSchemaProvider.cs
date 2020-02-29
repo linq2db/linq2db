@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -14,9 +13,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 	class FirebirdSchemaProvider : SchemaProviderBase
 	{
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(dbConnection));
+			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(connection));
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -86,7 +85,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
@@ -184,7 +183,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			try
 			{
@@ -216,7 +215,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -240,9 +239,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 	}
 }

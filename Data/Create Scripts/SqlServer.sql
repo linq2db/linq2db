@@ -459,7 +459,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
 -- SKIP SqlServer.2017 BEGIN
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
 	datetimeoffset0DataType  varchar(50)       NULL,
@@ -476,7 +476,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2017 END
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 
 ) ON [PRIMARY]
 GO
@@ -590,14 +590,14 @@ GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -658,7 +658,7 @@ GO
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
 -- SKIP SqlServer.2017 BEGIN
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -674,7 +674,7 @@ CREATE TABLE LinqDataTypes
 	StringValue    nvarchar(50)    NULL
 )
 GO
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2017 END

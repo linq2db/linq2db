@@ -13,9 +13,10 @@ namespace Tests.xUpdate
 	{
 		[Test]
 		public void SameSourceDelete([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana,
-			ProviderName.Firebird, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -44,9 +45,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceDeleteWithPredicate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -76,9 +79,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeletePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -108,8 +111,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -134,10 +137,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceDeleteWithPredicateDelete([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017, TestProvName.SqlAzure,
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -167,7 +170,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceDelete([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -198,7 +201,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceDeletePartialSourceProjection_UnknownFieldInMatch([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -223,8 +226,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceDeleteWithPredicate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -255,8 +258,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceDeleteWithPredicate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -296,8 +299,8 @@ namespace Tests.xUpdate
 		// Oracle: implicit Delete to UpdateWithDelete conversion failed here
 		[Test]
 		public void AnonymousListSourceDeleteWithPredicate([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -336,8 +339,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteReservedAndCaseNames([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -376,8 +379,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteReservedAndCaseNamesFromList([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -416,7 +419,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteFromPartialSourceProjection_MissingKeyField([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{

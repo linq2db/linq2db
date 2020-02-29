@@ -16,7 +16,7 @@ namespace LinqToDB
 		/// Creates new transaction wrapper.
 		/// </summary>
 		/// <param name="dataContext">Data context.</param>
-		public DataContextTransaction([NotNull] DataContext dataContext)
+		public DataContextTransaction(DataContext dataContext)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}

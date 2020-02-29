@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -10,11 +8,28 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
+	using LinqToDB.Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly InformixDataProvider? _provider;
+
+		public InformixSqlBuilder(
+			InformixDataProvider? provider,
+			MappingSchema         mappingSchema,
+			ISqlOptimizer         sqlOptimizer,
+			SqlProviderFlags      sqlProviderFlags)
+			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public InformixSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -52,7 +67,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
@@ -63,11 +78,6 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NOT NULL", "1=0")
 				.Replace("NULL IS NULL",     "1=1");
 		}
-
-//		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
-//		{
-//			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
-//		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -175,35 +185,24 @@ namespace LinqToDB.DataProvider.Informix
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && !IsValidIdentifier(name))
-						{
-							// I wonder what to do if identifier has " in name?
-							return '"' + name + '"';
-						}
-					}
+					if (value.Length > 0 && !IsValidIdentifier(value))
+						// I wonder what to do if identifier has " in name?
+						return '"' + value + '"';
 
 					break;
-				case ConvertType.NameToQueryParameter   : return "?";
+				case ConvertType.NameToQueryParameter   :
+					return SqlProviderFlags.IsParameterOrderDependent ? "?" : "@" + value;
 				case ConvertType.NameToCommandParameter :
 				case ConvertType.NameToSprocParameter   : return ":" + value;
 				case ConvertType.SprocParameterToName   :
-					if (value != null)
-					{
-						var str = value.ToString();
-						return (str.Length > 0 && str[0] == ':')? str.Substring(1): str;
-					}
-
-					break;
+					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
 			}
 
 			return value;
@@ -238,7 +237,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
@@ -262,14 +261,19 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
+			if (_provider != null)
+			{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					if (_provider.Adapter.GetIfxType != null)
+						return _provider.Adapter.GetIfxType(param).ToString();
+					else
+						return _provider.Adapter.GetDB2Type!(param).ToString();
+			}
 
-			if (parameter.GetType().Name == "DB2Parameter")
-				return p.DB2Type.ToString();
-
-			return p.IfxType.ToString();
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)

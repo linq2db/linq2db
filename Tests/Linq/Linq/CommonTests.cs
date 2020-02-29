@@ -162,7 +162,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +172,7 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{

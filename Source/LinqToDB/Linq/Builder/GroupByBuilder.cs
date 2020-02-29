@@ -309,18 +309,6 @@ namespace LinqToDB.Linq.Builder
 
 					var itemReader      = CompiledQuery.Compile(lambda);
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
-					var dataReaderLocal = context.Builder.DataReaderLocal;
-
-					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
-					{
-						keyExpr = Expression.Block(
-							new[] { context.Builder.DataReaderLocal },
-							new[]
-							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
-								keyExpr
-							});
-					}
 
 					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey>>(
 						keyExpr,
@@ -344,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
-							Expression.Constant(keyReader.Compile()),
+							keyReader,
 							Expression.Constant(itemReader)
 						});
 				}

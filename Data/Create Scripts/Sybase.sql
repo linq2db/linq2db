@@ -1,5 +1,8 @@
 ﻿USE master
 GO
+-- for bulk copy transactions support, must be called from master
+sp_dboption tempdb, 'ddl in tran', 'true'
+GO
 
 DROP DATABASE {DBNAME}
 GO
@@ -117,15 +120,15 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       int           IDENTITY,
+	ID                       int               IDENTITY,
 
 	bigintDataType           bigint            NULL,
 	uBigintDataType          unsigned  bigint  NULL,
-	numericDataType          numeric           NULL,
+	numericDataType          numeric(18, 1)    NULL,
 	bitDataType              bit               default(0),
 	smallintDataType         smallint          NULL,
 	uSmallintDataType        unsigned smallint NULL,
-	decimalDataType          decimal           NULL,
+	decimalDataType          decimal(18, 1)    NULL,
 	smallmoneyDataType       smallmoney        NULL,
 	intDataType              int               NULL,
 	uIntDataType             unsigned int      NULL,
@@ -257,3 +260,11 @@ GO
 CREATE OR REPLACE PROCEDURE AddIssue792Record AS
 	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792')
 RETURN
+
+GO
+
+CREATE TABLE KeepIdentityTest (
+	ID    NUMERIC(12, 0) IDENTITY,
+	Value INT            NULL
+)
+GO

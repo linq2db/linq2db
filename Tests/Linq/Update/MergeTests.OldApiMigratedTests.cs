@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test]
-		public void MergeWithEmptySource([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative, TestProvName.AllSybase)] string context)
+		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,7 +187,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -215,7 +215,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeChar2([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -246,7 +246,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeString([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, TestProvName.AllSapHana)]
+			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

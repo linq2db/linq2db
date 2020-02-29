@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Globalization;
 using System.Threading;
 
@@ -7,7 +6,7 @@ namespace LinqToDB
 {
 	internal class InvariantCultureRegion : IDisposable
 	{
-		private readonly CultureInfo _original;
+		private readonly CultureInfo? _original;
 
 		public InvariantCultureRegion()
 		{

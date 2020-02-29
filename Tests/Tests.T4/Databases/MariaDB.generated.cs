@@ -38,7 +38,6 @@ namespace MariaDBDataContext
 		/// VIEW
 		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
-		public ITable<Test>              Tests              { get { return this.GetTable<Test>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
@@ -268,13 +267,6 @@ namespace MariaDBDataContext
 		[Column, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	[Table("test")]
-	public partial class Test
-	{
-		[Column, NotNull    ] public int  Id           { get; set; } // int(11)
-		[Column,    Nullable] public int? TestAnimalId { get; set; } // int(11)
-	}
-
 	[Table("testidentity")]
 	public partial class Testidentity
 	{
@@ -378,21 +370,6 @@ namespace MariaDBDataContext
 
 			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
 			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TestProc
-
-		public static int TestProc(this TestmariadbDB dataConnection, string? aInParam, out sbyte? aOutParam)
-		{
-			var ret = dataConnection.ExecuteProc("`test_proc`",
-				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
-
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
 			return ret;
 		}

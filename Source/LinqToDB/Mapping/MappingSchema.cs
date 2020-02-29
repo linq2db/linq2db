@@ -439,9 +439,9 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression(
-			[JetBrains.Annotations.NotNull] Type fromType,
-			[JetBrains.Annotations.NotNull] Type toType,
-			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			Type fromType,
+			Type toType,
+			LambdaExpression expr,
 			bool addNullCheck = true)
 		{
 			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
@@ -469,7 +469,7 @@ namespace LinqToDB.Mapping
 		public void SetConvertExpression(
 			DbDataType                      fromType,
 			DbDataType                      toType,
-			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			LambdaExpression                expr,
 			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
@@ -493,7 +493,7 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression<TFrom,TTo>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
+			Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
@@ -513,8 +513,8 @@ namespace LinqToDB.Mapping
 		/// <param name="checkNullExpr"><c>null</c> values conversion expression.</param>
 		/// <param name="expr">Conversion expression.</param>
 		public void SetConvertExpression<TFrom,TTo>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
+			Expression<Func<TFrom,TTo>> checkNullExpr,
+			Expression<Func<TFrom,TTo>> expr)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -527,7 +527,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
 		/// <param name="func">Conversion delegate.</param>
-		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
+		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -546,7 +546,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		/// <param name="from">Source type detalization</param>
 		/// <param name="to">Target type detalization</param>
-		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func, DbDataType from, DbDataType to)
+		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func, DbDataType from, DbDataType to)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -1174,6 +1174,8 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(double?),         DataType.Double);
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
+
+				SetConverter<DBNull, object?>(_ => null);
 
 				ValueToSqlConverter.SetDefaults();
 			}

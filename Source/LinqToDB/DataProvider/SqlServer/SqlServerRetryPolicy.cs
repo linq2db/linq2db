@@ -1,5 +1,4 @@
-﻿#nullable disable
-// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/SqlServerRetryingExecutionStrategy.cs
+﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/SqlServerRetryingExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -7,17 +6,14 @@
 using System;
 using System.Collections.Generic;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Linq;
 	using Common;
 	using Data.RetryPolicy;
 
 	public class SqlServerRetryPolicy : RetryPolicyBase
 	{
-		readonly ICollection<int> _additionalErrorNumbers;
+		readonly ICollection<int>? _additionalErrorNumbers;
 
 		/// <summary>
 		///   Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -46,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerRetryPolicy(
 			int maxRetryCount,
 			TimeSpan maxRetryDelay,
-			[CanBeNull] ICollection<int> errorNumbersToAdd)
+			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay)
 		{
 			_additionalErrorNumbers = errorNumbersToAdd;
@@ -56,9 +52,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (_additionalErrorNumbers != null)
 			{
-				if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
-					foreach (dynamic err in ((dynamic)exception).Errors)
-						if (_additionalErrorNumbers.Contains(err.Number))
+				if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+					foreach (var errNumber in errorNumbers)
+						if (_additionalErrorNumbers.Contains(errNumber))
 							return true;
 			}
 
@@ -80,9 +76,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static bool IsMemoryOptimizedError(Exception exception)
 		{
-			if (SqlServerTransientExceptionDetector.ExceptionTypes.Any(e => e == exception.GetType()))
-				foreach (dynamic err in ((dynamic)exception).Errors)
-					switch (err.Number)
+			if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+				foreach (var errNumber in errorNumbers)
+					switch (errNumber)
 					{
 						case 41301:
 						case 41302:

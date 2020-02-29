@@ -807,10 +807,10 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						(string)SqlBuilder.Convert(ServerName,      LinqToDB.SqlProvider.ConvertType.NameToServer),
-						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.Convert(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.Convert(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.Convert(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
 				spName = ToStringLiteral(spName);

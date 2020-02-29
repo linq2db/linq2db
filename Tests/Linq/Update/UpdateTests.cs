@@ -114,7 +114,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update3([DataSources(ProviderName.Informix)] string context)
+		public void Update3([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -137,7 +137,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update4([DataSources(ProviderName.Informix)] string context)
+		public void Update4([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -164,7 +164,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update4Async([DataSources(ProviderName.Informix)] string context)
+		public async Task Update4Async([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -191,7 +191,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update5([DataSources(ProviderName.Informix)] string context)
+		public void Update5([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -218,7 +218,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update6([DataSources(ProviderName.Informix)] string context)
+		public void Update6([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -245,7 +245,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update7([DataSources(ProviderName.Informix)] string context)
+		public void Update7([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -306,7 +306,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update9(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
@@ -346,7 +346,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update10(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
@@ -403,7 +403,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
@@ -427,7 +427,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
@@ -451,7 +451,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
@@ -580,7 +580,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -611,7 +611,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -642,7 +642,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -673,7 +673,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -704,7 +704,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -780,7 +780,7 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
@@ -810,7 +810,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AsUpdatableTest([DataSources(ProviderName.Informix)] string context)
+		public void AsUpdatableTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -868,13 +868,13 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -909,7 +909,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
@@ -955,7 +955,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
@@ -1004,7 +1004,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
@@ -1043,7 +1043,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateSetSelect([DataSources(
-			ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe)]
+			ProviderName.Access, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1071,7 +1071,7 @@ namespace Tests.xUpdate
 		public void UpdateIssue319Regression(
 			[DataSources(
 				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
@@ -1118,7 +1118,7 @@ namespace Tests.xUpdate
 		// maybe we need to do the same for unmanaged
 		[ActiveIssue("AseException : Null value is not allowed in BIT TYPE", Configuration = ProviderName.Sybase)]
 		[Test]
-		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, ProviderName.Informix, TestProvName.AllFirebird)] string context)
+		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1322,7 +1322,7 @@ namespace Tests.xUpdate
 		public void TestUpdateFromJoin([DataSources(
 			ProviderName.Access, // access doesn't have Replace mapping
 			ProviderName.SqlCe,
-			ProviderName.Informix)] string context)
+			TestProvName.AllInformix)] string context)
 		{
 			using (var db          = GetDataContext(context))
 			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
@@ -1387,7 +1387,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
@@ -1418,7 +1418,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
@@ -1449,7 +1449,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
@@ -1480,7 +1480,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
@@ -1511,7 +1511,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
@@ -1542,7 +1542,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllFirebird,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{

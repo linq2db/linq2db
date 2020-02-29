@@ -577,7 +577,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContext);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal);
 		}
 
 		#endregion

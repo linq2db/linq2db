@@ -5,7 +5,9 @@
 			"TestNoopProvider",
 			// System.Data.SQLite
 			"SQLite.Classic",
-			"Northwind.SQLite"
+			"Northwind.SQLite",
+			"SQLite.Classic.MiniProfiler.Unmapped",
+			"SQLite.Classic.MiniProfiler.Mapped"
 		]
 	}
 }

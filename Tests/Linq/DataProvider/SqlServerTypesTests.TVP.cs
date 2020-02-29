@@ -13,13 +13,13 @@ using Microsoft.SqlServer.Server;
 using NUnit.Framework;
 
 using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
+using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
 	{
-		private const string TYPE_NAME = "[dbo].[TestTableType]";
+		internal const string TYPE_NAME = "[dbo].[TestTableType]";
 		public class TVPRecord
 		{
 			public int?   Id   { get; set; }
@@ -27,7 +27,7 @@ namespace Tests.DataProvider
 			public string Name { get; set; }
 		}
 
-		private static TVPRecord[] TestData = new[]
+		internal static TVPRecord[] TestData = new[]
 		{
 			new TVPRecord(),
 			new TVPRecord() { Id = 1, Name = "Value1" },

@@ -1014,7 +1014,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation102([DataSources(ProviderName.Informix)] string context)
+		public void GroupByAssociation102([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1031,7 +1031,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed*/)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1049,7 +1049,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed.*/)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed.*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1073,7 +1073,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix) /* Can be fixed. */]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix) /* Can be fixed. */]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1312,7 +1312,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1328,7 +1328,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1811,7 +1811,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCustomEntity2([DataSources(ProviderName.Informix, TestProvName.AllSybase)] string context)
+		public void GroupByCustomEntity2([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			var rand = new Random().Next(5);
 

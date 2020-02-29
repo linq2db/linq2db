@@ -6,8 +6,8 @@ namespace LinqToDB.SqlProvider
 {
 	internal static class SqlOptimizerExtensions
 	{
-		public static SqlStatement OptimizeStatement([JetBrains.Annotations.NotNull] this ISqlOptimizer optimizer, [JetBrains.Annotations.NotNull] SqlStatement statement,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public static SqlStatement OptimizeStatement(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema)
 		{
 			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));

@@ -1,5 +1,3 @@
-#nullable disable
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +9,10 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
+		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
+		{
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new List<DataTypeInfo>
@@ -46,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
-		List<PrimaryKeyInfo> _primaryKeys;
+		List<PrimaryKeyInfo>? _primaryKeys;
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
@@ -121,8 +123,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if ((size  ?? 0) > 0) ci.Precision = (int?)size.Value;
-					if ((scale ?? 0) > 0) ci.Scale     = scale;
+					if (size  > 0) ci.Precision = (int)size;
+					if (scale > 0) ci.Scale     = scale;
 					break;
 
 				case "DBCLOB"                    :
@@ -145,7 +147,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return
 			(

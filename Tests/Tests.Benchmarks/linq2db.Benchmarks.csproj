@@ -3,10 +3,11 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
-		<RootNamespace>Tests</RootNamespace>
-		<TargetFrameworks>net462;netcoreapp2.1</TargetFrameworks>
+		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
+		<TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<Nullable>disable</Nullable>
+		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.0" />

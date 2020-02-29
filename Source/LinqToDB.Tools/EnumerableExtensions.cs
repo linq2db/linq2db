@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -28,10 +27,10 @@ namespace LinqToDB.Tools
 		/// <param name="stringBuilder"><see cref="StringBuilder"/> instance.</param>
 		/// <param name="addTableHeader">if true (default), adds table header.</param>
 		/// <returns>Formatted text.</returns>
-		[JetBrains.Annotations.NotNull, Pure]
+		[Pure]
 		public static StringBuilder ToDiagnosticString<T>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<T> source,
-			[JetBrains.Annotations.NotNull] StringBuilder stringBuilder,
+			this IEnumerable<T> source,
+			StringBuilder stringBuilder,
 			bool addTableHeader = true)
 		{
 			if (source        == null) throw new ArgumentNullException(nameof(source));
@@ -161,10 +160,10 @@ namespace LinqToDB.Tools
 		/// <param name="header">Optional header text.</param>
 		/// <param name="addTableHeader">if true (default), adds table header.</param>
 		/// <returns>Formatted text.</returns>
-		[JetBrains.Annotations.NotNull, Pure]
+		[Pure]
 		public static string ToDiagnosticString<T>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<T> source,
-			string? header = null,
+			this IEnumerable<T> source,
+			string? header      = null,
 			bool addTableHeader = true)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

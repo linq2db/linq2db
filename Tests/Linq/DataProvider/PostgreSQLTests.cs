@@ -1013,7 +1013,7 @@ namespace Tests.DataProvider
 
 				// actually void function returns void, which is not null, but in C# void is not a 'real' type
 				// https://stackoverflow.com/questions/11318973/void-in-c-sharp-generics
-				Assert.AreEqual(DBNull.Value, result);
+				Assert.IsNull(result);
 			}
 		}
 

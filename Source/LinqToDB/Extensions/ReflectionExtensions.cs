@@ -83,6 +83,52 @@ namespace LinqToDB.Extensions
 			return type.GetMethod(name);
 		}
 
+		/// <summary>
+		/// Gets method by name, input parameters and return type.
+		/// Usefull for method overloads by return type, like op_Explicit/op_Implicit conversions.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, Type returnType, string name, params Type[] types)
+		{
+			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				if (method.Name == name && method.ReturnType == returnType)
+				{
+					var parameters = method.GetParameters();
+					if (parameters.Length != types.Length)
+						continue;
+
+					var found = true;
+					for (var i = 0; i < types.Length; i++)
+					{
+						if (types[i] != parameters[i].ParameterType)
+						{
+							found = false;
+							break;
+						}
+					}
+
+					if (found)
+						return method;
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Gets generic method.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, string name, int genericParametersCount, params Type[] types)
+		{
+			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				if (method.IsGenericMethod && method.Name == name && method.GetParameters().Length == genericParametersCount)
+					return method;
+			}
+
+			return null;
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
@@ -250,7 +296,7 @@ namespace LinqToDB.Extensions
 		/// Only attributes that are assignable to this type are returned.</typeparam>
 		/// <returns>An array of custom attributes applied to this type,
 		/// or an array with zero (0) elements if no attributes have been applied.</returns>
-		public static T[] GetAttributes<T>([NotNull] this Type type)
+		public static T[] GetAttributes<T>(this Type type)
 			where T : Attribute
 		{
 			if (type == null) throw new ArgumentNullException("type");
@@ -277,7 +323,7 @@ namespace LinqToDB.Extensions
 		/// Only attributes that are assignable to this type are returned.</typeparam>
 		/// <returns>A reference to the first custom attribute of type attributeType
 		/// that is applied to element, or null if there is no such attribute.</returns>
-		public static T GetFirstAttribute<T>([NotNull] this Type type)
+		public static T GetFirstAttribute<T>(this Type type)
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type);
@@ -291,7 +337,7 @@ namespace LinqToDB.Extensions
 		/// <param name="type">A <see cref="System.Type"/> instance. </param>
 		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
 		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
-		public static bool IsNullable([NotNull] this Type type)
+		public static bool IsNullable(this Type type)
 		{
 			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
@@ -307,7 +353,7 @@ namespace LinqToDB.Extensions
 		/// <item>Otherwise, the type itself.</item>
 		/// </list>
 		/// </returns>
-		public static Type ToUnderlying([NotNull] this Type type)
+		public static Type ToUnderlying(this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
@@ -317,7 +363,7 @@ namespace LinqToDB.Extensions
 			return type;
 		}
 
-		public static Type ToNullableUnderlying([NotNull] this Type type)
+		public static Type ToNullableUnderlying(this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
@@ -329,7 +375,7 @@ namespace LinqToDB.Extensions
 		/// </summary>
 		/// <param name="type">Value type to wrap.</param>
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
-		public static Type AsNullable([NotNull] this Type type)
+		public static Type AsNullable(this Type type)
 		{
 			if (type == null)          throw new ArgumentNullException("type");
 			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
@@ -371,7 +417,7 @@ namespace LinqToDB.Extensions
 		/// <remarks>Note that nullable types does not have a parent-child relation to it's underlying type.
 		/// For example, the 'int?' type (nullable int) and the 'int' type
 		/// aren't a parent and it's child.</remarks>
-		public static bool IsSameOrParentOf([NotNull] this Type parent, [NotNull] Type child)
+		public static bool IsSameOrParentOf(this Type parent, Type child)
 		{
 			if (parent == null) throw new ArgumentNullException(nameof(parent));
 			if (child  == null) throw new ArgumentNullException(nameof(child));
@@ -419,7 +465,7 @@ namespace LinqToDB.Extensions
 		/// true if the <paramref name="type"/> derives from <paramref name="check"/>; otherwise, false.
 		/// </returns>
 		[Pure]
-		internal static bool IsSubClassOf([NotNull] this Type type, [NotNull] Type check)
+		internal static bool IsSubClassOf(this Type type, Type check)
 		{
 			if (type  == null) throw new ArgumentNullException(nameof(type));
 			if (check == null) throw new ArgumentNullException(nameof(check));
@@ -452,7 +498,7 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		public static Type? GetGenericType([NotNull] this Type genericType, Type type)
+		public static Type? GetGenericType(this Type genericType, Type type)
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
@@ -928,7 +974,7 @@ namespace LinqToDB.Extensions
 
 		#endregion
 
-		public static bool IsAnonymous([NotNull] this Type type)
+		public static bool IsAnonymous(this Type type)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 

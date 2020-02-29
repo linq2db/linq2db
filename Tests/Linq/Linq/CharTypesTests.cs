@@ -100,7 +100,7 @@ namespace Tests.Linq
 		// need to configure sybase docker image to use utf8 character set
 		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
-		public void StringTrimming([DataSources(ProviderName.Informix)] string context)
+		public void StringTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,57 +150,47 @@ namespace Tests.Linq
 			}
 		}
 
-		private static CharTestTable[] GetCharData([DataSources] string context)
+		private CharTestTable[] GetCharData([DataSources] string context)
 		{
+			var provider = GetProviderName(context, out var _);
+
 			// filter out null-character test cases for servers/providers without support
 			if (   context.Contains(ProviderName.PostgreSQL)
-				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2        + ".LinqService"
-				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe      + ".LinqService"
-				|| context.StartsWith(ProviderName.SapHana))
+				|| provider == ProviderName.DB2
+				|| provider == ProviderName.SqlCe
+				|| context.Contains(ProviderName.SapHana))
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
-			if (   context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService"
-				|| context == TestProvName.Firebird3
-				|| context == TestProvName.Firebird3 + ".LinqService")
+			if (context.Contains(ProviderName.Firebird))
 				return CharTestData.Where(_ => _.NChar != '\xA0').ToArray();
 
 			// also strange
-			if (   context == ProviderName.Informix
-				|| context == ProviderName.Informix + ".LinqService")
+			if (context.Contains(TestProvName.AllInformix))
 				return CharTestData.Where(_ => _.NChar != '\0' && (_.NChar ?? 0) < byte.MaxValue).ToArray();
 
 			return CharTestData;
 		}
 
-		private static StringTestTable[] GetStringData([DataSources] string context)
+		private StringTestTable[] GetStringData([DataSources] string context)
 		{
+			var provider = GetProviderName(context, out var _);
+
 			// filter out null-character test cases for servers/providers without support
 			if (context.Contains(ProviderName.PostgreSQL)
-				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2           + ".LinqService"
-				|| context == ProviderName.SQLiteClassic
-				|| context == ProviderName.SQLiteClassic + ".LinqService"
-				|| context == ProviderName.SQLiteMS
-				|| context == ProviderName.SQLiteMS      + ".LinqService"
-				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe         + ".LinqService"
-				|| context.StartsWith(ProviderName.SapHana))
+				|| provider == ProviderName.DB2
+				|| context  == ProviderName.DB2           + ".LinqService"
+				|| context.Contains("SQLite")
+				|| provider == ProviderName.SqlCe
+				|| context.Contains(ProviderName.SapHana))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
-			if (   context == ProviderName.Firebird
-				|| context == ProviderName.Firebird  + ".LinqService"
-				|| context == TestProvName.Firebird3
-				|| context == TestProvName.Firebird3 + ".LinqService")
+			if (context.Contains(ProviderName.Firebird))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\xA0")).ToArray();
 
 			// also strange
-			if (   context == ProviderName.Informix
-				|| context == ProviderName.Informix + ".LinqService")
+			if (context.Contains(TestProvName.AllInformix))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")
 					&& !(_.NString ?? string.Empty).Any(c => (int)c > byte.MaxValue)).ToArray();
 
@@ -235,7 +225,7 @@ namespace Tests.Linq
 		// need to configure sybase docker image to use utf8 character set
 		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
-		public void CharTrimming([DataSources(ProviderName.Informix)] string context)
+		public void CharTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,10 +241,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.Char, record.Char);
 
-						if (   context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService"
-							|| context == TestProvName.Firebird3
-							|| context == TestProvName.Firebird3 + ".LinqService")
+						if (context.Contains(ProviderName.Firebird))
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
 
 						query.Insert();
@@ -296,10 +283,7 @@ namespace Tests.Linq
 							  || context == TestProvName.MariaDB + ".LinqService")
 							// for some reason mysql doesn't insert space
 							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
-						else if (context != ProviderName.Firebird
-							  && context != ProviderName.Firebird + ".LinqService"
-							  && context != TestProvName.Firebird3
-							  && context != TestProvName.Firebird3 + ".LinqService")
+						else if (!context.Contains(ProviderName.Firebird))
 							Assert.AreEqual(testData[i].NChar, records[i].NChar);
 					}
 				}

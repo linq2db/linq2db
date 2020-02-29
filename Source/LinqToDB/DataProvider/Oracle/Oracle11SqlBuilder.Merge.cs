@@ -1,10 +1,9 @@
-﻿#nullable disable
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using SqlQuery;
 	using System.Text;
 
-	partial class OracleSqlBuilder
+	partial class Oracle11SqlBuilder
 	{
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 		protected override bool MergeSupportsColumnAliasesInSource => false;

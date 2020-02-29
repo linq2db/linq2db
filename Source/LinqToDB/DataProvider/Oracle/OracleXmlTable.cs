@@ -1,16 +1,13 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -170,9 +167,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
-		private static MethodInfo OracleXmlTableIEnumerableT;
-		private static MethodInfo OracleXmlTableString;
-		private static MethodInfo OracleXmlTableFuncString;
+		private static MethodInfo OracleXmlTableIEnumerableT = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableString       = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableFuncString   = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)

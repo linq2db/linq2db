@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -8,11 +6,28 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly SybaseDataProvider? _provider;
+
+		public SybaseSqlBuilder(
+			SybaseDataProvider? provider,
+			MappingSchema       mappingSchema,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public SybaseSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -37,9 +52,10 @@ namespace LinqToDB.DataProvider.Sybase
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlBuilder(bool skipAliases, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		SybaseSqlBuilder(SybaseDataProvider? provider, bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			_provider    = provider;
 			_skipAliases = skipAliases;
 		}
 
@@ -50,7 +66,7 @@ namespace LinqToDB.DataProvider.Sybase
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -71,7 +87,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -152,64 +168,45 @@ namespace LinqToDB.DataProvider.Sybase
 				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					{
-						var name = "@" + value;
+					value = "@" + value;
 
-						if (name.Length > 27)
-							name = name.Substring(0, 27);
+					if (value.Length > 27)
+						value = value.Substring(0, 27);
 
-						return name;
-					}
+					return value;
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
+					if (value.Length > 28 || value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 28 || name.Length > 0 && name[0] == '[')
-							return value;
-
-						// https://github.com/linq2db/linq2db/issues/1064
-						if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && name[0] == '#')
-							return value;
-					}
+					// https://github.com/linq2db/linq2db/issues/1064
+					if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && value[0] == '#')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
+						return value;
 
-						if (name.Length > 28 || name.Length > 0 && (name[0] == '[' || name[0] == '#'))
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
 			return value;
@@ -238,10 +235,16 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(")");
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.AseDbType.ToString();
+			if (_provider != null)
+			{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return _provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
