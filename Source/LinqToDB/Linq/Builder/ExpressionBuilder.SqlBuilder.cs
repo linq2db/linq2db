@@ -1703,7 +1703,7 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (RestoreCompare(ref left, ref right));
+			if (RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
 			switch (nodeType)
@@ -1810,25 +1810,25 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (op1.NodeType == ExpressionType.Convert)
 			{
-				var conv = (UnaryExpression)op1;
+				var op1conv = (UnaryExpression)op1;
 
 				// handle char replaced with int
 				// (int)chr op CONST
-				if (op1.Type == typeof(int) && conv.Operand.Type == typeof(char)
+				if (op1.Type == typeof(int) && op1conv.Operand.Type == typeof(char)
 					&& (op2.NodeType == ExpressionType.Constant || op2.NodeType == ExpressionType.Convert))
 				{
-					op1 = conv.Operand;
+					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
 						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
 						: ((UnaryExpression)op2).Operand;
 					return true;
 				}
 				// (int?)chr? op CONST
-				else if (op1.Type == typeof(int?) && conv.Operand.Type == typeof(char?)
+				else if (op1.Type == typeof(int?) && op1conv.Operand.Type == typeof(char?)
 					&& (op2.NodeType == ExpressionType.Constant
 						|| (op2.NodeType == ExpressionType.Convert && ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Convert)))
 				{
-					op1 = conv.Operand;
+					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
 						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
 						: ((UnaryExpression)((UnaryExpression)op2).Operand).Operand;
@@ -1837,22 +1837,34 @@ namespace LinqToDB.Linq.Builder
 				// handle enum replaced with integer
 				// here byte/short values replaced with int, int+ values replaced with actual underlying type
 				// (int)enum op const
-				else if (conv.Operand.Type.IsEnumEx()
+				else if (op1conv.Operand.Type.IsEnumEx()
 					&& op2.NodeType == ExpressionType.Constant
-						&& (op2.Type == Enum.GetUnderlyingType(conv.Operand.Type) || op2.Type == typeof(int)))
+						&& (op2.Type == Enum.GetUnderlyingType(op1conv.Operand.Type) || op2.Type == typeof(int)))
 				{
-					op1 = conv.Operand;
-					op2 = Expression.Constant(Enum.ToObject(conv.Operand.Type, ((ConstantExpression)op2).Value), conv.Operand.Type);
+					op1 = op1conv.Operand;
+					op2 = Expression.Constant(Enum.ToObject(op1conv.Operand.Type, ((ConstantExpression)op2).Value), op1conv.Operand.Type);
 					return true;
 				}
 				// here underlying type used
 				// (int?)enum? op (int?)enum
-				else if (conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(conv.Operand.Type).IsEnumEx()
+				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type).IsEnumEx()
 					&& op2.NodeType == ExpressionType.Convert
-					&& ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Constant && (((UnaryExpression)op2).Operand).Type == Nullable.GetUnderlyingType(conv.Operand.Type))
+					&& op2 is UnaryExpression op2conv2
+					&& op2conv2.Operand.NodeType == ExpressionType.Constant
+					&& op2conv2.Operand.Type == Nullable.GetUnderlyingType(op1conv.Operand.Type))
 				{
-					op1 = conv.Operand;
-					op2 = Expression.Convert(((UnaryExpression)op2).Operand, conv.Operand.Type);
+					op1 = op1conv.Operand;
+					op2 = Expression.Convert(op2conv2.Operand, op1conv.Operand.Type);
+					return true;
+				}
+				// https://github.com/linq2db/linq2db/issues/2039
+				// byte, sbyte and ushort comparison operands upcasted to int
+				else if (op2.NodeType == ExpressionType.Convert
+					&& op2 is UnaryExpression op2conv1
+					&& op1conv.Operand.Type == op2conv1.Operand.Type)
+				{
+					op1 = op1conv .Operand;
+					op2 = op2conv1.Operand;
 					return true;
 				}
 			}

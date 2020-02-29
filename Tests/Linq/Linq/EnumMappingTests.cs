@@ -1838,7 +1838,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db    = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
@@ -1851,7 +1851,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db    = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
@@ -1864,7 +1864,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db    = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
@@ -1877,7 +1877,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db    = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
@@ -1890,7 +1890,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
@@ -1903,7 +1903,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
@@ -1916,7 +1916,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
@@ -1929,7 +1929,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
@@ -1942,7 +1942,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
@@ -1955,7 +1955,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
@@ -1968,7 +1968,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
@@ -1981,7 +1981,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
@@ -1994,7 +1994,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
@@ -2007,7 +2007,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
@@ -2020,7 +2020,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
@@ -2033,7 +2033,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
@@ -2046,7 +2046,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
@@ -2059,7 +2059,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
@@ -2072,7 +2072,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
@@ -2085,7 +2085,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
@@ -2098,7 +2098,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
@@ -2111,7 +2111,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
@@ -2124,7 +2124,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Greater_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
@@ -2137,7 +2137,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
