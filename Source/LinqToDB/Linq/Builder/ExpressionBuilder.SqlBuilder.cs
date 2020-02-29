@@ -3116,7 +3116,8 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsNullConstant(Expression expr)
 		{
-			return expr.NodeType == ExpressionType.Constant && ((ConstantExpression)expr).Value == null;
+			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
+				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
 		Expression RemoveNullPropagation(Expression expr)
