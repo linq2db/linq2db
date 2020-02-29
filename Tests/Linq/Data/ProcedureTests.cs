@@ -45,7 +45,7 @@ namespace Tests.Data
 			using (var db = new DataConnection(context))
 			{
 				var p1 = PersonSelectByKeyLowercaseColumns(db, 1).First();
-				var p2 = db.Query<Person>("SELECT ID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
+				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
 				var p3 = PersonSelectByKey(db, 1).First();
 
 				Assert.AreEqual(p1.FirstName, p2.FirstName);
