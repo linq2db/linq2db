@@ -133,7 +133,7 @@ CREATE Procedure Person_SelectByKeyLowercase
 	@id int
 AS
 
-SELECT id, firstname FROM Person WHERE PersonID = @id
+SELECT personid, firstname FROM Person WHERE PersonID = @id
 
 GO
 
