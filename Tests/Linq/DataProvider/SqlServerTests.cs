@@ -18,6 +18,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using System.Threading;
+using Tests.Model;
 
 #if !NETSTANDARD1_6
 using Microsoft.SqlServer.Types;
@@ -1256,6 +1257,7 @@ namespace Tests.DataProvider
 				};
 				
 				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
 				
 				Assert.That(ret, Is.GreaterThan(0));
 			}
@@ -1277,6 +1279,7 @@ namespace Tests.DataProvider
 				};
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
 
 				Assert.That(ret, Is.GreaterThan(0));
 			}
@@ -1298,6 +1301,7 @@ namespace Tests.DataProvider
 				};
 				
 				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
 				
 				Assert.That(ret, Is.GreaterThan(0));
 			}
@@ -1319,7 +1323,8 @@ namespace Tests.DataProvider
 				};
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
-
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+			
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
