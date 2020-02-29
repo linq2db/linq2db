@@ -1250,7 +1250,7 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = "Dummy",
+					FirstName = Guid.NewGuid().ToString(),
 					LastName = "Person",
 					MiddleName = "X",
 					Gender = "M"
@@ -1272,7 +1272,7 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = "Dummy",
+					FirstName = Guid.NewGuid().ToString(),
 					LastName = "Person",
 					MiddleName = "X",
 					Gender = "M"
@@ -1294,7 +1294,7 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = "Dummy",
+					FirstName = Guid.NewGuid().ToString(),
 					LastName = "Person",
 					MiddleName = "X",
 					Gender = "M"
@@ -1316,7 +1316,7 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = "Async",
+					FirstName = Guid.NewGuid().ToString(),
 					LastName = "Person",
 					MiddleName = "X",
 					Gender = "M"
