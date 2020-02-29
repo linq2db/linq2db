@@ -561,5 +561,89 @@ namespace Tests.DataProvider
 		}
 
 #endif
+
+		// there is no date type in sqlite and one of three other types could be used as storage:
+		// INTEGER: unixtime (not sure if it supports full 64 bits) without fractional seconds
+		// DOUBLE : unixtime with fractional seconds support
+		// TEXT   : ISO8601 string
+		public class DateTimeTable
+		{ 
+			public DateTime DateTime { get; set; }
+		}
+
+		private MappingSchema ConfigureMapping(string columnType)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<DateTimeTable>()
+					.Property(_ => _.DateTime)
+						.HasDbType(columnType);
+
+			return ms;
+		}
+
+		[Test]
+		public void DateTimeRoundtrip_Insert(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     DateTimeKind kind,
+			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+		{
+			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
+			using (var table = db.CreateLocalTable<DateTimeTable>())
+			{
+				db.InlineParameters = inline;
+				// use 2040 to test unixtime don't overflow
+				var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+				table
+					.Insert(() => new DateTimeTable()
+					{
+						DateTime = dt
+					});
+
+				var sql = db.LastQuery;
+
+				var result = table.Single();
+
+				Assert.AreEqual(!inline                 , sql.Contains("@"));
+				Assert.AreEqual(dt                      , result.DateTime);
+				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind); // this is what we currently get always from provider
+			}
+		}
+
+		[Test]
+		public void DateTimeRoundtrip_BulkCopy(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     DateTimeKind kind,
+			[Values]                                     BulkCopyType copyType,
+			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+		{
+			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
+			using (var table = db.CreateLocalTable<DateTimeTable>())
+			{
+				db.InlineParameters = inline;
+				var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+				db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = copyType },
+						new[]
+						{
+							new DateTimeTable()
+							{
+								DateTime = dt
+							}
+						});
+
+				var result = table.Single();
+
+				// don't assert sql, as InlineParameters ignored for some copy types
+
+				Assert.AreEqual(dt                      , result.DateTime);
+				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind); // this is what we currently get always from provider
+			}
+		}
 	}
 }
