@@ -1708,8 +1708,8 @@ namespace LinqToDB.Linq.Builder
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal:
-				case ExpressionType.NotEqual:
+				case ExpressionType.Equal    :
+				case ExpressionType.NotEqual :
 
 					var p = ConvertObjectComparison(nodeType, context, left, context, right);
 					if (p != null)
@@ -1737,12 +1737,12 @@ namespace LinqToDB.Linq.Builder
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal: op = SqlPredicate.Operator.Equal; break;
-				case ExpressionType.NotEqual: op = SqlPredicate.Operator.NotEqual; break;
-				case ExpressionType.GreaterThan: op = SqlPredicate.Operator.Greater; break;
+				case ExpressionType.Equal             : op = SqlPredicate.Operator.Equal;          break;
+				case ExpressionType.NotEqual          : op = SqlPredicate.Operator.NotEqual;       break;
+				case ExpressionType.GreaterThan       : op = SqlPredicate.Operator.Greater;        break;
 				case ExpressionType.GreaterThanOrEqual: op = SqlPredicate.Operator.GreaterOrEqual; break;
-				case ExpressionType.LessThan: op = SqlPredicate.Operator.Less; break;
-				case ExpressionType.LessThanOrEqual: op = SqlPredicate.Operator.LessOrEqual; break;
+				case ExpressionType.LessThan          : op = SqlPredicate.Operator.Less;           break;
+				case ExpressionType.LessThanOrEqual   : op = SqlPredicate.Operator.LessOrEqual;    break;
 				default: throw new InvalidOperationException();
 			}
 
@@ -1767,7 +1767,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (nodeType)
 			{
-				case ExpressionType.Equal:
+				case ExpressionType.Equal   :
 				case ExpressionType.NotEqual:
 
 					if (!context.SelectQuery.IsParameterDependent &&
