@@ -505,5 +505,42 @@ WHERE
 			}
 		}
 
+		public interface ITreeItem
+		{
+			int Id { get; set; }
+			int? ParentId { get; set; }
+			IList<TreeItem> Children { get; set; }
+		}
+
+		[Table("TreeItem")]
+		public class TreeItem : ITreeItem
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column]
+			public int? ParentId { get; set; }
+			
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
+			public IList<TreeItem> Children { get; set; }
+		}
+
+		[Test]
+		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
+			using (db.CreateLocalTable<TreeItem>())
+			{
+				var treeItems = db.GetTable<TreeItem>();
+
+				DoGeneric(treeItems);
+			}
+		}
+		
+		void DoGeneric<T>(ITable<T> treeItems) where T: ITreeItem
+		{
+			var q = treeItems.Where(x => x.Children.Any());
+				
+			Console.WriteLine(q.ToString());
+		}
 	}
 }
