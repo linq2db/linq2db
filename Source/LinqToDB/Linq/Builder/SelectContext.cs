@@ -711,22 +711,21 @@ namespace LinqToDB.Linq.Builder
 									{
 										var member = ((MemberExpression)levelExpression).Member;
 
-										var memberExpression = GetProjectedExpression(member, false);
-										if (memberExpression == null)
+										if (!Members.TryGetValue(member, out var memberExpression))
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
 											if (nm != null && member.DeclaringType.IsInterfaceEx())
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
-													memberExpression = GetProjectedExpression(nm, false);
+													memberExpression = Members[nm];
 												else
 												{
 													var mdt = member.DeclaringType.GetDefiningTypes(member);
 													var ndt = Body.Type.           GetDefiningTypes(nm);
 
 													if (mdt.Intersect(ndt).Any())
-														memberExpression = GetProjectedExpression(nm, false);
+														memberExpression = Members[nm];
 												}
 											}
 
@@ -925,7 +924,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (level == 0)
 			{
-				if (Body.Unwrap().NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
+				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
 				{
 					var sequence = GetSequence(Body, 0);
 
@@ -982,8 +981,14 @@ namespace LinqToDB.Linq.Builder
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
 			Func<int,IBuildContext,Expression,int,Expression,T> action)
 		{
-			var memberExpression = GetProjectedExpression(levelExpression.Member, true);
-			memberExpression = memberExpression.Unwrap();
+			if (!Members.TryGetValue(levelExpression.Member, out var memberExpression))
+			{
+				if (Body != null)
+					Members.TryGetValue(Body.Type.GetMemberEx(levelExpression.Member), out memberExpression);
+
+				if (memberExpression == null)
+					throw new LinqToDBException($"Member '{levelExpression.Member.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+			}
 
 			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
 			var sequence         = GetSequence  (expression, level);
@@ -1033,32 +1038,6 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		Expression GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
-		{
-			if (!Members.TryGetValue(memberInfo, out var memberExpression))
-			{
-				var member = Body?.Type.GetMemberEx(memberInfo);
-				if (member != null)
-					Members.TryGetValue(member, out memberExpression);
-
-				if (memberExpression == null)
-				{
-					if (typeof(ExpressionBuilder.GroupSubQuery<,>).IsSameOrParentOf(Body.Type))
-					{
-						var newMember = Body.Type.GetField("Element");
-						if (Members.TryGetValue(newMember, out memberExpression))
-						{
-							memberExpression = Expression.MakeMemberAccess(memberExpression, memberInfo);
-						}
-					}
-				}
-			}
-
-			if (throwOnError && memberExpression == null)
-				throw new LinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
-			return memberExpression;
-		}
-
 		IBuildContext GetSequence(Expression expression, int level)
 		{
 			if (Sequence.Length == 1 && Sequence[0].Parent == null)
@@ -1079,7 +1058,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
-							var memberExpression = GetProjectedExpression(((MemberExpression)levelExpression).Member, true);
+							var memberExpression = Members[((MemberExpression)levelExpression).Member];
 
 							root =  memberExpression.GetRootObject(Builder.MappingSchema);
 
@@ -1183,8 +1162,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
 		{
-			var memberExpression = GetProjectedExpression(member, false);
-			if (memberExpression == null)
+			if (!Members.TryGetValue(member, out var memberExpression))
 			{
 				foreach (var m in Members)
 				{
