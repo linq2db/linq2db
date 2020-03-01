@@ -17,6 +17,9 @@ namespace Tests._Create
 {
 	using Model;
 
+#if APPVEYOR
+	[Retry(2)] // Appveyor SQL Server instance timeouts first time due to spatial types use
+#endif
 	[TestFixture]
 	[Category("Create")]
 	// ReSharper disable once InconsistentNaming

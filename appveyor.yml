@@ -52,11 +52,11 @@ before_build:
 
     # create databases
     $dbName = "TestDatanet45"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
-    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
 
     $dbName = "TestDatacore1"
     sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
