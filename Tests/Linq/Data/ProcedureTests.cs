@@ -27,6 +27,32 @@ namespace Tests.Data
 				new DataParameter("@id", @id));
 		}
 
+		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, int? @id)
+		{
+			var databaseName = TestUtils.GetDatabaseName(dataConnection);
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
+#else
+			var escapedTableName = "[" + databaseName + "]";
+#endif
+			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKeyLowercase]",
+				new DataParameter("@id", @id));
+		}
+
+		[Test]
+		public void TestColumnNameComparerCaseInsensivity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p1 = PersonSelectByKeyLowercaseColumns(db, 1).First();
+				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
+				var p3 = PersonSelectByKey(db, 1).First();
+
+				Assert.AreEqual(p1.FirstName, p2.FirstName);
+				Assert.AreEqual(p1.FirstName, p3.FirstName);
+			}
+		}
+
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
