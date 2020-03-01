@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -23,9 +21,13 @@ namespace Tests.UserTests
 			{
 				fmb.Entity<Issue>()
 					.HasTableName("issues")
-					.Property(x => x.AssignedToId).HasColumnName("assigned_to_id").IsNullable()
-					.Association(x => x.Tagging, (y, z) => y.Id == z.TaggableId)
-					.Property(x => x.Id).HasColumnName("id").IsPrimaryKey();
+						.Property(x => x.AssignedToId)
+							.HasColumnName("assigned_to_id")
+							.IsNullable()
+						.Association(x => x.Tagging, (y, z) => y.Id == z.TaggableId)
+						.Property(x => x.Id)
+							.HasColumnName("id")
+							.IsPrimaryKey();
 			}
 		}
 
@@ -46,11 +48,19 @@ namespace Tests.UserTests
 				fmb.Entity<Tagging>()
 					.HasTableName("taggings")
 					.Inheritance(x => x.TaggableType, "Issue", typeof(TaggingIssue))
-					.Property(x => x.Id).HasColumnName("id").IsPrimaryKey()
-					.Association(x => x.Tag, (y, z) => y.TagId == z.Id)
-					.Property(x => x.TagId).HasColumnName("tag_id").IsNullable()
-					.Property(x => x.TaggableId).HasColumnName("taggable_id").IsNullable()
-					.Property(x => x.TaggableType).HasColumnName("taggable_type").IsNullable();
+						.Property(x => x.Id)
+							.HasColumnName("id")
+							.IsPrimaryKey()
+						.Association(x => x.Tag, (y, z) => y.TagId == z.Id)
+						.Property(x => x.TagId)
+							.HasColumnName("tag_id")
+							.IsNullable()
+						.Property(x => x.TaggableId)
+							.HasColumnName("taggable_id")
+							.IsNullable()
+						.Property(x => x.TaggableType)
+							.HasColumnName("taggable_type")
+							.IsNullable();
 			}
 		}
 
@@ -58,7 +68,7 @@ namespace Tests.UserTests
 		{
 			public Issue Issue { get; set; }
 
-			public static void Map(FluentMappingBuilder fmb)
+			public static new void Map(FluentMappingBuilder fmb)
 			{
 				fmb.Entity<TaggingIssue>()
 					.Association(x => x.Issue, (y, z) => y.TaggableId == z.Id);
@@ -75,8 +85,12 @@ namespace Tests.UserTests
 			{
 				fmb.Entity<Tag>()
 				   .HasTableName("tags")
-				   .Property(x => x.Id).HasColumnName("id").IsPrimaryKey()
-				   .Property(x => x.Name).HasColumnName("name").IsNullable();
+						.Property(x => x.Id)
+							.HasColumnName("id")
+							.IsPrimaryKey()
+						.Property(x => x.Name)
+							.HasColumnName("name")
+							.IsNullable();
 			}
 		}
 
@@ -84,26 +98,27 @@ namespace Tests.UserTests
 		{
 			public int Id { get; set; }
 
-			public string Lastname { get; set; }
-
 			public static void Map(FluentMappingBuilder fmb)
 			{
 				fmb.Entity<User>()
 					.HasTableName("users")
-					.Property(x => x.Id).HasColumnName("id").IsPrimaryKey()
-					.Property(x => x.Lastname).HasColumnName("lastname").IsNullable(false);
+						.Property(x => x.Id)
+							.HasColumnName("id")
+							.IsPrimaryKey();
 			}
 		}
 
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms = new MappingSchema();
+			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
-			Issue.Map(builder);
-			Tagging.Map(builder);
+
+			Issue       .Map(builder);
+			Tagging     .Map(builder);
 			TaggingIssue.Map(builder);
-			Tag.Map(builder);
+			Tag         .Map(builder);
+
 			using (var db = GetDataContext(context, ms))
 			{
 				var query = from i in db.GetTable<Issue>()
@@ -111,6 +126,7 @@ namespace Tests.UserTests
 							from u in uj.DefaultIfEmpty()
 							where i.Tagging.Any(x => x.Tag.Name == "Visu")
 							select new { Issue = i, User = u };
+
 				var lst = query.ToList();
 
 				/*

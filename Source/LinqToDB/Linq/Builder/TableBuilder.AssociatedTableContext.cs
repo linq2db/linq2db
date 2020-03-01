@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					RegularConditionCount = join.Condition.Conditions.Count;
-					ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
+					ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, OriginalType);
 
 					if (ExpressionPredicate != null)
 					{

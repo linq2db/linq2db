@@ -1420,7 +1420,7 @@ namespace LinqToDB.Linq.Builder
 					isNew = true;
 				}
 
-				if (tableAssociation == null && levelExpression.NodeType == ExpressionType.MemberAccess && objectMapper.Associations.Count > 0 || inheritance.Count > 0)
+				if (tableAssociation == null && levelExpression.NodeType == ExpressionType.MemberAccess && (objectMapper.Associations.Count > 0 || inheritance.Count > 0))
 				{
 
 					var memberExpression = (MemberExpression)levelExpression;
