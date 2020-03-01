@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -704,5 +704,582 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		#region redundant convert https://github.com/linq2db/linq2db/issues/2039
+
+		[Table]
+		public class IntegerConverts
+		{
+			[Column] public int Id { get; set; }
+
+			[Column] public byte    Byte    { get; set; }
+			[Column] public sbyte   SByte   { get; set; }
+			[Column] public short   Int16   { get; set; }
+			[Column] public ushort  UInt16  { get; set; }
+			[Column] public int     Int32   { get; set; }
+			[Column] public uint    UInt32  { get; set; }
+			[Column] public long    Int64   { get; set; }
+			[Column] public ulong   UInt64  { get; set; }
+
+			[Column] public byte?   ByteN   { get; set; }
+			[Column] public sbyte?  SByteN  { get; set; }
+			[Column] public short?  Int16N  { get; set; }
+			[Column] public ushort? UInt16N { get; set; }
+			[Column] public int?    Int32N  { get; set; }
+			[Column] public uint?   UInt32N { get; set; }
+			[Column] public long?   Int64N  { get; set; }
+			[Column] public ulong?  UInt64N { get; set; }
+
+			public static IntegerConverts[] Seed { get; }
+				= new[]
+				{
+					new IntegerConverts() { Id = 1 },
+				};
+		}
+
+		[Test]
+		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Byte equals y.Byte
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Byte == x.Byte)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.SByte equals y.SByte
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.SByte == x.SByte)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int16 equals y.Int16
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int16 == x.Int16)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt16 equals y.UInt16
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt16 == x.UInt16)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int32 equals y.Int32
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int32 == x.Int32)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt32 equals y.UInt32
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt32 == x.UInt32)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int64 equals y.Int64
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int64 == x.Int64)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt64 equals y.UInt64
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt64 == x.UInt64)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.ByteN equals y.ByteN
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.ByteN == x.ByteN)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.SByteN equals y.SByteN
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.SByteN == x.SByteN)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int16N equals y.Int16N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int16N == x.Int16N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt16N equals y.UInt16N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt16N == x.UInt16N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int32N equals y.Int32N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int32N == x.Int32N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt32N equals y.UInt32N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt32N == x.UInt32N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.Int64N equals y.Int64N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.Int64N == x.Int64N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvert_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							join y in db.GetTable<IntegerConverts>() on x.UInt64N equals y.UInt64N
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+
+		[Test]
+		public void TestNoConvertWithExtension_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable(IntegerConverts.Seed))
+			{
+				var query = from x in db.GetTable<IntegerConverts>()
+							from y in db.GetTable<IntegerConverts>().InnerJoin(y => y.UInt64N == x.UInt64N)
+							select x;
+
+				var res = query.Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.False(db.LastQuery.Contains(" Convert("));
+			}
+		}
+		#endregion
 	}
 }
