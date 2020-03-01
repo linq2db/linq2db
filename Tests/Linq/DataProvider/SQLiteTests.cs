@@ -564,8 +564,8 @@ namespace Tests.DataProvider
 
 		// there is no date type in sqlite and one of three other types could be used as storage:
 		// INTEGER: unixtime (not sure if it supports full 64 bits) without fractional seconds
-		// DOUBLE : unixtime with fractional seconds support
-		// TEXT   : ISO8601 string
+		// DOUBLE : "the number of days since noon in Greenwich on November 24, 4714 B.C. according to the proleptic Gregorian calendar." whatever it means O_O
+		// TEXT   : ISO8601 string ("YYYY-MM-DD HH:MM:SS.SSS"). Not sure why SQLite documentation specify this specific format, maybe they don't support other qualifiers from ISO8601
 		public class DateTimeTable
 		{ 
 			public DateTime DateTime { get; set; }
@@ -590,6 +590,14 @@ namespace Tests.DataProvider
 			[Values]                                     DateTimeKind kind,
 			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
 		{
+			// TODO: retest in V3 with newer provider version
+			// in v108 it:
+			// - cannot read data from int/double values into DateTime
+			// - custom converter could be registered, but it still will not work because provider will return
+			// year number instead of full date value (not sure if it is read bug or it is written into db incorrectly)
+			if (context.Contains("Classic") && columnType != "TEXT")
+				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
+
 			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
 			using (var table = db.CreateLocalTable<DateTimeTable>())
 			{
@@ -607,9 +615,24 @@ namespace Tests.DataProvider
 
 				var result = table.Single();
 
+				var resultDt = result.DateTime;
+				if (kind == DateTimeKind.Utc)
+
 				Assert.AreEqual(!inline                 , sql.Contains("@"));
-				Assert.AreEqual(dt                      , result.DateTime);
-				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind); // this is what we currently get always from provider
+
+				if (kind == DateTimeKind.Utc)
+				{
+					// utc values returned as local
+					Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
+				}
+				else
+				{
+					Assert.AreEqual(dt                      , result.DateTime);
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
+				}
 			}
 		}
 
@@ -621,6 +644,9 @@ namespace Tests.DataProvider
 			[Values]                                     BulkCopyType copyType,
 			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
 		{
+			if (context.Contains("Classic") && columnType != "TEXT")
+				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
+			
 			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
 			using (var table = db.CreateLocalTable<DateTimeTable>())
 			{
@@ -641,8 +667,19 @@ namespace Tests.DataProvider
 
 				// don't assert sql, as InlineParameters ignored for some copy types
 
-				Assert.AreEqual(dt                      , result.DateTime);
-				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind); // this is what we currently get always from provider
+				if (kind == DateTimeKind.Utc)
+				{
+					// utc values returned as local
+					Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
+				}
+				else
+				{
+					Assert.AreEqual(dt                      , result.DateTime);
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
+				}
 			}
 		}
 	}

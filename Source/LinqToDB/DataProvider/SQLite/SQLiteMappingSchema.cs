@@ -62,17 +62,21 @@ namespace LinqToDB.DataProvider.SQLite
 			if (value.Millisecond == 0)
 			{
 				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
+					"'{0:yyyy-MM-dd}" :
+					"'{0:yyyy-MM-dd HH:mm:ss}";
 
 				stringBuilder.AppendFormat(format, value);
 			}
 			else
 			{
 				stringBuilder
-					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-					.Append('\'');
+					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'));
 			}
+
+			if (value.Kind == DateTimeKind.Utc)
+				stringBuilder.Append("Z'");
+			else
+				stringBuilder.Append("'");
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
