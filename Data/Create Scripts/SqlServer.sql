@@ -125,7 +125,7 @@ GO
 -- Person_SelectByKeyLowercase
 
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectByKeyLowercase')
-BEGIN DROP Procedure Person_SelectByKey
+BEGIN DROP Procedure Person_SelectByKeyLowercase
 END
 GO
 
