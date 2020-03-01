@@ -1703,7 +1703,7 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (RestoreCompare(ref left, ref right))
+			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
 			switch (nodeType)
