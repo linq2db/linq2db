@@ -104,6 +104,29 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Returns collection of query result records.</returns>
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProc(objectReader);
+		}
+
+		/// <summary>
 		/// Executes command and returns results as collection of values, mapped using provided mapping function.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
@@ -530,6 +553,28 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Returns collection of query result records.</returns>
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProc<T>();
+		}
+
+		/// <summary>
 		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
@@ -582,6 +627,62 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		/// <example>
+		/// Example of <typeparamref name="T"/> definition with <see cref="Mapping.ResultSetIndexAttribute"/>.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   [ResultSetIndex(0)] public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   [ResultSetIndex(1)] public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   [ResultSetIndex(2)] public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   [ResultSetIndex(3)] public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// Example of <typeparamref name="T"/> definition without attributes.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// </example>
+		/// <remarks>
+		///		- type <typeparamref name="T"/> should have default constructor.<para/>
+		///		- if at least one property or field has <see cref="Mapping.ResultSetIndexAttribute"/>,
+		///		then properties that are not marked with <see cref="Mapping.ResultSetIndexAttribute"/> will be ignored.<para/>
+		///		- if there is missing index in properties that are marked with <see cref="Mapping.ResultSetIndexAttribute"/>, then result set under missing index will be ignored.<para/>
+		///		- if there is no <see cref="Mapping.ResultSetIndexAttribute"/>, then all non readonly fields or properties with setter will read from multiple result set. Order is based on their appearance in class.
+		/// </remarks>
+		public static Task<T> QueryProcMultipleAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
+			where T : class
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProcMultipleAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>
 		///     A task that represents the asynchronous operation.
@@ -617,6 +718,61 @@ namespace LinqToDB.Data
 		///		- if there is no <see cref="Mapping.ResultSetIndexAttribute"/>, then all non readonly fields or properties with setter will read from multiple result set. Order is based on their appearance in class.
 		/// </remarks>
 		public static Task<T> QueryProcMultipleAsync<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+			where T : class
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProcMultipleAsync<T>();
+		}
+
+		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		/// <example>
+		/// Example of <typeparamref name="T"/> definition with <see cref="Mapping.ResultSetIndexAttribute"/>.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   [ResultSetIndex(0)] public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   [ResultSetIndex(1)] public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   [ResultSetIndex(2)] public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   [ResultSetIndex(3)] public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// Example of <typeparamref name="T"/> definition without attributes.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// </example>
+		/// <remarks>
+		///		- type <typeparamref name="T"/> should have default constructor.<para/>
+		///		- if at least one property or field has <see cref="Mapping.ResultSetIndexAttribute"/>,
+		///		then properties that are not marked with <see cref="Mapping.ResultSetIndexAttribute"/> will be ignored.<para/>
+		///		- if there is missing index in properties that are marked with <see cref="Mapping.ResultSetIndexAttribute"/>, then result set under missing index will be ignored.<para/>
+		///		- if there is no <see cref="Mapping.ResultSetIndexAttribute"/>, then all non readonly fields or properties with setter will read from multiple result set. Order is based on their appearance in class.
+		/// </remarks>
+		public static Task<T> QueryProcMultipleAsync<T>(this DataConnection connection, string sql, object parameters)
 			where T : class
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcMultipleAsync<T>();
@@ -660,6 +816,58 @@ namespace LinqToDB.Data
 		///		- if there is no <see cref="Mapping.ResultSetIndexAttribute"/>, then all non readonly fields or properties with setter will read from multiple result set. Order is based on their appearance in class.
 		/// </remarks>
 		public static T QueryProcMultiple<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+			where T : class
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProcMultiple<T>();
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Returns result.</returns>
+		/// <example>
+		/// Example of <typeparamref name="T"/> definition with <see cref="Mapping.ResultSetIndexAttribute"/>.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   [ResultSetIndex(0)] public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   [ResultSetIndex(1)] public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   [ResultSetIndex(2)] public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   [ResultSetIndex(3)] public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// Example of <typeparamref name="T"/> definition without attributes.
+		/// <code>
+		/// class MultipleResult
+		/// {
+		///	   public IEnumerable&lt;Person&gt;  AllPersons   { get; set; }
+		///	   public IList&lt;Doctor&gt;        AllDoctors   { get; set; }
+		///	   public IEnumerable&lt;Patient&gt; AllPatients  { get; set; }
+		///	   public Patient              FirstPatient { get; set; }
+		/// }
+		/// </code>
+		/// </example>
+		/// <remarks>
+		///		- type <typeparamref name="T"/> should have default constructor.<para/>
+		///		- if at least one property or field has <see cref="Mapping.ResultSetIndexAttribute"/>,
+		///		then properties that are not marked with <see cref="Mapping.ResultSetIndexAttribute"/> will be ignored.<para/>
+		///		- if there is missing index in properties that are marked with <see cref="Mapping.ResultSetIndexAttribute"/>, then result set under missing index will be ignored.<para/>
+		///		- if there is no <see cref="Mapping.ResultSetIndexAttribute"/>, then all non readonly fields or properties with setter will read from multiple result set. Order is based on their appearance in class.
+		/// </remarks>
+		public static T QueryProcMultiple<T>(this DataConnection connection, string sql, object parameters)
 			where T : class
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcMultiple<T>();
@@ -1188,6 +1396,27 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
+		/// </summary>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Number of records, affected by command execution.</returns>
+		public static int ExecuteProc(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProc();
+		}
+
+		/// <summary>
 		/// Executes command and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
@@ -1316,10 +1545,53 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Task with number of records, affected by command execution.</returns>
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync();
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// </summary>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// </summary>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Task with number of records, affected by command execution.</returns>
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync(cancellationToken);
 		}
@@ -1401,6 +1673,27 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).ExecuteProc<T>();
 		}
 
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Resulting value.</returns>
+		public static T ExecuteProc<T>(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProc<T>();
+		}
 		#endregion
 
 		#region Execute scalar async
@@ -1548,10 +1841,55 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Task with resulting value.</returns>
+		public static Task<T> ExecuteProcAsync<T>(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync<T>();
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Resulting value.</returns>
 		public static Task<T> ExecuteProcAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Resulting value.</returns>
+		public static Task<T> ExecuteProcAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync<T>(cancellationToken);
 		}
