@@ -416,6 +416,135 @@ namespace Tests.SchemaProvider
 				Assert.That(column.Description, Is.EqualTo("This is the Person.PersonID column"));
 			}
 		}
+
+		[Test]
+		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var view = schema.Tables.FirstOrDefault(t => t.TableName == "Issue2023");
+
+				if (context.Contains("9.2"))
+				{
+					// test that schema load is not broken by materialized view support for old versions
+					Assert.IsNull(view);
+					return;
+				}
+				
+				Assert.IsNotNull(view);
+
+				Assert.AreEqual("public.Issue2023", view.ID);
+				Assert.IsNull(view.CatalogName);
+				Assert.AreEqual("public", view.SchemaName);
+				Assert.AreEqual("Issue2023", view.TableName);
+				Assert.AreEqual("This is the Issue2023 matview", view.Description);
+				Assert.AreEqual(true, view.IsDefaultSchema);
+				Assert.AreEqual(true, view.IsView);
+				Assert.AreEqual(false, view.IsProcedureResult);
+				Assert.AreEqual("Issue2023", view.TypeName);
+				Assert.AreEqual(false, view.IsProviderSpecific);
+				Assert.AreEqual(0, view.ForeignKeys.Count);
+				Assert.AreEqual(5, view.Columns.Count);
+
+				Assert.AreEqual("PersonID", view.Columns[0].ColumnName);
+				Assert.AreEqual("int4", view.Columns[0].ColumnType);
+				Assert.AreEqual(true, view.Columns[0].IsNullable);
+				Assert.AreEqual(false, view.Columns[0].IsIdentity);
+				Assert.AreEqual(false, view.Columns[0].IsPrimaryKey);
+				Assert.AreEqual(-1, view.Columns[0].PrimaryKeyOrder);
+				Assert.AreEqual("This is the Issue2023.PersonID column", view.Columns[0].Description);
+				Assert.AreEqual("PersonID", view.Columns[0].MemberName);
+				Assert.AreEqual("int?", view.Columns[0].MemberType);
+				Assert.AreEqual(null, view.Columns[0].ProviderSpecificType);
+				Assert.AreEqual(typeof(int), view.Columns[0].SystemType);
+				Assert.AreEqual(DataType.Int32, view.Columns[0].DataType);
+				Assert.AreEqual(true, view.Columns[0].SkipOnInsert);
+				Assert.AreEqual(true, view.Columns[0].SkipOnUpdate);
+				Assert.AreEqual(null, view.Columns[0].Length);
+				// TODO: maybe we should fix it?
+				Assert.AreEqual(32, view.Columns[0].Precision);
+				Assert.AreEqual(0, view.Columns[0].Scale);
+				Assert.AreEqual(view, view.Columns[0].Table);
+
+				Assert.AreEqual("FirstName", view.Columns[1].ColumnName);
+				Assert.AreEqual("character varying(50)", view.Columns[1].ColumnType);
+				Assert.AreEqual(true, view.Columns[1].IsNullable);
+				Assert.AreEqual(false, view.Columns[1].IsIdentity);
+				Assert.AreEqual(false, view.Columns[1].IsPrimaryKey);
+				Assert.AreEqual(-1, view.Columns[1].PrimaryKeyOrder);
+				Assert.IsNull(view.Columns[1].Description);
+				Assert.AreEqual("FirstName", view.Columns[1].MemberName);
+				Assert.AreEqual("string", view.Columns[1].MemberType);
+				Assert.AreEqual(null, view.Columns[1].ProviderSpecificType);
+				Assert.AreEqual(typeof(string), view.Columns[1].SystemType);
+				Assert.AreEqual(DataType.NVarChar, view.Columns[1].DataType);
+				Assert.AreEqual(true, view.Columns[1].SkipOnInsert);
+				Assert.AreEqual(true, view.Columns[1].SkipOnUpdate);
+				Assert.AreEqual(50, view.Columns[1].Length);
+				Assert.AreEqual(null, view.Columns[1].Precision);
+				Assert.AreEqual(null, view.Columns[1].Scale);
+				Assert.AreEqual(view, view.Columns[1].Table);
+
+				Assert.AreEqual("LastName", view.Columns[2].ColumnName);
+				Assert.AreEqual("character varying(50)", view.Columns[2].ColumnType);
+				Assert.AreEqual(true, view.Columns[2].IsNullable);
+				Assert.AreEqual(false, view.Columns[2].IsIdentity);
+				Assert.AreEqual(false, view.Columns[2].IsPrimaryKey);
+				Assert.AreEqual(-1, view.Columns[2].PrimaryKeyOrder);
+				Assert.IsNull(view.Columns[2].Description);
+				Assert.AreEqual("LastName", view.Columns[2].MemberName);
+				Assert.AreEqual("string", view.Columns[2].MemberType);
+				Assert.AreEqual(null, view.Columns[2].ProviderSpecificType);
+				Assert.AreEqual(typeof(string), view.Columns[2].SystemType);
+				Assert.AreEqual(DataType.NVarChar, view.Columns[2].DataType);
+				Assert.AreEqual(true, view.Columns[2].SkipOnInsert);
+				Assert.AreEqual(true, view.Columns[2].SkipOnUpdate);
+				Assert.AreEqual(50, view.Columns[2].Length);
+				Assert.AreEqual(null, view.Columns[2].Precision);
+				Assert.AreEqual(null, view.Columns[2].Scale);
+				Assert.AreEqual(view, view.Columns[2].Table);
+
+				Assert.AreEqual("MiddleName", view.Columns[3].ColumnName);
+				Assert.AreEqual("character varying(50)", view.Columns[3].ColumnType);
+				Assert.AreEqual(true, view.Columns[3].IsNullable);
+				Assert.AreEqual(false, view.Columns[3].IsIdentity);
+				Assert.AreEqual(false, view.Columns[3].IsPrimaryKey);
+				Assert.AreEqual(-1, view.Columns[3].PrimaryKeyOrder);
+				Assert.IsNull(view.Columns[3].Description);
+				Assert.AreEqual("MiddleName", view.Columns[3].MemberName);
+				Assert.AreEqual("string", view.Columns[3].MemberType);
+				Assert.AreEqual(null, view.Columns[3].ProviderSpecificType);
+				Assert.AreEqual(typeof(string), view.Columns[3].SystemType);
+				Assert.AreEqual(DataType.NVarChar, view.Columns[3].DataType);
+				Assert.AreEqual(true, view.Columns[3].SkipOnInsert);
+				Assert.AreEqual(true, view.Columns[3].SkipOnUpdate);
+				Assert.AreEqual(50, view.Columns[3].Length);
+				Assert.AreEqual(null, view.Columns[3].Precision);
+				Assert.AreEqual(null, view.Columns[3].Scale);
+				Assert.AreEqual(view, view.Columns[3].Table);
+
+				Assert.AreEqual("Gender", view.Columns[4].ColumnName);
+				Assert.AreEqual("character(1)", view.Columns[4].ColumnType);
+				Assert.AreEqual(true, view.Columns[4].IsNullable);
+				Assert.AreEqual(false, view.Columns[4].IsIdentity);
+				Assert.AreEqual(false, view.Columns[4].IsPrimaryKey);
+				Assert.AreEqual(-1, view.Columns[4].PrimaryKeyOrder);
+				Assert.IsNull(view.Columns[4].Description);
+				Assert.AreEqual("Gender", view.Columns[4].MemberName);
+				Assert.AreEqual("char?", view.Columns[4].MemberType);
+				Assert.AreEqual(null, view.Columns[4].ProviderSpecificType);
+				Assert.AreEqual(typeof(char), view.Columns[4].SystemType);
+				Assert.AreEqual(DataType.NChar, view.Columns[4].DataType);
+				Assert.AreEqual(true, view.Columns[4].SkipOnInsert);
+				Assert.AreEqual(true, view.Columns[4].SkipOnUpdate);
+				Assert.AreEqual(1, view.Columns[4].Length);
+				Assert.AreEqual(null, view.Columns[4].Precision);
+				Assert.AreEqual(null, view.Columns[4].Scale);
+				Assert.AreEqual(view, view.Columns[4].Table);
+			}
+		}
 #endif
 	}
 

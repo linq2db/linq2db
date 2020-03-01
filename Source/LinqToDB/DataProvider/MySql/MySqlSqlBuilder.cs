@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Extensions;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -73,36 +74,203 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
+			// mysql has limited support for types in type-CAST expressions
+			if (!createDbType)
+			{
+				switch (type.DataType)
+				{
+					case DataType.Boolean       :
+					case DataType.SByte         :
+					case DataType.Int16         :
+					case DataType.Int32         :
+					case DataType.Int64         : StringBuilder.Append("SIGNED");        break;
+					case DataType.BitArray      : // wild guess
+					case DataType.Byte          :
+					case DataType.UInt16        :
+					case DataType.UInt32        :
+					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");      break;
+					case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)"); break;
+					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)"); break;
+					case DataType.DateTime      :
+					case DataType.DateTime2     :
+					case DataType.SmallDateTime :
+					case DataType.DateTimeOffset: StringBuilder.Append("DATETIME");      break;
+					case DataType.Time          : StringBuilder.Append("TIME");          break;
+					case DataType.Date          : StringBuilder.Append("DATE");          break;
+					case DataType.Json          : StringBuilder.Append("JSON");          break;
+					case DataType.Guid          : StringBuilder.Append("CHAR(36)");      break;
+					// TODO: FLOAT/DOUBLE support in CAST added just recently (v8.0.17)
+					// and needs version sniffing
+					case DataType.Double        :
+					case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
+					case DataType.Decimal       :
+						if (type.Scale != null && type.Scale != 0)
+							StringBuilder.Append($"DECIMAL({type.Precision ?? 10},{type.Scale})");
+						else if (type.Precision != null && type.Precision != 10)
+							StringBuilder.Append($"DECIMAL({type.Precision})");
+						else
+							StringBuilder.Append("DECIMAL"); break;
+					case DataType.Char          :
+					case DataType.NChar         :
+					case DataType.VarChar       :
+					case DataType.NVarChar      :
+					case DataType.NText         :
+					case DataType.Text          :
+						if (type.Length == null || type.Length > 255 || type.Length < 0)
+							StringBuilder.Append("CHAR(255)");
+						else if (type.Length == 1)
+							StringBuilder.Append("CHAR");
+						else
+							StringBuilder.Append($"CHAR({type.Length})");
+						break;
+					case DataType.VarBinary     :
+					case DataType.Binary        :
+					case DataType.Blob          :
+						if (type.Length == null || type.Length < 0)
+							StringBuilder.Append("BINARY(255)");
+						else if (type.Length == 1)
+							StringBuilder.Append("BINARY");
+						else
+							StringBuilder.Append($"BINARY({type.Length})");
+						break;
+					default                     : base.BuildDataType(type, createDbType); break;
+				}
+
+				return;
+			}
+
+			// types for CREATE TABLE statement
 			switch (type.DataType)
 			{
-				case DataType.Int16         :
-				case DataType.Int32         :
-				case DataType.Int64         :
-					if (createDbType) goto default;
-					StringBuilder.Append("Signed");
-					break;
-				case DataType.SByte         :
-				case DataType.Byte          :
-				case DataType.UInt16        :
-				case DataType.UInt32        :
-				case DataType.UInt64        :
-					if (createDbType) goto default;
-					StringBuilder.Append("Unsigned");
-					break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");                 break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                 break;
+				case DataType.SByte         : StringBuilder.Append("TINYINT");                       break;
+				case DataType.Int16         : StringBuilder.Append("SMALLINT");                      break;
+				case DataType.Int32         : StringBuilder.Append("INT");                           break;
+				case DataType.Int64         : StringBuilder.Append("BIGINT");                        break;
+				case DataType.Byte          : StringBuilder.Append("TINYINT UNSIGNED");              break;
+				case DataType.UInt16        : StringBuilder.Append("SMALLINT UNSIGNED");             break;
+				case DataType.UInt32        : StringBuilder.Append("INT UNSIGNED");                  break;
+				case DataType.UInt64        : StringBuilder.Append("BIGINT UNSIGNED");               break;
+				case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)");                 break;
+				case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)");                 break;
+				case DataType.Decimal       :
+					if (type.Scale != null && type.Scale != 0)
+						StringBuilder.Append($"DECIMAL({type.Precision ?? 10},{type.Scale})");
+					else if (type.Precision != null && type.Precision != 10)
+						StringBuilder.Append($"DECIMAL({type.Precision})");
+					else
+						StringBuilder.Append("DECIMAL"); break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                      break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean");                       break;
+				case DataType.SmallDateTime :
+					if (type.Precision > 0 && type.Precision <= 6)
+						StringBuilder.Append($"DATETIME({type.Precision})");
+					else
+						StringBuilder.Append("DATETIME");
+					break;
+				case DataType.DateTimeOffset:
+					if (type.Precision > 0 && type.Precision <= 6)
+						StringBuilder.Append($"TIMESTAMP({type.Precision})");
+					else
+						StringBuilder.Append("TIMESTAMP");
+					break;
+				case DataType.Time:
+					if (type.Precision > 0 && type.Precision <= 6)
+						StringBuilder.Append($"TIME({type.Precision})");
+					else
+						StringBuilder.Append("TIME");
+					break;
+				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                       break;
 				case DataType.Double        :
-				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
+					if (type.Precision >= 0 && type.Precision <= 53)
+						StringBuilder.Append($"FLOAT({type.Precision})"); // this is correct, FLOAT(p)
+					else
+						StringBuilder.Append("DOUBLE");
+					break;
+				case DataType.Single        :
+					if (type.Precision >= 0 && type.Precision <= 53)
+						StringBuilder.Append($"FLOAT({type.Precision})");
+					else
+						StringBuilder.Append("FLOAT");
+					break;
+				case DataType.BitArray:
+					{
+						var length = type.Length;
+						if (length == null)
+						{
+							var columnType = type.Type?.ToNullableUnderlying();
+							if (columnType == typeof(byte) || columnType == typeof(sbyte))
+								length = 8;
+							else if (columnType == typeof(short) || columnType == typeof(ushort))
+								length = 16;
+							else if (columnType == typeof(int) || columnType == typeof(uint))
+								length = 32;
+							else if (columnType == typeof(long) || columnType == typeof(ulong))
+								length = 64;
+						}
+
+						if (length != null && length != 1 && length >= 0)
+							StringBuilder.Append($"BIT({length})");
+						else
+							StringBuilder.Append("BIT");
+					}
+					break;
+				case DataType.Date          : StringBuilder.Append("DATE");                          break;
+				case DataType.Json          : StringBuilder.Append("JSON");                          break;
+				case DataType.Guid          : StringBuilder.Append("CHAR(36)");                      break;
+				case DataType.Char          :
+				case DataType.NChar         :
+					if (type.Length == null || type.Length > 255 || type.Length < 0)
+						StringBuilder.Append("CHAR(255)");
+					else if (type.Length == 1)
+						StringBuilder.Append("CHAR");
+					else
+						StringBuilder.Append($"CHAR({type.Length})");
+					break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
-					// yep, char(0) is allowed
 					if (type.Length == null || type.Length > 255 || type.Length < 0)
-						StringBuilder.Append("Char(255)");
+						StringBuilder.Append("VARCHAR(255)");
 					else
-						StringBuilder.Append($"Char({type.Length})");
+						StringBuilder.Append($"VARCHAR({type.Length})");
+					break;
+				case DataType.Binary:
+					if (type.Length == null || type.Length < 0)
+						StringBuilder.Append("BINARY(255)");
+					else if (type.Length == 1)
+						StringBuilder.Append("BINARY");
+					else
+						StringBuilder.Append($"BINARY({type.Length})");
+					break;
+				case DataType.VarBinary:
+					if (type.Length == null || type.Length < 0)
+						StringBuilder.Append("VARBINARY(255)");
+					else
+						StringBuilder.Append($"VARBINARY({type.Length})");
+					break;
+				case DataType.Blob:
+					if (type.Length == null || type.Length < 0)
+						StringBuilder.Append("BLOB");
+					else if (type.Length <= 255)
+						StringBuilder.Append("TINYBLOB");
+					else if (type.Length <= 65535)
+						StringBuilder.Append("BLOB");
+					else if (type.Length <= 16777215)
+						StringBuilder.Append("MEDIUMBLOB");
+					else
+						StringBuilder.Append("LONGBLOB");
+					break;
+				case DataType.NText:
+				case DataType.Text:
+					if (type.Length == null || type.Length < 0)
+						StringBuilder.Append("TEXT");
+					else if (type.Length <= 255)
+						StringBuilder.Append("TINYTEXT");
+					else if (type.Length <= 65535)
+						StringBuilder.Append("TEXT");
+					else if (type.Length <= 16777215)
+						StringBuilder.Append("MEDIUMTEXT");
+					else
+						StringBuilder.Append("LONGTEXT");
 					break;
 				default: base.BuildDataType(type, createDbType);                                     break;
 			}

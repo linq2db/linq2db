@@ -33,7 +33,6 @@
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 
 		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 		<PackageReference Include="System.Memory" Version="4.5.3" />
 	</ItemGroup>
 
@@ -59,6 +58,8 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.3.0" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
 	</ItemGroup>
 
 
@@ -72,6 +73,7 @@
 		<Compile Remove="Mapping\DynamicStoreTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
+		<Compile Remove="UserTests\Issue1925Tests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="TypeMapping\OracleWrappingTests.cs" />
 	</ItemGroup>
@@ -89,5 +91,9 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
+		<Compile Remove="UserTests\Issue1925Tests.cs" />
+		<Compile Remove="Microsoft\MicrosoftODataTests.cs" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>
+
 </Project>

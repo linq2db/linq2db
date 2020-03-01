@@ -132,6 +132,44 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TestObjectProjection([DataSources(false)] string context)
+		{
+			using (var conn = new TestDataConnection(context))
+			{
+				var result = conn.Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
+					.Take(1)
+					.ToArray();
+
+				var expected = Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
+					.Take(1)
+					.ToArray();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var result = 
+					from p in conn.Person
+					from pp in conn.Person.LeftJoin(pp => pp.ID + 1 == p.ID)
+					select new { p.ID, pp.Name };
+
+				var expected =
+					from p in Person
+					join pp in Person on p.ID equals pp.ID + 1 into j
+					from pp in j.DefaultIfEmpty()
+					select new { p.ID, pp?.Name };
+
+				AreEqual(expected, result);
+			}
+		}
+
+
+		[Test]
 		public void TestObject6()
 		{
 			using (var conn = new DataConnection())

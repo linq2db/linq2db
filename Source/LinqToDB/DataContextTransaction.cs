@@ -70,7 +70,7 @@ namespace LinqToDB
 		{
 			var db = DataContext.GetDataConnection();
 
-			await db.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_transactionCounter == 0)
 				DataContext.LockDbManagerCounter++;
@@ -88,7 +88,7 @@ namespace LinqToDB
 		{
 			var db = DataContext.GetDataConnection();
 
-			await db.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await db.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_transactionCounter == 0)
 				DataContext.LockDbManagerCounter++;
@@ -140,7 +140,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Commits started transaction.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -163,8 +163,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Rollbacks started transaction asynchonously.
-		/// If underlying provider doesn't support asynchonous rollback, it will be performed synchonously.
+		/// Rollbacks started transaction asynchronously.
+		/// If underlying provider doesn't support asynchronous rollback, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>

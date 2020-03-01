@@ -29,6 +29,7 @@ namespace MariaDBDataContext
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
+		public ITable<Issue1993>         Issue1993          { get { return this.GetTable<Issue1993>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
@@ -176,6 +177,13 @@ namespace MariaDBDataContext
 		[PrimaryKey, NotNull    ] public int    InheritanceParentId { get; set; } // int(11)
 		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int(11)
 		[Column,        Nullable] public string Name                { get; set; } // varchar(50)
+	}
+
+	[Table("issue1993")]
+	public partial class Issue1993
+	{
+		[Column("id"),          PrimaryKey, Identity] public uint   Id          { get; set; } // int(10) unsigned
+		[Column("description"), Nullable            ] public string Description { get; set; } // varchar(100)
 	}
 
 	[Table("linqdatatypes")]
@@ -330,7 +338,7 @@ namespace MariaDBDataContext
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this TestmariadbDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("`AddIssue792Record`");
 		}
@@ -339,7 +347,7 @@ namespace MariaDBDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this TestmariadbDB dataConnection, string aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -354,7 +362,7 @@ namespace MariaDBDataContext
 
 		#region TestProcedure
 
-		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this TestmariadbDB dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
@@ -371,7 +379,7 @@ namespace MariaDBDataContext
 
 		#region TestProc
 
-		public static int TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestProc(this TestmariadbDB dataConnection, string aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`test_proc`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -434,6 +442,12 @@ namespace MariaDBDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static Issue1993 Find(this ITable<Issue1993> table, uint Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Patient Find(this ITable<Patient> table, int PersonID)

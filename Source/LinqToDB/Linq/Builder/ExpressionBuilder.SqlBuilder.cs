@@ -675,7 +675,7 @@ namespace LinqToDB.Linq.Builder
 						return expr.Bindings
 							.Where  (b => b is MemberAssignment)
 							.Cast<MemberAssignment>()
-							.OrderBy(b => dic[b.Member])
+							.OrderBy(b => dic[expr.Type.GetMemberEx(b.Member)])
 							.Select (a =>
 							{
 								var mi = a.Member;
@@ -686,6 +686,26 @@ namespace LinqToDB.Linq.Builder
 							})
 							.SelectMany(si => si)
 							.ToArray();
+					}
+				case ExpressionType.Call         :
+					{
+						var callCtx = GetContext(context, expression);
+						if (callCtx != null)
+						{
+							var mc = (MethodCallExpression)expression;
+							if (IsSubQuery(callCtx, mc))
+							{
+								var subQueryContextInfo = GetSubQueryContext(callCtx, mc);
+								if (subQueryContextInfo.Context.IsExpression(null, 0, RequestFor.Object).Result)
+								{
+									var info = subQueryContextInfo.Context.ConvertToSql(null, 0, ConvertFlags.All);
+									return info;
+								}
+
+								return new[] { new SqlInfo { Sql = subQueryContextInfo.Context.SelectQuery } };
+							}
+						}						
+						break;
 					}
 			}
 
@@ -1215,6 +1235,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsQueryMember(Expression expr)
 		{
+			expr = expr.Unwrap();
 			if (expr != null) switch (expr.NodeType)
 			{
 				case ExpressionType.Parameter    : return true;
@@ -2463,8 +2484,8 @@ namespace LinqToDB.Linq.Builder
 					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
 
 				return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0?
-					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'));
+					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, false):
+					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'), false);
 			}
 
 			if (a is SqlParameter p)
@@ -2491,7 +2512,7 @@ namespace LinqToDB.Linq.Builder
 
 				CurrentSqlParameters.Add(ep);
 
-				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'));
+				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), false);
 			}
 
 			var mi = MemberHelper.MethodOf(() => "".Replace("", ""));
@@ -2512,7 +2533,7 @@ namespace LinqToDB.Linq.Builder
 			if (!string.IsNullOrEmpty(end))
 				expr = new SqlBinaryExpression(typeof(string), expr, "+", new SqlValue("%"));
 
-			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'));
+			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'), false);
 		}
 
 		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
@@ -2526,7 +2547,7 @@ namespace LinqToDB.Linq.Builder
 			if (e.Arguments.Count == 3)
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
-			return new SqlPredicate.Like(a1, false, a2, a3);
+			return new SqlPredicate.Like(a1, false, a2, a3, true);
 		}
 
 		static string EscapeLikeText(string text)
@@ -3044,6 +3065,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetContext([JetBrains.Annotations.NotNull] IBuildContext current, Expression expression)
 		{
 			var root = expression.GetRootObject(MappingSchema);
+			root = root.Unwrap();
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
@@ -3094,7 +3116,8 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsNullConstant(Expression expr)
 		{
-			return expr.NodeType == ExpressionType.Constant && ((ConstantExpression)expr).Value == null;
+			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
+				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
 		Expression RemoveNullPropagation(Expression expr)

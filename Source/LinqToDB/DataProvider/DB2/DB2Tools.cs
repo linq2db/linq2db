@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		private static  bool                  _isInitialized;
 		static readonly object                _syncAfterInitialized    = new object();
-		private static  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+		private static  ConcurrentQueue<Action> _afterInitializedActions = new ConcurrentQueue<Action>();
 
 		internal static void Initialized()
 		{
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 					}
 					else
 					{
-						_afterInitializedActions.Add(action);
+						_afterInitializedActions.Enqueue(action);
 					}
 				}
 			}

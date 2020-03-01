@@ -27,6 +27,32 @@ namespace Tests.Data
 				new DataParameter("@id", @id));
 		}
 
+		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, int? @id)
+		{
+			var databaseName = TestUtils.GetDatabaseName(dataConnection);
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
+#else
+			var escapedTableName = "[" + databaseName + "]";
+#endif
+			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKeyLowercase]",
+				new DataParameter("@id", @id));
+		}
+
+		[Test]
+		public void TestColumnNameComparerCaseInsensivity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p1 = PersonSelectByKeyLowercaseColumns(db, 1).First();
+				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
+				var p3 = PersonSelectByKey(db, 1).First();
+
+				Assert.AreEqual(p1.FirstName, p2.FirstName);
+				Assert.AreEqual(p1.FirstName, p3.FirstName);
+			}
+		}
+
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -101,5 +127,34 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void VariableResultsTestWithAnonymParam([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var set1 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 0 }).First();
+
+				var set2 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 1 }).First();
+
+				var set11 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 0 }).First();
+
+				var set22 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 1 }).First();
+
+				Assert.AreEqual(2, set1.Code);
+				Assert.AreEqual("v", set1.Value1);
+				Assert.IsNull(set1.Value2);
+
+				Assert.AreEqual(1, set2.Code);
+				Assert.AreEqual("Val1", set2.Value1);
+				Assert.AreEqual("Val2", set2.Value2);
+
+				Assert.AreEqual(set1, set11);
+				Assert.AreEqual(set2, set22);
+			}
+		}
 	}
 }
