@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -9,136 +11,113 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1979Tests : TestBase
 	{
+		[Table]
 		public class Issue
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
+			[Association(QueryExpressionMethod = nameof(TaggingImpl))]
 			public List<TaggingIssue> Tagging { get; set; }
 
-			public int AssignedToId { get; set; }
 
-			public static void Map(FluentMappingBuilder fmb)
+			public static Expression<Func<Issue, TaggingIssue, bool>> TaggingImpl()
 			{
-				fmb.Entity<Issue>()
-					.HasTableName("issues")
-						.Property(x => x.AssignedToId)
-							.HasColumnName("assigned_to_id")
-							.IsNullable()
-						.Association(x => x.Tagging, (y, z) => y.Id == z.TaggableId)
-						.Property(x => x.Id)
-							.HasColumnName("id")
-							.IsPrimaryKey();
+				return (y, z) => y.Id == z.TaggableId;
 			}
 		}
 
+		[Table]
+		[InheritanceMapping(Code = "Issue", Type = typeof(TaggingIssue))]
 		public class Tagging
 		{
-			public long Id { get; set; }
+			[PrimaryKey]                     public long   Id           { get; set; }
+			[Column]                         public int    TagId        { get; set; }
+			[Column]                         public int    TaggableId   { get; set; }
+			[Column(IsDiscriminator = true)] public string TaggableType { get; set; }
 
-			public int TagId { get; set; }
-
+			[Association(QueryExpressionMethod = nameof(TagImpl))]
 			public Tag Tag { get; set; }
 
-			public int TaggableId { get; set; }
-
-			public string TaggableType { get; set; }
-
-			public static void Map(FluentMappingBuilder fmb)
+			public static Expression<Func<Tagging, Tag, bool>> TagImpl()
 			{
-				fmb.Entity<Tagging>()
-					.HasTableName("taggings")
-					.Inheritance(x => x.TaggableType, "Issue", typeof(TaggingIssue))
-						.Property(x => x.Id)
-							.HasColumnName("id")
-							.IsPrimaryKey()
-						.Association(x => x.Tag, (y, z) => y.TagId == z.Id)
-						.Property(x => x.TagId)
-							.HasColumnName("tag_id")
-							.IsNullable()
-						.Property(x => x.TaggableId)
-							.HasColumnName("taggable_id")
-							.IsNullable()
-						.Property(x => x.TaggableType)
-							.HasColumnName("taggable_type")
-							.IsNullable();
+				return (y, z) => y.TagId == z.Id;
 			}
 		}
 
+		[Table]
 		public class TaggingIssue : Tagging
 		{
+			[Association(QueryExpressionMethod = nameof(IssueImpl))]
 			public Issue Issue { get; set; }
 
-			public static new void Map(FluentMappingBuilder fmb)
+			public static Expression<Func<TaggingIssue, Issue, bool>> IssueImpl()
 			{
-				fmb.Entity<TaggingIssue>()
-					.Association(x => x.Issue, (y, z) => y.TaggableId == z.Id);
+				return (y, z) => y.TaggableId == z.Id;
 			}
 		}
 
+		[Table]
 		public class Tag
 		{
-			public long Id { get; set; }
-
-			public string Name { get; set; }
-
-			public static void Map(FluentMappingBuilder fmb)
-			{
-				fmb.Entity<Tag>()
-				   .HasTableName("tags")
-						.Property(x => x.Id)
-							.HasColumnName("id")
-							.IsPrimaryKey()
-						.Property(x => x.Name)
-							.HasColumnName("name")
-							.IsNullable();
-			}
-		}
-
-		public class User
-		{
-			public int Id { get; set; }
-
-			public static void Map(FluentMappingBuilder fmb)
-			{
-				fmb.Entity<User>()
-					.HasTableName("users")
-						.Property(x => x.Id)
-							.HasColumnName("id")
-							.IsPrimaryKey();
-			}
+			[Column] public long   Id   { get; set; }
+			[Column] public string Name { get; set; }
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test_Linq([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms      = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
-
-			Issue       .Map(builder);
-			Tagging     .Map(builder);
-			TaggingIssue.Map(builder);
-			Tag         .Map(builder);
-
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Tag>())
+			using (db.CreateLocalTable<Tagging>())
+			using (db.CreateLocalTable<Issue>())
 			{
-				var query = from i in db.GetTable<Issue>()
-							join u in db.GetTable<User>() on i.AssignedToId equals u.Id into uj
-							from u in uj.DefaultIfEmpty()
-							where i.Tagging.Any(x => x.Tag.Name == "Visu")
-							select new { Issue = i, User = u };
+				var tagFilter = from ti in db.GetTable<TaggingIssue>()
+								join t in db.GetTable<Tag>() on ti.TagId equals t.Id
+								where t.Name == "Visu"
+								select ti;
 
-				var lst = query.ToList();
+				var query = from i in db.GetTable<Issue>()
+							where tagFilter.Where(t => t.TaggableId == i.Id).Any()
+							select i;
+
+				var sql = query.ToString();
+				query.ToList();
 
 				/*
-				 * Expected Query
-				 *
-				 *   SELECT issues.*, users.* FROM ISSUE
-				 *   JOIN users ON issues.assigned_to_id = users.id
-				 *   INNER JOIN taggings ON issues.id = taggings.taggable_id
-				 *   INNER JOIN tags ON tag_id.id = tags.id  
-				 *   WHERE taggings.taggable_type = 'Issue' AND tag.name = 'Visu'
-				 * 
-				 */
+				 * SQL:
+SELECT
+	[i].[Id]
+FROM
+	[Issue] [i]
+WHERE
+	EXISTS(
+		SELECT
+			*
+		FROM
+			[Tagging] [t_2]
+				INNER JOIN [Tag] [t_1] ON [t_2].[TagId] = [t_1].[Id]
+		WHERE
+			[t_1].[Name] = 'Visu' AND [t_2].[TaggableId] = [i].[Id] AND
+			[t_2].[TaggableType] = 'Issue'
+	)
+	*/
+			}
+
+		}
+		[Test]
+		public void Test_Associations([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Tag>())
+			using (db.CreateLocalTable<Tagging>())
+			using (db.CreateLocalTable<Issue>())
+			{
+				var query = from i in db.GetTable<Issue>()
+							where i.Tagging.Any(x => x.Tag.Name == "Visu")
+							select i;
+
+				var sql = query.ToString();
+				query.ToList();
 			}
 		}
 	}
