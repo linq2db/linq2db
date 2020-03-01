@@ -463,31 +463,32 @@ namespace Tests.Common
 			Assert.AreEqual(0,    ConvertTo<int>. From((Enum15?)null));
 			Assert.AreEqual(null, ConvertTo<int?>.From((Enum15?)null));
 		}
-	
+
+#if !NETSTANDARD1_6
 		[Test]
+#endif
 		public void NullableParameterInOperatorConvert()
 		{
-			var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1) 
-				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(ConvertTests.CustomMoneyType));
+			var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1)
+				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(CustomMoneyType));
 
 			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.Compile();
 			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2.Compile();
 
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromDecimalFunc1(1.11m));
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromDecimalFunc2(1.11m));
+			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc1(1.11m));
+			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc2(1.11m));
 
-
-			var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2) 
-				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(ConvertTests.CustomMoneyType));
+			var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2)
+				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(CustomMoneyType));
 
 			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.Compile();
 			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2.Compile();
 
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromNullableDecimalFunc1(1.11m));
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = 1.11m}, convertFromNullableDecimalFunc2(1.11m));
+			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc1(1.11m));
+			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc2(1.11m));
 
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = null}, convertFromNullableDecimalFunc1(null));
-			Assert.AreEqual(new ConvertTests.CustomMoneyType{Amount = null}, convertFromNullableDecimalFunc2(null));
+			Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc1(null));
+			Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc2(null));
 		}
 
 		private struct CustomMoneyType
@@ -495,7 +496,7 @@ namespace Tests.Common
 			public decimal? Amount;
 
 			public static explicit operator CustomMoneyType(decimal? amount) =>
-				new CustomMoneyType {Amount = amount};
+				new CustomMoneyType() { Amount = amount };
 		}
 	}
 }

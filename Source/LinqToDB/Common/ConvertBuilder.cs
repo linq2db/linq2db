@@ -73,12 +73,10 @@ namespace LinqToDB.Common
 			if (op != null)
 			{
 				Type oppt = op.GetParameters()[0].ParameterType;
-				Type pt = p.Type;
+				Type pt   = p.Type;
 
 				if (oppt.IsNullable() && !pt.IsNullable())
-				{
 					p = GetCtor(pt, oppt, p);
-				}
 
 				return Expression.Convert(p, to, op);
 			}
