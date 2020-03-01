@@ -39,6 +39,7 @@ namespace Tests.UserTests
 			public int Options { get; set; }
 		}
 
+#if !NETSTANDARD1_6
 		[Test]
 		public void TestDynamicInColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -54,5 +55,6 @@ namespace Tests.UserTests
 				Assert.That(result.Count, Is.EqualTo(1));
 			}
 		}
+#endif
 	}
 }
