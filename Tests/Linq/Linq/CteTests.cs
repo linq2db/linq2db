@@ -24,7 +24,8 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle 
-			//ProviderName.Informix,
+			// TODO: v14
+			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
@@ -577,7 +578,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

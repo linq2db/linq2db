@@ -89,6 +89,24 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region Issue1921
+
+		[Sql.TableFunction(Schema="dbo", Name="Issue1921")]
+		public ITable<Issue1921Result> Issue1921()
+		{
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+		}
+
+		public partial class Issue1921Result
+		{
+			#nullable disable
+			public string name  { get; set; }
+			#nullable enable
+			public int?   objid { get; set; }
+		}
+
+		#endregion
+
 		#endregion
 	}
 
@@ -320,7 +338,7 @@ namespace TestAzureSQL
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test"), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test"), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Parent")]

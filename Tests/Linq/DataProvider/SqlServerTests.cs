@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
-using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
@@ -17,9 +16,10 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using System.Threading;
+using Tests.Model;
 
 using Microsoft.SqlServer.Types;
-using SqlServerTypes;
 
 using NUnit.Framework;
 
@@ -775,7 +775,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class AllTypes
+		internal class AllTypes
 		{
 			[Identity]
 			[Column(DataType=DataType.Int32),                          NotNull]  public int             ID                       { get; set; }
@@ -1236,6 +1236,94 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(Person.Count(), db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update());
 				Assert.AreEqual(Person.Count(), db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public async Task ExecProcedureTestAnonymParamAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParamGeneric([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public async Task ExecProcedureAsyncTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+			
+				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
 

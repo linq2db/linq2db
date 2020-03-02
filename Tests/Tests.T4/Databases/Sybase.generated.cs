@@ -28,6 +28,7 @@ namespace SybaseDataContext
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<KeepIdentityTest>(); } }
 		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
@@ -62,11 +63,11 @@ namespace SybaseDataContext
 		[Column(),                                                              Identity   ] public int       ID                    { get; set; } // int
 		[Column("bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
 		[Column("uBigintDataType"),                                                Nullable] public object?   UBigintDataType       { get; set; } // ubigint
-		[Column("numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 0)
+		[Column("numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 1)
 		[Column("bitDataType"),                                                 NotNull    ] public bool      BitDataType           { get; set; } // bit
 		[Column("smallintDataType"),                                               Nullable] public short?    SmallintDataType      { get; set; } // smallint
 		[Column("uSmallintDataType"),                                              Nullable] public object?   USmallintDataType     { get; set; } // usmallint
-		[Column("decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 0)
+		[Column("decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 1)
 		[Column("smallmoneyDataType"),                                             Nullable] public decimal?  SmallmoneyDataType    { get; set; } // smallmoney
 		[Column("intDataType"),                                                    Nullable] public int?      IntDataType           { get; set; } // int
 		[Column("uIntDataType"),                                                   Nullable] public object?   UIntDataType          { get; set; } // uint
@@ -143,6 +144,13 @@ namespace SybaseDataContext
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
 		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
+	}
+
+	[Table(Schema="dbo", Name="KeepIdentityTest")]
+	public partial class KeepIdentityTest
+	{
+		[Identity          ] public decimal ID    { get; set; } // numeric(12, 0)
+		[Column,   Nullable] public int?    Value { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="LinqDataTypes")]

@@ -41,6 +41,7 @@ namespace OracleDataContext
 		public ITable<StgTradeInformation>   StgTradeInformation    { get { return this.GetTable<StgTradeInformation>(); } }
 		public ITable<STRINGTEST>            Stringtests            { get { return this.GetTable<STRINGTEST>(); } }
 		public ITable<TEntity>               TEntities              { get { return this.GetTable<TEntity>(); } }
+		public ITable<TEST0431>              TEST0431               { get { return this.GetTable<TEST0431>(); } }
 		public ITable<TESTIDENTITY>          Testidentities         { get { return this.GetTable<TESTIDENTITY>(); } }
 		public ITable<TESTMERGE1>            TESTMERGE1             { get { return this.GetTable<TESTMERGE1>(); } }
 		public ITable<TESTMERGE2>            TESTMERGE2             { get { return this.GetTable<TESTMERGE2>(); } }
@@ -93,7 +94,7 @@ namespace OracleDataContext
 		[Column(DbType="BLOB",                              DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
 		[Column(DbType="BFILE",                             DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
 		[Column(DbType="RAW(16)",                           DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GUIDDATATYPE           { get; set; } // RAW(16)
-		[Column(DbType="LONG",                              DataType=DataType.Text,           Length=0),                            Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
+		[Column(DbType="LONG",                              DataType=DataType.Long,           Length=0),                            Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
 		[Column(DbType="URITYPE",                           DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         URIDATATYPE            { get; set; } // URITYPE
 		[Column(DbType="XMLTYPE",                           DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         XMLDATATYPE            { get; set; } // XMLTYPE
 	}
@@ -230,7 +231,7 @@ namespace OracleDataContext
 	public partial class LONGRAWTABLE
 	{
 		[Column(DbType="NUMBER",   DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
-		[Column(DbType="LONG RAW", DataType=DataType.Binary,  Length=0),     Nullable         ] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
+		[Column(DbType="LONG RAW", DataType=DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
 	}
 
 	[Table(Schema="MANAGED", Name="PARENT")]
@@ -331,6 +332,23 @@ namespace OracleDataContext
 		[Column(             DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object?   DURATION { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
+	[Table(Schema="MANAGED", Name="TEST0431")]
+	public partial class TEST0431
+	{
+		[Column(                    DbType="DATE",                        DataType=DataType.DateTime,       Length=7),           NotNull] public DateTime       Date            { get; set; } // DATE
+		[Column(                    DbType="TIMESTAMP(6)",                DataType=DataType.DateTime2,      Length=11, Scale=6), NotNull] public DateTime       DATETIME        { get; set; } // TIMESTAMP(6)
+		[Column("DATETIME_",        DbType="DATE",                        DataType=DataType.DateTime,       Length=7),           NotNull] public DateTime       Datetime        { get; set; } // DATE
+		[Column(                    DbType="TIMESTAMP(6)",                DataType=DataType.DateTime2,      Length=11, Scale=6), NotNull] public DateTime       DATETIME2       { get; set; } // TIMESTAMP(6)
+		[Column("DATETIME2_0",      DbType="TIMESTAMP(0)",                DataType=DataType.DateTime2,      Length=7, Scale=0),  NotNull] public DateTime       DATETIME20      { get; set; } // TIMESTAMP(0)
+		[Column("DATETIME2_1",      DbType="TIMESTAMP(1)",                DataType=DataType.DateTime2,      Length=11, Scale=1), NotNull] public DateTime       DATETIME21      { get; set; } // TIMESTAMP(1)
+		[Column("DATETIME2_9",      DbType="TIMESTAMP(9)",                DataType=DataType.DateTime2,      Length=11, Scale=9), NotNull] public DateTime       DATETIME29      { get; set; } // TIMESTAMP(9)
+		[Column(                    DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6), NotNull] public DateTimeOffset DATETIMEOFFSET  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+		[Column("DATETIMEOFFSET_",  DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6), NotNull] public DateTimeOffset Datetimeoffset  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+		[Column("DATETIMEOFFSET_0", DbType="TIMESTAMP(0) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=0), NotNull] public DateTimeOffset Datetimeoffset0 { get; set; } // TIMESTAMP(0) WITH TIME ZONE
+		[Column("DATETIMEOFFSET_1", DbType="TIMESTAMP(1) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=1), NotNull] public DateTimeOffset Datetimeoffset1 { get; set; } // TIMESTAMP(1) WITH TIME ZONE
+		[Column("DATETIMEOFFSET_9", DbType="TIMESTAMP(9) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=9), NotNull] public DateTimeOffset Datetimeoffset9 { get; set; } // TIMESTAMP(9) WITH TIME ZONE
+	}
+
 	[Table(Schema="MANAGED", Name="TESTIDENTITY")]
 	public partial class TESTIDENTITY
 	{
@@ -401,7 +419,7 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00327863_BackReference
+		/// SYS_C00476199_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; }
@@ -425,9 +443,9 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00327863
+		/// SYS_C00476199
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00327863", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00476199", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; }
 
 		#nullable enable

@@ -1,8 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
@@ -13,6 +11,13 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
+		private readonly MySqlDataProvider _provider;
+
+		public MySqlSchemaProvider(MySqlDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return base.GetDataTypes(dataConnection)
@@ -144,7 +149,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
 			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html
@@ -183,7 +188,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -273,7 +278,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 
@@ -326,35 +331,35 @@ SELECT
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "MySql.Data.Types";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType.ToLower())
 			{
-				case "geometry"  : return "MySqlGeometry";
-				case "decimal"   : return "MySqlDecimal";
+				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
+				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
 				case "date"      :
 				case "newdate"   :
 				case "datetime"  :
-				case "timestamp" : return "MySqlDateTime";
+				case "timestamp" : return _provider.Adapter.MySqlDateTimeType.Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (columnType != null && columnType.Contains("unsigned"))
 			{
 				switch (dataType.ToLower())
 				{
-					case "smallint"   : return typeof(UInt16);
-					case "int"        : return typeof(UInt32);
-					case "mediumint"  : return typeof(UInt32);
-					case "bigint"     : return typeof(UInt64);
-					case "tiny int"   : return typeof(Byte);
+					case "smallint"   : return typeof(ushort);
+					case "int"        :
+					case "mediumint"  : return typeof(uint);
+					case "bigint"     : return typeof(ulong);
+					case "tiny int"   : return typeof(byte);
 				}
 			}
 
@@ -362,7 +367,7 @@ SELECT
 			{
 				case "tinyint"   :
 					if (columnType == "tinyint(1)")
-						return typeof(Boolean);
+						return typeof(bool);
 					break;
 				case "datetime2" : return typeof(DateTime);
 			}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -10,11 +9,28 @@ namespace LinqToDB.DataProvider.Access
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly AccessDataProvider? _provider;
+
+		public AccessSqlBuilder(
+			AccessDataProvider? provider,
+			MappingSchema       mappingSchema,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public AccessSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -99,7 +115,7 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildSql();
 		}
 
-		SqlColumn _selectColumn;
+		SqlColumn? _selectColumn;
 
 		void BuildAnyAsCount(SelectQuery selectQuery)
 		{
@@ -157,7 +173,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new AccessSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
@@ -167,9 +183,9 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
-			if (predicate.Expr2 is SqlValue)
+			if (predicate.Expr2 is SqlValue sqlValue)
 			{
-				var value = ((SqlValue)predicate.Expr2).Value;
+				var value = sqlValue.Value;
 
 				if (value != null)
 				{
@@ -181,17 +197,16 @@ namespace LinqToDB.DataProvider.Access
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
+			else if (predicate.Expr2 is SqlParameter p)
 			{
-				var p = ((SqlParameter)predicate.Expr2);
 				p.ReplaceLike = predicate.IsSqlLike != true;
 			}
 
 			if (predicate.Escape != null)
 			{
-				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
+				if (predicate.Expr2 is SqlValue escSqlValue && predicate.Escape is SqlValue)
 				{
-					var value = ((SqlValue)predicate.Expr2).Value;
+					var value = escSqlValue.Value;
 
 					if (value != null)
 					{
@@ -201,17 +216,15 @@ namespace LinqToDB.DataProvider.Access
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);
 					}
 				}
-				else if (predicate.Expr2 is SqlParameter)
+				else if (predicate.Expr2 is SqlParameter p)
 				{
-					var p = (SqlParameter)predicate.Expr2;
-
 					if (p.LikeStart != null)
 					{
 						var value = (string)p.Value;
 
 						if (value != null)
 						{
-							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value))
+							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value)!)
 								.Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
 							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
 							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null, predicate.IsSqlLike);
@@ -347,7 +360,7 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -359,41 +372,26 @@ namespace LinqToDB.DataProvider.Access
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
+					if (value.Length > 0 && value[0] == '[')
 							return value;
-					}
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					var name = value;
 
-						if (name.Length > 0 && name[0] == '[')
+					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
 						return "[" + value + "]";
-					}
-
-					break;
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1) : value;
 			}
 
 			return value;
@@ -412,7 +410,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -422,9 +420,16 @@ namespace LinqToDB.DataProvider.Access
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+			if (_provider != null)
+		{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return _provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

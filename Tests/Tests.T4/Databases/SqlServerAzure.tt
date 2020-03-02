@@ -7,6 +7,6 @@
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
 	NamespaceName = "TestAzureSQL";
-	LoadSqlServerMetadata(GetConnectionString("SqlAzure.2012"));
+	LoadSqlServerMetadata(GetConnectionString("SqlAzure"));
 	GenerateModel();
 #>

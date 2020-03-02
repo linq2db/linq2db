@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -9,11 +7,28 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
+	using LinqToDB.Mapping;
 
-	partial class OracleSqlBuilder : BasicSqlBuilder
+	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		protected OracleDataProvider? Provider { get; }
+
+		public Oracle11SqlBuilder(
+			OracleDataProvider? provider,
+			MappingSchema       mappingSchema,
+			ISqlOptimizer       sqlOptimizer,
+			SqlProviderFlags    sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			Provider = provider;
+		}
+
+		// remote context
+		public Oracle11SqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -42,7 +57,7 @@ namespace LinqToDB.DataProvider.Oracle
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table)
+		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
@@ -93,7 +108,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -189,7 +204,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -231,7 +246,7 @@ namespace LinqToDB.DataProvider.Oracle
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -243,19 +258,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (!IsValidIdentifier(value))
+						return '"' + value + '"';
 
-						if (!IsValidIdentifier(name))
-						{
-							return '"' + name + '"';
-						}
-
-						return name;
-					}
-
-					break;
+					return value;
 			}
 
 			return value;
@@ -281,7 +287,7 @@ namespace LinqToDB.DataProvider.Oracle
 			StringBuilder.AppendLine();
 		}
 
-		SqlField _identityField;
+		SqlField? _identityField;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -463,7 +469,7 @@ END;",
 						StringBuilder
 							.AppendLine  (" FOR EACH ROW")
 							.AppendLine  ("BEGIN")
-							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
+							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField!.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
@@ -478,7 +484,7 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
@@ -494,10 +500,16 @@ END;",
 			return sb;
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.OracleDbType.ToString();
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 	}
 }

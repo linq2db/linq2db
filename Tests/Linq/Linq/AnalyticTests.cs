@@ -889,8 +889,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRankOracle([IncludeDataSources(true,
-			ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -918,8 +917,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRegrOracle([IncludeDataSources(
-			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRegrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1074,8 +1072,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true,
-			ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1266,7 +1263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1480,7 +1477,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase,
 			TestProvName.AllPostgreSQL,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			ProviderName.Access,
 			ProviderName.Firebird)] string context)
@@ -1538,7 +1535,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1591,7 +1588,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,

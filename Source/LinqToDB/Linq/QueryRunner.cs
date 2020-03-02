@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Collections.Concurrent;
 	using System.Diagnostics;
 	using Async;
 	using Builder;
@@ -48,34 +49,59 @@ namespace LinqToDB.Linq
 			}
 
 			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
-			         Expression<Func<IQueryRunner,IDataReader,T>> _mapperExpression;
-			                    Func<IQueryRunner,IDataReader,T>  _mapper;
-
-			bool _isFaulted;
+			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ConcurrentDictionary<Type, ReaderMapperInfo>();
 
 			public IQueryRunner QueryRunner;
 
-			public T Map(IQueryRunner queryRunner, IDataReader dataReader)
+			class ReaderMapperInfo
 			{
-				if (_mapper == null)
+				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression;
+				public Func<IQueryRunner, IDataReader, T>             Mapper;
+				public bool                                           IsFaulted;
+			}
+
+			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
+			{
+				var dataReaderType = dataReader.GetType();
+
+				ParameterExpression oldVariable;
+				ParameterExpression newVariable;
+				LambdaExpression    converterExpr;
+				Type                variableType;
+				ReaderMapperInfo    mapperInfo;
+
+				if (!_mappers.TryGetValue(dataReaderType, out mapperInfo))
 				{
-					_mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
-						e => e is ConvertFromDataReaderExpression ex ? ex.Reduce(dataReader) : e);
+					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
+					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
+
+					oldVariable = null;
+					newVariable = null;
+					var mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
+						e => {
+							if (e is ConvertFromDataReaderExpression ex)
+								return ex.Reduce(context, dataReader, newVariable).Transform(replaceVariable);
+
+							return replaceVariable(e);
+						});
 
 					var qr = QueryRunner;
 					if (qr != null)
-						qr.MapperExpression = _mapperExpression;
+						qr.MapperExpression = mapperExpression;
 
-					_mapper = _mapperExpression.Compile();
+					var mapper = mapperExpression.Compile();
+					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
+					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
 
 				try
 				{
-					return _mapper(queryRunner, dataReader);
+					return mapperInfo.Mapper(queryRunner, dataReader);
 				}
 				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException)
 				{
-					if (_isFaulted)
+					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+					if (mapperInfo.IsFaulted)
 						throw;
 
 					if (DataConnection.TraceSwitch.TraceInfo)
@@ -86,13 +112,50 @@ namespace LinqToDB.Linq
 
 					var qr = QueryRunner;
 					if (qr != null)
-						qr.MapperExpression = _mapperExpression;
+						qr.MapperExpression = mapperInfo.MapperExpression;
 
-					_mapper = _expression.Compile();
+					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
+					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
 
-					_isFaulted = true;
+					oldVariable = null;
+					newVariable = null;
+					var expression = (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
+						if (e is ConvertFromDataReaderExpression ex)
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable, context);
 
-					return _mapper(queryRunner, dataReader);
+						return replaceVariable(e);
+					});
+
+					mapperInfo.Mapper = expression.Compile();
+
+					mapperInfo.IsFaulted = true;
+
+					return mapperInfo.Mapper(queryRunner, dataReader);
+				}
+
+				Expression replaceVariable(Expression e)
+				{
+					if (e is ParameterExpression vex && vex.Name == "ldr")
+					{
+						oldVariable = vex;
+						return newVariable ?? (newVariable = Expression.Variable(variableType, "ldr"));
+					}
+
+					if (e is BinaryExpression bex
+						&& bex.NodeType == ExpressionType.Assign
+						&& bex.Left == oldVariable)
+					{
+						Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
+
+						if (converterExpr != null)
+						{
+							dataReaderExpression = Expression.Convert(converterExpr.GetBody(dataReaderExpression), variableType);
+						}
+
+						return Expression.Assign(newVariable, dataReaderExpression);
+					}
+
+					return e;
 				}
 			}
 		}
@@ -511,7 +574,7 @@ namespace LinqToDB.Linq
 				{
 					while (dr.Read())
 					{
-						var value = mapper.Map(runner, dr);
+						var value = mapper.Map(dataContext, runner, dr);
 						runner.RowsCount++;
 						yield return value;
 					}
@@ -554,7 +617,7 @@ namespace LinqToDB.Linq
 						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							runner.RowsCount++;
-							if (!func(mapper.Map(runner, dr.DataReader)))
+							if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
 								break;
 						}
 					}
@@ -631,7 +694,7 @@ namespace LinqToDB.Linq
 				{
 					_queryRunner.RowsCount++;
 
-					Current = _mapper.Map(_queryRunner, _dataReader.DataReader);
+					Current = _mapper.Map(_dataContext, _queryRunner, _dataReader.DataReader);
 
 					return true;
 				}
@@ -837,7 +900,7 @@ namespace LinqToDB.Linq
 				{
 					while (dr.Read())
 					{
-						var value = mapper.Map(runner, dr);
+						var value = mapper.Map(dataContext, runner, dr);
 						runner.RowsCount++;
 						return value;
 					}
@@ -872,7 +935,7 @@ namespace LinqToDB.Linq
 						{
 							runner.RowsCount++;
 
-							var item = mapper.Map(runner, dr.DataReader);
+							var item = mapper.Map(dataContext, runner, dr.DataReader);
 
 							return dataContext.MappingSchema.ChangeTypeTo<T>(item);
 						}

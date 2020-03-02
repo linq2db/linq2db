@@ -106,9 +106,20 @@ namespace LinqToDB.Async
 
 		public virtual IAsyncDbConnection? TryClone()
 		{
-			return Connection is ICloneable cloneable
-				? AsyncFactory.Create((IDbConnection)cloneable.Clone())
-				: null;
+			try
+			{
+				return Connection is ICloneable cloneable
+					? AsyncFactory.Create((IDbConnection)cloneable.Clone())
+					: null;
+			}
+			catch
+			{
+				// this try-catch added to handle errors like this one from MiniProfiler's ProfiledDbConnection
+				// "NotSupportedException : Underlying SqliteConnection is not cloneable"
+				// because wrapper implements ICloneable but wrapped connection doesn't
+				// exception-less solution will be always return null for wrapped connections which is also meh
+				return null;
+			}
 		}
 	}
 }

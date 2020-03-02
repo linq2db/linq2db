@@ -119,9 +119,6 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			if (HasNoneSqlMember(expr))
-				return new TransformInfo(expr);
-
 			alias = alias ?? GetExpressionAlias(expr);
 
 			switch (expr.NodeType)
@@ -150,10 +147,12 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.MemberAccess:
 					{
-						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
-							return new TransformInfo(BuildSql(context, expr, alias));
-
 						var ma = (MemberExpression)expr;
+
+						if (IsServerSideOnly(ma) || PreferServerSide(ma, enforceServerSide) && !HasNoneSqlMember(ma))
+						{
+							return new TransformInfo(BuildSql(context, expr, alias));
+						}
 
 						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
 						if (l != null)
@@ -188,7 +187,21 @@ namespace LinqToDB.Linq.Builder
 
 							var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 							var expression = ctx.BuildExpression(ma, 0, enforceServerSide);
-							if (!alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+
+							if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression && ma.Expression?.NodeType == ExpressionType.Parameter)
+							{
+								var objExpression = BuildExpression(ctx, ma.Expression, enforceServerSide, alias);
+								var varTempVar = objExpression.NodeType == ExpressionType.Parameter
+									? objExpression
+									: BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
+
+								var condition = Expression.Condition(
+									Expression.Equal(varTempVar,
+										new DefaultValueExpression(MappingSchema, ma.Expression.Type)), expression,
+									Expression.MakeMemberAccess(varTempVar, ma.Member));
+								expression = condition;
+							}
+							else if (!alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
 							{
 								ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = alias;
 							}
@@ -583,7 +596,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContext);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal);
 		}
 
 		#endregion

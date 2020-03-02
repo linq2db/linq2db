@@ -1257,6 +1257,24 @@ namespace DataModel
 
 		#endregion
 
+		#region Issue1921
+
+		[Sql.TableFunction(Name="Issue1921")]
+		public ITable<Issue1921Result> Issue1921()
+		{
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+		}
+
+		public partial class Issue1921Result
+		{
+			#nullable disable
+			public string name  { get; set; }
+			#nullable enable
+			public int?   objid { get; set; }
+		}
+
+		#endregion
+
 		#endregion
 	}
 

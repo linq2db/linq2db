@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,12 +8,29 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 	using LinqToDB.Extensions;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly MySqlDataProvider? _provider;
+
+		public MySqlSqlBuilder(
+			MySqlDataProvider? provider,
+			MappingSchema      mappingSchema,
+			ISqlOptimizer      sqlOptimizer,
+			SqlProviderFlags   sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public MySqlSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -48,7 +64,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -78,17 +94,17 @@ namespace LinqToDB.DataProvider.MySql
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-			switch (type.DataType)
-			{
+				switch (type.DataType)
+				{
 					case DataType.Boolean       :
 					case DataType.SByte         :
-				case DataType.Int16         :
-				case DataType.Int32         :
+					case DataType.Int16         :
+					case DataType.Int32         :
 					case DataType.Int64         : StringBuilder.Append("SIGNED");        break;
 					case DataType.BitArray      : // wild guess
-				case DataType.Byte          :
-				case DataType.UInt16        :
-				case DataType.UInt32        :
+					case DataType.Byte          :
+					case DataType.UInt16        :
+					case DataType.UInt32        :
 					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");      break;
 					case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)"); break;
 					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)"); break;
@@ -273,7 +289,7 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						StringBuilder.Append("LONGTEXT");
 					break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                                     break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);                       break;
 			}
 		}
 
@@ -285,7 +301,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			AppendIndent()
 				.Append("DELETE ")
-				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
+				.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}
 
@@ -319,77 +335,61 @@ namespace LinqToDB.DataProvider.MySql
 			set => _sprocParameterPrefix = value ?? string.Empty;
 		}
 
-		private static List<char> _convertParameterSymbols;
+		private static List<char>? _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get => _convertParameterSymbols;
+			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return ParameterSymbol + value.ToString();
+					return ParameterSymbol + value;
 
 				case ConvertType.NameToCommandParameter:
 					return ParameterSymbol + CommandParameterPrefix + value;
 
 				case ConvertType.NameToSprocParameter:
-					{
-						var valueStr = value.ToString();
-
-						if(string.IsNullOrEmpty(valueStr))
+					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-						if (valueStr[0] == ParameterSymbol)
-							valueStr = valueStr.Substring(1);
+					if (value[0] == ParameterSymbol)
+						value = value.Substring(1);
 
-						if (valueStr.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-							valueStr = valueStr.Substring(SprocParameterPrefix.Length);
+					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
+						value = value.Substring(SprocParameterPrefix.Length);
 
-						return ParameterSymbol + SprocParameterPrefix + valueStr;
-					}
+					return ParameterSymbol + SprocParameterPrefix + value;
 
 				case ConvertType.SprocParameterToName:
-					{
-						var str = value.ToString();
-						str = (str.Length > 0 && (str[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(str[0])))) ? str.Substring(1) : str;
+					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
 
-						if (!string.IsNullOrEmpty(SprocParameterPrefix) && str.StartsWith(SprocParameterPrefix))
-							str = str.Substring(SprocParameterPrefix.Length);
+					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
+						value = value.Substring(SprocParameterPrefix.Length);
 
-						return str;
-					}
+					return value;
 
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '`')
+					if (value.Length > 0 && value[0] == '`')
 							return value;
 						return "`" + value + "`";
-					}
 
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
-					if (value != null)
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '`')
+					if (value.Length > 0 && value[0] == '`')
 							return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("`.`", name.Split('.'));
+					if (value.IndexOf('.') > 0)
+						value = string.Join("`.`", value.Split('.'));
 
 						return "`" + value + "`";
 					}
-
-					break;
-			}
 
 			return value;
 		}
@@ -398,7 +398,7 @@ namespace LinqToDB.DataProvider.MySql
 			ISqlExpression expr,
 			bool           buildTableName,
 			bool           checkParentheses,
-			string         alias,
+			string?        alias,
 			ref bool       addAlias,
 			bool           throwExceptionIfTableNotFound = true)
 		{
@@ -471,7 +471,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -481,10 +481,16 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.MySqlDbType.ToString();
+			if (_provider != null)
+		{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return _provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,17 +8,25 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		protected readonly SqlServerDataProvider? Provider;
+
+		protected SqlServerSqlBuilder(
+			SqlServerDataProvider? provider,
+			MappingSchema          mappingSchema,
+			ISqlOptimizer          sqlOptimizer,
+			SqlProviderFlags       sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			Provider = provider;
 		}
 
 		protected virtual  bool BuildAlternativeSql => false;
 
-		protected override string FirstFormat(SelectQuery selectQuery)
+		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
@@ -131,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			StringBuilder
 				.Append(" ")
-				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
+				.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}
 
@@ -144,10 +151,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);
 			else
-				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
+				StringBuilder.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias));
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -182,20 +189,17 @@ namespace LinqToDB.DataProvider.SqlServer
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
-			{
-				var p = ((SqlParameter)predicate.Expr2);
+			else if (predicate.Expr2 is SqlParameter p)
 				p.ReplaceLike = predicate.IsSqlLike != true;
-			}
 
 			base.BuildLikePredicate(predicate);
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb,
-			string server,
-			string database,
-			string schema,
-			[JetBrains.Annotations.NotNull] string table)
+			string? server,
+			string? database,
+			string? schema,
+			string table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -221,7 +225,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return sb.Append(table);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -233,41 +237,26 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
+					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-						return SqlServerTools.QuoteIdentifier(name);
-					}
+					if (Provider != null)
+						return Provider.Adapter.QuoteIdentifier(value);
+					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
+					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-//						if (name.IndexOf('.') > 0)
-//							value = string.Join("].[", name.Split('.'));
-
-						return SqlServerTools.QuoteIdentifier(name);
-					}
-
-					break;
+					if (Provider != null)
+						return Provider.Adapter.QuoteIdentifier(value);
+					return SqlServerTools.BasicQuoteIdentifier(value);
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-					break;
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
 			return value;
@@ -368,19 +357,40 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string GetTypeName(IDbDataParameter parameter)
+		protected override string? GetTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).TypeName;
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetTypeName(param);
+			}
+
+			return base.GetTypeName(parameter);
 		}
 
-		protected override string GetUdtTypeName(IDbDataParameter parameter)
+		protected override string? GetUdtTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).UdtTypeName;
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetUdtTypeName(param);
+			}
+
+			return base.GetUdtTypeName(parameter);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((dynamic)parameter).SqlDbType.ToString();
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

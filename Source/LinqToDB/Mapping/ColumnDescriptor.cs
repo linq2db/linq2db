@@ -41,13 +41,13 @@ namespace LinqToDB.Mapping
 				MemberType       = propertyInfo.PropertyType;
 			}
 
+			var dataType = mappingSchema.GetDataType(MemberType);
+			if (dataType.DataType == DataType.Undefined)
+				dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+
 			if (columnAttribute == null)
 			{
 				columnAttribute = new ColumnAttribute();
-				var dataType = mappingSchema.GetDataType(MemberType);
-
-				if (dataType.DataType == DataType.Undefined)
-					dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
 
 				columnAttribute.DataType  = dataType.DataType;
 				columnAttribute.DbType    = dataType.DbType;
@@ -55,6 +55,12 @@ namespace LinqToDB.Mapping
 				if (dataType.Length    != null) columnAttribute.Length    = dataType.Length.Value;
 				if (dataType.Precision != null) columnAttribute.Precision = dataType.Precision.Value;
 				if (dataType.Scale     != null) columnAttribute.Scale     = dataType.Scale.Value;
+			}
+			else if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.DataType)
+			{
+				if (dataType.Length    != null && !columnAttribute.HasLength())    columnAttribute.Length    = dataType.Length.Value;
+				if (dataType.Precision != null && !columnAttribute.HasPrecision()) columnAttribute.Precision = dataType.Precision.Value;
+				if (dataType.Scale     != null && !columnAttribute.HasScale())     columnAttribute.Scale     = dataType.Scale.Value;
 			}
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;

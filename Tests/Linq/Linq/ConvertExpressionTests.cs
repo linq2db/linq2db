@@ -215,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,7 +251,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest3([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -268,7 +268,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest41 with explicit sort")]
 		[Test]
-		public void LetTest4([DataSources(ProviderName.Informix, TestProvName.AllSapHana)] string context)
+		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -330,7 +330,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest5([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -362,7 +362,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest61 with explicit sort")]
 		[Test]
-		public void LetTest6([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest6([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -486,6 +486,41 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LetTest7([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(
+						from p in Parent
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.Where(c => c.ChildID > -100)
+						select new
+						{
+							p.ParentID,
+							Any    = ch2.Any(),
+							Count  = ch2.Count(),
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First2 = ch2.FirstOrDefault()
+						}
+					).Where(t => t.ParentID > 0).Take(5000)
+					,
+					(
+						from p in db.Parent
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.Where(c => c.ChildID > -100)
+						select new
+						{
+							p.ParentID,
+							Any    = ch2.Any(),
+							Count  = ch2.Count(),
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First2 = ch2.FirstOrDefault()
+						}
+					).Where(t => t.ParentID > 0).Take(5000));
+		}
+
+		[Test]
 		public void LetTest71([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -551,7 +586,6 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue("Sybase doesn't support TOP in subqueries", Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void LetTest9([DataSources] string context)
 		{
@@ -560,7 +594,7 @@ namespace Tests.Linq
 				AreEqual(
 					(
 						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
@@ -569,7 +603,7 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()

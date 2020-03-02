@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,7 +7,6 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -70,7 +68,7 @@ namespace LinqToDB.DataProvider.Oracle
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
 		{
 			if (to.IsEnum && from == typeof(decimal))
 			{
@@ -78,7 +76,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (type != null)
 				{
-					var fromDecimalToType = GetConvertExpression(from, type, false);
+					var fromDecimalToType = GetConvertExpression(from, type, false)!;
 					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
 
 					return Expression.Lambda(
@@ -130,12 +128,22 @@ namespace LinqToDB.DataProvider.Oracle
 				: base(ProviderName.OracleNative, Instance)
 			{
 			}
+
+			public NativeMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 
 		public class ManagedMappingSchema : MappingSchema
 		{
 			public ManagedMappingSchema()
 				: base(ProviderName.OracleManaged, Instance)
+			{
+			}
+
+			public ManagedMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}

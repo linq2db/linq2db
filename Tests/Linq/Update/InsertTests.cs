@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -1056,7 +1056,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1496,7 +1496,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			ProviderName.Informix, ProviderName.SqlCe, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

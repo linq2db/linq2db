@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Data;
-using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -58,12 +56,6 @@ namespace Tests.TypeMapping
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
 		}
-
-		[Wrapper]
-		internal class GetOracleDate
-		{
-
-		}
 	}
 
 	[TestFixture]
@@ -83,11 +75,11 @@ namespace Tests.TypeMapping
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(false, ProviderName.OracleManaged)] string context)
+		public void Test([IncludeDataSources(false, TestProvName.AllOracleManaged)] string context)
 		{
-			var prov = DataConnection.GetDataProvider(ProviderName.OracleManaged);
+			var prov = DataConnection.GetDataProvider(context);
 
-			var connectionType = ((DynamicDataProviderBase)prov).GetConnectionType();
+			var connectionType = ((OracleDataProvider)prov).Adapter.ConnectionType;
 
 			var oracleParameter  = GetDynamicType("OracleParameter", connectionType);
 			var oracleDbType     = GetDynamicType("OracleDbType", connectionType);
@@ -95,17 +87,14 @@ namespace Tests.TypeMapping
 
 			var oracleDate = GetDynamicTypesType("OracleDate", connectionType);
 
-			var oracleMapper = new TypeMapper(oracleParameter, oracleDbType, oracleDataReader, oracleDate);
+			var oracleMapper = new TypeMapper();
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleParameter>(oracleParameter);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDbType>(oracleDbType);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDataReader>(oracleDataReader);
 
-
-//			oracleMapper.MapSetter<OracleParameter>(p => p.OracleDbType, () => OracleDbType.Date);
+			oracleMapper.FinalizeMappings();
 
 			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
-
-			oracleMapper.SetValue<OracleParameter>(instance, p => p.OracleDbType, OracleDbType.Date);
-
-			var action = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>(OracleDbType.Single);
-			action(instance);
 
 			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>();
 			setterAction(instance, OracleDbType.Blob);

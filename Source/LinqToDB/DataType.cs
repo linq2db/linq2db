@@ -271,6 +271,11 @@ namespace LinqToDB
 		/// <summary>
 		/// PostgreSQL interval type.
 		/// </summary>
-		Interval
+		Interval,
+
+		/// <summary>
+		/// Oracle BFILE data type.
+		/// </summary>
+		BFile
 	}
 }

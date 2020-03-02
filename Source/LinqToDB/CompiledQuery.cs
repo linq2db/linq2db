@@ -252,7 +252,7 @@ namespace LinqToDB
 		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TResult> Compile<TDC,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TResult>> query)
+			Expression<Func<TDC,TResult>> query)
 			  where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -270,7 +270,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TResult> Compile<TDC,TArg1,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TResult>> query)
+			Expression<Func<TDC,TArg1,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -289,7 +289,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TResult> Compile<TDC,TArg1,TArg2,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -309,7 +309,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TResult> Compile<TDC,TArg1,TArg2,TArg3,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -330,7 +330,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg4">Type of forth parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -352,7 +352,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg5">Type of fifth parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");

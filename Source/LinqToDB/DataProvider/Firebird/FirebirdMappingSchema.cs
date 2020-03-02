@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird

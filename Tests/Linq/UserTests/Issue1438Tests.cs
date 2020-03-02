@@ -47,32 +47,30 @@ namespace Tests.UserTests
 		[Test]
 		public void SpecificTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
 		{
-			using (new AvoidSpecificDataProviderAPI(avoidProviderSpecificApi))
+			var provider = new PostgreSQLDataProvider(PostgreSQLVersion.v95);
+			var cs       = DataConnection.GetConnectionString(context);
+
+			using (var cn = new NpgsqlConnection(cs))
+			using (var db = new DataConnection(provider, cn))
 			{
-				var provider = new PostgreSQLDataProvider(PostgreSQLVersion.v95);
-				var cs = DataConnection.GetConnectionString(context);
-				using (var cn = new NpgsqlConnection(cs))
-				using (var db = new DataConnection(provider, cn))
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<Client>()
+						.HasTableName("Issue1438")
+						.Property(x => x.Id)
+							.IsPrimaryKey()
+							.IsIdentity();
+
+				using (var tbl = db.CreateLocalTable<Client>())
 				{
-					db.MappingSchema.GetFluentMappingBuilder()
-						.Entity<Client>()
-							.HasTableName("Issue1438")
-							.Property(x => x.Id)
-								.IsPrimaryKey()
-								.IsIdentity();
-
-					using (var tbl = db.CreateLocalTable<Client>())
+					var id = db.InsertWithInt32Identity(new Client()
 					{
-						var id = db.InsertWithInt32Identity(new Client()
-						{
-							Has = true
-						});
+						Has = true
+					});
 
-						var record = tbl.Where(_ => _.Id == id).Single();
+					var record = tbl.Where(_ => _.Id == id).Single();
 
-						Assert.AreEqual(id, record.Id);
-						Assert.True(record.Has);
-					}
+					Assert.AreEqual(id, record.Id);
+					Assert.True(record.Has);
 				}
 			}
 		}

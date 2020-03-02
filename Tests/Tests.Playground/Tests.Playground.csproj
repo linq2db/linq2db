@@ -4,6 +4,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
 		<Nullable>disable</Nullable>
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
 
 	<ItemGroup>

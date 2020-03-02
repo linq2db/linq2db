@@ -363,7 +363,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal)
 					}
 				).ToList();
 
@@ -515,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal)
 						}
 					).ToList()).ToList();
 
@@ -730,8 +730,7 @@ namespace LinqToDB.Linq.Builder
 						if (EntityDescriptor != null &&
 							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
-							throw new LinqException("Member '{0}.{1}' is not a table column.",
-								memberExpression.Member.DeclaringType?.Name, memberExpression.Member.Name);
+							return new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
 						}
 					}
 
@@ -981,7 +980,7 @@ namespace LinqToDB.Linq.Builder
 				where T : class
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
-				{
+				{	
 					var expression = association.Builder.DataContext.GetTable<T>();
 
 					var loadWith = association.GetLoadWith();
@@ -1037,6 +1036,20 @@ namespace LinqToDB.Linq.Builder
 							p = (SqlPredicate.ExprExpr)cond.Predicate;
 						}
 
+						if (parent is UnaryExpression parentUnaryExpression)
+						{
+							if (parentUnaryExpression.NodeType == ExpressionType.Convert &&
+							    parentUnaryExpression.Type.IsAssignableFrom(parentUnaryExpression.Operand.Type))
+							{
+								// When parentUnaryExpression.Type is an interface and
+								// parentUnaryExpression.Operand.Type is generic type that implements the interface type
+								// var e1 = Expression.MakeMemberAccess (see below) fails,
+								// because ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo is declared in parentUnaryExpression.Operand.Type
+								// and of course is missing in parentUnaryExpression.Type
+								parent = parentUnaryExpression.Operand;
+							}
+						} 
+						
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
 						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
@@ -1278,16 +1291,28 @@ namespace LinqToDB.Linq.Builder
 
 								if (sameType || InheritanceMapping.Count > 0)
 								{
+									string pathName = null;
 									foreach (var field in SqlTable.Fields.Values)
 									{
 										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
+											if (pathName == null)
+											{
+												var suffix = string.Empty;
+												for (var ex = (MemberExpression)expression;
+													ex != levelMember;
+													ex = (MemberExpression)ex.Expression)
+												{
+													suffix = string.IsNullOrEmpty(suffix)
+														? ex.Member.Name
+														: ex.Member.Name + "." + suffix;
+												}
 
-											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
-												name += "." + ex.Member.Name;
-
-											if (field.Name == name)
+												pathName = !string.IsNullOrEmpty(suffix) ? name + "." + suffix : name;
+											}
+											
+											if (field.Name == pathName)
 												return field;
 										}
 										else if (field.Name == name)

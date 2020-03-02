@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -16,18 +15,20 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void SetQueryParameter(IQueryElement element)
 		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-
-				// enforce binary and timespan as parameters
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
-					|| p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+			if (element is SqlParameter p)
+				// enforce binary as parameters
+				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
 					p.IsQueryParameter = true;
-				else
-					// TODO: Ifx doesn't like parameters for some reason
+				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
+				// intervals explicitly
+				else if ((p.SystemType == typeof(TimeSpan) || p.SystemType == typeof(TimeSpan?)) && p.DataType != DataType.Int64)
 					p.IsQueryParameter = false;
-			}
+		}
+
+		static void ClearQueryParameter(IQueryElement element)
+		{
+			if (element is SqlParameter p && p.IsQueryParameter)
+				p.IsQueryParameter = false;
 		}
 
 		public override SqlStatement Finalize(SqlStatement statement)
@@ -35,6 +36,17 @@ namespace LinqToDB.DataProvider.Informix
 			CheckAliases(statement, int.MaxValue);
 
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
+
+			// Informix doesn't support parameters in select list
+			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
+			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count == 0;
+			// whould be better if our insert AST had no SelectQuery when it is not used...
+			if (!ignore)
+				new QueryVisitor().VisitAll(statement, e =>
+				{
+					if (e is SqlSelectClause select)
+						new QueryVisitor().VisitAll(select, ClearQueryParameter);
+				});
 
 			return base.Finalize(statement);
 		}

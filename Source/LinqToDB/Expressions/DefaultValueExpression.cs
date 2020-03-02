@@ -30,5 +30,10 @@ namespace LinqToDB.Expressions
 					_mappingSchema.GetDefaultValue(Type),
 				Type);
 		}
+
+		public override string ToString()
+		{
+			return $"Default({Type.Name})";
+		}
 	}
 }

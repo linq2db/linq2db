@@ -16,7 +16,7 @@ namespace LinqToDB
 		/// Creates new transaction wrapper.
 		/// </summary>
 		/// <param name="dataContext">Data context.</param>
-		public DataContextTransaction([NotNull] DataContext dataContext)
+		public DataContextTransaction(DataContext dataContext)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
@@ -140,7 +140,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Commits started transaction.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -163,8 +163,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Rollbacks started transaction asynchonously.
-		/// If underlying provider doesn't support asynchonous rollback, it will be performed synchonously.
+		/// Rollbacks started transaction asynchronously.
+		/// If underlying provider doesn't support asynchronous rollback, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>

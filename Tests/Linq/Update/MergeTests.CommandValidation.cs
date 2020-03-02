@@ -30,7 +30,7 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]
 			string context)
 		{

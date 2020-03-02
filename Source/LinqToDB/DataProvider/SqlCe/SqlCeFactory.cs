@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new SqlCeDataProvider();
+			return SqlCeTools.GetDataProvider();
 		}
 	}
 }

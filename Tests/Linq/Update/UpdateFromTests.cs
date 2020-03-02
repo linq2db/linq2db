@@ -78,7 +78,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestWhere(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, ProviderName.Informix)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -129,7 +129,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoin(
-			[DataSources(ProviderName.SqlCe, ProviderName.Informix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -280,7 +280,7 @@ namespace Tests.Update
 				AreEqual(expected, actual);
 
 			}
-		}		
+		}
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinTake(
@@ -334,7 +334,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestAssociation(
-			[DataSources(ProviderName.SqlCe, ProviderName.Informix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -359,7 +359,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestAssociationAsUpdatable(
-			[DataSources(ProviderName.SqlCe, ProviderName.Informix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -387,7 +387,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestAssociationSimple(
-			[DataSources(ProviderName.Informix)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -417,7 +417,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestAssociationSimpleAsUpdatable(
-			[DataSources(ProviderName.Informix)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			var data = GenerateData();

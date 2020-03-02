@@ -238,12 +238,12 @@ namespace LinqToDB.SqlQuery
 
 			new TypeInfo(DataType.Char,              8000,                  null,                  null,                    8000),
 			new TypeInfo(DataType.VarChar,           8000,                  null,                  null,                    8000),
-			new TypeInfo(DataType.Text,      int.MaxValue,                  null,                  null,            int.MaxValue),
+			new TypeInfo(DataType.Text,              null,                  null,                  null,            int.MaxValue),
 			new TypeInfo(DataType.NChar,             4000,                  null,                  null,                    4000),
 			new TypeInfo(DataType.NVarChar,          4000,                  null,                  null,                    4000),
-			new TypeInfo(DataType.NText,     int.MaxValue,                  null,                  null,        int.MaxValue / 2),
-			new TypeInfo(DataType.Json,      int.MaxValue,                  null,                  null,        int.MaxValue / 2),
-			new TypeInfo(DataType.BinaryJson,int.MaxValue,                  null,                  null,        int.MaxValue / 2),
+			new TypeInfo(DataType.NText,             null,                  null,                  null,        int.MaxValue / 2),
+			new TypeInfo(DataType.Json,              null,                  null,                  null,        int.MaxValue / 2),
+			new TypeInfo(DataType.BinaryJson,        null,                  null,                  null,        int.MaxValue / 2),
 
 			new TypeInfo(DataType.Binary,            8000,                  null,                  null,                    null),
 			new TypeInfo(DataType.VarBinary,         8000,                  null,                  null,                    null),

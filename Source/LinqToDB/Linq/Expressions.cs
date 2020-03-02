@@ -126,11 +126,11 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/></param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary(
-			[JetBrains.Annotations.NotNull] string           providerName, 
-			                                ExpressionType   nodeType,
-			[JetBrains.Annotations.NotNull] Type             leftType, 
-			[JetBrains.Annotations.NotNull] Type             rightType,
-			[JetBrains.Annotations.NotNull] LambdaExpression expression)
+			string           providerName, 
+			ExpressionType   nodeType,
+			Type             leftType, 
+			Type             rightType,
+			LambdaExpression expression)
 		{
 			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
 			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
@@ -158,10 +158,10 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/>.</param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary(
-			                                ExpressionType   nodeType, 
-			[JetBrains.Annotations.NotNull] Type             leftType, 
-			[JetBrains.Annotations.NotNull] Type             rightType, 
-			[JetBrains.Annotations.NotNull] LambdaExpression expression)
+			ExpressionType   nodeType, 
+			Type             leftType, 
+			Type             rightType, 
+			LambdaExpression expression)
 		{
 			MapBinary("", nodeType, leftType, rightType, expression);
 		}
@@ -177,9 +177,9 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary<TLeft,TRight,TR>(
-			[JetBrains.Annotations.NotNull] string                            providerName,
-			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> binaryExpression,
-			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> expression)
+			string                            providerName,
+			Expression<Func<TLeft,TRight,TR>> binaryExpression,
+			Expression<Func<TLeft,TRight,TR>> expression)
 		{
 			MapBinary(providerName, GetBinaryNode(binaryExpression.Body).NodeType, typeof(TLeft), typeof(TRight), expression);
 		}
@@ -194,8 +194,8 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary<TLeft,TRight,TR>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> binaryExpression, 
-			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> expression)
+			Expression<Func<TLeft,TRight,TR>> binaryExpression, 
+			Expression<Func<TLeft,TRight,TR>> expression)
 		{
 			MapBinary("", binaryExpression, expression);
 		}

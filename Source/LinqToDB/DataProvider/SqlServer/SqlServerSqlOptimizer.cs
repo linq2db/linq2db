@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Linq;
+﻿using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

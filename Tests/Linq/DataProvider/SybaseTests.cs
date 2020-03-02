@@ -635,5 +635,272 @@ namespace Tests.DataProvider
 				return time - TimeSpan.FromDays(time.Days);
 			}
 		}
+
+		#region BulkCopy
+		[Table("AllTypes")]
+		public partial class AllType
+		{
+			[PrimaryKey, Identity] public int ID { get; set; }
+
+			[Column] public long?     bigintDataType         { get; set; }
+			[Column] public ulong?    uBigintDataType        { get; set; }
+			[Column] public decimal?  numericDataType        { get; set; }
+			[Column] public bool      bitDataType            { get; set; }
+			[Column] public short?    smallintDataType       { get; set; }
+			[Column] public ushort?   uSmallintDataType      { get; set; }
+			[Column] public decimal?  decimalDataType        { get; set; }
+			[Column] public decimal?  moneyDataType          { get; set; }
+			[Column] public decimal?  smallmoneyDataType     { get; set; }
+			[Column] public int?      intDataType            { get; set; }
+			[Column] public uint?     uIntDataType           { get; set; }
+			[Column] public byte?     tinyintDataType        { get; set; }
+			[Column] public double?   floatDataType          { get; set; }
+			[Column] public float?    realDataType           { get; set; }
+			[Column] public DateTime? datetimeDataType       { get; set; }
+			[Column] public DateTime? smalldatetimeDataType  { get; set; }
+			[Column] public DateTime? dateDataType           { get; set; }
+			[Column] public TimeSpan? timeDataType           { get; set; }
+			[Column] public char?     charDataType           { get; set; }
+			[Column] public string    char20DataType         { get; set; }
+			[Column] public string    varcharDataType        { get; set; }
+			[Column] public string    textDataType           { get; set; }
+			[Column] public char?     ncharDataType          { get; set; }
+			[Column] public string    nvarcharDataType       { get; set; }
+			[Column] public string    ntextDataType          { get; set; }
+			[Column] public byte[]    binaryDataType         { get; set; }
+			[Column] public byte[]    varbinaryDataType      { get; set; }
+			[Column] public byte[]    imageDataType          { get; set; }
+			[Column] public byte[]    timestampDataType      { get; set; }
+		}
+
+		static readonly AllType[] _allTypeses =
+		{
+#region data
+			new AllType
+			{
+				ID                       = 700,
+				bigintDataType           = 1,
+				uBigintDataType          = 2,
+				numericDataType          = 1.6m,
+				bitDataType              = true,
+				smallintDataType         = 1,
+				uSmallintDataType        = 2,
+				decimalDataType          = 1.1m,
+				moneyDataType            = 1.2m,
+				smallmoneyDataType       = 1.3m,
+				intDataType              = 1,
+				uIntDataType             = 2,
+				tinyintDataType          = 1,
+				floatDataType            = 1.4d,
+				realDataType             = 1.5f,
+				datetimeDataType         = new DateTime(2014, 12, 17, 21, 2, 58, 123),
+				smalldatetimeDataType    = new DateTime(2014, 12, 17, 21, 3, 0),
+				dateDataType             = new DateTime(2014, 12, 17),
+				timeDataType             = new TimeSpan(0, 10, 11, 12),
+				charDataType             = 'E',
+				char20DataType           = "Eboi",
+				varcharDataType          = "E",
+				textDataType             = "E",
+				ncharDataType            = 'Ё',
+				nvarcharDataType         = "Ё",
+				ntextDataType            = "Ё",
+				binaryDataType           = new byte[] { 1 },
+				varbinaryDataType        = new byte[] { 1 },
+				imageDataType            = new byte[] { 1, 2, 3, 4, 5 },
+				timestampDataType        = new byte[] { 5, 4, 3, 2, 1 },
+			},
+			new AllType
+			{
+				ID                       = 701,
+			},
+#endregion
+		};
+
+		[Table("LinqDataTypes")]
+		class DataTypes
+		{
+			[Column] public int       ID;
+			[Column] public decimal?  MoneyValue;
+			[Column] public DateTime? DateTimeValue;
+			[Column] public DateTime? DateTimeValue2;
+			[Column] public bool      BoolValue;
+			[Column] public Guid?     GuidValue;
+			[Column] public Binary    BinaryValue;
+			[Column] public short?    SmallIntValue;
+			[Column] public int?      IntValue;
+			[Column] public long?     BigIntValue;
+			[Column] public string    StringValue;
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.MultipleRows,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
+						{
+							ID             = 4000 + n,
+							MoneyValue     = 1000m + n,
+							DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue      = true,
+							GuidValue      = Guid.NewGuid(),
+							BinaryValue    = new byte[] { (byte)n },
+							SmallIntValue  = (short)n,
+							IntValue       = n,
+							BigIntValue    = n,
+							StringValue    = n.ToString(),
+						}
+					));
+
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.ProviderSpecific,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
+						{
+							ID             = 4000 + n,
+							MoneyValue     = 1000m + n,
+							DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue      = true,
+							GuidValue      = Guid.NewGuid(),
+							BinaryValue    = new byte[] { (byte)n },
+							SmallIntValue  = (short)n,
+							IntValue       = n,
+							BigIntValue    = n,
+							StringValue    = n.ToString(),
+						}
+					));
+
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
+
+		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
+		{
+			var hasBitBug = context == ProviderName.Sybase && bulkCopyType == BulkCopyType.ProviderSpecific;
+			using (var db = new DataConnection(context))
+			{
+				db.CommandTimeout = 60;
+
+				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType       = bulkCopyType,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+						KeepIdentity       = true,
+					},
+					_allTypeses);
+
+				var ids = _allTypeses.Select(at => at.ID).ToArray();
+
+				var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+
+				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+
+				for (var i = 0; i < list.Count; i++)
+					CompareObject(db.MappingSchema, list[i], _allTypeses[i], hasBitBug);
+			}
+		}
+
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test, bool hasBitBug)
+		{
+			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
+
+			foreach (var column in ed.Columns)
+			{
+				var actualValue = column.GetValue(mappingSchema, actual);
+				var testValue   = column.GetValue(mappingSchema, test);
+
+				// timestampDataType autogenerated
+				if (column.MemberName == "timestampDataType")
+					continue;
+
+				if (hasBitBug && column.MemberName == "bitDataType")
+				{
+					// this is a bug in ASE bulk copy implementation:
+					// for first record it inserts false into bit field
+					// assert it so we will know when it fixed
+					Assert.AreEqual(false, actualValue);
+					continue;
+				}
+
+				Assert.That(actualValue, Is.EqualTo(testValue),
+					actualValue is DateTimeOffset
+						? "Column  : {0} {1:yyyy-MM-dd HH:mm:ss.fffffff zzz} {2:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
+						: "Column  : {0}",
+					column.MemberName,
+					actualValue,
+					testValue);
+			}
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test]
+		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ms = new MappingSchema();
+
+				db.AddMappingSchema(ms);
+
+				ms.GetFluentMappingBuilder()
+					.Entity<AllType>()
+						.HasTableName("AllTypeCreateTest");
+
+				try
+				{
+					db.DropTable<AllType>();
+				}
+				catch
+				{
+				}
+
+				var table = db.CreateTable<AllType>();
+
+				var list = table.ToList();
+
+				db.DropTable<AllType>();
+			}
+		}
+		#endregion
 	}
 }

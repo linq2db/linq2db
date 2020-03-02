@@ -110,7 +110,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			if (_connection is ICloneable cloneable)
 				return cloneable.Clone();
-			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString);
+			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString!);
 		}
 
 		public Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
