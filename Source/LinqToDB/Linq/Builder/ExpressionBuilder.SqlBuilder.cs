@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
 
 								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
-									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+													 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
 								if (memberInfo == null)
 									memberInfo = MemberHelper.GetMemberInfo(expr);
 
@@ -2008,10 +2008,15 @@ namespace LinqToDB.Linq.Builder
 		static Expression ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
 			Expression result = ob;
+			var skipCount = 0;
 			foreach (var memberInfo in memberPath)
 			{
 				if (!memberInfo.DeclaringType.IsAssignableFrom(result.Type))
 				{
+					// first element may have inappropriate nesting
+					if (skipCount-- == 0)
+						continue;
+
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
 					return null;
@@ -2114,7 +2119,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (sr)
 				{
-					var memeberPath = ConstructMemberPath(lcol.MemberChain.Skip(1), right, true);
+					var memeberPath = ConstructMemberPath(lcol.MemberChain, right, true);
 					rcol = ConvertToSql(rightContext, memeberPath);
 				}	
 				else if (rmembers.Count != 0)
