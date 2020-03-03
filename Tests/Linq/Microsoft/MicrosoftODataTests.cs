@@ -43,7 +43,9 @@ namespace Tests.Microsoft
 		}
 
 		[Test]
-		public void SelectViaOData([Values(
+		public void SelectViaOData(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[Values(
 			 "/odata/PersonClass?$apply=groupby((Title),aggregate(YearsExperience%20with%20sum%20as%20TotalExperience))",
 			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))",
 			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as TotalExperience))&$orderby=TotalExperience",
@@ -60,7 +62,7 @@ namespace Tests.Microsoft
 			"/odata/People?$apply=filter(Title eq 'Engineer' or Title eq 'QA')/groupby((Title),aggregate($count as NumPeople))&$count=true"
 			//"/odata/People?$apply=groupby((Office/Name),aggregate($count as NumPeople))&$count=true",
 			//"/odata/People?$apply=filter(Title eq 'QA')/groupby((Office/Id,Office/Name),aggregate($count as NumPeople))&$count=true&$orderby=NumPeople desc"
-			)] string oDataQuery, [IncludeDataSources(TestProvName.AllSqlServer)] string context)
+			)] string oDataQuery)
 		{
 			var modelBuilder = new ODataModelBuilder();
 			var person = modelBuilder.EntityType<PersonClass>();
