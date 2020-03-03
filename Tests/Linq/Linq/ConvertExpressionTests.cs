@@ -276,7 +276,7 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -287,7 +287,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -307,7 +307,7 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -318,7 +318,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -338,7 +338,7 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -349,7 +349,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -371,7 +371,7 @@ namespace Tests.Linq
 			{
 				var expected = (from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						p.ParentID,
@@ -386,7 +386,7 @@ namespace Tests.Linq
 				var actual = (
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						p.ParentID,
@@ -415,7 +415,7 @@ namespace Tests.Linq
 			{
 				var expected = (from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						p.ParentID,
@@ -430,7 +430,7 @@ namespace Tests.Linq
 				var actual = (
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						p.ParentID,
@@ -459,7 +459,7 @@ namespace Tests.Linq
 					(
 						from p in Parent
 						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -494,7 +494,7 @@ namespace Tests.Linq
 					(
 						from p in Parent
 						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -529,7 +529,7 @@ namespace Tests.Linq
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
 					let ch2 = ch1.Where(c => c.ChildID > -100)
-					let ch3	= ch2.FirstOrDefault(c => c.ParentID > 0)
+					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
 						First1 = ch3 == null ? 0 : ch3.ParentID,
@@ -541,7 +541,7 @@ namespace Tests.Linq
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
 					let ch2 = ch1.Where(c => c.ChildID > -100)
-					let ch3	= ch2.FirstOrDefault(c => c.ParentID > 0)
+					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
 						First1 = ch3 == null ? 0 : ch3.ParentID,
@@ -559,7 +559,7 @@ namespace Tests.Linq
 				AreEqual(
 					(
 						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = Child.OrderBy(c => c.ChildID).Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
@@ -568,7 +568,7 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = db.Child.OrderBy(c => c.ChildID).Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
