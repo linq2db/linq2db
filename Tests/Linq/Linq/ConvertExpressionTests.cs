@@ -299,7 +299,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest41([DataSources(ProviderName.Informix, TestProvName.AllSapHana)] string context)
+		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -330,7 +330,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -362,7 +362,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest61 with explicit sort")]
 		[Test]
-		public void LetTest6([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -406,7 +406,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest61([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -451,7 +451,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort")]
 		[Test]
-		public void LetTest7([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -486,7 +486,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest71([DataSources(ProviderName.Informix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -528,7 +528,7 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
@@ -540,7 +540,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
