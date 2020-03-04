@@ -552,7 +552,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest9([DataSources] string context)
+		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
