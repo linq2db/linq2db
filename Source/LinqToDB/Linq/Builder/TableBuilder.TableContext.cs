@@ -698,7 +698,29 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (table.Field == null)
-					return table.Table.BuildQuery(table.Table.OriginalType, table.Table, parentObject);
+				{
+					Expression expr = null;
+					
+					if (expression is MemberExpression memberExpression)
+					{
+						// workaround for not mapped properties
+
+						var orginalType = table.Table.OriginalType;
+						if (table.Table is AssociatedTableContext association)
+						{
+							if (association.IsList)
+								orginalType = typeof(IEnumerable<>).MakeGenericType(orginalType);
+						}
+						
+						if (!orginalType.IsSameOrParentOf(memberExpression.Type))
+							expr = new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
+					}
+					
+					if (expr == null)
+						expr = table.Table.BuildQuery(table.Table.OriginalType, table.Table, parentObject);
+
+					return expr;
+				}
 
 				// Build field.
 				//
