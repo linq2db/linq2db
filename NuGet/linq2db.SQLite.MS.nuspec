@@ -12,7 +12,7 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"                version="3.0.0"/>
-			<dependency id="Microsoft.Data.Sqlite"  version="3.1.0"/>
+			<dependency id="Microsoft.Data.Sqlite"  version="3.1.2"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
