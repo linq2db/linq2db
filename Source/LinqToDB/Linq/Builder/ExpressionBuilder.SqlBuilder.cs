@@ -444,7 +444,7 @@ namespace LinqToDB.Linq.Builder
 								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
 
 								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
-									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+													 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
 								if (memberInfo == null)
 									memberInfo = MemberHelper.GetMemberInfo(expr);
 
@@ -2012,6 +2012,28 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertObjectComparison
 
+		static Expression ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
+		{
+			Expression result = ob;
+			var skipCount = 0;
+			foreach (var memberInfo in memberPath)
+			{
+				if (!memberInfo.DeclaringType.IsAssignableFrom(result.Type))
+				{
+					// first element may have inappropriate nesting
+					if (skipCount-- == 0)
+						continue;
+
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
+					return null;
+				}
+				result = Expression.MakeMemberAccess(result, memberInfo);
+			}
+
+			return result;
+		}
+		
 		public ISqlPredicate ConvertObjectComparison(
 			ExpressionType nodeType,
 			IBuildContext  leftContext,
@@ -2103,7 +2125,10 @@ namespace LinqToDB.Linq.Builder
 				var lmember = lcol.MemberChain[lcol.MemberChain.Count - 1];
 
 				if (sr)
-					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
+				{
+					var memeberPath = ConstructMemberPath(lcol.MemberChain, right, true);
+					rcol = ConvertToSql(rightContext, memeberPath);
+				}	
 				else if (rmembers.Count != 0)
 					rcol = ConvertToSql(rightContext, rmembers[lmember]);
 

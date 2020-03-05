@@ -12,6 +12,7 @@ namespace Tests.Model
 		public int      ID;
 		public decimal  MoneyValue;
 		public DateTime DateTimeValue;
+		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		public bool     BoolValue;
 		public Guid     GuidValue;
 		public Binary   BinaryValue;
@@ -80,8 +81,7 @@ namespace Tests.Model
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
 		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
-		// native provider bulk copy cannot handle byte, which we will use for bool type
-		[Column(DataType = DataType.Int16, Configuration = ProviderName.OracleNative)]
+		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;

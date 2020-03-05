@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -38,18 +39,50 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			var wrapped = false;
+
 			if (sequence.SelectQuery.Select.TakeValue != null ||
 				sequence.SelectQuery.Select.SkipValue != null)
+			{
 				sequence = new SubQueryContext(sequence);
+				wrapped = true;
+			}
 
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var sparent = sequence.Parent;
-			var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
-			var body    = lambda.Body.Unwrap();
-			var sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key);
+			SqlInfo[] sql;
 
-			builder.ReplaceParent(order, sparent);
+			while (true)
+			{
+				var sparent = sequence.Parent;
+				var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
+				var body    = lambda.Body.Unwrap();
+				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key);
 
+				builder.ReplaceParent(order, sparent);
+
+			    if (wrapped)
+				    break;
+
+				// handle situation when order by uses complex field
+			    
+			    var isComplex = false;
+			    foreach (var sqlInfo in sql)
+			    {
+					// possible we have to extend this list
+				    isComplex = null != new QueryVisitor().Find(sqlInfo.Sql, 
+					                e => e.ElementType == QueryElementType.SqlQuery);
+				    if (isComplex)
+					    break;
+			    }
+
+			    if (!isComplex)
+				    break;
+
+			    sequence = new SubQueryContext(sequence);
+			    wrapped = true;
+			}
+
+	
 			if (!methodCall.Method.Name.StartsWith("Then") && !Configuration.Linq.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 

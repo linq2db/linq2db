@@ -68,6 +68,11 @@ namespace LinqToDB.SqlProvider
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		/// <summary>
+		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
+		/// </summary>
+		public bool IsCountDistinctSupported              { get; set; }
+
+		/// <summary>
 		/// Provider supports
 		/// <code>
 		/// UPDATE A
@@ -132,6 +137,7 @@ namespace LinqToDB.SqlProvider
 				^ IsOrderByAggregateFunctionsSupported         .GetHashCode()
 				^ IsAllSetOperationsSupported                  .GetHashCode()
 				^ IsDistinctSetOperationsSupported             .GetHashCode()
+				^ IsCountDistinctSupported                     .GetHashCode()
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
@@ -165,6 +171,7 @@ namespace LinqToDB.SqlProvider
 				&& IsOrderByAggregateFunctionsSupported == other.IsOrderByAggregateFunctionsSupported
 				&& IsAllSetOperationsSupported          == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported     == other.IsDistinctSetOperationsSupported
+				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
