@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tests.Model;
+using System.Threading;
 
 namespace Tests.Data
 {
@@ -146,6 +147,29 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TestSearchStoredProdecureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
+					"PersonSearch",
+					new { nameFilter = "Jane" }
+				);
+
+				Assert.IsFalse(res.DoctorFound);
+				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons.Count(), 1);
+				Assert.AreEqual(res.MatchingPatients.Count(), 0);
+				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchCount, 1);
+				Assert.NotNull(res.MatchingPerson);
+				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
+				Assert.AreEqual("Doe", res.MatchingPerson.LastName);
+				Assert.AreEqual(Gender.Female, res.MatchingPerson.Gender);
+			}
+		}
+
+		[Test]
 		public async Task TestSearchStoredProdecureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
@@ -153,6 +177,30 @@ namespace Tests.Data
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
+				);
+
+				Assert.IsFalse(res.DoctorFound);
+				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons.Count(), 1);
+				Assert.AreEqual(res.MatchingPatients.Count(), 0);
+				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchCount, 1);
+				Assert.NotNull(res.MatchingPerson);
+				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
+				Assert.AreEqual("Doe", res.MatchingPerson.LastName);
+				Assert.AreEqual(Gender.Female, res.MatchingPerson.Gender);
+			}
+		}
+
+		[Test]
+		public async Task TestSearchStoredProdecureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
+					"PersonSearch",
+					CancellationToken.None,
+					new { nameFilter = "Jane" }
 				);
 
 				Assert.IsFalse(res.DoctorFound);

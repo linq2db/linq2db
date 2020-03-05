@@ -284,14 +284,15 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (!query.GroupBy.IsEmpty/* && subQuery.Select.Columns.Count > 1*/)
+					if (!query.GroupBy.IsEmpty)
 					{
 						var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
 
 						subQuery.Select.Columns.RemoveAt(0);
 
-						query.Select.Columns[i].Expression =
-							new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]);
+						var parm = subQuery.Select.Columns.Count > 0 ? (ISqlExpression)subQuery.Select.Columns[0] : query.All;
+
+						query.Select.Columns[i].Expression = new SqlFunction(oldFunc.SystemType, oldFunc.Name, parm);
 					}
 					else
 					{

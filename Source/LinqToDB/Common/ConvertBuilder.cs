@@ -70,7 +70,18 @@ namespace LinqToDB.Common
 				to.GetMethodEx("op_Implicit", from) ??
 				to.GetMethodEx("op_Explicit", from);
 
-			return op != null ? Expression.Convert(p, to, op) : null;
+			if (op != null)
+			{
+				Type oppt = op.GetParameters()[0].ParameterType;
+				Type pt   = p.Type;
+
+				if (oppt.IsNullable() && !pt.IsNullable())
+					p = GetCtor(pt, oppt, p);
+
+				return Expression.Convert(p, to, op);
+			}
+
+			return null;
 		}
 
 		static bool IsConvertible(Type type)

@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
@@ -609,16 +610,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
-		public void SelectComplexField()
+		[Test]
+		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
 				var sql = q.ToString();
+				
+				Console.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
@@ -1230,8 +1233,6 @@ namespace Tests.Linq
 			public int Value1 { get; }
 		}
 
-		//https://github.com/linq2db/linq2db/issues/1788
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
@@ -1255,7 +1256,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
@@ -1375,5 +1375,26 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+		
+		[Test]
+		public void ToStringTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from p in db.GetTable<Parent>()
+					where p.ParentID == id
+					select p;
+
+				var sql1 = query.ToString();
+
+				id = 2;
+
+				var sql2 = query.ToString();
+				
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
+			}
+		}
+
 	}
 }
