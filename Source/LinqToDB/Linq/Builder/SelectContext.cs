@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (level == 0)
 			{
-				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
+				if (Body.NodeType == ExpressionType.Parameter && (Lambda.Parameters.Count == 1 || Lambda.Parameters.Count == 2))
 				{
 					var sequence = GetSequence(Body, 0);
 

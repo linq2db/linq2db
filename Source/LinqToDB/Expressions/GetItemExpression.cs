@@ -4,24 +4,26 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Expressions
 {
 	class GetItemExpression : Expression
 	{
-		public GetItemExpression(Expression expression)
+		public GetItemExpression(Expression expression, MappingSchema mappingSchema)
 		{
 			_expression = expression;
-			_type       = expression.Type.GetGenericArguments()[0];
+			_type       = EagerLoading.GetEnumerableElementType(expression.Type, mappingSchema);
 		}
 
 		readonly Expression _expression;
 		readonly Type       _type;
 
-		public          Expression     Expression { get { return _expression;              } }
-		public override Type           Type       { get { return _type;                    } }
-		public override ExpressionType NodeType   { get { return ExpressionType.Extension; } }
-		public override bool           CanReduce  { get { return true;                     } }
+		public          Expression     Expression => _expression;
+		public override Type           Type       => _type;
+		public override ExpressionType NodeType   => ExpressionType.Extension;
+		public override bool           CanReduce  => true;
 
 		public override Expression Reduce()
 		{

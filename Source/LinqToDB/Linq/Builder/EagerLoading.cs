@@ -1596,6 +1596,7 @@ namespace LinqToDB.Linq.Builder
 													{
 														//TODO: Support Grouping???
 														return expr;
+														/*
 														var newParam = Expression.Parameter(replacedType, prm.Name);
 														transientParam = newParam;
 														newParameters[j] = newParam;
@@ -1612,6 +1613,7 @@ namespace LinqToDB.Linq.Builder
 
 															return e;
 														});
+														*/
 													}
 												}
 											}

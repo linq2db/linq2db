@@ -64,7 +64,7 @@ namespace LinqToDB.Common
 			/// Controls behavior of linq2db when multiple queries required to load requested data:
 			/// - if <c>true</c> - multiple queries allowed;
 			/// - if <c>false</c> - <see cref="LinqToDB.Linq.LinqException"/> will be thrown.
-			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
+			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool AllowMultipleQuery;

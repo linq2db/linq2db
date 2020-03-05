@@ -379,7 +379,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			protected internal override List<MemberInfo[]> GetLoadWith()
+			protected internal override List<Tuple<MemberInfo, Expression>[]> GetLoadWith()
 			{
 				if (LoadWith == null)
 				{
@@ -434,7 +434,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var tableExpression = builder.DataContext.GetTable<T>();
+						IQueryable<T> tableExpression = builder.DataContext.GetTable<T>();
 
 						var loadWith = tableContext.GetLoadWith();
 
@@ -450,14 +450,17 @@ namespace LinqToDB.Linq.Builder
 								foreach (var member in members)
 								{
 									if (isPrevList)
-										obj = new GetItemExpression(obj);
+										obj = new GetItemExpression(obj, builder.MappingSchema);
 
-									obj = Expression.MakeMemberAccess(obj, member);
+									obj = Expression.MakeMemberAccess(obj, member.Item1);
 
 									isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
 								}
 
-								tableExpression = tableExpression.LoadWith(Expression.Lambda<Func<T,object>>(obj, pLoadWith));
+								var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
+
+								var loadLambda = Expression.Lambda(obj, pLoadWith);
+								tableExpression = (IQueryable<T>)method.Invoke(null, new object[] {tableExpression, loadLambda });
 							}
 						}
 						
