@@ -16,6 +16,7 @@
 		  <Link>JoinTests.cs</Link>
 		</Compile>
 		<Compile Include="..\Linq\Linq\LoadWithTests.cs" Link="LoadWithTests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1397Tests.cs" Link="Issue1397Tests.cs" />
 	</ItemGroup>
 
 </Project>
