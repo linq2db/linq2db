@@ -832,6 +832,17 @@ namespace LinqToDB.SqlQuery
 			return str;
 		}
 
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return expression.IsAggregate;
+
+			return false;
+		}
+
 		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
 		{
 			for (int i = 0; i < searchCondition.Conditions.Count; i++)

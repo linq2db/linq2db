@@ -22,5 +22,6 @@
 
 	<ItemGroup>
 		<PackageReference Update="FSharp.Core" Version="4.7.0" />
+		<PackageReference Update="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 </Project>

@@ -429,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 
 									Builder.ReplaceParent(ctx, p);
 
-									return new SqlFunction(call.Type, call.Method.Name, sql);
+									return new SqlFunction(call.Type, call.Method.Name, true, sql);
 								}
 							}
 						}

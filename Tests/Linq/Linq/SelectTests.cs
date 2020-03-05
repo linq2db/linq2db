@@ -611,16 +611,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
-		public void SelectComplexField()
+		[Test]
+		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
 				var sql = q.ToString();
+				
+				Console.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
@@ -1304,8 +1306,6 @@ namespace Tests.Linq
 			public int Value1 { get; }
 		}
 
-		//https://github.com/linq2db/linq2db/issues/1788
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
@@ -1329,7 +1329,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
