@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
 
 			if (version >= OracleVersion.v12)
 			{

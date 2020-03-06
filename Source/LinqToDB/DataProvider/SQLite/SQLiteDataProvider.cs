@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
