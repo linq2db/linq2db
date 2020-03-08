@@ -116,8 +116,29 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
+		private int GetMajorVersion(DataConnection dataConnection)
+		{
+			var version = dataConnection.Query<string>("SELECT VERSION FROM PRODUCT_COMPONENT_VERSION WHERE PRODUCT LIKE 'PL/SQL%'").FirstOrDefault();
+			if (version != null)
+			{
+				try
+				{
+					return int.Parse(version.Split('.')[0]);
+				}
+				catch { }
+			}
+
+			return 0;
+		}
+
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			var isIdentitySql = "0                                              as IsIdentity,";
+			if (GetMajorVersion(dataConnection) >= 12)
+			{
+				isIdentitySql = "CASE c.IDENTITY_COLUMN WHEN 'YES' THEN 1 ELSE 0 END as IsIdentity,";
+			}
+
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
@@ -131,7 +152,7 @@ namespace LinqToDB.DataProvider.Oracle
 						c.DATA_LENGTH                              as Length,
 						c.DATA_PRECISION                           as Precision,
 						c.DATA_SCALE                               as Scale,
-						0                                          as IsIdentity,
+						" + isIdentitySql + @"
 						cc.COMMENTS                                as Description
 					FROM ALL_TAB_COLUMNS c
 						JOIN ALL_COL_COMMENTS cc ON
@@ -155,7 +176,7 @@ namespace LinqToDB.DataProvider.Oracle
 						c.DATA_LENGTH                                  as Length,
 						c.DATA_PRECISION                               as Precision,
 						c.DATA_SCALE                                   as Scale,
-						0                                              as IsIdentity,
+						" + isIdentitySql + @"
 						cc.COMMENTS                                    as Description
 					FROM USER_TAB_COLUMNS c
 						JOIN USER_COL_COMMENTS cc ON
