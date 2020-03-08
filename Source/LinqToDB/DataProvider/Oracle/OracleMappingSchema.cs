@@ -27,17 +27,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),           (sb,dt,v) => ConvertGuidToSql    (sb,     (Guid)    v));
-			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).DateTime));
-
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
-
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid)          , (sb, dt, v) => ConvertGuidToSql    (sb,     (Guid)    v));
+			SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).DateTime));
+			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(double)        , (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
+			SetValueToSqlConverter(typeof(byte[])        , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)        , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
