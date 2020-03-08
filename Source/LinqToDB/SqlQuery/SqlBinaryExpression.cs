@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -63,6 +64,17 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public override int GetHashCode()
+		{
+			var hashCode = Operation.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+
+			return hashCode;
+		}
 
 		#region ISqlExpression Members
 

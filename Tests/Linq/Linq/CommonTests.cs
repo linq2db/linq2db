@@ -162,7 +162,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +172,7 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -195,6 +195,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * generated for query, which doesn't use any column data")]
 		[Test]
 		public void ClosureTest([DataSources] string context)
 		{

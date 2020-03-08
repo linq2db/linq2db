@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -63,8 +64,19 @@ namespace LinqToDB.Linq.Builder
 			new TruncateBuilder            (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
+			new MergeBuilder                             (),
+			new MergeBuilder.InsertWhenNotMatched        (),
+			new MergeBuilder.UpdateWhenMatched           (),
+			new MergeBuilder.UpdateWhenMatchedThenDelete (),
+			new MergeBuilder.UpdateWhenNotMatchedBySource(),
+			new MergeBuilder.DeleteWhenMatched           (),
+			new MergeBuilder.DeleteWhenNotMatchedBySource(),
+			new MergeBuilder.On                          (),
+			new MergeBuilder.Merge                       (),
+			new MergeBuilder.MergeInto                   (),
+			new MergeBuilder.Using                       (),
+			new MergeBuilder.UsingTarget                 (),
 			new ContextParser              (),
-			new MergeContextParser         (),
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new HasUniqueKeyBuilder        (),
@@ -114,14 +126,7 @@ namespace LinqToDB.Linq.Builder
 			Expression           = ConvertExpressionTree(expression);
 			_visitedExpressions  = null;
 
-			if (Configuration.AvoidSpecificDataProviderAPI)
-			{
-				DataReaderLocal = DataReaderParam;
-			}
-			else
-			{
-				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
-			}
+			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
 		#endregion
@@ -251,13 +256,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var call = (MethodCallExpression)expression;
 
-				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericTypeEx())
+				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericType)
 				{
 					var type = call.Type.GetGenericTypeDefinition();
 
 					if (type == typeof(IQueryable<>) || type == typeof(IEnumerable<>))
 					{
-						var arg = call.Type.GetGenericArgumentsEx();
+						var arg = call.Type.GetGenericArguments();
 
 						if (arg.Length == 1)
 						{
@@ -527,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
 							}
 
-							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member, out var alias);
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType, me.Member, out var alias);
 
 							if (l != null)
 							{
@@ -651,10 +656,10 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[] _enumerableMethods;
-		public  MethodInfo[]  EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx());
+		public  MethodInfo[]  EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods());
 
 		private MethodInfo[] _queryableMethods;
-		public  MethodInfo[]  QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethodsEx());
+		public  MethodInfo[]  QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethods());
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
@@ -685,16 +690,16 @@ namespace LinqToDB.Linq.Builder
 						//
 						if (me.Member.Name == "Count")
 						{
-							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
+							var isList = typeof(ICollection).IsAssignableFrom(me.Member.DeclaringType);
 
 							if (!isList)
 								isList =
-									me.Member.DeclaringType.IsGenericTypeEx() &&
+									me.Member.DeclaringType.IsGenericType &&
 									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
 
 							if (!isList)
-								isList = me.Member.DeclaringType.GetInterfacesEx()
-									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(ICollection<>));
+								isList = me.Member.DeclaringType.GetInterfaces()
+									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
 							{
@@ -756,27 +761,27 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method, out var alias);
+							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
 
-						if (l != null)
-						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							RegisterAlias(optimized, alias);
-							return new TransformInfo(optimized);
-						}
+							if (l != null)
+							{
+								var optimized = OptimizeExpression(ConvertMethod(call, l));
+								RegisterAlias(optimized, alias);
+								return new TransformInfo(optimized);
+							}
 
-						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
-						{
-							var attr = GetTableFunctionAttribute(call.Method);
+							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
+							{
+								var attr = GetTableFunctionAttribute(call.Method);
 
 							if (attr == null && !call.IsQueryable())
-							{
-								var ex = ConvertIQueryable(expr);
+								{
+									var ex = ConvertIQueryable(expr);
 
-								if (!ReferenceEquals(ex, expr))
-									return new TransformInfo(ConvertExpressionTree(ex));
+									if (!ReferenceEquals(ex, expr))
+										return new TransformInfo(ConvertExpressionTree(ex));
+								}
 							}
-						}
 
 						return new TransformInfo(ConvertSubquery(expr));
 					}
@@ -871,10 +876,10 @@ namespace LinqToDB.Linq.Builder
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
 
 			call   = (MethodCallExpression)OptimizeExpression(call);
 			select = select.MakeGenericMethod(call.Type, expr.Type);
@@ -940,7 +945,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var ex in exprs)
 				{
 					var type   = typeof(ExpressionHoder<,>).MakeGenericType(expr.Type, ex.Type);
-					var fields = type.GetFieldsEx();
+					var fields = type.GetFields();
 
 					expr = Expression.MemberInit(
 						Expression.New(type),
@@ -987,7 +992,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(sequence, method.Arguments[0]) || !ReferenceEquals(predicate, method.Arguments[1]))
 			{
 				var methodInfo  = method.Method.GetGenericMethodDefinition();
-				var genericType = sequence.Type.GetGenericArgumentsEx()[0];
+				var genericType = sequence.Type.GetGenericArguments()[0];
 				var newMethod   = methodInfo.MakeGenericMethod(genericType);
 
 				method = Expression.Call(newMethod, sequence, predicate);
@@ -1433,7 +1438,7 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 3)
 				return method;
 
-			var cm = typeof(AsyncExtensions).GetMethodsEx().First(m => m.Name == method.Method.Name && m.GetParameters().Length == 2);
+			var cm = typeof(AsyncExtensions).GetMethods().First(m => m.Name == method.Method.Name && m.GetParameters().Length == 2);
 			var wm = GetMethodInfo(method, "Where");
 
 			var argType = method.Method.GetGenericArguments()[0];
@@ -1472,7 +1477,7 @@ namespace LinqToDB.Linq.Builder
 						if (isGeneric)
 							return true;
 
-						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
+						var ts = ps[0].ParameterType.GetGenericArguments();
 						return ts[0] == types[1] || isDefault && ts[0].IsGenericParameter;
 					}
 				}
@@ -1502,7 +1507,7 @@ namespace LinqToDB.Linq.Builder
 
 			var types = GetMethodGenericTypes(method);
 			var sm    = GetMethodInfo(method, "Select");
-			var cm    = typeof(AsyncExtensions).GetMethodsEx().First(m =>
+			var cm    = typeof(AsyncExtensions).GetMethods().First(m =>
 			{
 				if (m.Name == method.Method.Name)
 				{
@@ -1513,7 +1518,7 @@ namespace LinqToDB.Linq.Builder
 						if (isGeneric)
 							return true;
 
-						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
+						var ts = ps[0].ParameterType.GetGenericArguments();
 						return ts[0] == types[1];// || isDefault && ts[0].IsGenericParameter;
 					}
 				}
@@ -1699,17 +1704,17 @@ namespace LinqToDB.Linq.Builder
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
-				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx() :
-				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx();
+				method.Method.GetParameters()[1].ParameterType.GetGenericArguments() :
+				method.Method.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments();
 		}
 
 		/// <summary>
@@ -1733,8 +1738,8 @@ namespace LinqToDB.Linq.Builder
 					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
 					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
 
-					var leftIsPrimitive  = left. Type.IsPrimitiveEx();
-					var rightIsPrimitive = right.Type.IsPrimitiveEx();
+					var leftIsPrimitive  = left. Type.IsPrimitive;
+					var rightIsPrimitive = right.Type.IsPrimitive;
 
 					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)
 						right = rightConvert.Item2.GetBody(right);

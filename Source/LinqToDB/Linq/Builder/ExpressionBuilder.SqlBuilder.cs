@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
@@ -19,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using SqlProvider;
 
 	partial class ExpressionBuilder
 	{
@@ -443,7 +444,7 @@ namespace LinqToDB.Linq.Builder
 								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
 
 								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
-									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+													 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
 								if (memberInfo == null)
 									memberInfo = MemberHelper.GetMemberInfo(expr);
 
@@ -675,7 +676,7 @@ namespace LinqToDB.Linq.Builder
 						return expr.Bindings
 							.Where  (b => b is MemberAssignment)
 							.Cast<MemberAssignment>()
-							.OrderBy(b => dic[b.Member])
+							.OrderBy(b => dic[expr.Type.GetMemberEx(b.Member)])
 							.Select (a =>
 							{
 								var mi = a.Member;
@@ -900,8 +901,8 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (e.Type == t ||
-							t.IsEnumEx()      && Enum.GetUnderlyingType(t)      == e.Type ||
-							e.Type.IsEnumEx() && Enum.GetUnderlyingType(e.Type) == t)
+							t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
+							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 							return o;
 
 						return Convert(
@@ -1057,7 +1058,7 @@ namespace LinqToDB.Linq.Builder
 
 									var p = pis[i];
 
-									if (p.GetCustomAttributesEx(true).OfType<ParamArrayAttribute>().Any())
+									if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
 									{
 										parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
 									}
@@ -1235,6 +1236,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsQueryMember(Expression expr)
 		{
+			expr = expr.Unwrap();
 			if (expr != null) switch (expr.NodeType)
 			{
 				case ExpressionType.Parameter    : return true;
@@ -1399,9 +1401,9 @@ namespace LinqToDB.Linq.Builder
 				value = new SqlValue(v);
 			else
 			{
-				if (v != null && v.GetType().IsEnumEx())
+				if (v != null && v.GetType().IsEnum)
 				{
-					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+					var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 					if (attrs.Length == 0)
 						v = MappingSchema.EnumToValue((Enum)v);
@@ -1438,7 +1440,6 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
 				foreach (var accessor in _parameters)
 					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
 						p = accessor.Value;
@@ -1623,7 +1624,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1702,69 +1703,8 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert
-				&& left.Type == typeof(int)
-				&& (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
-			{
-				var conv  = (UnaryExpression)left;
-
-				if (conv.Operand.Type == typeof(char))
-				{
-					left  = conv.Operand;
-					right = right.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) right).Value))
-						: ((UnaryExpression) right).Operand;
-				}
-			}
-
-			if (left.NodeType == ExpressionType.Convert
-				&& left.Type == typeof(int?)
-				&& (right.NodeType == ExpressionType.Constant
-					|| (right.NodeType == ExpressionType.Convert
-						&& ((UnaryExpression)right).Operand.NodeType == ExpressionType.Convert)))
-			{
-				var conv = (UnaryExpression)left;
-
-				if (conv.Operand.Type == typeof(char?))
-				{
-					left = conv.Operand;
-					right = right.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value))
-						: ((UnaryExpression)((UnaryExpression)right).Operand).Operand;
-				}
-			}
-
-			if (right.NodeType == ExpressionType.Convert
-				&& right.Type == typeof(int)
-				&& (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
-			{
-				var conv = (UnaryExpression)right;
-
-				if (conv.Operand.Type == typeof(char))
-				{
-					right = conv.Operand;
-					left  = left.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) left).Value))
-						: ((UnaryExpression) left).Operand;
-				}
-			}
-
-			if (right.NodeType == ExpressionType.Convert
-				&& right.Type == typeof(int?)
-				&& (left.NodeType == ExpressionType.Constant
-					|| (left.NodeType == ExpressionType.Convert
-						&& ((UnaryExpression)left).Operand.NodeType == ExpressionType.Convert)))
-			{
-				var conv = (UnaryExpression)right;
-
-				if (conv.Operand.Type == typeof(char?))
-				{
-					right = conv.Operand;
-					left = left.NodeType == ExpressionType.Constant
-						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value))
-						: ((UnaryExpression)((UnaryExpression)left).Operand).Operand;
-				}
-			}
+			if (!RestoreCompare(ref left, ref right))
+				RestoreCompare(ref right, ref left);
 
 			switch (nodeType)
 			{
@@ -1864,6 +1804,74 @@ namespace LinqToDB.Linq.Builder
 			return Convert(context, new SqlPredicate.ExprExpr(l, op, r));
 		}
 
+		// restores original types, lost due to C# compiler optimizations
+		// e.g. see https://github.com/linq2db/linq2db/issues/2041
+		private static bool RestoreCompare(ref Expression op1, ref Expression op2)
+		{
+			if (op1.NodeType == ExpressionType.Convert)
+			{
+				var op1conv = (UnaryExpression)op1;
+
+				// handle char replaced with int
+				// (int)chr op CONST
+				if (op1.Type == typeof(int) && op1conv.Operand.Type == typeof(char)
+					&& (op2.NodeType == ExpressionType.Constant || op2.NodeType == ExpressionType.Convert))
+				{
+					op1 = op1conv.Operand;
+					op2 = op2.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
+						: ((UnaryExpression)op2).Operand;
+					return true;
+				}
+				// (int?)chr? op CONST
+				else if (op1.Type == typeof(int?) && op1conv.Operand.Type == typeof(char?)
+					&& (op2.NodeType == ExpressionType.Constant
+						|| (op2.NodeType == ExpressionType.Convert && ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Convert)))
+				{
+					op1 = op1conv.Operand;
+					op2 = op2.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)op2).Value))
+						: ((UnaryExpression)((UnaryExpression)op2).Operand).Operand;
+					return true;
+				}
+				// handle enum replaced with integer
+				// here byte/short values replaced with int, int+ values replaced with actual underlying type
+				// (int)enum op const
+				else if (op1conv.Operand.Type.IsEnum
+					&& op2.NodeType == ExpressionType.Constant
+						&& (op2.Type == Enum.GetUnderlyingType(op1conv.Operand.Type) || op2.Type == typeof(int)))
+				{
+					op1 = op1conv.Operand;
+					op2 = Expression.Constant(Enum.ToObject(op1conv.Operand.Type, ((ConstantExpression)op2).Value), op1conv.Operand.Type);
+					return true;
+				}
+				// here underlying type used
+				// (int?)enum? op (int?)enum
+				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type).IsEnum
+					&& op2.NodeType == ExpressionType.Convert
+					&& op2 is UnaryExpression op2conv2
+					&& op2conv2.Operand.NodeType == ExpressionType.Constant
+					&& op2conv2.Operand.Type == Nullable.GetUnderlyingType(op1conv.Operand.Type))
+				{
+					op1 = op1conv.Operand;
+					op2 = Expression.Convert(op2conv2.Operand, op1conv.Operand.Type);
+					return true;
+				}
+				// https://github.com/linq2db/linq2db/issues/2039
+				// byte, sbyte and ushort comparison operands upcasted to int
+				else if (op2.NodeType == ExpressionType.Convert
+					&& op2 is UnaryExpression op2conv1
+					&& op1conv.Operand.Type == op2conv1.Operand.Type)
+				{
+					op1 = op1conv .Operand;
+					op2 = op2conv1.Operand;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		#endregion
 
 		#region ConvertEnumConversion
@@ -1906,7 +1914,7 @@ namespace LinqToDB.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnumEx())
+			if (!type.ToNullableUnderlying().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object>();
@@ -2004,6 +2012,28 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertObjectComparison
 
+		static Expression ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
+		{
+			Expression result = ob;
+			var skipCount = 0;
+			foreach (var memberInfo in memberPath)
+			{
+				if (!memberInfo.DeclaringType.IsAssignableFrom(result.Type))
+				{
+					// first element may have inappropriate nesting
+					if (skipCount-- == 0)
+						continue;
+
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
+					return null;
+				}
+				result = Expression.MakeMemberAccess(result, memberInfo);
+			}
+
+			return result;
+		}
+		
 		public ISqlPredicate ConvertObjectComparison(
 			ExpressionType nodeType,
 			IBuildContext  leftContext,
@@ -2095,7 +2125,10 @@ namespace LinqToDB.Linq.Builder
 				var lmember = lcol.MemberChain[lcol.MemberChain.Count - 1];
 
 				if (sr)
-					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
+				{
+					var memeberPath = ConstructMemberPath(lcol.MemberChain, right, true);
+					rcol = ConvertToSql(rightContext, memeberPath);
+				}	
 				else if (rmembers.Count != 0)
 					rcol = ConvertToSql(rightContext, rmembers[lmember]);
 
@@ -2187,8 +2220,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
 
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedType, member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedType, member);
 
 			var dataType = ca?.DataType ?? dta?.DataType;
 
@@ -2212,7 +2245,7 @@ namespace LinqToDB.Linq.Builder
 			var dbType     = baseType.DbType;
 			var length     = baseType.Length;
 
-			QueryVisitor.Find(expr, e =>
+			new QueryVisitor().Find(expr, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -2886,8 +2919,8 @@ namespace LinqToDB.Linq.Builder
 					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
 					var expr2 = exprExpr?.Expr2;
 
-					var nullValue1 =                 QueryVisitor.Find(expr1, _ => _ is IValueContainer);
-					var nullValue2 = expr2 != null ? QueryVisitor.Find(expr2, _ => _ is IValueContainer) : null;
+					var nullValue1 =                 new QueryVisitor().Find(expr1, _ => _ is IValueContainer);
+					var nullValue2 = expr2 != null ? new QueryVisitor().Find(expr2, _ => _ is IValueContainer) : null;
 
 					var hasNullValue =
 						   nullValue1 != null && ((IValueContainer) nullValue1).Value == null
@@ -2895,8 +2928,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (!hasNullValue)
 					{
-						var expr1IsField =                  expr1.CanBeNull && QueryVisitor.Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
-						var expr2IsField = expr2 != null && expr2.CanBeNull && QueryVisitor.Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr1IsField =                  expr1.CanBeNull && new QueryVisitor().Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr2IsField = expr2 != null && expr2.CanBeNull && new QueryVisitor().Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
 
 						var nullableField = expr1IsField
 							? expr1
@@ -3064,6 +3097,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetContext([JetBrains.Annotations.NotNull] IBuildContext current, Expression expression)
 		{
 			var root = expression.GetRootObject(MappingSchema);
+			root = root.Unwrap();
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
@@ -3074,12 +3108,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
@@ -3114,7 +3148,8 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsNullConstant(Expression expr)
 		{
-			return expr.NodeType == ExpressionType.Constant && ((ConstantExpression)expr).Value == null;
+			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
+				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
 		Expression RemoveNullPropagation(Expression expr)
@@ -3191,16 +3226,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr.Members != null)
 						{
-							for (var i = 0; i < expr.Members.Count; i++)
-							{
-								var member = expr.Members[i];
+						for (var i = 0; i < expr.Members.Count; i++)
+						{
+							var member = expr.Members[i];
 
-								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
-								members.Add(member, converted);
+							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+							members.Add(member, converted);
 
-								if (member is MethodInfo info)
-									members.Add(info.GetPropertyInfo(), converted);
-							}
+							if (member is MethodInfo info)
+								members.Add(info.GetPropertyInfo(), converted);
+						}
 						}
 
 						if (!MappingSchema.IsScalarType(expr.Type))

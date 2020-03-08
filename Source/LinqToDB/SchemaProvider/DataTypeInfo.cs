@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Diagnostics;
 
 namespace LinqToDB.SchemaProvider
@@ -11,6 +12,10 @@ namespace LinqToDB.SchemaProvider
 	[DebuggerDisplay("TypeName = {TypeName}, DataType = {DataType}, CreateFormat = {CreateFormat}, CreateParameters = {CreateParameters}")]
 	public class DataTypeInfo
 	{
+		/// <summary>
+		/// Marks provider-specific types.
+		/// </summary>
+		public bool ProviderSpecific;
 		/// <summary>
 		/// Gets or sets SQL name of data type.
 		/// </summary>

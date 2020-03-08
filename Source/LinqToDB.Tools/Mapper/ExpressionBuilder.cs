@@ -1,6 +1,6 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -236,7 +236,7 @@ namespace LinqToDB.Tools.Mapper
 		{
 			var type = originalType;
 
-			if (type.IsInterfaceEx() && type.IsGenericTypeEx())
+			if (type.IsInterface && type.IsGenericType)
 			{
 				var definition = type.GetGenericTypeDefinition();
 
@@ -272,7 +272,7 @@ namespace LinqToDB.Tools.Mapper
 			var fromItemType = fromType.GetItemType();
 			var toItemType   = toType.  GetItemType();
 
-			if (toType.IsGenericTypeEx() && !toType.IsGenericTypeDefinitionEx())
+			if (toType.IsGenericType && !toType.IsGenericTypeDefinition)
 			{
 				var toDefinition = toType.GetGenericTypeDefinition();
 
@@ -508,7 +508,6 @@ namespace LinqToDB.Tools.Mapper
 				}
 			}
 
-			[SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
 			Expression BuildClassMapper(Expression getValue, MemberAccessor toMember)
 			{
 				var key   = Tuple.Create(_fromExpression.Type, toMember.Type);
@@ -592,7 +591,7 @@ namespace LinqToDB.Tools.Mapper
 					var selectExpr = Select(_builder, _fromExpression, fromItemType, toItemType);
 					_expressions.Add(Call(_localObject, addRangeMethodInfo, selectExpr));
 				}
-				else if (toListType.IsGenericTypeEx() && !toListType.IsGenericTypeDefinitionEx())
+				else if (toListType.IsGenericType && !toListType.IsGenericTypeDefinition)
 				{
 					if (toListType.IsSubClassOf(typeof(ICollection<>)))
 					{

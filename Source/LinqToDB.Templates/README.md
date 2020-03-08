@@ -47,14 +47,17 @@ All loaded schema information is used for mappings generation, so if you want to
 
 ```cs
 // Enables loading of tables and views information
-GetSchemaOptions.GetTables             = true;
+GetSchemaOptions.GetTables                   = true;
 // Enables loading of foreign key relations for associations
-GetSchemaOptions.GetForeignKeys        = true;
+GetSchemaOptions.GetForeignKeys              = true;
 // Enables loading of functions and procedures information
-GetSchemaOptions.GetProcedures         = true;
+GetSchemaOptions.GetProcedures               = true;
 // Enables use of System.Char type in generated model for text types
 // with length 1 instead of System.String
-GetSchemaOptions.GenerateChar1AsString = false;
+GetSchemaOptions.GenerateChar1AsString       = false;
+// Enables generation of provider-specific type for column or parameter mapping
+// when both common .net type and provider-specific type supported.
+GetSchemaOptions.PreferProviderSpecificTypes = false;
 
 // (string[]) List of schemas to select.
 // Option applied only if is is not empty
@@ -164,20 +167,22 @@ SchemaDataContextTypeName       = "DataContext"
 
 /* Table mappings configuration */
 // (string) Specify base class (or comma-separated list of class and/or interfaces) for table mappings
-BaseEntityClass                    = null;
+BaseEntityClass               = null;
 // Enables generation of TableAttribute.Database property using database name, returned by schema loader
-GenerateDatabaseName               = false;
+GenerateDatabaseName          = false;
 // Enables generation of TableAttribute.Database property with provided name value.
 // (string) If set, overrides GenerateDatabaseName behavior
-DatabaseName                       = null;
+DatabaseName                  = null;
+// Enables generation of TableAttribute.Server property with provided name value.
+ServerName                    = null;
 // Enables generation of TableAttribute.Schema property for default schema
-IncludeDefaultSchema               = true;
+IncludeDefaultSchema          = true;
 // Enables generation of mappings for views
-GenerateViews                      = true;
+GenerateViews                 = true;
 // Enables prefixing mapping classes for tables in non-default schema with schema name
 // E.g. MySchema.MyTable -> MySchema_MyTable
 // Applicable only if GenerateSchemaAsType = false
-PrefixTableMappingWithSchema       = true;
+PrefixTableMappingWithSchema  = true;
 // Enables prefixing mapping classes for tables in default schema with schema name
 // E.g. dbo.MyTable -> dbo_MyTable
 // Applicable only if IncludeDefaultSchema = true && GenerateSchemaAsType = false && PrefixTableMappingWithSchema = true
@@ -226,16 +231,16 @@ Func<ForeignKey, string> GetAssociationExtensionPluralName
 /* Procedures and functions configuration */
 // Enables use of existing table mappings for procedures and functions that return same results as
 // defined by mapping
-ReplaceSimilarTables             = true;
+ReplaceSimilarTables          = true;
 // If enabled, procedure schema load error will be generated as #error directive and fail build
 // of output file. Useful for initial generation to highlight places, that require review or
 // additional hints for schema loader
 // Also check GetSchemaOptions.LoadProcedure option above
-GenerateProcedureErrors          = true;
+GenerateProcedureErrors       = true;
 // If enabled, methods for procedures that return table will be generated with List<T> return type and
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
-GenerateProcedureResultAsList    = false;
+GenerateProcedureResultAsList = false;
 // Enables stored procedure methods to accept generated context object or DataConnection type
 GenerateProceduresOnTypedContext = true;
 

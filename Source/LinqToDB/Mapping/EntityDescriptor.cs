@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,9 +25,9 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
 			MappingSchema = mappingSchema;
-			TypeAccessor  = TypeAccessor.GetAccessor(type);
-			Associations  = new List<AssociationDescriptor>();
-			Columns       = new List<ColumnDescriptor>();
+			TypeAccessor = TypeAccessor.GetAccessor(type);
+			Associations = new List<AssociationDescriptor>();
+			Columns = new List<ColumnDescriptor>();
 
 			Init();
 			InitInheritanceMapping();
@@ -70,6 +71,17 @@ namespace LinqToDB.Mapping
 		{
 			get => DatabaseName;
 			set => DatabaseName = value;
+		}
+
+		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		public string ServerName { get; private set; }
+
+		string IEntityChangeDescriptor.ServerName
+		{
+			get => ServerName;
+			set => ServerName = value;
 		}
 
 		// TODO: V2: remove?
@@ -145,6 +157,7 @@ namespace LinqToDB.Mapping
 				TableName = ta.Name;
 				SchemaName = ta.Schema;
 				DatabaseName = ta.Database;
+				ServerName                = ta.Server;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
@@ -152,7 +165,7 @@ namespace LinqToDB.Mapping
 			{
 				TableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterfaceEx() && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 
@@ -198,7 +211,7 @@ namespace LinqToDB.Mapping
 					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
 					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(MappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(MappingSchema, null, member);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}

@@ -30,6 +30,9 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value && true && !false select p);
 		}
 
+		// only for netcore linq test we generate unused parameter for sybase
+		// There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@value_1' was not used in the preceding DECLARE CURSOR or SQL command.
+		[ActiveIssue(SkipForNonLinqService = true, Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void Bool2([DataSources] string context)
 		{
@@ -198,12 +201,12 @@ namespace Tests.Linq
 		public void NewGuid(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -258,7 +261,7 @@ namespace Tests.Linq
 		public void InsertBinary1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
@@ -355,13 +358,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -386,13 +389,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -420,13 +423,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -522,7 +525,7 @@ namespace Tests.Linq
 
 		[Test, Category("WindowsOnly")]
 		public void Unicode([DataSources(
-			ProviderName.Informix, TestProvName.AllFirebird, TestProvName.AllSybase)]
+			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -550,9 +553,8 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
-		public void TestCultureInfo([DataSources(ProviderName.Informix)] string context)
+		public void TestCultureInfo([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var current = Thread.CurrentThread.CurrentCulture;
 
@@ -565,7 +567,6 @@ namespace Tests.Linq
 
 			Thread.CurrentThread.CurrentCulture = current;
 		}
-#endif
 
 		[Test]
 		public void SmallInt([DataSources] string context)

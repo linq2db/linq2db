@@ -15,38 +15,44 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void SetQueryParameter(IQueryElement element)
 		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
-					p.IsQueryParameter = false;
-			}
-		}
-
-		static void EnforceBinaryParameters(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
+			if (element is SqlParameter p)
+				// enforce binary as parameters
 				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
 					p.IsQueryParameter = true;
-			}
+				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
+				// intervals explicitly
+				else if ((p.SystemType == typeof(TimeSpan) || p.SystemType == typeof(TimeSpan?)) && p.DataType != DataType.Int64)
+					p.IsQueryParameter = false;
+		}
+
+		static void ClearQueryParameter(IQueryElement element)
+		{
+			if (element is SqlParameter p && p.IsQueryParameter)
+				p.IsQueryParameter = false;
 		}
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
-			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
+			// Informix doesn't support parameters in select list
+			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
+			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count == 0;
+			// whould be better if our insert AST had no SelectQuery when it is not used...
+			if (!ignore)
+				new QueryVisitor().VisitAll(statement, e =>
+				{
+					if (e is SqlSelectClause select)
+						new QueryVisitor().VisitAll(select, ClearQueryParameter);
+				});
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:

@@ -4,9 +4,9 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Data.SqlClient;
-
-using JetBrains.Annotations;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -15,14 +15,32 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// </summary>
 	public class SqlServerTransientExceptionDetector
 	{
-		public static bool ShouldRetryOn([NotNull] Exception ex)
-		{
-			var sqlException = ex as SqlException;
+		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes
+			= new ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>>();
 
-			if (sqlException != null)
+		internal static void RegisterExceptionType(Type type, Func<Exception, IEnumerable<int>> errrorNumbersGetter)
+		{
+			_exceptionTypes.TryAdd(type, errrorNumbersGetter);
+		}
+
+		internal static bool IsHandled(Exception ex, [NotNullWhen(true)] out IEnumerable<int>? errorNumbers)
+		{
+			if (_exceptionTypes.TryGetValue(ex.GetType(), out var getter))
 			{
-				foreach (SqlError err in sqlException.Errors)
-					switch (err.Number)
+				errorNumbers = getter(ex);
+				return true;
+			}
+
+			errorNumbers = null;
+			return false;
+		}
+
+		public static bool ShouldRetryOn(Exception ex)
+		{
+			if (IsHandled(ex, out var errors))
+			{
+				foreach (var err in errors)
+					switch (err)
 					{
 						// SQL Error Code: 49920
 						// Cannot process request. Too many operations in progress for subscription "%ld".

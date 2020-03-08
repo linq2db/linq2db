@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using System.Windows.Forms;
 #endif
 
@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
@@ -219,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test, Parallelizable(ParallelScope.None)]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -457,7 +458,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
@@ -549,6 +550,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -609,16 +611,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
-		public void SelectComplexField()
+		[Test]
+		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
 				var sql = q.ToString();
+				
+				Console.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
@@ -914,7 +918,7 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
-					ProviderName.SapHana)]
+					TestProvName.AllSapHana)]
 				string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -963,7 +967,7 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
 			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
@@ -1175,8 +1179,10 @@ namespace Tests.Linq
 		}
 
 
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1187,8 +1193,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1200,7 +1208,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1212,7 +1220,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1230,8 +1238,6 @@ namespace Tests.Linq
 			public int Value1 { get; }
 		}
 
-		//https://github.com/linq2db/linq2db/issues/1788
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
@@ -1255,7 +1261,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
@@ -1328,7 +1333,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12)] string context)
 		{
 			// TODO: eager loading
 			// using (new AllowMultipleQuery())
@@ -1375,5 +1380,26 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+		
+		[Test]
+		public void ToStringTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from p in db.GetTable<Parent>()
+					where p.ParentID == id
+					select p;
+
+				var sql1 = query.ToString();
+
+				id = 2;
+
+				var sql2 = query.ToString();
+				
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
+			}
+		}
+
 	}
 }

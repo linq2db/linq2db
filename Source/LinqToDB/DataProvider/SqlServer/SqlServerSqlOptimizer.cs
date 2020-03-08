@@ -15,6 +15,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlVersion = sqlVersion;
 		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			statement = SeparateDistinctFromPagination(statement);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement);
+			statement = ReplaceTakeSkipWithRowNumber(statement, false);
+			statement = QueryHelper.OptimizeSubqueries(statement);
+			return statement;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

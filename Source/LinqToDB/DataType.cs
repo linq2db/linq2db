@@ -266,6 +266,16 @@ namespace LinqToDB
 		/// <summary>
 		/// Oracle data type for storing binary data of variable length up to 2 Gigabytes in length.
 		/// </summary>
-		LongRaw
+		LongRaw,
+
+		/// <summary>
+		/// PostgreSQL interval type.
+		/// </summary>
+		Interval,
+
+		/// <summary>
+		/// Oracle BFILE data type.
+		/// </summary>
+		BFile
 	}
 }

@@ -40,8 +40,9 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
-		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
+		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -70,6 +71,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{

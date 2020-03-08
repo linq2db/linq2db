@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
@@ -28,6 +29,11 @@ namespace LinqToDB.Expressions
 					DefaultValue.GetValue(Type) :
 					_mappingSchema.GetDefaultValue(Type),
 				Type);
+		}
+
+		public override string ToString()
+		{
+			return $"Default({Type.Name})";
 		}
 	}
 }

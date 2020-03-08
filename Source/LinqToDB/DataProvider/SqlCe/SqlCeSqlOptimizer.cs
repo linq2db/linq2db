@@ -12,10 +12,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery != null)
 				new QueryVisitor().Visit(selectQuery.Select, element =>
@@ -44,40 +42,55 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			if (selectQuery != null)
-				CorrectSkip(selectQuery);
+			statement = CorrectSkipAndColumns(statement);
 
 			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		public static SqlStatement CorrectSkipAndColumns(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
+			new QueryVisitor().Visit(statement, e =>
 			{
-				if (e is SelectQuery q && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				switch (e.ElementType)
 				{
-					if (q.Select.Columns.Count == 0)
-					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
+					case QueryElementType.SqlQuery:
 						{
-							q.Select.AddNew(key);
+							var q = (SelectQuery)e;
+
+							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+							{
+								if (q.Select.Columns.Count == 0)
+								{
+									var source = q.Select.From.Tables[0].Source;
+									var keys   = source.GetKeys(true);
+
+									foreach (var key in keys)
+									{
+										q.Select.AddNew(key);
+									}
+								}
+
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
+
+								if (q.OrderBy.IsEmpty)
+								{
+									throw new LinqToDBException("Order by required for Skip operation.");
+								}
+							}
+
+							// looks like SqlCE do not allow '*' for grouped records
+							if (!q.GroupBy.IsEmpty && q.Select.Columns.Count == 0)
+							{
+								q.Select.Add(new SqlValue(1));
+							}
+
+							break;
 						}
-					}
-
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
-
-					if (q.OrderBy.IsEmpty)
-					{
-						throw new LinqToDBException("Order by required for Skip operation.");
-					}
 				}
-				return e;
-			}
-			);
+			});
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

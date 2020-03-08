@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,6 +36,8 @@ namespace LinqToDB.Linq.Builder
 		public SqlStatement      Statement   { [DebuggerStepThrough] get; set; }
 		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
 		public bool              IsScalar    { [DebuggerStepThrough] get; }
+
+		public bool              AllowAddDefault { [DebuggerStepThrough] get; set; } = true;
 
 		Expression IBuildContext.Expression => Lambda;
 
@@ -77,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
+			var expr   = BuildExpression(null, 0, Sequence.Length == 0);
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -172,8 +175,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
+							var memberInfo = ((MemberExpression)levelExpression).Member;
+
 							var memberExpression = GetMemberExpression(
-								((MemberExpression)levelExpression).Member,
+								memberInfo,
 								ReferenceEquals(levelExpression, expression),
 								levelExpression.Type,
 								expression);
@@ -224,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+								return Builder.BuildExpression(this, memberExpression, enforceServerSide, memberInfo.Name);
 							}
 
 							{
@@ -339,6 +344,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						{
 							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							levelExpression = levelExpression.Unwrap();
 
 							switch (levelExpression.NodeType)
 							{
@@ -708,21 +714,22 @@ namespace LinqToDB.Linq.Builder
 									{
 										var member = ((MemberExpression)levelExpression).Member;
 
-										if (!Members.TryGetValue(member, out var memberExpression))
+										var memberExpression = GetProjectedExpression(member, false);
+										if (memberExpression == null)
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterfaceEx())
+											if (nm != null && member.DeclaringType.IsInterface)
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
-													memberExpression = Members[nm];
+													memberExpression = GetProjectedExpression(nm, false);
 												else
 												{
 													var mdt = member.DeclaringType.GetDefiningTypes(member);
 													var ndt = Body.Type.           GetDefiningTypes(nm);
 
 													if (mdt.Intersect(ndt).Any())
-														memberExpression = Members[nm];
+														memberExpression = GetProjectedExpression(nm, false);
 												}
 											}
 
@@ -978,7 +985,9 @@ namespace LinqToDB.Linq.Builder
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
 			Func<int,IBuildContext,Expression,int,Expression,T> action)
 		{
-			var memberExpression = Members[levelExpression.Member];
+			var memberExpression = GetProjectedExpression(levelExpression.Member, true);
+			memberExpression = memberExpression.Unwrap();
+
 			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
 			var sequence         = GetSequence  (expression, level);
 			var nextLevel        = 1;
@@ -1027,6 +1036,32 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		Expression GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
+		{
+			if (!Members.TryGetValue(memberInfo, out var memberExpression))
+			{
+				var member = Body?.Type.GetMemberEx(memberInfo);
+				if (member != null)
+					Members.TryGetValue(member, out memberExpression);
+
+				if (memberExpression == null)
+				{
+					if (typeof(ExpressionBuilder.GroupSubQuery<,>).IsSameOrParentOf(Body.Type))
+					{
+						var newMember = Body.Type.GetField("Element");
+						if (Members.TryGetValue(newMember, out memberExpression))
+						{
+							memberExpression = Expression.MakeMemberAccess(memberExpression, memberInfo);
+						}
+					}
+				}
+			}
+
+			if (throwOnError && memberExpression == null)
+				throw new LinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+			return memberExpression;
+		}
+
 		IBuildContext GetSequence(Expression expression, int level)
 		{
 			if (Sequence.Length == 1 && Sequence[0].Parent == null)
@@ -1041,12 +1076,13 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+				levelExpression = levelExpression.Unwrap();
 
 				switch (levelExpression.NodeType)
 				{
 					case ExpressionType.MemberAccess :
 						{
-							var memberExpression = Members[((MemberExpression)levelExpression).Member];
+							var memberExpression = GetProjectedExpression(((MemberExpression)levelExpression).Member, true);
 
 							root =  memberExpression.GetRootObject(Builder.MappingSchema);
 
@@ -1058,7 +1094,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter :
 						{
-							root = expression.GetRootObject(Builder.MappingSchema);
+							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
 							break;
 						}
 				}
@@ -1150,7 +1186,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
 		{
-			if (!Members.TryGetValue(member, out var memberExpression))
+			var memberExpression = GetProjectedExpression(member, false);
+			if (memberExpression == null)
 			{
 				foreach (var m in Members)
 				{
@@ -1186,7 +1223,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (add)
+					if (add && AllowAddDefault)
 					{
 						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
 						Members.Add(member, memberExpression);

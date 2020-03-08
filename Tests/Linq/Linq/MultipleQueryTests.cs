@@ -30,6 +30,7 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.ToList());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Test3([DataSources] string context)
 		{

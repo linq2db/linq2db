@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public static class SqlServerExtensions
 	{
-		public static ISqlServerExtensions SqlServer(this Sql.ISqlExtension ext) => null;
+		public static ISqlServerExtensions? SqlServer(this Sql.ISqlExtension ext) => null;
 
 		#region FTS
 		public class FreeTextKey<TKey>
 		{
-			[Column("KEY")]  public TKey Key;
+			[Column("KEY")]  public TKey Key = default!;
 			[Column("RANK")] public int  Rank;
 		}
 

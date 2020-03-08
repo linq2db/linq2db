@@ -13,10 +13,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :

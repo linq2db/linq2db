@@ -57,7 +57,6 @@ namespace Tests.UserTests
 			public string Code { get; set; }
 		}
 
-#if !NETSTANDARD1_6
 		/// <summary>
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
@@ -132,6 +131,5 @@ namespace Tests.UserTests
 				}
 			}
 		}
-#endif
 	}
 }

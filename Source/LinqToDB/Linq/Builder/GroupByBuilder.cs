@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -47,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
 			var sequence        = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			var groupingType    = methodCall.Type.GetGenericArgumentsEx()[0];
+			var groupingType    = methodCall.Type.GetGenericArguments()[0];
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
@@ -59,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var type = ((LambdaExpression)call.Arguments[1].Unwrap()).Body.Type;
 
-					if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
+					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
 						sequence = new SubQueryContext(sequence);
 					}
@@ -308,18 +309,6 @@ namespace LinqToDB.Linq.Builder
 
 					var itemReader      = CompiledQuery.Compile(lambda);
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
-					var dataReaderLocal = context.Builder.DataReaderLocal;
-
-					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
-					{
-						keyExpr = Expression.Block(
-							new[] { context.Builder.DataReaderLocal },
-							new[]
-							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
-								keyExpr
-							});
-					}
 
 					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey>>(
 						keyExpr,
@@ -343,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
-							Expression.Constant(keyReader.Compile()),
+							keyReader,
 							Expression.Constant(itemReader)
 						});
 				}
@@ -430,7 +419,7 @@ namespace LinqToDB.Linq.Builder
 							if (arg0.NodeType != ExpressionType.Call)
 							{
 								var l     = (LambdaExpression)arg.Arguments[1].Unwrap();
-								var largs = l.Type.GetGenericArgumentsEx();
+								var largs = l.Type.GetGenericArguments();
 
 								if (largs.Length == 2)
 								{
@@ -440,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 
 									Builder.ReplaceParent(ctx, p);
 
-									return new SqlFunction(call.Type, call.Method.Name, sql);
+									return new SqlFunction(call.Type, call.Method.Name, true, sql);
 								}
 							}
 						}
@@ -576,7 +565,7 @@ namespace LinqToDB.Linq.Builder
 									if (e.Member.Name == "Key")
 									{
 										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetPropertyEx("Key");
+											_keyProperty = _groupingType.GetProperty("Key");
 
 										if (e.Member == _keyProperty)
 										{

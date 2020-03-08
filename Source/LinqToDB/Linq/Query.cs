@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Diagnostics;
 
 	public abstract class Query
 	{
@@ -132,7 +134,7 @@ namespace LinqToDB.Linq
 
 		#region Cache Support
 
-		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
+		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ConcurrentQueue<Action>();
 
 		/// <summary>
 		/// Clears query caches for all typed queries.
@@ -141,7 +143,6 @@ namespace LinqToDB.Linq
 		{
 			InternalExtensions.ClearCaches();
 
-			// ConcurrentBag has thread safe enumerator
 			foreach (var cleaner in CacheCleaners)
 			{
 				cleaner();
@@ -212,7 +213,7 @@ namespace LinqToDB.Linq
 			_sync         = new object();
 			_orderedCache = new List<Query<T>>(CacheSize);
 
-			CacheCleaners.Add(ClearCache);
+			CacheCleaners.Enqueue(ClearCache);
 		}
 
 		/// <summary>
@@ -251,8 +252,8 @@ namespace LinqToDB.Linq
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
-				lock (_sync)
-				{
+					lock (_sync)
+					{
 						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
 						{
 							if (_orderedCache.Count == CacheSize)
@@ -276,7 +277,8 @@ namespace LinqToDB.Linq
 				if (DataConnection.TraceSwitch.TraceInfo)
 					DataConnection.WriteTraceLine(
 						$"Expression test code generated: \'{testFile}\'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Info);
 			}
 
 			var query = new Query<T>(dataContext, expr);
@@ -291,7 +293,8 @@ namespace LinqToDB.Linq
 				{
 					DataConnection.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Error);
 				}
 
 				throw;

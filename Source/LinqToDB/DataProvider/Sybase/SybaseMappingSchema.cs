@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -16,8 +15,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected SybaseMappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(String)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));

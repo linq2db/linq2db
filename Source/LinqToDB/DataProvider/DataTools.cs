@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -10,7 +11,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
 		/// </summary>
-		public static string EscapeUnterminatedBracket(string str)
+		public static string? EscapeUnterminatedBracket(string? str)
 		{
 			if (str == null)
 				return str;
@@ -53,10 +54,10 @@ namespace LinqToDB.DataProvider
 		public static void ConvertStringToSql(
 			StringBuilder stringBuilder,
 			string plusOperator,
-			string startPrefix,
+			string? startPrefix,
 			Action<StringBuilder,int> appendConversion,
 			string value,
-			char[] extraEscapes)
+			char[]? extraEscapes)
 		{
 			if (value.Length > 0
 				&& (value.IndexOfAny(_escapes) >= 0 || (extraEscapes != null && value.IndexOfAny(extraEscapes) >= 0)))
@@ -197,5 +198,49 @@ namespace LinqToDB.DataProvider
 
 			return string.Empty;
 		};
+
+		#region Create/Drop Database
+
+		internal static void CreateFileDatabase(
+			string databaseName,
+			bool deleteIfExists,
+			string extension,
+			Action<string> createDatabase)
+		{
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(extension))
+				databaseName += extension;
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			createDatabase(databaseName);
+		}
+
+		internal static void DropFileDatabase(string databaseName, string extension)
+		{
+			databaseName = databaseName.Trim();
+
+			if (File.Exists(databaseName))
+			{
+				File.Delete(databaseName);
+			}
+			else
+			{
+				if (!databaseName.ToLower().EndsWith(extension))
+				{
+					databaseName += extension;
+
+					if (File.Exists(databaseName))
+						File.Delete(databaseName);
+				}
+			}
+		}
+		#endregion
 	}
 }

@@ -138,6 +138,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Now([DataSources] string context)
 		{
@@ -392,7 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -402,7 +403,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DatepartDynamic(
-			[DataSources(ProviderName.Informix)] string context, 
+			[DataSources(TestProvName.AllInformix)] string context, 
 			[Values(
 				Sql.DateParts.Day,
 				Sql.DateParts.Hour,
@@ -496,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void Millisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -524,7 +525,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlData57Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -533,7 +534,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlData57Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -700,7 +701,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMilliseconds([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -711,7 +712,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositive([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumnPositive([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -730,7 +731,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnNegative([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumnNegative([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -751,7 +752,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumn([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -763,7 +764,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddWeekFromColumn([DataSources(ProviderName.Informix)] string context)
+		public void AddWeekFromColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -774,7 +775,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddQuarterFromColumn([DataSources(ProviderName.Informix)] string context)
+		public void AddQuarterFromColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -785,7 +786,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddYearFromColumn([DataSources(ProviderName.Informix)] string context)
+		public void AddYearFromColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -802,7 +803,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AddDynamicFromColumn(
-			[DataSources(ProviderName.Informix)] string context, 
+			[DataSources(TestProvName.AllInformix)] string context, 
 			[Values(
 				Sql.DateParts.Day, 
 				Sql.DateParts.Hour, 
@@ -950,7 +951,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondExpression([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var part1 = 200;
 			var part2 = 26;
@@ -1035,7 +1036,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMillisecondsExpression([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			var part1 = 150;
@@ -1049,7 +1050,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositiveExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumnPositiveExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1071,7 +1072,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnNegativeExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumnNegativeExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1095,7 +1096,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddDaysFromColumnExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1110,7 +1111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddWeekFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddWeekFromColumnExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1124,7 +1125,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddQuarterFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddQuarterFromColumnExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1138,7 +1139,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddYearFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		public void AddYearFromColumnExpression([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1153,7 +1154,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AddDynamicFromColumnExpression(
-			[DataSources(ProviderName.Informix)] string context,
+			[DataSources(TestProvName.AllInformix)] string context,
 			[Values(
 				Sql.DateParts.Day,
 				Sql.DateParts.Hour,
@@ -1186,7 +1187,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubDateDay(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1201,7 +1202,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateDiffDay(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1216,7 +1217,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubDateHour(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1231,7 +1232,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateDiffHour(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1246,7 +1247,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubDateMinute(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1261,7 +1262,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateDiffMinute(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1276,7 +1277,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubDateSecond(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1291,7 +1292,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateDiffSecond(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.Access)]
@@ -1314,7 +1315,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
@@ -1343,7 +1344,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateDiffMillisecond(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
@@ -1447,6 +1448,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
@@ -1490,7 +1492,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateTimeSum(
 			[DataSources(
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,

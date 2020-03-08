@@ -56,7 +56,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestSql([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void TestSql([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			var query1 = GetSql(context);
 			var query2 = GetSql(context);

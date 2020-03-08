@@ -15,18 +15,16 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public class AsyncDbTransaction : IAsyncDbTransaction
 	{
-		private readonly IDbTransaction _transaction;
-
 		internal protected AsyncDbTransaction(IDbTransaction transaction)
 		{
-			_transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
-		public virtual IDbConnection Connection => Transaction.Connection;
+		public virtual IDbConnection Connection      => Transaction.Connection;
 
 		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
 
-		public IDbTransaction Transaction => _transaction;
+		public IDbTransaction Transaction { get; }
 
 		public virtual void Commit()
 		{
@@ -43,6 +41,13 @@ namespace LinqToDB.Async
 		public virtual void Dispose()
 		{
 			Transaction.Dispose();
+		}
+
+		public virtual Task DisposeAsync()
+		{
+			Dispose();
+
+			return TaskEx.CompletedTask;
 		}
 
 		public virtual void Rollback()

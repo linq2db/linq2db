@@ -7,11 +7,15 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SQLiteSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -40,7 +44,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -55,13 +59,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -73,49 +71,35 @@ namespace LinqToDB.DataProvider.SQLite
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					{
-						var name = (string)value;
-						return name.Length > 0 && name[0] == '@'? name.Substring(1): name;
-					}
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
-				default             : base.BuildDataType(type, createDbType);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
+				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -171,7 +155,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -192,6 +176,11 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

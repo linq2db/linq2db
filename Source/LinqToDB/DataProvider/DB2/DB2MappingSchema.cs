@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -19,8 +20,8 @@ namespace LinqToDB.DataProvider.DB2
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 		}
@@ -82,12 +83,22 @@ namespace LinqToDB.DataProvider.DB2
 			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
 		{
 		}
+
+		public DB2zOSMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		{
+		}
 	}
 
 	public class DB2LUWMappingSchema : MappingSchema
 	{
 		public DB2LUWMappingSchema()
 			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
+		{
+		}
+
+		public DB2LUWMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
 		{
 		}
 	}

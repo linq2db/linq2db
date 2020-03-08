@@ -39,7 +39,7 @@ namespace LinqToDB.Common
 			_values[typeof(string)]         = default(string);
 		}
 
-		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
+		static readonly ConcurrentDictionary<Type,object?> _values = new ConcurrentDictionary<Type,object?>();
 
 		/// <summary>
 		/// Returns default value for provided type.
@@ -47,18 +47,18 @@ namespace LinqToDB.Common
 		/// <param name="type">Type, for which default value requested.</param>
 		/// <param name="mappingSchema">Optional mapping schema to provide mapping information for enum type.</param>
 		/// <returns>Default value for specific type.</returns>
-		public static object GetValue([JetBrains.Annotations.NotNull] Type type, MappingSchema mappingSchema = null)
+		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
 			var ms = mappingSchema ?? MappingSchema.Default;
 
-			object value;
+			object? value;
 
 			if (_values.TryGetValue(type, out value))
 				return value;
 
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 			{
 				var mapValues = ms.GetMapValues(type);
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Common
 				}
 			}
 
-			if (value == null && !type.IsClassEx() && !type.IsNullable())
+			if (value == null && !type.IsClass && !type.IsNullable())
 			{
 				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 
@@ -97,14 +97,14 @@ namespace LinqToDB.Common
 		/// <returns>Default value for specific type.</returns>
 		public static T GetValue<T>()
 		{
-			object value;
+			object? value;
 
 			if (_values.TryGetValue(typeof(T), out value))
-				return (T)value;
+				return (T)value!;
 
-			_values[typeof(T)] = default(T);
+			_values[typeof(T)] = default(T)!;
 
-			return default(T);
+			return default(T)!;
 		}
 
 		/// <summary>

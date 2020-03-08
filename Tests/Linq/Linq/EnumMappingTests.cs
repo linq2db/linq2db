@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NETCOREAPP2_1
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -1719,6 +1722,8 @@ namespace Tests.Linq
 		[Test]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1729,6 +1734,17 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
+#if !NETCOREAPP2_1
+					if (isLinqService)
+					{
+						Assert.Throws<FaultException<ExceptionDetail>>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
+					}
+					else
+#endif
 					Assert.Throws<LinqToDBConvertException>(() =>
 						db.GetTable<UndefinedValueTest>()
 							.Select(r => new { r.Id, r.TestField })
@@ -1755,9 +1771,10 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
 		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Fails due to default mapping schema on remote server. Fixed in 3.0")]
-		[Test]
-		public void Issue1622Test([DataSources] string context)
+		// Sybase disabled due to https://github.com/nunit/nunit/issues/3296
+		// because it breaks test run, which is very annoying
+		[Test, ActiveIssue(1622)]
+		public void Issue1622Test([DataSources(ProviderName.Sybase)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -1780,6 +1797,370 @@ namespace Tests.Linq
 					Assert.That(item.Id, Is.EqualTo(res2.Id));
 					Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
 				}
+			}
+		}
+
+		public enum CharEnum
+		{
+			[MapValue('A')]
+			A = 6,
+			[MapValue('B')]
+			B = 5,
+			[MapValue('C')]
+			C = 4
+		}
+
+		public enum CharEnumS : ushort
+		{
+			[MapValue('A')]
+			A = 6,
+			[MapValue('B')]
+			B = 5,
+			[MapValue('C')]
+			C = 4
+		}
+
+		public enum CharEnumL : ulong
+		{
+			[MapValue('A')]
+			A = 0xFFFFFFFFFFFFFFFF,
+			[MapValue('B')]
+			B = 0xFFFFFFFFFFFFFFFE,
+			[MapValue('C')]
+			C = 0xFFFFFFFFFFFFFFFD
+		}
+
+		[Table]
+		public class EnumCardinality
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column] public CharEnum   Property1 { get; set; }
+			[Column] public CharEnum?  Property2 { get; set; }
+			[Column] public CharEnumS  Property3 { get; set; }
+			[Column] public CharEnumS? Property4 { get; set; }
+			[Column] public CharEnumL  Property5 { get; set; }
+			[Column] public CharEnumL? Property6 { get; set; }
+
+			public static EnumCardinality[] Seed { get; }
+				= new[]
+				{
+					new EnumCardinality() { Id = 1, Property1 = CharEnum.A, Property2 = CharEnum.A, Property3 = CharEnumS.A, Property4 = CharEnumS.A, Property5 = CharEnumL.A, Property6 = CharEnumL.A },
+					new EnumCardinality() { Id = 2, Property1 = CharEnum.B, Property2 = CharEnum.B, Property3 = CharEnumS.B, Property4 = CharEnumS.B, Property5 = CharEnumL.B, Property6 = CharEnumL.B },
+					new EnumCardinality() { Id = 3, Property1 = CharEnum.C, Property2 = CharEnum.C, Property3 = CharEnumS.C, Property4 = CharEnumS.C, Property5 = CharEnumL.C, Property6 = CharEnumL.C },
+				};
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnum.A, res.Property1);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnum.A, res.Property1);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnum.C, res.Property1);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnum.C, res.Property1);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnum.A, res.Property2);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnum.A, res.Property2);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnum.C, res.Property2);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnum.C, res.Property2);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumS.A, res.Property3);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumS.A, res.Property3);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumS.C, res.Property3);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumS.C, res.Property3);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumS.A, res.Property4);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumS.A, res.Property4);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumS.C, res.Property4);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumS.C, res.Property4);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumL.A, res.Property5);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumL.A, res.Property5);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumL.C, res.Property5);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumL.C, res.Property5);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Less_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumL.A, res.Property6);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_LessOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
+
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(CharEnumL.A, res.Property6);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_Greater_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumL.C, res.Property6);
+			}
+		}
+
+		[Test]
+		public void TestCardinalityOperators_GreaterOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			{
+				var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
+
+				Assert.AreEqual(3, res.Id);
+				Assert.AreEqual(CharEnumL.C, res.Property6);
 			}
 		}
 	}

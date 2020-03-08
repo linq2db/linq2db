@@ -1,0 +1,7 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			"DB2"
+		]
+	}
+}

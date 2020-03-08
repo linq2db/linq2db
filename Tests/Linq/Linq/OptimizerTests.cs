@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Humanizer;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;

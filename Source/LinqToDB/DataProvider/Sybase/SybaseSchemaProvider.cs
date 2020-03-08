@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -12,17 +11,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
-		public SybaseSchemaProvider(string providerName)
-		{
-			_providerName = providerName;
-		}
-
-		private readonly string _providerName;
-
 		// sybase provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -61,10 +53,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return _providerName == ProviderName.SybaseManaged ? "AdoNetCore.AseClient" : "Sybase.Data.AseClient";
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
@@ -105,7 +94,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ColumnInfo>(@"
 SELECT
@@ -129,7 +118,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			const string baseSql = @"
 SELECT
@@ -150,7 +139,7 @@ FROM
 WHERE
 	c.status = 64";
 
-			string sql = null;
+			string? sql = null;
 
 			for (var i = 1; i <= 16; i++)
 			{
@@ -232,14 +221,14 @@ WHERE
 			}
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 
 			return dt.AsEnumerable().Any() ? dt : null;
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 			(
@@ -267,7 +256,7 @@ WHERE
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			List<DataTypeInfo> dataTypes = null;
+			List<DataTypeInfo>? dataTypes = null;
 
 			try
 			{

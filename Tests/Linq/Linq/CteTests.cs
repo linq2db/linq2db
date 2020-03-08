@@ -24,7 +24,8 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle 
-			//ProviderName.Informix,
+			// TODO: v14
+			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
@@ -273,7 +274,7 @@ namespace Tests.Linq
 
 				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCte("EmployeeSubordinatesReport");
 
-				var result =
+				var actualQuery =
 					from employee in employeeSubordinatesReportCte
 					from manager in employeeSubordinatesReportCte.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -286,7 +287,7 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expected =
+				var expectedQuery =
 					from employee in employeeSubordinatesReport
 					from manager in employeeSubordinatesReport.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -299,10 +300,10 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var actual   = actualQuery.ToArray();
+				var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result);
+				AreEqual(expected, actual);
 			}
 		}
 
@@ -417,6 +418,42 @@ namespace Tests.Linq
 					select p;
 
 				Assert.AreEqual(expected.Count(), query.Count());
+			}
+		}
+
+		[Test]
+		public void TestCustomCount([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct()
+					.AsCte();
+
+				var query = from c in cte1
+					select new
+					{
+						Count = Sql.Ext.Count().ToValue()
+					};
+
+
+				var expected = Child
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct().Count();
+
+
+				var actual = query.AsEnumerable().Select(c => c.Count).First();
+
+				Assert.AreEqual(expected, actual);
 			}
 		}
 
@@ -541,7 +578,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1018,6 +1055,53 @@ namespace Tests.Linq
 
 				var result = cte.ToList();
 
+			}
+		}
+
+
+		class NestingA
+		{
+			public string Property1 { get; set; }
+		}
+
+		class NestingB : NestingA
+		{
+			public string Property2 { get; set; }
+		}
+
+		class NestingC : NestingB
+		{
+			public string Property3 { get; set; }
+		}
+
+		[Test]
+		public void TestNesting([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<NestingA>())
+			using (db.CreateLocalTable<NestingB>())
+			using (db.CreateLocalTable<NestingC>())
+			{
+				var cte1 = db.GetTable<NestingC>().Select(a => new NestingB { Property1 = a.Property2 }).AsCte();
+				var cte2 =
+					from c1 in cte1
+					from t in db.GetTable<NestingC>()
+					select new NestingB
+					{
+						Property1 = c1.Property1,
+						Property2 = t.Property2
+					};
+				var cte3 =
+					from c2 in cte2
+					from t in db.GetTable<NestingC>()
+					select new NestingC
+					{
+						Property1 = c2.Property1,
+						Property2 = t.Property2,
+						Property3 = t.Property3
+					};
+
+				var sql = cte3.ToArray();
 			}
 		}
 

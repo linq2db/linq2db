@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -19,9 +20,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			if (builder.MappingSchema.IsScalarType(methodCall.Method.GetGenericArguments()[0]))
-				throw new LinqToDBException("Selection of scalar types not supported by FromSql method. Use mapping class with one column for scalar values");
-
 			PrepareRawSqlArguments(methodCall.Arguments[1],
 				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
 				out var format, out var arguments);
@@ -31,19 +29,19 @@ namespace LinqToDB.Linq.Builder
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
-		public static void PrepareRawSqlArguments(Expression fromatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
+		public static void PrepareRawSqlArguments(Expression formatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
 		{
 			// Consider that FormattableString is used
-			if (fromatArg.NodeType == ExpressionType.Call)
+			if (formatArg.NodeType == ExpressionType.Call)
 			{
-				var mc = (MethodCallExpression)fromatArg;
+				var mc = (MethodCallExpression)formatArg;
 
 				format = (string)mc.Arguments[0].EvaluateExpression();
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 			}
 			else
 			{
-				var evaluatedSql = fromatArg.EvaluateExpression();
+				var evaluatedSql = formatArg.EvaluateExpression();
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{

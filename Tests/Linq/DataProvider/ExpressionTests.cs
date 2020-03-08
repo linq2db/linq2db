@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Data;
 using System.Linq.Expressions;
 
@@ -11,9 +12,6 @@ using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
 	[TestFixture]
 	public class ExpressionTests : TestBase
 	{

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -41,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 					case "SingleAsync"          :
 					case "SingleOrDefaultAsync" :
 						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value >= 2)
+							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value >= 2)
 								take = 2;
 
 						break;

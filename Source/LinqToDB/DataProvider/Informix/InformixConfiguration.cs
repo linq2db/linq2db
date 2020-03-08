@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Informix
+﻿namespace LinqToDB.DataProvider.Informix
 {
 	public static class InformixConfiguration
 	{

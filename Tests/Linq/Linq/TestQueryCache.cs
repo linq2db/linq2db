@@ -74,10 +74,10 @@ namespace Tests.Linq
 				db.Delete(new SampleClass() { Id = 1, StrKey = "K1" });
 				db.Update(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != QueryVisitor.Find(table.GetSelectQuery(),
+				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
 					            e => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != QueryVisitor.Find(table.GetSelectQuery(),
+				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
 					               e => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);
@@ -104,10 +104,10 @@ namespace Tests.Linq
 				await db.DeleteAsync(new SampleClass() { Id = 1, StrKey = "K1" });
 				await db.UpdateAsync(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != QueryVisitor.Find(table.GetSelectQuery(),
+				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
 					            e => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != QueryVisitor.Find(table.GetSelectQuery(),
+				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
 					            e => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);

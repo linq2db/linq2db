@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,9 +8,12 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
+	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public class SelectQuery : ISqlTableSource
 	{
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		protected string DebugSqlText => SqlText;
+
 		#region Init
 
 		public SelectQuery()
@@ -132,6 +136,13 @@ namespace LinqToDB.SqlQuery
 			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
 			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
 
+			if (clone.HasSetOperators)
+			{
+				SetOperators.AddRange(
+					clone.SetOperators.Select(u =>
+						new SqlSetOperator((SelectQuery) u.SelectQuery.Clone(objectTree, doClone), u.Operation)));
+			}
+
 			IsParameterDependent = clone.IsParameterDependent;
 
 			if (clone.HasUniqueKeys)
@@ -178,9 +189,6 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
-
-//			if (ts == null && IsUpdate && Update.Table == table)
-//				return Update.Table;
 
 			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
@@ -322,17 +330,20 @@ namespace LinqToDB.SqlQuery
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
-			if (_keys == null && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
+			if (_keys == null)
 			{
-				_keys = new List<ISqlExpression>();
+				if (Select.Columns.Count > 0 && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
+				{
+					var q =
+						from key in ((ISqlTableSource) From.Tables[0]).GetKeys(allIfEmpty)
+						from col in Select.Columns
+						where  col.Expression == key
+						select col as ISqlExpression;
 
-				var q =
-					from key in ((ISqlTableSource)From.Tables[0]).GetKeys(allIfEmpty)
-					from col in Select.Columns
-					where col.Expression == key
-					select col as ISqlExpression;
-
-				_keys = q.ToList();
+					_keys = q.ToList();
+				}
+				else
+					_keys = new List<ISqlExpression>();
 			}
 
 			return _keys;

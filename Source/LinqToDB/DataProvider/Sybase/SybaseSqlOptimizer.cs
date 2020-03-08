@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Sybase
+﻿namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlProvider;
 

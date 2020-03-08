@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -74,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 						ReflectionHelper.DataReader.IsDBNull,
 						Expression.Constant(n));
 
-					var defaultValue = _defaultValue ?? Expression.Constant(null, expr.Type);
+					var defaultValue = _defaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
 					if (expr.NodeType == ExpressionType.Parameter)
 					{

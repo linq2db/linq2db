@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Mapping;
@@ -19,7 +20,7 @@ namespace LinqToDB.SqlQuery
 			[JetBrains.Annotations.NotNull] string sql,
 			[JetBrains.Annotations.NotNull] params ISqlExpression[] parameters) : base(mappingSchema, objectType)
 		{
-			SQL = sql ?? throw new ArgumentNullException(nameof(sql));
+			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
@@ -30,7 +31,7 @@ namespace LinqToDB.SqlQuery
 			int id, string alias, Type objectType,
 			SqlField[]       fields,
 			string           sql,
-			ISqlExpression[] parameters)  : base(id, string.Empty, alias, string.Empty, string.Empty, string.Empty, objectType, null, fields, SqlTableType.RawSql, null)
+			ISqlExpression[] parameters)  : base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null)
 		{
 			SQL        = sql;
 			Parameters = parameters;
@@ -39,6 +40,7 @@ namespace LinqToDB.SqlQuery
 		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
 		{
 			Alias              = table.Alias;
+			Server             = table.Server;
 			Database           = table.Database;
 			Schema             = table.Schema;
 

@@ -1,14 +1,18 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2000SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlServer2000SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		public SqlServer2000SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -19,7 +23,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlServer2000SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
@@ -34,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.AppendLine("SELECT SCOPE_IDENTITY()");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -45,7 +49,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Xml            : StringBuilder.Append("NText");    return;
 				case DataType.NVarChar       :
 
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)
@@ -58,7 +62,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.VarChar        :
 				case DataType.VarBinary      :
 
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 8000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)
@@ -69,7 +73,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFunction(SqlFunction func)

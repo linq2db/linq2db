@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryType        QueryType   => QueryType.Delete;
 		public override QueryElementType ElementType => QueryElementType.DeleteStatement;
 
-		public override bool               IsParameterDependent
+		public override bool             IsParameterDependent
 		{
 			get => SelectQuery.IsParameterDependent;
 			set => SelectQuery.IsParameterDependent = value;
@@ -53,7 +54,8 @@ namespace LinqToDB.SqlQuery
 		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			With?.Walk(options, func);
-			Table = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
+
+			Table       = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
@@ -75,6 +77,7 @@ namespace LinqToDB.SqlQuery
 			if (SelectQuery != null)
 			{
 				var newQuery = func(SelectQuery);
+
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}
