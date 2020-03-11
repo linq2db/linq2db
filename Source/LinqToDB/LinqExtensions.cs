@@ -3127,6 +3127,25 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(AsSubQuery, source), source.Expression));
 		}
 
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TKey> AsSubQuery<TKey, TElement>([NotNull] this IQueryable<IGrouping<TKey, TElement>> grouping)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<TKey>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, grouping), grouping.Expression));
+		}
+
 		#endregion
 
 		#region HasUniqueKey
