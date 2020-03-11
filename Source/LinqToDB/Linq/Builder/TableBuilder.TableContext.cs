@@ -1026,11 +1026,33 @@ namespace LinqToDB.Linq.Builder
 								isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
 							}
 
+							var queryFilter = members[members.Length - 1].Item2;
 
-							var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
+							if (queryFilter == null)
+							{
+								var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
 
-							var lambda = Expression.Lambda(obj, pLoadWith);
-							expression = (IQueryable<T>)method.Invoke(null, new object[] {expression, lambda });
+								var lambda = Expression.Lambda(obj, pLoadWith);
+								expression = (IQueryable<T>)method.Invoke(null, new object[] { expression, lambda });
+							}
+							else
+							{
+//								var method =
+//									(isPrevList
+//										? Methods.LinqToDB.LoadWithQueryMany
+//										: Methods.LinqToDB.LoadWithQuerySingle).MakeGenericMethod(typeof(T), EagerLoading.GetEnumerableElementType(obj.Type, association.Builder.MappingSchema));
+								var method =
+									(isPrevList
+										? Methods.LinqToDB.LoadWithQueryMany
+										: Methods.LinqToDB.LoadWithQuerySingle).MakeGenericMethod(typeof(T), EagerLoading.GetEnumerableElementType(obj.Type, association.Builder.MappingSchema));
+
+								if (isPrevList)
+									obj = EagerLoading.EnsureEnumerable(obj, association.Builder.MappingSchema);
+
+								var lambda = Expression.Lambda(obj, pLoadWith);
+
+								expression = (IQueryable<T>)method.Invoke(null, new object[] { expression, lambda, queryFilter.EvaluateExpression() });
+							}
 						}
 					}
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Data.Common;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -126,6 +127,11 @@ namespace LinqToDB.Common
 		{
 			foreach (var item in items) 
 				hashSet.Add(item);
+		}
+
+		public static IQueryable<T> CreateEmptyQuery<T>()
+		{
+			return Enumerable.Empty<T>().AsQueryable();
 		}
 
 		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)

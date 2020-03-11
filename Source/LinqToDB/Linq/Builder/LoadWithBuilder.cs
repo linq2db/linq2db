@@ -17,7 +17,11 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(Methods.LinqToDB.LoadWith, Methods.LinqToDB.ThenLoadSingle, Methods.LinqToDB.ThenLoadMultiple);
+			return methodCall.IsSameGenericMethod(Methods.LinqToDB.LoadWith, Methods.LinqToDB.ThenLoadSingle,
+				Methods.LinqToDB.ThenLoadMultiple, 
+				Methods.LinqToDB.LoadWithQueryMany,
+				Methods.LinqToDB.LoadWithQuerySingle,
+				Methods.LinqToDB.ThenLoadMultipleFunc);
 		}
 
 		TableBuilder.TableContext GetTableContext(IBuildContext ctx, BuildInfo buildInfo)
@@ -61,13 +65,19 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException(
 					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType.Name}>() method.");
 
-			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.ThenLoadSingle, Methods.LinqToDB.ThenLoadMultiple))
+			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.ThenLoadSingle, Methods.LinqToDB.ThenLoadMultiple, Methods.LinqToDB.ThenLoadMultipleFunc))
 			{
 				if (!(table.LoadWith?.Count > 0))
 					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{selector.Body}'.");
 
 				var lastPath = table.LoadWith[table.LoadWith.Count - 1];
 				associations = Array<Tuple<MemberInfo, Expression>>.Append(lastPath, associations);
+
+				if (methodCall.Arguments.Count == 3)
+				{
+					var lastElement = associations[associations.Length - 1];
+					associations[associations.Length - 1] = Tuple.Create(lastElement.Item1, methodCall.Arguments[2]);
+				}
 
 				// append to the last member chain
 				table.LoadWith[table.LoadWith.Count - 1] = associations;
@@ -76,6 +86,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (table.LoadWith == null)
 					table.LoadWith = new List<Tuple<MemberInfo, Expression>[]>();
+
+				if (methodCall.Arguments.Count == 3)
+				{
+					var lastElement = associations[associations.Length - 1];
+					associations[associations.Length - 1] = Tuple.Create(lastElement.Item1, methodCall.Arguments[2]);
+				}
 
 				table.LoadWith.Add(associations);
 			}

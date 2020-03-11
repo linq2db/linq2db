@@ -396,5 +396,74 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem>()
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1,
+						q => q
+							.Where(i => i.Id % 2 == 0)
+							.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
+							.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
+					);
+
+				var result = query.ToArray();
+
+				var query2 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
+
+				var result2 = query2.ToArray();
+			}
+		}
+
+		[Test]
+		public void LoadWithRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem>()
+					from mm in db.GetTable<MainItem2>().InnerJoin(mm => mm.Id == m.Id)
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1,
+						ms => ms.LoadWith(c => c.SubSubItems, cq => cq.LoadWith(ss => ss.ParentSubItem)))
+					.LoadWith(m => m.SubItems2);
+
+				var result = query.ToArray();
+
+				var query2 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(si => si.SubSubItems, qsi => qsi.LoadWith(_ => _.ParentSubItem));
+
+				var result2 = query2.ToArray();
+
+			}
+		}
+
 	}
 }

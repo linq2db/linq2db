@@ -274,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 			finalExpression     = null;
 			replaceParam        = null;
 
-			var allowed = new HashSet<ParameterExpression>(parameters);
+			var allowed = new HashSet<ParameterExpression>(parameters ?? Enumerable.Empty<ParameterExpression>());
 
 			void CollectLambdaParameters(Expression expr)
 			{
@@ -557,9 +557,70 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		static IQueryable CreateEmptyQuery(Type elementType)
+		{
+			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
+			return (IQueryable)method.Invoke(null, Array<object>.Empty);
+		}
+
+		static Expression MakeAsQueryable(Expression expression, MappingSchema mappingSchema)
+		{
+			if (typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+				return expression;
+
+			var elementType = GetEnumerableElementType(expression.Type, mappingSchema);
+			var method = Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType);
+			return Expression.Call(method, expression);
+		}
+
+		static Expression CorrectLoadWithExpression(Expression detailExpression, IBuildContext context, IList<MemberInfo> associationPath, MappingSchema mappingSchema)
+		{
+			if (context is TableBuilder.TableContext table)
+			{
+				if (table.LoadWith?.Count > 0)
+				{
+					Tuple<MemberInfo, Expression>[] found = null;
+					for (var index = table.LoadWith.Count - 1; index >= 0; index--)
+					{
+						var path = table.LoadWith[index];
+						if (path.Length == associationPath.Count)
+						{
+							found = path;
+							for (int i = 0; i < path.Length; i++)
+							{
+								if (path[i].Item1 != associationPath[i])
+								{
+									found = null;
+									break;
+								}
+							}
+
+							if (found != null)
+								break;
+						}
+					}
+
+					if (found != null && found[found.Length - 1].Item2 != null)
+					{
+						var filterFunc   = (Delegate)found[found.Length - 1].Item2.EvaluateExpression();
+						var elementType  = GetEnumerableElementType(detailExpression.Type, mappingSchema);
+						var fakeQuery    = CreateEmptyQuery(elementType);
+						var appliedQuery = (IQueryable)filterFunc.DynamicInvoke(fakeQuery);
+
+						var queryableExpression = MakeAsQueryable(detailExpression, mappingSchema);
+						detailExpression = appliedQuery.Expression.Transform(e => e == fakeQuery.Expression ? queryableExpression : e);
+					}
+
+				}
+			}
+
+			return detailExpression;
+		}
+
 		public static Expression GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, AssociationDescriptor association)
 		{
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
+			var mappingSchema    = builder.MappingSchema;
 
 			// that means we processing association from TableContext. First parameter is master
 			Expression detailQuery;
@@ -582,6 +643,8 @@ namespace LinqToDB.Linq.Builder
 			var associationParentType = associationPath[0].DeclaringType;
 
 			Expression resultExpression;
+			Expression finalExpression;
+			ParameterExpression replaceParam;
 
 			// recursive processing
 			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
@@ -615,7 +678,10 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				detailQuery = ConstructMemberPath(associationPath, detailProp, true);
-				
+				detailQuery = CorrectLoadWithExpression(detailQuery, extractContext, associationPath, mappingSchema);
+
+				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
+
 				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParm, masterParm, detailQuery, initialMainQuery, builder);
 			}
@@ -641,8 +707,16 @@ namespace LinqToDB.Linq.Builder
 				var masterKeys = ExtractKeys(extractContext, masterParm).ToArray();
 
 				detailQuery = ConstructMemberPath(associationPath, masterParm, true);
+				detailQuery = CorrectLoadWithExpression(detailQuery, extractContext, associationPath, mappingSchema);
+
+				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParm, masterParm, detailQuery, initialMainQuery, builder);
+			}
+
+			if (replaceParam != null)
+			{
+				resultExpression = finalExpression.Transform(e => e == replaceParam ? resultExpression : e);
 			}
 
 			resultExpression = EnsureDestinationType(resultExpression, association.MemberInfo.GetMemberType(), builder.MappingSchema);
@@ -968,6 +1042,10 @@ namespace LinqToDB.Linq.Builder
 				replaceInfo.Keys.AddRange(dependencyParameters);
 
 				var mainQueryWithCollectedKey = ApplyReMapping(initialMainQuery, replaceInfo, true);
+
+				// something happened and we failed to enrich query
+				if (mainQueryWithCollectedKey == initialMainQuery)
+					return null;
 
 				var resultParameterType = GetEnumerableElementType(mainQueryWithCollectedKey.Type, builder.MappingSchema);
 				var resultParameter     = Expression.Parameter(resultParameterType, "key_data_result");
@@ -1594,26 +1672,8 @@ namespace LinqToDB.Linq.Builder
 													}
 													else if (typeof(IGrouping<,>).IsSameOrParentOf(replacedType))
 													{
-														//TODO: Support Grouping???
+														//We do not support grouping yet
 														return expr;
-														/*
-														var newParam = Expression.Parameter(replacedType, prm.Name);
-														transientParam = newParam;
-														newParameters[j] = newParam;
-
-														var accessExpr =
-															Expression.PropertyOrField(
-																Expression.PropertyOrField(newParam, "Key"), "Data");
-														newBody = newBody.Transform(e =>
-														{
-															if (e == prm)
-															{
-																return newParam;
-															}
-
-															return e;
-														});
-														*/
 													}
 												}
 											}
