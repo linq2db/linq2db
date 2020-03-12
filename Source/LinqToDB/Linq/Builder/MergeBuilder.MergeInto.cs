@@ -1,5 +1,4 @@
-﻿#nullable disable
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System.Linq.Expressions;
 
@@ -24,10 +23,10 @@ namespace LinqToDB.Linq.Builder
 
 				var merge         = new SqlMergeStatement(targetTable)
 				{
-					Hint = (string)methodCall.Arguments[2].EvaluateExpression()
+					Hint = (string?)methodCall.Arguments[2].EvaluateExpression()
 				};
 
-				target.SetAlias(merge.Target.Alias);
+				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;
 
 				var source = new MergeSourceQueryContext(
@@ -40,8 +39,8 @@ namespace LinqToDB.Linq.Builder
 				return new MergeContext(merge, target, source);
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

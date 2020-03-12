@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into.GetIdentityField();
+			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTime       : StringBuilder.Append("timestamp");                 break;
 				case DataType.DateTime2      : StringBuilder.Append("timestamp");                 break;
@@ -141,16 +141,16 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
 				case DataType.VarChar        :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
-						StringBuilder.Append($"VarChar({type.Length})");
+						StringBuilder.Append($"VarChar({type.Type.Length})");
 					break;
 				case DataType.NVarChar       :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
-						StringBuilder.Append($"VarChar2({type.Length})");
+						StringBuilder.Append($"VarChar2({type.Type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
@@ -158,10 +158,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
 				case DataType.Binary         :
 				case DataType.VarBinary      :
-					if (type.Length == null || type.Length == 0)
+					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Length).Append(")");
+						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(")");
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
@@ -281,7 +281,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in insertClause.Into.Fields)
+			foreach (var col in insertClause.Into!.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -294,10 +294,10 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity && truncateTable.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncateTable.ResetIdentity && truncateTable.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 					if (_identityField != null)
 						return 3;
 					break;
@@ -308,7 +308,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 			if (identityField == null && dropTable.IfExists == false)
 			{
@@ -439,14 +439,14 @@ BEGIN
 	-- Set the increment back to 1
 	EXECUTE IMMEDIATE 'ALTER SEQUENCE SIDENTITY_{0} INCREMENT BY 1 MINVALUE 0';
 END;",
-							truncate.Table.PhysicalName)
+							truncate.Table!.PhysicalName)
 						.AppendLine()
 						;
 
 					break;
 				case SqlCreateTableStatement createTable:
 				{
-					var schemaPrefix = GetSchemaPrefix(createTable.Table);
+					var schemaPrefix = GetSchemaPrefix(createTable.Table!);
 
 					if (commandNumber == 1)
 					{
@@ -454,13 +454,13 @@ END;",
 							.Append("CREATE SEQUENCE ")
 							.Append(schemaPrefix)
 							.Append("SIDENTITY_")
-							.Append(createTable.Table.PhysicalName)
+							.Append(createTable.Table!.PhysicalName)
 							.AppendLine();
 					}
 					else
 					{
 						StringBuilder
-							.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table.PhysicalName)
+							.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table!.PhysicalName)
 							.AppendLine()
 							.AppendFormat("BEFORE INSERT ON ");
 

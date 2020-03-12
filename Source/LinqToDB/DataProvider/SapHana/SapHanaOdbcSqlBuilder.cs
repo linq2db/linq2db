@@ -29,7 +29,7 @@
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Money:
 					StringBuilder.Append("Decimal(19,4)");

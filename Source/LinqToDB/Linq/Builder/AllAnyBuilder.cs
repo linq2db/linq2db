@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -42,8 +41,8 @@ namespace LinqToDB.Linq.Builder
 			return new AllAnyContext(buildInfo.Parent, methodCall, sequence);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -80,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			readonly MethodCallExpression _methodCall;
 
-			public AllAnyContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence)
+			public AllAnyContext(IBuildContext? parent, MethodCallExpression methodCall, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
@@ -101,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
@@ -109,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 				return Builder.BuildSql(typeof(bool), index);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (expression == null)
 				{
@@ -125,17 +124,17 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				var sql = ConvertToSql(expression, level, flags);
 
 				if (sql[0].Index < 0)
-					sql[0].Index = sql[0].Query.Select.Add(sql[0].Sql);
+					sql[0].Index = sql[0].Query!.Select.Add(sql[0].Sql);
 
 				return sql;
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				if (expression == null)
 				{
@@ -149,14 +148,14 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
 
-			ISqlExpression _subQuerySql;
+			ISqlExpression? _subQuerySql;
 
-			public override ISqlExpression GetSubQuery(IBuildContext context)
+			public override ISqlExpression GetSubQuery(IBuildContext? context)
 			{
 				if (_subQuerySql == null)
 				{

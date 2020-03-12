@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
-			if (sqlDataType.DataType == DataType.Int64)
+			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
 				stringBuilder.Append(value.Ticks);
 			}

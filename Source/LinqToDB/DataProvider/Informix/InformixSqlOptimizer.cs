@@ -17,11 +17,12 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (element is SqlParameter p)
 				// enforce binary as parameters
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
+				if (p.Type.SystemType == typeof(byte[]) || p.Type.SystemType == typeof(Binary))
 					p.IsQueryParameter = true;
 				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
 				// intervals explicitly
-				else if ((p.SystemType == typeof(TimeSpan) || p.SystemType == typeof(TimeSpan?)) && p.DataType != DataType.Int64)
+				else if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
+						&& p.Type.DataType != DataType.Int64)
 					p.IsQueryParameter = false;
 		}
 
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			// Informix doesn't support parameters in select list
 			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
-			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count == 0;
+			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
 			// whould be better if our insert AST had no SelectQuery when it is not used...
 			if (!ignore)
 				new QueryVisitor().VisitAll(statement, e =>
@@ -111,7 +112,7 @@ namespace LinqToDB.DataProvider.Informix
 									}
 
 								case TypeCode.UInt64:
-									if (func.Parameters[1].SystemType.IsFloatType())
+									if (func.Parameters[1].SystemType!.IsFloatType())
 										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
 									break;
 

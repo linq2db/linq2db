@@ -201,7 +201,7 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
 
-			if (merge.Source.SourceEnumerable.Rows.Count > 0)
+			if (merge.Source.SourceEnumerable!.Rows.Count > 0)
 			{
 				StringBuilder.Append("(");
 
@@ -286,10 +286,10 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable, -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(null));
+				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, -1, i))
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
 				else
-					BuildExpression(new SqlValue(null));
+					BuildExpression(new SqlValue(field.Type!.Value, null));
 
 				if (!MergeSupportsColumnAliasesInSource)
 					StringBuilder.Append(" ").Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
@@ -323,7 +323,7 @@ namespace LinqToDB.SqlProvider
 			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
 				columnTypes[i] = new SqlDataType(mergeSource.SourceFields[i]);
 
-			for (var i = 0; i < mergeSource.SourceEnumerable.Rows.Count; i++)
+			for (var i = 0; i < mergeSource.SourceEnumerable!.Rows.Count; i++)
 			{
 				var row = mergeSource.SourceEnumerable.Rows[i];
 

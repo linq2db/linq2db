@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.SqlQuery
 {
@@ -7,8 +6,8 @@ namespace LinqToDB.SqlQuery
 	{
 		bool Equals   (ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer);
 
-		bool CanBeNull  { get; }
-		int  Precedence { get; }
-		Type SystemType { get; }
+		bool  CanBeNull  { get; }
+		int   Precedence { get; }
+		Type? SystemType { get; }
 	}
 }

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
@@ -9,14 +8,14 @@ namespace LinqToDB.Expressions
 
 	public class DefaultValueExpression : Expression
 	{
-		public DefaultValueExpression(MappingSchema mappingSchema, Type type)
+		public DefaultValueExpression(MappingSchema? mappingSchema, Type type)
 		{
 			_mappingSchema = mappingSchema;
 			_type          = type;
 		}
 
-		readonly MappingSchema _mappingSchema;
-		readonly Type          _type;
+		readonly MappingSchema? _mappingSchema;
+		readonly Type           _type;
 
 		public override Type           Type      => _type;
 		public override ExpressionType NodeType  => ExpressionType.Extension;

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Extensions;
-	using Linq;
 	using Reflection;
 
 	/// <summary>

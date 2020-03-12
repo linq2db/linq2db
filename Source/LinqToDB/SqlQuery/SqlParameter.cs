@@ -1,29 +1,27 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.Common;
 using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
-		public SqlParameter(Type systemType, string name, object value)
+		public SqlParameter(DbDataType type, string? name, object? value)
 		{
 			IsQueryParameter = true;
 			Name             = name;
-			SystemType       = systemType;
+			Type             = type;
 			Value            = value;
-			DataType         = DataType.Undefined;
 
 #if DEBUG
 			_paramNumber = ++_paramCounter;
 #endif
-
 		}
 
-		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
-			: this(systemType, name, value)
+		public SqlParameter(DbDataType type, string? name, object? value, Func<object?, object?>? valueConverter)
+			: this(type, name, value)
 		{
 			_valueConverter = valueConverter;
 		}
@@ -33,20 +31,19 @@ namespace LinqToDB.SqlQuery
 		static   int _paramCounter;
 #endif
 
-		public string   Name             { get; set; }
-		public Type     SystemType       { get; set; }
-		public bool     IsQueryParameter { get; set; }
-		public DataType DataType         { get; set; }
-		public string   DbType           { get; set; }
-		public int?     DbSize           { get; set; }
-		public string   LikeStart        { get; set; }
-		public string   LikeEnd          { get; set; }
-		public bool     ReplaceLike      { get; set; }
+		// meh, nullable...
+		public string?    Name             { get; set; }
+		public DbDataType Type             { get; set; }
+		public bool       IsQueryParameter { get; set; }
+		public string?    LikeStart        { get; set; }
+		public string?    LikeEnd          { get; set; }
+		public bool       ReplaceLike      { get; set; }
+		internal int?     AccessorId       { get; set; }
 
-		internal int?   AccessorId       { get; set; }
+		Type ISqlExpression.SystemType => Type.SystemType;
 
-		private object _value;
-		public  object  Value
+		private object? _value;
+		public  object?  Value
 		{
 			get
 			{
@@ -68,20 +65,20 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var valueConverter = ValueConverter;
-				return valueConverter == null? value: valueConverter(value);
+				return valueConverter == null ? value : valueConverter(value);
 			}
 
 			set => _value = value;
 		}
 
-		internal object RawValue => _value;
+		internal object? RawValue => _value;
 
 		#region Value Converter
 
-		internal List<int>  TakeValues;
+		internal List<int>? TakeValues;
 
-		private Func<object,object> _valueConverter;
-		public  Func<object,object>  ValueConverter
+		private Func<object?, object?>? _valueConverter;
+		public  Func<object?, object?>?  ValueConverter
 		{
 			get
 			{
@@ -112,7 +109,7 @@ namespace LinqToDB.SqlQuery
 			if (conv == null)
 				_valueConverter = v => v == null ? null : (object) ((int) v + take);
 			else
-				_valueConverter = v => v == null ? null : (object) ((int) conv(v) + take);
+				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
 		}
 
 		static string EscapeLikeText(string text)
@@ -176,13 +173,15 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-			var p = other as SqlParameter;
-			return (object)p != null && Name != null && p.Name != null && Name == p.Name && SystemType == p.SystemType;
+			return
+				other is SqlParameter p
+				&& Name == p.Name
+				&& Type.Equals(p.Type);
 		}
 
 		public override int GetHashCode()
 		{
-			var hashCode = SystemType.GetHashCode();
+			var hashCode = Type.GetHashCode();
 
 			if (Name != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
@@ -198,10 +197,10 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				if (SystemType == null && _value == null)
+				if (_value == null)
 					return true;
 
-				return SqlDataType.TypeCanBeNull(SystemType ?? _value.GetType());
+				return SqlDataType.TypeCanBeNull(Type.SystemType);
 			}
 		}
 
@@ -221,12 +220,9 @@ namespace LinqToDB.SqlQuery
 
 			if (!objectTree.TryGetValue(this, out var clone))
 			{
-				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
+				var p = new SqlParameter(Type, Name, _value, _valueConverter)
 				{
 					IsQueryParameter = IsQueryParameter,
-					DataType         = DataType,
-					DbType           = DbType,
-					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
 					ReplaceLike      = ReplaceLike,

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -79,15 +78,15 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
 
 		class AggregationContext : SequenceContextBase
 		{
-			public AggregationContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_returnType = methodCall.Method.ReturnType;
@@ -100,12 +99,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			readonly string    _methodName;
-			readonly Type      _returnType;
-			private  SqlInfo[] _index;
+			readonly string     _methodName;
+			readonly Type       _returnType;
+			private  SqlInfo[]? _index;
 
-			public int            FieldIndex;
-			public ISqlExpression Sql;
+			public int             FieldIndex;
+			public ISqlExpression? Sql;
 
 			static int CheckNullValue(IDataRecord reader, object context)
 			{
@@ -123,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
@@ -142,14 +141,14 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null, null)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null!, null!)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex));
 				}
 
 				return expr;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -161,21 +160,21 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
 					case ConvertFlags.Field :
 						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql), Sql = Sql, }
+							new SqlInfo { Query = Parent!.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql!), Sql = Sql!, }
 						});
 				}
 
 				throw new InvalidOperationException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				switch (requestFlag)
 				{
@@ -186,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 				return IsExpressionResult.False;
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

@@ -189,7 +189,7 @@ namespace LinqToDB
 			{
 				if (t.IsAnonymous())
 				{
-					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t);
+					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t)!;
 					var members = nctor.Members
 						.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
 						.ToList();

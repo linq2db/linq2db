@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					if (element.ElementType == QueryElementType.SqlParameter)
 					{
 						var p = (SqlParameter)element;
-						if (p.SystemType == null || p.SystemType.IsScalar(false))
+						if (p.Type.SystemType.IsScalar(false))
 						{
 							p.IsQueryParameter = false;
 
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				case QueryType.Delete :
 					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					statement.SelectQuery.From.Tables[0].Alias = "$";
+					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					switch (be.Operation)
 					{
 						case "%":
-							return be.Expr1.SystemType.IsIntegerType()?
+							return be.Expr1.SystemType!.IsIntegerType()?
 								be :
 								new SqlBinaryExpression(
 									typeof(int),
@@ -133,7 +133,7 @@ namespace LinqToDB.DataProvider.SqlCe
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
 								case TypeCode.UInt64 :
-									if (func.Parameters[1].SystemType.IsFloatType())
+									if (func.Parameters[1].SystemType!.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									break;
 
 								case TypeCode.DateTime :
-									var type1 = func.Parameters[1].SystemType.ToUnderlying();
+									var type1 = func.Parameters[1].SystemType!.ToUnderlying();
 
 									if (IsTimeDataType(func.Parameters[0]))
 									{

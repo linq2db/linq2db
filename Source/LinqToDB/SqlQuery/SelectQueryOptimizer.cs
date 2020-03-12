@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		class QueryData
 		{
-			public          SelectQuery          Query;
+			public          SelectQuery          Query   = null!;
 			public readonly List<ISqlExpression> Fields  = new List<ISqlExpression>();
 			public readonly List<QueryData>      Queries = new List<QueryData>();
 		}
@@ -66,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SqlStatement statement, SelectQuery selectQuery)
+		static QueryData GetQueryData(SqlStatement? statement, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
@@ -111,7 +110,7 @@ namespace LinqToDB.SqlQuery
 			return data;
 		}
 
-		static SqlTableSource FindField(SqlField field, SqlTableSource table)
+		static SqlTableSource? FindField(SqlField field, SqlTableSource table)
 		{
 			if (field.Table == table.Source)
 				return table;
@@ -127,7 +126,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		static ISqlExpression GetColumn(QueryData data, SqlField field)
+		static ISqlExpression? GetColumn(QueryData data, SqlField field)
 		{
 			foreach (var query in data.Queries)
 			{
@@ -291,7 +290,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.SetExpression :
 							{
 								var expr = (SqlSetExpression)e;
-								if (dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
+								if (dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
 								break;
 							}
 
@@ -890,7 +889,7 @@ namespace LinqToDB.SqlQuery
 					clmn.RawAlias = c.RawAlias;
 			}
 
-			List<ISqlExpression[]> uniqueKeys = null;
+			List<ISqlExpression[]>? uniqueKeys = null;
 			if (parentJoin == JoinType.Inner && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 

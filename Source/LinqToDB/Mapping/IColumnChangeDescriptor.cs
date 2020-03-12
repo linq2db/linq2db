@@ -39,6 +39,6 @@
 		/// Gets or sets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be returned.
 		/// </summary>
-		string? ColumnName { get; set; }
+		string ColumnName { get; set; }
 	}
 }

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -48,7 +47,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets linq2db type of the database column.
@@ -58,6 +57,6 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets the name of the database column type.
 		/// </summary>
-		public string DbType { get; set; }
+		public string? DbType { get; set; }
 	}
 }

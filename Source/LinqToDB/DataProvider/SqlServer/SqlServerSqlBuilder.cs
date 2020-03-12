@@ -49,9 +49,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (insertClause.WithIdentity)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -73,9 +73,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (insertClause.WithIdentity)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].")
@@ -91,9 +91,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into.GetIdentityField();
+			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();
@@ -176,13 +176,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
-			if (predicate.Expr2 is SqlValue)
+			if (predicate.Expr2 is SqlValue sqlValue)
 			{
-				var value = ((SqlValue)predicate.Expr2).Value;
+				var value = sqlValue.Value;
 
 				if (value != null)
 				{
-					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var text  = value.ToString();
 					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
@@ -286,9 +286,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
+			var table = dropTable.Table!;
 
-			if (table.PhysicalName.StartsWith("#"))
+			if (table.PhysicalName!.StartsWith("#"))
 			{
 				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
@@ -314,15 +314,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(Max)");
 						return;
 					}
@@ -331,10 +331,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Length == null || type.Length > 8000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 8000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(Max)");
 						return;
 					}
@@ -344,12 +344,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime2:
 				case DataType.DateTimeOffset:
 				case DataType.Time:
-					StringBuilder.Append(type.DataType);
+					StringBuilder.Append(type.Type.DataType);
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Precision != null && type.Precision != 7)
+					if (type.Type.Precision != null && type.Type.Precision != 7)
 					{
-						StringBuilder.Append('(').Append(type.Precision).Append(')');
+						StringBuilder.Append('(').Append(type.Type.Precision).Append(')');
 					}
 					return;
 			}
@@ -395,7 +395,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+			if (truncateTable.ResetIdentity || truncateTable.Table!.Fields.Values.All(f => !f.IsIdentity))
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");

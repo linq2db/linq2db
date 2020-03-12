@@ -1,5 +1,4 @@
-﻿#nullable disable
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System;
 using System.Collections.Generic;
@@ -36,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 				Statement = merge;
 			}
 
-			public SqlMergeStatement Merge => (SqlMergeStatement)Statement;
+			public SqlMergeStatement Merge => (SqlMergeStatement)Statement!;
 
 			public IBuildContext           TargetContext => Sequence;
 			public MergeSourceQueryContext SourceContext => (MergeSourceQueryContext)Sequences[1];
@@ -46,48 +45,51 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				switch (flags)
+				if (expression != null)
 				{
-					case ConvertFlags.Field:
-						{
-							var root = expression.GetRootObject(Builder.MappingSchema);
-
-							if (root.NodeType == ExpressionType.Parameter)
+					switch (flags)
+					{
+						case ConvertFlags.Field:
 							{
-								if (_sourceParameters.Contains(root))
-									return SourceContext.ConvertToSql(expression, level, flags);
+								var root = expression.GetRootObject(Builder.MappingSchema);
 
-								if (_targetParameters.Contains(root))
+								if (root.NodeType == ExpressionType.Parameter)
+								{
+									if (_sourceParameters.Contains(root))
+										return SourceContext.ConvertToSql(expression, level, flags);
+
+									if (_targetParameters.Contains(root))
+										return TargetContext.ConvertToSql(expression, level, flags);
+
 									return TargetContext.ConvertToSql(expression, level, flags);
+								}
 
-								return TargetContext.ConvertToSql(expression, level, flags);
+								break;
 							}
-
-							break;
-						}
+					}
 				}
 
 				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}

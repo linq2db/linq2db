@@ -87,7 +87,7 @@
 				.AppendLine("DELETE WHERE")
 				.Append("\t");
 
-			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete);
+			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!);
 		}
 	}
 }

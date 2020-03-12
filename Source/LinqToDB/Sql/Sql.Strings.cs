@@ -179,14 +179,14 @@ namespace LinqToDB
 					data = builder.GetExpression("selector");
 
 				// https://github.com/linq2db/linq2db/issues/1765
-				if (data is SqlField field && field.DataType != DataType.Undefined)
+				if (data is SqlField field && field.Type!.Value.DataType != DataType.Undefined)
 				{
 					var separator = builder.GetExpression("separator");
 
 					if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
-						value.ValueType = value.ValueType.WithDataType(field.DataType);
-					else if (separator is SqlParameter parameter && parameter.DataType == DataType.Undefined)
-						parameter.DataType = field.DataType;
+						value.ValueType = value.ValueType.WithDataType(field.Type!.Value.DataType);
+					else if (separator is SqlParameter parameter && parameter.Type.DataType == DataType.Undefined)
+						parameter.Type  = parameter.Type.WithDataType(field.Type!.Value.DataType);
 				}
 			}
 		}

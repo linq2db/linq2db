@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
 
 	[PublicAPI]
@@ -811,6 +812,7 @@ namespace LinqToDB.Extensions
 
 		#region MethodInfo extensions
 
+		[return: NotNullIfNotNull("method")]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
 		{
 			if (method != null)

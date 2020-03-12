@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,7 +43,7 @@ namespace LinqToDB.SqlQuery
 		void Add(ISqlExpression expr, bool isDescending)
 		{
 			foreach (var item in Items)
-				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent.HasSetOperators || x == y))
+				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
 					return;
 
 			Items.Add(new SqlOrderByItem(expr, isDescending));
@@ -65,7 +64,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			foreach (var t in Items)
 				t.Walk(options, func);

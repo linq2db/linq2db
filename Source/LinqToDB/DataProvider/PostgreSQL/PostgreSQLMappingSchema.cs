@@ -44,18 +44,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
 				{
 					format = "'{0:yyyy-MM-dd}'::{1}";
-					dbType = dt.DbType ?? "date";
+					dbType = dt.Type.DbType ?? "date";
 				}
 				else
 				{
 					format = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
-					dbType = dt.DbType ?? "timestamp";
+					dbType = dt.Type.DbType ?? "timestamp";
 				}
 			}
 			else
 			{
 				format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
-				dbType = dt.DbType ?? "timestamp";
+				dbType = dt.Type.DbType ?? "timestamp";
 			}
 
 			stringBuilder.AppendFormat(format, value, dbType);
