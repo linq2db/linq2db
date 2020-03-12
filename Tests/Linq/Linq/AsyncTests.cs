@@ -84,6 +84,8 @@ namespace Tests.Linq
 		{
 			using (var conn = new TestDataConnection(context))
 			{
+				conn.InlineParameters = true;
+				
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;

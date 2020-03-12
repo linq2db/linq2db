@@ -191,40 +191,11 @@ namespace LinqToDB.Linq.Builder
 				 DataContext.SqlProviderFlags.IsTakeSupported &&
 				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
-				if (context.SelectQuery.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)
-				{
-					var skip = (SqlParameter)sql.Select.SkipValue;
-					var parm = (SqlParameter)sql.Select.SkipValue.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-
-					parm.SetTakeConverter((int)((SqlValue)sql.Select.TakeValue).Value);
-
-					sql.Select.Take(parm, hints);
-
-					var ep = (from pm in CurrentSqlParameters where ReferenceEquals(pm.SqlParameter, skip) select pm).First();
-
-					ep = new ParameterAccessor
-					(
-						ep.Expression,
-						ep.Accessor,
-						ep.DataTypeAccessor,
-						ep.DbTypeAccessor,
-						ep.SizeAccessor,
-						parm
-					);
-
-					CurrentSqlParameters.Add(ep);
-				}
-				else
-					sql.Select.Take(Convert(
-						context,
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
+				sql.Select.Take(
+					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive), hints);
 			}
 
-			if (!DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
-			{
-				if (sql.Select.TakeValue is SqlParameter p)
-					p.IsQueryParameter = false;
-			}
+			sql.IsParameterDependent = true;
 		}
 
 		#endregion
