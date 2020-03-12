@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
@@ -808,7 +809,7 @@ namespace LinqToDB.Linq.Builder
 									if (SqlTable is SqlRawSqlTable)
 									{
 										sql                  = SqlTable.All;
-										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType);
+										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType) ?? new DbDataType(OriginalType);
 									}
 
 									result = new[]
@@ -1503,7 +1504,7 @@ namespace LinqToDB.Linq.Builder
 							ForceLeftJoinAssociations,
 							_associationsToSubQueries);
 							// TODO: parent is r/o on context
-							//{ Parent = Parent };
+							// { Parent = Parent };
 
 					isNew = true;
 				}

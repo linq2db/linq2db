@@ -362,7 +362,7 @@ namespace LinqToDB.Linq
 #if !DEBUG
 			foreach (var q in query.Queries)
 				foreach (var sqlParameter in q.Parameters)
-					sqlParameter.Expression = null;
+					sqlParameter.Expression = null!;
 #endif
 		}
 

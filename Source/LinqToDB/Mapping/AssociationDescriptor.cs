@@ -3,11 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using JNotNull = JetBrains.Annotations.NotNullAttribute;
-
 namespace LinqToDB.Mapping
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using Extensions;
 
