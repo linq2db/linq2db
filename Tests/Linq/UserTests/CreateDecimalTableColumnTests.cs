@@ -16,7 +16,7 @@ namespace Tests.UserTests
 		public void Test()
 		{
 			var schema = new MappingSchema();
-			schema.SetDataType(typeof (decimal), new SqlDataType(DataType.Decimal, 19, 4));
+			schema.SetDataType(typeof (decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 19, 4));
 
 			var table = new SqlTable<Foo>(schema);
 

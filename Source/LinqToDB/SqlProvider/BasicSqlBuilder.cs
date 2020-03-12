@@ -2063,7 +2063,7 @@ namespace LinqToDB.SqlProvider
 						case QueryElementType.SqlParameter:
 							{
 								var p = (SqlParameter)predicate.Expr1;
-								sqlDataType = new SqlDataType(p);
+								sqlDataType = new SqlDataType(p.Type);
 							}
 
 							break;
@@ -2311,7 +2311,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm), parm.Value);
+							BuildValue(new SqlDataType(parm.Type), parm.Value);
 						}
 					}
 

@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 #endif
 		}
 
-		public SqlParameter(DbDataType type, string? name, object? value, Func<object?, object?>? valueConverter)
+		private SqlParameter(DbDataType type, string? name, object? value, Func<object?, object?>? valueConverter)
 			: this(type, name, value)
 		{
 			_valueConverter = valueConverter;

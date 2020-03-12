@@ -15,11 +15,6 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		public SqlDataType(DataType dataType)
-		{
-			Type  = GetDataType(dataType).Type.WithDataType(dataType);
-		}
-
 		public SqlDataType(DbDataType dataType)
 		{
 			Type = dataType;
@@ -30,39 +25,11 @@ namespace LinqToDB.SqlQuery
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
 		}
 
-		public SqlDataType(DataType dataType, int? precision, int? scale)
-		{
-			Type = GetDataType(dataType).Type
-				.WithDataType(dataType)
-				.WithPrecision(precision)
-				.WithScale(scale);
-		}
-
 		public SqlDataType(Type type)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			Type = GetDataType(type).Type.WithSystemType(type);
-		}
-
-		public SqlDataType(Type type, int length)
-		{
-			if (type   == null) throw new ArgumentNullException      (nameof(type));
-			if (length <= 0)    throw new ArgumentOutOfRangeException(nameof(length));
-
-			Type = GetDataType(type).Type.WithSystemType(type).WithLength(length);
-		}
-
-		public SqlDataType(Type type, int precision, int scale)
-		{
-			if (type  == null)  throw new ArgumentNullException      (nameof(type));
-			if (precision <= 0) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0) throw new ArgumentOutOfRangeException(nameof(scale));
-
-			Type = GetDataType(type).Type
-				.WithSystemType(type)
-				.WithPrecision(precision)
-				.WithScale(scale);
 		}
 
 		public SqlDataType(DataType dataType, Type type)
@@ -96,11 +63,6 @@ namespace LinqToDB.SqlQuery
 				.WithSystemType(type)
 				.WithPrecision(precision)
 				.WithScale(scale);
-		}
-
-		internal SqlDataType(SqlParameter parameter)
-			: this(parameter.Type)
-		{
 		}
 
 		internal SqlDataType(ColumnDescriptor column)
