@@ -41,6 +41,10 @@ No, this is not the donate link. We do need something really more valuable - you
 
 https://dotnetfoundation.org/code-of-conduct
 
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
 ## Project Build Status
 
 --------------------
