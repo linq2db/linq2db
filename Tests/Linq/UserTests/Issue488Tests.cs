@@ -39,7 +39,7 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[1]).DbType);
+				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
 			}
 		}
 
@@ -56,7 +56,7 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[1]).DbType);
+				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
 			}
 		}
 	}
