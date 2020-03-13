@@ -36,6 +36,27 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Parameters Support
+
+		public    List<SqlParameter>     ActualParameters { get; } = new List<SqlParameter>();
+
+		protected void AddParameters(List<SqlParameter> parameters)
+		{
+			foreach (var parameter in parameters)
+			{
+				if (!ActualParameters.Contains(parameter))
+					ActualParameters.Add(parameter);
+			}
+		}
+
+		protected void AddParameter(SqlParameter parameter)
+		{
+			if (!ActualParameters.Contains(parameter))
+				ActualParameters.Add(parameter);
+		}
+
+		#endregion
+
 		#region Support Flags
 
 		public virtual bool IsNestedJoinSupported           => true;
@@ -117,9 +138,11 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber,
+						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, indent,
 							skipAlias);
+						AddParameters(sqlBuilder.ActualParameters);
 					}
 				}
 			}
@@ -146,8 +169,10 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0,
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, indent, skipAlias);
+			AddParameters(sqlBuilder.ActualParameters);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -225,7 +250,9 @@ namespace LinqToDB.SqlProvider
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
 				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
+			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, Indent);
+			AddParameters(sqlBuilder.ActualParameters);
 
 			--Indent;
 
@@ -262,7 +289,9 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
+			AddParameters(sqlBuilder.ActualParameters);
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -2306,6 +2335,7 @@ namespace LinqToDB.SqlProvider
 						if (parm.IsQueryParameter)
 						{
 							var name = Convert(parm.Name, ConvertType.NameToQueryParameter);
+							AddParameter(parm);
 
 							StringBuilder.Append(name);
 						}

@@ -201,7 +201,7 @@ namespace LinqToDB.Data
 				return new PreparedQuery
 				{
 					Commands      = commands,
-					SqlParameters = sql.Parameters,
+					SqlParameters = sqlProvider.ActualParameters,
 					Statement     = sql,
 					SqlProvider   = sqlProvider,
 					QueryHints    = query.QueryHints,
