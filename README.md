@@ -13,6 +13,8 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
+
 ## Standout Features
 
  - Rich Querying API:
@@ -36,14 +38,9 @@ T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/maste
 
 No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
 
-
 ## Code of Conduct
 
 https://dotnetfoundation.org/code-of-conduct
-
-## .NET Foundation
-
-This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
 
 ## Project Build Status
 
