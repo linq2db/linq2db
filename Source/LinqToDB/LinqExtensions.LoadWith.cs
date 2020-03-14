@@ -14,10 +14,10 @@ namespace LinqToDB
 	public partial class LinqExtensions
 	{
 		/// <summary>
-		///     Supports queryable LoadWith/ThenLoad chaining operators.
+		/// Provides support for queryable LoadWith/ThenLoad chaining operators.
 		/// </summary>
-		/// <typeparam name="TEntity"> The entity type. </typeparam>
-		/// <typeparam name="TProperty"> The property type. </typeparam>
+		/// <typeparam name="TEntity">The entity type.</typeparam>
+		/// <typeparam name="TProperty">The property type.</typeparam>
 		// ReSharper disable once UnusedTypeParameter
 		public interface ILoadWithQueryable<out TEntity, out TProperty> : IQueryable<TEntity>, IAsyncEnumerable<TEntity>
 		{
@@ -44,40 +44,41 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Specifies associations, that should be loaded for each loaded record from current table.
+		/// Specifies associations that should be loaded for each loaded record from current table.
 		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
 		/// Take into account that use of this method could require multiple queries to load all requested associations.
 		/// </summary>
 		/// <example>
 		/// <para>
 		///     <para>
-		///         The following query loads records from Table1 with Reference association, loaded for each Table1 record.
+		///         Following query loads records from Table1 with Reference association, loaded for each Table1 record.
 		///         <code>
 		///             db.Table1.LoadWith(r => r.Reference);
 		///         </code>
 		///     </para>
 		///     <para>
-		///			The following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
 		///         <code>
 		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
 		///         </code>
 		///         Same query using ThenLoad extension.
 		///         <code>
-		///				db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
 		///         </code>
 		///     </para>
 		///     <para>
-		///         The following query loads records from Table1 with References collection association loaded for each Table1 record.
+		///         Following query loads records from Table1 with References collection association loaded for each Table1 record.
 		///         <code>
 		///             db.Table1.LoadWith(r => r.References);
 		///         </code>
 		///     </para>
 		///     <para>
-		///         The following query loads loads from Table1 with Reference1 collection association loaded for each Table1 record.
-		///			Loads records from Reference2 collection association for each loaded Reference1 record.
-		///			Loads records from Reference3 association for each loaded Reference2 record.
+		///         Following query loads records from Table1 with:
+		///         - Reference1 collection association loaded for each Table1 record;
+		///         - Reference2 collection association for each loaded Reference1 record;
+		///         - Reference3 association for each loaded Reference2 record.
 		///     <para>
-		///			Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
 		///     </para>
 		///         <code>
 		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
@@ -89,16 +90,16 @@ namespace LinqToDB
 		///     </para>
 		/// </para>
 		/// </example>
-		/// <typeparam name="TEntity"> The type of entity being queried. </typeparam>
-		/// <typeparam name="TProperty"> The type of the related entity to be included. </typeparam>
-		/// <param name="source"> The source query. </param>
-		/// <param name="selector"> A lambda expression representing the navigation property to be included (<c>t => t.Property1</c>). </param>
-		/// <returns> A new query with the related data included. </returns>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
-			[InstantHandle] Expression<Func<TEntity, TProperty>> selector) 
+			[InstantHandle] Expression<Func<TEntity, TProperty>> selector)
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
@@ -110,12 +111,80 @@ namespace LinqToDB
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
-		
+
+		/// <summary>
+		/// Specifies associations that should be loaded for each loaded record from current table.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// <paramref name="loadFunc"/> parameter could be used to define additional association loading logic like filters or loading of more associations.
+		/// </summary>
+		/// <example>
+		/// <para>
+		///     <para>
+		///         Following query loads records from Table1 with Reference association, loaded for each Table1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following query loads records from Table1 with References collection association loaded for each Table1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following query loads records from Table1 with:
+		///         - Reference1 collection association loaded for each Table1 record;
+		///         - Reference2 collection association for each loaded Reference1 record;
+		///         - Reference3 association for each loaded Reference2 record.
+		///     <para>
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///     </para>
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following query loads records from Table1 with References collection association loaded for each Table1 record, where References record
+		///         contains only records without "exclude" text in Name property.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References, r => r.Where(rr => !rr.Name.Contains("exclude")));
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following query loads records from Table1 with References1 collection association loaded for each Table1 record, where References1 record
+		///         also load Reference2 association.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1, r => r.LoadWith(rr => rr.Reference2));
+		///         </code>
+		///     </para>
+		/// </para>
+		/// </example>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <param name="loadFunc">Defines additional logic for association load query.</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
-			[InstantHandle] Expression<Func<TEntity, IEnumerable<TProperty>>> selector, 
+			[InstantHandle] Expression<Func<TEntity, IEnumerable<TProperty>>> selector,
 			Func<IQueryable<TProperty>, IQueryable<TProperty>> loadFunc)
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -129,6 +198,43 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		/// <summary>
+		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// </summary>
+		/// <example>
+		/// <para>
+		///     <para>
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///     </para>
+		///     <para>
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
+		///         </code>
+		///     </para>
+		/// </para>
+		/// </example>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TPreviousProperty">Type of parent association.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
@@ -147,6 +253,43 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		/// <summary>
+		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// </summary>
+		/// <example>
+		/// <para>
+		///     <para>
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///     </para>
+		///     <para>
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
+		///         </code>
+		///     </para>
+		/// </para>
+		/// </example>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TPreviousProperty">Type of parent association.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
@@ -165,6 +308,53 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		/// <summary>
+		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// <paramref name="loadFunc"/> parameter could be used to define additional association loading logic like filters or loading of more associations.
+		/// </summary>
+		/// <example>
+		/// <para>
+		///     <para>
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///     </para>
+		///     <para>
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Following query loads records from Table1 with References1 collection association loaded for each Table1 record with
+		///         References2 collection association loaded for each record in References1, with filter over References2 record
+		///         to include only records without "exclude" text in Name property.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r1 => r1.References2, r2 => r2.Where(rr2 => !rr2.Name.Contains("exclude")));
+		///         </code>
+		///     </para>
+		/// </para>
+		/// </example>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TPreviousProperty">Type of parent association.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <param name="loadFunc">Defines additional logic for association load query.</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
@@ -184,7 +374,43 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
-
+		/// <summary>
+		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// </summary>
+		/// <example>
+		/// <para>
+		///     <para>
+		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
+		///         </code>
+		///     </para>
+		///     <para>
+		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
+		///     </para>
+		///     <para>
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
+		///         </code>
+		///         Same query using ThenLoad extension.
+		///         <code>
+		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
+		///         </code>
+		///     </para>
+		/// </para>
+		/// </example>
+		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
+		/// <typeparam name="TPreviousProperty">Type of parent association.</typeparam>
+		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
+		/// <param name="source">The source query.</param>
+		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
+		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
