@@ -8,7 +8,6 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using Expressions;
-	using Extensions;
 	using JetBrains.Annotations;
 	using Mapping;
 
@@ -224,7 +223,7 @@ namespace LinqToDB.Common
 		/// <param name="mappingSchema">Current mapping schema</param>
 		/// <param name="enumType">Enumeration type.</param>
 		/// <returns>Underlying mapping type.</returns>
-		public static Type GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
+		public static Type? GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
 		{
 			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);
 		}

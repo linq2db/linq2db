@@ -15,11 +15,11 @@
 
 			if (statement.IsUpdate())
 			{
-				var selectQuery = statement.SelectQuery;
+				var selectQuery = statement.SelectQuery!;
 				if (selectQuery.Select.SkipValue != null || selectQuery.Select.TakeValue != null)
 					throw new LinqToDBException("SQL Server 2000 do not support Skip, Take in Update statement.");
 
-				if (!statement.SelectQuery.OrderBy.IsEmpty)
+				if (!statement.SelectQuery!.OrderBy.IsEmpty)
 				{
 					statement.SelectQuery.OrderBy.Items.Clear();
 				}

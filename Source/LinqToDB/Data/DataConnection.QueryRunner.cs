@@ -18,7 +18,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters)
 		{
 			CheckAndThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 
 		internal class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[] parameters)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters)
 				: base(query, queryNumber, dataConnection, expression, parameters)
 			{
 				_dataConnection = dataConnection;
@@ -41,9 +41,9 @@ namespace LinqToDB.Data
 			bool        _isAsync;
 			Expression? _mapperExpression;
 
-			public override Expression? MapperExpression
+			public override Expression MapperExpression
 			{
-				get => _mapperExpression;
+				get => _mapperExpression!;
 				set
 				{
 					_mapperExpression = value;
@@ -230,7 +230,7 @@ namespace LinqToDB.Data
 							var parm = parameters.Length > i && object.ReferenceEquals(parameters[i], sqlp) ?
 								parameters[i] :
 								parameters.First(p => object.ReferenceEquals(p, sqlp));
-							AddParameter(dataConnection, parms, parm.Name, parm);
+							AddParameter(dataConnection, parms, parm.Name!, parm);
 						}
 					}
 				}
@@ -239,7 +239,7 @@ namespace LinqToDB.Data
 					foreach (var parm in parameters)
 					{
 						if (parm.IsQueryParameter && pq.SqlParameters.Contains(parm))
-							AddParameter(dataConnection, parms, parm.Name, parm);
+							AddParameter(dataConnection, parms, parm.Name!, parm);
 					}
 				}
 
@@ -249,27 +249,19 @@ namespace LinqToDB.Data
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 			{
 				var p          = dataConnection.Command.CreateParameter();
-				var systemType = parm.SystemType;
-				var dataType   = parm.DataType;
-				var dbType     = parm.DbType;
-				var dbSize     = parm.DbSize;
+				var dbDataType = parm.Type;
 				var paramValue = parm.Value;
 
-				if (systemType == null)
+				if (dbDataType.DataType == DataType.Undefined)
 				{
-					if (paramValue != null)
-						systemType = paramValue.GetType();
+					dbDataType = dbDataType.WithDataType(
+						dataConnection.MappingSchema.GetDataType(
+							dbDataType.SystemType == typeof(object) && paramValue != null
+								? paramValue.GetType()
+								: dbDataType.SystemType).Type.DataType);
 				}
 
-				if (dataType == DataType.Undefined)
-				{
-					dataType = dataConnection.MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && paramValue != null ?
-							paramValue.GetType() :
-							systemType!).DataType;
-				}
-
-				dataConnection.DataProvider.SetParameter(dataConnection, p, name, new DbDataType(systemType, dataType, dbType, dbSize), paramValue);
+				dataConnection.DataProvider.SetParameter(dataConnection, p, name, dbDataType, paramValue);
 
 				parms.Add(p);
 			}

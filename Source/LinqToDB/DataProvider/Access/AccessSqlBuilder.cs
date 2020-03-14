@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Access
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.Fields.Values.Count(f => f.IsIdentity) : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -45,10 +45,10 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder
 					.Append(" ALTER COLUMN ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.Access
 				else if (!selectQuery.OrderBy.IsEmpty)
 				{
 					StringBuilder.Append(" TOP ");
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue, selectQuery.Select.TakeValue));
+					BuildExpression(Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!));
 				}
 			}
 			else
@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.Access
 
 				if (value != null)
 				{
-					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var text  = value.ToString();
 		
 					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
@@ -204,14 +204,14 @@ namespace LinqToDB.DataProvider.Access
 
 			if (predicate.Escape != null)
 			{
-				if (predicate.Expr2 is SqlValue escSqlValue && predicate.Escape is SqlValue)
+				if (predicate.Expr2 is SqlValue escSqlValue && predicate.Escape is SqlValue escapeValue)
 				{
 					var value = escSqlValue.Value;
 
 					if (value != null)
 					{
-						var text = ((SqlValue)predicate.Expr2).Value.ToString();
-						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+						var text = value.ToString();
+						var val  = new SqlValue(ReescapeLikeText(text, (char)escapeValue.Value!));
 
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);
 					}
@@ -220,13 +220,13 @@ namespace LinqToDB.DataProvider.Access
 				{
 					if (p.LikeStart != null)
 					{
-						var value = (string)p.Value;
+						var value = (string?)p.Value;
 
 						if (value != null)
 						{
 							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value)!)
 								.Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
-							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
+							p         = new SqlParameter(p.Type, p.Name, value) { IsQueryParameter = p.IsQueryParameter };
 							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null, predicate.IsSqlLike);
 						}
 					}
@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
 				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;

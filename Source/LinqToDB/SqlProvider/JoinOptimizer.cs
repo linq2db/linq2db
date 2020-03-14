@@ -1271,13 +1271,13 @@ namespace LinqToDB.SqlProvider
 			public SqlField?  Field  { get; }
 			public SqlColumn? Column { get; }
 
-			public string Name      => Field == null    ?  Column!.Alias : Field.Name;
-			public int    SourceID  => Field == null    ?  Column!.Parent.SourceID : Field.Table?.SourceID ?? -1;
+			public string Name      => Field == null    ?  Column!.Alias! : Field.Name!;
+			public int    SourceID  => Field == null    ?  Column!.Parent!.SourceID : Field.Table?.SourceID ?? -1;
 			public bool   CanBeNull => Element.CanBeNull;
 
 			private ISqlExpression? _expression;
-			private ISqlExpression? Expression => 
-				_expression ?? (_expression = Field ?? QueryHelper.GetUnderlyingField(Column) as ISqlExpression ?? Column);
+			private ISqlExpression Expression => 
+				_expression ?? (_expression = Field ?? QueryHelper.GetUnderlyingField(Column!) as ISqlExpression ?? Column!);
 
 			public ISqlExpression Element
 			{
@@ -1326,9 +1326,9 @@ namespace LinqToDB.SqlProvider
 			public string DisplayString()
 			{
 				if (Field != null)
-					return $"F: '{GetSourceString(Field.Table)}.{Name}'";
+					return $"F: '{GetSourceString(Field.Table!)}.{Name}'";
 
-				return $"C: '{GetSourceString(Column!.Parent)}.{Name}'";
+				return $"C: '{GetSourceString(Column!.Parent!)}.{Name}'";
 			}
 
 			public override int GetHashCode()

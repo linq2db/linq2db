@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,8 +6,8 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlTruncateTableStatement : SqlStatement
 	{
-		public SqlTable Table         { get; set; }
-		public bool     ResetIdentity { get; set; }
+		public SqlTable? Table         { get; set; }
+		public bool      ResetIdentity { get; set; }
 
 		public override QueryType          QueryType    => QueryType.TruncateTable;
 		public override QueryElementType   ElementType  => QueryElementType.TruncateTableStatement;
@@ -19,22 +18,22 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 
-		public override SelectQuery SelectQuery { get => null; set {}}
+		public override SelectQuery? SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("TRUNCATE TABLE ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Table = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
+			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;
 
 			return null;
 		}
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			return null;
 		}

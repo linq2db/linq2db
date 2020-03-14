@@ -1,15 +1,11 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 	using SqlQuery;
 
 	partial class TableBuilder
@@ -18,10 +14,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			Expression bodyExpr;
-			IQueryable query = null;
-			string     name  = null;
-			bool       isRecursive = false;
+			Expression  bodyExpr;
+			IQueryable? query = null;
+			string?     name  = null;
+			bool        isRecursive = false;
 
 			switch (methodCall.Arguments.Count)
 			{
@@ -58,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 						cteClause.Name = name;
 					}
 
-					return Tuple.Create(cteClause, sequence);
+					return Tuple.Create(cteClause, (IBuildContext?)sequence);
 				}
 			);
 
@@ -74,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression();
+			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
 			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
@@ -84,9 +80,9 @@ namespace LinqToDB.Linq.Builder
 
 		class CteTableContext : TableContext
 		{
-			private readonly CteClause     _cte;
-			private readonly Expression    _cteExpression;
-			private          IBuildContext _cteQueryContext;
+			private readonly CteClause      _cte;
+			private readonly Expression     _cteExpression;
+			private          IBuildContext? _cteQueryContext;
 
 			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
 				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
@@ -95,12 +91,12 @@ namespace LinqToDB.Linq.Builder
 				_cteExpression   = cteExpression;
 			}
 
-			IBuildContext GetQueryContext()
+			IBuildContext? GetQueryContext()
 			{
 				return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
 			{
 				var queryContext = GetQueryContext();
 				if (queryContext == null)
@@ -108,10 +104,10 @@ namespace LinqToDB.Linq.Builder
 				return queryContext.IsExpression(expression, level, requestFor);
 			}
 
-			static string GenerateAlias(Expression expression)
+			static string? GenerateAlias(Expression? expression)
 			{
-				string alias = null;
-				var current  = expression;
+				string? alias = null;
+				var current   = expression;
 				while (current?.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression) current;
@@ -122,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				var queryContext = GetQueryContext();
 				if (queryContext == null)
@@ -130,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 
 				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
 
-				if (flags != ConvertFlags.All && _cte.Fields.Length == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
+				if (flags != ConvertFlags.All && _cte.Fields!.Length == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
 				{
 					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
 					ConvertToSql(null, 0, ConvertFlags.All);
@@ -158,9 +154,9 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			static string GetColumnFriendlyAlias(SqlColumn column)
+			static string? GetColumnFriendlyAlias(SqlColumn column)
 			{
-				string alias = null;
+				string? alias = null;
 
 				var visited = new HashSet<ISqlExpression>();
 				ISqlExpression current = column;
@@ -180,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 					var field = current as SqlField;
 
 					alias = field?.Name;
-				}				
+				}
 
 				if (alias == null)
 					alias = column.Alias;
@@ -194,22 +190,22 @@ namespace LinqToDB.Linq.Builder
 
 				if (_cteQueryContext != null)
 				{
-					for (int i = 0; i < _cte.Fields.Length; i++)
+					for (int i = 0; i < _cte.Fields!.Length; i++)
 					{
 						if (_cte.Fields[i] == null)
 						{
-							var column = _cte.Body.Select.Columns[i];
-							_cte.Fields[i] = new SqlField { Name = column.Alias, PhysicalName = column.Alias };
+							var column = _cte.Body!.Select.Columns[i];
+							_cte.Fields[i] = new SqlField(column.Alias!, column.Alias!);
 						}
 					}
 				}
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
+			public override int ConvertToParentIndex(int index, IBuildContext? context)
 			{
 				if (context == _cteQueryContext)
 				{
-					var queryColumn = context.SelectQuery.Select.Columns[index];
+					var queryColumn = context!.SelectQuery.Select.Columns[index];
 					var alias       = GetColumnFriendlyAlias(queryColumn);
 					var field       = RegisterCteField(null, queryColumn, index, alias);
 
@@ -221,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, string alias)
+			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -230,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 					var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 					var newField = f == null
-						? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = alias }
+						? new SqlField(expression.SystemType!, alias, expression.CanBeNull)
 						: new SqlField(f);
 
 					if (alias != null)
@@ -240,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
+				if (!SqlTable.Fields.TryGetValue(cteField.Name!, out var field))
 				{
 					field = new SqlField(cteField);
 					SqlTable.Add(field);
@@ -261,7 +257,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var queryContext = GetQueryContext();
 				if (queryContext == null)
@@ -273,7 +269,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				if (_cte.Fields.Length == 0)
+				if (_cte.Fields!.Length == 0)
 				{
 					ConvertToSql(null, 0, ConvertFlags.Key);
 				}

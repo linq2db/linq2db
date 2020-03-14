@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (type != null)
 				{
 					var fromDecimalToType = GetConvertExpression(from, type, false)!;
-					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
+					var fromTypeToEnum    = GetConvertExpression(type, to,   false)!;
 
 					return Expression.Lambda(
 						fromTypeToEnum.GetBody(fromDecimalToType.Body),
@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
 			string format;
-			if (value.Millisecond != 0 && (dataType.DataType == DataType.DateTime2 || dataType.DataType == DataType.Undefined))
+			if (value.Millisecond != 0 && (dataType.Type.DataType == DataType.DateTime2 || dataType.Type.DataType == DataType.Undefined))
 				format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 			else
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?

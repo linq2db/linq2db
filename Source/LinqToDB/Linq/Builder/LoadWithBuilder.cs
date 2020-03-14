@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -35,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression)
 		{
-			MemberInfo lastMember = null;
+			MemberInfo? lastMember = null;
 
 			for (;;)
 			{
@@ -135,8 +133,8 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}

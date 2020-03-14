@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
@@ -14,12 +13,12 @@ namespace LinqToDB.Linq
 	{
 		public class Expressor<T>
 		{
-			public static FieldInfo FieldOf(Expression<Func<T,object>> func)
+			public static FieldInfo FieldOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.FieldOf(func);
 			}
 
-			public static MethodInfo MethodOf(Expression<Func<T,object>> func)
+			public static MethodInfo MethodOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.MethodOf(func);
 			}
@@ -116,7 +115,7 @@ namespace LinqToDB.Linq
 				return ((MethodCallExpression)((UnaryExpression)func.Body).Operand).Method;
 			}
 
-			public static MethodInfo Item = IndexerExpressor(c => c[0]);
+			public static MethodInfo Item = IndexerExpressor(c => c[0]!);
 		}
 
 		public class MemberAssignmentBind : Expressor<MemberAssignment>

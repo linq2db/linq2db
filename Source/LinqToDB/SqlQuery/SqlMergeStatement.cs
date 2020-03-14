@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,10 +15,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlMergeStatement(
-			string hint,
-			SqlTableSource target,
-			SqlMergeSourceTable source,
-			SqlSearchCondition on,
+			string?                              hint,
+			SqlTableSource                       target,
+			SqlMergeSourceTable                  source,
+			SqlSearchCondition                   on,
 			IEnumerable<SqlMergeOperationClause> operations)
 		{
 			Hint   = hint;
@@ -31,11 +30,11 @@ namespace LinqToDB.SqlQuery
 				Operations.Add(operation);
 		}
 
-		public string                         Hint       { get; internal set; }
+		public string?                        Hint       { get; internal set; }
 
 		public SqlTableSource                 Target     { get; }
 
-		public SqlMergeSourceTable            Source     { get; internal set; }
+		public SqlMergeSourceTable            Source     { get; internal set; } = null!;
 
 		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
 
@@ -81,7 +80,7 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			Target.Walk(options, func);
 			Source.Walk(options, func);
@@ -101,13 +100,13 @@ namespace LinqToDB.SqlQuery
 			set => Source.IsParameterDependent = value;
 		}
 
-		public override SelectQuery SelectQuery
+		public override SelectQuery? SelectQuery
 		{
 			get => null;
 			set => throw new InvalidOperationException();
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (Target.Source == table)
 				return Target;

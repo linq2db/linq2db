@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Linq.Expressions;
 
@@ -19,7 +18,7 @@ namespace LinqToDB.Expressions
 		/// <param name="obj1"></param>
 		/// <param name="obj2"></param>
 		/// <returns>Result of comparison</returns>
-		public virtual bool ObjectsEqual(object obj1, object obj2)
+		public virtual bool ObjectsEqual(object? obj1, object? obj2)
 		{
 			if (ReferenceEquals(obj1, obj2))
 				return true;

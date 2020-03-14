@@ -1,5 +1,4 @@
-﻿#nullable disable
-using LinqToDB.Common;
+﻿using LinqToDB.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,9 +37,9 @@ namespace LinqToDB.SqlQuery
 			SourceFields.Add(field);
 		}
 
-		public SqlValuesTable  SourceEnumerable { get; internal set; }
-		public SelectQuery     SourceQuery      { get; internal set; }
-		public ISqlTableSource Source => (ISqlTableSource)SourceQuery ?? SourceEnumerable;
+		public SqlValuesTable?  SourceEnumerable { get; internal set; }
+		public SelectQuery?     SourceQuery      { get; internal set; }
+		public ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
 
 		public void WalkQueries(Func<SelectQuery, SelectQuery> func)
 		{
@@ -109,8 +108,8 @@ namespace LinqToDB.SqlQuery
 
 		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.MergeSource;
 
-		private SqlField _all;
-		SqlField ISqlTableSource.All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+		private SqlField? _all;
+		SqlField ISqlTableSource.All => _all ?? (_all = SqlField.All(this));
 
 
 		public int SourceID { get; }
@@ -121,7 +120,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			return SourceQuery?.Walk(options, func);
 		}

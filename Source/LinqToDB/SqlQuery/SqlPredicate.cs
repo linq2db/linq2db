@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,13 +21,13 @@ namespace LinqToDB.SqlQuery
 
 		public class Expr : SqlPredicate
 		{
-			public Expr([JetBrains.Annotations.NotNull] ISqlExpression exp1, int precedence)
+			public Expr(ISqlExpression exp1, int precedence)
 				: base(precedence)
 			{
 				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
 			}
 
-			public Expr([JetBrains.Annotations.NotNull] ISqlExpression exp1)
+			public Expr(ISqlExpression exp1)
 				: base(exp1.Precedence)
 			{
 				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
@@ -38,7 +37,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				Expr1 = Expr1.Walk(options, func);
+				Expr1 = Expr1.Walk(options, func)!;
 
 				if (Expr1 == null)
 					throw new InvalidOperationException();
@@ -113,7 +112,7 @@ namespace LinqToDB.SqlQuery
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
 			}
 
 			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
@@ -161,22 +160,22 @@ namespace LinqToDB.SqlQuery
 		//
 		public class Like : NotExpr
 		{
-			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression escape, bool isSqlLike)
+			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression? escape, bool isSqlLike)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				Expr2  = exp2;
-				Escape = escape;
+				Expr2     = exp2;
+				Escape    = escape;
 				IsSqlLike = isSqlLike;
 			}
 
-			public ISqlExpression Expr2     { get; internal set; }
-			public ISqlExpression Escape    { get; internal set; }
-			public bool           IsSqlLike { get; internal set; }
+			public ISqlExpression  Expr2     { get; internal set; }
+			public ISqlExpression? Escape    { get; internal set; }
+			public bool            IsSqlLike { get; internal set; }
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
 
 				Escape = Escape?.Walk(options, func);
 			}
@@ -229,8 +228,8 @@ namespace LinqToDB.SqlQuery
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func);
-				Expr3 = Expr3.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
+				Expr3 = Expr3.Walk(options, func)!;
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -310,7 +309,7 @@ namespace LinqToDB.SqlQuery
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
 				base.Walk(options, func);
-				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, func);
+				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, func)!;
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -343,7 +342,7 @@ namespace LinqToDB.SqlQuery
 
 		public class InList : NotExpr
 		{
-			public InList(ISqlExpression exp1, bool isNot, params ISqlExpression[] values)
+			public InList(ISqlExpression exp1, bool isNot, params ISqlExpression[]? values)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
 				if (values != null && values.Length > 0)
@@ -363,7 +362,7 @@ namespace LinqToDB.SqlQuery
 			{
 				base.Walk(options, action);
 				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(options, action);
+					Values[i] = Values[i].Walk(options, action)!;
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -421,7 +420,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, func);
+				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, func)!;
 			}
 
 			public override bool CanBeNull => Function.CanBeNull;
@@ -471,7 +470,7 @@ namespace LinqToDB.SqlQuery
 		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
 		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> action);
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Walk(options, func);
 			return null;

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -32,20 +31,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression();
+					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression()!;
 
 				BuildTake(builder, sequence, expr, hints);
 			}
 			else
 			{
-				BuildSkip(builder, sequence, sequence.SelectQuery.Select.SkipValue, expr);
+				BuildSkip(builder, sequence, sequence.SelectQuery.Select.SkipValue!, expr);
 			}
 
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
 
@@ -87,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 					var skip = (SqlParameter)sql.Select.SkipValue;
 					var parm = (SqlParameter)sql.Select.SkipValue.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
 
-					parm.SetTakeConverter((int)((SqlValue)sql.Select.TakeValue).Value);
+					parm.SetTakeConverter((int)((SqlValue)sql.Select.TakeValue).Value!);
 
 					sql.Select.Take(parm, hints);
 
@@ -99,8 +98,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 					sql.Select.Take(builder.Convert(
-						sequence,
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
+						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive)), hints);
 			}
 
 			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
@@ -127,13 +125,11 @@ namespace LinqToDB.Linq.Builder
 				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
 					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
 					sql.Select.Take(builder.Convert(
-						sequence,
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue, Precedence.Additive)), sql.Select.TakeHints);
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue!, Precedence.Additive)), sql.Select.TakeHints);
 
 				if (prevSkipValue != null)
 					sql.Select.Skip(builder.Convert(
-						sequence,
-						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue!, Precedence.Additive)));
 			}
 
 			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))

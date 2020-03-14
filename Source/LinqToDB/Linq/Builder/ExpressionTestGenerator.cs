@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -500,7 +499,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		readonly Dictionary<Type,string> _typeNames = new Dictionary<Type,string>
+		readonly Dictionary<Type,string?> _typeNames = new Dictionary<Type,string?>
 		{
 			{ typeof(object), "object" },
 			{ typeof(bool),   "bool"   },
@@ -687,7 +686,7 @@ namespace {0}
 			return type.Namespace == null || SystemNamespaces.All(ns => type.Namespace != ns && !type.Namespace.StartsWith(ns + '.'));
 		}
 
-		string GetTypeName(Type type)
+		string? GetTypeName(Type type)
 		{
 			if (type == null || type == typeof(object))
 				return null;
@@ -845,10 +844,10 @@ namespace {0}
 			}
 		}
 
-		public string GenerateSource(Expression expr)
+		public string? GenerateSource(Expression expr)
 		{
-			string fileName = null;
-			StreamWriter sw = null;
+			string? fileName = null;
+			StreamWriter? sw = null;
 
 			try
 			{

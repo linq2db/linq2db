@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -8,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	class BuildInfo
 	{
-		public BuildInfo(IBuildContext parent, Expression expression, SelectQuery selectQuery)
+		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{
 			Parent      = parent;
 			Expression  = expression;
@@ -29,8 +27,8 @@ namespace LinqToDB.Linq.Builder
 			CreateSubQuery = buildInfo.CreateSubQuery;
 		}
 
-		public BuildInfo            SequenceInfo             { get; set; }
-		public IBuildContext        Parent                   { get; set; }
+		public BuildInfo?           SequenceInfo             { get; set; }
+		public IBuildContext?       Parent                   { get; set; }
 		public Expression           Expression               { get; set; }
 		public SelectQuery          SelectQuery              { get; set; }
 		public bool                 CopyTable                { get; set; }
