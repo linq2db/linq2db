@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -12,26 +10,26 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Indicates when test or request was successful.
 		/// </summary>
-		public readonly bool          Result;
+		public readonly bool           Result;
 
 		/// <summary>
 		/// Stores found Context during <see cref="RequestFor.Table"/> request.
 		/// </summary>
-		public readonly IBuildContext Context;
+		public readonly IBuildContext? Context;
 
 		/// <summary>
 		/// Stores found expression request.
 		/// </summary>
-		public readonly Expression    Expression;
+		public readonly Expression?    Expression;
 
-		public IsExpressionResult(bool result, Expression expression = null)
+		public IsExpressionResult(bool result, Expression? expression = null)
 		{
 			Result     = result;
 			Context    = null;
 			Expression = expression;
 		}
 
-		public IsExpressionResult(bool result, IBuildContext context, Expression expression = null)
+		public IsExpressionResult(bool result, IBuildContext? context, Expression? expression = null)
 		{
 			Result     = result;
 			Context    = context;

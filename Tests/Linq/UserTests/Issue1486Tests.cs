@@ -59,24 +59,19 @@ namespace Tests.UserTests
 				ProviderName.MySqlConnector,
 				TestProvName.AllOracle,
 				TestProvName.AllSapHana)]
-					string context,
-			[Values]
-					bool providerSpecific)
+					string context)
 		{
 			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new IssueDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
 			}
 		}
 
-		[ActiveIssue("AvoidSpecificDataProviderAPI support missing", Configuration = TestProvName.AllOracle)]
 		[Test]
-		public void TestFactory([DataSources(false)] string context, [Values] bool providerSpecific)
+		public void TestFactory([DataSources(false)] string context)
 		{
 			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new FactoryDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();

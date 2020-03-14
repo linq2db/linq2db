@@ -43,7 +43,7 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix)]
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -83,7 +83,7 @@ namespace Tests.UserTests
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
 			TestProvName.AllSybase,

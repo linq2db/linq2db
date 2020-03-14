@@ -1,9 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
-using System.Security;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -12,17 +9,16 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlProvider;
 
-	public class InformixDataProvider : DynamicDataProviderBase
+	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		public InformixDataProvider()
-			: this(ProviderName.Informix, new InformixMappingSchema())
-		{
-		}
+		public InformixDataProvider(string providerName)
+						: base(
+				  providerName,
+				  GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
+				  InformixProviderAdapter.GetInstance(providerName))
 
-		protected InformixDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsGroupByExpressionSupported      = false;
@@ -37,18 +33,23 @@ namespace LinqToDB.DataProvider.Informix
 			SetCharFieldToType<char>("CHAR",  (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("NCHAR", (r, i) => DataTools.GetChar(r, i));
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
-			{
-				SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
 
-				SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
-				SetField<IDataReader, double >((r, i) => GetDouble (r, i));
-				SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
-			}
+			SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
+			SetField<IDataReader, double >((r, i) => GetDouble (r, i));
+			SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
+
+			if (Adapter.GetBigIntReaderMethod != null)
+				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);
+
+			if (Name == ProviderName.Informix && Adapter.DecimalType != null)
+											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
 		}
 
 		static float GetFloat(IDataReader dr, int idx)
@@ -69,86 +70,14 @@ namespace LinqToDB.DataProvider.Informix
 				return dr.GetDecimal(idx);
 		}
 
-		Type _ifxBlob;
-		Type _ifxClob;
-		Type _ifxDecimal;
-		Type _ifxDateTime;
-		Type _ifxTimeSpan;
-
 		public override IDisposable ExecuteScope(DataConnection dataConnection)
 		{
 			return new InvariantCultureRegion();
 		}
 
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			_ifxBlob     = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Blob"     : "IBM.Data.Informix.IfxBlob", true);
-			_ifxClob     = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Clob"     : "IBM.Data.Informix.IfxClob", true);
-			_ifxDecimal  = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2Decimal"  : "IBM.Data.Informix.IfxDecimal", true);
-			_ifxDateTime = connectionType.Assembly.GetType(InformixTools.IsCore ? "IBM.Data.DB2Types.DB2DateTime" : "IBM.Data.Informix.IfxDateTime", true);
-			// type not implemented by core provider (but exists for source compatibility and to punish those who don't use tests)
-			_ifxTimeSpan = InformixTools.IsCore ? null : connectionType.Assembly.GetType("IBM.Data.Informix.IfxTimeSpan", true);
-
-			if (!Configuration.AvoidSpecificDataProviderAPI)
-			{
-				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
-
-				SetProviderField(_ifxDecimal , typeof(decimal) , InformixTools.IsCore ? "GetDB2Decimal"  : "GetIfxDecimal");
-				SetProviderField(_ifxDateTime, typeof(DateTime), InformixTools.IsCore ? "GetDB2DateTime" : "GetIfxDateTime");
-				if (_ifxTimeSpan != null)
-					SetProviderField(_ifxTimeSpan, typeof(TimeSpan), InformixTools.IsCore ? "GetDB2TimeSpan" : "GetIfxTimeSpan", false);
-			}
-
-			var p = Expression.Parameter(typeof(TimeSpan));
-			if (_ifxTimeSpan != null)
-			{
-				_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan, object>>(
-					Expression.Convert(
-						Expression.New(_ifxTimeSpan.GetConstructor(new[] { typeof(TimeSpan) }), p),
-						typeof(object)),
-					p).Compile();
-			}
-
-			_setText = GetSetParameter(
-				connectionType,
-				InformixTools.IsCore ? "DB2Parameter" : "IfxParameter",
-				InformixTools.IsCore ? "DB2Type"      : "IfxType",
-				InformixTools.IsCore ? "DB2Type"      : "IfxType",
-				"Clob");
-
-			MappingSchema.AddScalarType(_ifxBlob,     GetNullValue(_ifxBlob),     true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_ifxClob,     GetNullValue(_ifxClob),     true, DataType.Text);
-			MappingSchema.AddScalarType(_ifxDateTime, GetNullValue(_ifxDateTime), true, DataType.DateTime2);
-			MappingSchema.AddScalarType(_ifxDecimal,  GetNullValue(_ifxDecimal),  true, DataType.Decimal);
-			if (_ifxTimeSpan != null)
-				MappingSchema.AddScalarType(_ifxTimeSpan, GetNullValue(_ifxTimeSpan), true, DataType.Time);
-			//AddScalarType(typeof(IfxMonthSpan),   IfxMonthSpan.  Null, DataType.Time);
-		}
-
-		static object GetNullValue(Type type)
-		{
-			try
-			{
-				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-				return getValue.Compile()();
-			}
-			catch (SecurityException)
-			{
-				return null;
-			}
-		}
-
-		public    override string ConnectionNamespace => InformixTools.IsCore ? "IBM.Data.DB2.Core"                                  : "IBM.Data.Informix";
-		protected override string ConnectionTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
-		protected override string DataReaderTypeName  => InformixTools.IsCore ? "IBM.Data.DB2.Core.DB2DataReader, IBM.Data.DB2.Core" : "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
-
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
-		public override string DbFactoryProviderName => "IBM.Data.Informix";
-#endif
-
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new InformixSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -160,17 +89,17 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new InformixSchemaProvider();
+			return new InformixSchemaProvider(this);
 		}
 
-		Func<TimeSpan,object> _newIfxTimeSpan;
-
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is TimeSpan ts && _newIfxTimeSpan != null)
+			if (value is TimeSpan ts)
 			{
-				if (dataType.DataType != DataType.Int64)
-					value = _newIfxTimeSpan(ts);
+				// TODO: we should reverse Int64 check somehow, as now it pollutes multiple places
+				// and will not work with other not-interval mappings
+				if (Adapter.TimeSpanFactory != null && dataType.DataType != DataType.Int64)
+					value = Adapter.TimeSpanFactory(ts);
 			}
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
@@ -179,37 +108,98 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else if (value is bool b)
 			{
-				value = b ? 't' : 'f';
-				dataType = dataType.WithDataType(DataType.Char);
+				// IDS provider needs short values for bulk copy, but chars still for regular SQL
+				if (parameter is BulkCopyReader.Parameter)
+				{
+					value    = (short)(b == true ? 1 : 0);
+					dataType = dataType.WithDataType(DataType.Int16);
+				}
+				else
+				{
+					value    = b ? 't' : 'f';
+					dataType = dataType.WithDataType(DataType.Char);
+				}
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		Action<IDbDataParameter> _setText;
-
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
+			InformixProviderAdapter.IfxType? idsType = null;
+			DB2.DB2ProviderAdapter.DB2Type?  db2Type = null;
+
+			switch (dataType.DataType)
+			{
+				case DataType.Text      :
+				case DataType.NText     :
+					idsType = InformixProviderAdapter.IfxType.Clob;
+					db2Type = DB2.DB2ProviderAdapter .DB2Type.Clob;
+					break;
+			}
+
+			if (idsType != null && db2Type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					if (Adapter.SetIfxType != null)
+						Adapter.SetIfxType(param, idsType.Value);
+					else
+						Adapter.SetDB2Type!(param, db2Type.Value);
+					return;
+				}
+			}
+
 			switch (dataType.DataType)
 			{
 				case DataType.UInt16    : dataType = dataType.WithDataType(DataType.Int32);    break;
 				case DataType.UInt32    : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64    : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.UInt64    :
 				case DataType.VarNumeric: dataType = dataType.WithDataType(DataType.Decimal);  break;
 				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
-				case DataType.Text      : _setText(parameter); return;
-				case DataType.NText     : _setText(parameter); return;
+				case DataType.Text      :
+				case DataType.NText     : dataType = dataType.WithDataType(DataType.NVarChar); break;
 			}
 
-			base.SetParameterType(parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		static class MappingSchemaInstance
+		{
+			public static readonly MappingSchema IfxMappingSchema = new InformixMappingSchema.IfxMappingSchema();
+			public static readonly MappingSchema DB2MappingSchema = new InformixMappingSchema.DB2MappingSchema();
+
+			public static MappingSchema Get(string providerName, MappingSchema providerSchema)
+			{
+				switch (providerName)
+				{
+					default:
+					case ProviderName.Informix   : return new MappingSchema(IfxMappingSchema, providerSchema);
+					case ProviderName.InformixDB2: return new MappingSchema(DB2MappingSchema, providerSchema);
+				}
+			}
+		}
+
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		{
+			switch (name)
+			{
+				case ProviderName.Informix   : return new InformixMappingSchema.IfxMappingSchema(providerSchema);
+				default                      :
+				case ProviderName.InformixDB2: return new InformixMappingSchema.DB2MappingSchema(providerSchema);
+			}
 		}
 
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new InformixBulkCopy().BulkCopy(
+			return new InformixBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,

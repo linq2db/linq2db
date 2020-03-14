@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,14 +8,15 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Mapping;
 	using Common.Internal.Cache;
+	using System.Diagnostics.CodeAnalysis;
 
 	static partial class QueryRunner
 	{
 		public static class InsertWithIdentity<T>
 		{
 			static Query<object> CreateQuery(
-				IDataContext dataContext, EntityDescriptor descriptor, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				IDataContext dataContext, EntityDescriptor descriptor, [DisallowNull] T obj,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -37,22 +37,22 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = insertStatement, } }
 				};
 
-				foreach (var field in sqlTable.Fields)
+				foreach (var field in sqlTable.Fields.Values)
 				{
-					if (field.Value.IsInsertable && !field.Value.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
+					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
-						var param = GetParameter(type, dataContext, field.Value);
+						var param = GetParameter(type, dataContext, field);
 						ei.Queries[0].Parameters.Add(param);
 
-						insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
+						insertStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
-					else if (field.Value.IsIdentity)
+					else if (field.IsIdentity)
 					{
 						var sqlb = dataContext.CreateSqlProvider();
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)
-							insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
+							insertStatement.Insert.Items.Add(new SqlSetExpression(field, expr));
 					}
 				}
 
@@ -63,9 +63,9 @@ namespace LinqToDB.Linq
 
 			public static object Query(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName)
+				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -80,15 +80,15 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return ei.GetElement(dataContext, Expression.Constant(obj), null);
+				return ei.GetElement(dataContext, Expression.Constant(obj), null)!;
 			}
 
 			public static async Task<object> QueryAsync(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await ((Task<object>)ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token)!).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

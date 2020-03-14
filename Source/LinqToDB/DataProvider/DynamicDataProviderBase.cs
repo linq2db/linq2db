@@ -1,238 +1,62 @@
-﻿#nullable disable
-using System;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Configuration;
+	using Expressions;
 	using Extensions;
 	using Mapping;
 
-	public abstract class DynamicDataProviderBase : DataProviderBase
+	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
+		where TProviderMappings : IDynamicProviderAdapter
 	{
-		protected DynamicDataProviderBase(string name, MappingSchema mappingSchema)
+		// DbDataReader method
+		protected const string GetProviderSpecificValueReaderMethod = "GetProviderSpecificValue";
+
+		protected DynamicDataProviderBase(string name, MappingSchema mappingSchema, TProviderMappings providerMappings)
 			: base(name, mappingSchema)
 		{
+			Adapter = providerMappings;
 		}
 
-		protected abstract string ConnectionTypeName { get; }
-		protected abstract string DataReaderTypeName { get; }
+		public TProviderMappings Adapter { get; }
 
-		protected static readonly object SyncRoot = new object();
+		public override string ConnectionNamespace => Adapter.ConnectionType.Namespace;
+		public override Type   DataReaderType      => Adapter.DataReaderType;
 
-		protected abstract void OnConnectionTypeCreated(Type connectionType);
-
-		protected void EnsureConnection()
-		{
-			GetConnectionType();
-		}
-
-		volatile Type _connectionType;
-
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return GetConnectionType().IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
-
-		private         Type _dataReaderType;
-
-		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
-#if NETSTANDARD2_0
-		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
-
-		protected internal virtual Type GetConnectionType()
-		{
-			if (_connectionType == null)
-				lock (SyncRoot)
-					if (_connectionType == null)
-					{
-						var connectionType = Type.GetType(ConnectionTypeName, true);
-
-						OnConnectionTypeCreated(connectionType);
-
-						_connectionType = connectionType;
-					}
-
-			return _connectionType;
-		}
-#else
-		public virtual string DbFactoryProviderName => null;
-
-		public override Type DataReaderType
-		{
-			get
-			{
-				if (_dataReaderType != null)
-					return _dataReaderType;
-
-				if (DbFactoryProviderName == null)
-					return _dataReaderType = Type.GetType(DataReaderTypeName, true);
-
-				_dataReaderType = Type.GetType(DataReaderTypeName, false);
-
-				if (_dataReaderType == null)
-				{
-					var assembly = DbProviderFactories.GetFactory(DbFactoryProviderName).GetType().Assembly;
-
-					var idx = 0;
-					var dataReaderTypeName = (idx = DataReaderTypeName.IndexOf(',')) != -1 ? DataReaderTypeName.Substring(0, idx) : DataReaderTypeName;
-					_dataReaderType = assembly.GetType(dataReaderTypeName, true);
-				}
-
-				return _dataReaderType;
-			}
-		}
-
-		protected internal virtual Type GetConnectionType()
-		{
-			if (_connectionType == null)
-				lock (SyncRoot)
-					if (_connectionType == null)
-					{
-						Type connectionType;
-
-						if (DbFactoryProviderName == null)
-							connectionType = Type.GetType(ConnectionTypeName, true);
-						else
-						{
-							connectionType = Type.GetType(ConnectionTypeName, false);
-
-							if (connectionType == null)
-								using (var db = DbProviderFactories.GetFactory(DbFactoryProviderName).CreateConnection())
-									connectionType = db.GetType();
-						}
-
-						OnConnectionTypeCreated(connectionType);
-
-						_connectionType = connectionType;
-					}
-
-			return _connectionType;
-		}
-#endif
-
-		Func<string,IDbConnection> _createConnection;
+		Func<string, IDbConnection>? _createConnection;
 
 		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			if (_createConnection == null)
 			{
-				var l = CreateConnectionExpression(GetConnectionType());
+				var l = CreateConnectionExpression(Adapter.ConnectionType);
 				_createConnection = l.Compile();
 			}
 
 			return _createConnection(connectionString);
 		}
 
-		public static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
+		private static Expression<Func<string, IDbConnection>> CreateConnectionExpression(Type connectionType)
 		{
 			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string,IDbConnection>>(
+			var l = Expression.Lambda<Func<string, IDbConnection>>(
 				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
 				p);
 
 			return l;
 		}
 
-		#region Expression Helpers
+		#region DataReader ReaderExpressions Helpers
 
-		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
-			Type connectionType,
-			string parameterTypeName, string propertyName, Type dbType)
-		{
-			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			return GetSetParameter<TResult>(pType, propertyName, dbType);
-		}
-
-		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
-			Type parameterType, string propertyName, Type dbType)
-		{
-			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var v = Expression.Parameter(typeof(TResult));
-			var l = Expression.Lambda<Action<IDbDataParameter, TResult>>(
-				Expression.Assign(
-					Expression.PropertyOrField(
-						Expression.Convert(p, parameterType),
-						propertyName),
-					Expression.Convert(v, dbType)),
-				p, v);
-
-			return l.Compile();
-		}
-
-		protected Func<IDbDataParameter, TResult> GetGetParameter<TResult>(Type parameterType, string propertyName)
-		{
-			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var l = Expression.Lambda<Func<IDbDataParameter, TResult>>(
-					Expression.PropertyOrField(
-						Expression.Convert(p, parameterType),
-						propertyName),
-				p);
-
-			return l.Compile();
-		}
-
-		protected Action<IDbDataParameter> GetSetParameter(
-			Type connectionType,
-			string parameterTypeName, string propertyName, Type dbType, string valueName)
-		{
-			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var value = Enum.Parse(dbType, valueName);
-
-			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var l = Expression.Lambda<Action<IDbDataParameter>>(
-				Expression.Assign(
-					Expression.PropertyOrField(
-						Expression.Convert(p, pType),
-						propertyName),
-					Expression.Constant(value)),
-				p);
-
-			return l.Compile();
-		}
-
-		protected Action<IDbDataParameter> GetSetParameter(
-			Type connectionType,
-			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
-		{
-			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
-			return GetSetParameter(connectionType, parameterTypeName, propertyName, dbType, valueName);
-		}
-
-		protected Func<IDbDataParameter,bool> IsGetParameter(
-			Type connectionType,
-			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
-			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
-		{
-			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
-			var value  = Enum.Parse(dbType, valueName);
-
-			var p = Expression.Parameter(typeof(IDbDataParameter));
-			var l = Expression.Lambda<Func<IDbDataParameter,bool>>(
-				Expression.Equal(
-					Expression.PropertyOrField(
-						Expression.Convert(p, pType),
-						propertyName),
-					Expression.Constant(value)),
-				p);
-
-			return l.Compile();
-		}
-
-		// SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
-		//
-		// protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
-		// {
-		//     ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
-		// }
-		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true)
+		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
 			MethodCallExpression call;
 
@@ -250,7 +74,7 @@ namespace LinqToDB.DataProvider
 				call = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
 			}
 
-			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] =
+			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					call,
 					dataReaderParameter,
@@ -259,57 +83,44 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		protected void SetProviderField<TField>(string methodName)
+		protected void SetProviderField<TField>(string methodName, Type? dataReaderType = null)
 		{
-			SetProviderField(typeof(TField), methodName);
+			SetProviderField(typeof(TField), methodName, dataReaderType);
 		}
 
-		protected void SetProviderField(Type fieldType, string methodName)
+		protected void SetProviderField(Type fieldType, string methodName, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType }] =
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
 					indexParameter);
 		}
 
-		// SetToTypeField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
-		//
-		// protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
-		// {
-		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
-		// }
-		protected void SetToTypeField(Type toType, string methodName)
+		protected void SetToTypeField(Type toType, string methodName, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ToType = toType }] =
+			ReaderExpressions[new ReaderInfo { ToType = toType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
 					indexParameter);
 		}
 
-		// SetProviderField<OracleDataReader,OracleBFile,OracleBFile>((r,i) => r.GetOracleBFile(i));
-		//
-		// protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
-		// {
-		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
-		// }
-
-		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true)
+		protected bool SetProviderField<TTo, TField>(string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
-			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException);
+			return SetProviderField(typeof(TTo), typeof(TField), methodName, throwException, dataReaderType);
 		}
 
-		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
+		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
 			Expression methodCall;
 
@@ -330,10 +141,81 @@ namespace LinqToDB.DataProvider
 			if (methodCall.Type != toType)
 				methodCall = Expression.Convert(methodCall, toType);
 
-			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
+			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
 			return true;
+		}
+
+		#endregion
+
+		#region Provider Type Converters
+
+		// That's fine, as TryGetValue and indexer are lock-free operations for ConcurrentDictionary.
+		// In general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
+		// to support multiple wrappers
+		//
+		// Actually it should be fine to remove support for IDbDataParameter wrappers, as it's probably something
+		// nobody will do
+		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters   = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
+		private readonly IDictionary<Type, Func<IDbCommand      , IDbCommand      >?> _commandConverters     = new ConcurrentDictionary<Type, Func<IDbCommand      , IDbCommand      >?>();
+		private readonly IDictionary<Type, Func<IDbConnection   , IDbConnection   >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection   , IDbConnection   >?>();
+		private readonly IDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?>();
+
+		internal virtual IDbDataParameter? TryGetProviderParameter(IDbDataParameter parameter, MappingSchema ms)
+		{
+			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
+		}
+
+		internal virtual IDbCommand? TryGetProviderCommand(IDbCommand command, MappingSchema ms)
+		{
+			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
+		}
+
+		internal virtual IDbConnection? TryGetProviderConnection(IDbConnection connection, MappingSchema ms)
+		{
+			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
+		}
+
+		internal virtual IDbTransaction? TryGetProviderTransaction(IDbTransaction transaction, MappingSchema ms)
+		{
+			return TryConvertProviderType(_transactionConverters, Adapter.TransactionType, transaction, ms);
+		}
+
+		private static TResult? TryConvertProviderType<TResult>(
+			IDictionary<Type, Func<TResult, TResult>?> converters,
+			Type expectedType,
+			TResult value,
+			MappingSchema ms)
+			where TResult : class
+		{
+			var valueType = value.GetType();
+
+			if (expectedType.IsSameOrParentOf(valueType))
+				return value;
+
+			if (!converters.TryGetValue(valueType, out var converter))
+			{
+				// don't think it makes sense to lock creation of new converter
+				var converterExpr = ms.GetConvertExpression(valueType, typeof(TResult), false, false);
+				
+				if (converterExpr != null)
+				{
+					var param = Expression.Parameter(typeof(TResult));
+					converter = (Func<TResult, TResult>)Expression
+						.Lambda(
+							converterExpr.GetBody(Expression.Convert(param, valueType)),
+							param)
+						.Compile();
+
+					converters[valueType] = converter;
+				}
+			}
+
+			if (converter != null)
+				return converter(value);
+
+			return null;
 		}
 
 		#endregion

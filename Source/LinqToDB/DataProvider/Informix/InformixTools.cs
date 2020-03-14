@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -9,120 +8,118 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using LinqToDB.Common;
 	using LinqToDB.Configuration;
+	using LinqToDB.DataProvider.DB2;
 
 	public static class InformixTools
 	{
-		public static string? AssemblyName;
-#if !NETCOREAPP2_1
-		public static bool             IsCore;
-#else
-		public static readonly bool    IsCore = true;
-#endif
-
-
-		static readonly InformixDataProvider _informixDataProvider = new InformixDataProvider();
-
-		public static bool AutoDetectProvider { get; set; }
-
-		static InformixTools()
+#if NET45 || NET46
+		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			try
-			{
-				var path = typeof(InformixTools).Assembly.GetPath();
+			var provider = new InformixDataProvider(ProviderName.Informix);
 
-				AssemblyName = "IBM.Data.DB2.Core";
+			DataConnection.AddDataProvider(provider);
 
-#if !NETCOREAPP2_1
-				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
-
-				if (!IsCore)
-					AssemblyName = "IBM.Data.Informix";
+			return provider;
+		}, true);
 #endif
-			}
-			catch (Exception)
-			{
-			}
 
-			AutoDetectProvider = true;
-
-			DataConnection.AddDataProvider(_informixDataProvider);
-
-#if !NETCOREAPP2_1
-			DataConnection.AddProviderDetector(ProviderDetector);
-#endif
-		}
-
-#if !NETCOREAPP2_1
-		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		private static readonly Lazy<IDataProvider> _informixDB2DataProvider = new Lazy<IDataProvider>(() =>
 		{
-			// IBM.Data.DB2.Core already mapped to DB2 provider...
+			var provider = new InformixDataProvider(ProviderName.InformixDB2);
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
 			switch (css.ProviderName)
 			{
-				case "":
-				case null:
+				case ProviderName.InformixDB2:
+					return _informixDB2DataProvider.Value;
+#if NET45 || NET46
+				case InformixProviderAdapter.IfxClientNamespace:
+					return _informixDataProvider.Value;
+#endif
+				case ""                      :
+				case null                    :
+				case DB2ProviderAdapter.NetFxClientNamespace:
+				case DB2ProviderAdapter.CoreClientNamespace :
 
-					if (css.Name == "Informix.Core")
-						goto case "IBM.Data.Informix.Core";
-					if (css.Name == "Informix")
-						goto case "IBM.Data.Informix";
+					// this check used by both Informix and DB2 providers to avoid conflicts
+					if (css.Name.Contains("Informix"))
+						goto case ProviderName.Informix;
 					break;
+				case ProviderName.Informix   :
+					if (css.Name.Contains("DB2"))
+						return _informixDB2DataProvider.Value;
 
-				case "Informix.Core":
-				case "IBM.Data.Informix.Core":
-					IsCore       = true;
-					AssemblyName = "IBM.Data.DB2.Core";
-
-					break;
-
-				case "IBM.Data.Informix":
-
-					IsCore       = false;
-					AssemblyName = "IBM.Data.Informix";
-
-					break;
+#if NET45 || NET46
+					return _informixDataProvider.Value;
+#else
+					return _informixDB2DataProvider.Value;
+#endif
 			}
 
 			return null;
 		}
+
+		private static string DetectProviderName()
+		{
+#if NET45 || NET46
+			var path = typeof(InformixTools).Assembly.GetPath();
+
+			if (File.Exists(Path.Combine(path, $"{InformixProviderAdapter.IfxAssemblyName}.dll")))
+				return ProviderName.Informix;
 #endif
 
-		public static IDataProvider GetDataProvider()
-		{
-			return _informixDataProvider;
+			return ProviderName.InformixDB2;
 		}
 
-		public static void ResolveInformix(string path)
-		{
-			new AssemblyResolver(path, AssemblyName);
-		}
+		private  static string? _detectedProviderName;
+		internal static string DetectedProviderName =>
+			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
-		public static void ResolveInformix(Assembly assembly)
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			switch (providerName ?? DetectedProviderName)
+			{
+#if NET45 || NET46
+				case ProviderName.Informix   : return _informixDataProvider.Value;
+#endif
+				case ProviderName.InformixDB2: return _informixDB2DataProvider.Value;
+			}
+
+#if NET45 || NET46
+				return _informixDataProvider.Value;
+#else
+				return _informixDB2DataProvider.Value;
+#endif
 		}
 
 #region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(_informixDataProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(_informixDataProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(_informixDataProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 #endregion
 
 #region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
@@ -134,7 +131,7 @@ namespace LinqToDB.DataProvider.Informix
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
 					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);

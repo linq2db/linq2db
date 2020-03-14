@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			ProviderName.DB2,
 			TestProvName.AllSybase,
 			TestProvName.AllFirebird,
-			ProviderName.Informix
+			TestProvName.AllInformix
 		})]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]

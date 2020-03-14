@@ -60,7 +60,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OriginalTestSimplified([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void OriginalTestSimplified([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table1>())

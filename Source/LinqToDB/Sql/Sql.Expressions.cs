@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -65,7 +64,7 @@ namespace LinqToDB
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = (string)builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -95,7 +94,7 @@ namespace LinqToDB
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = (string)builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -128,7 +127,7 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified field name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				result = sqlBuilder.Convert(result, ConvertType.NameToQueryField) as string;
+				result         = sqlBuilder.Convert(result, ConvertType.NameToQueryField);
 			}
 				
 			return result;
@@ -204,7 +203,7 @@ namespace LinqToDB
 				columnExpressions);
 		}
 
-		private static IDataContext GetDataContext<T>(ITable<T> table)
+		private static IDataContext? GetDataContext<T>(ITable<T> table)
 		{
 			if (table is ExpressionQuery<T> query)
 				return query.DataContext;
@@ -284,9 +283,9 @@ namespace LinqToDB
 
 		private abstract class TableHelper
 		{
-			public abstract string ServerName   { get; }
-			public abstract string DatabaseName { get; }
-			public abstract string SchemaName   { get; }
+			public abstract string? ServerName   { get; }
+			public abstract string? DatabaseName { get; }
+			public abstract string? SchemaName   { get; }
 			public abstract string TableName    { get; }
 		}
 
@@ -299,10 +298,10 @@ namespace LinqToDB
 				_table = table;
 			}
 
-			public override string ServerName   => _table.ServerName;
-			public override string DatabaseName => _table.DatabaseName;
-			public override string SchemaName   => _table.SchemaName;
-			public override string TableName    => _table.TableName;
+			public override string? ServerName   => _table.ServerName;
+			public override string? DatabaseName => _table.DatabaseName;
+			public override string? SchemaName   => _table.SchemaName;
+			public override string  TableName    => _table.TableName;
 		}
 
 
@@ -356,8 +355,8 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr     = builder.GetExpression(0);
-				SqlTable sqlTable = null;
+				var tableExpr      = builder.GetExpression(0);
+				SqlTable? sqlTable = null;
 				if (tableExpr is SqlTable t)
 					sqlTable = t;
 				else if (tableExpr is SqlField field)
@@ -376,7 +375,7 @@ namespace LinqToDB
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
 
-				var name = sqlTable.PhysicalName;
+				var name = sqlTable.PhysicalName!;
 
 				if (qualified != TableQualification.None)
 				{
@@ -385,13 +384,21 @@ namespace LinqToDB
 						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server   : null,
 						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database : null,
 						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema   : null,
-						sqlTable.PhysicalName);
+						sqlTable.PhysicalName!);
 					name = sb.ToString();
 				}
 
 				builder.ResultExpression = isExpression
 					? new SqlExpression(name, Precedence.Primary)
 					: (ISqlExpression)new SqlValue(name);
+			}
+		}
+
+		private class TableSourceBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlAliasPlaceholder();
 			}
 		}
 
@@ -411,13 +418,9 @@ namespace LinqToDB
 					return;
 				}
 
-				var sqlTable = sqlField.Table as SqlTable;
+				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField()
-				{
-					Table = sqlField.Table,
-					Name  = sqlTable.Name
-				};
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
 			}
 		}
 
@@ -431,13 +434,9 @@ namespace LinqToDB
 				if (sqlField == null)
 					throw new LinqToDBException("Can not find Table associated with expression");
 
-				var sqlTable = sqlField.Table as SqlTable;
+				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField()
-				{
-					Table = sqlField.Table,
-					Name  = sqlTable.Name
-				};
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
 			}
 		}
 
@@ -452,11 +451,7 @@ namespace LinqToDB
 				if (sqlField == null)
 					throw new LinqToDBException("Can not find Table associated with expression");
 
-				builder.ResultExpression = new SqlField()
-				{
-					Table = sqlField.Table,
-					Name = fieldName
-				};
+				builder.ResultExpression = new SqlField(sqlField.Table!, fieldName);
 			}
 		}
 
@@ -561,6 +556,27 @@ namespace LinqToDB
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
+		/// <summary>
+		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
+		/// </summary>
+		/// <remarks>
+		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>, 
+		///		automatic alias for the query will be not generated.
+		/// </remarks>
+		/// <returns>ISqlExpression which is Alias Placeholder.</returns>
+		/// <example>
+		/// The following <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> calls are equivalent.
+		/// <code>
+		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA {Sql.AliasExpr()}")
+		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
+		/// </code>
+		/// </example>
+		[Sql.Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
+		public static ISqlExpression AliasExpr()
+		{
+			return new SqlAliasPlaceholder();
+		}
+
 		class CustomExtensionAttribute : Sql.ExtensionAttribute
 		{
 			public CustomExtensionAttribute(string expression) : base(expression)
@@ -599,8 +615,8 @@ namespace LinqToDB
 		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent]                RawSqlString sql,
-			[JetBrains.Annotations.NotNull] params object[] parameters
+			[SqlQueryDependent] RawSqlString sql,
+			params              object[]     parameters
 			)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");

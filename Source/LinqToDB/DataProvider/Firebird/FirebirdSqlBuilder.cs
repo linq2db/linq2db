@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -14,17 +12,34 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
+	using LinqToDB.Mapping;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly FirebirdDataProvider? _provider;
+
+		public FirebirdSqlBuilder(
+			FirebirdDataProvider? provider,
+			MappingSchema         mappingSchema,
+			ISqlOptimizer         sqlOptimizer,
+			SqlProviderFlags      sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public FirebirdSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -61,7 +76,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into.GetIdentityField();
+			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
@@ -71,10 +86,10 @@ namespace LinqToDB.DataProvider.Firebird
 			BuildExpression(identityField, false, true);
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table)
+		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
-				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
+				return new SqlExpression("GEN_ID(" + table.SequenceAttributes![0].SequenceName + ", 1)", Precedence.Primary);
 
 			return base.GetIdentityExpression(table);
 		}
@@ -87,10 +102,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataTypeFromDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale, type.DbType) : type, forCreateTable);
+					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -105,10 +120,10 @@ namespace LinqToDB.DataProvider.Firebird
 					// 10921 is implementation limit for UNICODE_FSS encoding
 					// use 255 as default length, because FB have 64k row-size limits
 					// also it is not good to depend on implementation limits
-					if (type.Length == null || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
-						StringBuilder.Append($"({type.Length})");
+						StringBuilder.Append($"({type.Type.Length})");
 
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
@@ -120,50 +135,12 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-//		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
-//		{
-//			switch (type.DataType)
-//			{
-//				case DataType.DateTimeOffset :
-//				case DataType.DateTime2      :
-//				case DataType.Time           :
-//				case DataType.Date           : StringBuilder.Append("DateTime"); return;
-//				case DataType.Xml            : StringBuilder.Append("NText");    return;
-//				case DataType.NVarChar       :
-//
-//					if (type.Length == int.MaxValue || type.Length < 0)
-//					{
-//						StringBuilder
-//							.Append(type.DataType)
-//							.Append("(4000)");
-//						return;
-//					}
-//
-//					break;
-//
-//				case DataType.VarChar        :
-//				case DataType.VarBinary      :
-//
-//					if (type.Length == int.MaxValue || type.Length < 0)
-//					{
-//						StringBuilder
-//							.Append(type.DataType)
-//							.Append("(8000)");
-//						return;
-//					}
-//
-//					break;
-//			}
-//
-//			base.BuildDataType(type, createDbType);
-//		}
-
 		protected sealed override bool IsReserved(string word)
 		{
 			return ReservedWords.IsReserved(word, ProviderName.Firebird);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -208,22 +185,18 @@ namespace LinqToDB.DataProvider.Firebird
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
-					if (value != null)
+					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
-						var name = value.ToString();
-						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-						   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(name)))
-						{
-							// I wonder what to do if identifier has " in name?
-							return '"' + name + '"';
-						}
+						// I wonder what to do if identifier has " in name?
+						return '"' + value + '"';
 					}
 
 					break;
@@ -234,13 +207,7 @@ namespace LinqToDB.DataProvider.Firebird
 					return "@" + value;
 
 				case ConvertType.SprocParameterToName  :
-					if (value != null)
-					{
-						string str = value.ToString();
-						return str.Length > 0 && str[0] == '@' ? str.Substring(1) : str;
-					}
-
-					break;
+					return value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 			}
 
 			return value;
@@ -257,17 +224,17 @@ namespace LinqToDB.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-		SqlField _identityField;
+		SqlField? _identityField;
 
 		public override int CommandCount(SqlStatement statement)
 		{
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncate:
-					return truncate.ResetIdentity && truncate.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncate.ResetIdentity && truncate.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 					if (_identityField != null)
 						return 3;
 					break;
@@ -278,7 +245,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 			if (identityField == null && dropTable.IfExists == false)
 			{
@@ -298,7 +265,7 @@ namespace LinqToDB.DataProvider.Firebird
 				BuildDropWithSchemaCheck("GENERATOR", "rdb$generators", "rdb$generator_name", "GIDENTITY_" + dropTable.Table.PhysicalName);
 			}
 
-			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.PhysicalName);
+			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.PhysicalName!);
 
 			Indent--;
 
@@ -353,7 +320,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case SqlTruncateTableStatement truncate:
 					StringBuilder
 						.Append("SET GENERATOR ")
-						.Append(Convert("GIDENTITY_" + truncate.Table.PhysicalName, ConvertType.NameToQueryTable))
+						.Append(Convert("GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable))
 						.AppendLine(" TO 0")
 						;
 					break;
@@ -364,7 +331,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							StringBuilder
 								.Append("CREATE GENERATOR ")
-								.Append(Convert("GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
+								.Append(Convert("GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable))
 								.AppendLine();
 						}
 						else
@@ -372,14 +339,14 @@ namespace LinqToDB.DataProvider.Firebird
 							StringBuilder
 								.AppendFormat(
 									"CREATE TRIGGER {0} FOR {1}",
-									Convert("TIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable),
-									Convert(createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
+									Convert("TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable),
+									Convert(createTable.Table.PhysicalName!, ConvertType.NameToQueryTable))
 								.AppendLine  ()
 								.AppendLine  ("BEFORE INSERT POSITION 0")
 								.AppendLine  ("AS BEGIN")
 								.AppendFormat(
 									"\tNEW.{0} = GEN_ID({1}, 1);",
-									Convert(_identityField.PhysicalName, ConvertType.NameToQueryField),
+									Convert(_identityField!.PhysicalName, ConvertType.NameToQueryField),
 									Convert("GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
 								.AppendLine  ()
 								.AppendLine  ("END");
@@ -390,15 +357,21 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.FbDbType.ToString();
+			if (_provider != null)
+			{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return _provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)

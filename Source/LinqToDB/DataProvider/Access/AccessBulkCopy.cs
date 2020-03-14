@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -11,7 +10,6 @@ namespace LinqToDB.DataProvider.Access
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return base.MultipleRowsCopy(table, options, source);
-			//return MultipleRowsCopy2(dataConnection, options, source, "");
 		}
 	}
 }

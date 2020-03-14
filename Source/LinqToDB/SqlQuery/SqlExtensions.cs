@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
@@ -44,16 +43,25 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlField GetIdentityField(this SqlStatement statement)
+		public static bool IsDelete(this SqlStatement statement)
 		{
-			return statement.GetInsertClause()?.Into.GetIdentityField();
+			return statement != null && statement.QueryType == QueryType.Delete;
 		}
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlInsertClause GetInsertClause(this SqlStatement statement)
+		public static SqlField? GetIdentityField(this SqlStatement statement)
+		{
+			return statement.GetInsertClause()?.Into!.GetIdentityField();
+		}
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		public static SqlInsertClause? GetInsertClause(this SqlStatement statement)
 		{
 			switch (statement)
 			{
@@ -65,7 +73,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public static SqlWithClause GetWithClause(this SqlStatement statement)
+		public static SqlWithClause? GetWithClause(this SqlStatement statement)
 		{
 			switch (statement)
 			{
@@ -91,7 +99,7 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlUpdateClause GetUpdateClause(this SqlStatement statement)
+		public static SqlUpdateClause? GetUpdateClause(this SqlStatement statement)
 		{
 			switch (statement)
 		{
@@ -119,7 +127,7 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlOutputClause GetOutputClause(this SqlStatement statement)
+		public static SqlOutputClause? GetOutputClause(this SqlStatement statement)
 		{
 			switch (statement)
 			{

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,18 +67,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlPointType      != null) list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlLineType       != null) list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlLSegType       != null) list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlBoxType        != null) list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlPathType       != null) list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlPolygonType    != null) list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlCircleType     != null) list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
-			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).AssemblyQualifiedName       });
+
+			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName       });
 			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
 			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName });
 			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
@@ -98,7 +103,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			var sql = (@"
+			var sql = @"
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
 					t.table_catalog                                                            as CatalogName,
@@ -116,12 +121,43 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					)                                                                          as Description,
 					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
-					information_schema.tables t");
+					information_schema.tables t";
 
 			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
+
+			// materialized views supported starting from pgsql 9.3
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+			if (version >= 90300)
+			{
+				// materialized views are not exposed to information_schema
+				sql += @"
+			UNION ALL
+				SELECT
+					v.schemaname || '.' || v.matviewname                                       as TableID,
+					NULL                                                                       as CatalogName,
+					v.schemaname                                                               as SchemaName,
+					v.matviewname                                                              as TableName,
+					v.schemaname = 'public'                                                    as IsDefaultSchema,
+					true                                                                       as IsView,
+					(
+						SELECT pgd.description
+							FROM pg_catalog.pg_class
+								INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
+								INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
+						WHERE pg_class.relkind = 'm' AND pgd.objsubid = 0 AND pg_namespace.nspname = v.schemaname AND pg_class.relname = v.matviewname
+						LIMIT 1
+					)                                                                          as Description,
+					false                                                                      as IsProviderSpecific
+				FROM pg_matviews v";
+
+				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
+					sql += @"
+				WHERE
+					v.schemaname NOT IN ('pg_catalog','information_schema')";
+			}
 
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
@@ -138,8 +174,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						pg_attribute
 							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
-							JOIN pg_class ON pg_class.oid = pg_constraint.conrelid
-								JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
+							JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
+							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
 						pg_constraint.contype = 'p'")
 				.ToList();
@@ -179,10 +215,54 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";
 
+			// materialized views supported starting from pgsql 9.3
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+			if (version >= 90300)
+			{
+				// materialized views are not exposed to information_schema
+				// NOTE: looks like IsNullable always true for mat.views (or I dunno where to look for it)
+				sql += @"
+				UNION ALL
+					SELECT
+						pg_namespace.nspname || '.' || pg_class.relname                           as TableID,
+						pg_attribute.attname                                                      as Name,
+						pg_attribute.attnotnull <> true                                           as IsNullable,
+						pg_attribute.attnum                                                       as Ordinal,
+						pg_type.typname                                                           as DataType,
+						CASE WHEN pg_attribute.atttypmod = -1
+							THEN NULL
+							ELSE pg_attribute.atttypmod - 4
+						END                                                                       as Length,
+						COALESCE(
+							information_schema._pg_numeric_precision(pg_type.oid, pg_attribute.atttypmod),
+							information_schema._pg_datetime_precision(pg_type.oid, pg_attribute.atttypmod))
+																								  as Precision,
+						information_schema._pg_numeric_scale(pg_type.oid, pg_attribute.atttypmod) as Scale,
+						false                                                                     as IsIdentity,
+						true                                                                      as SkipOnInsert,
+						true                                                                      as SkipOnUpdate,
+						(
+							SELECT pgd.description
+								FROM pg_catalog.pg_class
+									INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
+									INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
+								WHERE pg_class.relkind = 'm' AND pgd.objsubid = pg_attribute.attnum AND pg_namespace.nspname = pg_namespace.nspname AND pg_class.relname = pg_class.relname
+								LIMIT 1
+					)                                                                             as Description
+						FROM pg_catalog.pg_class
+							INNER JOIN pg_catalog.pg_namespace ON pg_class.relnamespace = pg_namespace.oid
+							INNER JOIN pg_catalog.pg_attribute ON pg_class.oid = pg_attribute.attrelid
+							INNER JOIN pg_catalog.pg_type      ON pg_attribute.atttypid = pg_type.oid
+						WHERE pg_class.relkind = 'm' AND pg_attribute.attnum >= 1";
+
+				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
+					sql += @" AND pg_namespace.nspname NOT IN ('pg_catalog','information_schema')";
+			}
+
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query(
 				rd => new
@@ -263,7 +343,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -329,28 +409,28 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "NpgsqlTypes";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
 				case "timestamp"                   :
 				case "timestamptz"                 :
 				case "timestamp with time zone"    :
-				case "timestamp without time zone" :
-				case "date"                        : return _provider.NpgsqlDateType    ?.Name;
-				case "point"                       : return _provider.NpgsqlPointType   ?.Name;
-				case "lseg"                        : return _provider.NpgsqlLSegType    ?.Name;
-				case "box"                         : return _provider.NpgsqlBoxType     ?.Name;
-				case "circle"                      : return _provider.NpgsqlCircleType  ?.Name;
-				case "path"                        : return _provider.NpgsqlPathType    ?.Name;
-				case "polygon"                     : return _provider.NpgsqlPolygonType ?.Name;
-				case "line"                        : return _provider.NpgsqlLineType    ?.Name;
+				case "timestamp without time zone" : return _provider.Adapter.NpgsqlDateTimeType.Name;
+				case "date"                        : return _provider.Adapter.NpgsqlDateType    .Name;
+				case "point"                       : return _provider.Adapter.NpgsqlPointType   .Name;
+				case "lseg"                        : return _provider.Adapter.NpgsqlLSegType    .Name;
+				case "box"                         : return _provider.Adapter.NpgsqlBoxType     .Name;
+				case "circle"                      : return _provider.Adapter.NpgsqlCircleType  .Name;
+				case "path"                        : return _provider.Adapter.NpgsqlPathType    .Name;
+				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType .Name;
+				case "line"                        : return _provider.Adapter.NpgsqlLineType    .Name;
 				case "cidr"                        :
-				case "inet"                        : return _provider.NpgsqlInetType    ?.Name;
-				case "geometry "                   : return "PostgisGeometry";
+				case "inet"                        : return _provider.Adapter.NpgsqlInetType    .Name;
+				case "geometry"                    : return "PostgisGeometry";
 			}
 
 			return base.GetProviderSpecificType(dataType);

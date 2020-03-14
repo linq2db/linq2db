@@ -636,7 +636,7 @@ namespace Tests.Linq
 						query => db.Employee.Where(join => (query.ReportsTo == join.EmployeeID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							Order             = root.Order,
 							EmployeeTerritory = root.EmployeeTerritory,
 							EmployeeID        = root.EmployeeID,
@@ -649,7 +649,7 @@ namespace Tests.Linq
 						query => db.Order.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							EmployeeTerritory = root.EmployeeTerritory,
 							EmployeeID        = root.EmployeeID,
 							BirthDate         = root.BirthDate,
@@ -662,7 +662,7 @@ namespace Tests.Linq
 						query => db.OrderDetail.Where(join => (query.Order.OrderID == join.OrderID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							EmployeeTerritory = root.EmployeeTerritory,
 							EmployeeID        = root.EmployeeID,
 							BirthDate         = root.BirthDate,
@@ -688,7 +688,7 @@ namespace Tests.Linq
 						query => db.EmployeeTerritory.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							Order             = root.Order,
 							EmployeeID        = root.EmployeeID,
 							BirthDate         = root.BirthDate,
@@ -701,7 +701,7 @@ namespace Tests.Linq
 						query => db.Territory.Where(join => (query.EmployeeTerritory.TerritoryID == join.TerritoryID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							Order             = root.Order,
 							EmployeeID        = root.EmployeeID,
 							BirthDate         = root.BirthDate,
@@ -719,7 +719,7 @@ namespace Tests.Linq
 						query => db.Region.Where(join => (query.EmployeeTerritory.Territory.RegionID == join.RegionID)).DefaultIfEmpty(),
 						(root, bind) => new Northwind.Employee
 						{
-							Employee2         = root.Employee2,
+//							Employee2         = root.Employee2,
 							Order             = root.Order,
 							EmployeeID        = root.EmployeeID,
 							BirthDate         = root.BirthDate,

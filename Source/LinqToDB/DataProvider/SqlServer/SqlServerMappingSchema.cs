@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
@@ -11,6 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
+	using LinqToDB.Metadata;
 	using Mapping;
 	using SqlQuery;
 
@@ -19,7 +19,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerMappingSchema()
 			: base(ProviderName.SqlServer)
 		{
-			SetConvertExpression<SqlXml,XmlReader>(
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+			SetConvertExpression<SqlXml, XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),
 				s => s.CreateReader());
 
@@ -56,34 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
 
-			try
-			{
-				foreach (var typeInfo in new[]
-				{
-					new { Type = SqlServerTools.SqlHierarchyIdType, Name = "SqlHierarchyId" },
-					new { Type = SqlServerTools.SqlGeographyType,   Name = "SqlGeography"   },
-					new { Type = SqlServerTools.SqlGeometryType,    Name = "SqlGeometry"    },
-				})
-				{
-					var type = typeInfo.Type ?? Type.GetType($"Microsoft.SqlServer.Types.{typeInfo.Name}, Microsoft.SqlServer.Types");
-
-					if (type == null)
-						continue;
-
-					var p = type.GetProperty("Null");
-					var l = Expression.Lambda<Func<object>>(
-						Expression.Convert(Expression.Property(null, p), typeof(object)));
-
-					var nullValue = l.Compile()();
-
-					AddScalarType(type, nullValue, true, DataType.Udt);
-
-					SqlServerDataProvider.SetUdtType(type, typeInfo.Name.Substring(3).ToLower());
-				}
-			}
-			catch
-			{
-			}
+			SqlServerTypes.Configure(this);
 
 			SetValueToSqlConverter(typeof(String),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
@@ -93,16 +68,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), int.MaxValue));
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+
+			AddMetadataReader(new SystemDataSqlServerAttributeReader());
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		// TODO: move to SqlServerTypes.Configure?
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			if (@from           != to          &&
 				@from.FullName  == to.FullName &&
-				@from.Namespace == "Microsoft.SqlServer.Types")
+				@from.Namespace == SqlServerTypes.TypesNamespace)
 			{
 				var p = Expression.Parameter(@from);
 
@@ -131,9 +109,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
-			string startPrefix;
+			string? startPrefix;
 
-			switch (sqlDataType.DataType)
+			switch (sqlDataType.Type.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
@@ -152,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			string start;
 
-			switch (sqlDataType.DataType)
+			switch (sqlDataType.Type.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
@@ -167,16 +145,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 
-		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
+		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType? dt, DateTime value)
 		{
 			var format =
 				value.Millisecond == 0
 					? "yyyy-MM-ddTHH:mm:ss"
-					: dt == null || dt.DataType != DataType.DateTime2
+					: dt == null || dt.Type.DataType != DataType.DateTime2
 						? "yyyy-MM-ddTHH:mm:ss.fff"
-						: dt.Precision == 0
+						: dt.Type.Precision == 0
 							? "yyyy-MM-ddTHH:mm:ss"
-							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Precision ?? 7);
+							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7);
 
 			stringBuilder
 				.Append('\'')
@@ -187,7 +165,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
-			if (sqlDataType.DataType == DataType.Int64)
+			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
 				stringBuilder.Append(value.Ticks);
 			}
@@ -213,7 +191,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
 
-			switch (sqlDataType.Precision ?? sqlDataType.Scale)
+			switch (sqlDataType.Type.Precision ?? sqlDataType.Type.Scale)
 			{
 				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
 				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
@@ -242,9 +220,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2000MappingSchema()
 			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
@@ -255,9 +234,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2005MappingSchema()
 			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
@@ -268,10 +248,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2008MappingSchema()
 			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
@@ -282,10 +263,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
@@ -296,10 +278,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2017MappingSchema()
 			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}

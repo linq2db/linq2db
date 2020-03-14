@@ -73,9 +73,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_UpdateWithConditionDelete([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
@@ -106,9 +108,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_DeleteWithConditionUpdate([MergeDataContextSource(
-			ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
@@ -168,9 +172,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
@@ -235,7 +241,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_SameSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
@@ -296,7 +302,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_SameSourceUpdateWithUpdate([MergeDataContextSource(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+			TestProvName.AllOracle, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
@@ -16,14 +15,14 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets collection with values to skip.
 		/// </summary>
-		protected HashSet<object> Values { get; set; }
+		protected HashSet<object?> Values { get; set; }
 
-		protected SkipValuesByListAttribute(IEnumerable<object> values)
+		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{
 			if (values == null)
 				throw new ArgumentNullException(nameof(values));
 
-			Values = new HashSet<object>(values);
+			Values = new HashSet<object?>(values);
 		}
 
 		/// <summary>

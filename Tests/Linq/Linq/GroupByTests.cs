@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -1012,7 +1014,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation102([DataSources(ProviderName.Informix)] string context)
+		public void GroupByAssociation102([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1029,7 +1031,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed*/)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1047,7 +1049,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed.*/)]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed.*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1071,7 +1073,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix) /* Can be fixed. */]
+			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix) /* Can be fixed. */]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1310,7 +1312,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1326,7 +1328,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1809,7 +1811,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCustomEntity2([DataSources(ProviderName.Informix, TestProvName.AllSybase)] string context)
+		public void GroupByCustomEntity2([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			var rand = new Random().Next(5);
 
@@ -1885,7 +1887,7 @@ namespace Tests.Linq
 		public void GroupByGuard([DataSources] string context)
 		{
 			using(new AllowMultipleQuery())
-			using(new GuardGrouping())
+			using(new GuardGrouping(true))
 			using (var db = GetDataContext(context))
 			{
 				// group on client
@@ -1953,6 +1955,40 @@ namespace Tests.Linq
 						y = _.Average(r => r.ParentID)
 					})
 					.ToList();
+			}
+		}
+
+		[Table("Stone")]
+		public class Stone
+		{
+			[PrimaryKey, Identity] public int Id { get; set; } // int
+			[Column, NotNull] public string Name { get; set; } // nvarchar(256)
+			[Column, Nullable] public bool? Enabled { get; set; } // bit
+			[Column, Nullable] public string ImageFullUrl { get; set; } // nvarchar(255)
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue672Test([DataSources] string context, [Values] bool enableGroupByguard)
+		{
+			using (new GuardGrouping(enableGroupByguard))
+			using (var db = GetDataContext(context))
+			using (db.CreateTempTable<Stone>())
+			{
+				db.Insert(new Stone() { Id = 1, Name = "group1", Enabled = true, ImageFullUrl = "123" });
+				db.Insert(new Stone() { Id = 2, Name = "group1", Enabled = true, ImageFullUrl = "123" });
+				db.Insert(new Stone() { Id = 3, Name = "group2", Enabled = true, ImageFullUrl = "123" });
+
+				IQueryable<Stone> stones;
+				stones = from s in db.GetTable<Stone>() where s.Enabled == true select s;
+
+				stones = from s in stones
+						 where !s.Name.StartsWith("level - ") && s.ImageFullUrl.Length > 0
+						 group s by s.Name
+							  into sG
+						 select sG.First();
+
+				var list = stones.ToList();
 			}
 		}
 	}

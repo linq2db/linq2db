@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Globalization;
 using System.Reflection;
 
@@ -55,7 +54,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <inheritdoc cref="IEquatable{T}.Equals(T)"/>
-		public bool Equals(DynamicColumnInfo other)
+		public bool Equals(DynamicColumnInfo? other)
 		{
 			if (other == null)
 				return false;
@@ -84,7 +83,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// The result of the operator.
 		/// </returns>
-		public static bool operator ==(DynamicColumnInfo a, DynamicColumnInfo b)
+		public static bool operator ==(DynamicColumnInfo? a, DynamicColumnInfo? b)
 			=> a?.Equals(b) ?? ReferenceEquals(b, null);
 
 		/// <summary>
@@ -95,7 +94,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// The result of the operator.
 		/// </returns>
-		public static bool operator !=(DynamicColumnInfo a, DynamicColumnInfo b)
+		public static bool operator !=(DynamicColumnInfo? a, DynamicColumnInfo? b)
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
 
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>

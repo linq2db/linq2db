@@ -304,7 +304,7 @@ namespace Tests.Linq
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -320,7 +320,7 @@ namespace Tests.Linq
 		public void NewGuid2(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -493,11 +493,7 @@ namespace Tests.Linq
 
 				var sqlTable = (SqlTable)field.Table;
 
-				var newField = new SqlField
-				{
-					Name  = sqlTable.PhysicalName,
-					Table = sqlTable
-				};
+				var newField = new SqlField(sqlTable, sqlTable.PhysicalName);
 
 				builder.AddParameter("table_field", newField);
 			}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		class QueryData
 		{
-			public          SelectQuery          Query;
+			public          SelectQuery          Query   = null!;
 			public readonly List<ISqlExpression> Fields  = new List<ISqlExpression>();
 			public readonly List<QueryData>      Queries = new List<QueryData>();
 		}
@@ -66,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SqlStatement statement, SelectQuery selectQuery)
+		static QueryData GetQueryData(SqlStatement? statement, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
@@ -111,7 +110,7 @@ namespace LinqToDB.SqlQuery
 			return data;
 		}
 
-		static SqlTableSource FindField(SqlField field, SqlTableSource table)
+		static SqlTableSource? FindField(SqlField field, SqlTableSource table)
 		{
 			if (field.Table == table.Source)
 				return table;
@@ -127,7 +126,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		static ISqlExpression GetColumn(QueryData data, SqlField field)
+		static ISqlExpression? GetColumn(QueryData data, SqlField field)
 		{
 			foreach (var query in data.Queries)
 			{
@@ -143,7 +142,7 @@ namespace LinqToDB.SqlQuery
 						var idx = q.Select.Add(field);
 
 						if (n != q.Select.Columns.Count)
-							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => IsAggregationFunction(c.Expression)))
+							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
 								q.GroupBy.Items.Add(field);
 
 						return q.Select.Columns[idx];
@@ -291,7 +290,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.SetExpression :
 							{
 								var expr = (SqlSetExpression)e;
-								if (dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
+								if (dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
 								break;
 							}
 
@@ -839,7 +838,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				new QueryVisitor().Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
+				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationFunction(ex)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -875,7 +874,7 @@ namespace LinqToDB.SqlQuery
 				return childSource;
 
 			var isColumnsOK =
-				(allColumns && !query.Select.Columns.Any(c => IsAggregationFunction(c.Expression))) ||
+				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
 				!query.Select.Columns.Any(c => CheckColumn(c, c.Expression, query, optimizeValues, optimizeColumns));
 
 			if (!isColumnsOK)
@@ -890,7 +889,7 @@ namespace LinqToDB.SqlQuery
 					clmn.RawAlias = c.RawAlias;
 			}
 
-			List<ISqlExpression[]> uniqueKeys = null;
+			List<ISqlExpression[]>? uniqueKeys = null;
 			if (parentJoin == JoinType.Inner && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
@@ -939,17 +938,6 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		static bool IsAggregationFunction(IQueryElement expr)
-		{
-			if (expr is SqlFunction func)
-				return func.IsAggregate;
-
-			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
-
-			return false;
-		}
-
 		void OptimizeApply(HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
 		{
 			var joinSource = joinTable.Table;
@@ -972,7 +960,7 @@ namespace LinqToDB.SqlQuery
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
+				var isAgg = sql.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
 
 				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
 					return;
@@ -1014,27 +1002,37 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				// correct conditions
-				if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
-				{
-					var map = sql.Select.Columns.ToDictionary(c => c.Expression);
-					foreach (var condition in searchCondition)
-					{
-						condition.Predicate.Walk(new WalkOptions(), e =>
-						{
-							if (map.TryGetValue(e, out var newExpr))
-								return newExpr;
-
-							return e;
-						});
-					}
-				}
-
 				if (!ContainsTable(tableSource.Source, sql))
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)
 						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+
+					// correct conditions
+					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+					{
+						var map = sql.Select.Columns.ToDictionary(c => c.Expression);
+						foreach (var condition in searchCondition)
+						{
+							var visitor = new QueryVisitor();
+							var newPredicate = visitor.ConvertImmutable(condition.Predicate, e =>
+							{
+								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
+								{
+									if (visitor.ParentElement is SqlColumn column)
+									{
+										if (newExpr != column)
+											e = newExpr;
+									}
+									else 
+										e = newExpr;
+								}
+
+								return e;
+							});
+							condition.Predicate = newPredicate;
+						}
+					}
 
 					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);
@@ -1114,7 +1112,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var sql = _selectQuery.From.Tables[i].Source as SelectQuery;
 
-					if (!_selectQuery.Select.Columns.All(c => IsAggregationFunction(c.Expression)))
+					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 						if (sql != null && sql.OrderBy.Items.Count > 0)
 							foreach (var item in sql.OrderBy.Items)
 								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);

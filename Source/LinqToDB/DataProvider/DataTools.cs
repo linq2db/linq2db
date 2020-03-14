@@ -1,6 +1,7 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -8,15 +9,57 @@ namespace LinqToDB.DataProvider
 {
 	public class DataTools
 	{
+		/// <summary>
+		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
+		/// </summary>
+		[return: NotNullIfNotNull("str")]
+		public static string? EscapeUnterminatedBracket(string? str)
+		{
+			if (str == null)
+				return str;
+
+			var nextIndex = str.IndexOf('[');
+			if (nextIndex < 0)
+				return str;
+
+			var lastIndex = 0;
+			var newStr = new StringBuilder(str.Length + 10);
+
+			while (nextIndex >= 0)
+			{
+				if (nextIndex != 0)
+					newStr.Append(str.Substring(lastIndex, nextIndex - lastIndex));
+
+				lastIndex = nextIndex;
+
+				var closeBracket = str.IndexOf(']', nextIndex + 1);
+				nextIndex        = str.IndexOf('[', nextIndex + 1);
+
+				if ((closeBracket > 0 && (closeBracket < nextIndex || nextIndex < 0))
+				    ||
+				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
+				{
+					if (nextIndex < 0)
+						newStr.Append("[");
+				}
+				else
+					newStr.Append("[[]");
+
+			}
+
+			newStr.Append(str.Substring(lastIndex + 1));
+			return newStr.ToString();
+		}
+
 		static readonly char[] _escapes = { '\x0', '\'' };
 
 		public static void ConvertStringToSql(
 			StringBuilder stringBuilder,
 			string plusOperator,
-			string startPrefix,
+			string? startPrefix,
 			Action<StringBuilder,int> appendConversion,
 			string value,
-			char[] extraEscapes)
+			char[]? extraEscapes)
 		{
 			if (value.Length > 0
 				&& (value.IndexOfAny(_escapes) >= 0 || (extraEscapes != null && value.IndexOfAny(extraEscapes) >= 0)))
@@ -157,5 +200,49 @@ namespace LinqToDB.DataProvider
 
 			return string.Empty;
 		};
+
+		#region Create/Drop Database
+
+		internal static void CreateFileDatabase(
+			string databaseName,
+			bool deleteIfExists,
+			string extension,
+			Action<string> createDatabase)
+		{
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(extension))
+				databaseName += extension;
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			createDatabase(databaseName);
+		}
+
+		internal static void DropFileDatabase(string databaseName, string extension)
+		{
+			databaseName = databaseName.Trim();
+
+			if (File.Exists(databaseName))
+			{
+				File.Delete(databaseName);
+			}
+			else
+			{
+				if (!databaseName.ToLower().EndsWith(extension))
+				{
+					databaseName += extension;
+
+					if (File.Exists(databaseName))
+						File.Delete(databaseName);
+				}
+			}
+		}
+		#endregion
 	}
 }

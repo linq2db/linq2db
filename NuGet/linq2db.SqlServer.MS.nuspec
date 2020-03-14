@@ -11,8 +11,8 @@
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                   version="3.0.0"       />
-			<dependency id="Microsoft.Data.SqlClient"  version="1.0.19269.1" />
+			<dependency id="linq2db"                   version="3.0.0" />
+			<dependency id="Microsoft.Data.SqlClient"  version="1.1.1" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>

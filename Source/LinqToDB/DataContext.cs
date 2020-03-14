@@ -38,10 +38,10 @@ namespace LinqToDB
 		/// In case of <c>null</c> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
-		public DataContext([CanBeNull] string? configurationString)
+		public DataContext(string? configurationString)
 		{
 			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
-			DataProvider        = DataConnection.GetDataProvider(ConfigurationString);
+			DataProvider        = DataConnection.GetDataProvider(ConfigurationString!);
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -51,7 +51,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
-		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext(IDataProvider dataProvider, string connectionString)
 		{
 			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
 			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
@@ -64,7 +64,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
-		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext( string providerName, string connectionString)
 		{
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -108,7 +108,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		[CanBeNull]
 		public Action<TraceInfo>? OnTraceConnection { get; set; } 
 
 		private bool _keepConnectionAlive;
@@ -189,6 +188,35 @@ namespace LinqToDB
 		/// </summary>
 		internal int LockDbManagerCounter;
 
+
+		private int? _commandTimeout;
+
+		/// <summary>
+		/// Gets or sets command execution timeout in seconds.
+		/// Negative timeout value means that default timeout will be used.
+		/// 0 timeout value corresponds to infinite timeout.
+		/// By default timeout is not set and default value for current provider used.
+		/// </summary>
+		public  int   CommandTimeout
+		{
+			get => _commandTimeout ?? -1;
+			set
+			{
+				if (value < 0)
+				{
+					_commandTimeout = null;
+					if (_dataConnection != null)
+						_dataConnection.CommandTimeout = -1;
+				}
+				else
+				{
+					_commandTimeout = value;
+					if (_dataConnection != null)
+						_dataConnection.CommandTimeout = value;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Underlying active database connection.
 		/// </summary>
@@ -208,6 +236,9 @@ namespace LinqToDB
 				_dataConnection = ConnectionString != null
 					? new DataConnection(DataProvider, ConnectionString)
 					: new DataConnection(ConfigurationString);
+
+				if (_commandTimeout != null)
+					_dataConnection.CommandTimeout = CommandTimeout;
 
 				if (_queryHints != null && _queryHints.Count > 0)
 				{
@@ -407,7 +438,7 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters)
 		{
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
 		}
@@ -466,12 +497,12 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
-			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
-			public object?[]    Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
-			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
-			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
-			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
+			public IDataContext DataContext      { get => _queryRunner!.DataContext;       set => _queryRunner!.DataContext      = value; }
+			public Expression   Expression       { get => _queryRunner!.Expression;        set => _queryRunner!.Expression       = value; }
+			public object?[]?   Parameters       { get => _queryRunner!.Parameters;        set => _queryRunner!.Parameters       = value; }
+			public Expression   MapperExpression { get => _queryRunner!.MapperExpression!; set => _queryRunner!.MapperExpression = value; }
+			public int          RowsCount        { get => _queryRunner!.RowsCount;         set => _queryRunner!.RowsCount        = value; }
+			public int          QueryNumber      { get => _queryRunner!.QueryNumber;       set => _queryRunner!.QueryNumber      = value; }
 		}
 	}
 }

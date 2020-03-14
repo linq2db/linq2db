@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace LinqToDB.SqlQuery
 	public class SelectQuery : ISqlTableSource
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		protected string DebugSqlText => Common.Tools.ToDebugDisplay(SqlText);
+		protected string DebugSqlText => SqlText;
 
 		#region Init
 
@@ -34,16 +33,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlSelectClause        select,
-			SqlFromClause          from,
-			SqlWhereClause         where,
-			SqlGroupByClause       groupBy,
-			SqlWhereClause         having,
-			SqlOrderByClause       orderBy,
-			List<SqlSetOperator>   setOparators,
-			List<ISqlExpression[]> uniqueKeys,
-			SelectQuery            parentSelect,
-			bool                   parameterDependent)
+			SqlSelectClause         select,
+			SqlFromClause           from,
+			SqlWhereClause          where,
+			SqlGroupByClause        groupBy,
+			SqlWhereClause          having,
+			SqlOrderByClause        orderBy,
+			List<SqlSetOperator>?   setOparators,
+			List<ISqlExpression[]>? uniqueKeys,
+			SelectQuery?            parentSelect,
+			bool                    parameterDependent)
 		{
 			Select               = select;
 			From                 = from;
@@ -69,17 +68,17 @@ namespace LinqToDB.SqlQuery
 			OrderBy.SetSqlQuery(this);
 		}
 
-		public SqlSelectClause  Select  { get; private set; }
-		public SqlFromClause    From    { get; private set; }
-		public SqlWhereClause   Where   { get; private set; }
-		public SqlGroupByClause GroupBy { get; private set; }
-		public SqlWhereClause   Having  { get; private set; }
-		public SqlOrderByClause OrderBy { get; private set; }
+		public SqlSelectClause  Select  { get; private set; } = null!;
+		public SqlFromClause    From    { get; private set; } = null!;
+		public SqlWhereClause   Where   { get; private set; } = null!;
+		public SqlGroupByClause GroupBy { get; private set; } = null!;
+		public SqlWhereClause   Having  { get; private set; } = null!;
+		public SqlOrderByClause OrderBy { get; private set; } = null!;
 
-		private List<object> _properties;
-		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
+		private List<object>? _properties;
+		public  List<object>   Properties => _properties ?? (_properties = new List<object>());
 
-		public SelectQuery    ParentSelect         { get; set; }
+		public SelectQuery?   ParentSelect         { get; set; }
 		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 		public bool           IsParameterDependent { get; set; }
 
@@ -88,7 +87,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public bool               DoNotRemove         { get; set; }
 
-		private List<ISqlExpression[]> _uniqueKeys;
+		private List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for this sub-query.
@@ -103,8 +102,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Union
 
-		private List<SqlSetOperator> _setOperators;
-		public  List<SqlSetOperator>  SetOperators => _setOperators ?? (_setOperators = new List<SqlSetOperator>());
+		private List<SqlSetOperator>? _setOperators;
+		public  List<SqlSetOperator>   SetOperators => _setOperators ?? (_setOperators = new List<SqlSetOperator>());
 
 		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
@@ -186,14 +185,14 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public ISqlTableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
 
 			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
 
-		internal static SqlTableSource CheckTableSource(SqlTableSource ts, ISqlTableSource table, string alias)
+		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
 			if (ts.Source == table && (alias == null || ts.Alias == alias))
 				return ts;
@@ -240,7 +239,7 @@ namespace LinqToDB.SqlQuery
 			return this == other;
 		}
 
-		public Type SystemType
+		public Type? SystemType
 		{
 			get
 			{
@@ -312,10 +311,10 @@ namespace LinqToDB.SqlQuery
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
 
-		private SqlField _all;
-		public  SqlField  All
+		private SqlField? _all;
+		public  SqlField   All
 		{
-			get => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+			get => _all ?? (_all = SqlField.All(this));
 
 			internal set
 			{
@@ -326,7 +325,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		List<ISqlExpression> _keys;
+		List<ISqlExpression>? _keys;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
@@ -397,9 +396,9 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e is SqlField f)
 				{
-					var ts = GetTableSource(f.Table);
+					var ts = GetTableSource(f.Table!);
 
-					if (ts == null && f != f.Table.All)
+					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});

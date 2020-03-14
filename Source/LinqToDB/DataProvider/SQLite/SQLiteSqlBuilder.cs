@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,18 +7,22 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SQLiteSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -29,7 +32,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				StringBuilder
 					.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='")
-					.Append(trun.Table.PhysicalName)
+					.Append(trun.Table!.PhysicalName)
 					.AppendLine("'")
 					;
 			}
@@ -41,7 +44,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -56,7 +59,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -68,38 +71,24 @@ namespace LinqToDB.DataProvider.SQLite
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return value;
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return "[" + value + "]";
 
 				case ConvertType.SprocParameterToName:
-					{
-						var name = (string)value;
-						return name.Length > 0 && name[0] == '@'? name.Substring(1): name;
-					}
+					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
 			}
 
 			return value;
@@ -107,7 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
@@ -121,7 +110,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (createTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table!.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;
@@ -140,8 +129,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
-				var leftType  = exprExpr.Expr1.SystemType;
-				var rightType = exprExpr.Expr2.SystemType;
+				var leftType  = exprExpr.Expr1.SystemType!;
+				var rightType = exprExpr.Expr2.SystemType!;
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
 					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
@@ -166,7 +155,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 

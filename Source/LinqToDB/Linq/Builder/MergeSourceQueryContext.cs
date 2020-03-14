@@ -1,6 +1,4 @@
-﻿#nullable disable
-using JetBrains.Annotations;
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -60,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 				table.ForceLeftJoinAssociations = true;
 		}
 
-		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
@@ -77,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 		}
 
-		SqlField RegisterSourceField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, MemberInfo member)
+		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo member)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -86,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 				var newField = f == null
-					? new SqlField()  { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
+					? new SqlField(expression.SystemType!, member?.Name, expression.CanBeNull)
 					: new SqlField(f) { Name = member?.Name ?? f.Name};
 
 				newField.PhysicalName = newField.Name;
@@ -97,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 			return sourceField;
 		}
 
-		public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 		{
 			return base.IsExpression(expression, level, testFlag);
 		}

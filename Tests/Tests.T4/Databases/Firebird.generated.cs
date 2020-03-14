@@ -211,9 +211,9 @@ namespace FirebirdDataContext
 
 		#nullable disable
 		/// <summary>
-		/// INTEG_4513
+		/// INTEG_55471
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_4513", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_55471", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#nullable enable
@@ -243,7 +243,7 @@ namespace FirebirdDataContext
 		public DOCTOR? DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_4513_BackReference
+		/// INTEG_55471_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT? INTEG { get; set; }

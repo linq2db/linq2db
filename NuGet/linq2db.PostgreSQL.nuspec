@@ -16,15 +16,15 @@
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETFramework4.6.1">
-				<dependency id="Npgsql"  version="4.1.1" />
+				<dependency id="Npgsql"  version="4.1.3.1" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="Npgsql"  version="4.1.1" />
+				<dependency id="Npgsql"  version="4.1.3.1" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
-				<dependency id="Npgsql"  version="4.1.1" />
+				<dependency id="Npgsql"  version="4.1.3.1" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 		</dependencies>

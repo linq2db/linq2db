@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -19,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 			return new SubQueryContext(sequence);
 		}
 
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+			ParameterExpression? param)
 		{
 			return null;
 		}

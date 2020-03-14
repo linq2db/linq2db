@@ -37,10 +37,15 @@ namespace LinqToDB
 		/// </summary>
 		public const string Firebird      = "Firebird";
 		/// <summary>
-		/// Informix provider.
+		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
 		/// </summary>
 		public const string Informix      = "Informix";
+		/// <summary>
+		/// Informix over IBM.Data.DB2 IDS provider.
+		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
+		/// </summary>
+		public const string InformixDB2   = "Informix.DB2";
 		/// <summary>
 		/// Microsoft SQL Server default provider (SQL Server 2008).
 		/// Used as configuration name for SQL Server base mapping schema <see cref="DataProvider.SqlServer.SqlServerMappingSchema"/>.

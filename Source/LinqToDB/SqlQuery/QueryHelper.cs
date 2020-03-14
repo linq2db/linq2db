@@ -1,9 +1,7 @@
-#nullable disable
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
 {
@@ -11,7 +9,7 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryHelper
 	{
-		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement> ignore = null)
+		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
@@ -26,14 +24,14 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column :
 						{
 							var c = (SqlColumn) e;
-							if (hash.Contains(c.Parent))
+							if (hash.Contains(c.Parent!))
 								found.Add(c);
 							break;
 						}
 					case QueryElementType.SqlField :
 						{
 							var f = (SqlField) e;
-							if (hash.Contains(f.Table))
+							if (hash.Contains(f.Table!))
 								found.Add(f);
 							break;
 						}
@@ -51,7 +49,7 @@ namespace LinqToDB.SqlQuery
 			return query;
 		}
 
-		public static SqlJoinedTable FindJoin(this SelectQuery query,
+		public static SqlJoinedTable? FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
 			return new QueryVisitor().Find(query, e =>
@@ -127,7 +125,7 @@ namespace LinqToDB.SqlQuery
 			return whereClause;
 		}
 
-		public static bool IsEqualTables(SqlTable table1, SqlTable table2)
+		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
 		{
 			var result =
 				table1                 != null
@@ -249,7 +247,7 @@ namespace LinqToDB.SqlQuery
 						!nonProjecting.Contains(oi.Expression)
 							? oi
 							: new SqlOrderByItem(
-								new SqlFunction(oi.Expression.SystemType, oi.IsDescending ? "Min" : "Max", true, oi.Expression),
+								new SqlFunction(oi.Expression.SystemType!, oi.IsDescending ? "Min" : "Max", true, oi.Expression),
 								oi.IsDescending))
 					.ToList();
 
@@ -277,7 +275,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="flags"></param>
 		/// <param name="information"></param>
 		/// <returns></returns>
-		public static bool CanRemoveOrderBy([NotNull] SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
+		public static bool CanRemoveOrderBy(SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
@@ -331,7 +329,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="selectQuery"></param>
 		/// <param name="information"></param>
 		/// <returns></returns>
-		public static bool TryRemoveDistinct([NotNull] SelectQuery selectQuery, QueryInformation information)
+		public static bool TryRemoveDistinct(SelectQuery selectQuery, QueryInformation information)
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
@@ -398,7 +396,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		/// <param name="expression"></param>
 		/// <returns>Field instance associated with expression</returns>
-		public static SqlField GetUnderlyingField(ISqlExpression expression)
+		public static SqlField? GetUnderlyingField(ISqlExpression expression)
 		{
 			switch (expression)
 			{
@@ -407,10 +405,11 @@ namespace LinqToDB.SqlQuery
 				case SqlColumn column:
 					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
 			}
+
 			return null;
 		}
 
-		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField? GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
@@ -448,7 +447,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		/// <param name="root">Expression to analyze.</param>
 		/// <param name="foundSources">Output container for detected sources/</param>
-		public static void GetUsedSources(ISqlExpression root, [NotNull] HashSet<ISqlTableSource> foundSources)
+		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
 			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
 
@@ -462,13 +461,13 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.Column:
 						{
 							var c = (SqlColumn) e;
-							foundSources.Add(c.Parent);
+							foundSources.Add(c.Parent!);
 							break;
 						}
 						case QueryElementType.SqlField:
 						{
 							var f = (SqlField) e;
-							foundSources.Add(f.Table);
+							foundSources.Add(f.Table!);
 							break;
 						}
 					}
@@ -482,11 +481,11 @@ namespace LinqToDB.SqlQuery
 		/// <param name="forExpression">Expression that has to be enveloped by column.</param>
 		/// <param name="inProjection">If 'true', function ensures that column is created. If 'false' it may return Field if it fits to nesting level.</param>
 		/// <returns>Returns Column of Field according to its nesting level. May return null if expression is not valid for <paramref name="selectQuery"/></returns>
-		public static ISqlExpression NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
+		public static ISqlExpression? NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
 		{
 			var field = GetUnderlyingField(forExpression);
 
-			SqlColumn column = null;
+			SqlColumn? column = null;
 
 			if (inProjection)
 			{
@@ -515,7 +514,7 @@ namespace LinqToDB.SqlQuery
 				if (tableToCompare != null && tableToCompare == table)
 				{
 					if (inProjection)
-						return selectQuery.Select.AddNewColumn(field);
+						return selectQuery.Select.AddNewColumn(field!);
 					return field;
 				}
 			}
@@ -560,7 +559,7 @@ namespace LinqToDB.SqlQuery
 		/// <typeparam name="TStatement"></typeparam>
 		/// <param name="statement">Statement which may contain queries that needs optimization</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
-		public static TStatement OptimizeSubqueries<TStatement>([NotNull] TStatement statement)
+		public static TStatement OptimizeSubqueries<TStatement>(TStatement statement)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -647,8 +646,10 @@ namespace LinqToDB.SqlQuery
 		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
 		/// </param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>([NotNull] TStatement statement, [NotNull] Func<SelectQuery, int> wrapTest,
-			[NotNull] Action<SelectQuery[]> onWrap)
+		public static TStatement WrapQuery<TStatement>(
+			TStatement             statement,
+			Func<SelectQuery, int> wrapTest,
+			Action<SelectQuery[]>  onWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -719,7 +720,7 @@ namespace LinqToDB.SqlQuery
 				
 				if (element is SqlField f && f.Table != null && correctedTables.TryGetValue(f.Table, out var levelQuery))
 				{
-					return QueryHelper.NeedColumnForExpression(levelQuery, f, false);
+					return NeedColumnForExpression(levelQuery, f, false)!;
 				} 
 
 				return element;
@@ -747,7 +748,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="statement">Statement which may contain tested query</param>
 		/// <param name="queryToWrap">Tells which select query needs enveloping</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>([NotNull] TStatement statement, SelectQuery queryToWrap)
+		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -764,8 +765,10 @@ namespace LinqToDB.SqlQuery
 		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
 		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>([NotNull] TStatement statement, [NotNull] Func<SelectQuery, bool> wrapTest,
-			[NotNull] Action<SelectQuery, SelectQuery> onWrap)
+		public static TStatement WrapQuery<TStatement>(
+			TStatement                       statement,
+			Func<SelectQuery, bool>          wrapTest,
+			Action<SelectQuery, SelectQuery> onWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -803,7 +806,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static string TransformExpressionIndexes([NotNull] string expression, [NotNull] Func<int, int> transformFunc)
+		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
 		{
 			if (expression    == null) throw new ArgumentNullException(nameof(expression));
 			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
@@ -832,5 +835,39 @@ namespace LinqToDB.SqlQuery
 			return str;
 		}
 
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return expression.IsAggregate;
+
+			return false;
+		}
+
+		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
+		{
+			for (int i = 0; i < searchCondition.Conditions.Count; i++)
+			{
+				var visitor      = new QueryVisitor();
+				var newCondition = visitor.ConvertImmutable(searchCondition.Conditions[i], e =>
+				{
+					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
+					{
+						if (visitor.ParentElement?.ElementType != QueryElementType.Column)
+						{
+							var column = NeedColumnForExpression(selectQuery, (ISqlExpression)e, false);
+							if (column != null)
+								return column;
+						}
+					}
+
+					return e;
+				});
+
+				searchCondition.Conditions[i] = newCondition;
+			}
+		}
 	}
 }

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -13,22 +12,16 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.IO;
 
-	public class SQLiteDataProvider : DynamicDataProviderBase
+	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
-		public SQLiteDataProvider()
-			: this(ProviderName.SQLite)
-		{
-		}
-
 		public SQLiteDataProvider(string name)
-			: this(name, null)
+			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}
 
 		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, SQLiteProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
@@ -48,17 +41,7 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace => Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite"
-			: "Microsoft.Data.Sqlite";
-		protected override string ConnectionTypeName  => Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"
-			: "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite";
-		protected override string DataReaderTypeName   =>Name == ProviderName.SQLiteClassic
-			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
-			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
-
-		protected override string NormalizeTypeName(string typeName)
+		protected override string? NormalizeTypeName(string? typeName)
 		{
 			if (typeName == null)
 				return null;
@@ -72,18 +55,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		// workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
-		// needed only for Microsoft.Data.Sqlite 3.0.0
-		private bool _needsCommandDisposeOnError;
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
+		public override IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
-			_needsCommandDisposeOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
-		}
-
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			if (_needsCommandDisposeOnError)
+			if (Adapter.DisposeCommandOnError)
 				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
 
 			return base.ExecuteScope(dataConnection);
@@ -91,18 +65,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SQLiteSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
 		{
-			public static readonly SQLiteMappingSchema.ClassicMappingSchema   ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
-			public static readonly SQLiteMappingSchema.MicrosoftMappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
-		}
+			public static readonly MappingSchema ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
+			public static readonly MappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
 
-		public override MappingSchema MappingSchema => Name == ProviderName.SQLiteClassic
-			? MappingSchemaInstance.ClassicMappingSchema as MappingSchema
-			: MappingSchemaInstance.MicrosoftMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.SQLiteClassic ? ClassicMappingSchema : MicrosoftMappingSchema;
+		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -121,14 +93,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
 			if (Name == ProviderName.SQLiteMS && value is char)
-			{
 				value = value.ToString();
-			}
 
 			// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
 			// https://github.com/aspnet/EntityFrameworkCore/issues/15078
@@ -139,10 +109,10 @@ namespace LinqToDB.DataProvider.SQLite
 				value = guid.ToByteArray();
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -151,56 +121,12 @@ namespace LinqToDB.DataProvider.SQLite
 				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
 			}
 
-			base.SetParameterType(parameter, dataType);
-		}
-
-		Action<string> _createDatabase;
-
-		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			CreateFileDatabase(
-				databaseName, deleteIfExists, ".sqlite",
-				dbName =>
-				{
-					if (_createDatabase == null)
-					{
-						var connectionType = GetConnectionType();
-						var method         = connectionType.GetMethodEx("CreateFile");
-						if (method != null)
-						{
-						var p = Expression.Parameter(typeof(string));
-						var l = Expression.Lambda<Action<string>>(
-								Expression.Call(method, p),
-							p);
-						_createDatabase = l.Compile();
-					}
-						else
-						{
-							// emulate for Microsoft.Data.SQLite
-							// that's actually what System.Data.SQLite does
-							_createDatabase = name =>
-							{
-								using (File.Create(name)) { };
-							};
-						}
-					}
-
-					_createDatabase(dbName);
-				});
-		}
-
-		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			DropFileDatabase(databaseName, ".sqlite");
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			if (Name == ProviderName.SQLiteClassic)
+			if (Name != ProviderName.SQLiteMS)
 				return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
@@ -242,8 +168,22 @@ namespace LinqToDB.DataProvider.SQLite
 						ex.Value));
 			}
 #endif
+			var dataReaderType = readerExpression.Type;
 
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
+			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType                                                                                   }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType                          }, out expr))
+				return expr;
+
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
@@ -267,7 +207,7 @@ namespace LinqToDB.DataProvider.SQLite
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,

@@ -55,8 +55,9 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
+		// TODO: disabled providers lacks connections
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
 		{
 			const int recordsCount = 20;
 
@@ -87,7 +88,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestMerge([MergeDataContextSource(
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, ProviderName.Informix)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			const int repeatsCount = 20;

@@ -1,37 +1,30 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Configuration;
 	using Data;
-	using Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using Tools;
 
-	public class OracleDataProvider : DynamicDataProviderBase
+	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{ }
 
-		public OracleDataProvider()
-			: this(OracleTools.DetectedProviderName)
+		public OracleDataProvider(string name, OracleVersion version)
+			: base(
+				  name,
+				  GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
+				  OracleProviderAdapter.GetInstance(name))
 		{
-		}
+			Version = version;
 
-		public OracleDataProvider(string name)
-			: base(name, null)
-		{
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -39,493 +32,167 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
-			SqlProviderFlags.MaxInListValuesCount = 1000;
+			if (version >= OracleVersion.v12)
+			{
+				SqlProviderFlags.IsApplyJoinSupported          = true;
+			}
 
-			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.MaxInListValuesCount              = 1000;
+
+			SetCharField            ("Char",  (r, i) => r.GetString(i).TrimEnd(' '));
+			SetCharField            ("NChar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
-			//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
-			//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
+			if (version == OracleVersion.v11)
+				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
+			else
+				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
 
-			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleBlobType        , Adapter.OracleBlobType        , Adapter.GetOracleBlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleClobType        , Adapter.OracleClobType        , Adapter.GetOracleClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleDateType        , Adapter.OracleDateType        , Adapter.GetOracleDateReaderMethod        , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleDecimalType     , Adapter.OracleDecimalType     , Adapter.GetOracleDecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleIntervalDSType  , Adapter.OracleIntervalDSType  , Adapter.GetOracleIntervalDSReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleIntervalYMType  , Adapter.OracleIntervalYMType  , Adapter.GetOracleIntervalYMReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleStringType      , Adapter.OracleStringType      , Adapter.GetOracleStringReaderMethod      , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampType   , Adapter.OracleTimeStampType   , Adapter.GetOracleTimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampLTZType, Adapter.OracleTimeStampLTZType, Adapter.GetOracleTimeStampLTZReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleTimeStampTZType , Adapter.OracleTimeStampTZType , Adapter.GetOracleTimeStampTZReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField(Adapter.OracleXmlTypeType     , Adapter.OracleXmlTypeType     , Adapter.GetOracleXmlTypeReaderMethod     , dataReaderType: Adapter.DataReaderType);
 
-//			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
+			// native provider only
+			if (Adapter.OracleRefType != null)
+				SetProviderField(Adapter.OracleRefType     , Adapter.OracleRefType         , Adapter.GetOracleRefReaderMethod!        , dataReaderType: Adapter.DataReaderType);
+
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampTZType, DataReaderType = Adapter.DataReaderType }]
+				= Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;
+
+			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        ProviderFieldType = Adapter.OracleDecimalType,      DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
+			ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
-		Type _oracleBFile;
-		Type _oracleBinary;
-		Type _oracleBlob;
-		Type _oracleClob;
-		Type _oracleDate;
-		Type _oracleDecimal;
-		Type _oracleIntervalDS;
-		Type _oracleIntervalYM;
-		Type _oracleRef;
-		Type _oracleRefCursor;
-		Type _oracleString;
-		Type _oracleTimeStamp;
-		Type _oracleTimeStampLTZ;
-		Type _oracleTimeStampTZ;
-		Type _oracleXmlType;
-		Type _oracleXmlStream;
+		public OracleVersion Version { get; }
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
-		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
-#endif
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			var typesNamespace  = AssemblyName + ".Types.";
-
-			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
-			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
-			_oracleBlob         = connectionType.Assembly.GetType(typesNamespace + "OracleBlob",         true);
-			_oracleClob         = connectionType.Assembly.GetType(typesNamespace + "OracleClob",         true);
-			_oracleDate         = connectionType.Assembly.GetType(typesNamespace + "OracleDate",         true);
-			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",      true);
-			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",   true);
-			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",   true);
-			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",    true);
-			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",       true);
-			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",    true);
-			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ", true);
-			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",  true);
-			_oracleRef          = connectionType.Assembly.GetType(typesNamespace + "OracleRef",          false);
-			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",      false);
-			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",    false);
-
-			SetProviderField(_oracleBFile,        _oracleBFile,        "GetOracleBFile");
-			SetProviderField(_oracleBinary,       _oracleBinary,       "GetOracleBinary");
-			SetProviderField(_oracleBlob,         _oracleBlob,         "GetOracleBlob");
-			SetProviderField(_oracleClob,         _oracleClob,         "GetOracleClob");
-			SetProviderField(_oracleDate,         _oracleDate,         "GetOracleDate");
-			SetProviderField(_oracleDecimal,      _oracleDecimal,      "GetOracleDecimal");
-			SetProviderField(_oracleIntervalDS,   _oracleIntervalDS,   "GetOracleIntervalDS");
-			SetProviderField(_oracleIntervalYM,   _oracleIntervalYM,   "GetOracleIntervalYM");
-			SetProviderField(_oracleString,       _oracleString,       "GetOracleString");
-			SetProviderField(_oracleTimeStamp,    _oracleTimeStamp,    "GetOracleTimeStamp");
-			SetProviderField(_oracleTimeStampLTZ, _oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
-			SetProviderField(_oracleTimeStampTZ,  _oracleTimeStampTZ,  "GetOracleTimeStampTZ");
-
-			try
-			{
-				if (_oracleRef != null)
-					SetProviderField(_oracleRef, _oracleRef, "GetOracleRef");
-			}
-			catch
-			{
-			}
-
-			try
-			{
-				if (_oracleXmlType != null)
-					SetProviderField(_oracleXmlType, _oracleXmlType, "GetOracleXmlType");
-			}
-			catch
-			{
-			}
-
-			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter      = Expression.Parameter(typeof(int),    "i");
-
-			{
-				// static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
-				// {
-				//     var tstz = rd.GetOracleTimeStampTZ(idx);
-				//     return new DateTimeOffset(
-				//         tstz.Year, tstz.Month,  tstz.Day,
-				//         tstz.Hour, tstz.Minute, tstz.Second,
-				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
-				// }
-
-				var tstz = Expression.Parameter(_oracleTimeStampTZ, "tstz");
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = _oracleTimeStampTZ }] =
-					Expression.Lambda(
-						Expression.Block(
-							new[] { tstz },
-							new Expression[]
-							{
-								Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter)),
-								Expression.Call(
-									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
-									Expression.Convert(tstz, typeof(object))
-								)
-							}),
-						dataReaderParameter,
-						indexParameter);
-			}
-
-			{
-				// static decimal GetOracleDecimal(OracleDataReader rd, int idx)
-				// {
-				//     var tstz = rd.GetOracleDecimal(idx);
-				//     decimal decimalVar;
-				//     var precision = 29;
-				//     while (true)
-				//     {
-				//        try
-				//        {
-				//           tstz = OracleDecimal.SetPrecision(tstz, precision);
-				//           decimalVar = (decimal)tstz;
-				//           break;
-				//        }
-				//        catch(OverflowException exceptionVar)
-				//        {
-				//           if (--precision <= 26)
-				//              throw exceptionVar;
-				//        }
-				//     }
-				//
-				//     return decimalVar;
-				// }
-
-				var tstz               = Expression.Parameter(_oracleDecimal, "tstz");
-				var decimalVar         = Expression.Variable(typeof(decimal), "decimalVar");
-				var precision          = Expression.Variable(typeof(int),     "precision");
-				var label              = Expression.Label(typeof(decimal));
-				var setPrecisionMethod = _oracleDecimal.GetMethod("SetPrecision", BindingFlags.Static | BindingFlags.Public);
-
-				var getDecimalAdv = Expression.Lambda(
-					Expression.Block(
-						new[] {tstz, decimalVar, precision},
-						Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter)),
-						Expression.Assign(precision, Expression.Constant(29)),
-						Expression.Loop(
-							Expression.TryCatch(
-								Expression.Block(
-									Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
-									Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
-									Expression.Break(label, decimalVar),
-									Expression.Constant(0)
-								),
-								Expression.Catch(typeof(OverflowException),
-									Expression.Block(
-										Expression.IfThen(
-											Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)),
-												Expression.Constant(26)),
-											Expression.Rethrow()
-										),
-										Expression.Constant(0)
-									)
-
-								)
-							),
-							label),
-						decimalVar
-					),
-					dataReaderParameter,
-					indexParameter);
-
-
-				// static T GetDecimalValue<T>(OracleDataReader rd, int idx)
-				// {
-				//    return (T)(decimal)OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
-				// }
-
-				LambdaExpression GetDecimal(Type t, bool convToDecimal)
-				{
-					Expression expr =
-						Expression.Call(setPrecisionMethod,
-							Expression.Call(
-								dataReaderParameter,
-								"GetOracleDecimal",
-								null,
-								indexParameter),
-							Expression.Constant(27));
-
-					if (convToDecimal)
-						expr = Expression.Convert(expr, typeof(decimal));
-
-					return Expression.Lambda(
-						Expression.Convert(expr, t),
-						dataReaderParameter,
-						indexParameter);
-				}
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = _oracleDecimal }] = getDecimalAdv;
-				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal)}        ] = getDecimalAdv;
-				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = GetDecimal(typeof(int),     true);
-				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = GetDecimal(typeof(long),    true);
-				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = GetDecimal(typeof(decimal), false);
-			}
-
-			{
-				// static DateTimeOffset GetOracleTimeStampLTZ(OracleDataReader rd, int idx)
-				// {
-				//     var tstz = rd.GetOracleTimeStampLTZ(idx).ToOracleTimeStampTZ();
-				//     return new DateTimeOffset(
-				//         tstz.Year, tstz.Month,  tstz.Day,
-				//         tstz.Hour, tstz.Minute, tstz.Second,
-				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
-				// }
-
-				var tstz = Expression.Parameter(_oracleTimeStampTZ, "tstz");
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = _oracleTimeStampLTZ }] =
-					Expression.Lambda(
-						Expression.Block(
-							new[] { tstz },
-							new Expression[]
-							{
-								Expression.Assign(
-									tstz,
-									Expression.Call(
-										Expression.Call(dataReaderParameter, "GetOracleTimeStampLTZ", null, indexParameter),
-										"ToOracleTimeStampTZ",
-										null,
-										null)),
-								Expression.Call(
-									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
-									Expression.Convert(tstz, typeof(object))
-								)
-							}),
-						dataReaderParameter,
-						indexParameter);
-			}
-
-			{
-				// ((OracleCommand)dataConnection.Command).BindByName = true;
-
-				var p     = Expression.Parameter(typeof(DataConnection), "dataConnection");
-				var pbind = Expression.Parameter(typeof(bool), "value");
-
-				_setBindByName =
-					Expression.Lambda<Action<DataConnection, bool>>(
-						Expression.Assign(
-							Expression.PropertyOrField(
-								Expression.Convert(
-									Expression.Call(
-										MemberHelper.MethodOf(() => Proxy.GetUnderlyingObject((DbCommand)null)),
-										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
-									connectionType.Assembly.GetType(AssemblyName + ".Client.OracleCommand", true)),
-								"BindByName"),
-							pbind),
-							p,
-							pbind
-					).Compile();
-			}
-
-			{
-				// value = new OracleTimeStampTZ(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), zone);
-
-				var dto  = Expression.Parameter(typeof(DateTimeOffset), "dto");
-				var zone = Expression.Parameter(typeof(string),         "zone");
-
-				_createOracleTimeStampTZ =
-					Expression.Lambda<Func<DateTimeOffset,string,object>>(
-						Expression.Convert(
-							Expression.New(
-								_oracleTimeStampTZ.GetConstructor(new []
-								{
-									typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(string)
-								}),
-								Expression.PropertyOrField(dto, "Year"),
-								Expression.PropertyOrField(dto, "Month"),
-								Expression.PropertyOrField(dto, "Day"),
-								Expression.PropertyOrField(dto, "Hour"),
-								Expression.PropertyOrField(dto, "Minute"),
-								Expression.PropertyOrField(dto, "Second"),
-								Expression.Call(null, MemberHelper.MethodOf(() => GetDateTimeOffsetNanoseconds(default(DateTimeOffset))), dto),
-								zone),
-							typeof(object)),
-						dto,
-						zone
-					).Compile();
-			}
-
-			_setSingle         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "BinaryFloat");
-			_setDouble         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "BinaryDouble");
-			_setText           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Clob");
-			_setNText          = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NClob");
-			_setImage          = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Blob");
-			_setBinary         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Blob");
-			_setVarBinary      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Blob");
-			_setDate           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Date");
-			_setSmallDateTime  = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Date");
-			_setDateTime2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "TimeStamp");
-			_setDateTimeOffset = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "TimeStampTZ");
-			_setGuid           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Raw");
-			_setCursor         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "RefCursor");
-			_setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
-			_setVarchar2       = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Varchar2");
-			_setLong           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Long");
-			_setLongRaw        = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "LongRaw");
-
-			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
-			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_oracleBlob,         GetNullValue(_oracleBlob),         true, DataType.Blob);       // ?
-			MappingSchema.AddScalarType(_oracleClob,         GetNullValue(_oracleClob),         true, DataType.NText);
-			MappingSchema.AddScalarType(_oracleDate,         GetNullValue(_oracleDate),         true, DataType.DateTime);
-			MappingSchema.AddScalarType(_oracleDecimal,      GetNullValue(_oracleDecimal),      true, DataType.Decimal);
-			MappingSchema.AddScalarType(_oracleIntervalDS,   GetNullValue(_oracleIntervalDS),   true, DataType.Time);       // ?
-			MappingSchema.AddScalarType(_oracleIntervalYM,   GetNullValue(_oracleIntervalYM),   true, DataType.Date);       // ?
-			MappingSchema.AddScalarType(_oracleRefCursor,    GetNullValue(_oracleRefCursor),    true, DataType.Binary);     // ?
-			MappingSchema.AddScalarType(_oracleString,       GetNullValue(_oracleString),       true, DataType.NVarChar);
-			MappingSchema.AddScalarType(_oracleTimeStamp,    GetNullValue(_oracleTimeStamp),    true, DataType.DateTime2);
-			MappingSchema.AddScalarType(_oracleTimeStampLTZ, GetNullValue(_oracleTimeStampLTZ), true, DataType.DateTimeOffset);
-			MappingSchema.AddScalarType(_oracleTimeStampTZ,  GetNullValue(_oracleTimeStampTZ),  true, DataType.DateTimeOffset);
-
-			if (_oracleRef != null)
-				MappingSchema.AddScalarType(_oracleRef, GetNullValue(_oracleRef), true, DataType.Binary); // ?
-
-			if (_oracleXmlType != null)
-				MappingSchema.AddScalarType(_oracleXmlType, GetNullValue(_oracleXmlType), true, DataType.Xml);
-
-			if (_oracleXmlStream != null)
-				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
-		}
-
-		static int GetDateTimeOffsetNanoseconds(DateTimeOffset value)
-		{
-			var tmp = new DateTimeOffset(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Offset);
-
-			return Convert.ToInt32((value.Ticks - tmp.Ticks) * NanosecondsPerTick);
-		}
-
-		static DateTimeOffset ToDateTimeOffset(object value)
-		{
-			dynamic tstz = value;
-
-			return new DateTimeOffset(
-				tstz.Year, tstz.Month,  tstz.Day,
-				tstz.Hour, tstz.Minute, tstz.Second,
-				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
-		}
-
-		static object GetNullValue(Type type)
-		{
-			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-			try
-			{
-				return getValue.Compile()();
-			}
-			catch (Exception)
-			{
-				return getValue.Compile()();
-			}
-		}
-
-		public string AssemblyName => Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
-
-		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
-		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
-		protected override string DataReaderTypeName  => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
-
-		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
+		// TODO: remove? both managed and unmanaged providers support it
+		public bool          IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			switch (Version)
+			{
+				case OracleVersion.v11: return new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				default               :
+				case OracleVersion.v12: return new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			}
 		}
 
-		static class MappingSchemaInstance
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			public static readonly OracleMappingSchema.NativeMappingSchema  NativeMappingSchema  = new OracleMappingSchema.NativeMappingSchema();
-			public static readonly OracleMappingSchema.ManagedMappingSchema ManagedMappingSchema = new OracleMappingSchema.ManagedMappingSchema();
+			switch (name)
+			{
+				default                        :
+				case ProviderName.OracleManaged: return new OracleMappingSchema.ManagedMappingSchema(providerSchema);
+				case ProviderName.OracleNative : return new OracleMappingSchema.NativeMappingSchema (providerSchema);
+			}
 		}
-
-		public override MappingSchema MappingSchema => Name == ProviderName.OracleNative
-			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
-			: MappingSchemaInstance.ManagedMappingSchema;
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
-		{
-			return _sqlOptimizer;
-		}
+		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
-		{
-			return new OracleSchemaProvider(Name);
-		}
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
-		Action<DataConnection, bool> _setBindByName;
-
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
 
-			if (_setBindByName == null)
-				EnsureConnection();
+			var command = TryGetProviderCommand(dataConnection.Command, dataConnection.MappingSchema);
 
-			// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
-			// parameter-like token.
-			// This is mostly issue with triggers creation, because they can have record tokens like :NEW
-			// incorectly identified by native provider as parameter
-			var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
-			_setBindByName(dataConnection, bind);
+			if (command != null)
+			{
+				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
+				// parameter-like token.
+				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
+				// incorectly identified by native provider as parameter
+				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
+				Adapter.SetBindByName(command, bind);
+			}
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
-			dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
+			if (command != null)
+			{
+				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
+				// For LONG data type fetching initialization
+				Adapter.SetInitialLONGFetchSize(command, -1);
 
-			// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
-			// For LONG data type fetching initialization
-			command.InitialLONGFetchSize = -1;
-
-			if (parameters != null)
-				foreach (var parameter in parameters)
-				{
-					if (parameter.IsArray && parameter.Value is object[])
+				if (parameters != null)
+					foreach (var parameter in parameters)
 					{
-						var value = (object[])parameter.Value;
-
-						if (value.Length != 0)
+						if (parameter.IsArray && parameter.Value is object[])
 						{
-							command.ArrayBindCount = value.Length;
+							var value = (object[])parameter.Value;
 
-							break;
+							if (value.Length != 0)
+							{
+								Adapter.SetArrayBindCount(command, value.Length);
+
+								break;
+							}
 						}
 					}
-				}
+			}
 		}
 
 		public override void DisposeCommand(DataConnection dataConnection)
 		{
 			foreach (DbParameter param in dataConnection.Command.Parameters)
 			{
-//				if (param != null && param.Value != null && param.Value is IDisposable)
-//					((IDisposable)param.Value).Dispose();
-
-				if (param is IDisposable)
-					((IDisposable)param).Dispose();
+				if (param is IDisposable disposable)
+					disposable.Dispose();
 			}
 
 			base.DisposeCommand(dataConnection);
 		}
 
-		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
-
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset:
-					if (value is DateTimeOffset)
+					if (value is DateTimeOffset dto)
 					{
-						var dto  = (DateTimeOffset)value;
 						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
-						value = _createOracleTimeStampTZ(dto, zone);
+						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
 					break;
 				case DataType.Boolean:
 					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					if (value is bool boolValue)
+						value = boolValue ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
-					if (value is Guid) value = ((Guid)value).ToByteArray();
+					if (value is Guid guid) value = guid.ToByteArray();
 					break;
 				case DataType.Time:
 					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
-					//
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
+				case DataType.BFile:
+					{
+						// TODO: BFile we do not support setting parameter value
+						value = null;
+						break;
+					}
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
@@ -533,7 +200,7 @@ namespace LinqToDB.DataProvider.Oracle
 				dataType = dataType.WithDataType(DataType.NText);
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
 		public override Type ConvertParameterType(Type type, DbDataType dataType)
@@ -543,75 +210,86 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
-				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
-				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);     break;
-				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);      break;
+				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return Adapter.OracleTimeStampTZType; break;
+				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);                  break;
+				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);                break;
+				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);                 break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		Action<IDbDataParameter> _setSingle;
-		Action<IDbDataParameter> _setDouble;
-		Action<IDbDataParameter> _setText;
-		Action<IDbDataParameter> _setNText;
-		Action<IDbDataParameter> _setImage;
-		Action<IDbDataParameter> _setBinary;
-		Action<IDbDataParameter> _setVarBinary;
-		Action<IDbDataParameter> _setDate;
-		Action<IDbDataParameter> _setSmallDateTime;
-		Action<IDbDataParameter> _setDateTime2;
-		Action<IDbDataParameter> _setDateTimeOffset;
-		Action<IDbDataParameter> _setGuid;
-		Action<IDbDataParameter> _setCursor;
-		Action<IDbDataParameter> _setNVarchar2;
-		Action<IDbDataParameter> _setVarchar2;
-		Action<IDbDataParameter> _setLong;
-		Action<IDbDataParameter> _setLongRaw;
-
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
+			OracleProviderAdapter.OracleDbType? type = null;
+
 			switch (dataType.DataType)
 			{
-				case DataType.Byte           : parameter.DbType = DbType.Int16;            break;
-				case DataType.SByte          : parameter.DbType = DbType.Int16;            break;
-				case DataType.UInt16         : parameter.DbType = DbType.Int32;            break;
-				case DataType.UInt32         : parameter.DbType = DbType.Int64;            break;
-				case DataType.UInt64         : parameter.DbType = DbType.Decimal;          break;
-				case DataType.VarNumeric     : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Single         : _setSingle           (parameter);           break;
-				case DataType.Double         : _setDouble           (parameter);           break;
-				case DataType.Text           : _setText             (parameter);           break;
-				case DataType.NText          : _setNText            (parameter);           break;
-				case DataType.Image          : _setImage            (parameter);           break;
-				case DataType.Binary         : _setBinary           (parameter);           break;
-				case DataType.VarBinary      : _setVarBinary        (parameter);           break;
-				case DataType.Date           : _setDate             (parameter);           break;
-				case DataType.SmallDateTime  : _setSmallDateTime    (parameter);           break;
-				case DataType.DateTime2      : _setDateTime2        (parameter);           break;
-				case DataType.DateTimeOffset : _setDateTimeOffset   (parameter);           break;
-				case DataType.Guid           : _setGuid             (parameter);           break;
-				case DataType.Cursor         : _setCursor           (parameter);           break;
-				case DataType.NVarChar       : _setNVarchar2        (parameter);           break;
-				case DataType.VarChar        : _setVarchar2         (parameter);           break;
-				case DataType.Long           : _setLong             (parameter);           break;
-				case DataType.LongRaw        : _setLongRaw          (parameter);           break;
-				default                      : base.SetParameterType(parameter, dataType); break;
+				case DataType.BFile    : type = OracleProviderAdapter.OracleDbType.BFile       ; break;
+				case DataType.Xml      : type = OracleProviderAdapter.OracleDbType.XmlType     ; break;
+				case DataType.Single   : type = OracleProviderAdapter.OracleDbType.BinaryFloat ; break;
+				case DataType.Double   : type = OracleProviderAdapter.OracleDbType.BinaryDouble; break;
+				case DataType.Text     : type = OracleProviderAdapter.OracleDbType.Clob        ; break;
+				case DataType.NText    : type = OracleProviderAdapter.OracleDbType.NClob       ; break;
+				case DataType.Image    :
+				case DataType.Binary   :
+				case DataType.VarBinary: type = OracleProviderAdapter.OracleDbType.Blob        ; break;
+				case DataType.Cursor   : type = OracleProviderAdapter.OracleDbType.RefCursor   ; break;
+				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;
+				case DataType.Long     : type = OracleProviderAdapter.OracleDbType.Long        ; break;
+				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				case DataType.Byte          :
+				case DataType.SByte         : parameter.DbType = DbType.Int16;       break;
+				case DataType.UInt16        : parameter.DbType = DbType.Int32;       break;
+				case DataType.UInt32        : parameter.DbType = DbType.Int64;       break;
+				case DataType.UInt64        :
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;     break;
+				case DataType.SmallDateTime : parameter.DbType = DbType.Date;        break;
+				case DataType.DateTime2     : parameter.DbType = DbType.DateTime;    break;
+				case DataType.Guid          : parameter.DbType = DbType.Binary;      break;
+				case DataType.VarChar       : parameter.DbType = DbType.String;      break;
+
+				// fallback (probably)
+				case DataType.NVarChar      :
+				case DataType.Text          :
+				case DataType.NText         : parameter.DbType = DbType.String;      break;
+				case DataType.Long          :
+				case DataType.LongRaw       :
+				case DataType.Image         :
+				case DataType.Binary        :
+				case DataType.Cursor        : parameter.DbType = DbType.Binary;      break;
+				case DataType.BFile         : parameter.DbType = DbType.Binary;      break;
+				case DataType.Xml           : parameter.DbType = DbType.String;      break;
+
+				default: base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 
 		#region BulkCopy
 
-		OracleBulkCopy _bulkCopy;
+		OracleBulkCopy? _bulkCopy;
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
+				_bulkCopy = new OracleBulkCopy(this);
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)

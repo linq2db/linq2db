@@ -416,7 +416,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
+		public static double Average<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -455,9 +455,9 @@ namespace LinqToDB
 
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal Corr<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+			           this IQueryable<TEntity>               source,
+			[ExprParameter] Expression<Func<TEntity, object>> expr1,
+			[ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
@@ -496,7 +496,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static int CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -541,9 +541,9 @@ namespace LinqToDB
 
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarPop<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+			           this IQueryable<TEntity>               source,
+			[ExprParameter] Expression<Func<TEntity, object>> expr1,
+			[ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
@@ -577,9 +577,9 @@ namespace LinqToDB
 
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarSamp<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+			           this IQueryable<TEntity>               source,
+			[ExprParameter] Expression<Func<TEntity, object>> expr1,
+			[ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
@@ -684,7 +684,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
+		public static TV Max<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -722,7 +722,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("MEDIAN({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static long Median<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		public static long Median<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -754,7 +754,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
+		public static TV Min<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -929,7 +929,7 @@ namespace LinqToDB
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true)]
-		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
+		public static double StdDev<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -969,7 +969,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("STDDEV_POP({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static decimal StdDevPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		public static decimal StdDevPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -1001,7 +1001,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("STDDEV_SAMP({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static decimal StdDevSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		public static decimal StdDevSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -1045,7 +1045,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("VAR_POP({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static decimal VarPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		public static decimal VarPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -1077,7 +1077,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("VAR_SAMP({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static decimal VarSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		public static decimal VarSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
@@ -1115,7 +1115,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public static TV Variance<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));

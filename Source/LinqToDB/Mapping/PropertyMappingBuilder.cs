@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -25,8 +24,8 @@ namespace LinqToDB.Mapping
 		/// <param name="entity">Entity fluent mapping builder.</param>
 		/// <param name="memberGetter">Column or association member getter expression.</param>
 		public PropertyMappingBuilder(
-			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>    entity,
-			[JetBrains.Annotations.NotNull] Expression<Func<T,object>> memberGetter)
+			EntityMappingBuilder<T>     entity,
+			Expression<Func<T,object?>> memberGetter)
 		{
 			_entity       = entity       ?? throw new ArgumentNullException(nameof(entity));
 			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
@@ -36,9 +35,9 @@ namespace LinqToDB.Mapping
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 
-		readonly Expression<Func<T,object>> _memberGetter;
-		readonly MemberInfo                 _memberInfo;
-		readonly EntityMappingBuilder<T>    _entity;
+		readonly Expression<Func<T,object?>> _memberGetter;
+		readonly MemberInfo                  _memberInfo;
+		readonly EntityMappingBuilder<T>     _entity;
 
 		#endregion
 		/// <summary>
@@ -59,7 +58,7 @@ namespace LinqToDB.Mapping
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
 		/// <returns>Returns entity mapping builder.</returns>
-		public EntityMappingBuilder<TE> Entity<TE>(string configuration = null)
+		public EntityMappingBuilder<TE> Entity<TE>(string? configuration = null)
 		{
 			return _entity.Entity<TE>(configuration);
 		}
@@ -69,7 +68,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
+		public PropertyMappingBuilder<T> Property(Expression<Func<T,object?>> func)
 		{
 			return _entity.Property(func);
 		}
@@ -79,7 +78,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object?>> func)
 		{
 			return _entity.Member(func);
 		}
@@ -116,10 +115,10 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<S>>> prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>>            thisKey,
-			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>>            otherKey,
-			                                bool                                canBeNull = true)
+			Expression<Func<T, IEnumerable<S>>> prop,
+			Expression<Func<T, ID1>>            thisKey,
+			Expression<Func<S, ID2>>            otherKey,
+			bool                                canBeNull = true)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -133,9 +132,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>> prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>>        predicate,
-			                                bool                                     canBeNull = true)
+			Expression<Func<T, IEnumerable<TOther>>> prop,
+			Expression<Func<T, TOther, bool>>        predicate,
+			bool                                     canBeNull = true)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -149,9 +148,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>> predicate,
-			                                bool                              canBeNull = true)
+			Expression<Func<T, TOther>>       prop,
+			Expression<Func<T, TOther, bool>> predicate,
+			bool                              canBeNull = true)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -165,9 +164,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>>              prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
-			                                bool                                     canBeNull = true)
+			Expression<Func<T, IEnumerable<TOther>>>              prop,
+			Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			bool                                     canBeNull = true)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -181,9 +180,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
-			                                bool                              canBeNull = true)
+			Expression<Func<T, TOther>>       prop,
+			Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			bool                              canBeNull = true)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -217,7 +216,7 @@ namespace LinqToDB.Mapping
 
 			if (me != null && me.Expression is MemberExpression)
 			{
-				for (var m = me; m != null; m = m.Expression as MemberExpression)
+				for (MemberExpression? m = me; m != null; m = m.Expression as MemberExpression)
 				{
 					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
@@ -420,7 +419,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="aliasMember">Alias member getter expression.</param>
 		/// <returns>Returns current column mapping builder.</returns>
-		public PropertyMappingBuilder<T> IsAlias([JetBrains.Annotations.NotNull] Expression<Func<T, object>> aliasMember)
+		public PropertyMappingBuilder<T> IsAlias(Expression<Func<T, object>> aliasMember)
 		{
 			if (aliasMember == null) throw new ArgumentNullException(nameof(aliasMember));
 
@@ -437,7 +436,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="aliasMember">Alias member name.</param>
 		/// <returns>Returns current column mapping builder.</returns>
-		public PropertyMappingBuilder<T> IsAlias([JetBrains.Annotations.NotNull] string aliasMember)
+		public PropertyMappingBuilder<T> IsAlias(string aliasMember)
 		{
 			if (string.IsNullOrEmpty(aliasMember))
 				throw new ArgumentException("Value cannot be null or empty.", nameof(aliasMember));
@@ -456,7 +455,7 @@ namespace LinqToDB.Mapping
 		/// <param name="isColumn">Indicates whether a property value should be filled during entity materialization (calculated property).</param>
 		/// <param name="alias">Optional alias for specific member expression. By default Member Name is used.</param>
 		/// <returns>Returns current column mapping builder.</returns>
-		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false, string alias = null)
+		public PropertyMappingBuilder<T> IsExpression<TR>(Expression<Func<T, TR>> expression, bool isColumn = false, string? alias = null)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 

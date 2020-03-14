@@ -91,7 +91,7 @@ public class MySettings : ILinqToDBSettings
             yield return
                 new ConnectionStringSettings
                 {
-                    Name = "SqlServer",
+                    Name = "Northwind",
                     ProviderName = "SqlServer",
                     ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
                 };
@@ -514,40 +514,43 @@ using (var transaction = new TransactionScope())
 
 ## MiniProfiler
 
-If you would like to use MiniProfiler from StackExchange you'd need to wrap ProfiledDbConnection around our regular DataConnection.
+If you would like to use [MiniProfiler](https://github.com/MiniProfiler/dotnet) or other profiling tool that wraps ADO.NET provider classes, you need to configure our regular DataConnection to use wrapped connection.
 
 ```c#
+// example of SQL Server-backed data connection with MiniProfiler enabled for debug builds
 public class DbDataContext : DataConnection
 {
+// let's use profiler only for debug builds
 #if !DEBUG
-  public DbDataContext() : base("Northwind") { }
+  public DbDataContext() : base("Northwind")
+  {
+    // this is important part:
+    // here we tell linq2db how to access underlying ADO.NET classes of used provider
+    // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
+    // which could lead to loss or unavailability of some functionality when profiled connection enabled
+    MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
+    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
+    MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
+    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+  }
 #else
   public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
 
   private static IDataProvider GetDataProvider()
   {
-    // you can move this line to other place, but it should be
-    // always set before LINQ to DB provider instance creation
-    LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
-
-    return new SqlServerDataProvider("", SqlServerVersion.v2012);
+     // create provider instance (SQL Server 2012 provider in our case)
+     return new SqlServerDataProvider("", SqlServerVersion.v2012);
   }
 
   private static IDbConnection GetConnection()
   {
-    var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
-    return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+     // create provider-specific connection instance. SqlConnection in our case
+     var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+
+     // wrap it by profiler's connection implementation
+     return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
   }
 #endif
-}
-```
-
-This assumes that you only want to use MiniProfiler while in DEBUG mode and that you are using SQL Server for your database. If you're using a different database you would need to change GetDataProvider() to return the appropriate IDataProvider. For example for MySql you would use:
-
-```c#
-private static IDataProvider GetDataProvider()
-{
-  return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
 ```
 

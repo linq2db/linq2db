@@ -1,6 +1,5 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Oracle.OracleTools.AssemblyName = "Oracle.ManagedDataAccess";
 	LinqToDB.DataProvider.Oracle.OracleTools.ResolveOracle(
 		typeof(Oracle.ManagedDataAccess.Client.OracleConnection).Assembly);
 #><#+

@@ -1,4 +1,4 @@
-﻿#nullable disable
+﻿#if !NETSTANDARD2_0
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,19 +11,19 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlProvider;
 
-	public class SapHanaDataProvider : DynamicDataProviderBase
+	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
 		public SapHanaDataProvider()
-			: this(SapHanaTools.DetectedProviderName)
+			: this(ProviderName.SapHanaNative)
 		{
 		}
 
 		public SapHanaDataProvider(string name)
-			: this(name, null)
+			: this(name, MappingSchemaInstance)
 		{
 		}
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -49,30 +49,6 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace => "Sap.Data.Hana";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
-
-#if !NETSTANDARD2_0
-		public override string DbFactoryProviderName => "Sap.Data.Hana";
-#endif
-
-		Action<IDbDataParameter> _setText;
-		Action<IDbDataParameter> _setNText;
-		Action<IDbDataParameter> _setBlob;
-		Action<IDbDataParameter> _setVarBinary;
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			const string paramTypeName = "HanaParameter";
-			const string dataTypeName  = "HanaDbType";
-
-			_setText      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
-			_setNText     = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
-			_setBlob      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Blob");
-			_setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
-		}
-
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaSchemaProvider();
@@ -80,7 +56,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SapHanaSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -101,14 +77,14 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Char:
 					type = typeof (string);
 					break;
-				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);  break;
+				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);   break;
 				case DataType.Guid   : if (type == typeof(Guid)) return typeof(string); break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -125,28 +101,48 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
+			SapHanaProviderAdapter.HanaDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Text  : _setText(parameter);      break;
-				case DataType.Image : _setBlob(parameter);      break;
-				case DataType.NText : _setNText(parameter);     break;
-				case DataType.Binary: _setVarBinary(parameter); break;
+				case DataType.Text : type = SapHanaProviderAdapter.HanaDbType.Text; break;
+				case DataType.Image: type = SapHanaProviderAdapter.HanaDbType.Blob; break;
 			}
-			base.SetParameterType(parameter, dataType);
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				// fallback types
+				case DataType.Text  : parameter.DbType = DbType.String; return;
+				case DataType.Image : parameter.DbType = DbType.Binary; return;
+
+				case DataType.NText : parameter.DbType = DbType.Xml;    return;
+				case DataType.Binary: parameter.DbType = DbType.Binary; return;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
+			return new SapHanaBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
@@ -159,20 +155,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return true;
 		}
 
-		static class MappingSchemaInstance
-		{
-#if !NETSTANDARD2_0
-			public static readonly SapHanaMappingSchema.NativeMappingSchema NativeMappingSchema = new SapHanaMappingSchema.NativeMappingSchema();
-#endif
-			public static readonly SapHanaMappingSchema.OdbcMappingSchema   OdbcMappingSchema   = new SapHanaMappingSchema.OdbcMappingSchema();
-		}
-
-#if !NETSTANDARD2_0
-		public override MappingSchema MappingSchema => Name == ProviderName.SapHanaOdbc
-			? MappingSchemaInstance.OdbcMappingSchema as MappingSchema
-			: MappingSchemaInstance.NativeMappingSchema;
-#else
-		public override MappingSchema MappingSchema => MappingSchemaInstance.OdbcMappingSchema;
-#endif
+		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
 	}
 }
+#endif

@@ -1,25 +1,16 @@
 ﻿using BenchmarkDotNet.Running;
-using System;
-using System.Diagnostics;
-using Tests.Benchmarks;
 
-namespace Tests.Benchmark
+namespace LinqToDB.Benchmarks
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			if (Debugger.IsAttached)
-			{
-				QueryTests.VisitAllBigPredicateNonRecursive();
-				Console.WriteLine("Finished...");
-				Console.ReadLine();
-			}
-			else
-			{
-				BenchmarkRunner.Run<QueryTests>();
-				BenchmarkRunner.Run<QueryCacheCollectionsBenchmark>();
-			}
+			BenchmarkSwitcher
+				.FromAssembly(typeof(Program).Assembly)
+				.Run(
+					args.Length > 0 ? args : new [] { "--filter=*" },
+					Config.Instance);
 		}
 	}
 }

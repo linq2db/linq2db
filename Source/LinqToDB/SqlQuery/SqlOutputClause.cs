@@ -1,22 +1,19 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Linq.Builder;
-
 	public class SqlOutputClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
-		private List<SqlSetExpression> _outputItems;
+		private List<SqlSetExpression>? _outputItems;
 
-		public SqlTable    SourceTable    { get; set; }
-		public SqlTable    InsertedTable  { get; set; }
-		public SqlTable    DeletedTable   { get; set; }
-		public SqlTable    OutputTable    { get; set; }
-		public SelectQuery OutputQuery    { get; set; }
+		public SqlTable     SourceTable    { get; set; } = null!;
+		public SqlTable     InsertedTable  { get; set; } = null!;
+		public SqlTable     DeletedTable   { get; set; } = null!;
+		public SqlTable     OutputTable    { get; set; } = null!;
+		public SelectQuery? OutputQuery    { get; set; }
 
 		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
 		public List<SqlSetExpression> OutputItems    => _outputItems ?? (_outputItems = new List<SqlSetExpression>());
@@ -63,7 +60,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			((ISqlExpressionWalkable)SourceTable  )?.Walk(options, func);
 			((ISqlExpressionWalkable)DeletedTable )?.Walk(options, func);

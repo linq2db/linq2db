@@ -156,17 +156,17 @@ void GenerateTypesFromMetadata()
 
 			DataContextObject.Members.Add(c);
 		}
-	}
 
-	DataContextObject.Members.Add(new MemberGroup
-	{
-		IsCompact = true,
-		Members   =
+		DataContextObject.Members.Add(new MemberGroup
 		{
-			new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
-			new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
-		}
-	});
+			IsCompact = true,
+			Members   =
+			{
+				new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
+				new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
+			}
+		});
+	}
 
 	if (Tables.Count > 0)
 		DataContextObject.Members.Insert(0, defProps);
@@ -807,10 +807,10 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						(string)SqlBuilder.Convert(ServerName,      LinqToDB.SqlProvider.ConvertType.NameToServer),
-						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.Convert(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.Convert(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.Convert(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
 				spName = ToStringLiteral(spName);

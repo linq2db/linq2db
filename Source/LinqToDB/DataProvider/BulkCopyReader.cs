@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -10,39 +9,40 @@ using System.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using LinqToDB.Data;
 	using Mapping;
 
 	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
 	{
-		public BulkCopyReader(IDataProvider dataProvider, MappingSchema mappingSchema, List<ColumnDescriptor> columns, IEnumerable collection)
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable collection)
 		{
-			_dataProvider  = dataProvider;
-			_columns       = columns;
-			_enumerator    = collection.GetEnumerator();
-			_mappingSchema = mappingSchema;
-			_columnTypes   = _columns
-				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType, c.DbType, c.Length))
+			_dataConnection      = dataConnection;
+			_columns             = columns;
+			_enumerator          = collection.GetEnumerator();
+			_columnTypes         = _columns
+				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? _dataConnection.DataProvider.MappingSchema.GetDataType(c.MemberType).Type.DataType : c.DataType, c.DbType, c.Length))
 				.ToArray();
+			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
 		public int Count;
 
-		readonly DbDataType[]           _columnTypes;
-		readonly IDataProvider          _dataProvider;
-		readonly List<ColumnDescriptor> _columns;
-		readonly IEnumerator            _enumerator;
-		readonly Parameter              _valueConverter = new Parameter();
-		readonly MappingSchema          _mappingSchema;
+		readonly DataConnection                   _dataConnection;
+		readonly DbDataType[]                     _columnTypes;
+		readonly List<ColumnDescriptor>           _columns;
+		readonly IEnumerator                      _enumerator;
+		readonly Parameter                        _valueConverter = new Parameter();
+		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		public class Parameter : IDbDataParameter
 		{
 			public DbType             DbType        { get; set; }
 			public ParameterDirection Direction     { get; set; }
 			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string             ParameterName { get; set; }
-			public string             SourceColumn  { get; set; }
+			public string?            ParameterName { get; set; }
+			public string?            SourceColumn  { get; set; }
 			public DataRowVersion     SourceVersion { get; set; }
-			public object             Value         { get; set; }
+			public object?            Value         { get; set; }
 			public byte               Precision     { get; set; }
 			public byte               Scale         { get; set; }
 			public int                Size          { get; set; }
@@ -57,37 +57,34 @@ namespace LinqToDB.DataProvider
 
 		public override Type GetFieldType(int i)
 		{
-			return _dataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
+			return _dataConnection.DataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
 		}
 
-		public override object GetValue(int i)
+		public override object? GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_mappingSchema, _enumerator.Current);
+			var value = _columns[i].GetValue(_dataConnection.MappingSchema, _enumerator.Current);
 
-			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
+				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
 			return _valueConverter.Value;
 		}
 
-		public override int GetValues(object[] values)
+		public override int GetValues(object?[] values)
 		{
 			var count = _columns.Count;
 			var obj   = _enumerator.Current;
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(_mappingSchema, obj);
-				_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value);
+				var value = _columns[it].GetValue(_dataConnection.MappingSchema, obj);
+				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}
 
 			return count;
 		}
 
-		public override int FieldCount
-		{
-			get { return _columns.Count; }
-		}
+		public override int FieldCount => _columns.Count;
 
 		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
@@ -99,32 +96,25 @@ namespace LinqToDB.DataProvider
 			throw new NotImplementedException();
 		}
 
-		public override string      GetDataTypeName(int i)       { throw new NotImplementedException(); }
-		public override int         GetOrdinal     (string name) { throw new NotImplementedException(); }
-		public override bool        GetBoolean     (int i)       { throw new NotImplementedException(); }
-		public override byte        GetByte        (int i)       { throw new NotImplementedException(); }
-		public override char        GetChar        (int i)       { throw new NotImplementedException(); }
-		public override Guid        GetGuid        (int i)       { throw new NotImplementedException(); }
-		public override short       GetInt16       (int i)       { throw new NotImplementedException(); }
-		public override int         GetInt32       (int i)       { throw new NotImplementedException(); }
-		public override long        GetInt64       (int i)       { throw new NotImplementedException(); }
-		public override float       GetFloat       (int i)       { throw new NotImplementedException(); }
-		public override double      GetDouble      (int i)       { throw new NotImplementedException(); }
-		public override string      GetString      (int i)       { throw new NotImplementedException(); }
-		public override decimal     GetDecimal     (int i)       { throw new NotImplementedException(); }
-		public override DateTime    GetDateTime    (int i)       { throw new NotImplementedException(); }
-		//public override IDataReader GetData        (int i)       { throw new NotImplementedException(); }
-		public override bool        IsDBNull       (int i)       { return GetValue(i) == null;          }
+		public override string      GetDataTypeName(int i)       => throw new NotImplementedException();
+		public override int         GetOrdinal     (string name) => _ordinals[name];
+		public override bool        GetBoolean     (int i)       => throw new NotImplementedException();
+		public override byte        GetByte        (int i)       => throw new NotImplementedException();
+		public override char        GetChar        (int i)       => throw new NotImplementedException();
+		public override Guid        GetGuid        (int i)       => throw new NotImplementedException();
+		public override short       GetInt16       (int i)       => throw new NotImplementedException();
+		public override int         GetInt32       (int i)       => throw new NotImplementedException();
+		public override long        GetInt64       (int i)       => throw new NotImplementedException();
+		public override float       GetFloat       (int i)       => throw new NotImplementedException();
+		public override double      GetDouble      (int i)       => throw new NotImplementedException();
+		public override string      GetString      (int i)       => throw new NotImplementedException();
+		public override decimal     GetDecimal     (int i)       => throw new NotImplementedException();
+		public override DateTime    GetDateTime    (int i)       => throw new NotImplementedException();
+		//public override IDataReader GetData        (int i)       => throw new NotImplementedException();
+		public override bool        IsDBNull       (int i)       => GetValue(i) == null;
 
-		public override object this[int i]
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public override object this[string name]
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public override object this[int i]       => throw new NotImplementedException();
+		public override object this[string name] => throw new NotImplementedException();
 
 		#endregion
 
@@ -172,7 +162,7 @@ namespace LinqToDB.DataProvider
 				var columnDescriptor = _columns[i];
 				var row = table.NewRow();
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
-				row[SchemaTableColumn.DataType]                = _dataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
+				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;
@@ -191,10 +181,7 @@ namespace LinqToDB.DataProvider
 			return table;
 		}
 
-		public override bool NextResult()
-		{
-			return false;
-		}
+		public override bool NextResult()   => false;
 
 		public override bool Read()
 		{
@@ -222,10 +209,7 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		public override IEnumerator GetEnumerator()
-		{
-			throw new NotImplementedException();
-		}
+		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
 
 		public override bool HasRows => throw new NotImplementedException();
 	}

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Tests.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Benchmarks</AssemblyName>
+		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
+		<TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<Nullable>disable</Nullable>
+		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+	</ItemGroup>
+</Project>

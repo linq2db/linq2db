@@ -58,7 +58,7 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder, that contains only target.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
-			[NotNull] this ITable<TTarget> target)
+			 this ITable<TTarget> target)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -80,8 +80,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder, that contains only target.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
-			[NotNull]                    this ITable<TTarget> target,
-			[NotNull, SqlQueryDependent]      string          hint)
+			                    this ITable<TTarget> target,
+			[SqlQueryDependent]      string          hint)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (hint   == null) throw new ArgumentNullException(nameof(hint));
@@ -105,8 +105,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
-			[NotNull] this IQueryable<TSource> source,
-			[NotNull]      ITable<TTarget>     target)
+			 this IQueryable<TSource> source,
+			      ITable<TTarget>     target)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -131,9 +131,9 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
-			[NotNull]                    this IQueryable<TSource> source,
-			[NotNull]                         ITable<TTarget>     target,
-			[NotNull, SqlQueryDependent]      string              hint)
+			                    this IQueryable<TSource> source,
+			                         ITable<TTarget>     target,
+			[SqlQueryDependent]      string              hint)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -158,8 +158,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			[NotNull] this IMergeableUsing<TTarget> merge,
-			[NotNull]      IQueryable<TSource>      source)
+			 this IMergeableUsing<TTarget> merge,
+			      IQueryable<TSource>      source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -184,8 +184,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			[NotNull]                    this IMergeableUsing<TTarget> merge,
-			[NotNull, SqlQueryDependent] IEnumerable<TSource>          source)
+			                    this IMergeableUsing<TTarget> merge,
+			[SqlQueryDependent] IEnumerable<TSource>          source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -218,7 +218,7 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(
-			[NotNull] this IMergeableUsing<TTarget> merge)
+			 this IMergeableUsing<TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -246,9 +246,9 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
-			[NotNull]                this IMergeableOn<TTarget, TSource>  merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TKey>> targetKey,
-			[NotNull, InstantHandle]      Expression<Func<TSource, TKey>> sourceKey)
+			                this IMergeableOn<TTarget, TSource>  merge,
+			[InstantHandle]      Expression<Func<TTarget, TKey>> targetKey,
+			[InstantHandle]      Expression<Func<TSource, TKey>> sourceKey)
 		{
 			if (merge     == null) throw new ArgumentNullException(nameof(merge));
 			if (targetKey == null) throw new ArgumentNullException(nameof(targetKey));
@@ -274,8 +274,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
-			[NotNull]                this IMergeableOn<TTarget, TSource>           merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>> matchCondition)
+			                this IMergeableOn<TTarget, TSource>           merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>> matchCondition)
 		{
 			if (merge          == null) throw new ArgumentNullException(nameof(merge));
 			if (matchCondition == null) throw new ArgumentNullException(nameof(matchCondition));
@@ -298,7 +298,7 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(
-			[NotNull] this IMergeableOn<TTarget, TTarget> merge)
+			 this IMergeableOn<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -324,7 +324,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(
-			[NotNull] this IMergeableSource<TTarget, TTarget> merge)
+			 this IMergeableSource<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -350,8 +350,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
-			[NotNull]                this IMergeableSource<TTarget, TTarget> merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
+			                this IMergeableSource<TTarget, TTarget> merge,
+			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -379,8 +379,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
-			[NotNull, InstantHandle]      Expression<Func<TSource, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -410,9 +410,9 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
-			[NotNull, InstantHandle]      Expression<Func<TSource, bool>>    searchCondition,
-			[NotNull, InstantHandle]      Expression<Func<TSource, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle]      Expression<Func<TSource, bool>>    searchCondition,
+			[InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -440,7 +440,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(
-			[NotNull] this IMergeableSource<TTarget, TTarget> merge)
+			 this IMergeableSource<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -466,8 +466,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
-			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition)
+			                this IMergeableSource<TTarget, TTarget>       merge,
+			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -495,8 +495,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource>          merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -526,9 +526,9 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource>          merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
+			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -559,8 +559,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
-			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
+			                this IMergeableSource<TTarget, TTarget>       merge,
+			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
@@ -590,9 +590,9 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
-			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
+			                this IMergeableSource<TTarget, TTarget>       merge,
+			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition,
+			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -624,9 +624,9 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
+			                this IMergeableSource<TTarget, TSource>          merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
@@ -660,10 +660,10 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
+			                this IMergeableSource<TTarget, TSource>          merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
+			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -693,7 +693,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
-			[NotNull] this IMergeableSource<TTarget, TSource> merge)
+			 this IMergeableSource<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -719,8 +719,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource>       merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>> searchCondition)
+			                this IMergeableSource<TTarget, TSource>       merge,
+			[InstantHandle]      Expression<Func<TTarget, TSource, bool>> searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -751,8 +751,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -783,9 +783,9 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition,
+			[InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -815,7 +815,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
-			[NotNull] this IMergeableSource<TTarget, TSource> merge)
+			 this IMergeableSource<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -842,8 +842,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
-			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
-			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
@@ -868,7 +868,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static int Merge<TTarget, TSource>(
-			[NotNull] this IMergeable<TTarget, TSource> merge)
+			 this IMergeable<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
@@ -894,7 +894,7 @@ namespace LinqToDB
 		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static Task<int> MergeAsync<TTarget, TSource>(
-			[NotNull] this IMergeable<TTarget, TSource> merge,
+			 this IMergeable<TTarget, TSource> merge,
 			               CancellationToken            token = default)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));

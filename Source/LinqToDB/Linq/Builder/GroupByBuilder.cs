@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -100,8 +99,8 @@ namespace LinqToDB.Linq.Builder
 			return groupBy;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -112,12 +111,12 @@ namespace LinqToDB.Linq.Builder
 
 		internal class KeyContext : SelectContext
 		{
-			public KeyContext(IBuildContext parent, LambdaExpression lambda, params IBuildContext[] sequences)
+			public KeyContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
 				: base(parent, lambda, sequences)
 			{
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				return base.BuildExpression(expression, level, true);
 			}
@@ -127,12 +126,12 @@ namespace LinqToDB.Linq.Builder
 				base.BuildQuery(query, queryParameter);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				return base.ConvertToSql(expression, level, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				return base.ConvertToIndex(expression, level, flags);
 			}
@@ -142,12 +141,12 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				return base.IsExpression(expression, level, requestFlag);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				return base.GetContext(expression, level, buildInfo);
 			}
@@ -160,12 +159,12 @@ namespace LinqToDB.Linq.Builder
 		internal class GroupByContext : SequenceContextBase
 		{
 			public GroupByContext(
-				IBuildContext parent,
-				Expression   sequenceExpr,
-				Type          groupingType,
-				IBuildContext sequence,
-				KeyContext    key,
-				SelectContext element)
+				IBuildContext? parent,
+				Expression     sequenceExpr,
+				Type           groupingType,
+				IBuildContext  sequence,
+				KeyContext     key,
+				SelectContext  element)
 				: base(parent, sequence, null)
 			{
 				_sequenceExpr = sequenceExpr;
@@ -187,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 					TKey                    key,
 					IQueryRunner            queryRunner,
 					List<ParameterAccessor> parameters,
-					Func<IDataContext,TKey,object[],IQueryable<TElement>> itemReader)
+					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
 					Key = key;
 
@@ -201,10 +200,10 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				private  IList<TElement>                                       _items;
-				readonly IQueryRunner                                          _queryRunner;
-				readonly List<ParameterAccessor>                               _parameters;
-				readonly Func<IDataContext,TKey,object[],IQueryable<TElement>> _itemReader;
+				private  IList<TElement>?                                        _items;
+				readonly IQueryRunner                                            _queryRunner;
+				readonly List<ParameterAccessor>                                 _parameters;
+				readonly Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> _itemReader;
 
 				public TKey Key { get; private set; }
 
@@ -212,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					using (var db = _queryRunner.DataContext.Clone(true))
 					{
-						var ps = new object[_parameters.Count];
+						var ps = new object?[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
 							ps[i] = _parameters[i].Accessor(_queryRunner.Expression, _queryRunner.Parameters);
@@ -287,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TSource,bool>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TSource,bool>>)null!)),
 						groupExpression,
 						Expression.Lambda<Func<TSource,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, context._key.Lambda.Body, keyParam),
@@ -295,13 +294,13 @@ namespace LinqToDB.Linq.Builder
 
 					expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null!)),
 						expr,
 						context._element.Lambda);
 
 // ReSharper restore AssignNullToNotNullAttribute
 
-					var lambda = Expression.Lambda<Func<IDataContext,TKey,object[],IQueryable<TElement>>>(
+					var lambda = Expression.Lambda<Func<IDataContext,TKey,object?[]?,IQueryable<TElement>>>(
 						Expression.Convert(expr, typeof(IQueryable<TElement>)),
 						Expression.Parameter(typeof(IDataContext), "ctx"),
 						keyParam,
@@ -309,20 +308,8 @@ namespace LinqToDB.Linq.Builder
 
 					var itemReader      = CompiledQuery.Compile(lambda);
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
-					var dataReaderLocal = context.Builder.DataReaderLocal;
 
-					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
-					{
-						keyExpr = Expression.Block(
-							new[] { context.Builder.DataReaderLocal },
-							new[]
-							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
-								keyExpr
-							});
-					}
-
-					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey>>(
+					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,TKey>>(
 						keyExpr,
 						new []
 						{
@@ -335,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null, null, null, null, null, null, null, null)),
+						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, null!, null!, null!, null!, null!)),
 						new Expression[]
 						{
 							ExpressionBuilder.QueryRunnerParam,
@@ -344,20 +331,20 @@ namespace LinqToDB.Linq.Builder
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
-							Expression.Constant(keyReader.Compile()),
+							keyReader,
 							Expression.Constant(itemReader)
 						});
 				}
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					IQueryRunner             runner,
-					IDataContext             dataContext,
-					IDataReader              dataReader,
-					List<ParameterAccessor>  parameterAccessor,
-					Expression               expr,
-					object[]                 ps,
-					Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey> keyReader,
-					Func<IDataContext,TKey,object[],IQueryable<TElement>>                itemReader)
+					IQueryRunner                                                           runner,
+					IDataContext                                                           dataContext,
+					IDataReader                                                            dataReader,
+					List<ParameterAccessor>                                                parameterAccessor,
+					Expression                                                             expr,
+					object?[]?                                                             ps,
+					Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,TKey> keyReader,
+					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>>                itemReader)
 				{
 					var key = keyReader(runner, dataContext, dataReader, expr, ps);
 					return new Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
@@ -383,7 +370,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null)
 					return BuildGrouping();
@@ -441,7 +428,7 @@ namespace LinqToDB.Linq.Builder
 
 									Builder.ReplaceParent(ctx, p);
 
-									return new SqlFunction(call.Type, call.Method.Name, sql);
+									return new SqlFunction(call.Type, call.Method.Name, true, sql);
 								}
 							}
 						}
@@ -539,9 +526,9 @@ namespace LinqToDB.Linq.Builder
 				return new SqlFunction(call.Type, call.Method.Name, true, args);
 			}
 
-			PropertyInfo _keyProperty;
+			PropertyInfo? _keyProperty;
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (expression == null)
 				{
@@ -599,10 +586,10 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
-			readonly Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]> _expressionIndex =
-				new Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]>();
+			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex =
+				new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				var key = Tuple.Create(expression, level, flags);
 
@@ -622,11 +609,11 @@ namespace LinqToDB.Linq.Builder
 				return info;
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				if (level != 0)
 				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -659,16 +646,16 @@ namespace LinqToDB.Linq.Builder
 
 			interface IContextHelper
 			{
-				Expression GetContext(MappingSchema mappingSchema, Expression sequence, ParameterExpression param, Expression expr1, Expression expr2);
+				Expression GetContext(MappingSchema mappingSchema, Expression? sequence, ParameterExpression param, Expression expr1, Expression expr2);
 			}
 
 			class ContextHelper<T> : IContextHelper
 			{
-				public Expression GetContext(MappingSchema mappingSchema, Expression sequence, ParameterExpression param, Expression expr1, Expression expr2)
+				public Expression GetContext(MappingSchema mappingSchema, Expression? sequence, ParameterExpression param, Expression expr1, Expression expr2)
 				{
 // ReSharper disable AssignNullToNotNullAttribute
 					//ReflectionHelper.Expressor<object>.MethodExpressor(_ => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
-					var mi   = MemberHelper.MethodOf(() => Enumerable.Where(null, (Func<T,bool>)null));
+					var mi   = MemberHelper.MethodOf(() => Enumerable.Where(null, (Func<T,bool>)null!));
 // ReSharper restore AssignNullToNotNullAttribute
 					var arg2 = Expression.Lambda<Func<T,bool>>(ExpressionBuilder.Equal(mappingSchema, expr1, expr2), new[] { param });
 
@@ -676,7 +663,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (expression == null && buildInfo != null)
 				{
@@ -718,7 +705,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (level != 0)
 				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -727,8 +714,8 @@ namespace LinqToDB.Linq.Builder
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
 							return ReferenceEquals(levelExpression, expression) ?
-								_key.GetContext(null,       0,         buildInfo) :
-								_key.GetContext(expression, level + 1, buildInfo);
+								_key.GetContext(null,       0,         buildInfo!) :
+								_key.GetContext(expression, level + 1, buildInfo!);
 						}
 					}
 				}

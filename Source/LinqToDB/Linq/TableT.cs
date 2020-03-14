@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq
 			InitTable(dataContext, expression);
 		}
 
-		void InitTable(IDataContext dataContext, Expression expression)
+		void InitTable(IDataContext dataContext, Expression? expression)
 		{
 			Init(dataContext, expression);
 
@@ -31,14 +30,14 @@ namespace LinqToDB.Linq
 		}
 
 		// ReSharper disable StaticMemberInGenericType
-		static MethodInfo _serverNameMethodInfo;
-		static MethodInfo _databaseNameMethodInfo;
-		static MethodInfo _schemaNameMethodInfo;
-		static MethodInfo _tableNameMethodInfo;
+		static MethodInfo? _serverNameMethodInfo;
+		static MethodInfo? _databaseNameMethodInfo;
+		static MethodInfo? _schemaNameMethodInfo;
+		static MethodInfo? _tableNameMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
-		private string _serverName;
-		public  string ServerName
+		private string? _serverName;
+		public  string? ServerName
 		{
 			get => _serverName;
 			set
@@ -55,8 +54,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		private string _databaseName;
-		public  string  DatabaseName
+		private string? _databaseName;
+		public  string?  DatabaseName
 		{
 			get => _databaseName;
 			set
@@ -73,8 +72,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		private string _schemaName;
-		public  string  SchemaName
+		private string? _schemaName;
+		public  string?  SchemaName
 		{
 			get => _schemaName;
 			set
@@ -91,7 +90,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		private string _tableName;
+		private string _tableName = null!;
 		public  string  TableName
 		{
 			get => _tableName;
@@ -114,7 +113,7 @@ namespace LinqToDB.Linq
 				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName)
 				.ToString();
 
-		public ITable<T> ChangeServerName(string serverName)
+		public ITable<T> ChangeServerName(string? serverName)
 		{
 			var table          = new Table<T>(DataContext);
 			table.TableName    = TableName;
@@ -125,7 +124,7 @@ namespace LinqToDB.Linq
 			return table;
 		}
 
-		public ITable<T> ChangeDatabaseName(string databaseName)
+		public ITable<T> ChangeDatabaseName(string? databaseName)
 		{
 			var table          = new Table<T>(DataContext);
 			table.TableName    = TableName;
@@ -136,7 +135,7 @@ namespace LinqToDB.Linq
 			return table;
 		}
 
-		public ITable<T> ChangeSchemaName(string schemaName)
+		public ITable<T> ChangeSchemaName(string? schemaName)
 		{
 			var table          = new Table<T>(DataContext);
 			table.TableName    = TableName;

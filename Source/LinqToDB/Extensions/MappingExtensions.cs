@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Extensions
 {
@@ -17,7 +16,7 @@ namespace LinqToDB.Extensions
 			return GetSqlValue(mappingSchema, value.GetType(), value);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object value)
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? value)
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
@@ -25,10 +24,10 @@ namespace LinqToDB.Extensions
 			{
 				if (value != null || systemType == underlyingType)
 				{
-					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
+					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
 					if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) && mappingSchema.GetMapValues(underlyingType) == null)
-						return new SqlValue(type, value.ToString());
+						return new SqlValue(type, value!.ToString());
 
 					return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
 				}

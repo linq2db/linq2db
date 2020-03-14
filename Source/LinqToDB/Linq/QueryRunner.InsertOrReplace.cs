@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq
 		{
 			static Query<int> CreateQuery(
 				IDataContext dataContext, EntityDescriptor descriptor, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -31,7 +30,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor param = null;
+				ParameterAccessor? param = null;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
 				insertOrUpdateStatement.Insert.Into  = sqlTable;
@@ -50,7 +49,7 @@ namespace LinqToDB.Linq
 				//
 				foreach (var field in sqlTable.Fields.Select(f => f.Value))
 				{
-					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
+					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
 						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
@@ -72,7 +71,7 @@ namespace LinqToDB.Linq
 				// Update.
 				//
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update))
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update))
 				                     .Except(keys).ToList();
 
 				if (keys.Count == 0)
@@ -123,9 +122,9 @@ namespace LinqToDB.Linq
 
 			public static int Query(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schema)
+				string? tableName, string? serverName, string? databaseName, string? schema)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -142,15 +141,15 @@ namespace LinqToDB.Linq
 						return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type);
 					});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
+				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null)!;
 			}
 
 			public static async Task<int> QueryAsync(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schema,
+				string? tableName, string? serverName, string? databaseName, string? schema,
 				CancellationToken token)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -167,9 +166,9 @@ namespace LinqToDB.Linq
 						return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type);
 					});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (int)result;
+				return (int)result!;
 			}
 		}
 
@@ -194,7 +193,7 @@ namespace LinqToDB.Linq
 							p.DataTypeAccessor,
 							p.DbTypeAccessor,
 							p.SizeAccessor,
-							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
+							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
 						))
 					.Where(p => p.SqlParameter != null)
 					.ToList(),
@@ -203,7 +202,7 @@ namespace LinqToDB.Linq
 			var keys = firstStatement.Update.Keys;
 
 			foreach (var key in keys)
-				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
+				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
 
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

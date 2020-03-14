@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Specialized;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Collections.Generic;
 	using Configuration;
 
 	[UsedImplicitly]
@@ -13,7 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new FirebirdDataProvider();
+			return FirebirdTools.GetDataProvider();
 		}
 	}
 }

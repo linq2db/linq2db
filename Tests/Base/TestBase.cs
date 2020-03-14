@@ -15,7 +15,6 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -29,14 +28,15 @@ using NUnit.Framework;
 
 namespace Tests
 {
+	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
 	using Tools;
 
-//	[Order(1000)]
+	//	[Order(1000)]
 	public class TestBase
 	{
-		private const int TRACES_LIMIT = 100000;
+		private const int TRACES_LIMIT = 50000;
 
 		static TestBase()
 		{
@@ -49,7 +49,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var ctx = CustomTestContext.Get();
+				var ctx   = CustomTestContext.Get();
 				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
 				if (trace == null)
 				{
@@ -69,11 +69,10 @@ namespace Tests
 				traceCount++;
 			};
 
-//			Configuration.RetryPolicy.Factory = db => new Retry();
+			//			Configuration.RetryPolicy.Factory = db => new Retry();
 
-//			Configuration.AvoidSpecificDataProviderAPI = true;
-			Configuration.Linq.TraceMapperExpression   = false;
-//			Configuration.Linq.GenerateExpressionTest  = true;
+			Configuration.Linq.TraceMapperExpression = false;
+			//			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
 #if !NETCOREAPP2_1
@@ -124,9 +123,9 @@ namespace Tests
 			}
 
 			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
-			var logLevel   = testSettings.TraceLevel;
+			var logLevel = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
 
 			if (!string.IsNullOrEmpty(logLevel))
@@ -175,7 +174,7 @@ namespace Tests
 
 			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
-				DataConnection.DefaultConfiguration       = DefaultProvider;
+				DataConnection.DefaultConfiguration = DefaultProvider;
 #if NETCOREAPP2_1
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
@@ -186,9 +185,9 @@ namespace Tests
 			{
 				switch (str)
 				{
-					case "Tests.Model.Gender" : return typeof(Gender);
-					case "Tests.Model.Person" : return typeof(Person);
-					default                   : return null;
+					case "Tests.Model.Gender": return typeof(Gender);
+					case "Tests.Model.Person": return typeof(Person);
+					default: return null;
 				}
 			};
 #endif
@@ -216,10 +215,10 @@ namespace Tests
 		}
 
 #if !NETCOREAPP2_1
-		const int IP = 22654;
-		static bool _isHostOpen;
+		const  int         IP        = 22654;
+		static bool        _isHostOpen;
 		static LinqService _service;
-		static object _syncRoot = new object();
+		static object      _syncRoot = new object();
 #endif
 
 		static void OpenHost(MappingSchema ms)
@@ -273,7 +272,7 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
-		public static readonly string          DefaultProvider;
+		public static readonly string DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
@@ -281,14 +280,19 @@ namespace Tests
 #if !NETCOREAPP2_1
 			ProviderName.Sybase,
 			ProviderName.OracleNative,
+			TestProvName.Oracle11Native,
+			ProviderName.Informix,
 #endif
 			ProviderName.SqlCe,
 			ProviderName.Access,
 			ProviderName.DB2,
-			ProviderName.Informix,
+			ProviderName.InformixDB2,
 			ProviderName.SQLiteClassic,
+			TestProvName.SQLiteClassicMiniProfilerMapped,
+			TestProvName.SQLiteClassicMiniProfilerUnmapped,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
+			TestProvName.Oracle11Managed,
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
@@ -372,8 +376,8 @@ namespace Tests
 			TestPerson(1, "John", persons);
 		}
 
-		private List<LinqDataTypes> _types;
-		protected IEnumerable<LinqDataTypes>  Types
+		private   List<LinqDataTypes>       _types;
+		protected IEnumerable<LinqDataTypes> Types
 		{
 			get
 			{
@@ -402,8 +406,8 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
-		private          List<Person> _person;
-		protected IEnumerable<Person>  Person
+		private   List<Person>       _person;
+		protected IEnumerable<Person> Person
 		{
 			get
 			{
@@ -458,8 +462,8 @@ namespace Tests
 
 		#region Parent/Child Model
 
-		private          List<Parent> _parent;
-		protected IEnumerable<Parent>  Parent
+		private   List<Parent>       _parent;
+		protected IEnumerable<Parent> Parent
 		{
 			get
 			{
@@ -474,8 +478,8 @@ namespace Tests
 						foreach (var p in _parent)
 						{
 							p.ParentTest    = p;
-							p.Children      = Child.     Where(c => c.ParentID == p.ParentID).ToList();
-							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
+							p.Children      = Child         .Where(c => c.ParentID == p.ParentID).ToList();
+							p.GrandChildren = GrandChild    .Where(c => c.ParentID == p.ParentID).ToList();
 							p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
 						}
 					}
@@ -484,8 +488,8 @@ namespace Tests
 			}
 		}
 
-		private          List<Parent1> _parent1;
-		protected IEnumerable<Parent1>  Parent1
+		private   List<Parent1>       _parent1;
+		protected IEnumerable<Parent1> Parent1
 		{
 			get
 			{
@@ -512,7 +516,7 @@ namespace Tests
 			{
 				if (_parent5 == null)
 				{
-					_parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1}).ToList();
+					_parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
 					foreach (var p in _parent5)
 						p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
@@ -522,16 +526,16 @@ namespace Tests
 			}
 		}
 
-		private          List<ParentInheritanceBase> _parentInheritance;
-		protected IEnumerable<ParentInheritanceBase>  ParentInheritance
+		private   List<ParentInheritanceBase>       _parentInheritance;
+		protected IEnumerable<ParentInheritanceBase> ParentInheritance
 		{
 			get
 			{
 				if (_parentInheritance == null)
 					_parentInheritance = Parent.Select(p =>
-						p.Value1       == null ? new ParentInheritanceNull  { ParentID = p.ParentID } :
-						p.Value1.Value == 1    ? new ParentInheritance1     { ParentID = p.ParentID, Value1 = p.Value1.Value } :
-						 (ParentInheritanceBase) new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
+						p.Value1 == null ? new ParentInheritanceNull { ParentID = p.ParentID } :
+						p.Value1.Value == 1 ? new ParentInheritance1 { ParentID = p.ParentID, Value1 = p.Value1.Value } :
+						 (ParentInheritanceBase)new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
 					).ToList();
 
 				return _parentInheritance;
@@ -549,7 +553,7 @@ namespace Tests
 		}
 
 		private   List<ParentInheritance1> _parentInheritance1;
-		protected List<ParentInheritance1>  ParentInheritance1
+		protected List<ParentInheritance1> ParentInheritance1
 		{
 			get
 			{
@@ -572,8 +576,8 @@ namespace Tests
 			}
 		}
 
-		protected        List<Child> _child;
-		protected IEnumerable<Child>  Child
+		protected List<Child>       _child;
+		protected IEnumerable<Child> Child
 		{
 			get
 			{
@@ -587,7 +591,7 @@ namespace Tests
 
 						foreach (var ch in _child)
 						{
-							ch.Parent        = Parent. Single(p => p.ParentID == ch.ParentID);
+							ch.Parent        = Parent .Single(p => p.ParentID == ch.ParentID);
 							ch.Parent1       = Parent1.Single(p => p.ParentID == ch.ParentID);
 							ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
 							ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
@@ -599,8 +603,8 @@ namespace Tests
 			}
 		}
 
-		private          List<GrandChild> _grandChild;
-		protected IEnumerable<GrandChild>  GrandChild
+		private   List<GrandChild>       _grandChild;
+		protected IEnumerable<GrandChild> GrandChild
 		{
 			get
 			{
@@ -619,8 +623,8 @@ namespace Tests
 			}
 		}
 
-		private          List<GrandChild1> _grandChild1;
-		protected IEnumerable<GrandChild1>  GrandChild1
+		private   List<GrandChild1>       _grandChild1;
+		protected IEnumerable<GrandChild1> GrandChild1
 		{
 			get
 			{
@@ -633,7 +637,7 @@ namespace Tests
 						foreach (var ch in _grandChild1)
 						{
 							ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.Child  = Child.  Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+							ch.Child  = Child  .Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
 						}
 					}
 
@@ -696,7 +700,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Category> _category;
-			public  List<Northwind.Category>  Category
+			public List<Northwind.Category> Category
 			{
 				get
 				{
@@ -709,7 +713,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Customer> _customer;
-			public  List<Northwind.Customer>  Customer
+			public List<Northwind.Customer> Customer
 			{
 				get
 				{
@@ -728,7 +732,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Employee> _employee;
-			public  List<Northwind.Employee>  Employee
+			public List<Northwind.Employee> Employee
 			{
 				get
 				{
@@ -741,8 +745,8 @@ namespace Tests
 
 							foreach (var employee in _employee)
 							{
-								employee.Employees         = (from e in _employee where e.ReportsTo  == employee.EmployeeID select e).ToList();
-								employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo  select e).SingleOrDefault();
+								employee.Employees         = (from e in _employee where e.ReportsTo == employee.EmployeeID select e).ToList();
+								employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo select e).SingleOrDefault();
 							}
 						}
 					}
@@ -752,7 +756,7 @@ namespace Tests
 			}
 
 			private List<Northwind.EmployeeTerritory> _employeeTerritory;
-			public  List<Northwind.EmployeeTerritory>  EmployeeTerritory
+			public List<Northwind.EmployeeTerritory> EmployeeTerritory
 			{
 				get
 				{
@@ -765,7 +769,7 @@ namespace Tests
 			}
 
 			private List<Northwind.OrderDetail> _orderDetail;
-			public  List<Northwind.OrderDetail>  OrderDetail
+			public List<Northwind.OrderDetail> OrderDetail
 			{
 				get
 				{
@@ -778,7 +782,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Order> _order;
-			public  List<Northwind.Order>  Order
+			public List<Northwind.Order> Order
 			{
 				get
 				{
@@ -800,7 +804,7 @@ namespace Tests
 			}
 
 			private IEnumerable<Northwind.Product> _product;
-			public  IEnumerable<Northwind.Product>  Product
+			public IEnumerable<Northwind.Product> Product
 			{
 				get
 				{
@@ -815,18 +819,18 @@ namespace Tests
 			}
 
 			private List<Northwind.ActiveProduct> _activeProduct;
-			public  List<Northwind.ActiveProduct>  ActiveProduct
+			public List<Northwind.ActiveProduct> ActiveProduct
 			{
 				get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
 			}
 
-			public  IEnumerable<Northwind.DiscontinuedProduct>  DiscontinuedProduct
+			public IEnumerable<Northwind.DiscontinuedProduct> DiscontinuedProduct
 			{
 				get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
 			}
 
 			private List<Northwind.Region> _region;
-			public  List<Northwind.Region>  Region
+			public List<Northwind.Region> Region
 			{
 				get
 				{
@@ -839,7 +843,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Shipper> _shipper;
-			public  List<Northwind.Shipper>  Shipper
+			public List<Northwind.Shipper> Shipper
 			{
 				get
 				{
@@ -852,7 +856,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Supplier> _supplier;
-			public  List<Northwind.Supplier>  Supplier
+			public List<Northwind.Supplier> Supplier
 			{
 				get
 				{
@@ -865,7 +869,7 @@ namespace Tests
 			}
 
 			private List<Northwind.Territory> _territory;
-			public  List<Northwind.Territory>  Territory
+			public List<Northwind.Territory> Territory
 			{
 				get
 				{
@@ -940,30 +944,30 @@ namespace Tests
 			AreEqual(t => t, expected, result, comparer, sort);
 		}
 
-		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
+		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
 		{
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
+		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
 			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
-			Func<T,T> fixSelector,
+			Func<T, T> fixSelector,
 			IEnumerable<T> expected,
 			IEnumerable<T> result,
 			IEqualityComparer<T> comparer,
 			Func<IEnumerable<T>, IEnumerable<T>> sort,
 			bool allowEmpty = false)
 		{
-			var resultList   = result.  Select(fixSelector).ToList();
+			var resultList   = result.Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
 			{
-				resultList   = sort(resultList)  .ToList();
+				resultList   = sort(resultList).ToList();
 				expectedList = sort(expectedList).ToList();
 			}
 
@@ -971,33 +975,33 @@ namespace Tests
 				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
-			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
-			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
+			var exceptExpectedList = resultList.Except(expectedList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList, comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
-			var exceptResult   = exceptResultList.  Count;
+			var exceptResult   = exceptResultList.Count;
 			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 			{
-				Debug.WriteLine(resultList.  ToDiagnosticString());
+				Debug.WriteLine(resultList.ToDiagnosticString());
 				Debug.WriteLine(expectedList.ToDiagnosticString());
 
 				for (var i = 0; i < resultList.Count; i++)
 				{
-					Debug.  WriteLine   ("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					Debug.WriteLine("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
-					message.AppendLine  ();
+					message.AppendLine();
 				}
 			}
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
-			Assert.AreEqual(0, exceptResult,   $"Expect Result{Environment.NewLine}{message}");
+			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
 		{
-			var resultList   = result.  ToList();
+			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
@@ -1006,7 +1010,7 @@ namespace Tests
 			for (var i = 0; i < resultList.Count; i++)
 			{
 				var elist = expectedList[i].ToList();
-				var rlist = resultList  [i].ToList();
+				var rlist = resultList[i].ToList();
 
 				if (elist.Count > 0 || rlist.Count > 0)
 					AreEqual(elist, rlist);
@@ -1015,7 +1019,7 @@ namespace Tests
 
 		protected void AreSame<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			var resultList   = result.  ToList();
+			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
@@ -1101,6 +1105,18 @@ namespace Tests
 
 			CustomTestContext.Release();
 		}
+
+		protected bool IsIDSProvider(string context)
+		{
+			if (!context.Contains("Informix"))
+				return false;
+			var providerName = GetProviderName(context, out var _);
+			if (providerName == ProviderName.InformixDB2)
+				return true;
+
+			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
+				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+		}
 	}
 
 	static class DataCache<T>
@@ -1157,31 +1173,18 @@ namespace Tests
 		}
 	}
 
-	public class AvoidSpecificDataProviderAPI : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.AvoidSpecificDataProviderAPI;
-
-		public AvoidSpecificDataProviderAPI(bool value)
-		{
-			Configuration.AvoidSpecificDataProviderAPI = value;
-		}
-
-		public void Dispose()
-		{
-			Configuration.AvoidSpecificDataProviderAPI = _oldValue;
-		}
-	}
-
 	public class GuardGrouping : IDisposable
 	{
-		public GuardGrouping()
+		private readonly bool _oldValue = Configuration.Linq.GuardGrouping;
+
+		public GuardGrouping(bool enable)
 		{
-			Configuration.Linq.GuardGrouping = true;
+			Configuration.Linq.GuardGrouping = enable;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.GuardGrouping = false;
+			Configuration.Linq.GuardGrouping = _oldValue;
 		}
 	}
 

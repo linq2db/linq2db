@@ -426,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -452,7 +452,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -642,7 +642,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -668,7 +668,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -694,7 +694,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
