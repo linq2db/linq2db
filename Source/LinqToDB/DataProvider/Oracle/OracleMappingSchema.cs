@@ -27,14 +27,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid)          , (sb, dt, v) => ConvertGuidToSql    (sb,     (Guid)    v));
-			SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb,     (Guid)    v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).DateTime));
 			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(double)        , (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
-			SetValueToSqlConverter(typeof(byte[])        , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)        , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (type != null)
 				{
 					var fromDecimalToType = GetConvertExpression(from, type, false)!;
-					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
+					var fromTypeToEnum    = GetConvertExpression(type, to,   false)!;
 
 					return Expression.Lambda(
 						fromTypeToEnum.GetBody(fromDecimalToType.Body),
@@ -108,13 +108,13 @@ namespace LinqToDB.DataProvider.Oracle
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
 			string format;
-			switch (dataType.DataType)
+			switch (dataType.Type.DataType)
 			{
 				case DataType.Date:
 					format = "TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')";
 					break;
 				case DataType.DateTime2:
-					switch (dataType.Precision)
+					switch (dataType.Type.Precision)
 					{
 						case 0: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')"              ; break;
 						case 1: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.f}', 'YYYY-MM-DD HH24:MI:SS.FF1')"        ; break;
@@ -132,16 +132,16 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset:
 					// just use UTC literal
 					value = value.ToUniversalTime();
-					switch (dataType.Precision)
+					switch (dataType.Type.Precision)
 					{
-						case 0: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss} 00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')"              ; break;
-						case 1: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.f} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF1 TZH:TZM')"        ; break;
-						case 2: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF2 TZH:TZM')"       ; break;
-						case 3: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM')"      ; break;
-						case 4: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF4 TZH:TZM')"     ; break;
-						case 5: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF5 TZH:TZM')"    ; break;
+						case 0: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss} 00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')"            ; break;
+						case 1: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.f} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF1 TZH:TZM')"      ; break;
+						case 2: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF2 TZH:TZM')"     ; break;
+						case 3: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM')"    ; break;
+						case 4: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF4 TZH:TZM')"   ; break;
+						case 5: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF5 TZH:TZM')"  ; break;
 						default:
-						case 6: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"   ; break;
+						case 6: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')" ; break;
 						case 7:
 						case 8:
 						case 9: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fffffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"; break;

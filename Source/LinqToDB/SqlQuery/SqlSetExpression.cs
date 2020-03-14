@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,20 +17,15 @@ namespace LinqToDB.SqlQuery
 				{
 					if (field.ColumnDescriptor != null)
 					{
-						if (field.ColumnDescriptor.DataType != DataType.Undefined && p.DataType == DataType.Undefined)
-							p.DataType = field.ColumnDescriptor.DataType;
-//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
-//								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
-//
-//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbSizeSet)
-//								p.DbSize = field.ColumnDescriptor.MapMemberInfo.DbSize;
+						if (field.ColumnDescriptor.DataType != DataType.Undefined && p.Type.DataType == DataType.Undefined)
+							p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);
 					}
 				}
 			}
 		}
 
-		public ISqlExpression Column     { get; set; }
-		public ISqlExpression Expression { get; set; }
+		public ISqlExpression  Column     { get; set; }
+		public ISqlExpression? Expression { get; set; }
 
 		#region Overrides
 
@@ -57,7 +51,7 @@ namespace LinqToDB.SqlQuery
 			{
 				objectTree.Add(this, clone = new SqlSetExpression(
 					(ISqlExpression)Column.    Clone(objectTree, doClone),
-					(ISqlExpression)Expression.Clone(objectTree, doClone)));
+					(ISqlExpression)Expression!.Clone(objectTree, doClone)));
 			}
 
 			return clone;
@@ -67,9 +61,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Column     = Column.     Walk(options, func);
+			Column     = Column.     Walk(options, func)!;
 			Expression = Expression?.Walk(options, func);
 			return null;
 		}

@@ -45,7 +45,7 @@
 									func.Parameters[0],
 									func.Parameters[1],
 									func.Parameters[1],
-									new SqlValue(null));
+									new SqlValue(value.ValueType, null));
 						}
 
 						break;

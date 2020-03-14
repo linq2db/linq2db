@@ -736,10 +736,10 @@ namespace Tests.DataProvider
 					(stringBuilder, dataType, val) =>
 					{
 						var value = (DateTime)val;
-						Assert.That(dataType.DataType, Is.Not.EqualTo(DataType.Undefined));
+						Assert.That(dataType.Type.DataType, Is.Not.EqualTo(DataType.Undefined));
 
 						var format =
-							dataType.DataType == DataType.DateTime2 ?
+							dataType.Type.DataType == DataType.DateTime2 ?
 								"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 								"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
@@ -764,7 +764,7 @@ namespace Tests.DataProvider
 				{
 					var value  = (DateTime)val;
 					var format =
-						dataType.DataType == DataType.DateTime ?
+						dataType.Type.DataType == DataType.DateTime ?
 							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
@@ -796,7 +796,7 @@ namespace Tests.DataProvider
 				{
 					var value  = (DateTime)val;
 					var format =
-						dataType.DataType == DataType.DateTime ?
+						dataType.Type.DataType == DataType.DateTime ?
 							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 

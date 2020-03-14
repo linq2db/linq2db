@@ -40,7 +40,7 @@
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
@@ -49,10 +49,10 @@
 				case DataType.Xml            : StringBuilder.Append("NText");    return;
 				case DataType.NVarChar       :
 
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(4000)");
 						return;
 					}
@@ -62,10 +62,10 @@
 				case DataType.VarChar        :
 				case DataType.VarBinary      :
 
-					if (type.Length == null || type.Length > 8000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 8000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(8000)");
 						return;
 					}
@@ -86,7 +86,7 @@
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
+			var table = dropTable.Table!;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
@@ -32,8 +31,8 @@ namespace LinqToDB.ServiceModel
 
 		public bool AllowUpdates { get; set; }
 
-		private MappingSchema _mappingSchema;
-		public MappingSchema MappingSchema
+		private MappingSchema? _mappingSchema;
+		public MappingSchema? MappingSchema
 		{
 			get => _mappingSchema;
 			set
@@ -43,13 +42,13 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		private MappingSchema _serializationMappingSchema;
+		private MappingSchema? _serializationMappingSchema;
 		internal  MappingSchema SerializationMappingSchema
 		{
 			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema));
 		}
 
-		public static Func<string,Type> TypeResolver = _ => null;
+		public static Func<string,Type?> TypeResolver = _ => null;
 
 		public virtual DataConnection CreateDataContext(string configuration)
 		{
@@ -85,10 +84,10 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement   Statement   { get; set; }
-			public object         Context     { get; set; }
-			public SqlParameter[] Parameters  { get; set; }
-			public List<string>   QueryHints  { get; set; }
+			public SqlStatement   Statement   { get; set; } = null!;
+			public object?        Context     { get; set; }
+			public SqlParameter[] Parameters  { get; set; } = null!;
+			public List<string>?  QueryHints  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -124,7 +123,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public object ExecuteScalar(string configuration, string queryData)
+		public object? ExecuteScalar(string configuration, string queryData)
 		{
 			try
 			{
@@ -206,7 +205,7 @@ namespace LinqToDB.ServiceModel
 							ret.FieldNames[i] = name;
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
-							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
+							ret.FieldTypes[i] = query.Statement.SelectQuery!.Select.Columns[i].SystemType;
 
 							// async compiled query support
 							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))

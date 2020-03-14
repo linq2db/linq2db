@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			string? startPrefix;
 
-			switch (sqlDataType.DataType)
+			switch (sqlDataType.Type.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			string start;
 
-			switch (sqlDataType.DataType)
+			switch (sqlDataType.Type.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
@@ -150,11 +150,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			var format =
 				value.Millisecond == 0
 					? "yyyy-MM-ddTHH:mm:ss"
-					: dt == null || dt.DataType != DataType.DateTime2
+					: dt == null || dt.Type.DataType != DataType.DateTime2
 						? "yyyy-MM-ddTHH:mm:ss.fff"
-						: dt.Precision == 0
+						: dt.Type.Precision == 0
 							? "yyyy-MM-ddTHH:mm:ss"
-							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Precision ?? 7);
+							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7);
 
 			stringBuilder
 				.Append('\'')
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
-			if (sqlDataType.DataType == DataType.Int64)
+			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
 				stringBuilder.Append(value.Ticks);
 			}
@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
 
-			switch (sqlDataType.Precision ?? sqlDataType.Scale)
+			switch (sqlDataType.Type.Precision ?? sqlDataType.Type.Scale)
 			{
 				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
 				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;

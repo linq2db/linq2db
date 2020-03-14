@@ -44,7 +44,7 @@
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
 		{
-			if (dataType.DbType == null && dataType.DataType == DataType.NVarChar)
+			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
 			{
 				var length = 0;
 				var typeRequired = false;

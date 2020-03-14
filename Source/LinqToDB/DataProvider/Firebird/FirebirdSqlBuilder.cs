@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into.GetIdentityField();
+			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
-				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
+				return new SqlExpression("GEN_ID(" + table.SequenceAttributes![0].SequenceName + ", 1)", Precedence.Primary);
 
 			return base.GetIdentityExpression(table);
 		}
@@ -102,10 +102,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataTypeFromDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale, type.DbType) : type, forCreateTable);
+					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -120,10 +120,10 @@ namespace LinqToDB.DataProvider.Firebird
 					// 10921 is implementation limit for UNICODE_FSS encoding
 					// use 255 as default length, because FB have 64k row-size limits
 					// also it is not good to depend on implementation limits
-					if (type.Length == null || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
-						StringBuilder.Append($"({type.Length})");
+						StringBuilder.Append($"({type.Type.Length})");
 
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
@@ -231,10 +231,10 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncate:
-					return truncate.ResetIdentity && truncate.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncate.ResetIdentity && truncate.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 					if (_identityField != null)
 						return 3;
 					break;
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 			if (identityField == null && dropTable.IfExists == false)
 			{
@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.Firebird
 				BuildDropWithSchemaCheck("GENERATOR", "rdb$generators", "rdb$generator_name", "GIDENTITY_" + dropTable.Table.PhysicalName);
 			}
 
-			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.PhysicalName);
+			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.PhysicalName!);
 
 			Indent--;
 
@@ -320,7 +320,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case SqlTruncateTableStatement truncate:
 					StringBuilder
 						.Append("SET GENERATOR ")
-						.Append(Convert("GIDENTITY_" + truncate.Table.PhysicalName, ConvertType.NameToQueryTable))
+						.Append(Convert("GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable))
 						.AppendLine(" TO 0")
 						;
 					break;
@@ -331,7 +331,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							StringBuilder
 								.Append("CREATE GENERATOR ")
-								.Append(Convert("GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
+								.Append(Convert("GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable))
 								.AppendLine();
 						}
 						else
@@ -339,8 +339,8 @@ namespace LinqToDB.DataProvider.Firebird
 							StringBuilder
 								.AppendFormat(
 									"CREATE TRIGGER {0} FOR {1}",
-									Convert("TIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable),
-									Convert(createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
+									Convert("TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable),
+									Convert(createTable.Table.PhysicalName!, ConvertType.NameToQueryTable))
 								.AppendLine  ()
 								.AppendLine  ("BEFORE INSERT POSITION 0")
 								.AppendLine  ("AS BEGIN")

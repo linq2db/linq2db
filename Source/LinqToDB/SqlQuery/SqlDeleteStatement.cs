@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
-		public SqlDeleteStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlDeleteStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -25,8 +24,8 @@ namespace LinqToDB.SqlQuery
 			set => SelectQuery.IsParameterDependent = value;
 		}
 
-		public SqlTable       Table { get; set; }
-		public ISqlExpression Top   { get; set; }
+		public SqlTable?       Table { get; set; }
+		public ISqlExpression? Top   { get; set; }
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -51,11 +50,11 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			With?.Walk(options, func);
 
-			Table       = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
+			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
@@ -65,7 +64,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb.Append("DELETE FROM ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 

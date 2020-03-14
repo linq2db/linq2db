@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlDbType.Structured:
 						{
 							if (!dataType.DbType.IsNullOrEmpty())
-								Adapter.SetTypeName(param, dataType.DbType);
+								Adapter.SetTypeName(param, dataType.DbType!);
 
 							// TVP doesn't support DBNull
 							if (parameter.Value is DBNull)

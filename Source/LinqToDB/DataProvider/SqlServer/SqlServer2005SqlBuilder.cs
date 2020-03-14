@@ -23,7 +23,7 @@
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :

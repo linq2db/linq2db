@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -52,7 +51,7 @@ namespace LinqToDB.Mapping
 		internal ColumnAttribute(string memberName, ColumnAttribute ca)
 			: this(ca)
 		{
-			MemberName = memberName + "." + ca.MemberName.TrimStart('.');
+			MemberName = memberName + "." + ca.MemberName!.TrimStart('.');
 		}
 
 		/// <summary>
@@ -88,13 +87,13 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of a column in database.
 		/// If not specified, member name will be used.
 		/// </summary>
-		public string Name { get; set; }
+		public string? Name { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of mapped member.
@@ -124,7 +123,7 @@ namespace LinqToDB.Mapping
 		/// </code>
 		/// </example>
 		/// </summary>
-		public string MemberName { get; set; }
+		public string? MemberName { get; set; }
 
 		/// <summary>
 		/// Gets or sets linq2db type for column.
@@ -136,7 +135,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of the database column type.
 		/// Default value: default type, defined for member type in mapping schema.
 		/// </summary>
-		public string DbType { get; set; }
+		public string? DbType { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag that tells that current member should be included into mapping.
@@ -149,7 +148,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets a storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string Storage { get; set; }
+		public string? Storage { get; set; }
 
 		/// <summary>
 		/// Gets or sets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
@@ -312,7 +311,7 @@ namespace LinqToDB.Mapping
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string CreateFormat { get; set; }
+		public string? CreateFormat { get; set; }
 
 		private int? _order;
 		/// <summary>

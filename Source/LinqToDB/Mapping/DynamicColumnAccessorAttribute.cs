@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
@@ -31,39 +30,39 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration              { get; set; }
+		public string? Configuration              { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property setter method.
 		/// </summary>
-		public string SetterMethod               { get; set; }
+		public string? SetterMethod               { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property getter method.
 		/// </summary>
-		public string GetterMethod               { get; set; }
+		public string? GetterMethod               { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property setter expression method or property. Method or property
 		/// must be static.
 		/// </summary>
-		public string SetterExpressionMethod     { get; set; }
+		public string? SetterExpressionMethod     { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property getter expression method or property. Method or property
 		/// must be static.
 		/// </summary>
-		public string GetterExpressionMethod     { get; set; }
+		public string? GetterExpressionMethod     { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property set expression.
 		/// </summary>
-		public LambdaExpression SetterExpression { get; set; }
+		public LambdaExpression? SetterExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of dynamic properties property get expression.
 		/// </summary>
-		public LambdaExpression GetterExpression { get; set; }
+		public LambdaExpression? GetterExpression { get; set; }
 
 		protected internal void Validate()
 		{

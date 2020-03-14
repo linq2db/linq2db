@@ -38,12 +38,12 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							case "%":
 								{
-									var type1 = be.Expr1.SystemType.ToUnderlying();
+									var type1 = be.Expr1.SystemType!.ToUnderlying();
 
 									if (type1 == typeof(double) || type1 == typeof(float))
 									{
 										return new SqlBinaryExpression(
-											be.Expr2.SystemType,
+											be.Expr2.SystemType!,
 											new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, be.Expr1),
 											be.Operation,
 											be.Expr2);
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							case "Convert" :
 								{
 									if (func.SystemType.ToUnderlying() == typeof(ulong) &&
-										func.Parameters[1].SystemType.IsFloatType())
+										func.Parameters[1].SystemType!.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					if (func.Name == "Convert")
 					{
-						var type1 = func.Parameters[1].SystemType.ToUnderlying();
+						var type1 = func.Parameters[1].SystemType!.ToUnderlying();
 
 						if (IsTimeDataType(func.Parameters[0]))
 						{

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
@@ -29,21 +28,21 @@ namespace LinqToDB.Expressions
 			_slowModeDataContext = dataContext;
 		}
 
-		readonly int          _idx;
-		readonly Expression   _dataReaderParam;
-		         Type         _type;
-		readonly IDataContext _slowModeDataContext;
+		readonly int           _idx;
+		readonly Expression    _dataReaderParam;
+		         Type          _type;
+		readonly IDataContext? _slowModeDataContext;
 
 		public override Type           Type        => _type;
 		public override ExpressionType NodeType    => ExpressionType.Extension;
 		public override bool           CanReduce   => true;
 		public          int            Index       => _idx;
 
-		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
+		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null!));
 
 		public override Expression Reduce()
 		{
-			return Reduce(_slowModeDataContext);
+			return Reduce(_slowModeDataContext!);
 		}
 
 		public Expression Reduce(IDataContext dataContext)
@@ -84,13 +83,13 @@ namespace LinqToDB.Expressions
 
 			if (toType.IsEnum)
 			{
-				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
+				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType)!;
 
 				if (mapType != ex.Type)
 				{
 					// Use only defined convert
 					var econv = mappingSchema.GetConvertExpression(ex.Type, type,    false, false) ??
-						        mappingSchema.GetConvertExpression(ex.Type, mapType, false);
+						        mappingSchema.GetConvertExpression(ex.Type, mapType, false)!;
 
 					if (econv.Body.GetCount(e => e == econv.Parameters[0]) > 1)
 					{
@@ -106,7 +105,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false);
+			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false)!;
 
 			// Replace multiple parameters with single variable or single parameter with the reader expression.
 			//
@@ -147,7 +146,7 @@ namespace LinqToDB.Expressions
 				_defaultValue  = mappingSchema.GetDefaultValue(columnType);
 			}
 
-			public object GetValue(IDataReader dataReader)
+			public object? GetValue(IDataReader dataReader)
 			{
 				if (dataReader.IsDBNull(_columnIndex))
 					return _defaultValue;
@@ -194,7 +193,7 @@ namespace LinqToDB.Expressions
 			readonly MappingSchema _mappingSchema;
 			readonly Type          _columnType;
 			readonly int           _columnIndex;
-			readonly object        _defaultValue;
+			readonly object?       _defaultValue;
 		}
 
 		public override string ToString()

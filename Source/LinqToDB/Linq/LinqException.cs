@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 		/// <param name="args">An System.Object array containing zero or more objects to format.</param>
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]
-		public LinqException(string message, params object[] args)
+		public LinqException(string message, params object?[] args)
 			: base(string.Format(message, args))
 		{
 		}

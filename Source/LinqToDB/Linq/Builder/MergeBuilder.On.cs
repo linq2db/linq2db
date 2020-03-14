@@ -1,7 +1,4 @@
-﻿#nullable disable
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System;
+﻿using LinqToDB.Expressions;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -104,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 					var pSource          = Expression.Parameter(targetType, "s");
 					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
 
-					Expression ex = null;
+					Expression? ex = null;
 
 					for (var i = 0; i< targetDescriptor.Columns.Count; i++)
 					{
@@ -134,8 +131,8 @@ namespace LinqToDB.Linq.Builder
 				return mergeContext;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}
