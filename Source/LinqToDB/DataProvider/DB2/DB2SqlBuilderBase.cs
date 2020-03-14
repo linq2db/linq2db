@@ -30,11 +30,11 @@ namespace LinqToDB.DataProvider.DB2
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.Fields.Values.Count(f => f.IsIdentity) : 1;
 
 			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
 			{
-				_identityField = insertStatement.Insert.Into.GetIdentityField();
+				_identityField = insertStatement.Insert.Into!.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -47,10 +47,10 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder
 					.Append(" ALTER ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var table = truncateTable.Table;
+			var table = truncateTable.Table!;
 
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
@@ -157,17 +157,17 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTime  : StringBuilder.Append("timestamp");             return;
 				case DataType.DateTime2 : StringBuilder.Append("timestamp");             return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 8168 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(8168)");
 						return;
 					}
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in insertClause.Into.Fields)
+			foreach (var col in insertClause.Into!.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -267,7 +267,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
+			var table = dropTable.Table!;
 
 			if (dropTable.IfExists)
 			{

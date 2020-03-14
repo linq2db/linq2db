@@ -102,6 +102,6 @@ namespace LinqToDB
 		/// <param name="parameters">Query parameters.</param>
 		/// <param name="preambles">Query preambles</param>
 		/// <returns>Query runner service.</returns>
-		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters, object[] preambles);
+		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
 	}
 }

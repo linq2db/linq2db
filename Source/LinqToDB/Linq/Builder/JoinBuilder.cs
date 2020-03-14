@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -193,8 +192,8 @@ namespace LinqToDB.Linq.Builder
 			return subQueryContext;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -249,12 +248,12 @@ namespace LinqToDB.Linq.Builder
 
 		internal class InnerKeyContext : ExpressionContext
 		{
-			public InnerKeyContext(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
+			public InnerKeyContext(IBuildContext? parent, IBuildContext sequence, LambdaExpression lambda)
 				: base(parent, sequence, lambda)
 			{
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				return base
 					.ConvertToSql(expression, level, flags)
@@ -274,7 +273,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
 				: base(parent, lambda, outerContext, innerContext)
 			{
 			}
@@ -283,7 +282,7 @@ namespace LinqToDB.Linq.Builder
 		internal class GroupJoinContext : JoinContext
 		{
 			public GroupJoinContext(
-				IBuildContext            parent,
+				IBuildContext?           parent,
 				LambdaExpression         lambda,
 				IBuildContext            outerContext,
 				GroupJoinSubQueryContext innerContext,
@@ -302,7 +301,7 @@ namespace LinqToDB.Linq.Builder
 			readonly Expression       _innerExpression;
 			public   LambdaExpression  OuterKeyLambda { get; }
 			public   LambdaExpression  InnerKeyLambda { get; }
-			private  Expression       _groupExpression;
+			private  Expression?       _groupExpression;
 
 			interface IGroupJoinHelper
 			{
@@ -343,13 +342,13 @@ namespace LinqToDB.Linq.Builder
 					//
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
 							new[] { context.InnerKeyLambda.Parameters[0] }));
 
-					var lambda = Expression.Lambda<Func<IDataContext,TKey,object[],IQueryable<TElement>>>(
+					var lambda = Expression.Lambda<Func<IDataContext,TKey,object?[]?,IQueryable<TElement>>>(
 						Expression.Convert(expr, typeof(IQueryable<TElement>)),
 						Expression.Parameter(typeof(IDataContext), "ctx"),
 						outerParam,
@@ -359,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null, null, default, null)),
+						MemberHelper.MethodOf(() => GetGrouping(null!, null!, default!, null!)),
 						new[]
 						{
 							ExpressionBuilder.QueryRunnerParam,
@@ -373,7 +372,7 @@ namespace LinqToDB.Linq.Builder
 					IQueryRunner             runner,
 					List<ParameterAccessor>  parameterAccessor,
 					TKey                     key,
-					Func<IDataContext,TKey,object[],IQueryable<TElement>> itemReader)
+					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
 					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
 				}
@@ -390,7 +389,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<T,bool>>(
 							ExpressionBuilder.Equal(
@@ -403,7 +402,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
@@ -420,7 +419,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expression != null && expression.NodeType == ExpressionType.Call)
 				{
-					Expression replaceExpression = null;
+					Expression? replaceExpression = null;
 
 					if (level == 0)
 					{
@@ -464,10 +463,10 @@ namespace LinqToDB.Linq.Builder
 
 		internal class GroupJoinSubQueryContext : SubQueryContext
 		{
-			public SqlJoinedTable Join;
-			public SelectQuery             CounterSelect;
-			public GroupJoinContext        GroupJoin;
-			public Func<IBuildContext>     GetSubQueryContext;
+			public SqlJoinedTable?      Join;
+			public SelectQuery?         CounterSelect;
+			public GroupJoinContext?    GroupJoin;
+			public Func<IBuildContext>? GetSubQueryContext;
 
 			public GroupJoinSubQueryContext(IBuildContext subQuery)
 				: base(subQuery)
@@ -476,17 +475,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return GroupJoin.ConvertToParentIndex(index, context);
+				return GroupJoin!.ConvertToParentIndex(index, context);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (expression == null)
 				{
 					if (buildInfo.CreateSubQuery)
 					{
-						Join.IsWeak = true;
-						var queryBuild = GetSubQueryContext();
+						Join!.IsWeak   = true;
+						var queryBuild = GetSubQueryContext!();
 						//queryBuild.Parent = Context.Parent;
 						return queryBuild;
 					}
@@ -497,7 +496,7 @@ namespace LinqToDB.Linq.Builder
 				return base.GetContext(expression, level, buildInfo);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 			{
 				if (testFlag == RequestFor.GroupJoin && expression == null)
 					return IsExpressionResult.True;

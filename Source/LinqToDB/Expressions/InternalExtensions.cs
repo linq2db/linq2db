@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +12,7 @@ namespace LinqToDB.Expressions
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
+	using System.Diagnostics.CodeAnalysis;
 
 	static class InternalExtensions
 	{
@@ -51,8 +51,8 @@ namespace LinqToDB.Expressions
 
 		#region Caches
 
-		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]> _queryDependentMethods =
-			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]>();
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]?> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]?>();
 
 		public static void ClearCaches()
 		{
@@ -65,26 +65,31 @@ namespace LinqToDB.Expressions
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2,
 			Dictionary<Expression,QueryableAccessor> queryableAccessorDic,
-			Dictionary<Expression,Expression>        queryDependedObjects,
+			Dictionary<Expression,Expression>?       queryDependedObjects,
 			bool compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, new EqualsToInfo
-			{
-				QueryableAccessorDic  = queryableAccessorDic,
-				QueryDependedObjects  = queryDependedObjects,
-				CompareConstantValues = compareConstantValues
-			});
+			return EqualsTo(expr1, expr2, new EqualsToInfo(queryableAccessorDic, queryDependedObjects, compareConstantValues));
 		}
 
 		class EqualsToInfo
 		{
-			public HashSet<Expression>                      Visited = new HashSet<Expression>();
-			public Dictionary<Expression,QueryableAccessor> QueryableAccessorDic;
-			public Dictionary<Expression,Expression>        QueryDependedObjects;
-			public bool                                     CompareConstantValues;
+			public EqualsToInfo(
+				Dictionary<Expression, QueryableAccessor> queryableAccessorDic,
+				Dictionary<Expression, Expression>?       queryDependedObjects,
+				bool                                      compareConstantValues)
+			{
+				QueryableAccessorDic  = queryableAccessorDic;
+				QueryDependedObjects  = queryDependedObjects;
+				CompareConstantValues = compareConstantValues;
+			}
+
+			public HashSet<Expression>                       Visited               { get; } = new HashSet<Expression>();
+			public Dictionary<Expression, QueryableAccessor> QueryableAccessorDic  { get; }
+			public Dictionary<Expression, Expression>?       QueryDependedObjects  { get; }
+			public bool                                      CompareConstantValues { get; }
 		}
 
-		static bool EqualsTo(this Expression expr1, Expression expr2, EqualsToInfo info)
+		static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -226,7 +231,7 @@ namespace LinqToDB.Expressions
 
 			if (expr1.Members != null)
 			{
-				if (expr1.Members.Count != expr2.Members.Count)
+				if (expr1.Members.Count != expr2.Members!.Count)
 					return false;
 
 				for (var i = 0; i < expr1.Members.Count; i++)
@@ -246,7 +251,7 @@ namespace LinqToDB.Expressions
 			if (expr1.Bindings.Count != expr2.Bindings.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
 				return false;
 
-			bool CompareBindings(MemberBinding b1, MemberBinding b2)
+			bool CompareBindings(MemberBinding? b1, MemberBinding? b2)
 			{
 				if (b1 == b2)
 					return true;
@@ -447,8 +452,8 @@ namespace LinqToDB.Expressions
 				{
 					if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 					{
-						var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()).Query;
-						var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()).Query;
+						var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()!).Query;
+						var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()!).Query;
 						return EqualsTo(query1.Expression, query2.Expression, info);
 					}
 				}
@@ -567,7 +572,7 @@ namespace LinqToDB.Expressions
 		static int _callCounter4;
 #endif
 
-		static void Path(PathInfo info, Expression expr, Expression path)
+		static void Path(PathInfo info, Expression? expr, Expression path)
 		{
 #if DEBUG
 			_callCounter1++;
@@ -807,7 +812,8 @@ namespace LinqToDB.Expressions
 
 		#region Helpers
 
-		public static Expression Unwrap(this Expression ex)
+		[return: NotNullIfNotNull("ex")]
+		public static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -823,7 +829,8 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		public static Expression UnwrapConvert(this Expression ex)
+		[return: NotNullIfNotNull("ex")]
+		public static Expression? UnwrapConvert(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -838,7 +845,8 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		public static Expression UnwrapWithAs(this Expression ex)
+		[return: NotNullIfNotNull("ex")]
+		public static Expression? UnwrapWithAs(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -861,8 +869,7 @@ namespace LinqToDB.Expressions
 
 		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
 		{
-			var result = Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
-			return result;
+			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
 		}
 
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
@@ -910,7 +917,8 @@ namespace LinqToDB.Expressions
 			return accessors;
 		}
 
-		public static Expression GetRootObject(this Expression expr, MappingSchema mapping)
+		[return: NotNullIfNotNull("expr")]
+		public static Expression? GetRootObject(this Expression? expr, MappingSchema mapping)
 		{
 			if (expr == null)
 				return null;
@@ -947,7 +955,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		public static List<Expression> GetMembers(this Expression expr)
+		public static List<Expression> GetMembers(this Expression? expr)
 		{
 			if (expr == null)
 				return new List<Expression>();
@@ -1164,7 +1172,7 @@ namespace LinqToDB.Expressions
 			return 0;
 		}
 
-		public static object EvaluateExpression(this Expression expr)
+		public static object? EvaluateExpression(this Expression? expr)
 		{
 			if (expr == null)
 				return null;

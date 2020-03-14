@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -36,7 +35,7 @@ namespace LinqToDB.Mapping
 		/// Adds <see cref="MapValueAttribute"/> to enum field.
 		/// </summary>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		public MapValueAttribute(object value)
+		public MapValueAttribute(object? value)
 		{
 			Value = value;
 		}
@@ -71,7 +70,7 @@ namespace LinqToDB.Mapping
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
 		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
 		/// to database value.</param>
-		public MapValueAttribute(string configuration, object value, bool isDefault)
+		public MapValueAttribute(string configuration, object? value, bool isDefault)
 		{
 			Configuration = configuration;
 			Value         = value;
@@ -83,13 +82,13 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Database value, to which current enumeration field will be mapped when used in query or saved to database.
 		/// This value, when loaded from database, will be converted to current enumeration field.
 		/// </summary>
-		public object Value         { get; set; }
+		public object? Value        { get; set; }
 
 		/// <summary>
 		/// If <c>true</c>, <see cref="Value"/> property value will be used for conversion from enumeration to

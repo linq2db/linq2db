@@ -190,7 +190,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i]) : null;
 
-					if (columnType == null || columnType.DataType == DataType.Undefined)
+					if (columnType == null || columnType.Type.DataType == DataType.Undefined)
 						columnType = mappingSchema.GetDataType(columns[i].StorageType);
 
 					var sb = new StringBuilder();
@@ -331,9 +331,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						{
 							void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
 							{
-								var rangeType = npgsqlRangeTType.MakeGenericType(typeof(T));
-								var fromType = new DbDataType(rangeType, fromDataType, fromDbType);
-								var toType = new DbDataType(typeof(DataParameter), toDataType, toDbType);
+								var rangeType  = npgsqlRangeTType.MakeGenericType(typeof(T));
+								var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
+								var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
 								var rangeParam = Expression.Parameter(rangeType, "p");
 
 								mappingSchema.SetConvertExpression(fromType, toType,

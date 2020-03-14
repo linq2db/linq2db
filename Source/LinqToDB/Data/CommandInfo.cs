@@ -1190,7 +1190,7 @@ namespace LinqToDB.Data
 				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
-					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
+					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType;
 
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
 				if (size                != null) p.Size      = size.               Value;
@@ -1361,8 +1361,8 @@ namespace LinqToDB.Data
 
 									if (memberType.IsEnum)
 									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType);
+										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
+										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -1375,7 +1375,7 @@ namespace LinqToDB.Data
 											Expression.Constant(column.ColumnName)),
 										Expression.Bind(
 											_dataParameterDataType,
-											Expression.Constant(column.DataType != DataType.Undefined ? column.DataType : dataConnection.MappingSchema.GetDataType(memberType).DataType)),
+											Expression.Constant(column.DataType != DataType.Undefined ? column.DataType : dataConnection.MappingSchema.GetDataType(memberType).Type.DataType)),
 										Expression.Bind(
 											_dataParameterDbType,
 											Expression.Constant(column.DbType, typeof(string))),

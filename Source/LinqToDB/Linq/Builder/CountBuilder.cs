@@ -1,11 +1,9 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 	using SqlQuery;
 
 	class CountBuilder : MethodCallBuilder
@@ -93,25 +91,25 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
 
 		internal class CountContext : SequenceContextBase
 		{
-			public CountContext(IBuildContext parent, IBuildContext sequence, Type returnType)
+			public CountContext(IBuildContext? parent, IBuildContext sequence, Type returnType)
 				: base(parent, sequence, null)
 			{
 				_returnType = returnType;
 			}
 
-			readonly Type      _returnType;
-			private  SqlInfo[] _index;
+			readonly Type       _returnType;
+			private  SqlInfo[]? _index;
 
-			public int            FieldIndex;
-			public ISqlExpression Sql;
+			public int             FieldIndex;
+			public ISqlExpression? Sql;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -121,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
@@ -129,31 +127,31 @@ namespace LinqToDB.Linq.Builder
 				return Builder.BuildSql(_returnType, index);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
-					case ConvertFlags.Field : return new[] { new SqlInfo { Query = Parent.SelectQuery, Sql = Sql } };
+					case ConvertFlags.Field : return new[] { new SqlInfo { Query = Parent!.SelectQuery, Sql = Sql! } };
 				}
 
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
 					case ConvertFlags.Field :
 						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql), Sql = Sql, }
+							new SqlInfo { Query = Parent!.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql!), Sql = Sql!, }
 						});
 				}
 
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				switch (requestFlag)
 				{
@@ -163,12 +161,12 @@ namespace LinqToDB.Linq.Builder
 				return IsExpressionResult.False;
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				return Sequence.GetContext(expression, level, buildInfo);
 			}
 
-			public override ISqlExpression GetSubQuery(IBuildContext context)
+			public override ISqlExpression? GetSubQuery(IBuildContext context)
 			{
 				var query = context.SelectQuery;
 

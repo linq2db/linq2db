@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -16,7 +15,7 @@ namespace LinqToDB.Linq
 		{
 			static Query<int> CreateQuery(
 				IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -59,9 +58,9 @@ namespace LinqToDB.Linq
 
 			public static int Query(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName)
+				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -75,15 +74,15 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null);
+				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -97,9 +96,9 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (int)result;
+				return (int)result!;
 			}
 		}
 	}

@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceTakeSkipWithRowNumber(statement, false);
 
-			CorrectRootSkip(statement.SelectQuery);
+			CorrectRootSkip(statement.SelectQuery!);
 
 			return statement;
 		}

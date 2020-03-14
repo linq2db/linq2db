@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.MySql
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-				switch (type.DataType)
+				switch (type.Type.DataType)
 				{
 					case DataType.Boolean       :
 					case DataType.SByte         :
@@ -121,10 +121,10 @@ namespace LinqToDB.DataProvider.MySql
 					case DataType.Double        :
 					case DataType.Single        : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
 					case DataType.Decimal       :
-						if (type.Scale != null && type.Scale != 0)
-							StringBuilder.Append($"DECIMAL({type.Precision ?? 10},{type.Scale})");
-						else if (type.Precision != null && type.Precision != 10)
-							StringBuilder.Append($"DECIMAL({type.Precision})");
+						if (type.Type.Scale != null && type.Type.Scale != 0)
+							StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10},{type.Type.Scale})");
+						else if (type.Type.Precision != null && type.Type.Precision != 10)
+							StringBuilder.Append($"DECIMAL({type.Type.Precision})");
 						else
 							StringBuilder.Append("DECIMAL"); break;
 					case DataType.Char          :
@@ -133,22 +133,22 @@ namespace LinqToDB.DataProvider.MySql
 					case DataType.NVarChar      :
 					case DataType.NText         :
 					case DataType.Text          :
-						if (type.Length == null || type.Length > 255 || type.Length < 0)
+						if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
 							StringBuilder.Append("CHAR(255)");
-						else if (type.Length == 1)
+						else if (type.Type.Length == 1)
 							StringBuilder.Append("CHAR");
 						else
-							StringBuilder.Append($"CHAR({type.Length})");
+							StringBuilder.Append($"CHAR({type.Type.Length})");
 						break;
 					case DataType.VarBinary     :
 					case DataType.Binary        :
 					case DataType.Blob          :
-						if (type.Length == null || type.Length < 0)
+						if (type.Type.Length == null || type.Type.Length < 0)
 							StringBuilder.Append("BINARY(255)");
-						else if (type.Length == 1)
+						else if (type.Type.Length == 1)
 							StringBuilder.Append("BINARY");
 						else
-							StringBuilder.Append($"BINARY({type.Length})");
+							StringBuilder.Append($"BINARY({type.Type.Length})");
 					break;
 					default                     : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 				}
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			// types for CREATE TABLE statement
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.SByte         : StringBuilder.Append("TINYINT");                       break;
 				case DataType.Int16         : StringBuilder.Append("SMALLINT");                      break;
@@ -170,51 +170,51 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)");                 break;
 				case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)");                 break;
 				case DataType.Decimal       :
-					if (type.Scale != null && type.Scale != 0)
-						StringBuilder.Append($"DECIMAL({type.Precision ?? 10},{type.Scale})");
-					else if (type.Precision != null && type.Precision != 10)
-						StringBuilder.Append($"DECIMAL({type.Precision})");
+					if (type.Type.Scale != null && type.Type.Scale != 0)
+						StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10},{type.Type.Scale})");
+					else if (type.Type.Precision != null && type.Type.Precision != 10)
+						StringBuilder.Append($"DECIMAL({type.Type.Precision})");
 					else
 						StringBuilder.Append("DECIMAL"); break;
 				case DataType.DateTime      :
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
-					if (type.Precision > 0 && type.Precision <= 6)
-						StringBuilder.Append($"DATETIME({type.Precision})");
+					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
+						StringBuilder.Append($"DATETIME({type.Type.Precision})");
 					else
 						StringBuilder.Append("DATETIME");
 					break;
 				case DataType.DateTimeOffset:
-					if (type.Precision > 0 && type.Precision <= 6)
-						StringBuilder.Append($"TIMESTAMP({type.Precision})");
+					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
+						StringBuilder.Append($"TIMESTAMP({type.Type.Precision})");
 					else
 						StringBuilder.Append("TIMESTAMP");
 					break;
 				case DataType.Time:
-					if (type.Precision > 0 && type.Precision <= 6)
-						StringBuilder.Append($"TIME({type.Precision})");
+					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
+						StringBuilder.Append($"TIME({type.Type.Precision})");
 					else
 						StringBuilder.Append("TIME");
 					break;
 				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                       break;
 				case DataType.Double        :
-					if (type.Precision >= 0 && type.Precision <= 53)
-						StringBuilder.Append($"FLOAT({type.Precision})"); // this is correct, FLOAT(p)
+					if (type.Type.Precision >= 0 && type.Type.Precision <= 53)
+						StringBuilder.Append($"FLOAT({type.Type.Precision})"); // this is correct, FLOAT(p)
 					else
 						StringBuilder.Append("DOUBLE");
 					break;
 				case DataType.Single        :
-					if (type.Precision >= 0 && type.Precision <= 53)
-						StringBuilder.Append($"FLOAT({type.Precision})");
+					if (type.Type.Precision >= 0 && type.Type.Precision <= 53)
+						StringBuilder.Append($"FLOAT({type.Type.Precision})");
 					else
 						StringBuilder.Append("FLOAT");
 					break;
 				case DataType.BitArray:
 					{
-						var length = type.Length;
+						var length = type.Type.Length;
 						if (length == null)
 						{
-							var columnType = type.Type?.ToNullableUnderlying();
+							var columnType = type.Type.SystemType.ToNullableUnderlying();
 							if (columnType == typeof(byte) || columnType == typeof(sbyte))
 								length = 8;
 							else if (columnType == typeof(short) || columnType == typeof(ushort))
@@ -236,55 +236,55 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.Guid          : StringBuilder.Append("CHAR(36)");                      break;
 				case DataType.Char          :
 				case DataType.NChar         :
-					if (type.Length == null || type.Length > 255 || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
 						StringBuilder.Append("CHAR(255)");
-					else if (type.Length == 1)
+					else if (type.Type.Length == 1)
 						StringBuilder.Append("CHAR");
 					else
-						StringBuilder.Append($"CHAR({type.Length})");
+						StringBuilder.Append($"CHAR({type.Type.Length})");
 					break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
-					if (type.Length == null || type.Length > 255 || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
 						StringBuilder.Append("VARCHAR(255)");
 					else
-						StringBuilder.Append($"VARCHAR({type.Length})");
+						StringBuilder.Append($"VARCHAR({type.Type.Length})");
 					break;
 				case DataType.Binary:
-					if (type.Length == null || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length < 0)
 						StringBuilder.Append("BINARY(255)");
-					else if (type.Length == 1)
+					else if (type.Type.Length == 1)
 						StringBuilder.Append("BINARY");
 					else
-						StringBuilder.Append($"BINARY({type.Length})");
+						StringBuilder.Append($"BINARY({type.Type.Length})");
 					break;
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length < 0)
 						StringBuilder.Append("VARBINARY(255)");
 					else
-						StringBuilder.Append($"VARBINARY({type.Length})");
+						StringBuilder.Append($"VARBINARY({type.Type.Length})");
 					break;
 				case DataType.Blob:
-					if (type.Length == null || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length < 0)
 						StringBuilder.Append("BLOB");
-					else if (type.Length <= 255)
+					else if (type.Type.Length <= 255)
 						StringBuilder.Append("TINYBLOB");
-					else if (type.Length <= 65535)
+					else if (type.Type.Length <= 65535)
 						StringBuilder.Append("BLOB");
-					else if (type.Length <= 16777215)
+					else if (type.Type.Length <= 16777215)
 						StringBuilder.Append("MEDIUMBLOB");
 					else
 						StringBuilder.Append("LONGBLOB");
 					break;
 				case DataType.NText:
 				case DataType.Text:
-					if (type.Length == null || type.Length < 0)
+					if (type.Type.Length == null || type.Type.Length < 0)
 						StringBuilder.Append("TEXT");
-					else if (type.Length <= 255)
+					else if (type.Type.Length <= 255)
 						StringBuilder.Append("TINYTEXT");
-					else if (type.Length <= 65535)
+					else if (type.Type.Length <= 65535)
 						StringBuilder.Append("TEXT");
-					else if (type.Length <= 16777215)
+					else if (type.Type.Length <= 16777215)
 						StringBuilder.Append("MEDIUMTEXT");
 					else
 						StringBuilder.Append("LONGTEXT");
@@ -434,7 +434,7 @@ namespace LinqToDB.DataProvider.MySql
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression, false, true);
+					BuildExpression(expr.Expression!, false, true);
 				}
 
 				Indent--;
@@ -495,7 +495,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+			if (truncateTable.ResetIdentity || truncateTable.Table!.Fields.Values.All(f => !f.IsIdentity))
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");

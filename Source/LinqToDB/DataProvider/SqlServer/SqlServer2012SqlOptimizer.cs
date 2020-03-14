@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				statement = ReplaceTakeSkipWithRowNumber(statement, true);
-				CorrectRootSkip(statement.SelectQuery);
+				CorrectRootSkip(statement.SelectQuery!);
 			}
 
 			return statement;

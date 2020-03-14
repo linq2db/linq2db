@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -16,10 +15,10 @@ namespace LinqToDB.Linq
 	{
 		public static class Update<T>
 		{
-			static Query<int> CreateQuery(
+			static Query<int>? CreateQuery(
 				IDataContext dataContext,
 				EntityDescriptor descriptor, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -40,7 +39,7 @@ namespace LinqToDB.Linq
 				};
 
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update)).Except(keys).ToList();
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update)).Except(keys).ToList();
 
 				if (fields.Count == 0)
 				{
@@ -81,9 +80,9 @@ namespace LinqToDB.Linq
 
 			public static int Query(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName)
+				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default(T)!, obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
@@ -98,12 +97,12 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null);
+				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
 				if (Equals(default, obj))
@@ -123,7 +122,7 @@ namespace LinqToDB.Linq
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				return (int)result;
+				return (int)result!;
 			}
 		}
 	}

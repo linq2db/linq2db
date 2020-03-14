@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -19,7 +18,7 @@ namespace LinqToDB.Mapping
 		/// Creates fluent mapping builder for specified mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema.</param>
-		public FluentMappingBuilder([JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public FluentMappingBuilder(MappingSchema mappingSchema)
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 
@@ -124,7 +123,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute<T>(Expression<Func<T,object>> func, Attribute attribute)
+		public FluentMappingBuilder HasAttribute<T>(Expression<Func<T,object?>> func, Attribute attribute)
 		{
 			var memberInfo = MemberHelper.MemberOf(func);
 			_reader.AddAttribute(memberInfo, attribute);
@@ -140,7 +139,7 @@ namespace LinqToDB.Mapping
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
 		/// <returns>Returns entity fluent mapping builder.</returns>
-		public EntityMappingBuilder<T> Entity<T>(string configuration = null)
+		public EntityMappingBuilder<T> Entity<T>(string? configuration = null)
 		{
 			return new EntityMappingBuilder<T>(this, configuration);
 		}

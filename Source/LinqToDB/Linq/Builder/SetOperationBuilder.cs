@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -94,8 +93,8 @@ namespace LinqToDB.Linq.Builder
 			return new SetOperationContext(set1, set2, methodCall);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -128,26 +127,26 @@ namespace LinqToDB.Linq.Builder
 				Init();
 			}
 
-			readonly Type                          _type;
+			readonly Type?                         _type;
 			readonly bool                          _isObject;
 			readonly MethodCallExpression          _methodCall;
-			readonly ParameterExpression           _unionParameter;
+			readonly ParameterExpression?          _unionParameter;
 			readonly Dictionary<MemberInfo,Member> _members = new Dictionary<MemberInfo,Member>(new MemberInfoComparer());
 			readonly SubQueryContext               _sequence1;
 			readonly SubQueryContext               _sequence2;
 
 			class Member
 			{
-				public SqlInfo          SequenceInfo;
-				public SqlInfo          SqlQueryInfo;
-				public MemberExpression MemberExpression;
+				public SqlInfo?          SequenceInfo;
+				public SqlInfo?          SqlQueryInfo;
+				public MemberExpression  MemberExpression = null!;
 			}
 
 			class UnionMember
 			{
-				public Member  Member;
-				public SqlInfo Info1;
-				public SqlInfo Info2;
+				public Member   Member = null!;
+				public SqlInfo? Info1;
+				public SqlInfo? Info2;
 			}
 
 			void Init()
@@ -165,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Count == 0)
 						throw new InvalidOperationException();
 
-					var mi = info.MemberChain.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter.Type));
+					var mi = info.MemberChain.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter!.Type));
 
 					var member = new Member
 					{
@@ -221,8 +220,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info1 == null)
 					{
-						var type = unionMembers.First(m => m.Info1 != null).Info1.MemberChain.First().GetMemberType();
-						member.Info1 = new SqlInfo(member.Info2.MemberChain)
+						var type = unionMembers.First(m => m.Info1 != null).Info1!.MemberChain.First().GetMemberType();
+						member.Info1 = new SqlInfo(member.Info2!.MemberChain)
 						{
 							Sql   = new SqlValue(type, null),
 							Query = _sequence1.SelectQuery,
@@ -233,7 +232,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info2 == null)
 					{
-						var spam = unionMembers.First(m => m.Info2 != null).Info2.MemberChain.First();
+						var spam = unionMembers.First(m => m.Info2 != null).Info2!.MemberChain.First();
 						var type = spam.GetMemberType();
 
 						member.Info2 = new SqlInfo(member.Info1.MemberChain)
@@ -243,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					string GetAlias(ILookup<ISqlExpression, string> aliases, ISqlExpression expression)
+					string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
 					{
 						if (aliases.Contains(expression))
 							return aliases[expression].FirstOrDefault();
@@ -253,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql, GetAlias(aliases1, member.Info1.Sql)));
 					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql, GetAlias(aliases2, member.Info2.Sql)));
 
-					member.Member.SequenceInfo.Index = i;
+					member.Member.SequenceInfo!.Index = i;
 
 					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
@@ -273,14 +272,14 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (_isObject)
 				{
 					if (expression == null)
 					{
 						var type  = _methodCall.Method.GetGenericArguments()[0];
-						var nctor = (NewExpression)Expression.Find(e => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
+						var nctor = (NewExpression?)Expression.Find(e => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
 
 						Expression expr;
 
@@ -389,7 +388,7 @@ namespace LinqToDB.Linq.Builder
 				return ret;
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 			{
 				if (testFlag == RequestFor.Root && ReferenceEquals(expression, _unionParameter))
 					return IsExpressionResult.True;
@@ -397,7 +396,7 @@ namespace LinqToDB.Linq.Builder
 				return base.IsExpression(expression, level, testFlag);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_isObject)
 				{
@@ -425,7 +424,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToIndex(expression, level, flags);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_isObject)
 				{
@@ -455,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (!_members.TryGetValue(ma.Member, out var member))
 									{
-										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
+										var ed = Builder.MappingSchema.GetEntityDescriptor(_type!);
 
 										if (ed.Aliases != null && ed.Aliases.ContainsKey(ma.Member.Name))
 										{
@@ -479,7 +478,7 @@ namespace LinqToDB.Linq.Builder
 										member.SqlQueryInfo = new SqlInfo(member.MemberExpression.Member)
 										{
 											Index = -2,
-											Sql   = SubQuery.SelectQuery.Select.Columns[member.SequenceInfo.Index],
+											Sql   = SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
 											Query = SelectQuery,
 										};
 									}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +12,12 @@ namespace LinqToDB.SqlQuery
 		int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 #endif
 
-		public SqlTableSource(ISqlTableSource source, string alias)
+		public SqlTableSource(ISqlTableSource source, string? alias)
 			: this(source, alias, null)
 		{
 		}
 
-		public SqlTableSource(ISqlTableSource source, string alias, params SqlJoinedTable[] joins)
+		public SqlTableSource(ISqlTableSource source, string? alias, params SqlJoinedTable[]? joins)
 		{
 			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
@@ -27,7 +26,7 @@ namespace LinqToDB.SqlQuery
 				Joins.AddRange(joins);
 		}
 
-		public SqlTableSource(ISqlTableSource source, string alias, IEnumerable<SqlJoinedTable> joins, IEnumerable<ISqlExpression[]> uniqueKeys)
+		public SqlTableSource(ISqlTableSource source, string? alias, IEnumerable<SqlJoinedTable> joins, IEnumerable<ISqlExpression[]>? uniqueKeys)
 		{
 			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
@@ -43,18 +42,18 @@ namespace LinqToDB.SqlQuery
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
 		// TODO: remove internal.
-		internal string _alias;
-		public   string  Alias
+		internal string? _alias;
+		public   string?  Alias
 		{
 			get
 			{
 				if (string.IsNullOrEmpty(_alias))
 				{
-					if (Source is SqlTableSource)
-						return (Source as SqlTableSource).Alias;
+					if (Source is SqlTableSource sqlSource)
+						return sqlSource.Alias;
 
-					if (Source is SqlTable)
-						return ((SqlTable)Source).Alias;
+					if (Source is SqlTable sqlTable)
+						return sqlTable.Alias;
 				}
 
 				return _alias;
@@ -62,7 +61,7 @@ namespace LinqToDB.SqlQuery
 			set => _alias = value;
 		}
 
-		private List<ISqlExpression[]> _uniqueKeys;
+		private List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for <see cref="Source"/>.
@@ -73,9 +72,9 @@ namespace LinqToDB.SqlQuery
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
 
-		public SqlTableSource this[ISqlTableSource table] => this[table, null];
+		public SqlTableSource? this[ISqlTableSource table] => this[table, null];
 
-		public SqlTableSource this[ISqlTableSource table, string alias]
+		public SqlTableSource? this[ISqlTableSource table, string? alias]
 		{
 			get
 			{
@@ -145,7 +144,7 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Source = (ISqlTableSource)Source.Walk(options, func);
+			Source = (ISqlTableSource)Source.Walk(options, func)!;
 
 			foreach (var t in Joins)
 				((ISqlExpressionWalkable)t).Walk(options, func);
@@ -232,9 +231,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull  => Source.CanBeNull;
-		public int  Precedence => Source.Precedence;
-		public Type SystemType => Source.SystemType;
+		public bool  CanBeNull  => Source.CanBeNull;
+		public int   Precedence => Source.Precedence;
+		public Type? SystemType => Source.SystemType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

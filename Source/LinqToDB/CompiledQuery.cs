@@ -21,8 +21,8 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                _sync = new object();
-		readonly LambdaExpression      _query;
+		readonly object                   _sync = new object();
+		readonly LambdaExpression         _query;
 		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
 		TResult ExecuteQuery<TResult>(params object?[] args)
@@ -57,17 +57,17 @@ namespace LinqToDB
 				return Expression.Call(
 					Expression.Constant(table),
 					type == MethodType.Queryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null, null)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!, null!)) :
 					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null, null)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null, null)),
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!, null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!, null!)),
 					ps, preambles);
 			}
 		}
 
 		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps        = Expression.Parameter(typeof(object[]), "ps");
+			var ps = Expression.Parameter(typeof(object[]), "ps");
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
 			var info = query.Body.Transform(pi =>

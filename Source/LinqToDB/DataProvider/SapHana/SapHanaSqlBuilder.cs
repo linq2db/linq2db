@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var insertClause = Statement.GetInsertClause();
 			if (insertClause != null)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table, null);
+				BuildPhysicalTable(createTable.Table!, null);
 			}
 			else
 			{
@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.SapHana
 					new StringBuilder(),
 					() =>
 					{
-						BuildPhysicalTable(createTable.Table, null);
+						BuildPhysicalTable(createTable.Table!, null);
 						return StringBuilder.ToString();
 					});
 
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Int32         :
 				case DataType.UInt16        :
@@ -119,10 +119,10 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 5000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(5000)");
 						return;
 					}

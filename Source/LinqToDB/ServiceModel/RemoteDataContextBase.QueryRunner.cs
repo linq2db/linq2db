@@ -68,7 +68,7 @@ namespace LinqToDB.ServiceModel
 								.Append("-- DECLARE ")
 								.Append(p.Name)
 								.Append(' ')
-								.Append(value == null ? p.SystemType.ToString() : value.GetType().Name)
+								.Append(value == null ? p.Type.SystemType.ToString() : value.GetType().Name)
 								.AppendLine();
 						}
 

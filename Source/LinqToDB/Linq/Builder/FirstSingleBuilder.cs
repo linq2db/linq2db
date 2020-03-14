@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -9,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
+	using System.Diagnostics.CodeAnalysis;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 					case "SingleAsync"          :
 					case "SingleOrDefaultAsync" :
 						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value >= 2)
+							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
 								take = 2;
 
 						break;
@@ -55,8 +55,8 @@ namespace LinqToDB.Linq.Builder
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var isAsync = methodCall.Method.Name.EndsWith("Async");
 
@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 
 		public class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
 					await query.GetForEachAsync(db, expr, ps, preambles,
 						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
 					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
 					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
 					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
@@ -202,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 
 					var join = SelectQuery.OuterApply();
 
-					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
 			}
 
@@ -219,12 +219,12 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent.SelectQuery.GroupBy.IsEmpty &&
+						Parent!.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{
 						CreateJoin();
@@ -258,36 +258,36 @@ namespace LinqToDB.Linq.Builder
 						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
 						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
-							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
+							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
 						}
 
-						var idx = Parent.SelectQuery.Select.Add(SelectQuery);
+						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
 						    idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx);
 					}
 
-					return null;
+					return null!; // ???
 				}
 
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				return Sequence.ConvertToSql(expression, level + 1, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				return Sequence.ConvertToIndex(expression, level, flags);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

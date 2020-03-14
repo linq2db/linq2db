@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,9 +12,6 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
-		private static MethodInfo _asSqlMethodInfo =
-			MemberHelper.MethodOf(() => Sql.AsSql(""));
-
 		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
@@ -29,19 +25,19 @@ namespace LinqToDB.Linq.Builder
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
-		public static void PrepareRawSqlArguments(Expression formatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
+		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IEnumerable<Expression> arguments)
 		{
 			// Consider that FormattableString is used
 			if (formatArg.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)formatArg;
 
-				format = (string)mc.Arguments[0].EvaluateExpression();
+				format    = (string)mc.Arguments[0].EvaluateExpression()!;
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 			}
 			else
 			{
-				var evaluatedSql = formatArg.EvaluateExpression();
+				var evaluatedSql = formatArg.EvaluateExpression()!;
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
@@ -53,14 +49,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					var rawSqlString = (RawSqlString)evaluatedSql;
 
-					format = rawSqlString.Format;
-					var arrayExpr = parametersArg;
+					format        = rawSqlString.Format;
+					var arrayExpr = parametersArg!;
 
 					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
 						arguments = ((NewArrayExpression)arrayExpr).Expressions;
 					else
 					{
-						var array = (object[])arrayExpr.EvaluateExpression();
+						var array = (object[])arrayExpr.EvaluateExpression()!;
 						arguments = array.Select(Expression.Constant);
 					}
 				}

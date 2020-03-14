@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -14,6 +13,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Async;
 	using Extensions;
 	using Data;
@@ -22,23 +22,23 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		protected void Init([NotNull] IDataContext dataContext, Expression expression)
+		protected void Init(IDataContext dataContext, Expression? expression)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			Expression  = expression  ?? Expression.Constant(this);
 		}
 
-		[NotNull] public Expression   Expression  { get; set; }
-		[NotNull] public IDataContext DataContext { get; set; }
+		public Expression   Expression  { get; set; } = null!;
+		public IDataContext DataContext { get; set; } = null!;
 
-		internal Query<T> Info;
-		internal object[] Parameters;
-		internal object[] Preambles;
+		internal Query<T>?  Info;
+		internal object?[]? Parameters;
+		internal object?[]? Preambles;
 
 		#endregion
 
 		#region Public Members
-
+		
 		// This property is helpful in Debug Mode.
 		//
 		[UsedImplicitly]
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 			{
 				var expression = Expression;
 				var info       = GetQuery(ref expression, true);
-				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, Preambles, 0);
+				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, Preambles);
 
 				return sqlText;
 			}
@@ -85,19 +85,19 @@ namespace LinqToDB.Linq
 				var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (TResult)value;
-			}
+			return (TResult)value!;
+		}
 		}
 
-		static readonly Task<DataConnectionTransaction> CompletedTransactionTask =
-			Task.FromResult<DataConnectionTransaction>(null);
+		static readonly Task<DataConnectionTransaction?> CompletedTransactionTask =
+			Task.FromResult<DataConnectionTransaction?>(null);
 
-		DataConnectionTransaction StartLoadTransaction(Query query)
+		DataConnectionTransaction? StartLoadTransaction(Query query)
 		{
 			if (!query.IsAnyPreambles())
 				return null;
 
-			DataConnection dc = null;
+			DataConnection? dc = null;
 			if (DataContext is DataConnection dataConnection)
 				dc = dataConnection;
 			else if (DataContext is DataContext dataContext)
@@ -109,12 +109,12 @@ namespace LinqToDB.Linq
 			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
 		}
 
-		Task<DataConnectionTransaction> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		Task<DataConnectionTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
 			if (!query.IsAnyPreambles())
 				return CompletedTransactionTask;
 
-			DataConnection dc = null;
+			DataConnection? dc = null;
 			if (DataContext is DataConnection dataConnection)
 				dc = dataConnection;
 			else if (DataContext is DataContext dataContext)
@@ -123,7 +123,7 @@ namespace LinqToDB.Linq
 			if (dc == null || dc.TransactionAsync != null)
 				return CompletedTransactionTask;
 
-			return dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken);
+			return dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!;
 		}
 
 		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext);
 
-				return Query<TResult>.GetQuery(DataContext, ref expression)
+			return Query<TResult>.GetQuery(DataContext, ref expression)
 					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
 			}
 		}
@@ -212,6 +212,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[return: MaybeNull]
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
 			var query = GetQuery(ref expression, false);
@@ -220,11 +221,11 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext);
 
-				return (TResult)query.GetElement(DataContext, expression, Parameters, Preambles);
+				return (TResult)query.GetElement(DataContext, expression, Parameters, Preambles)!;
 			}
 		}
 
-		object IQueryProvider.Execute(Expression expression)
+		object? IQueryProvider.Execute(Expression expression)
 		{
 			var query = GetQuery(ref expression, false);
 			
@@ -245,7 +246,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-			
+
 			using (StartLoadTransaction(query))
 			{
 				Preambles = query.InitPreambles(DataContext);

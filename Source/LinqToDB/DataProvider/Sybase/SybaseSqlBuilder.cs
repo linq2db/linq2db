@@ -92,15 +92,15 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");       return;
 				case DataType.NVarChar:
 					// yep, 5461...
-					if (type.Length == null || type.Length > 5461 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(5461)");
 						return;
 					}
@@ -138,22 +138,21 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
-			if (predicate.Expr2 is SqlValue)
+			if (predicate.Expr2 is SqlValue sqlValue)
 			{
-				var value = ((SqlValue)predicate.Expr2).Value;
+				var value = sqlValue.Value;
 
 				if (value != null)
 				{
-					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var text  = value.ToString();
 					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
+			else if (predicate.Expr2 is SqlParameter p)
 			{
-				var p = ((SqlParameter)predicate.Expr2);
 				p.ReplaceLike = true;
 			}
 
@@ -255,7 +254,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 			return 1;
 		}
@@ -265,7 +264,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table!.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
 		}

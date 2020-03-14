@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -39,8 +38,8 @@ namespace LinqToDB.SqlQuery
 
 				if (valueType.ToNullableUnderlying().IsEnum)
 				{
-					var toType           = Converter.GetDefaultMappingFromEnumType(_mappingSchema, valueType);
-					var convExpr         = _mappingSchema.GetConvertExpression(valueType, toType);
+					var toType           = Converter.GetDefaultMappingFromEnumType(_mappingSchema, valueType)!;
+					var convExpr         = _mappingSchema.GetConvertExpression(valueType, toType)!;
 					var convParam        = Expression.Parameter(typeof(object));
 					var getterExpression = Expression.Constant(getter);
 					var callGetter       = Expression.Invoke(getterExpression, convParam);

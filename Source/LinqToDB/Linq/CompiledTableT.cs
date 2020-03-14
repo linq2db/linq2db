@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -22,19 +21,19 @@ namespace LinqToDB.Linq
 		readonly Expression       _expression;
 		readonly object           _sync = new object();
 
-		string        _lastContextID;
-		Type          _lastContextType;
-		MappingSchema _lastMappingSchema;
-		Query<T>      _lastQuery;
+		string?        _lastContextID;
+		Type?          _lastContextType;
+		MappingSchema? _lastMappingSchema;
+		Query<T>?      _lastQuery;
 
 		readonly Dictionary<object,Query<T>> _infos = new Dictionary<object, Query<T>>();
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			string        lastContextID;
-			Type          lastContextType;
-			MappingSchema lastMappingSchema;
-			Query<T>      query;
+			string?        lastContextID;
+			Type?          lastContextType;
+			MappingSchema? lastMappingSchema;
+			Query<T>?      query;
 
 			lock (_sync)
 			{
@@ -96,7 +95,7 @@ namespace LinqToDB.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)query.GetElement(db, _expression, parameters, preambles);
+			return (T)query.GetElement(db, _expression, parameters, preambles)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -104,7 +103,7 @@ namespace LinqToDB.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))!;
 		}
 	}
 }
