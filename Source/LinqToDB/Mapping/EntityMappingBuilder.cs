@@ -177,7 +177,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasAttribute(Expression<Func<T,object>> func, Attribute attribute)
+		public EntityMappingBuilder<T> HasAttribute(Expression<Func<T,object?>> func, Attribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
 			return this;
@@ -406,7 +406,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				func,
 				true,
-				 _    => new ColumnAttribute(Configuration),
+				 _    => new ColumnAttribute() { Configuration = Configuration, Order = order },
 				(_,a) => a.IsColumn = true,
 				a => a.Configuration);
 		}
@@ -423,7 +423,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				func,
 				true,
-				 _    => new NotColumnAttribute { Configuration = Configuration },
+				 _    => new NotColumnAttribute { Configuration = Configuration, Order = order },
 				(_,a) => a.IsColumn = false,
 				a => a.Configuration);
 		}

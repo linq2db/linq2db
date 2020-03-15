@@ -1,6 +1,4 @@
-﻿#nullable disable
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+﻿using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 using System;
 using System.Collections;
@@ -92,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 							if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
 							{
 								// Avoiding collision with TableBuilder
-								var elementType = type.GetGenericArguments(typeof(EnumerableQuery<>))[0];
+								var elementType = type.GetGenericArguments(typeof(EnumerableQuery<>))![0];
 								if (!builder.MappingSchema.IsScalarType(elementType))
 									break;
 
@@ -101,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (typeof(IEnumerable<>).IsSameOrParentOf(type))
 							{
-								var elementType = type.GetGenericArguments(typeof(IEnumerable<>))[0];
+								var elementType = type.GetGenericArguments(typeof(IEnumerable<>))![0];
 
 								return action(4, elementType);
 							}
@@ -134,8 +132,8 @@ namespace LinqToDB.Linq.Builder
 				return elements.OfType<object>().Select(o => new SqlValue(type, o)).ToList();
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

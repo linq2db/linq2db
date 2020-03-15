@@ -1,5 +1,4 @@
-﻿#nullable disable
-namespace LinqToDB.ServiceModel
+﻿namespace LinqToDB.ServiceModel
 {
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
@@ -33,14 +32,14 @@ namespace LinqToDB.ServiceModel
 
 			if (!_serializeConverters.TryGetValue(key, out var converter))
 			{
-				Type enumType = null;
+				Type? enumType = null;
 				if (from.IsEnum)
 				{
 					enumType = from;
 					from     = Enum.GetUnderlyingType(from);
 				}
 
-				var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true);
+				var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
 
@@ -62,7 +61,7 @@ namespace LinqToDB.ServiceModel
 			return converter(value);
 		}
 
-		public static object Deserialize(MappingSchema ms, Type to, string value)
+		public static object? Deserialize(MappingSchema ms, Type to, string? value)
 		{
 			if (value == null)
 				return null;
@@ -78,14 +77,14 @@ namespace LinqToDB.ServiceModel
 
 			if (!_deserializeConverters.TryGetValue(key, out var converter))
 			{
-				Type enumType = null;
+				Type? enumType = null;
 				if (to.IsEnum)
 				{
 					enumType = to;
 					to       = Enum.GetUnderlyingType(to);
 				}
 
-				var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true);
+				var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;

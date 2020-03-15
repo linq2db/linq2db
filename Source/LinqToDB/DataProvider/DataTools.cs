@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
 		/// </summary>
+		[return: NotNullIfNotNull("str")]
 		public static string? EscapeUnterminatedBracket(string? str)
 		{
 			if (str == null)

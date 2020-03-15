@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				StringBuilder
 					.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='")
-					.Append(trun.Table.PhysicalName)
+					.Append(trun.Table!.PhysicalName)
 					.AppendLine("'")
 					;
 			}
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (createTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table!.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;
@@ -129,8 +129,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
-				var leftType  = exprExpr.Expr1.SystemType;
-				var rightType = exprExpr.Expr2.SystemType;
+				var leftType  = exprExpr.Expr1.SystemType!;
+				var rightType = exprExpr.Expr2.SystemType!;
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
 					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||

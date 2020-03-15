@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -99,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 								if (tableInfo.Result == false)
 									throw new LinqException("Expression '{0}' must be a table.", body);
 
-								into = tableInfo.Context;
+								into = tableInfo.Context!;
 							}
 							else
 							{
@@ -124,9 +123,9 @@ namespace LinqToDB.Linq.Builder
 							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							foreach (var item in updateStatement.Update.Items)
-								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression));
+								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
 
-							updateStatement.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
+							updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
 						}
 
 						break;
@@ -145,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
 				{
 					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					sequence.Statement.RequireUpdateClause().Table = atc.SqlTable;
+					ctx.Statement!.RequireUpdateClause().Table = atc.SqlTable;
 				}
 				else
 				{
@@ -155,15 +154,15 @@ namespace LinqToDB.Linq.Builder
 					{
 						var tc = (TableBuilder.TableContext)res.Context;
 
-						if (sequence.Statement.SelectQuery.From.Tables.Count == 0 || sequence.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							sequence.Statement.RequireUpdateClause().Table = tc.SqlTable;
+						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
+							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
 					}
 				}
 			}
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -203,8 +202,8 @@ namespace LinqToDB.Linq.Builder
 					var parm  = (SqlParameter)expr;
 					var field = QueryHelper.GetUnderlyingField(column[0].Sql);
 
-					if (parm.DataType == DataType.Undefined)
-						parm.DataType = field.DataType;
+					if (parm.Type.DataType == DataType.Undefined)
+						parm.Type = parm.Type.WithDataType(field!.Type!.Value.DataType);
 				}
 
 				items.Add(new SqlSetExpression(column[0].Sql, expr));
@@ -351,8 +350,8 @@ namespace LinqToDB.Linq.Builder
 								? sqlField
 								: (SqlField)((SqlColumn)column[0].Sql).Expression;
 
-							if (parm.DataType == DataType.Undefined)
-								parm.DataType = field.DataType;
+							if (parm.Type.DataType == DataType.Undefined)
+								parm.Type = parm.Type.WithDataType(field.Type!.Value.DataType);
 						}
 
 						items.Add(new SqlSetExpression(column[0].Sql, expr));
@@ -402,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 					return m;
 				})
 				.Where(m => m != null && !m.IsNullableValueMember())
-				.Select(m => m.Name)
+				.Select(m => m!.Name)
 				.Aggregate((s1,s2) => s1 + "." + s2);
 
 			if (table != null && !table.Fields.ContainsKey(name))
@@ -487,7 +486,7 @@ namespace LinqToDB.Linq.Builder
 
 		class UpdateContext : SequenceContextBase
 		{
-			public UpdateContext(IBuildContext parent, IBuildContext sequence)
+			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 			}
@@ -497,27 +496,27 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
@@ -554,7 +553,7 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						updateStatement.Update.Table,
+						updateStatement.Update.Table!,
 						updateStatement.Update.Items);
 				else
 					ParseSet(
@@ -568,8 +567,8 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

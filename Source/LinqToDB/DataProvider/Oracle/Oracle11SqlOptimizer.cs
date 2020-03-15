@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 				var p = (SqlParameter)element;
 
 				// enforce DateTimeOffset as parameter
-				if (p.SystemType.ToNullableUnderlying() == typeof(DateTimeOffset))
+				if (p.Type.SystemType.ToNullableUnderlying() == typeof(DateTimeOffset))
 					p.IsQueryParameter = true;
 			}
 		}
@@ -104,8 +104,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 								if (IsDateDataType(func.Parameters[0], "Date"))
 								{
-									if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime)
-										|| func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTimeOffset))
+									if (func.Parameters[1].SystemType!.ToUnderlying() == typeof(DateTime)
+										|| func.Parameters[1].SystemType!.ToUnderlying() == typeof(DateTimeOffset))
 									{
 										return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
 									}
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (query.Select.TakeValue != null)
 						{
 							processingQuery.Where.EnsureConjunction().Expr(RowNumExpr)
-								.LessOrEqual.Expr(new SqlBinaryExpression(query.Select.SkipValue.SystemType,
+								.LessOrEqual.Expr(new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
 									query.Select.SkipValue, "+", query.Select.TakeValue));
 						}
 
@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider.Oracle
 					else
 					{
 						processingQuery.Where.EnsureConjunction().Expr(RowNumExpr)
-							.LessOrEqual.Expr(query.Select.TakeValue);
+							.LessOrEqual.Expr(query.Select.TakeValue!);
 					}
 
 					query.Select.SkipValue = null;

@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Informix
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.Fields.Values.Count(f => f.IsIdentity) : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -44,10 +44,10 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder
 					.Append(" MODIFY ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
 					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
-					StringBuilder.AppendFormat("({0})", (type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					StringBuilder.AppendFormat("({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -145,17 +145,17 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
-					if (type.Precision != null && type.Scale != null)
+					if (type.Type.Precision != null && type.Type.Scale != null)
 						StringBuilder.AppendFormat(
 							"({0}, {1})",
-							type.Precision.Value.ToString(CultureInfo.InvariantCulture),
-							type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+							type.Type.Precision.Value.ToString(CultureInfo.InvariantCulture),
+							type.Type.Scale.Value.ToString(CultureInfo.InvariantCulture));
 					return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 255 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(255)");
 						return;
 					}
@@ -212,13 +212,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (field.IsIdentity)
 			{
-				if (field.DataType == DataType.Int32)
+				if (field.Type!.Value.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.DataType == DataType.Int64)
+				if (field.Type!.Value.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("SERIAL8");
 					return;

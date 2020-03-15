@@ -428,7 +428,7 @@ namespace LinqToDB.Linq
 
 			LambdaExpression? _expression;
 
-			public LambdaExpression? GetExpression(MappingSchema mappingSchema)
+			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
 				return _expression ?? (_expression = Lambda!());
 			}

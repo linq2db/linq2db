@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.SapHana
 				var p = (SqlParameter)element;
 
 				// enforce timespan as parameter
-				if (p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+				if (p.Type.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
 					p.IsQueryParameter = true;
 			}
 		}

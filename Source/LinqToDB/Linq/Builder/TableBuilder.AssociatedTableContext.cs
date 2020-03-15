@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +17,15 @@ namespace LinqToDB.Linq.Builder
 	{
 		public class AssociatedTableContext : TableContext
 		{
-			public readonly TableContext             ParentAssociation;
-			public readonly SqlJoinedTable           ParentAssociationJoin;
-			public readonly AssociationDescriptor    Association;
-			public readonly bool                     IsList;
-			public readonly bool                     IsSubQuery;
-			public          int                      RegularConditionCount;
-			public          LambdaExpression         ExpressionPredicate;
+			public readonly TableContext          ParentAssociation;
+			public readonly SqlJoinedTable?       ParentAssociationJoin;
+			public readonly AssociationDescriptor Association;
+			public readonly bool                  IsList;
+			public readonly bool                  IsSubQuery;
+			public          int                   RegularConditionCount;
+			public          LambdaExpression?     ExpressionPredicate;
 
-			public override IBuildContext Parent
+			public override IBuildContext? Parent
 			{
 				get { return ParentAssociation.Parent; }
 				set { }
@@ -35,15 +34,15 @@ namespace LinqToDB.Linq.Builder
 			static MethodInfo _selectManyMethodInfo = MemberHelper.MethodOf((IQueryable<int> q) =>
 				q.SelectMany(i => new int [0], (i, c) => i)).GetGenericMethodDefinition();
 
-			Dictionary<ISqlExpression, SqlField> _replaceMap;
-			internal IBuildContext               _innerContext;
+			Dictionary<ISqlExpression, SqlField>? _replaceMap;
+			internal IBuildContext?               _innerContext;
 
 			public AssociatedTableContext(
-				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
-				[JetBrains.Annotations.NotNull] TableContext          parent,
-				[JetBrains.Annotations.NotNull] AssociationDescriptor association,
-				                                bool                  forceLeft,
-				                                bool                  asSubquery
+				ExpressionBuilder     builder,
+				TableContext          parent,
+				AssociationDescriptor association,
+				bool                  forceLeft,
+				bool                  asSubquery
 			)
 				: base(builder, asSubquery ? new SelectQuery() { ParentSelect = parent.SelectQuery } : parent.SelectQuery)
 			{
@@ -153,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var psrc = parent.SelectQuery.From[parent.SqlTable];
+					var psrc = parent.SelectQuery.From[parent.SqlTable]!;
 					join = left ? SqlTable.WeakLeftJoin().JoinedTable : SqlTable.WeakInnerJoin().JoinedTable;
 
 					ParentAssociationJoin = join;
@@ -167,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 				Init(false);
 			}
 
-			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource table)
+			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource? table)
 			{
 				if (!association.AliasName.IsNullOrEmpty() && table != null)
 				{
@@ -295,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 					base.BuildQuery(query, queryParameter);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_innerContext != null)
 					return _innerContext.ConvertToSql(expression, level, flags);
@@ -303,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToSql(expression, level, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_innerContext != null)
 				{
@@ -317,14 +316,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				return new QueryVisitor().Convert(expression, e =>
 				{
-					if (e.ElementType == QueryElementType.SqlField && _replaceMap.TryGetValue((SqlField)e, out var newField))
+					if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
 						return newField;
 					return e;
 
-				}); 
+				});
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
+			public override int ConvertToParentIndex(int index, IBuildContext? context)
 			{
 				if (_innerContext != null)
 				{
@@ -335,7 +334,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (_innerContext != null)
 					return _innerContext.BuildExpression(expression, level, enforceServerSide);
@@ -348,18 +347,18 @@ namespace LinqToDB.Linq.Builder
 				var isLeft = false;
 
 				for (
-					var association = this;
+					AssociatedTableContext? association = this;
 					isLeft == false && association != null;
 					association = association.ParentAssociation as AssociatedTableContext)
 				{
 					isLeft =
-						association.ParentAssociationJoin.JoinType == JoinType.Left ||
+						association.ParentAssociationJoin!.JoinType == JoinType.Left ||
 						association.ParentAssociationJoin.JoinType == JoinType.OuterApply;
 				}
 
 				if (isLeft)
 				{
-					Expression cond = null;
+					Expression? cond = null;
 
 					var keys = ConvertToIndex(null, 0, ConvertFlags.Key);
 
@@ -381,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			protected internal override List<MemberInfo[]> GetLoadWith()
+			protected internal override List<MemberInfo[]>? GetLoadWith()
 			{
 				if (LoadWith == null)
 				{
@@ -466,7 +465,7 @@ namespace LinqToDB.Linq.Builder
 						// Where
 						var pWhere = Expression.Parameter(typeof(T), "t");
 
-						Expression expr = null;
+						Expression? expr = null;
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
@@ -499,7 +498,7 @@ namespace LinqToDB.Linq.Builder
 
 					expression = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
+						MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Convert(parentObject, typeof(object)),
 							Expression.Constant(queryReader));
@@ -536,7 +535,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			protected override ISqlExpression GetField(Expression expression, int level, bool throwException)
+			protected override ISqlExpression? GetField(Expression expression, int level, bool throwException)
 			{
 				if (_innerContext != null)
 				{
@@ -547,7 +546,7 @@ namespace LinqToDB.Linq.Builder
 				return base.GetField(expression, level, throwException);
 			}
 
-			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
+			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression? parentObject)
 			{
 				if (IsList == false)
 				{
@@ -562,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 				var sqtype = typeof(SubQueryHelper<>).MakeGenericType(tableType);
 				var helper = (ISubQueryHelper)Activator.CreateInstance(sqtype);
 
-				return helper.GetSubquery(Builder, this, parentObject);
+				return helper.GetSubquery(Builder, this, parentObject!);
 			}
 		}
 	}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -35,8 +34,8 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#region ISqlTableSource
-		private SqlField _all;
-		SqlField ISqlTableSource.All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+		private SqlField? _all;
+		SqlField ISqlTableSource.All => _all ?? (_all = SqlField.All(this));
 
 		int ISqlTableSource.SourceID => throw new NotImplementedException();
 

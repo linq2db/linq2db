@@ -99,11 +99,11 @@ namespace LinqToDB.SqlProvider
 						return;
 
 					var dependsOn = new HashSet<CteClause>();
-					new QueryVisitor().Visit(cteClause.Body, ce =>
+					new QueryVisitor().Visit(cteClause.Body!, ce =>
 					{
 						if (ce.ElementType == QueryElementType.SqlCteTable)
 						{
-							var subCte = ((SqlCteTable)ce).Cte;
+							var subCte = ((SqlCteTable)ce).Cte!;
 							dependsOn.Add(subCte);
 						}
 
@@ -122,7 +122,7 @@ namespace LinqToDB.SqlProvider
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
-							var cte = ((SqlCteTable)e).Cte;
+							var cte = ((SqlCteTable)e).Cte!;
 							RegisterDependency(cte);
 						}
 					}
@@ -223,8 +223,8 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (e.ElementType)
 						{
-							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
-							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
+							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
+							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
 						}
 
 						return false;
@@ -253,7 +253,7 @@ namespace LinqToDB.SqlProvider
 									if (replaced.TryGetValue(e, out ne))
 										return ne;
 
-									if (levelTables.Contains(((SqlField)e).Table))
+									if (levelTables.Contains(((SqlField)e).Table!))
 									{
 										subQuery.GroupBy.Expr((SqlField)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
@@ -265,7 +265,7 @@ namespace LinqToDB.SqlProvider
 									if (replaced.TryGetValue(e, out ne))
 										return ne;
 
-									if (levelTables.Contains(((SqlColumn)e).Parent))
+									if (levelTables.Contains(((SqlColumn)e).Parent!))
 									{
 										subQuery.GroupBy.Expr((SqlColumn)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)];
@@ -336,8 +336,8 @@ namespace LinqToDB.SqlProvider
 						{
 							switch (e.ElementType)
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
-								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
+								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
+								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
 							}
 
 							return false;
@@ -422,7 +422,7 @@ namespace LinqToDB.SqlProvider
 										if (replaced.TryGetValue(e, out ne))
 											return ne;
 
-										if (levelTables.Contains(((SqlField)e).Table))
+										if (levelTables.Contains(((SqlField)e).Table!))
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
@@ -435,7 +435,7 @@ namespace LinqToDB.SqlProvider
 										if (replaced.TryGetValue(e, out ne))
 											return ne;
 
-										if (levelTables.Contains(((SqlColumn)e).Parent))
+										if (levelTables.Contains(((SqlColumn)e).Parent!))
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlColumn)e);
@@ -597,7 +597,7 @@ namespace LinqToDB.SqlProvider
 
 							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 							{
-								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -612,7 +612,7 @@ namespace LinqToDB.SqlProvider
 
 							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 							{
-								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -812,10 +812,10 @@ namespace LinqToDB.SqlProvider
 							{
 								var typef = func.SystemType.ToUnderlying();
 
-								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType.ToUnderlying() == typef)
+								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
 									return from.Parameters[1];
 
-								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.ToUnderlying() == typef)
+								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
 									return fe.Parameters[0];
 							}
 
@@ -865,7 +865,7 @@ namespace LinqToDB.SqlProvider
 						//		((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
 						//}
 
-						if (expr.Expr2 is SqlParameter parameterExpr2 && parameterExpr2.DataType == DataType.Undefined)
+						if (expr.Expr2 is SqlParameter parameterExpr2 && parameterExpr2.Type.DataType == DataType.Undefined)
 						{
 							var innerExpr = expr.Expr1;
 
@@ -874,13 +874,11 @@ namespace LinqToDB.SqlProvider
 
 							if (innerExpr is SqlField field)
 							{
-								parameterExpr2.DataType = field.DataType;
-								parameterExpr2.DbType   = field.DbType;
-								parameterExpr2.DbSize   = field.Length;
+								parameterExpr2.Type = parameterExpr2.Type.WithoutSystemType(field.Type!.Value);
 							}
 						}
 
-						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.DataType == DataType.Undefined)
+						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.Type.DataType == DataType.Undefined)
 						{
 							var innerExpr = expr.Expr2;
 
@@ -889,9 +887,7 @@ namespace LinqToDB.SqlProvider
 
 							if (innerExpr is SqlField field)
 							{
-								parameterExpr1.DataType = field.DataType;
-								parameterExpr1.DbType   = field.DbType;
-								parameterExpr1.DbSize   = field.Length;
+								parameterExpr1.Type = parameterExpr1.Type.WithoutSystemType(field.Type!.Value);
 							}
 						}
 
@@ -1175,28 +1171,28 @@ namespace LinqToDB.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int? GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
-		protected virtual int? GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
-		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
-		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
+		protected virtual int? GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.Type.DataType); }
+		protected virtual int? GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.Type.DataType); }
+		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
+		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type == typeof(object))
+			if (to.Type.SystemType == typeof(object))
 				return func.Parameters[2];
 
-			if (to.Length > 0)
+			if (to.Type.Length > 0)
 			{
-				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength.Value) : to.Length;
+				var maxLength = to.Type.SystemType == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
+				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(to.Type.Length ?? 0, maxLength.Value) : to.Type.Length;
 
-				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength, null, null, to.DbType);
+				if (to.Type.Length != newLength)
+					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type == typeof(short) && to.Type == typeof(int))
+			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
 			return ConvertExpression(new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]));
@@ -1210,7 +1206,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var par = func.Parameters[paramNumber];
 
-			if (par.SystemType.IsFloatType() || par.SystemType.IsIntegerType())
+			if (par.SystemType!.IsFloatType() || par.SystemType!.IsIntegerType())
 			{
 				var sc = new SqlSearchCondition();
 
@@ -1227,8 +1223,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).DataType == DataType.Date;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == dateName;
+				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).Type.DataType == DataType.Date;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr          == dateName;
 			}
 
 			return false;
@@ -1238,8 +1234,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).  DataType == DataType.Time;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == "Time";
+				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).Type.DataType == DataType.Time;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr        == "Time";
 			}
 
 			return false;
@@ -1249,7 +1245,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var par1 = func.Parameters[1];
 
-			return par1.SystemType.IsFloatType() && func.SystemType.IsIntegerType() ?
+			return par1.SystemType!.IsFloatType() && func.SystemType.IsIntegerType() ?
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
@@ -1407,9 +1403,9 @@ namespace LinqToDB.SqlProvider
 			if (ReferenceEquals(tableToUpdate, tableToCompare))
 			{
 				// we have to create clone
-				tableToUpdate = tableToCompare.Clone();
+				tableToUpdate = tableToCompare!.Clone();
 
-				var ts = statement.SelectQuery.GetTableSource(tableToCompare);
+				var ts = statement.SelectQuery.GetTableSource(tableToCompare!);
 
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
@@ -1435,7 +1431,7 @@ namespace LinqToDB.SqlProvider
 			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
 			{
 
-				var keys1 = tableToUpdate. GetKeys(true);
+				var keys1 = tableToUpdate!.GetKeys(true);
 				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
@@ -1551,7 +1547,7 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var item in updateStatement.Update.Items)
 				{
-					var ex = new QueryVisitor().Convert(item.Expression, expr =>
+					var ex = new QueryVisitor().Convert(item.Expression!, expr =>
 						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
 							? (ISqlExpression) newValue
 							: expr);
@@ -1599,7 +1595,7 @@ namespace LinqToDB.SqlProvider
 						ex = innerQuery;
 					}
 
-					item.Column = tableToUpdate.Fields[QueryHelper.GetUnderlyingField(item.Column).Name];
+					item.Column = tableToUpdate.Fields[QueryHelper.GetUnderlyingField(item.Column)!.Name];
 					item.Expression = ex;
 					newUpdateStatement.Update.Items.Add(item);
 				}
@@ -1837,11 +1833,11 @@ namespace LinqToDB.SqlProvider
 						if (SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectClause.SelectQuery) &&
 						    expr.ElementType != QueryElementType.SqlParameter)
 						{
-							var takeValue = take.EvaluateExpression();
-							take = new SqlParameter(takeValue.GetType(), "take", takeValue) { IsQueryParameter = !inlineParameters };
-						}							
-						else if	(take.ElementType != QueryElementType.SqlValue)
-							take = new SqlValue(take.EvaluateExpression());
+							var takeValue = take.EvaluateExpression()!;
+							take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue) { IsQueryParameter = !inlineParameters };
+						}
+						else if (take.ElementType != QueryElementType.SqlValue)
+							take = new SqlValue(take.EvaluateExpression()!);
 
 						return take;
 					}
@@ -1853,11 +1849,11 @@ namespace LinqToDB.SqlProvider
 						    && SqlProviderFlags.AcceptsTakeAsParameter
 						    && expr.ElementType != QueryElementType.SqlParameter)
 						{
-							var skipValue = skip.EvaluateExpression();
-							skip = new SqlParameter(skipValue.GetType(), "skip", skipValue) { IsQueryParameter = !inlineParameters };
+							var skipValue = skip.EvaluateExpression()!;
+							skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue) { IsQueryParameter = !inlineParameters };
 						}
 						else if (skip.ElementType != QueryElementType.SqlValue)
-							skip = new SqlValue(skip.EvaluateExpression());
+							skip = new SqlValue(skip.EvaluateExpression()!);
 
 						return skip;
 					}
@@ -1963,13 +1959,13 @@ namespace LinqToDB.SqlProvider
 
 						if (query.Select.TakeValue != null)
 							processingQuery.Where.Expr(rowNumberColumn).LessOrEqual.Expr(
-								new SqlBinaryExpression(query.Select.SkipValue.SystemType,
+								new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
 									query.Select.SkipValue, "+", query.Select.TakeValue));
 					}
 					else
 					{
 						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).LessOrEqual
-							.Expr(query.Select.TakeValue);
+							.Expr(query.Select.TakeValue!);
 					}
 
 					query.Select.SkipValue = null;

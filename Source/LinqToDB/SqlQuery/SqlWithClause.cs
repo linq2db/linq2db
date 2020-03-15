@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,11 +16,11 @@ namespace LinqToDB.SqlQuery
 
 		public List<CteClause> Clauses { get; set; } = new List<CteClause>();
 
-		public ISqlTableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			foreach (var cte in Clauses)
 			{
-				var ts = cte.Body.GetTableSource(table);
+				var ts = cte.Body!.GetTableSource(table);
 				if (ts != null)
 					return ts;
 			}
@@ -38,7 +37,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			for (var index = 0; index < Clauses.Count; index++)
 			{
