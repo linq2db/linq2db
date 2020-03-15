@@ -108,11 +108,10 @@ namespace LinqToDB.Linq.Builder
 											{
 												// avoid parameters is source, because their number is limited
 												p.IsQueryParameter = false;
-												p.Type             = p.Type
-																		.WithDataType(column.DataType)
-																		.WithLength  (column.Length)
-																		.WithDbType  (column.DbType);
+												p.Type             = p.Type.WithoutSystemType(column);
 											}
+											else if (expr is SqlValue val)
+												val.ValueType = val.ValueType.WithoutSystemType(column);
 
 											Table.Rows[i].Add(expr);
 										}

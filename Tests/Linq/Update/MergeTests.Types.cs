@@ -8,9 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Informix;
-	using Model;
-
 	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
@@ -68,6 +65,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
+			[Column(Configuration = ProviderName.Oracle, Precision = 7)]
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
@@ -473,15 +471,6 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.Contains("Oracle"))
-				{
-					var trimmable = expected.Value.Ticks % 10;
-					if (trimmable >= 5)
-						trimmable -= 10;
-
-					expected = expected.Value.AddTicks(-trimmable);
-				}
-
 				if (provider.Contains(ProviderName.PostgreSQL))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
