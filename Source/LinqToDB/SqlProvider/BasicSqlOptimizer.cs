@@ -1230,6 +1230,16 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
+		protected static bool IsDateDataOffsetType(ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlDataType: return ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset;
+			}
+
+			return false;
+		}
+
 		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
 			switch (expr.ElementType)
