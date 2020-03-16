@@ -758,7 +758,8 @@ namespace Tests.DataProvider
 		{
 			// Set custom DateTime to SQL converter.
 			//
-			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+			var ms = new MappingSchema();
+			ms.SetValueToSqlConverter(
 				typeof(DateTime),
 				(stringBuilder,dataType,val) =>
 				{
@@ -771,7 +772,7 @@ namespace Tests.DataProvider
 					stringBuilder.AppendFormat(format, value);
 				});
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(context, ms))
 			{
 				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
 
@@ -787,28 +788,6 @@ namespace Tests.DataProvider
 					}
 				});
 			}
-
-			// Reset converter to default.
-			//
-			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
-				typeof(DateTime),
-				(stringBuilder,dataType,val) =>
-				{
-					var value  = (DateTime)val;
-					var format =
-						dataType.Type.DataType == DataType.DateTime ?
-							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
-							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
-
-					if (value.Millisecond == 0)
-					{
-						format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-							"TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
-							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
-					}
-
-					stringBuilder.AppendFormat(format, value);
-				});
 		}
 
 		[Test]
@@ -2182,6 +2161,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CustomMappingNonstandardTypeTest([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
+			var ms = new MappingSchema();
 			var dataProvider = (DataProviderBase)DataConnection.GetDataProvider(context);
 
 			// Expression to read column value from data reader.
@@ -2194,12 +2174,12 @@ namespace Tests.DataProvider
 
 			// Converts object property value to data reader parameter.
 			//
-			dataProvider.MappingSchema.SetConverter<MyDate,DataParameter>(
+			ms.SetConverter<MyDate,DataParameter>(
 				dt => new DataParameter { Value = MyDateToOracleTimeStampTZ(dt) });
 
 			// Converts object property value to SQL.
 			//
-			dataProvider.MappingSchema.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
 			{
 				var value = v as MyDate;
 				if (value == null) sb.Append("NULL");
@@ -2208,7 +2188,7 @@ namespace Tests.DataProvider
 
 			// Converts object property value to SQL.
 			//
-			dataProvider.MappingSchema.SetValueToSqlConverter(typeof(OracleTimeStampTZ), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(OracleTimeStampTZ), (sb,tp,v) =>
 			{
 				var value = (OracleTimeStampTZ)v;
 				if (value.IsNull) sb.Append("NULL");
@@ -2217,10 +2197,10 @@ namespace Tests.DataProvider
 
 			// Maps OracleTimeStampTZ to MyDate and the other way around.
 			//
-			dataProvider.MappingSchema.SetConverter<OracleTimeStampTZ,MyDate>(OracleTimeStampTZToMyDate);
-			dataProvider.MappingSchema.SetConverter<MyDate,OracleTimeStampTZ>(MyDateToOracleTimeStampTZ);
+			ms.SetConverter<OracleTimeStampTZ,MyDate>(OracleTimeStampTZToMyDate);
+			ms.SetConverter<MyDate,OracleTimeStampTZ>(MyDateToOracleTimeStampTZ);
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
 			{
 				var table = db.GetTable<MappingTest>();
 				var list  = table.ToList();

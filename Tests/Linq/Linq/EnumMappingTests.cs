@@ -1776,9 +1776,10 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1622)]
 		public void Issue1622Test([DataSources(ProviderName.Sybase)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			var ms = new MappingSchema();
+			using (var db = GetDataContext(context, ms))
 			{
-				db.MappingSchema.SetValueToSqlConverter(typeof(Issue1622Enum),
+				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
 					{
 						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
