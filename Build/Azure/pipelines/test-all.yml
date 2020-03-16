@@ -9,8 +9,11 @@ variables:
   netcore21_tests: 'netcoreapp21_tests'
 
 trigger: none
-# https://github.com/MicrosoftDocs/vsts-docs/issues/4206
-#pr: none
+pr:
+  branches:
+    include:
+    - '*'
+
 
 stages:
 
