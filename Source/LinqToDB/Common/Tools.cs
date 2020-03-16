@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
@@ -19,7 +20,7 @@ namespace LinqToDB.Common
 		/// <param name="args">Format parameters.</param>
 		/// <returns>String, generated from <paramref name="format"/> format string using <paramref name="args"/> parameters.</returns>
 		[Obsolete("Use either string interpolation or CodeJam.FormatWith instead."), StringFormatMethod("format")]
-		public static string Args(this string format, params object[] args)
+		public static string Args(this string format, params object?[] args)
 		{
 			return string.Format(format, args);
 		}
@@ -29,7 +30,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="array">Collection to check.</param>
 		/// <returns><c>true</c> if collection is null or contains no elements, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this ICollection array)
+		public static bool IsNullOrEmpty(this ICollection? array)
 		{
 			return array == null || array.Count == 0;
 		}
@@ -39,7 +40,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="str">String value to check.</param>
 		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this string str)
+		public static bool IsNullOrEmpty(this string? str)
 		{
 			return string.IsNullOrEmpty(str);
 		}
@@ -74,7 +75,13 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path =
+
+				var path = string.Empty;
+
+				if (uri.Host != string.Empty)
+					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
+
+				path +=
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);
@@ -85,6 +92,55 @@ namespace LinqToDB.Common
 			{
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
+		}
+
+		public static string ToDebugDisplay(string str)
+		{
+			string RemoveDuplicates(string pattern, string input)
+			{
+				var toSearch = pattern + pattern;
+				do
+				{
+					var s = input.Replace(toSearch, pattern);
+					if (s == input)
+						break;
+					input = s;
+				} while (true);
+
+				return input;
+			}
+
+			str = RemoveDuplicates("\t",   str);
+			str = RemoveDuplicates("\r\n", str);
+			str = RemoveDuplicates("\n",   str);
+
+			str = str.Replace("\t",   " ");
+			str = str.Replace("\r\n", " ");
+			str = str.Replace("\n",   " ");
+
+			return str.Trim();
+		}
+
+		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
+		{
+			if (assemblyName != null)
+			{
+				try
+				{
+					return Assembly.Load(assemblyName);
+				}
+				catch {}
+			}
+
+#if !NETSTANDARD2_0
+			try
+			{
+				return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
+			}
+			catch {}
+#endif
+
+			return null;
 		}
 	}
 }

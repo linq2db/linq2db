@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 2;
 
-					var joinValue = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression();
+					var joinValue = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()!;
 
 					switch (joinValue)
 					{
@@ -70,8 +70,8 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+			ParameterExpression? param)
 		{
 			return null;
 		}

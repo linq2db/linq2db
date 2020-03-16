@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using LinqToDB.Common;
 	using LinqToDB.SqlQuery;
 	using Mapping;
 	using System.Data.Linq;
@@ -14,15 +15,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		protected PostgreSQLMappingSchema(string configuration) : base(configuration)
+		public PostgreSQLMappingSchema(params MappingSchema[] schemas) : this(ProviderName.PostgreSQL, schemas)
+		{
+		}
+
+		protected PostgreSQLMappingSchema(string configuration, params MappingSchema[] schemas)
+			: base(configuration, schemas)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
@@ -38,18 +44,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
 				{
 					format = "'{0:yyyy-MM-dd}'::{1}";
-					dbType = dt.DbType ?? "date";
+					dbType = dt.Type.DbType ?? "date";
 				}
 				else
 				{
 					format = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
-					dbType = dt.DbType ?? "timestamp";
+					dbType = dt.Type.DbType ?? "timestamp";
 				}
 			}
 			else
 			{
 				format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
-				dbType = dt.DbType ?? "timestamp";
+				dbType = dt.Type.DbType ?? "timestamp";
 			}
 
 			stringBuilder.AppendFormat(format, value, dbType);
@@ -82,6 +88,47 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+		}
+
+		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
+	}
+
+	public class PostgreSQL92MappingSchema : MappingSchema
+	{
+		public PostgreSQL92MappingSchema()
+			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
+		}
+	}
+
+	public class PostgreSQL93MappingSchema : MappingSchema
+	{
+		public PostgreSQL93MappingSchema()
+			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
+		}
+	}
+
+	public class PostgreSQL95MappingSchema : MappingSchema
+	{
+		public PostgreSQL95MappingSchema()
+			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
+		{
+		}
+
+		public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		{
 		}
 	}
 }

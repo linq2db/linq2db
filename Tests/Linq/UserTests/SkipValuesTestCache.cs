@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestSkipInsertOrReplace(
-			[DataSources(ProviderName.OracleNative)] string context,
+			[DataSources(TestProvName.AllOracleNative)] string context,
 			[Values(1, 2, 1)] int value)
 		{
 			using (var db = GetDataContext(context))

@@ -445,7 +445,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(Informix, TestProvName.AllMySql, Access, SapHana)] string context)
+		public void DatePartMillisecond([DataSources(Informix, InformixDB2, TestProvName.AllMySql, Access, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

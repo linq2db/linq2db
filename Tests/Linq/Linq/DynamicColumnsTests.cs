@@ -367,38 +367,26 @@ namespace Tests.Linq
 			}
 		}
 
-		public void CreateTestTable<T>(IDataContext db, string tableName = null)
-		{
-			db.DropTable<T>(tableName, throwExceptionIfNotExists: false);
-			db.CreateTable<T>(tableName);
-		}
-
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
 			{
-				CreateTestTable<DynamicTablePrototype>(db);
-				try
-				{
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77 });
+				new DynamicTablePrototype { NotIdentifier = 77 }
+			}))
+			{
+				var query =
+					from d in db.GetTable<DynamicTable>()
+					select new
+					{
+						NI = Sql.Property<int>(d, "Not Identifier")
+					};
 
-					var query =
-						from d in db.GetTable<DynamicTable>()
-						select new
-						{
-							NI = Sql.Property<int>(d, "Not Identifier")
-						};
+				var result = query.ToArray();
 
-					var result = query.ToArray();
-
-					Assert.AreEqual(77, result[0].NI);
-				}
-				finally
-				{
-					db.DropTable<DynamicTablePrototype>();
-				}
+				Assert.AreEqual(77, result[0].NI);
 			}
 		}
 
@@ -407,34 +395,28 @@ namespace Tests.Linq
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
 			{
-				CreateTestTable<DynamicTablePrototype>(db);
-				try
-				{
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
+				new DynamicTablePrototype { NotIdentifier = 77, Value = 5 },
+				new DynamicTablePrototype { NotIdentifier = 77, Value = 5 }
+			}))
+			{
+				var query =
+					from d in db.GetTable<DynamicTable>()
+					group d by new { NI = Sql.Property<int>(d, "Not Identifier") }
+					into g
+					select new
+					{
+						g.Key.NI,
+						Count = g.Count(),
+						Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
+					};
 
-					var query =
-						from d in db.GetTable<DynamicTable>()
-						group d by new { NI = Sql.Property<int>(d, "Not Identifier") }
-						into g
-						select new
-						{
-							g.Key.NI,
-							Count = g.Count(),
-							Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
-						};
+				var result = query.ToArray();
 
-					var result = query.ToArray();
-
-					Assert.AreEqual(77, result[0].NI);
-					Assert.AreEqual(2,  result[0].Count);
-					Assert.AreEqual(10, result[0].Sum);
-				}
-				finally
-				{
-					db.DropTable<DynamicTablePrototype>();
-				}
+				Assert.AreEqual(77, result[0].NI);
+				Assert.AreEqual(2,  result[0].Count);
+				Assert.AreEqual(10, result[0].Sum);
 			}
 		}
 
@@ -541,7 +523,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 			var builder = mappingSchema.GetFluentMappingBuilder()

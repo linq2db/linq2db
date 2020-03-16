@@ -19,8 +19,6 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.DB2)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.Firebird)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.Oracle)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.OracleManaged)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.OracleNative)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
 			[Column(                          Configuration = ProviderName.Informix,   DbType = "byte")]
 			public byte[] BlobValue;
@@ -32,7 +30,6 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
 			{
-
 				db.Into(db.GetTable<BlobClass>())
 					.Value(p => p.Id,        1)
 					.Value(p => p.BlobValue, new byte[] { 1, 2, 3 })

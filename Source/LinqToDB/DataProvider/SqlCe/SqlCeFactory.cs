@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -13,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new SqlCeDataProvider();
+			return SqlCeTools.GetDataProvider();
 		}
 	}
 }

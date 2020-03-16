@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public List<SqlSetExpression> Items        { get; }
-		public SqlTable               Into         { get; set; }
+		public SqlTable?              Into         { get; set; }
 		public bool                   WithIdentity { get; set; }
 
 		#region Overrides
@@ -52,9 +52,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Into)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Into)?.Walk(options, func);
 
 			foreach (var t in Items)
 				((ISqlExpressionWalkable)t).Walk(options, func);
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb.Append("VALUES ");
 
-			((IQueryElement)Into)?.ToString(sb, dic);
+			((IQueryElement?)Into)?.ToString(sb, dic);
 
 			sb.AppendLine();
 

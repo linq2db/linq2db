@@ -3,14 +3,10 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NUnit.Framework;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
-using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -63,9 +59,9 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -83,9 +79,9 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -102,10 +98,10 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -133,7 +129,7 @@ namespace Tests.Linq
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2)]
 			string context)
 		{
@@ -143,38 +139,6 @@ namespace Tests.Linq
 				var s2 = db.Select(() => Sql.ToSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
-			}
-		}
-
-		[Test]
-		public void SqlStringParameter([DataSources(false)] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "John";
-				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				p = "Tester";
-				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
-			}
-		}
-
-		// Excluded providers inline such parameter
-		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)]
-			string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}
 		}
 
@@ -189,7 +153,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -244,6 +208,116 @@ namespace Tests.Linq
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
+		}
+
+
+		static class AdditionalSql
+		{
+			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
+			public static int Operation(int item1, int item2, int item3)
+			{
+				return (item3 * (item2 - item1) / item3) * item1;
+			}
+
+		}
+
+		[Test]
+		public void TestPositionedParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var x3  = 3;
+				var y10 = 10;
+				var z2  = 2;
+
+				var query = from child in db.Child
+					select new
+					{
+						Value1 = Sql.AsSql(AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3)))
+					};
+
+				var expected = from child in Child
+					select new
+					{
+						Value1 = AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3))
+					};
+
+				AreEqual(expected, query);
+			}
+		}
+
+		[Test]
+		public void TestQueryableCall([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => GetChildren(db).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[Test]
+		public void TestQueryableCallWithParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[Test]
+		public void TestQueryableCallWithParametersWorkaround([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		// sequence evaluation fails in GetChildrenFiltered2
+		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
+		[Test]
+		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => GetChildrenFiltered2(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[Test]
+		public void TestQueryableCallMustFail([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// we use external parameter p in GetChildrenFiltered parameter expression
+				// Sequence 'GetChildrenFiltered(value(Tests.Linq.ParameterTests+<>c__DisplayClass18_0).db, c => (c.ChildID != p.ParentID))' cannot be converted to SQL.
+				Assert.Throws<LinqException>(()
+					=> db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != p.ParentID).Select(c => c.ParentID).Contains(p.ParentID)).ToList());
+			}
+		}
+
+		private static bool ChildFilter(Model.Child c) => c.ChildID != 5;
+
+		private static IQueryable<Model.Child> GetChildren(Model.ITestDataContext db)
+		{
+			return db.Child;
+		}
+
+		private static IQueryable<Model.Child> GetChildrenFiltered(Model.ITestDataContext db, Func<Model.Child, bool> filter)
+		{
+			// looks strange, but it's just to make testcase work
+			var list = db.Child.Where(filter).Select(r => r.ChildID).ToList();
+			return db.Child.Where(c => list.Contains(c.ChildID));
+		}
+
+		private static IQueryable<Model.Child> GetChildrenFiltered2(Model.ITestDataContext db, Func<Model.Child, bool> filter)
+		{
+			var list = db.Child.ToList();
+			return db.Child.Where(c => list.Where(filter).Select(r => r.ChildID).Contains(c.ChildID));
 		}
 	}
 }

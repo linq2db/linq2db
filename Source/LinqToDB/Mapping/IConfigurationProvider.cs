@@ -2,6 +2,6 @@
 {
 	internal interface IConfigurationProvider
 	{
-		string Configuration { get; set; }
+		string? Configuration { get; set; }
 	}
 }

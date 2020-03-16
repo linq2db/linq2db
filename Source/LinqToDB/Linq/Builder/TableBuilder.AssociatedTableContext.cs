@@ -17,14 +17,15 @@ namespace LinqToDB.Linq.Builder
 	{
 		public class AssociatedTableContext : TableContext
 		{
-			public readonly TableContext             ParentAssociation;
-			public readonly SqlJoinedTable           ParentAssociationJoin;
-			public readonly AssociationDescriptor    Association;
-			public readonly bool                     IsList;
-			public          int                      RegularConditionCount;
-			public          LambdaExpression         ExpressionPredicate;
+			public readonly TableContext          ParentAssociation;
+			public readonly SqlJoinedTable?       ParentAssociationJoin;
+			public readonly AssociationDescriptor Association;
+			public readonly bool                  IsList;
+			public readonly bool                  IsSubQuery;
+			public          int                   RegularConditionCount;
+			public          LambdaExpression?     ExpressionPredicate;
 
-			public override IBuildContext Parent
+			public override IBuildContext? Parent
 			{
 				get { return ParentAssociation.Parent; }
 				set { }
@@ -33,22 +34,24 @@ namespace LinqToDB.Linq.Builder
 			static MethodInfo _selectManyMethodInfo = MemberHelper.MethodOf((IQueryable<int> q) =>
 				q.SelectMany(i => new int [0], (i, c) => i)).GetGenericMethodDefinition();
 
-			Dictionary<ISqlExpression, SqlField> _replaceMap;
-			IBuildContext                        _innerContext;
+			Dictionary<ISqlExpression, SqlField>? _replaceMap;
+			internal IBuildContext?               _innerContext;
 
 			public AssociatedTableContext(
-				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
-				[JetBrains.Annotations.NotNull] TableContext          parent,
-				[JetBrains.Annotations.NotNull] AssociationDescriptor association
+				ExpressionBuilder     builder,
+				TableContext          parent,
+				AssociationDescriptor association,
+				bool                  forceLeft,
+				bool                  asSubquery
 			)
-				: base(builder, parent.SelectQuery)
+				: base(builder, asSubquery ? new SelectQuery() { ParentSelect = parent.SelectQuery } : parent.SelectQuery)
 			{
 				if (builder     == null) throw new ArgumentNullException(nameof(builder));
 				if (parent      == null) throw new ArgumentNullException(nameof(parent));
 				if (association == null) throw new ArgumentNullException(nameof(association));
 
 				var type = association.MemberInfo.GetMemberType();
-				var left = association.CanBeNull;
+				var left = forceLeft || association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
@@ -63,8 +66,16 @@ namespace LinqToDB.Linq.Builder
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
-				Association        = association;
-				ParentAssociation  = parent;
+				Association       = association;
+				ParentAssociation = parent;
+				IsSubQuery        = asSubquery;
+
+				if (asSubquery)
+				{
+					BuildSubQuery(builder, parent, association, left);
+					Init(false);
+					return;
+				}
 
 				SqlJoinedTable join;
 
@@ -76,8 +87,13 @@ namespace LinqToDB.Linq.Builder
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
-					_innerContext = builder.BuildSequence(new BuildInfo(this, selectManyMethod, new SelectQuery())
-						{ IsAssociationBuilt = true });
+					var buildInfo = new BuildInfo(this, selectManyMethod, new SelectQuery()) { IsAssociationBuilt = true };
+					_innerContext = builder.BuildSequence(buildInfo);
+
+					if (Association.CanBeNull)
+					{
+						_innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, _innerContext, null);
+					}
 
 					var associationQuery = _innerContext.SelectQuery;
 
@@ -130,71 +146,128 @@ namespace LinqToDB.Linq.Builder
 
 					// add rest of tables
 					SelectQuery.From.Tables.AddRange(associationQuery.Select.From.Tables.Where(t => t != sourceToReplace));
+
+					//TODO: Change AssociatedTableContext base class
+					//SqlTable = null;
 				}
 				else
 				{
-					var psrc = parent.SelectQuery.From[parent.SqlTable];
+					var psrc = parent.SelectQuery.From[parent.SqlTable]!;
 					join = left ? SqlTable.WeakLeftJoin().JoinedTable : SqlTable.WeakInnerJoin().JoinedTable;
 
 					ParentAssociationJoin = join;
 
 					psrc.Joins.Add(join);
-
-					for (var i = 0; i < association.ThisKey.Length; i++)
-					{
-						if (!parent.SqlTable.Fields.TryGetValue(association.ThisKey[i], out var field1))
-							throw new LinqException("Association key '{0}' not found for type '{1}.", association.ThisKey[i], parent.ObjectType);
-
-						if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out var field2))
-							throw new LinqException("Association key '{0}' not found for type '{1}.", association.OtherKey[i], ObjectType);
-
-	//					join.Field(field1).Equal.Field(field2);
-
-						ISqlPredicate predicate = new SqlPredicate.ExprExpr(
-							field1, SqlPredicate.Operator.Equal, field2);
-
-						predicate = builder.Convert(parent, predicate);
-
-						join.Condition.Conditions.Add(new SqlCondition(false, predicate));
-					}
-
-					if (ObjectType != OriginalType)
-					{
-						var predicate = Builder.MakeIsPredicate(this, OriginalType);
-
-						if (predicate.GetType() != typeof(SqlPredicate.Expr))
-							join.Condition.Conditions.Add(new SqlCondition(false, predicate));
-					}
-
-					RegularConditionCount = join.Condition.Conditions.Count;
-					ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
-
-					if (ExpressionPredicate != null)
-					{
-						ExpressionPredicate = (LambdaExpression)Builder.ConvertExpressionTree(ExpressionPredicate);
-
-						var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
-
-						Builder.BuildSearchCondition(
-							new ExpressionContext(parent.Parent, new IBuildContext[] { parent, this }, ExpressionPredicate),
-							expr,
-							join.Condition.Conditions,
-							false);
-					}
+					BuildAssociationCondition(builder, parent, association, join.Condition);
 				}
 
-				if (!association.AliasName.IsNullOrEmpty() && join != null)
+				SetTableAlias(association, join?.Table);
+
+				Init(false);
+			}
+
+			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource? table)
+			{
+				if (!association.AliasName.IsNullOrEmpty() && table != null)
 				{
-					join.Table.Alias = association.AliasName;
+					table.Alias = association.AliasName;
 				}
 				else
 				{
-					if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty() && join != null)
-						join.Table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias,
+					if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty() && table != null)
+						table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias,
 							association.MemberInfo.Name);
 				}
+			}
 
-				Init(false);
+			private void BuildAssociationCondition(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association, SqlSearchCondition condition)
+			{
+				for (var i = 0; i < association.ThisKey.Length; i++)
+				{
+					if (!parent.SqlTable.Fields.TryGetValue(association.ThisKey[i], out var field1))
+						throw new LinqException("Association key '{0}' not found for type '{1}.", association.ThisKey[i], parent.ObjectType);
+
+					if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out var field2))
+						throw new LinqException("Association key '{0}' not found for type '{1}.", association.OtherKey[i], ObjectType);
+
+					ISqlPredicate predicate = new SqlPredicate.ExprExpr(
+						field1, SqlPredicate.Operator.Equal, field2);
+
+					predicate = builder.Convert(parent, predicate);
+
+					condition.Conditions.Add(new SqlCondition(false, predicate));
+				}
+
+				if (ObjectType != OriginalType)
+				{
+					var predicate = Builder.MakeIsPredicate(this, OriginalType);
+
+					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+						condition.Conditions.Add(new SqlCondition(false, predicate));
+				}
+
+				RegularConditionCount = condition.Conditions.Count;
+				ExpressionPredicate = Association.GetPredicate(parent.ObjectType, ObjectType);
+
+				if (ExpressionPredicate != null)
+				{
+					ExpressionPredicate = (LambdaExpression)Builder.ConvertExpressionTree(ExpressionPredicate);
+
+					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
+
+					Builder.BuildSearchCondition(
+						new ExpressionContext(parent.Parent, new IBuildContext[] { parent, this }, ExpressionPredicate),
+						expr,
+						condition.Conditions,
+						false);
+				}
+			}
+
+			public LambdaExpression GetAssociationQueryExpressionAsSubQuery(Expression dataContextExpr, LambdaExpression queryMethod)
+			{
+				var resultParam = Expression.Parameter(ObjectType);
+
+				var parentParameter = queryMethod.Parameters[0];
+
+				var body = queryMethod.GetBody(parentParameter, dataContextExpr);
+				body = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
+
+				return Expression.Lambda(body, parentParameter);
+			}
+
+			private void BuildSubQuery(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association, bool left)
+			{
+				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
+				if (queryMethod != null)
+				{
+					var subquery = GetAssociationQueryExpressionAsSubQuery(Expression.Constant(builder.DataContext), queryMethod);
+
+					var ownerTableSource = parent.SelectQuery.From.Tables[0];
+
+					// TODO: need to build without join here
+					_innerContext = builder.BuildSequence(
+						new BuildInfo(
+							new ExpressionContext(null, new[] { parent }, subquery),
+							subquery.Body,
+							new SelectQuery() { ParentSelect = SelectQuery.ParentSelect }
+							)
+					{ IsAssociationBuilt = false });
+
+					var associationQuery = _innerContext.SelectQuery;
+
+					if (associationQuery.Select.From.Tables.Count < 1)
+						throw new LinqToDBException("Invalid association query. It is not possible to inline query.");
+
+					SelectQuery = associationQuery;
+				}
+				else
+				{
+					SelectQuery.From.Table(SqlTable);
+
+					BuildAssociationCondition(builder, parent, association, SelectQuery.Where.SearchCondition);
+				}
+
+				SetTableAlias(association, SelectQuery.From.Tables[0]);
 			}
 
 			public Expression GetAssociationQueryExpression(Expression dataContextExpr, Expression parentObjExpression, Type parentType, Expression parentTableExpression,
@@ -221,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 					base.BuildQuery(query, queryParameter);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_innerContext != null)
 					return _innerContext.ConvertToSql(expression, level, flags);
@@ -229,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToSql(expression, level, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (_innerContext != null)
 				{
@@ -243,14 +316,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				return new QueryVisitor().Convert(expression, e =>
 				{
-					if (e.ElementType == QueryElementType.SqlField && _replaceMap.TryGetValue((SqlField)e, out var newField))
+					if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
 						return newField;
 					return e;
 
-				}); 
+				});
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
+			public override int ConvertToParentIndex(int index, IBuildContext? context)
 			{
 				if (_innerContext != null)
 				{
@@ -261,7 +334,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (_innerContext != null)
 					return _innerContext.BuildExpression(expression, level, enforceServerSide);
@@ -274,18 +347,18 @@ namespace LinqToDB.Linq.Builder
 				var isLeft = false;
 
 				for (
-					var association = this;
+					AssociatedTableContext? association = this;
 					isLeft == false && association != null;
 					association = association.ParentAssociation as AssociatedTableContext)
 				{
 					isLeft =
-						association.ParentAssociationJoin.JoinType == JoinType.Left ||
+						association.ParentAssociationJoin!.JoinType == JoinType.Left ||
 						association.ParentAssociationJoin.JoinType == JoinType.OuterApply;
 				}
 
 				if (isLeft)
 				{
-					Expression cond = null;
+					Expression? cond = null;
 
 					var keys = ConvertToIndex(null, 0, ConvertFlags.Key);
 
@@ -307,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			protected internal override List<MemberInfo[]> GetLoadWith()
+			protected internal override List<MemberInfo[]>? GetLoadWith()
 			{
 				if (LoadWith == null)
 				{
@@ -392,7 +465,7 @@ namespace LinqToDB.Linq.Builder
 						// Where
 						var pWhere = Expression.Parameter(typeof(T), "t");
 
-						Expression expr = null;
+						Expression? expr = null;
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
@@ -425,7 +498,7 @@ namespace LinqToDB.Linq.Builder
 
 					expression = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
+						MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Convert(parentObject, typeof(object)),
 							Expression.Constant(queryReader));
@@ -438,7 +511,7 @@ namespace LinqToDB.Linq.Builder
 					if (memberType.IsSameOrParentOf(typeof(List<T>)))
 						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
 
-					var ctor = memberType.GetConstructorEx(new[] { typeof(IEnumerable<T>) });
+					var ctor = memberType.GetConstructor(new[] { typeof(IEnumerable<T>) });
 
 					if (ctor != null)
 						return Expression.New(ctor, expression);
@@ -462,7 +535,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			protected override ISqlExpression GetField(Expression expression, int level, bool throwException)
+			protected override ISqlExpression? GetField(Expression expression, int level, bool throwException)
 			{
 				if (_innerContext != null)
 				{
@@ -473,10 +546,14 @@ namespace LinqToDB.Linq.Builder
 				return base.GetField(expression, level, throwException);
 			}
 
-			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
+			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression? parentObject)
 			{
 				if (IsList == false)
+				{
+					if (_innerContext != null)
+						return _innerContext.BuildExpression(null, 0, false);
 					return base.BuildQuery(tableType, tableContext, parentObject);
+				}
 
 				if (Common.Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
@@ -484,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 				var sqtype = typeof(SubQueryHelper<>).MakeGenericType(tableType);
 				var helper = (ISubQueryHelper)Activator.CreateInstance(sqtype);
 
-				return helper.GetSubquery(Builder, this, parentObject);
+				return helper.GetSubquery(Builder, this, parentObject!);
 			}
 		}
 	}

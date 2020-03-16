@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -16,10 +16,6 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
-
 	using Model;
 
 	[TestFixture]
@@ -270,7 +266,7 @@ namespace Tests.Data
 		// informix connection limits interfere with test
 		[Test]
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
-		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
+		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var exceptions = new ConcurrentBag<Exception>();
 

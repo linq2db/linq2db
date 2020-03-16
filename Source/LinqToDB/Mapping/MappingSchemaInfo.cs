@@ -7,7 +7,6 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Metadata;
 	using SqlQuery;
 
@@ -18,28 +17,27 @@ namespace LinqToDB.Mapping
 			Configuration = configuration;
 		}
 
-		public string          Configuration;
-		public IMetadataReader MetadataReader;
+		public string           Configuration;
+		public IMetadataReader? MetadataReader;
 
 		#region Default Values
 
-		volatile ConcurrentDictionary<Type,object> _defaultValues;
+		volatile ConcurrentDictionary<Type,object?>? _defaultValues;
 
-		public Option<object> GetDefaultValue(Type type)
+		public Option<object?> GetDefaultValue(Type type)
 		{
 			if (_defaultValues == null)
-				return Option<object>.None;
+				return Option<object?>.None;
 
-			object o;
-			return _defaultValues.TryGetValue(type, out o) ? Option<object>.Some(o) : Option<object>.None;
+			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		public void SetDefaultValue(Type type, object value)
+		public void SetDefaultValue(Type type, object? value)
 		{
 			if (_defaultValues == null)
 				lock (this)
 					if (_defaultValues == null)
-						_defaultValues = new ConcurrentDictionary<Type,object>();
+						_defaultValues = new ConcurrentDictionary<Type,object?>();
 
 			_defaultValues[type] = value;
 		}
@@ -48,15 +46,14 @@ namespace LinqToDB.Mapping
 
 		#region CanBeNull
 
-		volatile ConcurrentDictionary<Type,bool> _canBeNull;
+		volatile ConcurrentDictionary<Type,bool>? _canBeNull;
 
 		public Option<bool> GetCanBeNull(Type type)
 		{
 			if (_canBeNull == null)
 				return Option<bool>.None;
 
-			bool o;
-			return _canBeNull.TryGetValue(type, out o) ? Option<bool>.Some(o) : Option<bool>.None;
+			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
 		public void SetCanBeNull(Type type, bool value)
@@ -73,7 +70,7 @@ namespace LinqToDB.Mapping
 
 		#region GenericConvertProvider
 
-		volatile Dictionary<Type,List<Type[]>> _genericConvertProviders;
+		volatile Dictionary<Type,List<Type[]>>? _genericConvertProviders;
 
 		public bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
 		{
@@ -85,7 +82,7 @@ namespace LinqToDB.Mapping
 				{
 					foreach (var type in _genericConvertProviders)
 					{
-						var args = type.Key.GetGenericArgumentsEx();
+						var args = type.Key.GetGenericArguments();
 
 						if (args.Length == types.Length)
 						{
@@ -125,7 +122,7 @@ namespace LinqToDB.Mapping
 
 		#region ConvertInfo
 
-		ConvertInfo _convertInfo;
+		ConvertInfo? _convertInfo;
 
 		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
 		{
@@ -139,13 +136,13 @@ namespace LinqToDB.Mapping
 			SetConvertInfo(new DbDataType(from), new DbDataType(to), expr);
 		}
 
-		public ConvertInfo.LambdaInfo GetConvertInfo(DbDataType from, DbDataType to)
+		public ConvertInfo.LambdaInfo? GetConvertInfo(DbDataType from, DbDataType to)
 		{
 			return _convertInfo == null ? null : _convertInfo.Get(from, to);
 		}
 
-		private ConcurrentDictionary<object,Func<object,object>> _converters;
-		public  ConcurrentDictionary<object,Func<object,object>>  Converters
+		private ConcurrentDictionary<object,Func<object,object>>? _converters;
+		public  ConcurrentDictionary<object,Func<object,object>>   Converters
 		{
 			get { return _converters ?? (_converters = new ConcurrentDictionary<object,Func<object,object>>()); }
 		}
@@ -154,7 +151,7 @@ namespace LinqToDB.Mapping
 
 		#region Scalar Types
 
-		volatile ConcurrentDictionary<Type,bool> _scalarTypes;
+		volatile ConcurrentDictionary<Type,bool>? _scalarTypes;
 
 		public Option<bool> GetScalarType(Type type)
 		{
@@ -182,7 +179,7 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
-		volatile ConcurrentDictionary<Type,SqlDataType> _dataTypes;
+		volatile ConcurrentDictionary<Type,SqlDataType>? _dataTypes;
 
 		public Option<SqlDataType> GetDataType(Type type)
 		{
@@ -198,7 +195,7 @@ namespace LinqToDB.Mapping
 
 		public void SetDataType(Type type, DataType dataType)
 		{
-			SetDataType(type, new SqlDataType(dataType, type, null, null, null));
+			SetDataType(type, new SqlDataType(dataType, type, null, null, null, null));
 		}
 
 		public void SetDataType(Type type, SqlDataType dataType)
@@ -215,15 +212,15 @@ namespace LinqToDB.Mapping
 
 		#region Comparers
 
-		public StringComparer ColumnNameComparer { get; set; }
+		public StringComparer? ColumnNameComparer { get; set; }
 
 		#endregion
 
 		#region Enum
 
-		volatile ConcurrentDictionary<Type, Type> _defaultFromEnumTypes;
+		volatile ConcurrentDictionary<Type, Type>? _defaultFromEnumTypes;
 
-		public Type GetDefaultFromEnumType(Type enumType)
+		public Type? GetDefaultFromEnumType(Type enumType)
 		{
 			if (_defaultFromEnumTypes == null)
 				return null;

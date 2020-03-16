@@ -181,7 +181,8 @@ public enum AccessModifier
 	Protected,
 	Internal,
 	Private,
-	Partial
+	Partial,
+	None
 }
 
 public abstract partial class TypeBase : IClassMember
@@ -192,6 +193,7 @@ public abstract partial class TypeBase : IClassMember
 	public List<string>    Comment    = new List<string>();
 	public List<Attribute> Attributes = new List<Attribute>();
 	public string          Conditional;
+	public string          ClassKeyword = "class";
 
 	public abstract void Render(GeneratedTextTransformation tt);
 
@@ -226,7 +228,7 @@ static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	if (cl.IsStatic)  tt.Write("static ");
 	if (cl.IsPartial) tt.Write("partial ", cl.Name);
-	tt.Write("class {0}{1}", cl.Name, cl.GenericArguments.Count > 0 ? $"<{string.Join(", ", cl.GenericArguments)}>" : string.Empty);
+	tt.Write("{0} {1}{2}", cl.ClassKeyword, cl.Name, cl.GenericArguments.Count > 0 ? $"<{string.Join(", ", cl.GenericArguments)}>" : string.Empty);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -497,7 +499,7 @@ public partial class MemberGroup : MemberBase
 
 			if (allMembers.Count > 0)
 			{
-				int max = allMembers.Max(m => m.AccessModifier.ToString().Length);
+				int max = allMembers.Max(m => m.AccessModifier == AccessModifier.None ? 0 : m.AccessModifier.ToString().Length);
 				foreach (var m in allMembers)
 					m.AccessModifierLen = max;
 
@@ -974,11 +976,10 @@ public partial class Event : MemberBase
 
 static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,compact) =>
 {
-	var am  = p.AccessModifier.ToString().ToLower();
-//	var mdf = p.IsVirtual ? " virtual" : "";
-	var mdf = p.IsAbstract ? " abstract" : p.IsVirtual ? " virtual" : p.IsOverride ? " override" : p.IsStatic ? " static" : "";
+	var am  = p.AccessModifier == AccessModifier.None ? "" : p.AccessModifier.ToString().ToLower() + " ";
+	var mdf = p.IsAbstract ? "abstract " : p.IsVirtual ? "virtual " : p.IsOverride ? "override " : p.IsStatic ? "static " : "";
 
-	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
+	tt.Write("{0}{1}{2}{3}{4}{5} {6}",
 		am,            LenDiff(p.AccessModifierLen, am),
 		mdf,           LenDiff(p.ModifierLen,       mdf),
 		p.BuildType(), LenDiff(p.TypeLen,           p.BuildType()),
@@ -1238,7 +1239,7 @@ public partial class Property : MemberBase
 	{
 		return SetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
 	}
-	
+
 	protected virtual bool DisableNullable { get; }
 
 	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
@@ -1748,7 +1749,7 @@ public class ModelType
 
 		if (EnableNullableReferenceTypes && IsReference && IsNullable)
 			sb.Append("?");
-		
+
 		return sb.ToString();
 	}
 }

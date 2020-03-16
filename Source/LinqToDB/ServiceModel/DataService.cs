@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data.Services.Providers;
 using System.Linq;
@@ -182,7 +183,7 @@ namespace LinqToDB.ServiceModel
 							continue;
 
 						var kind  = ResourcePropertyKind.Primitive;
-						var ptype = ResourceType.GetPrimitiveResourceType(field.SystemType);
+						var ptype = ResourceType.GetPrimitiveResourceType(field.Type!.Value.SystemType);
 
 						if (baseType == null && field.IsPrimaryKey)
 							kind |= ResourcePropertyKind.Key;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Data;
 using System.Data.Linq;
@@ -128,6 +129,12 @@ namespace LinqToDB.Data
 		/// An <see cref="T:System.Object"/> that is the value of the parameter. The default value is null.
 		/// </returns>
 		public object Value { get; set; }
+
+		/// <summary>
+		/// Provider's parameter instance for out, in-out, return parameters.
+		/// Could be used to read parameter value for complex types like Oracle's BFile.
+		/// </summary>
+		public IDbDataParameter Output { get; internal set; }
 
 		public static DataParameter Char          (string name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string name, string         value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }

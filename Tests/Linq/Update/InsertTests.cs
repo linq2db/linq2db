@@ -24,11 +24,12 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -62,11 +63,12 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -364,6 +366,38 @@ namespace Tests.xUpdate
 				{
 					db.Parent.Delete(p => p.Value1 == 11);
 				}
+			}
+		}
+
+		class InsertTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public DateTime? CreatedOn { get; set; }
+			[Column]
+			public DateTime? ModifiedOn { get; set; }
+		}
+
+		[Test]
+		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []
+			{
+				new InsertTable{Id = 1, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+				new InsertTable{Id = 2, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+			}))
+			{
+				var affected = table
+					.Where(c => c.Id > 0)
+					.Into(table)
+					.Value(p => p.Id, c => c.Id + 10)
+					.Value(p => p.CreatedOn,  c => Sql.CurrentTimestamp)
+					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
+					.Insert();
+
+				Assert.That(affected, Is.EqualTo(2));
 			}
 		}
 
@@ -1022,7 +1056,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1462,7 +1496,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

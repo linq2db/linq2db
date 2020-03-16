@@ -4,8 +4,6 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-#if !NETSTANDARD1_6
-
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
@@ -47,7 +45,8 @@ namespace LinqToDB.Mapping
 		public DynamicColumnInfo(Type declaringType, Type columnType, string memberName)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException(nameof(declaringType));
-			PropertyType = columnType ?? throw new ArgumentNullException(nameof(columnType));
+			PropertyType  = columnType    ?? throw new ArgumentNullException(nameof(columnType));
+
 			Name = !string.IsNullOrEmpty(memberName) ? memberName : throw new ArgumentNullException(nameof(memberName));
 
 			_typedDummyGetter = _dummyGetter.MakeGenericMethod(declaringType);
@@ -55,7 +54,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <inheritdoc cref="IEquatable{T}.Equals(T)"/>
-		public bool Equals(DynamicColumnInfo other)
+		public bool Equals(DynamicColumnInfo? other)
 		{
 			if (other == null)
 				return false;
@@ -84,7 +83,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// The result of the operator.
 		/// </returns>
-		public static bool operator ==(DynamicColumnInfo a, DynamicColumnInfo b)
+		public static bool operator ==(DynamicColumnInfo? a, DynamicColumnInfo? b)
 			=> a?.Equals(b) ?? ReferenceEquals(b, null);
 
 		/// <summary>
@@ -95,7 +94,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// The result of the operator.
 		/// </returns>
-		public static bool operator !=(DynamicColumnInfo a, DynamicColumnInfo b)
+		public static bool operator !=(DynamicColumnInfo? a, DynamicColumnInfo? b)
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
 
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>
@@ -142,6 +141,4 @@ namespace LinqToDB.Mapping
 		private void DummySetter<T>(T value)
 			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
 	}
-	
-#endif
 }

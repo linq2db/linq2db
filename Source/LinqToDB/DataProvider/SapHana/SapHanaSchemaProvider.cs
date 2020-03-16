@@ -12,14 +12,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaSchemaProvider : SchemaProviderBase
 	{
-		protected String               DefaultSchema;
-		protected GetHanaSchemaOptions HanaSchemaOptions;
-		protected bool                 HaveAccessForCalculationViews;
+		protected string                DefaultSchema = null!;
+		protected GetHanaSchemaOptions? HanaSchemaOptions;
+		protected bool                  HaveAccessForCalculationViews;
 
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			HanaSchemaOptions = options as GetHanaSchemaOptions;
-			DefaultSchema = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
+			HanaSchemaOptions             = options as GetHanaSchemaOptions;
+			DefaultSchema                 = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
 			HaveAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
 			return base.GetSchema(dataConnection, options);
 		}
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return combinedQuery.ToList();
 		}
 
-		private String GetTablesQuery()
+		private string GetTablesQuery()
 		{
 			var result = @"
 				SELECT
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.SapHana
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			const string sqlText = @"
 				SELECT
@@ -246,7 +246,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return query.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new ProcedureParameterInfo
 				{
-					ProcedureID   = String.Concat(schema, '.', procedure),
+					ProcedureID   = string.Concat(schema, '.', procedure),
 					DataType      = dataType,
 					IsIn          = paramType.Contains("IN"),
 					IsOut         = paramType.Contains("OUT"),
@@ -362,7 +362,7 @@ namespace LinqToDB.DataProvider.SapHana
 			.ToList();
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 			(
@@ -371,8 +371,8 @@ namespace LinqToDB.DataProvider.SapHana
 				let systemType   = r.Field<Type>("DataType")
 				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName"))
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
-				let columnType   = dataType == null ? null : dataType.TypeName
+				let dataType     = GetDataTypeByProviderDbType(providerType, options)
+				let columnType   = dataType?.TypeName
 				let length       = r.Field<int>("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
@@ -380,7 +380,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				select new ColumnSchema
 				{
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 					ColumnName           = columnName,
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
@@ -395,23 +395,18 @@ namespace LinqToDB.DataProvider.SapHana
 		private static string GetEmptyStringIfInvalidColumnName(string columnName)
 		{
 			var invalidCharacters = new[] {':', '(', '"', ' '};
-			return columnName.IndexOfAny(invalidCharacters) > -1 ? String.Empty : columnName;
+			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType != null)
-			{
-				switch (dataType.ToLower())
-				{
-					case "tinyint": return typeof(byte);
-				}
-			}
+			if (dataType.ToLowerInvariant() == "tinyint")
+				return typeof(byte);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -454,12 +449,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return "Sap.Data.Hana";
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override void LoadProcedureTableSchema(DataConnection dataConnection, ProcedureSchema procedure, string commandText,
+		protected override void LoadProcedureTableSchema(DataConnection dataConnection, GetSchemaOptions options, ProcedureSchema procedure, string commandText,
 			List<TableSchema> tables)
 		{
 			CommandType     commandType;
@@ -468,7 +460,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += String.Join(",", procedure.Parameters.Select(p => (
+				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
 						? "'" + DateTime.Now + "'"
 						: DefaultValue.GetValue(p.SystemType)) ?? "''"));
@@ -499,7 +491,7 @@ namespace LinqToDB.DataProvider.SapHana
 						IsProcedureResult = true,
 						TypeName = ToValidName(procedure.ProcedureName + "Result"),
 						ForeignKeys = new List<ForeignKeySchema>(),
-						Columns = GetProcedureResultColumns(st)
+						Columns = GetProcedureResultColumns(st, options)
 					};
 
 					foreach (var column in procedure.ResultTable.Columns)
@@ -547,18 +539,10 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			//bug in drivers, SchemaOnly executes statement
-			dataConnection.BeginTransaction();
-
-			try
+			using (dataConnection.BeginTransaction())
+			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
 			{
-				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-				{
-					return rd.Reader.GetSchemaTable();
-				}
-			}
-			finally
-			{
-				dataConnection.RollbackTransaction();
+				return rd.Reader.GetSchemaTable();
 			}
 		}
 
@@ -653,7 +637,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return query.ToList();
 		}
 
-		protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
+		protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			if (!HaveAccessForCalculationViews)
 				return new List<TableSchema>();
@@ -666,8 +650,8 @@ namespace LinqToDB.DataProvider.SapHana
 				where
 					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
 					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
-					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.SchemaName)) &&
-					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.SchemaName))
+					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName)) &&
+					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName))
 				select new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,
@@ -682,15 +666,13 @@ namespace LinqToDB.DataProvider.SapHana
 					ForeignKeys     = new List<ForeignKeySchema>(),
 					Parameters      = (
 						from pr in pgroup
-						join dt in DataTypes
-							on pr.DataType equals dt.TypeName into g1
-						from dt in g1.DefaultIfEmpty()
+						let dt         = GetDataType(pr.DataType, options)
 						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale)
 						orderby pr.Ordinal
 						select new ParameterSchema
 						{
 							SchemaName           = pr.ParameterName,
-							SchemaType           = GetDbType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
+							SchemaType           = GetDbType(options, pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
 							IsIn                 = pr.IsIn,
 							IsOut                = pr.IsOut,
 							IsResult             = pr.IsResult,
@@ -707,10 +689,10 @@ namespace LinqToDB.DataProvider.SapHana
 			).ToList();
 
 			var columns =
-				from c in GetColumns(dataConnection)
+				from c in GetColumns(dataConnection, options)
 				join v in result on c.TableID equals v.ID
 				orderby c.Ordinal
-				select new {v, c, dt = GetDataType(c.DataType) };
+				select new {v, c, dt = GetDataType(c.DataType, options) };
 
 			foreach (var column in columns)
 			{
@@ -722,7 +704,7 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					Table                = column.v,
 					ColumnName           = column.c.Name,
-					ColumnType           = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null),
+					ColumnType           = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(column.c.Name),
 					MemberType           = ToTypeName(systemType, isNullable),

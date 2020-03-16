@@ -73,6 +73,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
@@ -90,10 +91,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				var expected = from sep in Parent
 							   select new
@@ -110,6 +109,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
@@ -128,10 +128,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				var expected = from sep in Parent
 							   select new
@@ -149,6 +147,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
@@ -166,10 +165,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -186,6 +183,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectToTypeTest2([DataSources] string context)
 		{
@@ -204,10 +202,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -227,17 +223,15 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
+		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
 				var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				AreEqual(expected, result);
 			}
@@ -245,17 +239,15 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
+		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 				var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
 					Console.WriteLine(connection.LastQuery);
-#endif
 
 				AreEqual(expected, result);
 			}

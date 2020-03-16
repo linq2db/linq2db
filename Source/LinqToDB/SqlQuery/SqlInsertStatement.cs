@@ -21,8 +21,8 @@ namespace LinqToDB.SqlQuery
 
 		#region InsertClause
 
-		private SqlInsertClause _insert;
-		public  SqlInsertClause  Insert
+		private SqlInsertClause? _insert;
+		public  SqlInsertClause   Insert
 		{
 			get => _insert ?? (_insert = new SqlInsertClause());
 			set => _insert = value;
@@ -32,14 +32,14 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			((IQueryElement)_insert)?.ToString(sb, dic);
+			((IQueryElement?)_insert)?.ToString(sb, dic);
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			With?.Walk(options, func);
-			((ISqlExpressionWalkable)_insert)?.Walk(options, func);
+			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
@@ -72,12 +72,12 @@ namespace LinqToDB.SqlQuery
 				yield return _insert;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (_insert?.Into == table)
 				return table;
 
-			return SelectQuery.GetTableSource(table);
+			return SelectQuery!.GetTableSource(table);
 		}
 	}
 }

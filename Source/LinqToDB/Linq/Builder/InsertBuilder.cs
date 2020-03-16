@@ -37,8 +37,9 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
+						sequence.SelectQuery.Select.Columns.Clear();
 						foreach (var item in insertStatement.Insert.Items)
-							sequence.SelectQuery.Select.Expr(item.Expression);
+							sequence.SelectQuery.Select.ExprNew(item.Expression!);
 						break;
 					}
 
@@ -73,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 						sequence.SelectQuery.Select.Columns.Clear();
 
 						foreach (var item in insertStatement.Insert.Items)
-							sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression));
+							sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression!));
 
 						insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
 
@@ -83,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 			var insert = insertStatement.Insert;
 
-			var q = insert.Into.Fields.Values
+			var q = insert.Into!.Fields.Values
 				.Except(insert.Items.Select(e => e.Column))
 				.OfType<SqlField>()
 				.Where(f => f.IsIdentity);
@@ -98,19 +99,20 @@ namespace LinqToDB.Linq.Builder
 
 					if (methodCall.Arguments.Count == 3)
 					{
-						sequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(sequence.SelectQuery, insert.Items[0].Expression));
+						sequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(sequence.SelectQuery, insert.Items[0].Expression!));
 					}
 				}
 			}
 
 			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -121,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 		class InsertContext : SequenceContextBase
 		{
-			public InsertContext(IBuildContext parent, IBuildContext sequence, bool insertWithIdentity)
+			public InsertContext(IBuildContext? parent, IBuildContext sequence, bool insertWithIdentity)
 				: base(parent, sequence, null)
 			{
 				_insertWithIdentity = insertWithIdentity;
@@ -135,27 +137,27 @@ namespace LinqToDB.Linq.Builder
 				else                     QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
@@ -184,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 				//
 				if (source.NodeType == ExpressionType.Constant && ((ConstantExpression)source).Value == null)
 				{
-					sequence = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
+					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
@@ -204,7 +206,7 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
 
-					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
+					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}
 
@@ -214,8 +216,8 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}
@@ -271,8 +273,8 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

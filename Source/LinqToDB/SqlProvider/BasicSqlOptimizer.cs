@@ -9,7 +9,6 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
-	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -31,7 +30,7 @@ namespace LinqToDB.SqlProvider
 			FinalizeCte(statement);
 
 //statement.EnsureFindTables();
-			//TODO: We can use Walk here but OptimizeUnions fails with subqueris. Needs revising.
+			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
 				selectQuery =>
 				{
@@ -70,11 +69,21 @@ namespace LinqToDB.SqlProvider
 
 //statement.EnsureFindTables();
 			if (Configuration.Linq.OptimizeJoins)
+			{
 				OptimizeJoins(statement);
 
-//statement.EnsureFindTables();
-			statement.SetAliases();
+				// Do it again after JOIN Optimization
+				FinalizeCte(statement);
+			}
 
+//statement.EnsureFindTables();
+			statement = TransformStatement(statement);
+
+			return statement;
+		}
+
+		public virtual SqlStatement TransformStatement(SqlStatement statement)
+		{
 			return statement;
 		}
 
@@ -90,11 +99,11 @@ namespace LinqToDB.SqlProvider
 						return;
 
 					var dependsOn = new HashSet<CteClause>();
-					new QueryVisitor().Visit(cteClause.Body, ce =>
+					new QueryVisitor().Visit(cteClause.Body!, ce =>
 					{
 						if (ce.ElementType == QueryElementType.SqlCteTable)
 						{
-							var subCte = ((SqlCteTable)ce).Cte;
+							var subCte = ((SqlCteTable)ce).Cte!;
 							dependsOn.Add(subCte);
 						}
 
@@ -113,7 +122,7 @@ namespace LinqToDB.SqlProvider
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
-							var cte = ((SqlCteTable)e).Cte;
+							var cte = ((SqlCteTable)e).Cte!;
 							RegisterDependency(cte);
 						}
 					}
@@ -214,8 +223,8 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (e.ElementType)
 						{
-							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
-							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
+							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
+							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
 						}
 
 						return false;
@@ -229,7 +238,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (QueryVisitor.Find(cond, CheckTable) == null)
+						if (new QueryVisitor().Find(cond, CheckTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -244,7 +253,7 @@ namespace LinqToDB.SqlProvider
 									if (replaced.TryGetValue(e, out ne))
 										return ne;
 
-									if (levelTables.Contains(((SqlField)e).Table))
+									if (levelTables.Contains(((SqlField)e).Table!))
 									{
 										subQuery.GroupBy.Expr((SqlField)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
@@ -256,7 +265,7 @@ namespace LinqToDB.SqlProvider
 									if (replaced.TryGetValue(e, out ne))
 										return ne;
 
-									if (levelTables.Contains(((SqlColumn)e).Parent))
+									if (levelTables.Contains(((SqlColumn)e).Parent!))
 									{
 										subQuery.GroupBy.Expr((SqlColumn)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)];
@@ -279,14 +288,15 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (!query.GroupBy.IsEmpty/* && subQuery.Select.Columns.Count > 1*/)
+					if (!query.GroupBy.IsEmpty)
 					{
 						var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
 
 						subQuery.Select.Columns.RemoveAt(0);
 
-						query.Select.Columns[i].Expression =
-							new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]);
+						var parm = subQuery.Select.Columns.Count > 0 ? (ISqlExpression)subQuery.Select.Columns[0] : query.All;
+
+						query.Select.Columns[i].Expression = new SqlFunction(oldFunc.SystemType, oldFunc.Name, parm);
 					}
 					else
 					{
@@ -326,8 +336,8 @@ namespace LinqToDB.SqlProvider
 						{
 							switch (e.ElementType)
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
-								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
+								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
+								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
 							}
 
 							return false;
@@ -345,7 +355,7 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add(source);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, CheckTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, CheckTable) == null)
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
@@ -397,7 +407,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (QueryVisitor.Find(cond, CheckTable) == null)
+							if (new QueryVisitor().Find(cond, CheckTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -412,7 +422,7 @@ namespace LinqToDB.SqlProvider
 										if (replaced.TryGetValue(e, out ne))
 											return ne;
 
-										if (levelTables.Contains(((SqlField)e).Table))
+										if (levelTables.Contains(((SqlField)e).Table!))
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
@@ -425,7 +435,7 @@ namespace LinqToDB.SqlProvider
 										if (replaced.TryGetValue(e, out ne))
 											return ne;
 
-										if (levelTables.Contains(((SqlColumn)e).Parent))
+										if (levelTables.Contains(((SqlColumn)e).Parent!))
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlColumn)e);
@@ -505,7 +515,8 @@ namespace LinqToDB.SqlProvider
 					{
 						case "+":
 						{
-							if (be.Expr1 is SqlValue v1)
+							var v1 = be.Expr1 as SqlValue;
+							if (v1 != null)
 							{
 								switch (v1.Value)
 								{
@@ -516,9 +527,9 @@ namespace LinqToDB.SqlProvider
 									case string  s when s == "" : return be.Expr2;
 								}
 							}
-							else v1 = null;
 
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -577,7 +588,6 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v2 = null;
 
 							if (v1 != null && v2 != null)
 							{
@@ -587,9 +597,9 @@ namespace LinqToDB.SqlProvider
 
 							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 							{
-								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).Type.DataType);
 
-								if (len <= 0)
+								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
@@ -602,9 +612,9 @@ namespace LinqToDB.SqlProvider
 
 							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 							{
-								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).Type.DataType);
 
-								if (len <= 0)
+								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
@@ -620,7 +630,8 @@ namespace LinqToDB.SqlProvider
 
 						case "-":
 						{
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -665,7 +676,6 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v2 = null;
 
 							if (be.Expr1 is SqlValue v1 && v2 != null)
 							{
@@ -677,7 +687,8 @@ namespace LinqToDB.SqlProvider
 
 						case "*":
 						{
-							if (be.Expr1 is SqlValue v1)
+							var v1 = be.Expr1 as SqlValue;
+							if (v1 != null)
 							{
 								switch (v1.Value)
 								{
@@ -694,9 +705,9 @@ namespace LinqToDB.SqlProvider
 									}
 								}
 							}
-							else v1 = null;
 
-							if (be.Expr2 is SqlValue v2)
+							var v2 = be.Expr2 as SqlValue;
+							if (v2 != null)
 							{
 								switch (v2.Value)
 								{
@@ -704,7 +715,6 @@ namespace LinqToDB.SqlProvider
 									case int i when i == 1 : return be.Expr1;
 								}
 							}
-							else v2 = null;
 
 							if (v1 != null && v2 != null)
 							{
@@ -802,10 +812,10 @@ namespace LinqToDB.SqlProvider
 							{
 								var typef = func.SystemType.ToUnderlying();
 
-								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType.ToUnderlying() == typef)
+								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
 									return from.Parameters[1];
 
-								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.ToUnderlying() == typef)
+								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
 									return fe.Parameters[0];
 							}
 
@@ -855,7 +865,7 @@ namespace LinqToDB.SqlProvider
 						//		((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
 						//}
 
-						if (expr.Expr2 is SqlParameter parameterExpr2 && parameterExpr2.DataType == DataType.Undefined)
+						if (expr.Expr2 is SqlParameter parameterExpr2 && parameterExpr2.Type.DataType == DataType.Undefined)
 						{
 							var innerExpr = expr.Expr1;
 
@@ -864,13 +874,11 @@ namespace LinqToDB.SqlProvider
 
 							if (innerExpr is SqlField field)
 							{
-								parameterExpr2.DataType = field.DataType;
-								parameterExpr2.DbType   = field.DbType;
-								parameterExpr2.DbSize   = field.Length;
+								parameterExpr2.Type = parameterExpr2.Type.WithoutSystemType(field.Type!.Value);
 							}
 						}
 
-						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.DataType == DataType.Undefined)
+						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.Type.DataType == DataType.Undefined)
 						{
 							var innerExpr = expr.Expr2;
 
@@ -879,9 +887,7 @@ namespace LinqToDB.SqlProvider
 
 							if (innerExpr is SqlField field)
 							{
-								parameterExpr1.DataType = field.DataType;
-								parameterExpr1.DbType   = field.DbType;
-								parameterExpr1.DbSize   = field.Length;
+								parameterExpr1.Type = parameterExpr1.Type.WithoutSystemType(field.Type!.Value);
 							}
 						}
 
@@ -1165,28 +1171,28 @@ namespace LinqToDB.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
-		protected virtual int GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
-		protected virtual int GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
-		protected virtual int GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
+		protected virtual int? GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.Type.DataType); }
+		protected virtual int? GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.Type.DataType); }
+		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
+		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type == typeof(object))
+			if (to.Type.SystemType == typeof(object))
 				return func.Parameters[2];
 
-			if (to.Length > 0)
+			if (to.Type.Length > 0)
 			{
-				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
+				var maxLength = to.Type.SystemType == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
+				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(to.Type.Length ?? 0, maxLength.Value) : to.Type.Length;
 
-				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength, null, null, to.DbType);
+				if (to.Type.Length != newLength)
+					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type == typeof(short) && to.Type == typeof(int))
+			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
 			return ConvertExpression(new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]));
@@ -1196,11 +1202,11 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected ISqlExpression AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
+		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
 		{
 			var par = func.Parameters[paramNumber];
 
-			if (par.SystemType.IsFloatType() || par.SystemType.IsIntegerType())
+			if (par.SystemType!.IsFloatType() || par.SystemType!.IsIntegerType())
 			{
 				var sc = new SqlSearchCondition();
 
@@ -1217,8 +1223,18 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).DataType == DataType.Date;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == dateName;
+				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).Type.DataType == DataType.Date;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr          == dateName;
+			}
+
+			return false;
+		}
+
+		protected static bool IsDateDataOffsetType(ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlDataType: return ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset;
 			}
 
 			return false;
@@ -1228,8 +1244,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).  DataType == DataType.Time;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == "Time";
+				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).Type.DataType == DataType.Time;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr        == "Time";
 			}
 
 			return false;
@@ -1239,7 +1255,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var par1 = func.Parameters[1];
 
-			return par1.SystemType.IsFloatType() && func.SystemType.IsIntegerType() ?
+			return par1.SystemType!.IsFloatType() && func.SystemType.IsIntegerType() ?
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
@@ -1292,69 +1308,394 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		protected SqlStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
+		SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
 		{
-			if (updateStatement.SelectQuery.From.Tables[0].Source is SqlTable || updateStatement.Update.Table != null)
+			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
+				return tableSource;
+			return null;
+		}
+
+		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
+		{
+			if (statement.SelectQuery.Select.HasModifier)
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
+
+			// removing joins
+			statement.SelectQuery.TransformInnerJoinsToWhere();
+
+			var tableSource = GetMainTableSource(statement.SelectQuery);
+			if (tableSource == null)
+				throw new LinqToDBException("Invalid query for Update.");
+
+			if (statement.SelectQuery.Select.HasModifier)
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
+
+			SqlTable? tableToUpdate  = statement.Update.Table;
+			SqlTable? tableToCompare = null;
+
+			switch (tableSource.Source)
 			{
-				if (updateStatement.SelectQuery.From.Tables.Count > 1 || updateStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
-				{
-					var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
-
-					var newUpdateStatement = new SqlUpdateStatement(sql);
-					updateStatement.SelectQuery.ParentSelect = sql;
-
-					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
-
-					if (updateStatement.Update.Table != null)
-						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
-								ex => ex is SqlTable sqlTable && sqlTable.ObjectType == table.ObjectType) ?? table;
-
-					var copy = new SqlTable(table);
-
-					var tableKeys = table.GetKeys(true);
-					var copyKeys  = copy. GetKeys(true);
-
-					for (var i = 0; i < tableKeys.Count; i++)
-						updateStatement.SelectQuery.Where
-							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
-
-					newUpdateStatement.SelectQuery.From.Table(copy).Where.Exists(updateStatement.SelectQuery);
-
-					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
-
-					foreach (var field in table.Fields.Values)
-						map.Add(field, copy[field.Name]);
-
-					foreach (var item in updateStatement.Update.Items)
+				case SqlTable table:
 					{
-						var ex = new QueryVisitor().Convert(item, expr =>
-							expr is SqlField fld && map.TryGetValue(fld, out fld) ? fld : expr);
+						if (tableSource.Joins.Count == 0 && (tableToUpdate == null || QueryHelper.IsEqualTables(table, tableToUpdate)))
+						{
+							// remove table from FROM clause
+							statement.SelectQuery.From.Tables.RemoveAt(0);
+							if (tableToUpdate != null && tableToUpdate != table)
+							{
+								statement.Walk(new WalkOptions(), e =>
+								{
+									if (e is SqlField field && field.Table == tableToUpdate)
+									{
+										return table.Fields[field.Name];
+									}
 
-						newUpdateStatement.Update.Items.Add(ex);
+									return e;
+								});
+							}
+							tableToUpdate = table;
+						}
+						else
+						{
+							if (tableToUpdate == null)
+							{
+								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
+									.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+									.FirstOrDefault(t => t != null);
+							}
+
+							if (tableToUpdate == null)
+								throw new LinqToDBException("Can not decide which table to update");
+
+							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
+								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+						}
+
+						break;
 					}
+				case SelectQuery query:
+					{
+						if (tableToUpdate == null)
+						{
+							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
+								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+								.FirstOrDefault(t => t != null);
 
-					newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
-					newUpdateStatement.Update.Table = updateStatement.Update.Table;
-					newUpdateStatement.With         = updateStatement.With;
+							if (tableToUpdate == null)
+								throw new LinqToDBException("Can not decide which table to update");
 
-					updateStatement.Parameters.Clear();
-					updateStatement.Update.Items.Clear();
+							tableToUpdate = tableToUpdate.Clone();
 
-					updateStatement = newUpdateStatement;
+							foreach (var item in statement.Update.Items)
+							{
+								var setField = QueryHelper.GetUnderlyingField(item.Column);
+								if (setField == null)
+									throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
+
+								item.Column = tableToUpdate.Fields[setField.Name];
+							}
+
+						}
+
+						// return first matched table
+						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
+							.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+							.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+
+						if (tableToCompare == null)
+							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+						break;
+					}
+			}
+
+			if (ReferenceEquals(tableToUpdate, tableToCompare))
+			{
+				// we have to create clone
+				tableToUpdate = tableToCompare!.Clone();
+
+				var ts = statement.SelectQuery.GetTableSource(tableToCompare!);
+
+				for (var i = 0; i < statement.Update.Items.Count; i++)
+				{
+					var item = statement.Update.Items[i];
+					var newItem = new QueryVisitor().ConvertImmutable(item, e =>
+					{
+						if (e is SqlField field && field.Table == tableToCompare)
+						{
+							return tableToUpdate.Fields[field.Name];
+						}
+
+						return e;
+					});
+
+					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
+					if (updateField != null)
+						newItem.Column = tableToUpdate.Fields[updateField.Name];
+
+					statement.Update.Items[i] = newItem;
+				}
+			}
+
+			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
+			{
+
+				var keys1 = tableToUpdate!.GetKeys(true);
+				var keys2 = tableToCompare.GetKeys(true);
+
+				if (keys1.Count == 0)
+					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not available.");
+
+				for (int i = 0; i < keys1.Count; i++)
+				{
+					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
+					if (column == null)
+						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
+
+					var compare = QueryHelper.GenerateEquality(keys1[i], column);
+					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
+			}
+
+			if (tableToUpdate != null)
+				tableToUpdate.Alias = "$F";
+
+			statement.Update.Table = tableToUpdate;
+
+			return statement;
+		}
+
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return expression.IsAggregate;
+
+			return false;
+		}
+
+		protected bool NeedsEnvelopingForUpdate(SelectQuery query)
+		{
+			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+				return true;
+
+			if (!query.Where.IsEmpty)
+			{
+				if (new QueryVisitor().Find(query.Where, e => IsAggregationFunction(e)) != null)
+					return true;
+			}
+
+			return false;
+		}
+
+		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
+		{
+			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Take(2).Count();
+
+			// It covers subqueries also. Simple subquery will have sourcesCount == 2
+			if (sourcesCount > 1)
+			{
+				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery);
+
+				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
+
+				var newUpdateStatement = new SqlUpdateStatement(sql);
+				updateStatement.SelectQuery.ParentSelect = sql;
+
+				SqlTable? tableToUpdate = updateStatement.Update.Table;
+				if (tableToUpdate == null)
+				{
+					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
+						.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+						.FirstOrDefault(t => t != null);
 				}
 
-				updateStatement.SelectQuery.From.Tables[0].Alias = "$";
+				if (tableToUpdate == null)
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+				// we have to ensure that clone do not contain tableToUpdate
+				var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
+				var clonedQuery = (SelectQuery)updateStatement.SelectQuery.Clone(
+					objectTree,
+					e => !(e is SqlParameter)
+				);
+
+				var tableToUpdateMapping = new Dictionary<ICloneableElement,ICloneableElement>(objectTree);
+				// remove mapping from updatable table
+				objectTree.Remove(tableToUpdate);
+				foreach (var field in tableToUpdate.Fields.Values)
+				{
+					objectTree.Remove(field);
+				} 
+
+				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
+					.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
+
+				if (tableToCompare == null)
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+				var compareKeys = tableToCompare.GetKeys(true);
+				var tableKeys   = tableToUpdate.GetKeys(true);
+
+				clonedQuery.Where.EnsureConjunction();
+				for (var i = 0; i < tableKeys.Count; i++)
+				{
+					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
+					if (column == null)
+						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
+					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
+
+				clonedQuery.Select.Columns.Clear();
+				newUpdateStatement.SelectQuery.From.Table(tableToUpdate).Where.Exists(clonedQuery);
+
+				foreach (var item in updateStatement.Update.Items)
+				{
+					var ex = new QueryVisitor().Convert(item.Expression!, expr =>
+						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
+							? (ISqlExpression) newValue
+							: expr);
+
+					var usedSources = new HashSet<ISqlTableSource>();
+					QueryHelper.GetUsedSources(ex, usedSources);
+					usedSources.Remove(tableToUpdate);
+					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+						usedSources.Remove((ISqlTableSource)replaced);
+
+					if (usedSources.Count > 0)
+					{
+						// it means that update value column depends on other tables and we have to generate more complicated query
+
+						var innerQuery = (SelectQuery) clonedQuery.Clone(
+							new Dictionary<ICloneableElement, ICloneableElement>(),
+							e => !(e is SqlParameter) && !(e is SqlTable));
+
+						innerQuery.ParentSelect = sql;
+
+						innerQuery.Select.Columns.Clear();
+
+
+						var remapped = new QueryVisitor().Convert(ex,
+							e =>
+							{
+								if (!(e is ICloneableElement c))
+									return e;
+
+								if (tableToUpdateMapping.TryGetValue(c, out var n))
+									e = (IQueryElement) n;
+
+								if (e is SqlColumn clmn && clmn.Parent != innerQuery || e is SqlField)
+								{
+									var column = QueryHelper.NeedColumnForExpression(innerQuery, (ISqlExpression)e, false);
+									if (column != null)
+										return column;
+								}
+
+								return e;
+
+							});
+
+						innerQuery.Select.AddNew(remapped);
+						ex = innerQuery;
+					}
+
+					item.Column = tableToUpdate.Fields[QueryHelper.GetUnderlyingField(item.Column)!.Name];
+					item.Expression = ex;
+					newUpdateStatement.Update.Items.Add(item);
+				}
+
+				newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
+				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
+				newUpdateStatement.With         = updateStatement.With;
+
+				updateStatement.Parameters.Clear();
+				updateStatement.Update.Items.Clear();
+
+				updateStatement = newUpdateStatement;
+
+				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
+				tableSource!.Alias = "$F";
+			}
+			else
+			{
+				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
+				if (tableSource!.Source is SqlTable || updateStatement.Update.Table != null)
+				{
+					tableSource.Alias = "$F";
+				}
 			}
 
 			return updateStatement;
+		}
+
+
+		/// <summary>
+		/// Corrects situation when update table is located in JOIN clause. 
+		/// Usually it is generated by associations.
+		/// </summary>
+		/// <param name="statement">Statement to examine.</param>
+		/// <returns>Corrected statement.</returns>
+		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement)
+		{
+			var updateTable = statement.Update.Table;
+			if (updateTable != null)
+			{
+				var firstTable = statement.SelectQuery.From.Tables[0];
+				if (!(firstTable.Source is SqlTable ft) || !QueryHelper.IsEqualTables(ft, updateTable))
+				{
+					foreach (var joinedTable in firstTable.Joins)
+					{
+						if (joinedTable.Table.Source is SqlTable jt &&
+							QueryHelper.IsEqualTables(jt, updateTable) && (joinedTable.JoinType == JoinType.Inner || joinedTable.JoinType == JoinType.Left))
+						{
+							joinedTable.JoinType = JoinType.Inner;
+							joinedTable.Table.Source = firstTable.Source;
+							firstTable.Source = jt;
+
+							statement.Update.Table = jt;
+
+							statement.Walk(new WalkOptions(), exp =>
+							{
+								if (exp is SqlField field && field.Table == updateTable)
+								{
+									return jt.Fields[field.Name];
+								}
+								return exp;
+							});
+
+							break;
+						}
+					}
+				}
+				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
+				{
+					statement.Update.Table = newUpdateTable;
+					statement.Update = new QueryVisitor().ConvertImmutable(statement.Update, e =>
+					{
+						if (e is SqlField field && field.Table == updateTable)
+						{
+							return newUpdateTable.Fields[field.Name];
+						}
+
+						return e;
+					});
+				}
+			}
+
+			return statement;
 		}
 
 		#endregion
 
 		#region Helpers
 
-		static string SetAlias(string alias, int maxLen)
+		static string? SetAlias(string? alias, int maxLen)
 		{
 			if (alias == null)
 				return null;
@@ -1486,7 +1827,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
 		{
-			statement = new QueryVisitor().Convert(statement, e =>
+			statement = new QueryVisitor().ConvertImmutable(statement, e =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);
@@ -1498,5 +1839,184 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Moves Distinct query into another subquery. Useful when preserving ordering is required, because some providers do not support DISTINCT ORDER BY.
+		/// <code>
+		/// -- before
+		/// SELECT DISTINCT TAKE 10 c1, c2
+		/// FROM A
+		/// ORDER BY c1
+		/// -- after
+		/// SELECT TAKE 10 B.c1, B.c2
+		/// FROM
+		///   (
+		///     SELECT DISTINCT c1, c2
+		///     FROM A
+		///   ) B
+		/// ORDER BY B.c1
+		/// </code>
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip and Distinct modifiers.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				q => q.Select.IsDistinct && (q.Select.TakeValue != null || q.Select.SkipValue != null),
+				(p, q) =>
+				{
+					p.Select.SkipValue = q.Select.SkipValue;
+					p.Select.Take(q.Select.TakeValue, q.Select.TakeHints);
+
+					q.Select.SkipValue = null;
+					q.Select.Take(null, null);
+
+					QueryHelper.MoveOrderByUp(p, q);
+				});
+		}
+
+		/// <summary>
+		/// Replaces pagination by Window function ROW_NUMBER().
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
+		{
+			return QueryHelper.WrapQuery(statement,
+				query =>
+				{
+					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
+						return 0;
+					if (onlySubqueries && query.ParentSelect == null)
+						return 0;
+					return 1;
+				}
+				, queries =>
+				{
+					var query = queries[queries.Length - 1];
+					var processingQuery = queries[queries.Length - 2];
+
+					SqlOrderByItem[]? orderByItems = null;
+					if (!query.OrderBy.IsEmpty)
+						orderByItems = query.OrderBy.Items.ToArray();
+					//else if (query.Select.Columns.Count > 0)
+					//{
+					//	orderByItems = query.Select.Columns
+					//		.Select(c => QueryHelper.NeedColumnForExpression(query, c, false))
+					//		.Where(e => e != null)
+					//		.Take(1)
+					//		.Select(e => new SqlOrderByItem(e, false))
+					//		.ToArray();
+					//}
+
+					if (orderByItems == null || orderByItems.Length == 0)
+						orderByItems = new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+
+					var orderBy = string.Join(", ",
+						orderByItems.Select((oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
+
+					query.OrderBy.Items.Clear();
+
+					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
+
+					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, parameters);
+
+					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
+					rowNumberColumn.Alias = "RN";
+
+					if (query.Select.SkipValue != null)
+					{
+						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).Greater
+							.Expr(query.Select.SkipValue);
+
+						if (query.Select.TakeValue != null)
+							processingQuery.Where.Expr(rowNumberColumn).LessOrEqual.Expr(
+								new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue, "+", query.Select.TakeValue));
+					}
+					else
+					{
+						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).LessOrEqual
+							.Expr(query.Select.TakeValue!);
+					}
+
+					query.Select.SkipValue = null;
+					query.Select.Take(null, null);
+
+				});
+		}
+
+		/// <summary>
+		/// Alternative mechanism how to prevent loosing sorting in Distinct queries.
+		/// </summary>
+		/// <param name="statement">Statement which may contain Distinct queries.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				(p, q) =>
+				{
+					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
+					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToArray();
+
+					var projectionItems = columnItems.Union(orderItems).ToArray();
+					if (projectionItems.Length < columnItems.Length)
+					{
+						// Sort columns not in projection, transforming to 
+						/*
+							 SELECT {S.columnItems}, S.RN FROM 
+							 (
+								  SELECT {columnItems + orderItems}, RN = ROW_NUMBER() OVER (PARTITION BY {columnItems} ORDER BY {orderItems}) FROM T
+							 )
+							 WHERE S.RN = 1
+						*/
+
+						var orderByItems = q.Select.OrderBy.Items;
+
+						var partitionBy = string.Join(", ", columnItems.Select((oi, i) => $"{{{i}}}"));
+
+						var orderBy = string.Join(", ",
+							orderByItems.Select((oi, i) =>
+								oi.IsDescending
+									? $"{{{i + columnItems.Length}}} DESC"
+									: $"{{{i + columnItems.Length}}}"));
+
+						var parameters = columnItems.Concat(orderByItems.Select(oi => oi.Expression)).ToArray();
+
+						var rnExpr = new SqlExpression(typeof(long),
+							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
+							true, parameters);
+
+						var additionalProjection = orderItems.Except(columnItems).ToArray();
+						foreach (var expr in additionalProjection)
+						{
+							q.Select.AddNew(expr);
+						}
+
+						var rnColumn = q.Select.AddNewColumn(rnExpr);
+						rnColumn.Alias = "RN";
+
+						q.Select.IsDistinct = false;
+						q.OrderBy.Items.Clear();
+						p.Select.Where.EnsureConjunction().Expr(rnColumn).Equal.Value(1);
+					}
+					else
+					{
+						// All sorting columns in projection, transforming to 
+						/*
+							 SELECT {S.columnItems} FROM 
+							 (
+								  SELECT DISTINCT {columnItems} FROM T
+							 )
+							 ORDER BY {orderItems}
+
+						*/
+
+						QueryHelper.MoveOrderByUp(p, q);
+					}
+				});
+		}
 	}
 }

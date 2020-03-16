@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 		class SelectContext2 : SelectContext
 		{
-			public SelectContext2(IBuildContext parent, LambdaExpression lambda, IBuildContext sequence)
+			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
 				: base(parent, lambda, sequence)
 			{
 			}
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				switch (requestFlag)
 				{
@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 				return base.IsExpression(expression, level, requestFlag);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == Lambda.Parameters[1])
 					return _counterParam;
@@ -126,8 +126,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region Convert
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression originalMethodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression originalMethodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var methodCall = originalMethodCall;
 			var selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
@@ -162,8 +162,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var types  = methodCall.Method.GetGenericArguments();
 						var mgen   = methodCall.Method.GetGenericMethodDefinition();
-						var btype  = typeof(ExpressionHoder<,>).MakeGenericType(types[0], selector.Body.Type);
-						var fields = btype.GetFieldsEx();
+						var btype  = typeof(ExpressionHolder<,>).MakeGenericType(types[0], selector.Body.Type);
+						var fields = btype.GetFields();
 						var pold   = selector.Parameters[0];
 						var psel   = Expression.Parameter(types[0], pold.Name);
 

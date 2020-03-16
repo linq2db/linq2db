@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Delete3([DataSources(ProviderName.Informix)] string context)
+		public void Delete3([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -88,7 +88,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Delete4([DataSources(ProviderName.Informix)] string context)
+		public void Delete4([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -136,7 +136,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AlterDelete([DataSources(false, ProviderName.Informix)] string context)
+		public void AlterDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -161,13 +161,13 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -200,13 +200,13 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -248,13 +248,13 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			var ids = new[] { 1001 };
@@ -298,11 +298,11 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllFirebird,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -343,7 +343,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void ContainsJoin1([DataSources(false, ProviderName.Informix)] string context)
+		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -373,7 +373,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MultipleDelete([DataSources(false, ProviderName.Informix)] string context)
+		public void MultipleDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

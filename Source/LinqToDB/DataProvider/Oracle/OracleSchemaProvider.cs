@@ -7,30 +7,37 @@ using System.Data;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Configuration;
 	using Data;
 	using SchemaProvider;
 
 	class OracleSchemaProvider : SchemaProviderBase
 	{
-		public OracleSchemaProvider(string providerName)
+		private readonly OracleDataProvider _provider;
+
+		public OracleSchemaProvider(OracleDataProvider provider)
 		{
-			_providerName = providerName;
+			_provider = provider;
 		}
 
-		readonly string _providerName;
-
-		protected override string GetDataSourceName(DbConnection dbConnection)
+		protected override string GetDataSourceName(DataConnection dataConnection)
 		{
-			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).HostName;
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			if (connection == null)
+				return string.Empty;
+
+			return _provider.Adapter.GetHostName(connection);
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection dataConnection)
 		{
-			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			if (connection == null)
+				return string.Empty;
+
+			return _provider.Adapter.GetDatabaseName(connection);
 		}
 
-		private string _currentUser;
+		private string? _currentUser;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
@@ -109,8 +116,29 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		private int GetMajorVersion(DataConnection dataConnection)
 		{
+			var version = dataConnection.Query<string>("SELECT VERSION FROM PRODUCT_COMPONENT_VERSION WHERE PRODUCT LIKE 'PL/SQL%'").FirstOrDefault();
+			if (version != null)
+			{
+				try
+				{
+					return int.Parse(version.Split('.')[0]);
+				}
+				catch { }
+			}
+
+			return 0;
+		}
+
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			var isIdentitySql = "0                                              as IsIdentity,";
+			if (GetMajorVersion(dataConnection) >= 12)
+			{
+				isIdentitySql = "CASE c.IDENTITY_COLUMN WHEN 'YES' THEN 1 ELSE 0 END as IsIdentity,";
+			}
+
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
@@ -124,7 +152,7 @@ namespace LinqToDB.DataProvider.Oracle
 						c.DATA_LENGTH                              as Length,
 						c.DATA_PRECISION                           as Precision,
 						c.DATA_SCALE                               as Scale,
-						0                                          as IsIdentity,
+						" + isIdentitySql + @"
 						cc.COMMENTS                                as Description
 					FROM ALL_TAB_COLUMNS c
 						JOIN ALL_COL_COMMENTS cc ON
@@ -148,7 +176,7 @@ namespace LinqToDB.DataProvider.Oracle
 						c.DATA_LENGTH                                  as Length,
 						c.DATA_PRECISION                               as Precision,
 						c.DATA_SCALE                                   as Scale,
-						0                                              as IsIdentity,
+						" + isIdentitySql + @"
 						cc.COMMENTS                                    as Description
 					FROM USER_TAB_COLUMNS c
 						JOIN USER_COL_COMMENTS cc ON
@@ -160,7 +188,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -277,7 +305,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
@@ -286,10 +314,10 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -305,7 +333,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -320,8 +348,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case "FLOAT"                  : return DataType.Decimal;
 				case "INTERVAL DAY TO SECOND" : return DataType.Time;
 				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
-				case "LONG"                   : return DataType.Text;
-				case "LONG RAW"               : return DataType.Binary;
+				case "LONG"                   : return DataType.Long;
+				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
 				case "NCLOB"                  : return DataType.NText;
 				case "NUMBER"                 : return DataType.Decimal;
@@ -341,32 +369,32 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return _providerName == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string dataType)
 		{
 			switch (dataType)
 			{
-				case "BFILE"                          : return "OracleBFile";
+				case "BFILE"                          : return _provider.Adapter.OracleBFileType       .Name;
 				case "RAW"                            :
-				case "LONG RAW"                       : return "OracleBinary";
-				case "BLOB"                           : return "OracleBlob";
-				case "CLOB"                           : return "OracleClob";
-				case "DATE"                           : return "OracleDate";
+				case "LONG RAW"                       : return _provider.Adapter.OracleBinaryType      .Name;
+				case "BLOB"                           : return _provider.Adapter.OracleBlobType        .Name;
+				case "CLOB"                           : return _provider.Adapter.OracleClobType        .Name;
+				case "DATE"                           : return _provider.Adapter.OracleDateType        .Name;
 				case "BINARY_DOUBLE"                  :
 				case "BINARY_FLOAT"                   :
-				case "NUMBER"                         : return "OracleDecimal";
-				case "INTERVAL DAY TO SECOND"         : return "OracleIntervalDS";
-				case "INTERVAL YEAR TO MONTH"         : return "OracleIntervalYM";
+				case "NUMBER"                         : return _provider.Adapter.OracleDecimalType     .Name;
+				case "INTERVAL DAY TO SECOND"         : return _provider.Adapter.OracleIntervalDSType  .Name;
+				case "INTERVAL YEAR TO MONTH"         : return _provider.Adapter.OracleIntervalYMType  .Name;
 				case "NCHAR"                          :
 				case "LONG"                           :
 				case "ROWID"                          :
-				case "CHAR"                           : return "OracleString";
-				case "TIMESTAMP"                      : return "OracleTimeStamp";
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return "OracleTimeStampLTZ";
-				case "TIMESTAMP WITH TIME ZONE"       : return "OracleTimeStampTZ";
-				case "XMLTYPE"                        : return "OracleXmlType";
+				case "CHAR"                           : return _provider.Adapter.OracleStringType      .Name;
+				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType   .Name;
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType.Name;
+				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType .Name;
+				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType     .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

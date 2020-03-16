@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Async;
 	using Extensions;
 
@@ -19,25 +20,22 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		protected void Init([NotNull] IDataContext dataContext, Expression expression)
+		protected void Init(IDataContext dataContext, Expression? expression)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			Expression  = expression  ?? Expression.Constant(this);
 		}
 
-		[NotNull] public Expression   Expression  { get; set; }
-		[NotNull] public IDataContext DataContext { get; set; }
+		public Expression   Expression  { get; set; } = null!;
+		public IDataContext DataContext { get; set; } = null!;
 
-		internal Query<T> Info;
-		internal object[] Parameters;
+		internal Query<T>? Info;
+		internal object[]? Parameters;
 
 		#endregion
 
 		#region Public Members
-
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		string _sqlTextHolder;
-
+		
 		// This property is helpful in Debug Mode.
 		//
 		[UsedImplicitly]
@@ -48,22 +46,11 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var hasQueryHints = DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0;
+				var expression = Expression;
+				var info       = GetQuery(ref expression, true);
+				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, 0);
 
-				if (_sqlTextHolder == null || hasQueryHints)
-				{
-					var expression = Expression;
-					var info       = GetQuery(ref expression, true);
-					Expression     = expression;
-					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
-
-					if (hasQueryHints)
-						return sqlText;
-
-					_sqlTextHolder = sqlText;
-				}
-
-				return _sqlTextHolder;
+				return sqlText;
 			}
 		}
 
@@ -89,7 +76,7 @@ namespace LinqToDB.Linq
 			var value = await GetQuery(ref expression, false).GetElementAsync(
 				DataContext, expression, Parameters, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return (TResult)value;
+			return (TResult)value!;
 		}
 
 		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
@@ -160,12 +147,13 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[return: MaybeNull]
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
+			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters)!;
 		}
 
-		object IQueryProvider.Execute(Expression expression)
+		object? IQueryProvider.Execute(Expression expression)
 		{
 			return GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
 		}

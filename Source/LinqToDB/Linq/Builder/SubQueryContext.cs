@@ -30,21 +30,21 @@ namespace LinqToDB.Linq.Builder
 			Statement = subQuery.Statement;
 		}
 
-		public          IBuildContext SubQuery    { get; private set; }
-		public override SelectQuery   SelectQuery { get; set; }
-		public override IBuildContext Parent      { get; set; }
+		public          IBuildContext  SubQuery    { get; private set; }
+		public override SelectQuery    SelectQuery { get; set; }
+		public override IBuildContext? Parent      { get; set; }
 
-		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
-				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
 		}
 
 		// JoinContext has similar logic. Consider to review it.
 		//
-		public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			return ConvertToSql(expression, level, flags)
 				.Select(idx =>
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 		}
 
-		public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 		{
 			switch (testFlag)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery.From.Tables[0].Alias = alias;
 		}
 
-		public override ISqlExpression GetSubQuery(IBuildContext context)
+		public override ISqlExpression? GetSubQuery(IBuildContext context)
 		{
 			return null;
 		}

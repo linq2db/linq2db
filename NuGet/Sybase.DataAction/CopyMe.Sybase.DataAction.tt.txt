@@ -34,12 +34,21 @@
 			}
 
 		5. See more at https://linq2db.github.io/articles/T4.html
+
+		IMPORTANT: if running .tt file gives you error like this:
+		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<SOME_DB>TemplatesDirectory)LinqToDB.<DB_NAME>.Tools.ttinclude"
+		check tt file properties.
+		Custom tool must be set to TextTemplatingFileGenerator, not TextTemplatingFilePreprocessor or any other value.
 	*/
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadSybaseMetadata("MyServer", "5000", "MyDatabase", "sa", "TestPassword");
 //	LoadSybaseMetadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

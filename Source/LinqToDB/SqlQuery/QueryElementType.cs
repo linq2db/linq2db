@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public enum QueryElementType
 	{
@@ -12,6 +10,7 @@ namespace LinqToDB.SqlQuery
 		SqlValue,
 		SqlDataType,
 		SqlTable,
+		SqlAliasPlaceholder,
 
 		ExprPredicate,
 		NotExprPredicate,
@@ -39,21 +38,26 @@ namespace LinqToDB.SqlQuery
 			GroupByClause,
 			OrderByClause,
 				OrderByItem,
-			Union,
+			SetOperator,
 
 		WithClause,
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
 
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
+		MergeStatement,
 
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
+
+		MergeSourceTable,
+		MergeOperationClause,
 	}
 }

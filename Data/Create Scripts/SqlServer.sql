@@ -122,6 +122,24 @@ GO
 GRANT EXEC ON Person_SelectByKey TO PUBLIC
 GO
 
+-- Person_SelectByKeyLowercase
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectByKeyLowercase')
+BEGIN DROP Procedure Person_SelectByKeyLowercase
+END
+GO
+
+CREATE Procedure Person_SelectByKeyLowercase
+	@id int
+AS
+
+SELECT personid, firstname FROM Person WHERE PersonID = @id
+
+GO
+
+GRANT EXEC ON Person_SelectByKeyLowercase TO PUBLIC
+GO
+
 -- Person_SelectAll
 
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectAll')
@@ -459,7 +477,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
 -- SKIP SqlServer.2017 BEGIN
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
 	datetimeoffset0DataType  varchar(50)       NULL,
@@ -476,7 +494,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2017 END
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 
 ) ON [PRIMARY]
 GO
@@ -590,14 +608,14 @@ GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -658,7 +676,7 @@ GO
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
 -- SKIP SqlServer.2017 BEGIN
--- SKIP SqlAzure.2012 BEGIN
+-- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -674,7 +692,7 @@ CREATE TABLE LinqDataTypes
 	StringValue    nvarchar(50)    NULL
 )
 GO
--- SKIP SqlAzure.2012 END
+-- SKIP SqlAzure END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2017 END
@@ -1054,5 +1072,90 @@ CREATE PROCEDURE TestSchema.TestProcedure
 AS
 BEGIN
 	SELECT 1
+END
+GO
+
+
+-- PersonSearch
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'PersonSearch')
+BEGIN DROP Procedure PersonSearch END
+GO
+CREATE PROCEDURE PersonSearch
+	@nameFilter	nvarchar(512)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+	Create Table #PeopleIds (
+		PersonID int
+	);
+	INSERT INTO #PeopleIds 
+	SELECT Person.PersonID 
+	FROM Person
+	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
+	OR LOWER(LastName) like '%' + @nameFilter + '%';
+	
+	-- 0: List of matching person ids.
+	SELECT PersonID FROM #PeopleIds;
+
+	-- 1: List of matching persons.
+	SELECT * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+
+	-- 2: List of matching patients.
+	SELECT * FROM Patient WHERE Patient.PersonID
+	IN (SELECT PersonID FROM #PeopleIds);
+
+	-- 3: Is doctor in the results.
+	SELECT 
+	CASE WHEN COUNT(*) >= 1 THEN
+		CAST (1 as BIT)
+	ELSE
+		CAST (0 as BIT)
+	END
+	FROM Doctor 
+	WHERE Doctor.PersonID
+	IN (SELECT PersonID FROM #PeopleIds);
+	
+	-- 4: List of matching persons again.
+	SELECT * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+	
+	-- 5: Number of matched people.
+	SELECT COUNT(*) FROM #PeopleIds;
+
+	-- 6: First matched person.
+	SELECT TOP 1 * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+
+	Drop Table #PeopleIds;
+END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Issue1897')
+BEGIN DROP Procedure Issue1897 END
+GO
+
+CREATE PROCEDURE dbo.Issue1897
+AS
+BEGIN
+	RETURN 4
+END
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'TF' AND name = 'Issue1921')
+BEGIN DROP FUNCTION Issue1921 END
+GO
+
+CREATE FUNCTION dbo.Issue1921()
+RETURNS @table table (name sysname, objid    int)
+AS
+BEGIN
+  INSERT INTO @table
+  SELECT  name, object_id from sys.objects where name ='Issue1921'
+RETURN
 END
 GO

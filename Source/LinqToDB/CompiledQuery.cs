@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -23,18 +21,18 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                _sync = new object();
-		readonly LambdaExpression      _query;
-		volatile Func<object[],object> _compiledQuery;
+		readonly object                   _sync = new object();
+		readonly LambdaExpression         _query;
+		volatile Func<object?[],object?>? _compiledQuery;
 
-		TResult ExecuteQuery<TResult>(params object[] args)
+		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
 					if (_compiledQuery == null)
 						_compiledQuery = CompileQuery(_query);
 
-			return (TResult)_compiledQuery(args);
+			return (TResult)_compiledQuery(args)!;
 		}
 
 		enum MethodType
@@ -58,15 +56,15 @@ namespace LinqToDB
 				return Expression.Call(
 					Expression.Constant(table),
 					type == MethodType.Queryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!)) :
 					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null)),
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!)),
 					ps);
 			}
 		}
 
-		static Func<object[],object> CompileQuery(LambdaExpression query)
+		static Func<object?[],object?> CompileQuery(LambdaExpression query)
 		{
 			var ps = Expression.Parameter(typeof(object[]), "ps");
 
@@ -89,9 +87,9 @@ namespace LinqToDB
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributesEx(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
 							{
-								var type = expr.Type.GetGenericArgumentsEx()[0];
+								var type = expr.Type.GetGenericArguments()[0];
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type));
 
@@ -105,7 +103,7 @@ namespace LinqToDB
 
 								var qtype  = type.GetGenericType(expr.Type);
 								var helper = (ITableHelper)Activator.CreateInstance(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArgumentsEx()[0]));
+									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
 								return helper.CallTable(query, expr, ps, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
@@ -121,7 +119,7 @@ namespace LinqToDB
 						{
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
-								.MakeGenericType(pi.Type.GetGenericArgumentsEx()[0]));
+								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
 							return helper.CallTable(query, pi, ps, MethodType.Queryable);
 						}
 
@@ -131,7 +129,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object[],object>>(Expression.Convert(info, typeof(object)), ps).Compile();
+			return Expression.Lambda<Func<object?[],object?>>(Expression.Convert(info, typeof(object)), ps).Compile();
 		}
 
 		#region Invoke
@@ -252,7 +250,7 @@ namespace LinqToDB
 		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TResult> Compile<TDC,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TResult>> query)
+			Expression<Func<TDC,TResult>> query)
 			  where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -270,7 +268,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TResult> Compile<TDC,TArg1,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TResult>> query)
+			Expression<Func<TDC,TArg1,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -289,7 +287,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TResult> Compile<TDC,TArg1,TArg2,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -309,7 +307,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TResult> Compile<TDC,TArg1,TArg2,TArg3,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -330,7 +328,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg4">Type of forth parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");
@@ -352,7 +350,7 @@ namespace LinqToDB
 		/// <typeparam name="TArg5">Type of fifth parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
+			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
 			where TDC : IDataContext
 		{
 			if (query == null) throw new ArgumentNullException("query");

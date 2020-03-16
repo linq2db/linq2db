@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
 	public enum RequestFor
 	{

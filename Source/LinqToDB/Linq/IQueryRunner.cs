@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 		/// Executes query and returns scalar value.
 		/// </summary>
 		/// <returns>Scalar value.</returns>
-		object                ExecuteScalar  ();
+		object?               ExecuteScalar  ();
 		/// <summary>
 		/// Executes query and returns data reader.
 		/// </summary>
@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Scalar value.</returns>
-		Task<object>           ExecuteScalarAsync  (CancellationToken cancellationToken);
+		Task<object?>          ExecuteScalarAsync  (CancellationToken cancellationToken);
 		/// <summary>
 		/// Executes query asynchronously and returns data reader.
 		/// </summary>
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 
 		Expression     Expression       { get; set; }
 		IDataContext   DataContext      { get; set; }
-		object[]       Parameters       { get; set; }
+		object?[]?     Parameters       { get; set; }
 		Expression     MapperExpression { get; set; }
 		int            RowsCount        { get; set; }
 		int            QueryNumber      { get; set; }

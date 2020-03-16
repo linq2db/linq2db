@@ -1,7 +1,7 @@
 <#@ assembly name="System.Data"        #>
 <#@ import namespace="System.Data"     #>
 <#@ import namespace="LinqToDB.Data"   #>
-<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text"     #>
 <#@ include file="DataModel.ttinclude" #>
 <#
 	if (BaseDataContextClass == null)
@@ -26,6 +26,7 @@ bool   GenerateDbTypes                     = false;
 bool   GenerateSchemaAsType                = false;
 bool   GenerateViews                       = true;
 bool   GenerateProcedureResultAsList       = false;
+bool   GenerateProceduresOnTypedContext    = true;
 bool   PrefixTableMappingWithSchema        = true;
 bool   PrefixTableMappingForDefaultSchema  = false;
 string SchemaNameSuffix                    = "Schema";
@@ -45,7 +46,7 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 	if (defaultConfiguration == null)
 		yield return new Method((Func<string>)null, name);
 	else
-		yield return new Method(null, name) { AfterSignature = { ": base(" + ToStringLiteral(defaultConfiguration) + ")" } };
+		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
 	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
 }
 
@@ -155,17 +156,17 @@ void GenerateTypesFromMetadata()
 
 			DataContextObject.Members.Add(c);
 		}
-	}
 
-	DataContextObject.Members.Add(new MemberGroup
-	{
-		IsCompact = true,
-		Members   =
+		DataContextObject.Members.Add(new MemberGroup
 		{
-			new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
-			new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
-		}
-	});
+			IsCompact = true,
+			Members   =
+			{
+				new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
+				new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
+			}
+		});
+	}
 
 	if (Tables.Count > 0)
 		DataContextObject.Members.Insert(0, defProps);
@@ -241,6 +242,7 @@ void GenerateTypesFromMetadata()
 
 		var tableAttrs = new List<string>();
 
+		if (ServerName   != null) tableAttrs.Add("Server="    + ToStringLiteral(ServerName));
 		if (DatabaseName != null) tableAttrs.Add("Database="  + ToStringLiteral(DatabaseName));
 		if (t.Schema     != null) tableAttrs.Add("Schema="    + ToStringLiteral(t.Schema));
 
@@ -354,7 +356,7 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			c.Attributes.Add(ca);
+			c.Attributes.Insert(0, ca);
 
 			// PK.
 			//
@@ -366,9 +368,9 @@ void GenerateTypesFromMetadata()
 					pka.Parameters.Add(c.PrimaryKeyOrder.ToString());
 
 				if (canBeReplaced)
-					c.Attributes[0] = pka;
-				else
-					c.Attributes.Add(pka);
+					c.Attributes.Remove(ca);
+
+				c.Attributes.Add(pka);
 
 				canBeReplaced = false;
 			}
@@ -380,9 +382,9 @@ void GenerateTypesFromMetadata()
 				var ida = new Attribute("Identity");
 
 				if (canBeReplaced)
-					c.Attributes[0] = ida;
-				else
-					c.Attributes.Add(ida);
+					c.Attributes.Remove(ca);
+
+				c.Attributes.Add(ida);
 
 				canBeReplaced = false;
 			}
@@ -683,6 +685,7 @@ void GenerateTypesFromMetadata()
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
+		var currentContext = DataContextObject;
 		foreach (var p in Procedures.Values.Where(
 			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
 			proc.IsTableFunction && proc.ResultException != null
@@ -724,6 +727,7 @@ void GenerateTypesFromMetadata()
 			{
 				var tableAttrs = new List<string>();
 
+				if (ServerName   != null) tableAttrs.Add("Server="   + ToStringLiteral(ServerName));
 				if (DatabaseName != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
 				if (p.Schema     != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
 
@@ -770,15 +774,15 @@ void GenerateTypesFromMetadata()
 						: "IEnumerable<" + p.ResultTable.TypeName + ">";
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
-					p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
+					p.ParameterBuilders.Add(() => $"this { (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 				else
-					p.ParameterBuilders.Add(() => "DataConnection dataConnection");
+					p.ParameterBuilders.Add(() => $"{ (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 			}
 
 			if (!p.IsAggregateFunction)
-				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
+				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult || !p.IsFunction))
 					p.ParameterBuilders.Add(() => string.Format("{0}{1} {2}",
-						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.Type.ToTypeName(), pr.ParameterName));
+						pr.IsOut || pr.IsResult ? pr.IsIn ? "ref " : "out " : "", pr.Type.ToTypeName(), pr.ParameterName));
 
 			if (p.IsTableFunction)
 			{
@@ -803,16 +807,17 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.Convert(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.Convert(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.Convert(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
 				spName = ToStringLiteral(spName);
 
-				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).            ToList();
-				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
-				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn || pp.IsOut).ToList();
+				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).                            ToList();
+				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut || pp.IsResult).            ToList();
+				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn  || pp.IsOut || pp.IsResult).ToList();
 
 				spName += inOrOutputParameters.Count == 0
 					? (p.ResultTable == null || !GenerateProcedureResultAsList ? ");" : ").ToList();")
@@ -824,7 +829,7 @@ void GenerateTypesFromMetadata()
 				while (p.ProcParameters.Any(pp => pp.ParameterName == retName))
 					retName = "ret" + ++retNo;
 
-				var hasOut = outputParameters.Any(pr => pr.IsOut);
+				var hasOut = outputParameters.Any(pr => pr.IsOut || pr.IsResult);
 				var prefix = hasOut ? "var " + retName + " = " : "return ";
 
 				if (p.ResultTable == null)
@@ -872,7 +877,7 @@ void GenerateTypesFromMetadata()
 					p.BodyBuilders.Add(() =>
 					{
 						var str = string.Format(
-							!pr.IsIn && pr.IsOut
+							!pr.IsIn && (pr.IsOut || pr.IsResult)
 								? "\tnew DataParameter({0}, null, {3}{4})"
 								: "\tnew DataParameter({0}, {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = {5} }}" : null),
 							ToStringLiteral(pr.SchemaName),
@@ -882,10 +887,10 @@ void GenerateTypesFromMetadata()
 							"DataType." + pr.DataType,
 							ToStringLiteral(pr.SchemaType));
 
-						if (pr.IsOut)
+						if (pr.IsOut || pr.IsResult)
 						{
 							str += LenDiff(maxLenType, "DataType." + pr.DataType);
-							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
+							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output"));
 
 							if (pr.Size != null && pr.Size.Value != 0)
 								str += ", Size = " + pr.Size.Value;
@@ -911,7 +916,7 @@ void GenerateTypesFromMetadata()
 
 					p.BodyBuilders.Add(() => new [] { string.Empty });
 
-					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut))
+					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut || _.IsResult))
 					{
 						p.BodyBuilders.Add(() => new [] { string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[{4}]).{5}Value);",
 							pr.ParameterName,

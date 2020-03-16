@@ -24,6 +24,8 @@ After package installing you will see new `LinqToDB.Templates` folder in your pr
 
 To create a data model template copy `CopyMe.<DB_NAME>.tt.txt` file from `LinqToDB.Templates` project folder to desired location and rename it to file with `.tt` extension, e.g. `MyModel.tt`. For SDK projects see important notes below.
 
+Make sure that custom tool for your `tt` file set to `TextTemplatingFileGenerator`, otherwise it will not run or will give you error like `error : Failed to resolve include text for file ...ttinclude`
+
 Next you need to edit content of your `.tt` file. It contains following main sections:
 
 1. Configuration of database structure load process (`GetSchemaOptions` object properties, read more about it below)
@@ -45,12 +47,17 @@ All loaded schema information is used for mappings generation, so if you want to
 
 ```cs
 // Enables loading of tables and views information
-GetSchemaOptions.GetTables             = true;
+GetSchemaOptions.GetTables                   = true;
+// Enables loading of foreign key relations for associations
+GetSchemaOptions.GetForeignKeys              = true;
 // Enables loading of functions and procedures information
-GetSchemaOptions.GetProcedures         = true;
+GetSchemaOptions.GetProcedures               = true;
 // Enables use of System.Char type in generated model for text types
 // with length 1 instead of System.String
-GetSchemaOptions.GenerateChar1AsString = false;
+GetSchemaOptions.GenerateChar1AsString       = false;
+// Enables generation of provider-specific type for column or parameter mapping
+// when both common .net type and provider-specific type supported.
+GetSchemaOptions.PreferProviderSpecificTypes = false;
 
 // (string[]) List of schemas to select.
 // Option applied only if is is not empty
@@ -160,20 +167,22 @@ SchemaDataContextTypeName       = "DataContext"
 
 /* Table mappings configuration */
 // (string) Specify base class (or comma-separated list of class and/or interfaces) for table mappings
-BaseEntityClass                    = null;
+BaseEntityClass               = null;
 // Enables generation of TableAttribute.Database property using database name, returned by schema loader
-GenerateDatabaseName               = false;
+GenerateDatabaseName          = false;
 // Enables generation of TableAttribute.Database property with provided name value.
 // (string) If set, overrides GenerateDatabaseName behavior
-DatabaseName                       = null;
+DatabaseName                  = null;
+// Enables generation of TableAttribute.Server property with provided name value.
+ServerName                    = null;
 // Enables generation of TableAttribute.Schema property for default schema
-IncludeDefaultSchema               = true;
+IncludeDefaultSchema          = true;
 // Enables generation of mappings for views
-GenerateViews                      = true;
+GenerateViews                 = true;
 // Enables prefixing mapping classes for tables in non-default schema with schema name
 // E.g. MySchema.MyTable -> MySchema_MyTable
 // Applicable only if GenerateSchemaAsType = false
-PrefixTableMappingWithSchema       = true;
+PrefixTableMappingWithSchema  = true;
 // Enables prefixing mapping classes for tables in default schema with schema name
 // E.g. dbo.MyTable -> dbo_MyTable
 // Applicable only if IncludeDefaultSchema = true && GenerateSchemaAsType = false && PrefixTableMappingWithSchema = true
@@ -232,6 +241,8 @@ GenerateProcedureErrors       = true;
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
 GenerateProcedureResultAsList = false;
+// Enables stored procedure methods to accept generated context object or DataConnection type
+GenerateProceduresOnTypedContext = true;
 
 /* Other generated functionality */
 // Enables generation of Find(pk fields) extension methods for record selection by primary key value
@@ -251,7 +262,11 @@ SingularizeDataContextPropertyNames = false;
 // Enables normalization of of type and member names.
 // Default normalization removes underscores and capitalize first letter.
 // Could be overriden using ToValidName option below.
-NormalizeNames                                 = false;
+// By default doesn't normalize names without underscores.
+// see NormalizeNamesWithoutUnderscores setting
+NormalizeNames                                 = true;
+// enables normalization of names without underscores.
+NormalizeNamesWithoutUnderscores               = false;
 // Defines logic to convert type/member name, derived from database object name, to C# identifier.
 Func<string, bool, string> ToValidName         = ToValidNameDefault;
 // Makes C# identifier valid by removing unsupported symbols and calling ToValidName
@@ -268,6 +283,12 @@ Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;
 // NOTE: this option is not needed anymore, as it generates old-style FTS support code and not recommeded for use
 // use new extesions from this PR: https://github.com/linq2db/linq2db/pull/1649
 bool GenerateSqlServerFreeText = false;
+
+// Enables return value parameter generation for procedure.
+// By default generation of this parameter is disabled, because it is not possible to say (except examining
+// procedure code) if procedure uses this parameter or it always returns default value (0).
+// Usefull for procedures, that use "RETURN code" statements to returns integer values from procedure.
+void AddReturnParameter(string procedureName, string parameterName = "@return");
 ```
 
 ### PostgreSQL

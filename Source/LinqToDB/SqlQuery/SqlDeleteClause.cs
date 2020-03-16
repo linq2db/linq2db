@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlDeleteClause2 : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
-		public SqlTable Table { get; set; }
+		public SqlTable? Table { get; set; }
 
 		#region Overrides
 
@@ -43,9 +43,9 @@ namespace LinqToDB.SqlQuery
 		#region ISqlExpressionWalkable Members
 
 		[Obsolete]
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Table)?.Walk(options, func);
 			return null;
 		}
 

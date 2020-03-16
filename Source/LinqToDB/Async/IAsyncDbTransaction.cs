@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,14 +13,14 @@ namespace LinqToDB.Async
 	public interface IAsyncDbTransaction : IDbTransaction
 	{
 		/// <summary>
-		/// Commits transaction asynchonously.
+		/// Commits transaction asynchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		Task CommitAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// Rollbacks transaction asynchonously.
+		/// Rollbacks transaction asynchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -31,5 +30,11 @@ namespace LinqToDB.Async
 		/// Gets underlying transaction instance.
 		/// </summary>
 		IDbTransaction Transaction { get; }
+
+		/// <summary>
+		/// Disposes transaciton asynchronously.
+		/// </summary>
+		/// <returns>Asynchronous operation completion task.</returns>
+		Task DisposeAsync();
 	}
 }

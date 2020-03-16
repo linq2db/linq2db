@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,7 +30,7 @@ namespace Tests.Model
 		public ITable<Northwind.Shipper>             Shipper             { get { return GetTable<Northwind.Shipper>();             } }
 		public ITable<Northwind.Supplier>            Supplier            { get { return GetTable<Northwind.Supplier>();            } }
 		public ITable<Northwind.Territory>           Territory           { get { return GetTable<Northwind.Territory>();           } }
-		
+
 		public class FreeTextKey<T>
 		{
 			public T   Key;
@@ -59,7 +60,7 @@ namespace Tests.Model
 			var methodInfo = typeof(NorthwindDB).GetMethods()
 				.Where(_ =>  _.Name == "FreeTextTable")
 				.Where(_ => _.GetParameters().Length == 2)
-				.Where(_ => _.GetParameters().First().ParameterType.IsGenericTypeEx()) 
+				.Where(_ => _.GetParameters().First().ParameterType.IsGenericType)
 				.Single()
 				.MakeGenericMethod(typeof(TTable), typeof(TKey));
 

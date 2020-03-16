@@ -36,18 +36,19 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var sp         = conn.DataProvider.GetSchemaProvider();
+				var schemaName = TestUtils.GetSchemaName(conn);
+				var dbSchema   = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
+				}));
 
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
@@ -97,6 +98,7 @@ namespace Tests.SchemaProvider
 						break;
 
 					case ProviderName.Informix      :
+					case ProviderName.InformixDB2   :
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
@@ -160,10 +162,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETSTANDARD2_0
-
 		[Test]
-		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		public void MySqlTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -182,7 +182,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySqlData)]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -195,8 +195,6 @@ namespace Tests.SchemaProvider
 				Assert.That(pk, Is.Not.Null);
 			}
 		}
-
-#endif
 
 		class PKTest
 		{
@@ -247,11 +245,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -268,12 +262,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[SkipCI("It is insanely slow for oracle. Wether we should fix it or implement configurations support for SkipCI")]
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -295,7 +286,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))
@@ -334,18 +325,19 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schemaName = TestUtils.GetSchemaName(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				}));
 
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);

@@ -4,19 +4,23 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
 	using Mapping;
+	using Common;
+	using LinqToDB.Extensions;
 
-	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
+	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
 		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+			((IQueryElement) this)
+				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+				.ToString();
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
 
 		public abstract QueryType QueryType { get; }
 
@@ -24,11 +28,16 @@ namespace LinqToDB.SqlQuery
 
 		public abstract bool IsParameterDependent { get; set; }
 
+		/// <summary>
+		/// Used internally for SQL Builder
+		/// </summary>
+		public SqlStatement? ParentStatement { get; set; }
+
 		public SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
 			if (IsParameterDependent)
 			{
-				var statement = new QueryVisitor().Convert(this, e =>
+				var statement = new QueryVisitor().ConvertImmutable(this, e =>
 				{
 					switch (e.ElementType)
 					{
@@ -37,7 +46,7 @@ namespace LinqToDB.SqlQuery
 								var p = (SqlParameter)e;
 
 								if (p.Value == null)
-									return new SqlValue(null);
+									return new SqlValue(p.Type, null);
 							}
 
 							break;
@@ -48,8 +57,8 @@ namespace LinqToDB.SqlQuery
 
 								if (ee.Operator == SqlPredicate.Operator.Equal || ee.Operator == SqlPredicate.Operator.NotEqual)
 								{
-									object value1;
-									object value2;
+									object? value1;
+									object? value2;
 
 									if (ee.Expr1 is SqlValue v1)
 										value1 = v1.Value;
@@ -77,10 +86,10 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
+							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e)!;
 					}
 
-					return null;
+					return e;
 				});
 
 				return statement;
@@ -121,7 +130,7 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-		static SqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
+		static SqlPredicate? ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
@@ -249,7 +258,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public abstract SelectQuery SelectQuery { get; set; }
+		public abstract SelectQuery? SelectQuery { get; set; }
 
 
 		#region IQueryElement
@@ -261,7 +270,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
+		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
 
 		#endregion
 
@@ -279,7 +288,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Aliases
 
-		HashSet<string> _aliases;
+		HashSet<string>? _aliases;
 
 		public void RemoveAlias(string alias)
 		{
@@ -326,6 +335,29 @@ namespace LinqToDB.SqlQuery
 			return aliases;
 		}
 
+		internal void UpdateIsParameterDepended()
+		{
+			if (IsParameterDependent)
+				return;
+
+			var isDepended = null != new QueryVisitor().Find(this, expr =>
+			{
+				if (expr.ElementType == QueryElementType.SqlParameter)
+				{
+					var p = (SqlParameter)expr;
+
+					if (!p.IsQueryParameter)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			});
+
+			IsParameterDependent = isDepended;
+		}
+
 		internal void SetAliases()
 		{
 			_aliases = null;
@@ -340,6 +372,31 @@ namespace LinqToDB.SqlQuery
 			{
 				switch (expr.ElementType)
 				{
+					case QueryElementType.MergeSourceTable:
+						{
+							var source = (SqlMergeSourceTable)expr;
+
+							Utils.MakeUniqueNames(
+								source.SourceFields,
+								n => !ReservedWords.IsReserved(n),
+								f => f.PhysicalName,
+								(f, n) => { f.PhysicalName = n; },
+								f =>
+								{
+									var a = f.PhysicalName;
+									return a.IsNullOrEmpty()
+										? "c1"
+										: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+								},
+								StringComparer.OrdinalIgnoreCase);
+
+							// copy aliases to source query fields
+							if (source.SourceQuery != null)
+								for (var i = 0; i < source.SourceFields.Count; i++)
+									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
+
+							break;
+						}
 					case QueryElementType.SqlQuery:
 						{
 							var query = (SelectQuery)expr;
@@ -351,7 +408,9 @@ namespace LinqToDB.SqlQuery
 								var isRootQuery = query.ParentSelect == null;
 
 								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
+									n => !ReservedWords.IsReserved(n), 
+									c => c.Alias, 
+									(c, n) =>
 									{
 										if (isRootQuery)
 											allAliases.Add(n);
@@ -362,17 +421,17 @@ namespace LinqToDB.SqlQuery
 										var a = c.Alias;
 										return a.IsNullOrEmpty()
 											? "c1"
-											: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+											: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
 									StringComparer.OrdinalIgnoreCase);
 
-								if (query.HasUnion)
+								if (query.HasSetOperators)
 								{
 									for (var i = 0; i < query.Select.Columns.Count; i++)
 									{
 										var col = query.Select.Columns[i];
 
-										foreach (var t in query.Unions)
+										foreach (var t in query.SetOperators)
 										{
 											var union = t.SelectQuery.Select;
 											union.Columns[i].Alias = col.Alias;
@@ -392,22 +451,24 @@ namespace LinqToDB.SqlQuery
 								if (paramsVisited.Add(p))
 									Parameters.Add(p);
 							}
-							else
-								IsParameterDependent = true;
 
 							break;
 						}
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							tablesVisited.Add(table);
+							if (tablesVisited.Add(table))
+							{
+								if (table.Source is SqlTable sqlTable)
+									allAliases.Add(sqlTable.PhysicalName!);
+							}
 							break;
 						}
 				}
 			});
 
 			Utils.MakeUniqueNames(tablesVisited,
-				n => !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
+				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
 				{
 					allAliases.Add(n);
 					ts.Alias = n;
@@ -415,7 +476,7 @@ namespace LinqToDB.SqlQuery
 				ts =>
 				{
 					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+					return a.IsNullOrEmpty() ? "t1" : a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 				},
 				StringComparer.OrdinalIgnoreCase);
 
@@ -425,7 +486,7 @@ namespace LinqToDB.SqlQuery
 					allAliases.Add(n);
 					p.Name = n;
 				},
-				ts => ts.Name ?? "p1",
+				p => p.Name.IsNullOrEmpty() ? "p1" : p.Name + "_1",
 				StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;
@@ -433,7 +494,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public abstract ISqlTableSource GetTableSource(ISqlTableSource table);
+		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
 
 		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
 
@@ -443,12 +504,22 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e is SqlField f)
 				{
-					var ts = SelectQuery?.GetTableSource(f.Table) ?? GetTableSource(f.Table);
+					var ts = SelectQuery?.GetTableSource(f.Table!) ?? GetTableSource(f.Table!);
 
-					if (ts == null && f != f.Table.All)
+					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});
+		}
+
+		/// <summary>
+		/// Indicates when optimizer can not remove reference for particular table
+		/// </summary>
+		/// <param name="table"></param>
+		/// <returns></returns>
+		public virtual bool IsDependedOn(SqlTable table)
+		{
+			return false;
 		}
 	}
 }

@@ -2,7 +2,7 @@
 <#+
 LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
 {
-	return new LinqToDB.Data.DataConnection(new LinqToDB.DataProvider.Informix.InformixDataProvider(), connectionString);
+	return new LinqToDB.Data.DataConnection(new LinqToDB.DataProvider.Informix.InformixDataProvider(LinqToDB.ProviderName.Informix), connectionString);
 }
 
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)

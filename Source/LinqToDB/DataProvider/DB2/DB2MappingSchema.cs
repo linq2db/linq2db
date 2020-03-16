@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -19,8 +20,8 @@ namespace LinqToDB.DataProvider.DB2
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
@@ -34,11 +35,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		static string GetTimestampFormat(SqlDataType type)
 		{
-			var precision = type.Precision;
+			var precision = type.Type.Precision;
 
-			if (precision == null && type.DbType != null)
+			if (precision == null && type.Type.DbType != null)
 			{
-				var dbtype = type.DbType.ToLowerInvariant();
+				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
 					int fromDbType;
@@ -66,7 +67,7 @@ namespace LinqToDB.DataProvider.DB2
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
 			stringBuilder.Append("'");
-			if (type.DataType == DataType.Date || "date".Equals(type.DbType, StringComparison.OrdinalIgnoreCase))
+			if (type.Type.DataType == DataType.Date || "date".Equals(type.Type.DbType, StringComparison.OrdinalIgnoreCase))
 				stringBuilder.Append(value.ToString("yyyy-MM-dd-HH.mm.ss"));
 			else
 				stringBuilder.Append(value.ToString(GetTimestampFormat(type)));
@@ -130,12 +131,22 @@ namespace LinqToDB.DataProvider.DB2
 			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
 		{
 		}
+
+		public DB2zOSMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		{
+		}
 	}
 
 	public class DB2LUWMappingSchema : MappingSchema
 	{
 		public DB2LUWMappingSchema()
 			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
+		{
+		}
+
+		public DB2LUWMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
 		{
 		}
 	}

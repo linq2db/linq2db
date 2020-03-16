@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -21,7 +19,7 @@ namespace Tests
 
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)
 		{
-			return query.GetStatement().SelectQuery;
+			return query.GetStatement().SelectQuery!;
 		}
 
 		public static IEnumerable<SelectQuery> EnumQueries<T>([NoEnumeration] this IQueryable<T> query)
@@ -29,6 +27,11 @@ namespace Tests
 			var selectQuery = query.GetSelectQuery();
 			var information = new QueryInformation(selectQuery);
 			return information.GetQueriesParentFirst();
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumJoins(this SelectQuery query)
+		{
+			return query.From.Tables.SelectMany(t => t.Joins);
 		}
 
 		public static SqlSearchCondition GetWhere<T>(this IQueryable<T> query)
@@ -49,6 +52,6 @@ namespace Tests
 		public static SqlTableSource GetTableSource<T>(this IQueryable<T> query)
 		{
 			return GetSelectQuery(query).From.Tables.Single();
-		}		
+		}
 	}
 }

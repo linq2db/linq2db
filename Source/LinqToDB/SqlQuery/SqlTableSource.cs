@@ -12,12 +12,12 @@ namespace LinqToDB.SqlQuery
 		int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 #endif
 
-		public SqlTableSource(ISqlTableSource source, string alias)
+		public SqlTableSource(ISqlTableSource source, string? alias)
 			: this(source, alias, null)
 		{
 		}
 
-		public SqlTableSource(ISqlTableSource source, string alias, params SqlJoinedTable[] joins)
+		public SqlTableSource(ISqlTableSource source, string? alias, params SqlJoinedTable[]? joins)
 		{
 			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
@@ -26,31 +26,34 @@ namespace LinqToDB.SqlQuery
 				Joins.AddRange(joins);
 		}
 
-		public SqlTableSource(ISqlTableSource source, string alias, IEnumerable<SqlJoinedTable> joins)
+		public SqlTableSource(ISqlTableSource source, string? alias, IEnumerable<SqlJoinedTable> joins, IEnumerable<ISqlExpression[]>? uniqueKeys)
 		{
 			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
 
 			if (joins != null)
 				Joins.AddRange(joins);
+
+			if (uniqueKeys != null)
+				UniqueKeys.AddRange(uniqueKeys);
 		}
 
 		public ISqlTableSource Source       { get; set; }
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
 		// TODO: remove internal.
-		internal string _alias;
-		public   string  Alias
+		internal string? _alias;
+		public   string?  Alias
 		{
 			get
 			{
 				if (string.IsNullOrEmpty(_alias))
 				{
-					if (Source is SqlTableSource)
-						return (Source as SqlTableSource).Alias;
+					if (Source is SqlTableSource sqlSource)
+						return sqlSource.Alias;
 
-					if (Source is SqlTable)
-						return ((SqlTable)Source).Alias;
+					if (Source is SqlTable sqlTable)
+						return sqlTable.Alias;
 				}
 
 				return _alias;
@@ -58,9 +61,20 @@ namespace LinqToDB.SqlQuery
 			set => _alias = value;
 		}
 
-		public SqlTableSource this[ISqlTableSource table] => this[table, null];
+		private List<ISqlExpression[]>? _uniqueKeys;
 
-		public SqlTableSource this[ISqlTableSource table, string alias]
+		/// <summary>
+		/// Contains list of columns that build unique key for <see cref="Source"/>.
+		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
+		/// </summary>
+		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+
+
+		public SqlTableSource? this[ISqlTableSource table] => this[table, null];
+
+		public SqlTableSource? this[ISqlTableSource table, string? alias]
 		{
 			get
 			{
@@ -80,9 +94,10 @@ namespace LinqToDB.SqlQuery
 
 		public void ForEach(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
-			action(this);
 			foreach (var join in Joins)
 				join.Table.ForEach(action, visitedQueries);
+
+			action(this);
 
 			if (Source is SelectQuery query && visitedQueries.Contains(query))
 				query.ForEachTable(action, visitedQueries);
@@ -129,7 +144,7 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Source = (ISqlTableSource)Source.Walk(options, func);
+			Source = (ISqlTableSource)Source.Walk(options, func)!;
 
 			foreach (var t in Joins)
 				((ISqlExpressionWalkable)t).Walk(options, func);
@@ -165,6 +180,9 @@ namespace LinqToDB.SqlQuery
 				objectTree.Add(this, clone = ts);
 
 				ts.Joins.AddRange(Joins.Select(jt => (SqlJoinedTable)jt.Clone(objectTree, doClone)));
+
+				if (HasUniqueKeys)
+					ts.UniqueKeys.AddRange(UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 			}
 
 			return clone;
@@ -213,9 +231,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull  => Source.CanBeNull;
-		public int  Precedence => Source.Precedence;
-		public Type SystemType => Source.SystemType;
+		public bool  CanBeNull  => Source.CanBeNull;
+		public int   Precedence => Source.Precedence;
+		public Type? SystemType => Source.SystemType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

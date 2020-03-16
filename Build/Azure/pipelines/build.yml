@@ -1,0 +1,41 @@
+# build solution only
+variables:
+  solution: 'linq2db.sln'
+  build_configuration: 'Azure'
+  assemblyVersion: 3.0.0
+
+# allways trigger on PRs
+trigger: none
+pr:
+  branches:
+    include:
+    - '*'
+
+stages:
+
+###############
+#  Build only #
+###############
+- stage: ''
+  displayName: ''
+  jobs:
+  - job: build_job
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Build'
+
+    steps:
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        workingDirectory: '$(Build.SourcesDirectory)'
+        arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      displayName: Update assembly version
+
+    - task: MSBuild@1
+      inputs:
+        solution: '$(solution)'
+        configuration: '$(build_configuration)'
+        msbuildArguments: '/t:Restore;Rebuild -m'
+      displayName: Build Solution

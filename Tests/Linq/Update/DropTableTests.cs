@@ -80,7 +80,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
+		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

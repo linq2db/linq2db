@@ -15,7 +15,7 @@
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter) element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
+				if (p.Type.SystemType.IsScalar(false))
 					p.IsQueryParameter = false;
 			}
 		}
@@ -34,7 +34,7 @@
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
+				if (p.Type.SystemType.IsScalar(false))
 					p.IsQueryParameter = false;
 				return false;
 			}
@@ -58,17 +58,29 @@
 			{
 				var insertOrUpdate = (SqlInsertOrUpdateStatement)statement;
 				foreach (var key in insertOrUpdate.Insert.Items)
-					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+					new QueryVisitor().Visit(key.Expression!, SetNonQueryParameter);
 
 				foreach (var key in insertOrUpdate.Update.Items)
-					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+					new QueryVisitor().Visit(key.Expression!, SetNonQueryParameter);
 
 				foreach (var key in insertOrUpdate.Update.Keys)
-					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+					new QueryVisitor().Visit(key.Expression!, SetNonQueryParameter);
+			}
+			else if (statement.QueryType == QueryType.Update)
+			{
+				var update = (SqlUpdateStatement)statement;
+				foreach (var key in update.Update.Items)
+					new QueryVisitor().Visit(key.Expression!, SetNonQueryParameter);
+
+				foreach (var key in update.Update.Keys)
+					new QueryVisitor().Visit(key.Expression!, SetNonQueryParameter);
 			}
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
@@ -103,7 +115,7 @@
 					case "Convert" :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							ISqlExpression ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}

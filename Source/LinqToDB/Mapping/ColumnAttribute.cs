@@ -51,7 +51,7 @@ namespace LinqToDB.Mapping
 		internal ColumnAttribute(string memberName, ColumnAttribute ca)
 			: this(ca)
 		{
-			MemberName = memberName + "." + ca.MemberName.TrimStart('.');
+			MemberName = memberName + "." + ca.MemberName!.TrimStart('.');
 		}
 
 		/// <summary>
@@ -87,13 +87,13 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of a column in database.
 		/// If not specified, member name will be used.
 		/// </summary>
-		public string Name { get; set; }
+		public string? Name { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of mapped member.
@@ -123,7 +123,7 @@ namespace LinqToDB.Mapping
 		/// </code>
 		/// </example>
 		/// </summary>
-		public string MemberName { get; set; }
+		public string? MemberName { get; set; }
 
 		/// <summary>
 		/// Gets or sets linq2db type for column.
@@ -135,7 +135,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of the database column type.
 		/// Default value: default type, defined for member type in mapping schema.
 		/// </summary>
-		public string DbType { get; set; }
+		public string? DbType { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag that tells that current member should be included into mapping.
@@ -148,7 +148,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets a storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string Storage { get; set; }
+		public string? Storage { get; set; }
 
 		/// <summary>
 		/// Gets or sets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
@@ -161,10 +161,10 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
+		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public  bool   SkipOnInsert
+		public bool   SkipOnInsert
 		{
 			get => _skipOnInsert ?? false;
 			set => _skipOnInsert = value;
@@ -180,7 +180,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string )"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool   SkipOnUpdate
@@ -304,14 +304,14 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable, string)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string CreateFormat { get; set; }
+		public string? CreateFormat { get; set; }
 
 		private int? _order;
 		/// <summary>

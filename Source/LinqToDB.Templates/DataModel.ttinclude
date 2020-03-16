@@ -20,6 +20,7 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
+string   ServerName                    = null;
 string   DatabaseName                  = null;
 string   DataContextName               = null;
 string   BaseDataContextClass          = null;
@@ -44,6 +45,7 @@ bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
 bool NormalizeNames                      = true;
+bool NormalizeNamesWithoutUnderscores    = false;
 static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
@@ -360,6 +362,11 @@ string CheckType(Type type, string typeName)
 {
 	if (!Model.Usings.Contains(type.Namespace))
 		Model.Usings.Add(type.Namespace);
+
+	if (type.IsGenericType)
+		foreach (var argType in type.GetGenericArguments())
+			CheckType(argType, null);
+
 	return typeName;
 }
 
@@ -440,7 +447,7 @@ void LoadMetadata(DataConnection dataConnection)
 			col.MemberName = ConvertToCompilable(col.MemberName, true);
 
 			if (col.MemberName == t.TypeName)
-				col.MemberName += "_Column";
+				col.MemberName += "Column";
 		}
 
 		foreach (var fk in t.ForeignKeys.Values)
@@ -855,9 +862,12 @@ private int _counter = 0;
 
 string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
-	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
+	if (NormalizeNames)
 	{
-		name = SplitAndJoin(name, "", '_');
+		if (mayRemoveUnderscore && name.Contains("_"))
+			name = SplitAndJoin(name, "", '_');
+		else if (NormalizeNamesWithoutUnderscores)
+			name = NormalizeFragment(name);
 	}
 
 	if (name.Contains("."))
@@ -882,9 +892,14 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 static string SplitAndJoin(string value, string join, params char[] split)
 {
 	var ss = value.Split(split, StringSplitOptions.RemoveEmptyEntries)
-		.Select(s => char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1)));
+		.Select(NormalizeFragment);
 
 	return string.Join(join, ss.ToArray());
+}
+
+static string NormalizeFragment(string s)
+{
+	return char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 }
 
 private string GetAssociationExtensionSinglularNameDefault(ForeignKey key)

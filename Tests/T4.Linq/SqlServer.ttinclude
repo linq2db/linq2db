@@ -1,7 +1,0 @@
-﻿<#
-	GetConstructors = (conf, name) => new[]
-	{
-		new Method(null, name, new Func<string>[] { () => "int i" }),
-		new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } },
-	};
-#>

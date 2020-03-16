@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,11 +15,9 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if NETSTANDARD1_6 || NETSTANDARD2_0
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#else
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 			, new SystemDataLinqAttributeReader()
-			, new SystemDataSqlServerAttributeReader()
 #endif
 		);
 

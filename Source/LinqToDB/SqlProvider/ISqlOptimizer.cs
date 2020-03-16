@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 

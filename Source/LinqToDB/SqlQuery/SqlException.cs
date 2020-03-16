@@ -16,7 +16,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[JetBrains.Annotations.StringFormatMethod("message")]
-		public SqlException(string message, params object[] args)
+		public SqlException(string message, params object?[] args)
 			: base(string.Format(message, args))
 		{
 		}
@@ -31,14 +31,10 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		protected SqlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 		}
-
-#endif
 	}
 }
 

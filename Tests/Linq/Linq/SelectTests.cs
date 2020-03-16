@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 using System.Windows.Forms;
 #endif
 
@@ -10,7 +10,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -219,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test, Parallelizable(ParallelScope.None)]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -457,7 +458,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
@@ -549,6 +550,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -609,16 +611,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
-		public void SelectComplexField()
+		[Test]
+		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
 				var sql = q.ToString();
+				
+				Console.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
@@ -914,7 +918,7 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
-					ProviderName.SapHana)]
+					TestProvName.AllSapHana)]
 				string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -963,7 +967,7 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
 			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
@@ -1016,6 +1020,7 @@ namespace Tests.Linq
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(new []
 			{
 				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
@@ -1026,15 +1031,20 @@ namespace Tests.Linq
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						Child1 = c,
-						Child2 = c == null ? null : new ChildEntityObject{Id = c.Id, Value = c.Value},
-						Child3 = c != null ? c    : new ChildEntityObject{Id = 4, Value = "Generated"},
+						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
+						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
 						Child4 = c.Value != "Value 1" ? c : null,
+						SubChild = c == null
+							? db.GetTable<ChildEntityObject>()
+								.Select(sc => new ChildEntityObject
+									{ Id = sc.Id, Value = sc != null ? sc.Value : "NeverHappen" }).FirstOrDefault()
+							: c
 					};
 
 				var result = query.ToArray();
@@ -1090,7 +1100,89 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void TestConditionalRecursive([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c in db.Child.Take(1).DefaultIfEmpty()
+					select new
+					{
+						a = p.ParentID == 1 ? c != null ? "1" : "2" : "3"
+					};
+
+				_ = query.ToList();
+			}
+		}
+
+		class ParentResult
+		{
+			public ParentResult(int parentID, int? value1)
+			{
+				ParentID = parentID;
+				Value1 = value1;
+			}
+
+			public int? Value1 { get; }
+			public int ParentID { get; }
+		}
+
+		[Test]
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Value1 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select new ParentResult(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Value1 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery, ComparerBuilder.GetEqualityComparer<ParentResult>());
+			}
+		}
+
+		[Test]
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultQuery = from q in query
+					where q.Item2 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select Tuple.Create(p.ParentID, p.Value1);
+
+				var resultExpected = from q in queryExpected
+					where q.Item2 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery);
+			}
+		}
+
+
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1101,8 +1193,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1114,7 +1208,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1126,7 +1220,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1144,8 +1238,6 @@ namespace Tests.Linq
 			public int Value1 { get; }
 		}
 
-		//https://github.com/linq2db/linq2db/issues/1788
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
@@ -1169,7 +1261,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
@@ -1240,5 +1331,75 @@ namespace Tests.Linq
 					results);
 			}
 		}
+
+		[Test]
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12)] string context)
+		{
+			// TODO: eager loading
+			// using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c1 in db.Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = db.Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				query = query
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID);
+
+
+				var expectedQuery = 
+					from p in Parent
+					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
+					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
+					select new
+					{
+						Parent = p,
+						Child = c1,
+						Any = children.Any(),
+						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+					};
+
+				var actual = query.ToArray();
+
+				var expected = expectedQuery
+					.Distinct()
+					.OrderBy(_ => _.Parent.ParentID)
+					.ToArray();
+
+				AreEqual(expected, actual);
+			}
+		}
+		
+		[Test]
+		public void ToStringTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from p in db.GetTable<Parent>()
+					where p.ParentID == id
+					select p;
+
+				var sql1 = query.ToString();
+
+				id = 2;
+
+				var sql2 = query.ToString();
+				
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
+			}
+		}
+
 	}
 }

@@ -12,7 +12,12 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Mapping;
 
+#if NET46
 using IBM.Data.DB2;
+#else
+using IBM.Data.DB2.Core;
+#endif
+
 using IBM.Data.DB2Types;
 
 using NUnit.Framework;
@@ -120,6 +125,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
+			// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
 //			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 //			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 //			Debug.WriteLine("{0} -> auto", typeof(T));
@@ -247,6 +253,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 
+				// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
+				//Assert.That(conn.Execute<char> ("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				//Assert.That(conn.Execute<char?>("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1)) FROM SYSIBM.SYSDUMMY1", DataParameter.Char("p", '1')), Is.EqualTo('1'));
@@ -536,47 +545,42 @@ namespace Tests.DataProvider
 			//p.
 			//new IBM.Data.DB2Types.DB2RowId();
 
-			dynamic int64Value = null;
-			dynamic int32Value = null;
-			dynamic int16Value = null;
-
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = DB2Types.DB2Int64.CreateInstance(1);
-				int32Value = DB2Types.DB2Int32.CreateInstance(2);
-				int16Value = DB2Types.DB2Int16.CreateInstance(3);
-			});
+			var int64Value = new DB2Int64(1);
+			var int32Value = new DB2Int32(2);
+			var int16Value = new DB2Int16(3);
 
 			using (var conn = new DataConnection(context))
 			{
 				conn.Select(() => 1);
 
-				Assert.That(DB2Types.DB2Clob.CreateInstance(conn).IsNull, Is.True);
-				Assert.That(DB2Types.DB2Blob.CreateInstance(conn).IsNull, Is.True);
+				Assert.That(new DB2Clob((DB2Connection)conn.Connection).IsNull, Is.True);
+				Assert.That(new DB2Blob((DB2Connection)conn.Connection).IsNull, Is.True);
 			}
 
 			Assert.That(int64Value.Value, Is.TypeOf<long>    ().And.EqualTo(1));
 			Assert.That(int32Value.Value, Is.TypeOf<int>     ().And.EqualTo(2));
 			Assert.That(int16Value.Value, Is.TypeOf<short>   ().And.EqualTo(3));
 
-			var decimalValue          = DB2Types.DB2Decimal.     CreateInstance(4);
-			var decimalValueAsDecimal = DB2Types.DB2DecimalFloat.CreateInstance(5m);
-			var decimalValueAsDouble  = DB2Types.DB2DecimalFloat.CreateInstance(6.0);
-			var decimalValueAsLong    = DB2Types.DB2DecimalFloat.CreateInstance(7);
-			var realValue             = DB2Types.DB2Real.        CreateInstance(8);
-			var real370Value          = DB2Types.DB2Real370.     CreateInstance(9);
-			var stringValue           = DB2Types.DB2String.      CreateInstance("1");
-			var clobValue             = DB2Types.DB2Clob.        CreateInstance("2");
-			var binaryValue           = DB2Types.DB2Binary.      CreateInstance(new byte[] { 1 });
-			var blobValue             = DB2Types.DB2Blob.        CreateInstance(new byte[] { 2 });
-			var dateValue             = DB2Types.DB2Date.        CreateInstance(new DateTime(2000, 1, 1));
-			var timeValue             = DB2Types.DB2Time.        CreateInstance(new TimeSpan(1, 1, 1));
+#pragma warning disable CS0618
+			var decimalValue          = new DB2Decimal     (4m);
+#pragma warning restore CS0618
+			var decimalValueAsDecimal = new DB2DecimalFloat(5m);
+			var decimalValueAsDouble  = new DB2DecimalFloat(6.0);
+			var decimalValueAsLong    = new DB2DecimalFloat(7);
+			var realValue             = new DB2Real        (8);
+			var real370Value          = new DB2Real370     (9);
+			var stringValue           = new DB2String      ("1");
+			var clobValue             = new DB2Clob        ("2");
+			var binaryValue           = new DB2Binary      (new byte[] { 1 });
+			var blobValue             = new DB2Blob        (new byte[] { 2 });
+			var dateValue             = new DB2Date        (new DateTime(2000, 1, 1));
+			var timeValue             = new DB2Time        (new TimeSpan(1, 1, 1));
 
-			if (DB2Types.DB2DateTime.Type != null)
+			//if (DB2Types.DB2DateTime.Type != null)
 			{
-				var dateTimeValue1 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 2));
-				var dateTimeValue2 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 3).Ticks);
-				var timeStampValue = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 4));
+				var dateTimeValue1 = new DB2DateTime(new DateTime(2000, 1, 2));
+				var dateTimeValue2 = new DB2DateTime(new DateTime(2000, 1, 3).Ticks);
+				var timeStampValue = new DB2DateTime(new DateTime(2000, 1, 4));
 
 				Assert.That(dateTimeValue1.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 2)));
 				Assert.That(dateTimeValue2.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 3)));
@@ -596,32 +600,25 @@ namespace Tests.DataProvider
 			Assert.That(dateValue.            Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 1)));
 			Assert.That(timeValue.            Value, Is.TypeOf<TimeSpan>().And.EqualTo(new TimeSpan(1, 1, 1)));
 
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = DB2Types.DB2Int64.CreateInstance();
-				int32Value = DB2Types.DB2Int32.CreateInstance();
-				int16Value = DB2Types.DB2Int16.CreateInstance();
-			});
+			int64Value = new DB2Int64();
+			int32Value = new DB2Int32();
+			int16Value = new DB2Int16();
 
 			Assert.That(int64Value.IsNull, Is.True);
 			Assert.That(int32Value.IsNull, Is.True);
 			Assert.That(int16Value.IsNull, Is.True);
 
-			Assert.That(DB2Types.DB2Decimal.     CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2DecimalFloat.CreateInstance().IsNull, Is.False);
-			Assert.That(DB2Types.DB2Real.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Real370.     CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2String.      CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Binary.      CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Date.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Time.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2TimeStamp.   CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2RowId.       CreateInstance().IsNull, Is.True);
-
-			if (DB2Types.DB2DateTime.Type != null)
-			{
-				Assert.That(DB2Types.DB2DateTime.CreateInstance().IsNull, Is.True);
-			}
+			Assert.That(new DB2Decimal     ().IsNull, Is.True);
+			Assert.That(new DB2DecimalFloat().IsNull, Is.False);
+			Assert.That(new DB2Real        ().IsNull, Is.True);
+			Assert.That(new DB2Real370     ().IsNull, Is.True);
+			Assert.That(new DB2String      ().IsNull, Is.True);
+			Assert.That(new DB2Binary      ().IsNull, Is.True);
+			Assert.That(new DB2Date        ().IsNull, Is.True);
+			Assert.That(new DB2Time        ().IsNull, Is.True);
+			Assert.That(new DB2TimeStamp   ().IsNull, Is.True);
+			Assert.That(new DB2RowId       ().IsNull, Is.True);
+			Assert.That(new DB2DateTime    ().IsNull, Is.True);
 		}
 
 		[Table]

@@ -91,7 +91,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Event, triggered before context connection closed using <see cref="Close"/> method.
 		/// </summary>
-		event EventHandler  OnClosing;
+		event EventHandler?  OnClosing;
 
 		/// <summary>
 		/// Returns query runner service for current context.
@@ -101,6 +101,6 @@ namespace LinqToDB
 		/// <param name="expression">Query results mapping expression.</param>
 		/// <param name="parameters">Query parameters.</param>
 		/// <returns>Query runner service.</returns>
-		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters);
+		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters);
 	}
 }

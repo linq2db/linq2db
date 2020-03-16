@@ -1,51 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Data.OleDb;
-using System.IO;
-using System.Runtime.InteropServices;
+using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Configuration;
 	using Common;
 	using Data;
-	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class AccessDataProvider : DataProviderBase
+	public class AccessDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
-		private readonly OleDbType _decimalType = OleDbType.Decimal;
 		public AccessDataProvider()
 			: this(ProviderName.Access, new AccessMappingSchema())
 		{
 		}
 
 		protected AccessDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, OleDbProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter      = false;
-			SqlProviderFlags.IsSkipSupported             = false;
-			SqlProviderFlags.IsCountSubQuerySupported    = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
-			SqlProviderFlags.TakeHintsSupported          = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported        = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported = false;
-			SqlProviderFlags.IsDistinctOrderBySupported  = false;
+			SqlProviderFlags.AcceptsTakeAsParameter           = false;
+			SqlProviderFlags.IsSkipSupported                  = false;
+			SqlProviderFlags.IsCountSubQuerySupported         = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
+			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported             = false;
+			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
+			SqlProviderFlags.IsDistinctOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsParameterOrderDependent        = true;
+			SqlProviderFlags.IsUpdateFromSupported            = false;
 
-			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", (r, i) => DataTools.GetChar(r, i));
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetProviderField<IDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
+			SetProviderField<IDataReader, DateTime, DateTime>((r, i) => GetDateTime(r, i));
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
-
-			if (System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != ".")
-				_decimalType = OleDbType.VarChar;
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -58,17 +52,9 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-		public override string ConnectionNamespace => typeof(OleDbConnection).Namespace;
-		public override Type   DataReaderType      => typeof(OleDbDataReader);
-
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
-		{
-			return new OleDbConnection(connectionString);
-		}
-
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new AccessSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -78,90 +64,52 @@ namespace LinqToDB.DataProvider.Access
 			return _sqlOptimizer;
 		}
 
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return typeof(OleDbConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
-
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new AccessSchemaProvider();
+			return new AccessSchemaProvider(this);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
-			// Do some magic to workaround 'Data type mismatch in criteria expression' error
-			// in JET for some european locales.
-			//
+			OleDbType? type = null;
 			switch (dataType.DataType)
 			{
-				// OleDbType.Decimal is locale aware, OleDbType.Currency is locale neutral.
-				//
-				case DataType.Decimal    :
-				case DataType.VarNumeric :
-					((OleDbParameter)parameter).OleDbType = _decimalType; return;
-
-				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
-				//
-				case DataType.DateTime   :
-				case DataType.DateTime2  : ((OleDbParameter)parameter).OleDbType = OleDbType.Date;         return;
-
-				case DataType.Text       : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarChar;  return;
-				case DataType.NText      : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarWChar; return;
+				case DataType.DateTime  :
+				case DataType.DateTime2 : type = OleDbType.Date        ; break;
+				case DataType.Text      : type = OleDbType.LongVarChar ; break;
+				case DataType.NText     : type = OleDbType.LongVarWChar; break;
 			}
 
-			base.SetParameterType(parameter, dataType);
-		}
-
-		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
-		class CatalogClass
-		{
-		}
-
-		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool   deleteIfExists = false)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			databaseName = databaseName.Trim();
-
-			if (!databaseName.ToLower().EndsWith(".mdb"))
-				databaseName += ".mdb";
-
-			if (File.Exists(databaseName))
+			if (type != null)
 			{
-				if (!deleteIfExists)
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
 					return;
-				File.Delete(databaseName);
+				}
 			}
 
-			var connectionString = string.Format(
-				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
-				databaseName);
+			switch (dataType.DataType)
+			{
+				// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
+				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
+				// doesn't work for all situations
+				case DataType.Decimal   :
+				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
+				case DataType.DateTime  :
+				case DataType.DateTime2 : parameter.DbType = DbType.DateTime;   return;
+				case DataType.Text      : parameter.DbType = DbType.AnsiString; return;
+				case DataType.NText     : parameter.DbType =  DbType.String;    return;
+			}
 
-			CreateFileDatabase(
-				databaseName, deleteIfExists, ".mdb",
-				dbName =>
-				{
-					dynamic catalog = new CatalogClass();
-
-					var conn = catalog.Create(connectionString);
-
-					if (conn != null)
-						conn.Close();
-				});
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
-		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
-
-			DropFileDatabase(databaseName, ".mdb");
-		}
-
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 
 			return new AccessBulkCopy().BulkCopy(
@@ -171,6 +119,6 @@ namespace LinqToDB.DataProvider.Access
 				source);
 		}
 
-		#endregion
+#endregion
 	}
 }

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Specialized;
-
+﻿using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Collections.Generic;
-	using System.Linq;
 	using Configuration;
 
 	[UsedImplicitly]
@@ -15,10 +12,7 @@ namespace LinqToDB.DataProvider.Sybase
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			if (assemblyName != null)
-				SybaseTools.AssemblyName = assemblyName.Value;
-
-			return new SybaseDataProvider();
+			return SybaseTools.GetDataProvider(null, assemblyName?.Value);
 		}
 	}
 }

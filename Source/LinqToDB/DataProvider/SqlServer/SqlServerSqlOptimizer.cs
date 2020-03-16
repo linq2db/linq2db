@@ -6,10 +6,22 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServerSqlOptimizer : BasicSqlOptimizer
+	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
-		public SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		private readonly SqlServerVersion _sqlVersion;
+
+		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
 		{
+			_sqlVersion = sqlVersion;
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			statement = SeparateDistinctFromPagination(statement);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement);
+			statement = ReplaceTakeSkipWithRowNumber(statement, false);
+			statement = QueryHelper.OptimizeSubqueries(statement);
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -26,12 +38,12 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							case "%":
 								{
-									var type1 = be.Expr1.SystemType.ToUnderlying();
+									var type1 = be.Expr1.SystemType!.ToUnderlying();
 
 									if (type1 == typeof(double) || type1 == typeof(float))
 									{
 										return new SqlBinaryExpression(
-											be.Expr2.SystemType,
+											be.Expr2.SystemType!,
 											new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, be.Expr1),
 											be.Operation,
 											be.Expr2);
@@ -53,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							case "Convert" :
 								{
 									if (func.SystemType.ToUnderlying() == typeof(ulong) &&
-										func.Parameters[1].SystemType.IsFloatType())
+										func.Parameters[1].SystemType!.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
@@ -81,13 +93,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					if (func.Name == "Convert")
 					{
-						var type1 = func.Parameters[1].SystemType.ToUnderlying();
+						var type1 = func.Parameters[1].SystemType!.ToUnderlying();
 
 						if (IsTimeDataType(func.Parameters[0]))
 						{
-							if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
-								return new SqlExpression(
-									func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
+							if (type1 == typeof(DateTimeOffset) || type1 == typeof(DateTime))
+								if (_sqlVersion >= SqlServerVersion.v2008)
+									return new SqlExpression(
+										func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, func.Parameters[1]);
+								else
+									return new SqlExpression(
+										func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
 
 							if (func.Parameters[1].SystemType == typeof(string))
 								return func.Parameters[1];

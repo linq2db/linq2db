@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
@@ -6,27 +7,28 @@ namespace LinqToDB.SqlQuery
 	{
 		public override bool               IsParameterDependent
 		{
-			get => SelectQuery.IsParameterDependent;
-			set => SelectQuery.IsParameterDependent = value;
+			get => SelectQuery!.IsParameterDependent;
+			set => SelectQuery!.IsParameterDependent = value;
 		}
 
-		private         SelectQuery _selectQuery;
-		public override SelectQuery  SelectQuery
+		private         SelectQuery? _selectQuery;
+		[NotNull]
+		public override SelectQuery?  SelectQuery
 		{
 			get => _selectQuery ?? (_selectQuery = new SelectQuery());
 			set => _selectQuery = value;
 		}
 
-		public SqlWithClause With { get; set; }
+		public SqlWithClause? With { get; set; }
 
-		protected SqlStatementWithQueryBase(SelectQuery selectQuery)
+		protected SqlStatementWithQueryBase(SelectQuery? selectQuery)
 		{
 			_selectQuery = selectQuery;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
-			var ts = SelectQuery.GetTableSource(table) ?? With?.GetTableSource(table);
+			var ts = SelectQuery!.GetTableSource(table) ?? With?.GetTableSource(table);
 			return ts;
 		}
 

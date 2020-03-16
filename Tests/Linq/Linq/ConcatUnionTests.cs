@@ -121,7 +121,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat5([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
+		public void Concat5([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -135,7 +135,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat501([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
+		public void Concat501([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -149,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat502([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
+		public void Concat502([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -261,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat87([DataSources(ProviderName.Informix)] string context)
+		public void Concat87([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -272,7 +272,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat871([DataSources(ProviderName.Informix)] string context)
+		public void Concat871([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -294,7 +294,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat89([DataSources(ProviderName.Informix)] string context)
+		public void Concat89([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -403,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union5([DataSources(ProviderName.Informix)] string context)
+		public void Union5([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -417,7 +417,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union51([DataSources(ProviderName.Informix)] string context)
+		public void Union51([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -429,7 +429,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union52([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void Union52([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -441,7 +441,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union521([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void Union521([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -455,7 +455,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union522([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void Union522([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -467,7 +467,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union523([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void Union523([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union53([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void Union53([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -860,7 +860,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			var testData = new[]
 			{
@@ -889,6 +889,7 @@ namespace Tests.Linq
 
 		}
 
+		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TestConcatWithParameterProjection([DataSources] string context)
 		{
@@ -935,5 +936,38 @@ namespace Tests.Linq
 			}
 		}
 
+		// https://github.com/linq2db/linq2db/issues/1774
+		[Test]
+		public void SelectFromUnion([IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = from p in db.Person where p.ID == 1 select new { p.ID };
+				var q2 = from p in db.Person where p.ID != 1 select new { p.ID };
+				var q = q1.Concat(q2);
+				var f = q.Select(t => new { t.ID, rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue() }).ToList();
+			}
+		}
+
+		// https://github.com/linq2db/linq2db/issues/1774
+		[Test]
+		public void SelectFromUnionReverse([IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = from p in db.Person where p.ID == 1 select new { p.ID };
+				var q2 = from p in db.Person where p.ID != 1 select new { p.ID };
+				var q = q1.Concat(q2);
+				var f = q.Select(t => new { rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue(), t.ID }).ToList();
+			}
+		}
 	}
 }

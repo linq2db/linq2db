@@ -47,8 +47,8 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Expr1 = Expr1.Walk(options, func);
-			Expr2 = Expr2.Walk(options, func);
+			Expr1 = Expr1.Walk(options, func)!;
+			Expr2 = Expr2.Walk(options, func)!;
 
 			return func(this);
 		}
@@ -63,6 +63,17 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public override int GetHashCode()
+		{
+			var hashCode = Operation.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+
+			return hashCode;
+		}
 
 		#region ISqlExpression Members
 

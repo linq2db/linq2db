@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Runtime.Serialization;
 
@@ -63,8 +64,6 @@ namespace LinqToDB.Common
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class
 		/// with serialized data.
@@ -78,8 +77,6 @@ namespace LinqToDB.Common
 			: base(info, context)
 		{
 		}
-
-#endif
 
 		/// <summary>
 		/// Gets name of misconfigured column, which caused exception.

@@ -6,14 +6,12 @@ namespace LinqToDB.Linq
 	public static class MethodHelper
 	{
 
-#if !NETSTANDARD1_6
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
 			if ((object)del == null)
 				throw new ArgumentNullException(nameof(del));
 			return del.Method;
 		}
-#endif
 
 		#region Helper methods to obtain MethodInfo in a safe way
 

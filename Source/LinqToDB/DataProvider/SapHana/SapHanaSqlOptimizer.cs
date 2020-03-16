@@ -13,20 +13,27 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		static void SetQueryParameter(IQueryElement element)
 		{
-			statement = base.Finalize(statement);
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				var p = (SqlParameter)element;
+
+				// enforce timespan as parameter
+				if (p.Type.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+					p.IsQueryParameter = true;
+			}
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete:
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					break;
-				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
-					break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
-
 			return statement;
 		}
 
@@ -34,9 +41,8 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlFunction)
+			if (expr is SqlFunction func)
 			{
-				var func = expr as SqlFunction;
 				if (func.Name == "Convert")
 				{
 					var ftype = func.SystemType.ToUnderlying();
@@ -50,10 +56,8 @@ namespace LinqToDB.DataProvider.SapHana
 					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
-			else if (expr is SqlBinaryExpression)
+			else if (expr is SqlBinaryExpression be)
 			{
-				var be = expr as SqlBinaryExpression;
-
 				switch (be.Operation)
 				{
 					case "%":

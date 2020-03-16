@@ -7,16 +7,19 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-
+using LinqToDB.Mapping;
 using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
+
+using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
+using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
 	{
-		private const string TYPE_NAME = "[dbo].[TestTableType]";
+		internal const string TYPE_NAME = "[dbo].[TestTableType]";
 		public class TVPRecord
 		{
 			public int?   Id   { get; set; }
@@ -24,7 +27,7 @@ namespace Tests.DataProvider
 			public string Name { get; set; }
 		}
 
-		private static TVPRecord[] TestData = new[]
+		internal static TVPRecord[] TestData = new[]
 		{
 			new TVPRecord(),
 			new TVPRecord() { Id = 1, Name = "Value1" },
@@ -61,14 +64,32 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public static IEnumerable<SqlDataRecordMS> GetSqlDataRecordsMS()
+		{
+			var sqlRecord = new SqlDataRecordMS(
+				new SqlMetaDataMS("Id", SqlDbType.Int),
+				new SqlMetaDataMS("Name", SqlDbType.NVarChar, 10));
+
+			foreach (var record in TestData)
+			{
+				sqlRecord.SetValue(0, record.Id);
+				sqlRecord.SetValue(1, record.Name);
+
+				yield return sqlRecord;
+			}
+		}
+
 		public static IEnumerable<Func<DataConnection, object>> ParameterFactories
 		{
 			get
 			{
 				// as DataTable
 				yield return _ => GetDataTable();
+
 				// as IEnumerable<SqlDataRecord>
-				yield return _ => GetSqlDataRecords();
+				yield return _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection
+				? (object)GetSqlDataRecordsMS()
+				: GetSqlDataRecords();
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
@@ -152,6 +173,47 @@ namespace Tests.DataProvider
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
 				AreEqualWithComparer(TestData, result);
+			}
+		}
+
+		[Table]
+		public class TestMergeTVPTable
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public string Name { get; set; }
+		}
+
+		[Test]
+		public void TableValuedParameterInMergeSource(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
+			[ValueSource(nameof(QueryDataParameterFactories))] Func<DataConnection, DataParameter> parameterGetter)
+		{
+			using (var external = new DataConnection(context))
+			using (var db = new DataConnection(context))
+			using (var table = db.CreateTempTable<TestMergeTVPTable>())
+			{
+				var cnt = table
+					.Merge()
+					.Using(db.FromSql<TVPRecord>($"{parameterGetter(external)}").Where(_ => _.Id != null))
+					.On((t, s) => t.Id == s.Id)
+					.InsertWhenNotMatched(s => new TestMergeTVPTable()
+					{
+						Id = s.Id.Value,
+						Name = s.Name
+					})
+					.Merge();
+
+				var data = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, cnt);
+				Assert.AreEqual(2, data.Length);
+				Assert.AreEqual(1, data[0].Id);
+				Assert.AreEqual("Value1", data[0].Name);
+				Assert.AreEqual(2, data[1].Id);
+				Assert.AreEqual("Value2", data[1].Name);
 			}
 		}
 

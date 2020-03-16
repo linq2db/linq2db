@@ -12,6 +12,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSchemaProvider : SchemaProviderBase
 	{
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
+		{
+			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
+			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
+				return new DatabaseSchema();
+
+			return base.GetSchema(dataConnection, options);
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
@@ -74,7 +83,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
@@ -83,7 +92,7 @@ namespace LinqToDB.DataProvider.SQLite
 				from c in cs.AsEnumerable()
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE")
+				let dataType = c.Field<string>("DATA_TYPE").Trim()
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
@@ -101,7 +110,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 
@@ -134,12 +143,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return result;
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			return dbConnection.DataSource;
+			return ((DbConnection)connection.Connection).DataSource;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -193,12 +202,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
