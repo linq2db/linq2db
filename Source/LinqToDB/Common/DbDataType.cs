@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Common
 {
@@ -58,7 +59,8 @@ namespace LinqToDB.Common
 		public int?     Precision  { get; }
 		public int?     Scale      { get; }
 
-		public DbDataType WithoutSystemType(DbDataType from ) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public DbDataType WithoutSystemType(DbDataType       from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public DbDataType WithoutSystemType(ColumnDescriptor from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 
 		public DbDataType WithSystemType(Type     systemType) => new DbDataType(systemType, DataType, DbType, Length, Precision, Scale);
 		public DbDataType WithDataType  (DataType dataType  ) => new DbDataType(SystemType, dataType, DbType, Length, Precision, Scale);

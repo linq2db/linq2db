@@ -12,23 +12,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		static void SetQueryParameter(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-
-				// enforce DateTimeOffset as parameter
-				if (p.Type.SystemType.ToNullableUnderlying() == typeof(DateTimeOffset))
-					p.IsQueryParameter = true;
-			}
-		}
-
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, 30);
-
-			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			return base.Finalize(statement);
 		}
@@ -111,6 +97,13 @@ namespace LinqToDB.DataProvider.Oracle
 									}
 
 									return new SqlFunction(func.SystemType, "TO_DATE", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
+								}
+								else if (IsDateDataOffsetType(func.Parameters[0]))
+								{
+									if (ftype == typeof(DateTimeOffset))
+										return func.Parameters[1];
+
+									return new SqlFunction(func.SystemType, "TO_TIMESTAMP_TZ", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 								}
 
 								return new SqlFunction(func.SystemType, "TO_TIMESTAMP", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
