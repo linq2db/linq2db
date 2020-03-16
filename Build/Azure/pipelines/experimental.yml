@@ -8,6 +8,10 @@ variables:
   netcore21_tests: 'netcoreapp21_tests'
 
 trigger: none
+pr:
+  branches:
+    include:
+    - '*' # https://status.dev.azure.com/_event/179641421
 
 stages:
 
