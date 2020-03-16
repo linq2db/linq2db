@@ -39,7 +39,7 @@ stages:
       inputs:
         solution: '$(solution)'
         configuration: '$(build_configuration)'
-        msbuildArguments: '/t:Restore;Rebuild -m'
+        msbuildArguments: '/t:Clean;Restore;Rebuild -m'
       displayName: Build Solution
 
 # need it for DotNetCoreCLI task be able to build C#8 project
