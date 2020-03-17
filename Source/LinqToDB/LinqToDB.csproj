@@ -30,6 +30,8 @@
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 
+		<PackageReference Include="Npgsql" Version="3.2.7" />
+
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
