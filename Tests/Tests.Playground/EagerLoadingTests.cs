@@ -70,6 +70,23 @@ namespace Tests.Playground
 			[Column] public string SubDetailValue { get; set; }
 		}
 
+		class SubDetailDTO
+		{
+			public int SubDetailId    { get; set; }
+			public int? DetailId    { get; set; }
+			public string SubDetailValue { get; set; }
+		}
+
+		static IQueryable<SubDetailDTO> MakeDTO(IQueryable<SubDetailClass> details)
+		{
+			return details.Select(d => new SubDetailDTO
+			{
+				//DetailId = d.DetailId,
+				//SubDetailId = d.SubDetailId,
+				SubDetailValue = d.SubDetailValue + "_Projected"
+			});
+		}
+
 		(MasterClass[], DetailClass[]) GenerateData()
 		{
 			var master = Enumerable.Range(1, 10).Select(i => new MasterClass { Id1 = i, Id2 = i, Value = "Str" + i })
@@ -193,6 +210,39 @@ namespace Tests.Playground
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
+
+		[Test]
+		public void TestMethodMappedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+			var intParam = 1;
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = from m in master
+					where m.Id1 >= intParam
+					select new 
+					{
+						Id1 = m.Id1,
+						Id2 = m.Id2,
+						Value = m.Value,
+						Details = m.Details.Select(d => new 
+						{
+							DetailId = d.DetailId,
+							DetailValue = d.DetailValue,
+							MasterId = d.MasterId,
+							SubDetails = MakeDTO(d.SubDetails.AsQueryable()).ToArray()
+						}).ToList(),
+					};;
+
+				var result = query.ToList();
+			}
+		}
+
 
 		[Test]
 		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite)] string context)

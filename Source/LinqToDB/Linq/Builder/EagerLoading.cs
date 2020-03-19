@@ -557,12 +557,6 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		static IQueryable CreateEmptyQuery(Type elementType)
-		{
-			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
-			return (IQueryable)method.Invoke(null, Array<object>.Empty);
-		}
-
 		static Expression MakeAsQueryable(Expression expression, MappingSchema mappingSchema)
 		{
 			if (typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
@@ -604,7 +598,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var filterFunc   = (Delegate)found[found.Length - 1].Item2.EvaluateExpression();
 						var elementType  = GetEnumerableElementType(detailExpression.Type, mappingSchema);
-						var fakeQuery    = CreateEmptyQuery(elementType);
+						var fakeQuery    = Tools.CreateEmptyQuery(elementType);
 						var appliedQuery = (IQueryable)filterFunc.DynamicInvoke(fakeQuery);
 
 						var queryableExpression = MakeAsQueryable(detailExpression, mappingSchema);
@@ -1624,9 +1618,12 @@ namespace LinqToDB.Linq.Builder
 
 									if (arg != newArg)
 									{
-										if (newArg.Unwrap().NodeType == ExpressionType.Lambda)
+										if (typeof(Expression<>).IsSameOrParentOf(genericParameters[i].ParameterType) 
+										    && newArg.Unwrap().NodeType == ExpressionType.Lambda)
+										{
 											newArg = Expression.Quote(CorrectLambdaType((LambdaExpression)arg.Unwrap(),
 												(LambdaExpression)newArg.Unwrap()));
+										}
 
 
 										methodNeedsUpdate = true;

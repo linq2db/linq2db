@@ -10,6 +10,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using Reflection;
+
 	/// <summary>
 	/// Various general-purpose helpers.
 	/// </summary>
@@ -132,6 +134,12 @@ namespace LinqToDB.Common
 		public static IQueryable<T> CreateEmptyQuery<T>()
 		{
 			return Enumerable.Empty<T>().AsQueryable();
+		}
+
+		public static IQueryable CreateEmptyQuery(Type elementType)
+		{
+			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
+			return (IQueryable)method.Invoke(null, Array<object>.Empty);
 		}
 
 		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
