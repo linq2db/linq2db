@@ -285,6 +285,12 @@ namespace Tests.Linq
 			public int Id { get; set; }
 			[Column(Length = 50)]
 			public string Value { get; set; }
+
+			[Column]
+			public int? MainItemId { get; set; }
+
+			[Association(ThisKey = nameof(MainItemId), OtherKey = nameof(LoadWithTests.MainItem.Id), CanBeNull = true)]
+			public MainItem MainItem { get;set; }
 		}
 
 		class SubItem1
@@ -340,7 +346,8 @@ namespace Tests.Linq
 			var mainItems2 = Enumerable.Range(0, 5).Select(i => new MainItem2
 			{
 				Id = i * 2,
-				Value = "Main2_" + i
+				Value = "Main2_" + i,
+				MainItemId = i
 			}).ToArray();
 
 
@@ -461,6 +468,32 @@ namespace Tests.Linq
 					.ThenLoad(si => si.SubSubItems, qsi => qsi.LoadWith(_ => _.ParentSubItem));
 
 				var result2 = query2.ToArray();
+
+			}
+		}
+
+		[Test]
+		public void LoadWithPlain([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem2>()
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.MainItem)
+					.ThenLoad(m => m.SubItems2);
+
+				var result = query.ToArray();
 
 			}
 		}
