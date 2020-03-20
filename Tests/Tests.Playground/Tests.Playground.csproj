@@ -9,13 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Data\DataExtensionsTests.cs" Link="DataExtensionsTests.cs" />
-		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
-		<Compile Include="..\Linq\Linq\AsyncTests.cs" Link="AsyncTests.cs" />
-		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
-		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue488Tests.cs" Link="Issue488Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue973Tests.cs" Link="Issue973Tests.cs" />
 	</ItemGroup>
 
 </Project>
