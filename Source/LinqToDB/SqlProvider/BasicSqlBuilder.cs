@@ -2401,9 +2401,9 @@ namespace LinqToDB.SqlProvider
 				return text;
 
 			text = text.Replace("\r", "");
-
-	        var strArray = text.Split('\n');
-	        var sb = new StringBuilder();
+			
+			var strArray = text.Split('\n'); 
+			var sb = new StringBuilder();
 			for (var i = 0; i < strArray.Length; i++)
 			{
 				var s = strArray[i];
