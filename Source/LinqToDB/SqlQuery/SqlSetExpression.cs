@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
-		public SqlSetExpression(ISqlExpression column, ISqlExpression expression)
+		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
 			Column     = column;
 			Expression = expression;

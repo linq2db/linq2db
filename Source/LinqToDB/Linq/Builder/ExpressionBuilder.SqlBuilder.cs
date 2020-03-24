@@ -1076,6 +1076,16 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method.IsSqlPropertyMethodEx())
 							return ConvertToSql(context, ConvertExpression(expression), unwrap);
 
+						if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
+						{
+							// TODO: move PrepareRawSqlArguments to more correct location
+							TableBuilder.PrepareRawSqlArguments(e, null,
+								out var format, out var arguments);
+							var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
+
+							return new SqlExpression(e.Type, format, Precedence.Primary, sqlArguments);
+						}
+
 						break;
 					}
 

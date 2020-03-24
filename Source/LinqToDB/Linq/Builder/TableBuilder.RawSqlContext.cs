@@ -32,8 +32,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mc = (MethodCallExpression)formatArg;
 
-				format    = (string)mc.Arguments[0].EvaluateExpression()!;
-				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
+				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
+				{
+					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					arguments = mc.Arguments.Skip(1).ToArray();
+				}
+				else
+				{
+					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
+				}
 			}
 			else
 			{

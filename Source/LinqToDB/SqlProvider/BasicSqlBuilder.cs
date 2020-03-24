@@ -570,11 +570,15 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 
 				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
-				StringBuilder.Append(" = ");
 
-				var addAlias = false;
+				if (expr.Expression != null)
+				{
+					StringBuilder.Append(" = ");
 
-				BuildColumnExpression(selectQuery, expr.Expression!, null, ref addAlias);
+					var addAlias = false;
+
+					BuildColumnExpression(selectQuery, expr.Expression, null, ref addAlias);
+				}
 			}
 
 			Indent--;
