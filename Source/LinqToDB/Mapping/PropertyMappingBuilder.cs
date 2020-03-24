@@ -462,5 +462,9 @@ namespace LinqToDB.Mapping
 			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}
 
+		public PropertyMappingBuilder<T> HasConversion<TR>(Expression<Func<T, TR>> toProvider, Expression<Func<T, TR>> toModel)
+		{
+			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
+		}
 	}
 }
