@@ -27,20 +27,20 @@ namespace LinqToDB.Linq.Builder
 			public string Path => this.GetPath();
 #endif
 
-			public ExpressionBuilder   Builder     { get; }
-			public Expression          Expression  { get; } = null!;
+			public ExpressionBuilder  Builder     { get; }
+			public Expression          Expression { get; } = null!;
 
-			public SelectQuery         SelectQuery { get; set; }
-			public SqlStatement?       Statement   { get; set; }
+			public SelectQuery        SelectQuery { get; set; }
+			public SqlStatement?       Statement  { get; set; }
 
-			public List<MemberInfo[]>? LoadWith    { get; set; }
+			public List<Tuple<MemberInfo, Expression?>[]>? LoadWith    { get; set; }
 
 			public virtual IBuildContext? Parent   { get; set; }
 
-			public Type             OriginalType = null!;
-			public Type             ObjectType = null!;
+			public Type             OriginalType     = null!;
+			public Type             ObjectType       = null!;
 			public EntityDescriptor EntityDescriptor = null!;
-			public SqlTable         SqlTable = null!;
+			public SqlTable         SqlTable         = null!;
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
@@ -808,7 +808,7 @@ namespace LinqToDB.Linq.Builder
 									ISqlExpression sql = SqlTable;
 									if (SqlTable is SqlRawSqlTable)
 									{
-										sql                  = SqlTable.All;
+										sql                        = SqlTable.All;
 										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType) ?? new DbDataType(OriginalType);
 									}
 
@@ -1004,7 +1004,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
 				{	
-					var expression = association.Builder.DataContext.GetTable<T>();
+					IQueryable<T> expression = association.Builder.DataContext.GetTable<T>();
 
 					var loadWith = association.GetLoadWith();
 
@@ -1020,19 +1020,45 @@ namespace LinqToDB.Linq.Builder
 							foreach (var member in members)
 							{
 								if (isPrevList)
-									obj = new GetItemExpression(obj);
+									obj = new GetItemExpression(obj, association.Builder.MappingSchema);
 
-								obj = Expression.MakeMemberAccess(obj, member);
+								obj = Expression.MakeMemberAccess(obj, member.Item1);
 
 								isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
 							}
 
-							expression = expression.LoadWith(Expression.Lambda<Func<T,object>>(obj, pLoadWith));
+							var queryFilter = members[members.Length - 1].Item2;
+
+							if (queryFilter == null)
+							{
+								var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
+
+								var lambda = Expression.Lambda(obj, pLoadWith);
+								expression = (IQueryable<T>)method.Invoke(null, new object[] { expression, lambda });
+							}
+							else
+							{
+//								var method =
+//									(isPrevList
+//										? Methods.LinqToDB.LoadWithQueryMany
+//										: Methods.LinqToDB.LoadWithQuerySingle).MakeGenericMethod(typeof(T), EagerLoading.GetEnumerableElementType(obj.Type, association.Builder.MappingSchema));
+								var method =
+									(isPrevList
+										? Methods.LinqToDB.LoadWithQueryMany
+										: Methods.LinqToDB.LoadWithQuerySingle).MakeGenericMethod(typeof(T), EagerLoading.GetEnumerableElementType(obj.Type, association.Builder.MappingSchema));
+
+								if (isPrevList)
+									obj = EagerLoading.EnsureEnumerable(obj, association.Builder.MappingSchema);
+
+								var lambda = Expression.Lambda(obj, pLoadWith);
+
+								expression = (IQueryable<T>)method.Invoke(null, new object[] { expression, lambda, queryFilter.EvaluateExpression()! });
+							}
 						}
 					}
 
 					Expression? expr  = null;
-					var         param = Expression.Parameter(typeof(T), "c");
+					var        param = Expression.Parameter(typeof(T), "c");
 
 					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
 
@@ -1225,11 +1251,11 @@ namespace LinqToDB.Linq.Builder
 
 			protected class LoadWithItem
 			{
-				public MemberInfo         MemberInfo   = null!;
-				public List<MemberInfo[]> NextLoadWith = null!;
+				public MemberInfo                             MemberInfo   = null!;
+				public List<Tuple<MemberInfo, Expression?>[]> NextLoadWith = null!;
 			}
 
-			protected List<LoadWithItem> GetLoadWith(List<MemberInfo[]> infos)
+			protected List<LoadWithItem> GetLoadWith(List<Tuple<MemberInfo, Expression?>[]> infos)
 			{
 				return
 				(
@@ -1240,7 +1266,7 @@ namespace LinqToDB.Linq.Builder
 						tail = lw.Skip(1).ToArray()
 					}
 					into info
-					group info by info.head into gr
+					group info by info.head.Item1 into gr
 					select new LoadWithItem
 					{
 						MemberInfo   = gr.Key,
@@ -1249,7 +1275,7 @@ namespace LinqToDB.Linq.Builder
 				).ToList();
 			}
 
-			protected internal virtual List<MemberInfo[]>? GetLoadWith()
+			protected internal virtual List<Tuple<MemberInfo, Expression?>[]>? GetLoadWith()
 			{
 				return LoadWith;
 			}
@@ -1429,8 +1455,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				public TableContext    Table = null!;
 				public ISqlExpression? Field;
-				public int             Level;
-				public bool            IsNew;
+				public int            Level;
+				public bool           IsNew;
 			}
 
 			TableLevel? FindTable(Expression? expression, int level, bool throwException, bool throwExceptionForNull)

@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsParameterOrderDependent        = true;
 			SqlProviderFlags.IsUpdateFromSupported            = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
 
 			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", (r, i) => DataTools.GetChar(r, i));

@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Data.Common;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using Reflection;
+
 	/// <summary>
 	/// Various general-purpose helpers.
 	/// </summary>
@@ -119,6 +123,23 @@ namespace LinqToDB.Common
 			str = str.Replace("\n",   " ");
 
 			return str.Trim();
+		}
+
+		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		{
+			foreach (var item in items) 
+				hashSet.Add(item);
+		}
+
+		public static IQueryable<T> CreateEmptyQuery<T>()
+		{
+			return Enumerable.Empty<T>().AsQueryable();
+		}
+
+		public static IQueryable CreateEmptyQuery(Type elementType)
+		{
+			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
+			return (IQueryable)method.Invoke(null, Array<object>.Empty);
 		}
 
 		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
