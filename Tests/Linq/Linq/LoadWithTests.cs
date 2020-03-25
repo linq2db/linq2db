@@ -82,10 +82,11 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith4([DataSources] string context)
 		{
-			MappingSchema.Default.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
+			var ms = new MappingSchema();
+			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
 			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
 			{
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
@@ -242,5 +243,260 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Test]
+		public void LoadWith12([DataSources(ProviderName.Access)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					(from p in db.Parent.LoadWith(p => p.Children[0].Parent.Children)
+					where p.ParentID < 2
+					select new
+					{
+						p,
+					});
+
+				var result = q1.FirstOrDefault();
+
+				Assert.DoesNotThrow(() => result.p.Children.Single().Parent.Children.Single());
+			}
+		}
+
+
+		class MainItem
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column(Length = 50)]
+			public string Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem1.ParentId))]
+			public SubItem1[] SubItems1 { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem2.ParentId))]
+			public SubItem2[] SubItems2 { get; set; }
+		}
+
+		class MainItem2
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column(Length = 50)]
+			public string Value { get; set; }
+
+			[Column]
+			public int? MainItemId { get; set; }
+
+			[Association(ThisKey = nameof(MainItemId), OtherKey = nameof(LoadWithTests.MainItem.Id), CanBeNull = true)]
+			public MainItem MainItem { get;set; }
+		}
+
+		class SubItem1
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column(Length = 50)]
+			public string Value { get; set; }
+			[Column]
+			public int? ParentId { get; set; }
+
+			public MainItem Parent { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem1_Sub.ParentId))]
+			public SubItem1_Sub[] SubSubItems { get; set; }
+		}
+
+		class SubItem1_Sub
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column(Length = 50)]
+			public string Value { get; set; }
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(SubItem1.Id))]
+			public SubItem1 ParentSubItem { get; set; }
+		}
+
+
+		class SubItem2
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column(Length = 50)]
+			public string Value { get; set; }
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(MainItem.Id))]
+			public MainItem Parent { get; set; }
+		}
+
+		Tuple<MainItem[], MainItem2[], SubItem1[], SubItem1_Sub[], SubItem2[]> GenerateTestData()
+		{
+			var mainItems = Enumerable.Range(0, 10).Select(i => new MainItem
+			{
+				Id = i,
+				Value = "Main_" + i
+			}).ToArray();
+
+			var mainItems2 = Enumerable.Range(0, 5).Select(i => new MainItem2
+			{
+				Id = i * 2,
+				Value = "Main2_" + i,
+				MainItemId = i
+			}).ToArray();
+
+
+			var subItems1 = Enumerable.Range(0, 20).Select(i => new SubItem1
+			{
+				Id = i * 10,
+				Value = "Sub1_" + i,
+				ParentId = i % 2 == 0 ? (int?)i / 2 : null
+			}).ToArray();
+
+			var subSubItems1 = Enumerable.Range(0, 20).Select(i => new SubItem1_Sub()
+			{
+				Id = i * 100,
+				Value = "SubSub1_" + i,
+				ParentId = (i * 10) / 3
+			}).ToArray();
+
+			var subItems2 = Enumerable.Range(0, 20).Select(i => new SubItem2
+			{
+				Id = i * 10,
+				Value = "Sub2_" + i,
+				ParentId = i % 2 == 0 ? (int?)i / 2 : null
+			}).ToArray();
+
+			return Tuple.Create(mainItems, mainItems2, subItems1, subSubItems1, subItems2);
+		}
+
+
+		[Test]
+		public void LoadWithAndFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem>()
+					from m2 in db.GetTable<MainItem2>().InnerJoin(m2 => m2.Id == m.Id)
+					from mm in db.GetTable<MainItem2>().InnerJoin(mm => mm.Id == m2.Id)
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1).ThenLoad(c => c.SubSubItems).ThenLoad(ss => ss.ParentSubItem)
+					.LoadWith(m => m.SubItems2);
+
+				var result = query.ToArray();
+			}
+		}
+
+		[Test]
+		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem>()
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1,
+						q => q
+							.Where(i => i.Id % 2 == 0)
+							.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
+							.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
+					);
+
+				var result = query.ToArray();
+
+				var query2 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
+
+				var result2 = query2.ToArray();
+			}
+		}
+
+		[Test]
+		public void LoadWithRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem>()
+					from mm in db.GetTable<MainItem2>().InnerJoin(mm => mm.Id == m.Id)
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1,
+						ms => ms.LoadWith(c => c.SubSubItems, cq => cq.LoadWith(ss => ss.ParentSubItem)))
+					.LoadWith(m => m.SubItems2);
+
+				var result = query.ToArray();
+
+				var query2 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(si => si.SubSubItems, qsi => qsi.LoadWith(_ => _.ParentSubItem));
+
+				var result2 = query2.ToArray();
+
+			}
+		}
+
+		[Test]
+		public void LoadWithPlain([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery = from m in db.GetTable<MainItem2>()
+					where m.Id > 1
+					select m;
+
+				var query = filterQuery
+					.LoadWith(m => m.MainItem)
+					.ThenLoad(m => m.SubItems2);
+
+				var result = query.ToArray();
+
+			}
+		}
+
 	}
 }

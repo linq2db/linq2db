@@ -22,8 +22,8 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object?[]?,object?> GetElement = null!;
-		public Func<IDataContext,Expression,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
@@ -149,6 +149,42 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region Eager Loading
+
+		Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>[]? _preambles;
+
+		public void SetPreambles(
+			IEnumerable<Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>>? preambles)
+		{
+			_preambles = preambles?.ToArray();
+		}
+
+		public bool IsAnyPreambles()
+		{
+			return _preambles?.Length > 0;
+		}
+
+		public object?[]? InitPreambles(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			return _preambles.Select(p => p.Item1(dc)).ToArray();
+		}
+
+		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			var result = new List<object?>();
+			foreach (var p in _preambles)
+			{
+				result.Add(await p.Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			}
+			return result.ToArray();
+		}
+
+		#endregion
 	}
 
 	class Query<T> : Query
@@ -176,9 +212,9 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
-		public Func<IDataContext,Expression,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
 
 		#endregion
 
@@ -369,12 +405,12 @@ namespace LinqToDB.Linq
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                           expression,
+			Expression                         expression,
 			Func<Expression,object?[]?,object?>  accessor,
 			Func<Expression,object?[]?,DataType> dataTypeAccessor,
 			Func<Expression,object?[]?,string?>  dbTypeAccessor,
 			Func<Expression,object?[]?,int?>     sizeAccessor,
-			SqlParameter                         sqlParameter)
+			SqlParameter                       sqlParameter)
 		{
 			Expression       = expression;
 			Accessor         = accessor;
@@ -384,11 +420,11 @@ namespace LinqToDB.Linq
 			SqlParameter     = sqlParameter;
 		}
 
-		public          Expression                           Expression;
+		public          Expression                         Expression;
 		public readonly Func<Expression,object?[]?,object?>  Accessor;
 		public readonly Func<Expression,object?[]?,DataType> DataTypeAccessor;
 		public readonly Func<Expression,object?[]?,string?>  DbTypeAccessor;
 		public readonly Func<Expression,object?[]?,int?>     SizeAccessor;
-		public readonly SqlParameter                         SqlParameter;
+		public readonly SqlParameter                       SqlParameter;
 	}
 }

@@ -17,8 +17,17 @@ namespace LinqToDB.SqlQuery
 				{
 					if (field.ColumnDescriptor != null)
 					{
-						if (field.ColumnDescriptor.DataType != DataType.Undefined && p.Type.DataType == DataType.Undefined)
+						if (field.ColumnDescriptor.DataType  != DataType.Undefined && p.Type.DataType == DataType.Undefined)
 							p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);
+
+						if (field.ColumnDescriptor.DbType    != null && p.Type.DbType == null)
+							p.Type = p.Type.WithDbType(field.ColumnDescriptor.DbType);
+						if (field.ColumnDescriptor.Length    != null && p.Type.Length == null)
+							p.Type = p.Type.WithLength(field.ColumnDescriptor.Length);
+						if (field.ColumnDescriptor.Precision != null && p.Type.Precision == null)
+							p.Type = p.Type.WithPrecision(field.ColumnDescriptor.Precision);
+						if (field.ColumnDescriptor.Scale     != null && p.Type.Scale == null)
+							p.Type = p.Type.WithScale(field.ColumnDescriptor.Scale);
 					}
 				}
 			}

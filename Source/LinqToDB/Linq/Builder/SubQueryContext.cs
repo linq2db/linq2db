@@ -82,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			var idx = GetIndex(context.SelectQuery.Select.Columns[index]);
+			var idx = context == this ? index : GetIndex(context.SelectQuery.Select.Columns[index]);
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 

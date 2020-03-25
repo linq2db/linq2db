@@ -830,6 +830,22 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("ex")]
+		public static Expression? UnwrapConvert(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked :
+				case ExpressionType.Convert        :
+					return ((UnaryExpression)ex).Operand.Unwrap();
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull("ex")]
 		public static Expression? UnwrapWithAs(this Expression? ex)
 		{
 			if (ex == null)
@@ -1047,6 +1063,14 @@ namespace LinqToDB.Expressions
 			if (!method.Method.IsGenericMethod)
 				return false;
 			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+		}
+
+		public static bool IsSameGenericMethod(this MethodCallExpression method, params MethodInfo[] genericMethodInfo)
+		{
+			if (!method.Method.IsGenericMethod)
+				return false;
+			var genericDefinition = method.Method.GetGenericMethodDefinition();
+			return Array.IndexOf(genericMethodInfo, genericDefinition) >= 0;
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)

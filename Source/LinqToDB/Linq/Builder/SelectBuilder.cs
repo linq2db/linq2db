@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
@@ -93,6 +93,7 @@ namespace LinqToDB.Linq.Builder
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
 						ExpressionBuilder.ParametersParam,
+						ExpressionBuilder.PreambleParam,
 						_counterParam
 					});
 

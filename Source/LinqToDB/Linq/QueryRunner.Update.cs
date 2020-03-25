@@ -82,10 +82,10 @@ namespace LinqToDB.Linq
 				IDataContext dataContext, T obj,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null)!;
+				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -105,10 +105,10 @@ namespace LinqToDB.Linq
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
@@ -120,7 +120,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return (int)result!;
 			}
