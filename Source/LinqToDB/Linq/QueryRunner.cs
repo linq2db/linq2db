@@ -575,7 +575,7 @@ namespace LinqToDB.Linq
 				}
 				else
 				{
-					queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Skip((int)select.SkipValue.EvaluateExpression()!);
+					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)select.SkipValue.EvaluateExpression()!);
 					skip  = (expr,ps) => (int)select.SkipValue.EvaluateExpression()!;
 				}
 			}
@@ -602,7 +602,7 @@ namespace LinqToDB.Linq
 				}
 				else
 				{
-					queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Take((int)select.TakeValue.EvaluateExpression()!);
+					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)select.TakeValue.EvaluateExpression()!);
 					take      = (expr,ps) => (int)select.TakeValue.EvaluateExpression()!;
 				}
 			}
