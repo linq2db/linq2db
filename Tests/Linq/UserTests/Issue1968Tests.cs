@@ -64,7 +64,6 @@ namespace Tests.UserTests
 		}
 
 		// https://stackoverflow.com/questions/58738542
-		[ActiveIssue(1968)]
 		[Test]
 		public void Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -101,7 +100,13 @@ namespace Tests.UserTests
 					ThirdSubject = "third"
 				});
 
-				db.GetTable<University>().LoadWith(x => x.Faculties).LoadWith(m => m.Subjects).ToList();
+				var result = db.GetTable<University>()
+					.LoadWith(x => x.Faculties)
+					.LoadWith(m => m.Subjects).ToList();
+
+				Assert.That(result.Count,              Is.EqualTo(1));
+				Assert.That(result[0].Faculties.Count, Is.EqualTo(1));
+				Assert.That(result[0].Subjects.Count,  Is.EqualTo(1));
 			}
 		}
 	}
