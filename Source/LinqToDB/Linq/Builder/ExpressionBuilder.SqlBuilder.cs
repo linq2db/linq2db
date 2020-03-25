@@ -184,6 +184,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = context.SelectQuery;
 
+			if (!context.Builder.DataContext.InlineParameters && expr is SqlValue sqlValue)
+				expr = new SqlParameter(sqlValue.ValueType, "take", sqlValue.Value);
+
 			sql.Select.Take(expr, hints);
 
 			if (sql.Select.SkipValue != null &&

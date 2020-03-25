@@ -1830,11 +1830,14 @@ namespace LinqToDB.SqlProvider
 					if (selectClause.TakeValue != null && ReferenceEquals(expr, selectClause.TakeValue))
 					{
 						var take = expr;
-						if (SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectClause.SelectQuery) &&
-						    expr.ElementType != QueryElementType.SqlParameter)
+						if (SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectClause.SelectQuery))
 						{
-							var takeValue = take.EvaluateExpression()!;
-							take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue) { IsQueryParameter = !inlineParameters };
+							if (expr.ElementType != QueryElementType.SqlParameter)
+							{
+								var takeValue = take.EvaluateExpression()!;
+								take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
+									{ IsQueryParameter = !inlineParameters };
+							}
 						}
 						else if (take.ElementType != QueryElementType.SqlValue)
 							take = new SqlValue(take.EvaluateExpression()!);
@@ -1846,11 +1849,14 @@ namespace LinqToDB.SqlProvider
 					{ 
 						var skip = expr;
 						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery) 
-						    && SqlProviderFlags.AcceptsTakeAsParameter
-						    && expr.ElementType != QueryElementType.SqlParameter)
+						    && SqlProviderFlags.AcceptsTakeAsParameter)
 						{
-							var skipValue = skip.EvaluateExpression()!;
-							skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue) { IsQueryParameter = !inlineParameters };
+							if (expr.ElementType != QueryElementType.SqlParameter)
+							{
+								var skipValue = skip.EvaluateExpression()!;
+								skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
+									{ IsQueryParameter = !inlineParameters };
+							}
 						}
 						else if (skip.ElementType != QueryElementType.SqlValue)
 							skip = new SqlValue(skip.EvaluateExpression()!);

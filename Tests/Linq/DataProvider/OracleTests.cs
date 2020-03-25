@@ -823,7 +823,7 @@ namespace Tests.DataProvider
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
 
 				var parm = (IDbDataParameter)db.Command.Parameters[0];
 				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
@@ -843,7 +843,7 @@ namespace Tests.DataProvider
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
 
 				var parm = (IDbDataParameter)db.Command.Parameters[0];
 				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
