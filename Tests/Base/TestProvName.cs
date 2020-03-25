@@ -53,6 +53,7 @@
 		public const string AllOracle             = "Oracle.Native,Oracle.Managed,Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracleManaged      = "Oracle.Managed,Oracle.11.Managed";
 		public const string AllOracleNative       = "Oracle.Native,Oracle.11.Native";
+		public const string AllOracle11           = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12           = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird           = "Firebird,Firebird3";
 		public const string AllSQLite             = "SQLite.Classic,SQLite.MS,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";

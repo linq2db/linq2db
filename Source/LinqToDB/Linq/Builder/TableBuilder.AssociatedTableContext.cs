@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,12 +18,12 @@ namespace LinqToDB.Linq.Builder
 	{
 		public class AssociatedTableContext : TableContext
 		{
-			public readonly TableContext          ParentAssociation;
+			public readonly TableContext             ParentAssociation;
 			public readonly SqlJoinedTable?       ParentAssociationJoin;
-			public readonly AssociationDescriptor Association;
-			public readonly bool                  IsList;
-			public readonly bool                  IsSubQuery;
-			public          int                   RegularConditionCount;
+			public readonly AssociationDescriptor    Association;
+			public readonly bool                     IsList;
+			public readonly bool                     IsSubQuery;
+			public          int                      RegularConditionCount;
 			public          LambdaExpression?     ExpressionPredicate;
 
 			public override IBuildContext? Parent
@@ -31,9 +32,6 @@ namespace LinqToDB.Linq.Builder
 				set { }
 			}
 
-			static MethodInfo _selectManyMethodInfo = MemberHelper.MethodOf((IQueryable<int> q) =>
-				q.SelectMany(i => new int [0], (i, c) => i)).GetGenericMethodDefinition();
-
 			Dictionary<ISqlExpression, SqlField>? _replaceMap;
 			internal IBuildContext?               _innerContext;
 
@@ -41,8 +39,8 @@ namespace LinqToDB.Linq.Builder
 				ExpressionBuilder     builder,
 				TableContext          parent,
 				AssociationDescriptor association,
-				bool                  forceLeft,
-				bool                  asSubquery
+				                                bool                  forceLeft,
+				                                bool                  asSubquery
 			)
 				: base(builder, asSubquery ? new SelectQuery() { ParentSelect = parent.SelectQuery } : parent.SelectQuery)
 			{
@@ -83,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 				if (queryMethod != null)
 				{
 					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
-						queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
+						queryMethod.Parameters[0], parent.ObjectType, parent.Expression!, queryMethod);
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
@@ -279,9 +277,9 @@ namespace LinqToDB.Linq.Builder
 				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
 				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
 
-				var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parentType, ObjectType, ObjectType);
-				var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
-				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentTableExpression, queryMethod, resultLamba);
+				var selectManyMethodInfo = Methods.Queryable.SelectManyProjection.MakeGenericMethod(parentType, ObjectType, ObjectType);
+				var resultLambda         = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
+				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentTableExpression, queryMethod, resultLambda);
 
 				return selectManyMethod;
 			}
@@ -320,7 +318,7 @@ namespace LinqToDB.Linq.Builder
 						return newField;
 					return e;
 
-				});
+				}); 
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext? context)
@@ -380,7 +378,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			protected internal override List<MemberInfo[]>? GetLoadWith()
+			protected internal override List<Tuple<MemberInfo, Expression?>[]>? GetLoadWith()
 			{
 				if (LoadWith == null)
 				{
@@ -435,7 +433,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var tableExpression = builder.DataContext.GetTable<T>();
+						IQueryable<T> tableExpression = builder.DataContext.GetTable<T>();
 
 						var loadWith = tableContext.GetLoadWith();
 
@@ -451,14 +449,17 @@ namespace LinqToDB.Linq.Builder
 								foreach (var member in members)
 								{
 									if (isPrevList)
-										obj = new GetItemExpression(obj);
+										obj = new GetItemExpression(obj, builder.MappingSchema);
 
-									obj = Expression.MakeMemberAccess(obj, member);
+									obj = Expression.MakeMemberAccess(obj, member.Item1);
 
 									isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
 								}
 
-								tableExpression = tableExpression.LoadWith(Expression.Lambda<Func<T,object>>(obj, pLoadWith));
+								var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
+
+								var loadLambda = Expression.Lambda(obj, pLoadWith);
+								tableExpression = (IQueryable<T>)method.Invoke(null, new object[] {tableExpression, loadLambda });
 							}
 						}
 						
@@ -555,13 +556,12 @@ namespace LinqToDB.Linq.Builder
 					return base.BuildQuery(tableType, tableContext, parentObject);
 				}
 
-				if (Common.Configuration.Linq.AllowMultipleQuery == false)
+				if (Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
-				var sqtype = typeof(SubQueryHelper<>).MakeGenericType(tableType);
-				var helper = (ISubQueryHelper)Activator.CreateInstance(sqtype);
+				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association);
 
-				return helper.GetSubquery(Builder, this, parentObject!);
+				return detailExpression;
 			}
 		}
 	}

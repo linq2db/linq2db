@@ -292,16 +292,16 @@ namespace LinqToDB.Linq.Builder
 				: base(parent, lambda, outerContext, innerContext)
 			{
 				_innerExpression = innerExpression;
-				_outerKeyLambda  = outerKeyLambda;
-				_innerKeyLambda  = innerKeyLambda;
+				OuterKeyLambda  = outerKeyLambda;
+				InnerKeyLambda  = innerKeyLambda;
 
 				innerContext.GroupJoin = this;
 			}
 
 			readonly Expression       _innerExpression;
-			readonly LambdaExpression _outerKeyLambda;
-			readonly LambdaExpression _innerKeyLambda;
-			private  Expression?      _groupExpression;
+			public   LambdaExpression  OuterKeyLambda { get; }
+			public   LambdaExpression  InnerKeyLambda { get; }
+			private  Expression?       _groupExpression;
 
 			interface IGroupJoinHelper
 			{
@@ -314,8 +314,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Convert outer condition.
 					//
-					var outerParam = Expression.Parameter(context._outerKeyLambda.Body.Type, "o");
-					var outerKey   = context._outerKeyLambda.GetBody(context.Lambda.Parameters[0]);
+					var outerParam = Expression.Parameter(context.OuterKeyLambda.Body.Type, "o");
+					var outerKey   = context.OuterKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
 					outerKey = context.Builder.BuildExpression(context, outerKey, false);
 
@@ -326,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
-					var innerKey = context._innerKeyLambda.Body.Transform(e =>
+					var innerKey = context.InnerKeyLambda.Body.Transform(e =>
 					{
 						if (parameters.TryGetValue(e, out var idx))
 						{
@@ -346,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
-							new[] { context._innerKeyLambda.Parameters[0] }));
+							new[] { context.InnerKeyLambda.Parameters[0] }));
 
 					var lambda = Expression.Lambda<Func<IDataContext,TKey,object?[]?,IQueryable<TElement>>>(
 						Expression.Convert(expr, typeof(IQueryable<TElement>)),
@@ -394,9 +394,9 @@ namespace LinqToDB.Linq.Builder
 						Expression.Lambda<Func<T,bool>>(
 							ExpressionBuilder.Equal(
 								context.Builder.MappingSchema,
-								context._innerKeyLambda.Body.Unwrap(),
-								context._outerKeyLambda.GetBody(context.Lambda.Parameters[0])),
-							new[] { context._innerKeyLambda.Parameters[0] }));
+								context.InnerKeyLambda.Body.Unwrap(),
+								context.OuterKeyLambda.GetBody(context.Lambda.Parameters[0])),
+							new[] { context.InnerKeyLambda.Parameters[0] }));
 
 					return expr;
 				}
@@ -408,13 +408,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_groupExpression == null)
 					{
-						var gtype  = typeof(GroupJoinHelper<,>).MakeGenericType(
-							_innerKeyLambda.Body.Type,
-							_innerKeyLambda.Parameters[0].Type);
+						var loadingExpression = Builder.BuildMultipleQuery(this, expression, true);
 
-						var helper = (IGroupJoinHelper)Activator.CreateInstance(gtype);
-
-						_groupExpression = helper.GetGroupJoin(this);
+						 _groupExpression = loadingExpression;
+						return _groupExpression;
 					}
 
 					return _groupExpression;
@@ -449,7 +446,7 @@ namespace LinqToDB.Linq.Builder
 					if (replaceExpression != null)
 					{
 						var call   = (MethodCallExpression)expression;
-						var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
+						var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(InnerKeyLambda.Parameters[0].Type);
 						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
 						var expr   = helper.GetGroupJoinCall(this);
 
@@ -457,6 +454,7 @@ namespace LinqToDB.Linq.Builder
 
 						return Builder.BuildExpression(this, expr, enforceServerSide);
 					}
+
 				}
 
 				return base.BuildExpression(expression, level, enforceServerSide);
@@ -473,6 +471,11 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinSubQueryContext(IBuildContext subQuery)
 				: base(subQuery)
 			{
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				return GroupJoin!.ConvertToParentIndex(index, context);
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

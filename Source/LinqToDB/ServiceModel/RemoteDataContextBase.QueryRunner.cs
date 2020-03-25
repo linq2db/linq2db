@@ -13,16 +13,16 @@ namespace LinqToDB.ServiceModel
 
 	public abstract partial class RemoteDataContextBase
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters, object[] preambles)
 		{
 			ThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters);
+			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
 		class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters)
-				: base(query, queryNumber, dataContext, expression, parameters)
+			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters, object[] preambles)
+				: base(query, queryNumber, dataContext, expression, parameters, preambles)
 			{
 				_dataContext = dataContext;
 			}

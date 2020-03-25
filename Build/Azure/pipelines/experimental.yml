@@ -8,6 +8,10 @@ variables:
   netcore21_tests: 'netcoreapp21_tests'
 
 trigger: none
+pr:
+  branches:
+    include:
+    - '*'
 
 stages:
 
@@ -40,9 +44,9 @@ stages:
 
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: UseDotNet@2
-      displayName: Install .NET Core 3.0
+      displayName: Install .NET Core 3.1
       inputs:
-        version: 3.0.x
+        version: 3.1.x
 
     - task: DotNetCoreCLI@2
       inputs:

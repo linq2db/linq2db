@@ -166,6 +166,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var sequence = GetSequence(expression, level)!;
 
+					Builder.AssociationRoot = expression;
+
 					return ReferenceEquals(levelExpression, expression) ?
 						sequence.BuildExpression(null,       0,         enforceServerSide) :
 						sequence.BuildExpression(expression, level + 1, enforceServerSide);
@@ -250,8 +252,8 @@ namespace LinqToDB.Linq.Builder
 									case ExpressionType.New        :
 									case ExpressionType.MemberInit :
 										{
-											var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
-											return Builder.BuildExpression(this, mmExpresion, enforceServerSide);
+											var mmExpression = GetMemberExpression(memberExpression, expression, level + 1);
+											return Builder.BuildExpression(this, mmExpression, enforceServerSide);
 										}
 								}
 
@@ -326,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var q =
 							from m in Members
-							where !(m.Key is MethodInfo)
+							where !(m.Key is MethodInfo || EagerLoading.IsDetailsMember(m.Key))
 							select ConvertMember(m.Key, m.Value, flags) into mm
 							from m in mm
 							select m;
@@ -526,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 								var p = Expression.Parameter(Body.Type, "p");
 								var q =
 									from m in Members.Keys
-									where !(m is MethodInfo)
+									where !(m is MethodInfo || EagerLoading.IsDetailsMember(m))
 									select new SqlData
 									{
 										Sql    = ConvertToIndex(Expression.MakeMemberAccess(p, m), 1, flags),
@@ -625,7 +627,7 @@ namespace LinqToDB.Linq.Builder
 		#region IsExpression
 
 		Expression? _lastAssociationExpression;
-		int         _lastAssociationLevel = -1;
+		int        _lastAssociationLevel = -1;
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
@@ -771,7 +773,13 @@ namespace LinqToDB.Linq.Builder
 											return sequence.IsExpression(levelExpression, level, requestFlag);
 										}
 
-										var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
+										var idx = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
+										if (idx < 0)
+										{
+											return IsExpressionResult.False;
+										}
+
+										var parameter = Lambda.Parameters[idx];
 
 										if (ReferenceEquals(levelExpression, expression))
 										{
@@ -851,7 +859,8 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Parameter    :
 						{
 							var sequence  = GetSequence(expression, level)!;
-							var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
+							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
+							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;
 
 							if (ReferenceEquals(levelExpression, expression))
 							{

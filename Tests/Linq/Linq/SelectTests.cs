@@ -1178,6 +1178,74 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Currently linq2db do not support such queries")]
+		[Test]
+		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+
+				var resultQuery = from q in query
+					where q.Item2.Item1 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+
+				var resultExpected = from q in queryExpected
+					where q.Item2.Item1 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery);
+			}
+		}
+
+		[Test]
+		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select new
+					{
+						A = new
+						{
+							A1 = new
+							{
+								B1 = p.ParentID,
+								B2 = p.Value1
+							},
+							A2 = new
+							{
+								C1 = p.Value1,
+								C2 = p.ParentID
+							}
+
+						}
+					};
+
+				var resultQuery = from q in query
+					where q.A.A1.B2 != null
+					select q;
+
+				resultQuery.ToArray();
+
+				// var queryExpected =
+				// 	from p in Parent
+				// 	select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+				//
+				// var resultExpected = from q in queryExpected
+				// 	where q.Item2.Item1 != null
+				// 	select q;
+				//
+				// AreEqual(resultExpected, resultQuery);
+			}
+		}
 
 		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value

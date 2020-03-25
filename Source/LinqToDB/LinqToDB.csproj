@@ -34,6 +34,16 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Common\Internal\MutableTuple.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+		</None>
 
 		<Compile Remove="Compatibility\**\*.cs" />
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />

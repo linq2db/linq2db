@@ -312,6 +312,10 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+			else
+			{
+				BuildReturningSubclause(statement);
+			}
 		}
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -339,6 +343,8 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+			else
+				BuildReturningSubclause(statement);
 
 			--Indent;
 
@@ -627,6 +633,17 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
+		}
+
+		protected virtual void BuildReturningSubclause(SqlStatement statement)
+		{
+		}
+
+		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
+		{
+			Statement     = statement;
+			StringBuilder = sb;
+			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string? insertText, bool appendTableName, bool addAlias)
@@ -2187,8 +2204,10 @@ namespace LinqToDB.SqlProvider
 
 						if (buildTableName && field.Table != null)
 						{
-							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
-							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
+							var ts = field.Table.SqlTableType == SqlTableType.SystemTable
+								? field.Table
+								: Statement.SelectQuery?.GetTableSource(field.Table);
+
 							if (ts == null)
 							{
 								SqlStatement? current = Statement;

@@ -65,22 +65,22 @@ namespace LinqToDB.Linq
 				IDataContext dataContext, T obj,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return ei.GetElement(dataContext, Expression.Constant(obj), null)!;
+				return ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<object> QueryAsync(
@@ -88,22 +88,22 @@ namespace LinqToDB.Linq
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return await ((Task<object>)ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token)!).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await ((Task<object>)ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token)!).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

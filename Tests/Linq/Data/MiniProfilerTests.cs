@@ -1071,6 +1071,8 @@ namespace Tests.Data
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = DateTimeOffset.Now;
+				// TODO: add precision/scale support to DataParameter instead of adjusting value precision to 6
+				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
@@ -1166,6 +1168,8 @@ namespace Tests.Data
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = DateTimeOffset.Now;
+				// TODO: add precision/scale support to DataParameter instead of adjusting value precision to 6
+				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());

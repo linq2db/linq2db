@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.SqlProvider
@@ -99,6 +100,12 @@ namespace LinqToDB.SqlProvider
 
 			return (TakeHintsSupported.Value & hints) == hints;
 		}
+
+		/// <summary>
+		/// Used when there is query which needs several additional database request for completing query.
+		/// Default is <see cref="IsolationLevel.RepeatableRead"/>
+		/// </summary>
+		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
 		/// Flags for use by external providers.
