@@ -57,7 +57,7 @@ namespace Tests.Linq
 			{
 				var arr = new[] { "oh", "oh'", "oh\\" };
 
-				var q = from p in db.Person where arr.Contains(p.FirstName) select p;
+				var q = from p in db.Person where  arr.Contains(p.FirstName) select p;
 				Assert.AreEqual(0, q.Count());
 			}
 		}
@@ -89,7 +89,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var s = "123[456";
+				var s  = "123[456";
 				var ps = "[";
 
 				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
@@ -118,7 +118,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.FirstName.Contains(str) && p.ID == 1 select new { p, str };
 				var r = q.ToList().First();
-				Assert.AreEqual(1, r.p.ID);
+				Assert.AreEqual(1,   r.p.ID);
 				Assert.AreEqual(str, r.str);
 			}
 		}
@@ -185,7 +185,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				string firstName = null;
-				int? id = null;
+				int?   id        = null;
 
 				var _ =
 				(
@@ -245,7 +245,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in Person where "John123".StartsWith(p.FirstName) select p,
+					from p in    Person where "John123".StartsWith(p.FirstName) select p,
 					from p in db.Person where "John123".StartsWith(p.FirstName) select p);
 		}
 
@@ -256,7 +256,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in Person where str.StartsWith(p.FirstName) select p,
+					from p in    Person where str.StartsWith(p.FirstName) select p,
 					from p in db.Person where str.StartsWith(p.FirstName) select p);
 		}
 
@@ -265,8 +265,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p1 in Person
-					from p2 in Person
+					from p1 in    Person
+					from p2 in    Person
 					where p1.ID == p2.ID && p1.FirstName.StartsWith(p2.FirstName)
 					select p1,
 					from p1 in db.Person
@@ -281,8 +281,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p1 in Person
-					from p2 in Person
+					from p1 in    Person
+					from p2 in    Person
 					where p1.ID == p2.ID && p1.FirstName.Replace("J", "%").StartsWith(p2.FirstName.Replace("J", "%"))
 					select p1,
 					from p1 in db.Person
@@ -528,15 +528,15 @@ namespace Tests.Linq
 #pragma warning disable 0109
 		new class Category
 		{
-			[PrimaryKey, Identity] public int Id;
-			[Column, NotNull] public string Name;
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
 		}
 #pragma warning restore 0109
 
 		class Task
 		{
-			[PrimaryKey, Identity] public int Id;
-			[Column, NotNull] public string Name;
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
 		}
 
 		class TaskCategory
@@ -685,11 +685,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Person
-					where p.ID == 1
-					select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-					where pp.Name.Trim() == "John"
-					select pp;
+					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+					where pp.Name.Trim() == "John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -700,11 +697,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Person
-					where p.ID == 1
-					select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-					where pp.Name.TrimStart() == "John "
-					select pp;
+					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+					where pp.Name.TrimStart() == "John " select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -715,11 +709,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Person
-					where p.ID == 1
-					select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-					where pp.Name.TrimEnd() == "  John"
-					select pp;
+					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+					where pp.Name.TrimEnd() == "  John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
