@@ -179,9 +179,7 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			IBuildContext sequence)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
-
-			BuildSetterWithContext(builder, buildInfo, setter, into, items, ctx);
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
 		}
 
 		internal static void BuildSetterWithContext(
@@ -190,8 +188,10 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression       setter,
 			IBuildContext          into,
 			List<SqlSetExpression> items,
-			ExpressionContext      ctx)
+			params IBuildContext[] sequences)
 		{
+			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
+
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
 				var column = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
@@ -273,7 +273,7 @@ namespace LinqToDB.Linq.Builder
 			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
-				var p  = ctx.Sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildNew(ex, bodyPath);
 
@@ -282,7 +282,7 @@ namespace LinqToDB.Linq.Builder
 			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
 			{
 				var ex = (MemberInitExpression)bodyExpr;
-				var p  = ctx.Sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildMemberInit(ex, bodyPath);
 

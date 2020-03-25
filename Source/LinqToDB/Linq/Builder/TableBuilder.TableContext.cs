@@ -27,20 +27,20 @@ namespace LinqToDB.Linq.Builder
 			public string Path => this.GetPath();
 #endif
 
-			public ExpressionBuilder  Builder     { get; }
-			public Expression          Expression { get; } = null!;
+			public ExpressionBuilder   Builder     { get; }
+			public Expression?         Expression  { get; }
 
-			public SelectQuery        SelectQuery { get; set; }
-			public SqlStatement?       Statement  { get; set; }
+			public SelectQuery         SelectQuery { get; set; }
+			public SqlStatement?       Statement   { get; set; }
 
 			public List<Tuple<MemberInfo, Expression?>[]>? LoadWith    { get; set; }
 
 			public virtual IBuildContext? Parent   { get; set; }
 
-			public Type             OriginalType     = null!;
-			public Type             ObjectType       = null!;
+			public Type             OriginalType = null!;
+			public Type             ObjectType = null!;
 			public EntityDescriptor EntityDescriptor = null!;
-			public SqlTable         SqlTable         = null!;
+			public SqlTable         SqlTable = null!;
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
@@ -80,6 +80,25 @@ namespace LinqToDB.Linq.Builder
 				SqlTable         = table;
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
+					SelectQuery.From.Table(SqlTable);
+
+				Init(true);
+			}
+
+			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
+			{
+				Builder          = builder;
+				Parent           = null;
+				Expression       = null;
+				SelectQuery      = selectQuery;
+
+				OriginalType     = table.ObjectType!;
+				ObjectType       = GetObjectType();
+				SqlTable         = table;
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 				SelectQuery.From.Table(SqlTable);
 
 				Init(true);
@@ -808,7 +827,7 @@ namespace LinqToDB.Linq.Builder
 									ISqlExpression sql = SqlTable;
 									if (SqlTable is SqlRawSqlTable)
 									{
-										sql                        = SqlTable.All;
+										sql                  = SqlTable.All;
 										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType) ?? new DbDataType(OriginalType);
 									}
 
@@ -1058,7 +1077,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					Expression? expr  = null;
-					var        param = Expression.Parameter(typeof(T), "c");
+					var         param = Expression.Parameter(typeof(T), "c");
 
 					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
 
@@ -1149,7 +1168,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var table = new TableContext(
 							Builder,
-							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression, buildInfo.SelectQuery),
+							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression!, buildInfo.SelectQuery),
 							SqlTable.ObjectType!);
 
 						return table;
@@ -1251,7 +1270,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected class LoadWithItem
 			{
-				public MemberInfo                             MemberInfo   = null!;
+				public MemberInfo         MemberInfo   = null!;
 				public List<Tuple<MemberInfo, Expression?>[]> NextLoadWith = null!;
 			}
 
@@ -1455,8 +1474,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				public TableContext    Table = null!;
 				public ISqlExpression? Field;
-				public int            Level;
-				public bool           IsNew;
+				public int             Level;
+				public bool            IsNew;
 			}
 
 			TableLevel? FindTable(Expression? expression, int level, bool throwException, bool throwExceptionForNull)

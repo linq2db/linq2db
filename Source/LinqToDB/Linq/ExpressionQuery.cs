@@ -31,7 +31,7 @@ namespace LinqToDB.Linq
 		public Expression   Expression  { get; set; } = null!;
 		public IDataContext DataContext { get; set; } = null!;
 
-		internal Query<T>?  Info;
+		internal Query<T>? Info;
 		internal object?[]? Parameters;
 		internal object?[]? Preambles;
 
@@ -221,7 +221,10 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext);
 
-				return (TResult)query.GetElement(DataContext, expression, Parameters, Preambles)!;
+				var getElement = query.GetElement;
+				if (getElement == null)
+					throw new LinqToDBException("GetElement is not assigned by the context.");
+				return (TResult)getElement(DataContext, expression, Parameters, Preambles)!;
 			}
 		}
 
@@ -233,7 +236,10 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext);
 
-				return query.GetElement(DataContext, expression, Parameters, Preambles);
+				var getElement = query.GetElement;
+				if (getElement == null)
+					throw new LinqToDBException("GetElement is not assigned by the context.");
+				return getElement(DataContext, expression, Parameters, Preambles);
 			}
 		}
 

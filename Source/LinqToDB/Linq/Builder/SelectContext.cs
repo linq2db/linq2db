@@ -252,8 +252,8 @@ namespace LinqToDB.Linq.Builder
 									case ExpressionType.New        :
 									case ExpressionType.MemberInit :
 										{
-											var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
-											return Builder.BuildExpression(this, mmExpresion, enforceServerSide);
+											var mmExpression = GetMemberExpression(memberExpression, expression, level + 1);
+											return Builder.BuildExpression(this, mmExpression, enforceServerSide);
 										}
 								}
 

@@ -60,10 +60,10 @@ namespace LinqToDB.Linq
 				IDataContext dataContext, T obj,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type)
@@ -82,10 +82,10 @@ namespace LinqToDB.Linq
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type)

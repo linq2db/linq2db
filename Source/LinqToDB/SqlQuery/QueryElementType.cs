@@ -46,6 +46,8 @@
 		SqlRawSqlTable,
 		SqlValuesTable,
 
+		OutputClause,
+
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,

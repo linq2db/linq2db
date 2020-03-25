@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 				if (queryMethod != null)
 				{
 					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
-						queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
+						queryMethod.Parameters[0], parent.ObjectType, parent.Expression!, queryMethod);
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 

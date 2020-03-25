@@ -10,6 +10,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Tools;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -1802,5 +1803,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
 	}
 }

@@ -9,6 +9,10 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+<<<<<<< HEAD
+		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
+		<Compile Include="..\Linq\Update\InsertWithOutputTests.cs" Link="InsertWithOutputTests.cs" />
+=======
 		<Compile Include="..\Linq\Linq\ConvertExpressionTests.cs">
 		  <Link>ConvertExpressionTests.cs</Link>
 		</Compile>
@@ -17,6 +21,7 @@
 		</Compile>
 		<Compile Include="..\Linq\Linq\LoadWithTests.cs" Link="LoadWithTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1397Tests.cs" Link="Issue1397Tests.cs" />
+>>>>>>> origin/release.3.0
 	</ItemGroup>
 
 </Project>
