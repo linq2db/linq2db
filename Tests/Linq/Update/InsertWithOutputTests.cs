@@ -102,6 +102,35 @@ namespace Tests.Playground
 		}
 
 		[Test]
+		public async Task InsertWithOutputFromQueryTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable<DestinationTable>())
+			{
+				var output = await source
+					.Where(s => s.Id > 3)
+					.InsertWithOutputAsync(
+						target,
+						s => new DestinationTable
+						{
+							Id = s.Id + param,
+							Value = s.Value + param,
+							ValueStr = s.ValueStr + param
+						});
+
+				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
+				{
+					Id = s.Id + param,
+					Value = s.Value + param,
+					ValueStr = s.ValueStr + param,
+				}),
+					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
 		public void InsertWithOutputTest3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
