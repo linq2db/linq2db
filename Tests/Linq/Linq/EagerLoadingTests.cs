@@ -9,7 +9,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class EagerLoadingTests : TestBase
