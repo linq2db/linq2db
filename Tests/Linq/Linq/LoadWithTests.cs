@@ -535,8 +535,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var testData = GenerateTestData();
-
 			using (new AllowMultipleQuery())
 			using (var db      = GetDataContext(context))
 			using (var parents = db.CreateLocalTable(ParentRecord.Items))

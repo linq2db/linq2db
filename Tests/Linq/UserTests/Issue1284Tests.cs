@@ -63,7 +63,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TestCteInvalidMappingUnion([CteTests.CteContextSource] string context)
 		{

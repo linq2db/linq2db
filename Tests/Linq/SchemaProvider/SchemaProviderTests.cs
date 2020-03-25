@@ -17,7 +17,6 @@ namespace Tests.SchemaProvider
 		// only tests that GetSchema call doesn't fail to detect incorrect calls to default implementation
 		// or other failures
 		// doesn't test that actual data returned
-		[ActiveIssue(Configuration = ProviderName.SQLiteMS, Details = "NotSupportedException")]
 		[Test]
 		public void TestApiImplemented([DataSources(false)] string context)
 		{

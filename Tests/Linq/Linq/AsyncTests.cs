@@ -154,10 +154,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[]
 		{ 
-			TestProvName.AllOracle,
-			ProviderName.DB2,
-			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2008
+			ProviderName.DB2
 		})]
 		[Test]
 		public async Task TakeSkipTest([DataSources] string context)

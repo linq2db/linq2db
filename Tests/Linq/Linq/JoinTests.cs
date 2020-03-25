@@ -843,7 +843,6 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[ActiveIssue(577)]
 		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{

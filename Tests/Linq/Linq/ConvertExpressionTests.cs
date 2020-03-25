@@ -266,7 +266,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest41 with explicit sort")]
 		[Test]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
@@ -360,7 +359,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest61 with explicit sort")]
 		[Test]
 		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
@@ -601,7 +599,21 @@ namespace Tests.Linq
 					).Any());
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
