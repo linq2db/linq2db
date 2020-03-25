@@ -30,6 +30,9 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value && true && !false select p);
 		}
 
+		// only for netcore linq test we generate unused parameter for sybase
+		// There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@value_1' was not used in the preceding DECLARE CURSOR or SQL command.
+		[ActiveIssue(SkipForNonLinqService = true, Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void Bool2([DataSources] string context)
 		{
