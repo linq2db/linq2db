@@ -714,7 +714,7 @@ namespace Tests.DataProvider
 			public static Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext fixed in v3")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
 		[Test]
 		public void TestTimespanAndTimeValues([IncludeDataSources(true, ProviderName.DB2)] string context, [Values] bool useParameters)
 		{

@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
+	using System.Globalization;
 
 	public class DB2MappingSchema : MappingSchema
 	{
@@ -26,6 +27,37 @@ namespace LinqToDB.DataProvider.DB2
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+
+			// set reader conversions from literals
+			SetConverter<string, DateTime>(ParseDateTime);
+		}
+
+		static DateTime ParseDateTime(string value)
+		{
+			if (DateTime.TryParse(value, out var res))
+				return res;
+
+			return DateTime.ParseExact(
+				value,
+				new[]
+				{
+					"yyyy-MM-dd",
+					"yyyy-MM-dd-HH.mm.ss",
+					"yyyy-MM-dd-HH.mm.ss.f",
+					"yyyy-MM-dd-HH.mm.ss.ff",
+					"yyyy-MM-dd-HH.mm.ss.fff",
+					"yyyy-MM-dd-HH.mm.ss.ffff",
+					"yyyy-MM-dd-HH.mm.ss.fffff",
+					"yyyy-MM-dd-HH.mm.ss.ffffff",
+					"yyyy-MM-dd-HH.mm.ss.fffffff",
+					"yyyy-MM-dd-HH.mm.ss.ffffffff",
+					"yyyy-MM-dd-HH.mm.ss.fffffffff",
+					"yyyy-MM-dd-HH.mm.ss.ffffffffff",
+					"yyyy-MM-dd-HH.mm.ss.fffffffffff",
+					"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
+				},
+				CultureInfo.InvariantCulture,
+				DateTimeStyles.None);
 		}
 
 		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)

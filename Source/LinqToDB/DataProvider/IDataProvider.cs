@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider
 		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DataConnection dataConnection);
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
-		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression         GetReaderExpression   (IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);

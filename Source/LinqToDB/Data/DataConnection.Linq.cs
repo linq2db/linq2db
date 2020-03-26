@@ -51,9 +51,9 @@ namespace LinqToDB.Data
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
-		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
 		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)

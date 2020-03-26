@@ -72,9 +72,9 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
-			public Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+			public Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
-				return _context.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
 			}
 
 			public bool? IsDBNullAllowed(IDataReader reader, int idx)

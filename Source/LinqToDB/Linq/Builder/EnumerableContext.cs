@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 											if (expr is SqlParameter p)
 											{
 												// avoid parameters is source, because their number is limited
-												p.IsQueryParameter = false;
+												p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
 												p.Type             = p.Type.WithoutSystemType(column);
 											}
 											else if (expr is SqlValue val)

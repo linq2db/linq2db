@@ -125,10 +125,10 @@ namespace LinqToDB.DataProvider.SQLite
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public override Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			if (Name != ProviderName.SQLiteMS)
-				return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+				return base.GetReaderExpression(reader, idx, readerExpression, toType);
 
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
