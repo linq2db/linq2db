@@ -817,7 +817,7 @@ namespace LinqToDB
 		public static IUpdatable<T> Set<T,TV>(
 			                this IQueryable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                              value)
+			TV                                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -849,7 +849,7 @@ namespace LinqToDB
 		public static IUpdatable<T> Set<T,TV>(
 			                this IUpdatable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                              value)
+			TV                                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -861,6 +861,77 @@ namespace LinqToDB
 					null,
 					_setMethodInfo6.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IQueryable<T>         source,
+			[InstantHandle] Expression<Func<T,string>> setExpression)
+		{
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					new[] { currentSource.Expression, Expression.Quote(setExpression) }));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.AsUpdatable()
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IUpdatable<T>         source,
+			[InstantHandle] Expression<Func<T,string>> setExpression)
+		{
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var query = ((Updatable<T>)source).Query;
+
+			query = query.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					new[] { query.Expression, Expression.Quote(setExpression) }));
 
 			return new Updatable<T>(query);
 		}
