@@ -24,5 +24,7 @@ namespace LinqToDB.SqlProvider
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 
 		string           Name { get; }
+
+		List<SqlParameter> ActualParameters { get; }
 	}
 }

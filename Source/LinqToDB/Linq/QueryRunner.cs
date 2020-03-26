@@ -573,6 +573,11 @@ namespace LinqToDB.Linq
 					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, ps)!);
 					skip  = (expr,ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, ps)!;
 				}
+				else
+				{
+					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)select.SkipValue.EvaluateExpression()!);
+					skip  = (expr,ps) => (int)select.SkipValue.EvaluateExpression()!;
+				}
 			}
 
 			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
@@ -594,6 +599,11 @@ namespace LinqToDB.Linq
 					var i = GetParameterIndex(query, select.TakeValue);
 					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)query.Queries[0].Parameters[i].Accessor(expr, ps)!);
 					take  = (expr,ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, ps)!;
+				}
+				else
+				{
+					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)select.TakeValue.EvaluateExpression()!);
+					take      = (expr,ps) => (int)select.TakeValue.EvaluateExpression()!;
 				}
 			}
 

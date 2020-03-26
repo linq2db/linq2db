@@ -313,12 +313,12 @@ namespace Tests.Linq
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
-		public void ElementAt1([DataSources] string context)
+		public void ElementAt1([DataSources] string context, [Values(2, 3)] int at)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).ElementAt(3),
-					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3));
+					(from p in    Parent where p.ParentID > 1 select p).ElementAt(at),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(at));
 		}
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]

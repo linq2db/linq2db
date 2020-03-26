@@ -75,39 +75,20 @@ namespace LinqToDB.Linq.Builder
 			if (hints != null && sql.Select.SkipValue != null)
 				throw new LinqException("Take with hints could not be applied with Skip");
 
+			if (!builder.DataContext.InlineParameters && expr is SqlValue sqlValue)
+				expr = new SqlParameter(sqlValue.ValueType, "take", sqlValue.Value);
+
 			sql.Select.Take(expr, hints);
 
 			if ( sql.Select.SkipValue != null &&
 				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
 				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
-				if (sql.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)
-				{
-					var skip = (SqlParameter)sql.Select.SkipValue;
-					var parm = (SqlParameter)sql.Select.SkipValue.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-
-					parm.SetTakeConverter((int)((SqlValue)sql.Select.TakeValue).Value!);
-
-					sql.Select.Take(parm, hints);
-
-					var ep = (from pm in builder.CurrentSqlParameters where pm.SqlParameter == skip select pm).First();
-
-					ep = new ParameterAccessor(ep.Expression, ep.Accessor, ep.DataTypeAccessor, ep.DbTypeAccessor, ep.SizeAccessor, parm);
-
-					builder.CurrentSqlParameters.Add(ep);
-				}
-				else
-					sql.Select.Take(builder.Convert(
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive)), hints);
+				sql.Select.Take(
+					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
 			}
 
-			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
-			{
-				var p = sql.Select.TakeValue as SqlParameter;
-
-				if (p != null)
-					p.IsQueryParameter = false;
-			}
+			sql.IsParameterDependent = true;
 		}
 
 		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression prevSkipValue, ISqlExpression expr)
@@ -117,6 +98,8 @@ namespace LinqToDB.Linq.Builder
 			if (sql.Select.TakeHints != null)
 				throw new LinqException("Skip could not be applied with Take with hints");
 
+			if (!builder.DataContext.InlineParameters && expr is SqlValue sqlValue)
+				expr = new SqlParameter(sqlValue.ValueType, "skip", sqlValue.Value);
 
 			sql.Select.Skip(expr);
 
@@ -124,21 +107,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
 					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
-					sql.Select.Take(builder.Convert(
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue!, Precedence.Additive)), sql.Select.TakeHints);
+					sql.Select.Take(
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue!, Precedence.Additive), sql.Select.TakeHints);
 
 				if (prevSkipValue != null)
-					sql.Select.Skip(builder.Convert(
-						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue!, Precedence.Additive)));
+					sql.Select.Skip(
+						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue!, Precedence.Additive));
 			}
 
-			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
-			{
-				var p = sql.Select.SkipValue as SqlParameter;
-
-				if (p != null)
-					p.IsQueryParameter = false;
-			}
+			sql.IsParameterDependent = true;
 		}
 	}
 }
