@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
@@ -500,7 +500,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestBugCountWithOrderBy([IdlProviders] string context)
+		public void TestCountWithOrderBy([IdlProviders] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -512,6 +512,22 @@ namespace Tests.Linq
 
 				Assert.DoesNotThrow(() => q2.Max(x => x.ID));
 				Assert.DoesNotThrow(() => q2.Count());
+			}
+		}
+
+		[Test]
+		public void TestCountWithOrderByAsync([IdlProviders] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var q1 = db.Person.OrderBy(x => x.ID);
+
+				var q2 = from p in q1
+					join p2 in db.Person on p.ID equals p2.ID
+					select p2;
+
+				Assert.DoesNotThrowAsync(() => q2.MaxAsync(x => x.ID));
+				Assert.DoesNotThrowAsync(() => q2.CountAsync());
 			}
 		}
 

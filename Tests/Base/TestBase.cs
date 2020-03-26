@@ -1050,7 +1050,37 @@ namespace Tests
 			return DataCache<LinqDataTypes>.Get(context);
 		}
 
-		protected string GetProviderName(string context, out bool isLinqService)
+		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		{
+			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
+		}
+
+		public static string GetTempTableName(string tableName, string context)
+		{
+			var finalTableName = tableName;
+			switch (GetProviderName(context, out var _))
+			{
+				case TestProvName.SqlAzure:
+				case ProviderName.SqlServer:
+				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2005:
+				case ProviderName.SqlServer2008:
+				case ProviderName.SqlServer2012:
+				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
+					{
+						if (!tableName.StartsWith("#"))
+							finalTableName = "#" + tableName;
+						break;
+					}
+				default:
+					throw new NotImplementedException();
+			}
+
+			return finalTableName;
+		}
+
+		protected static string GetProviderName(string context, out bool isLinqService)
 		{
 			isLinqService = context.EndsWith(".LinqService");
 			return context.Replace(".LinqService", "");

@@ -87,6 +87,81 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 				}
 			}
+			else 
+			{
+				var output = statement.GetOutputClause();
+				if (output != null && output.HasOutputItems)
+				{
+					AppendIndent()
+						.AppendLine("OUTPUT");
+
+					if (output.InsertedTable != null)
+						output.InsertedTable.PhysicalName = "INSERTED";
+
+					if (output.DeletedTable != null)
+						output.DeletedTable.PhysicalName = "DELETED";
+
+					++Indent;
+
+					bool first = true;
+					foreach (var oi in output.OutputItems)
+					{
+						if (!first)
+							StringBuilder.Append(',').AppendLine();
+						first = false;
+
+						AppendIndent();
+
+						BuildExpression(oi.Expression!);
+					}
+
+					if (output.OutputItems.Count > 0)
+					{
+						StringBuilder
+							.AppendLine();
+					}
+
+					--Indent;
+
+					if (output.OutputQuery != null)
+					{
+						BuildColumns(output.OutputQuery);
+					}
+
+					if (output.OutputTable != null)
+					{
+						AppendIndent()
+							.Append("INTO ")
+							.Append(GetTablePhysicalName(output.OutputTable))
+							.AppendLine();
+
+						AppendIndent()
+							.AppendLine("(");
+
+						++Indent;
+
+						var firstColumn = true;
+						foreach (var oi in output.OutputItems)
+						{
+							if (!firstColumn)
+								StringBuilder.Append(',').AppendLine();
+							firstColumn = false;
+
+							AppendIndent();
+
+							BuildExpression(oi.Column, false, true);
+						}
+
+						StringBuilder
+							.AppendLine();
+
+						--Indent;
+
+						AppendIndent()
+							.AppendLine(")");
+					}
+				}
+			}
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)

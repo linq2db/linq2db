@@ -179,9 +179,7 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			IBuildContext sequence)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
-
-			BuildSetterWithContext(builder, buildInfo, setter, into, items, ctx);
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
 		}
 
 		internal static void BuildSetterWithContext(
@@ -190,8 +188,10 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression       setter,
 			IBuildContext          into,
 			List<SqlSetExpression> items,
-			ExpressionContext      ctx)
+			params IBuildContext[] sequences)
 		{
+			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
+
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
 				var column = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
@@ -273,7 +273,7 @@ namespace LinqToDB.Linq.Builder
 			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
-				var p  = ctx.Sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildNew(ex, bodyPath);
 
@@ -282,7 +282,7 @@ namespace LinqToDB.Linq.Builder
 			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
 			{
 				var ex = (MemberInitExpression)bodyExpr;
-				var p  = ctx.Sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildMemberInit(ex, bodyPath);
 
@@ -541,12 +541,23 @@ namespace LinqToDB.Linq.Builder
 				//	sequence = new SubQueryContext(sequence);
 
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var update   =                   methodCall.Arguments[2].Unwrap();
+				var update   =  methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
 
 				var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 				sequence.Statement  = updateStatement;
 
-				if (update.NodeType == ExpressionType.Lambda)
+				if (update == null)
+				{
+					// we have first lambda as whole update field part
+					var sp     = sequence.Parent;
+					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
+					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body);
+
+					builder.ReplaceParent(ctx, sp);
+
+					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
+				}
+				else if (update.NodeType == ExpressionType.Lambda)
 					ParseSet(
 						builder,
 						buildInfo,

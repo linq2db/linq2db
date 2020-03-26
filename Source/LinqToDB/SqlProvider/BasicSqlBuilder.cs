@@ -36,6 +36,27 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Parameters Support
+
+		public    List<SqlParameter>     ActualParameters { get; } = new List<SqlParameter>();
+
+		protected void AddParameters(List<SqlParameter> parameters)
+		{
+			foreach (var parameter in parameters)
+			{
+				if (!ActualParameters.Contains(parameter))
+					ActualParameters.Add(parameter);
+			}
+		}
+
+		protected void AddParameter(SqlParameter parameter)
+		{
+			if (!ActualParameters.Contains(parameter))
+				ActualParameters.Add(parameter);
+		}
+
+		#endregion
+
 		#region Support Flags
 
 		public virtual bool IsNestedJoinSupported           => true;
@@ -117,9 +138,11 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber,
+						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, indent,
 							skipAlias);
+						AddParameters(sqlBuilder.ActualParameters);
 					}
 				}
 			}
@@ -146,8 +169,10 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0,
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, indent, skipAlias);
+			AddParameters(sqlBuilder.ActualParameters);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -185,16 +210,16 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                                             break;
-				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                                             break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                                            break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                                            break;
 				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery!, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false);                  break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);                                     break;
-				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                                        break;
-				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                          break;
-				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                      break;
-				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                              break;
-				default                      : BuildUnknownQuery();                                                                                    break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false);                 break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);                                    break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                                       break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
+				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
+				default                      : BuildUnknownQuery();                                                                                   break;
 			}
 		}
 
@@ -225,7 +250,9 @@ namespace LinqToDB.SqlProvider
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
 				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
+			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, Indent);
+			AddParameters(sqlBuilder.ActualParameters);
 
 			--Indent;
 
@@ -262,7 +289,9 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
+			AddParameters(sqlBuilder.ActualParameters);
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -283,6 +312,10 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+			else
+			{
+				BuildReturningSubclause(statement);
+			}
 		}
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -310,6 +343,8 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+			else
+				BuildReturningSubclause(statement);
 
 			--Indent;
 
@@ -570,11 +605,15 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 
 				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
-				StringBuilder.Append(" = ");
 
-				var addAlias = false;
+				if (expr.Expression != null)
+				{
+					StringBuilder.Append(" = ");
 
-				BuildColumnExpression(selectQuery, expr.Expression!, null, ref addAlias);
+					var addAlias = false;
+
+					BuildColumnExpression(selectQuery, expr.Expression, null, ref addAlias);
+				}
 			}
 
 			Indent--;
@@ -598,6 +637,17 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
+		}
+
+		protected virtual void BuildReturningSubclause(SqlStatement statement)
+		{
+		}
+
+		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
+		{
+			Statement     = statement;
+			StringBuilder = sb;
+			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string? insertText, bool appendTableName, bool addAlias)
@@ -2158,8 +2208,10 @@ namespace LinqToDB.SqlProvider
 
 						if (buildTableName && field.Table != null)
 						{
-							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
-							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
+							var ts = field.Table.SqlTableType == SqlTableType.SystemTable
+								? field.Table
+								: Statement.SelectQuery?.GetTableSource(field.Table);
+
 							if (ts == null)
 							{
 								SqlStatement? current = Statement;
@@ -2306,6 +2358,7 @@ namespace LinqToDB.SqlProvider
 						if (parm.IsQueryParameter)
 						{
 							var name = Convert(parm.Name!, ConvertType.NameToQueryParameter);
+							AddParameter(parm);
 
 							StringBuilder.Append(name);
 						}
@@ -2371,8 +2424,8 @@ namespace LinqToDB.SqlProvider
 				return text;
 
 			text = text.Replace("\r", "");
-
-			var strArray = text.Split('\n');
+			
+			var strArray = text.Split('\n'); 
 			var sb = new StringBuilder();
 			for (var i = 0; i < strArray.Length; i++)
 			{
@@ -2859,7 +2912,7 @@ namespace LinqToDB.SqlProvider
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Date;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr        == dateName;
+				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == dateName;
 			}
 
 			return false;
@@ -2870,7 +2923,7 @@ namespace LinqToDB.SqlProvider
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Time;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr        == "Time";
+				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == "Time";
 			}
 
 			return false;

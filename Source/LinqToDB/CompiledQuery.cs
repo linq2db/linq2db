@@ -23,7 +23,7 @@ namespace LinqToDB
 
 		readonly object                   _sync = new object();
 		readonly LambdaExpression         _query;
-		volatile Func<object?[],object?>? _compiledQuery;
+		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
 		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
@@ -32,7 +32,8 @@ namespace LinqToDB
 					if (_compiledQuery == null)
 						_compiledQuery = CompileQuery(_query);
 
-			return (TResult)_compiledQuery(args)!;
+			//TODO: pass preambles
+			return (TResult)_compiledQuery(args, null)!;
 		}
 
 		enum MethodType
@@ -44,29 +45,30 @@ namespace LinqToDB
 
 		interface ITableHelper
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type);
+			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
 		class TableHelper<T> : ITableHelper
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type)
+			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
 			{
 				var table = new CompiledTable<T>(query, expr);
 
 				return Expression.Call(
 					Expression.Constant(table),
 					type == MethodType.Queryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!, null!)) :
 					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!)),
-					ps);
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!, null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!, null!)),
+					ps, preambles);
 			}
 		}
 
-		static Func<object?[],object?> CompileQuery(LambdaExpression query)
+		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
 			var ps = Expression.Parameter(typeof(object[]), "ps");
+			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
 			var info = query.Body.Transform(pi =>
 			{
@@ -93,7 +95,7 @@ namespace LinqToDB
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type));
 
-								return helper.CallTable(query, expr, ps, MethodType.ElementAsync);
+								return helper.CallTable(query, expr, ps, preambles, MethodType.ElementAsync);
 							}
 							else if (expr.IsQueryable())
 							{
@@ -105,7 +107,7 @@ namespace LinqToDB
 								var helper = (ITableHelper)Activator.CreateInstance(
 									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
-								return helper.CallTable(query, expr, ps, qtype != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(query, expr, ps, preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
 
 							if (expr.Method.Name == "GetTable" && expr.Method.DeclaringType == typeof(DataExtensions))
@@ -120,7 +122,7 @@ namespace LinqToDB
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
-							return helper.CallTable(query, pi, ps, MethodType.Queryable);
+							return helper.CallTable(query, pi, ps, preambles, MethodType.Queryable);
 						}
 
 						break;
@@ -129,7 +131,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object?[],object?>>(Expression.Convert(info, typeof(object)), ps).Compile();
+			return Expression.Lambda<Func<object?[],object?[]?,object?>>(Expression.Convert(info, typeof(object)), ps, preambles).Compile();
 		}
 
 		#region Invoke

@@ -18,16 +18,16 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters);
+			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
 		internal class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters)
-				: base(query, queryNumber, dataConnection, expression, parameters)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataConnection, expression, parameters, preambles)
 			{
 				_dataConnection = dataConnection;
 				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
@@ -180,7 +180,7 @@ namespace LinqToDB.Data
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
-				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema);
+				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema, dataConnection.InlineParameters);
 
 				var cc = sqlProvider.CommandCount(sql);
 				var sb = new StringBuilder();
@@ -201,7 +201,7 @@ namespace LinqToDB.Data
 				return new PreparedQuery
 				{
 					Commands      = commands,
-					SqlParameters = sql.Parameters,
+					SqlParameters = sqlProvider.ActualParameters,
 					Statement     = sql,
 					SqlProvider   = sqlProvider,
 					QueryHints    = query.QueryHints,
@@ -210,36 +210,18 @@ namespace LinqToDB.Data
 
 			static void GetParameters(DataConnection dataConnection, IQueryContext query, PreparedQuery pq)
 			{
-				var parameters = query.GetParameters();
-
-				if (parameters.Length == 0 && pq.SqlParameters.Count == 0)
+				if (pq.SqlParameters.Count == 0)
 					return;
 
-				var ordered = dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent;
-				var c       = ordered ? pq.SqlParameters.Count : parameters.Length;
-				var parms   = new List<IDbDataParameter>(c);
+				var parms = new List<IDbDataParameter>(pq.SqlParameters.Count);
 
-				if (ordered)
-				{
 					for (var i = 0; i < pq.SqlParameters.Count; i++)
 					{
 						var sqlp = pq.SqlParameters[i];
 
 						if (sqlp.IsQueryParameter)
 						{
-							var parm = parameters.Length > i && object.ReferenceEquals(parameters[i], sqlp) ?
-								parameters[i] :
-								parameters.First(p => object.ReferenceEquals(p, sqlp));
-							AddParameter(dataConnection, parms, parm.Name!, parm);
-						}
-					}
-				}
-				else
-				{
-					foreach (var parm in parameters)
-					{
-						if (parm.IsQueryParameter && pq.SqlParameters.Contains(parm))
-							AddParameter(dataConnection, parms, parm.Name!, parm);
+						AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
 					}
 				}
 

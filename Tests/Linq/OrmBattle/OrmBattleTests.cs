@@ -1408,8 +1408,9 @@ namespace Tests.OrmBattle
 				Setup(context);
 				var result = db.Supplier.Select(
 					supplier => db.Product.Select(
-						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
-				var count = result.ToList().Count;
+						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)))
+					.ToList();
+				var count = result.Count;
 				Assert.Greater(count, 0);
 				foreach (var queryable in result)
 				{
@@ -1513,11 +1514,10 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Complex"), ActiveIssue(592)]
+		[Test]
 		public void ComplexTest6([NorthwindDataContext] string context)
 		{
 			Setup(context);
-			//TODO: sdanyliv: Another strange query that needs efforts for implementation. Can be replaced by this one:
 			var r =
 				from c in db.Customer
 				from o in db.Order

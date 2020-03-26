@@ -562,7 +562,6 @@ namespace Tests.DataProvider
 			public DateTime? DateTimeN { get; set; }
 		}
 
-		[ActiveIssue(730, SkipForNonLinqService = true)]
 		[Test]
 		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
 		{

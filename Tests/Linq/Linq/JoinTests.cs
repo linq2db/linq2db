@@ -4,7 +4,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-
+using LinqToDB.Reflection;
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -265,6 +266,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin2([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -289,6 +291,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin3([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 = Parent
@@ -324,6 +327,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin4([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -357,16 +361,24 @@ namespace Tests.Linq
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First()
-					,
-					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First());
+			{
+				var expectedQuery = from p in Parent
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var actualQuery = from p in db.Parent
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var expected = expectedQuery.ToArray(); 
+				var actual   = actualQuery.ToArray(); 
+
+				AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
@@ -415,6 +427,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin53([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -450,6 +463,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -485,6 +499,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -523,15 +538,17 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					join c in Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() }
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() }
 					,
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() });
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() });
 		}
 
+		// Access has strange order strategy
+		// Informix move constant column value from left-joined subquery to top level even for null records
 		[Test]
-		public void GroupJoin9([DataSources] string context)
+		public void GroupJoin9([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +653,8 @@ namespace Tests.Linq
 						.SelectMany(
 							a => a.y.DefaultIfEmpty(),
 							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						));
+						)
+					);
 		}
 
 		[Test]
@@ -825,7 +843,6 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[ActiveIssue(577)]
 		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{

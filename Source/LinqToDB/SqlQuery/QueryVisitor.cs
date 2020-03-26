@@ -76,6 +76,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.OutputClause:
+					{
+						Visit1X((SqlOutputClause)element);
+						break;
+					}
+
 				case QueryElementType.Column:
 					{
 						Visit1(((SqlColumn)element).Expression);
@@ -209,6 +215,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit1(((SqlInsertStatement)element).With);
 						Visit1(((SqlInsertStatement)element).Insert);
+						Visit1(((SqlInsertStatement)element).Output);
 						Visit1(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
@@ -436,11 +443,31 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SqlTable table)
 		{
+			if (table == null)
+				return;
+
 			Visit1(table.All);
 			foreach (var field in table.Fields.Values) Visit1(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit1(a);
+		}
+
+		void Visit1X(SqlOutputClause outputClause)
+		{
+			if (outputClause == null)
+				return;
+
+			Visit1X(outputClause.SourceTable);
+			Visit1X(outputClause.DeletedTable);
+			Visit1X(outputClause.InsertedTable);
+			Visit1X(outputClause.OutputTable);
+			if (outputClause.OutputQuery != null)
+				Visit1X(outputClause.OutputQuery);
+
+			if (outputClause.HasOutputItems)
+				foreach (var item in outputClause.OutputItems)
+					Visit1(item);
 		}
 
 		void Visit1X(SqlWithClause element)
@@ -579,6 +606,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.OutputClause:
+					{
+						Visit2X((SqlOutputClause)element);
+						break;
+					}
+
 				case QueryElementType.Column:
 					{
 						Visit2(((SqlColumn)element).Expression);
@@ -712,6 +745,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit2(((SqlInsertStatement)element).With);
 						Visit2(((SqlInsertStatement)element).Insert);
+						Visit2(((SqlInsertStatement)element).Output);
 						Visit2(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
@@ -973,6 +1007,9 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SqlTable table)
 		{
+			if (table == null)
+				return;
+
 			Visit2(table.All);
 			foreach (var field in table.Fields.Values) Visit2(field);
 
@@ -1004,6 +1041,23 @@ namespace LinqToDB.SqlQuery
 
 			// do not visit it may fail by stack overflow
 			//Visit2(table.CTE);
+		}
+
+		void Visit2X(SqlOutputClause outputClause)
+		{
+			if (outputClause == null)
+				return;
+
+			Visit2X(outputClause.SourceTable);
+			Visit2(outputClause.DeletedTable);
+			Visit2(outputClause.InsertedTable);
+			Visit2X(outputClause.OutputTable);
+			if (outputClause.OutputQuery != null)
+				Visit2(outputClause.OutputQuery);
+
+			if (outputClause.HasOutputItems)
+				foreach (var item in outputClause.OutputItems)
+					Visit2(item);
 		}
 
 		void Visit2X(SqlExpression element)
@@ -1151,6 +1205,16 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlRawSqlTable)element).All          ) ??
 							Find(((SqlRawSqlTable)element).Fields.Values) ??
 							Find(((SqlRawSqlTable)element).Parameters   );
+					}
+
+				case QueryElementType.OutputClause:
+					{
+						return
+							Find(((SqlOutputClause)element).SourceTable)   ??
+							Find(((SqlOutputClause)element).DeletedTable)  ??
+							Find(((SqlOutputClause)element).InsertedTable) ??
+							Find(((SqlOutputClause)element).OutputTable)   ??
+							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems) : null);
 					}
 
 				case QueryElementType.TableSource:
@@ -1527,6 +1591,39 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.OutputClause:
+					{
+						var output = (SqlOutputClause)element;
+
+						var sourceTable   = ConvertInternal(output.SourceTable);
+						var deletedTable  = ConvertInternal(output.DeletedTable);
+						var insertedTable = ConvertInternal(output.InsertedTable);
+						var outputTable   = ConvertInternal(output.OutputTable);
+
+						var outputItems   = !output.HasOutputItems ? null : Convert(output.OutputItems);
+
+						if (!ReferenceEquals(output.SourceTable, sourceTable)   ||
+						    !ReferenceEquals(output.SourceTable, deletedTable)  ||
+						    !ReferenceEquals(output.SourceTable, insertedTable) ||
+						    !ReferenceEquals(output.SourceTable, outputTable)   ||
+						    outputItems != null
+						)
+						{
+							newElement = output = new SqlOutputClause
+							{
+								SourceTable   = (SqlTable)sourceTable,
+								DeletedTable  = (SqlTable)deletedTable,
+								InsertedTable = (SqlTable)insertedTable,
+								OutputTable   = (SqlTable)outputTable
+							};
+
+							if (outputItems != null)
+								output.OutputItems.AddRange(outputItems);
+						}
+
+						break;
+					}
+
 				case QueryElementType.Column:
 					{
 						var col  = (SqlColumn)element;
@@ -1551,7 +1648,7 @@ namespace LinqToDB.SqlQuery
 							uk = ConvertListArray(table.UniqueKeys, null);
 
 						if (source != null && !ReferenceEquals(source, table.Source) ||
-							joins  != null && !ReferenceEquals(table.Joins, joins)   || 
+							joins  != null && !ReferenceEquals(table.Joins, joins)   ||
 							uk     != null && !ReferenceEquals(table.UniqueKeys, uk))
 						{
 							newElement = new SqlTableSource(source ?? table.Source, table._alias!, joins ?? table.Joins,

@@ -1961,10 +1961,10 @@ namespace Tests.Linq
 		[Table("Stone")]
 		public class Stone
 		{
-			[PrimaryKey, Identity] public int Id { get; set; } // int
-			[Column, NotNull] public string Name { get; set; } // nvarchar(256)
-			[Column, Nullable] public bool? Enabled { get; set; } // bit
-			[Column, Nullable] public string ImageFullUrl { get; set; } // nvarchar(255)
+			[PrimaryKey, Identity] public int    Id           { get; set; } // int
+			[Column, NotNull     ] public string Name         { get; set; } // nvarchar(256)
+			[Column, Nullable    ] public bool?  Enabled      { get; set; } // bit
+			[Column, Nullable    ] public string ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
 		[ActiveIssue]
@@ -1973,7 +1973,7 @@ namespace Tests.Linq
 		{
 			using (new GuardGrouping(enableGroupByguard))
 			using (var db = GetDataContext(context))
-			using (db.CreateTempTable<Stone>())
+			using (db.CreateLocalTable<Stone>())
 			{
 				db.Insert(new Stone() { Id = 1, Name = "group1", Enabled = true, ImageFullUrl = "123" });
 				db.Insert(new Stone() { Id = 2, Name = "group1", Enabled = true, ImageFullUrl = "123" });

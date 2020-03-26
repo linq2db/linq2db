@@ -23,8 +23,6 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		internal static readonly MethodInfo TableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null!, null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides table or view name with new name for current query.
 		/// </summary>
@@ -42,8 +40,6 @@ namespace LinqToDB
 			var result = ((ITableMutable<T>)table).ChangeTableName(name);
 			return result;
 		}
-
-		internal static readonly MethodInfo DatabaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Overrides database name with new name for current query. This call will have effect only for databases that support
@@ -107,8 +103,6 @@ namespace LinqToDB
 			return SchemaName(table, name);
 		}
 
-		internal static readonly MethodInfo SchemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null!, null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
@@ -125,8 +119,6 @@ namespace LinqToDB
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
 			return result;
 		}
-
-		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Replaces access to a table in generated query with SQL expression.
@@ -150,13 +142,11 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				_withTableExpressionMethodInfo.MakeGenericMethod(typeof(T)),
+				MethodHelper.GetMethodInfo(WithTableExpression, table, expression),
 				new[] { table.Expression, Expression.Constant(expression) });
 
 			return table;
 		}
-
-		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds table hints to a table in generated query.
@@ -178,59 +168,8 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				_with.MakeGenericMethod(typeof(T)),
+				MethodHelper.GetMethodInfo(With, table, args),
 				new[] { table.Expression, Expression.Constant(args) });
-
-			return table;
-		}
-
-		#endregion
-
-		#region LoadWith
-
-		static readonly MethodInfo _loadWithMethodInfo = MemberHelper.MethodOf(() => LoadWith<int>(null!, null!)).GetGenericMethodDefinition();
-
-		/// <summary>
-		/// Specifies associations, that should be loaded for each loaded record from current table.
-		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
-		/// Take into account that use of this method could require multiple queries to load all requested associations.
-		/// Some usage examples:
-		/// <code>
-		/// // loads records from Table1 with Reference association loaded for each Table1 record
-		/// db.Table1.LoadWith(r => r.Reference);
-		///
-		/// // loads records from Table1 with Reference1 association loaded for each Table1 record
-		/// // loads records from Reference2 association for each loaded Reference1 record
-		/// db.Table1.LoadWith(r => r.Reference1.Reference2);
-		///
-		/// // loads records from Table1 with References collection association loaded for each Table1 record
-		/// db.Table1.LoadWith(r => r.References);
-		///
-		/// // loads records from Table1 with Reference1 collection association loaded for each Table1 record
-		/// // loads records from Reference2 collection association for each loaded Reference1 record
-		/// // loads records from Reference3 association for each loaded Reference2 record
-		/// // note that a way you access collection association record (by index, using First() method) doesn't affect
-		/// // query results and allways select all records
-		/// db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
-		/// </code>
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="table">Table-like query source.</param>
-		/// <param name="selector">Association selection expression.</param>
-		/// <returns>Table-like query source.</returns>
-		[LinqTunnel]
-		[Pure]
-		public static ITable<T> LoadWith<T>(
-			                this ITable<T> table,
-			[InstantHandle] Expression<Func<T,object>> selector)
-		{
-			if (table    == null) throw new ArgumentNullException(nameof(table));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
-
-			table.Expression = Expression.Call(
-				null,
-				_loadWithMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { table.Expression, Expression.Quote(selector) });
 
 			return table;
 		}
@@ -878,7 +817,7 @@ namespace LinqToDB
 		public static IUpdatable<T> Set<T,TV>(
 			                this IQueryable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                              value)
+			TV                                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -910,7 +849,7 @@ namespace LinqToDB
 		public static IUpdatable<T> Set<T,TV>(
 			                this IUpdatable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                              value)
+			TV                                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -922,6 +861,77 @@ namespace LinqToDB
 					null,
 					_setMethodInfo6.MakeGenericMethod(typeof(T), typeof(TV)),
 					new[] { query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IQueryable<T>         source,
+			[InstantHandle] Expression<Func<T,string>> setExpression)
+		{
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					new[] { currentSource.Expression, Expression.Quote(setExpression) }));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.AsUpdatable()
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IUpdatable<T>         source,
+			[InstantHandle] Expression<Func<T,string>> setExpression)
+		{
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var query = ((Updatable<T>)source).Query;
+
+			query = query.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					new[] { query.Expression, Expression.Quote(setExpression) }));
 
 			return new Updatable<T>(query);
 		}
@@ -2734,9 +2744,6 @@ namespace LinqToDB
 
 		#region IOrderedQueryable
 
-		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() =>
-			ThenOrBy(null!,(Expression<Func<int, int>>)null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Adds ascending sort expression to a query.
 		/// If query already sorted, existing sorting will be preserved and updated with new sort.
@@ -2760,12 +2767,9 @@ namespace LinqToDB
 			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_thenOrBy.MakeGenericMethod(typeof(TSource), typeof(TKey)),
+					MethodHelper.GetMethodInfo(ThenOrBy, source, keySelector),
 					new[] { currentSource.Expression, Expression.Quote(keySelector) }));
 		}
-
-		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() =>
-			ThenOrByDescending(null!, (Expression<Func<int, int>>)null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Adds descending sort expression to a query.
@@ -2790,8 +2794,29 @@ namespace LinqToDB
 			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_thenOrByDescending.MakeGenericMethod(typeof(TSource), typeof(TKey)),
+					MethodHelper.GetMethodInfo(ThenOrByDescending, source, keySelector),
 					new[] { currentSource.Expression, Expression.Quote(keySelector) }));
+		}
+
+		/// <summary>
+		/// Removes ordering from current query.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Unsorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> RemoveOrderBy<TSource>(
+			[NotNull]                this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(RemoveOrderBy, source), currentSource.Expression));
 		}
 
 		#endregion

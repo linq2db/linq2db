@@ -1771,10 +1771,8 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
 		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
 
-		// Sybase disabled due to https://github.com/nunit/nunit/issues/3296
-		// because it breaks test run, which is very annoying
-		[Test, ActiveIssue(1622)]
-		public void Issue1622Test([DataSources(ProviderName.Sybase)] string context)
+		[Test]
+		public void Issue1622Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			using (var db = GetDataContext(context, ms))

@@ -1825,12 +1825,55 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
 		{
-			statement = new QueryVisitor().ConvertImmutable(statement, e =>
+			var visitor = new QueryVisitor();
+			statement = visitor.ConvertImmutable(statement, e =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);
+
+				// make skip take as parameters or evaluate otherwise
+				if (visitor.ParentElement?.ElementType == QueryElementType.SelectClause && e is ISqlExpression expr)
+				{
+					var selectClause = (SqlSelectClause)visitor.ParentElement;
+					if (selectClause.TakeValue != null && ReferenceEquals(expr, selectClause.TakeValue))
+					{
+						var take = expr;
+						if (SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectClause.SelectQuery))
+						{
+							if (expr.ElementType != QueryElementType.SqlParameter)
+							{
+								var takeValue = take.EvaluateExpression()!;
+								take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
+									{ IsQueryParameter = !inlineParameters };
+							}
+						}
+						else if (take.ElementType != QueryElementType.SqlValue)
+							take = new SqlValue(take.EvaluateExpression()!);
+
+						return take;
+					}
+					
+					if (selectClause.SkipValue != null && ReferenceEquals(expr, selectClause.SkipValue))
+					{ 
+						var skip = expr;
+						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery) 
+						    && SqlProviderFlags.AcceptsTakeAsParameter)
+						{
+							if (expr.ElementType != QueryElementType.SqlParameter)
+							{
+								var skipValue = skip.EvaluateExpression()!;
+								skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
+									{ IsQueryParameter = !inlineParameters };
+							}
+						}
+						else if (skip.ElementType != QueryElementType.SqlValue)
+							skip = new SqlValue(skip.EvaluateExpression()!);
+
+						return skip;
+					}
+				}
 
 				return e;
 			});

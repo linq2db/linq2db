@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
@@ -867,6 +868,43 @@ namespace LinqToDB.SqlQuery
 				});
 
 				searchCondition.Conditions[i] = newCondition;
+			}
+		}
+
+		public static object? EvaluateExpression(this ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlValue           : return ((SqlValue)expr).Value;
+				case QueryElementType.SqlParameter       : return ((SqlParameter)expr).Value;
+				case QueryElementType.SqlBinaryExpression:
+					{
+						var binary = (SqlBinaryExpression)expr;
+						dynamic? left  = binary.Expr1.EvaluateExpression();
+						dynamic? right = binary.Expr2.EvaluateExpression();
+						if (left == null || right == null)
+							return null;
+						switch (binary.Operation)
+						{
+							case "+": return left + right;
+							case "-": return left - right;
+							case "*": return left * right;
+							case "/": return left / right;
+							case "%": return left * right;
+							case "^": return left ^ right;
+							case "&": return left & right;
+							default:
+								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
+						}
+					}
+
+				default:
+					{
+						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+							.ToString();
+						throw new NotImplementedException(
+							$"Not implemented evaluation of '{expr.ElementType}': '{str}'.");
+					}
 			}
 		}
 	}

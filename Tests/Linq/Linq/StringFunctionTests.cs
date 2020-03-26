@@ -208,7 +208,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(2005)]
+		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void StartsWithSQL([DataSources(false)] string context)
 		{
@@ -221,6 +221,16 @@ namespace Tests.Linq
 				{
 					Assert.True(db.LastQuery.Contains(" STARTING WITH 'Jo'"));
 					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
+				}
+				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE N'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
+				}
+				else if (context.Contains("Informix"))
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
 				}
 				else
 				{
@@ -363,7 +373,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers")]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers (except HANA)")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,

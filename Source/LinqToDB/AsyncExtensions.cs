@@ -38,7 +38,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Function result type.</typeparam>
 		/// <param name="func">Function to execute.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
-		static Task<T> GetTask<T>(Func<T> func)
+		internal static Task<T> GetTask<T>(Func<T> func)
 		{
 			var task = new Task<T>(func);
 

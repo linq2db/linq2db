@@ -137,5 +137,26 @@ namespace LinqToDB.Async
 			}
 		}
 
+		/// <summary>Returns the first element of a sequence.</summary>
+		/// <param name="source">The <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return the first element of.</param>
+		/// <param name="token">Cancellation token</param>
+		/// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+		/// <returns>The first element in the specified sequence.</returns>
+		/// <exception cref="T:System.ArgumentNullException">
+		/// <paramref name="source" /> is <see langword="null" />.</exception>
+		/// <exception cref="T:System.InvalidOperationException">The source sequence is empty.</exception>
+		public static async Task<TSource> FirstAsync<TSource>([NotNull] this IAsyncEnumerable<TSource> source, CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			using (var enumerator = source.GetEnumerator())
+			{
+				if (await enumerator.MoveNext(token))
+					return enumerator.Current;
+			}
+
+			throw new InvalidOperationException("The source sequence is empty.");
+		}
+
 	}
 }

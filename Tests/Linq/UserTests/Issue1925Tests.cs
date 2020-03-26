@@ -22,7 +22,6 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		[ActiveIssue(1925)]
 		public void Issue1925Test([IncludeDataSources(ProviderName.Access, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
 		{
 			using (var db = GetDataContext(context))
@@ -40,9 +39,16 @@ namespace Tests.Playground
 
 				Assert.AreEqual(1, table.Where(r => r.Value.Contains("[0-9]")).ToList().Count());
 
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
-
+				if (context.Contains("Access"))
+				{
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+				}
+				else
+				{
+					table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count();
+					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count();
+				}
 
 				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count());
 
