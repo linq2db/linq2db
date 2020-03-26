@@ -1060,6 +1060,7 @@ namespace Tests
 			var finalTableName = tableName;
 			switch (GetProviderName(context, out var _))
 			{
+				case TestProvName.SqlAzure:
 				case ProviderName.SqlServer:
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:

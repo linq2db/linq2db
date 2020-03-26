@@ -216,7 +216,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("IFX: Parameters disabled", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void TestParametersInMatchCondition([MergeDataContextSource(false)] string context)
 		{
@@ -247,7 +246,6 @@ namespace Tests.xUpdate
 			{
 				case ProviderName.SapHanaOdbc    :
 				case ProviderName.Informix       :
-				case ProviderName.InformixDB2    :
 					return '?';
 				case ProviderName.SapHanaNative  :
 				case TestProvName.Oracle11Managed:

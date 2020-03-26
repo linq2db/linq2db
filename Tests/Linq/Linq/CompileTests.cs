@@ -113,10 +113,6 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		// fails with
-		// InvalidCastException: Unable to cast object of type 'System.Int64' to type 'System.Int32'.
-		// due to some #if inconsistencies
-		[ActiveIssue("NETSTANDARD != NETCOREAPP issue")]
 		[Test, Order(100)]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -153,7 +149,6 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[ActiveIssue("NETSTANDARD != NETCOREAPP issue")]
 		[Test]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

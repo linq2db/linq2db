@@ -348,6 +348,37 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Inserts records from source query into target table asynchronously and returns newly created records.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table record type.</typeparam>
+		/// <param name="source">Source query, that returns data for insert operation.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Inserted record constructor expression.
+		/// Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Array of records.</returns>
+		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
+			[NotNull]                this IQueryable<TSource>           source,
+			[NotNull]                ITable<TTarget>                    target,
+			[NotNull, InstantHandle] Expression<Func<TSource, TTarget>> setter,
+									 CancellationToken                  token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TTarget>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
+						currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)))
+				.ToArrayAsync(token);
+		}
+
+		/// <summary>
 		/// Inserts records from source query into target table and returns newly created records.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>

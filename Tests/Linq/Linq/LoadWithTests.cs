@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -498,5 +498,58 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		class ParentRecord
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildRecord.ParentId))]
+			public List<ChildRecord> Children;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildRecord.ParentId), ExpressionPredicate = nameof(ActiveChildrenPredicate))]
+			public List<ChildRecord> ActiveChildren;
+
+			public static Expression<Func<ParentRecord, ChildRecord, bool>> ActiveChildrenPredicate => (p, c) => c.IsActive;
+
+			public static readonly ParentRecord[] Items = new[]
+			{
+				new ParentRecord() { Id = 1 }
+			};
+		}
+
+		[Table]
+		class ChildRecord
+		{
+			[Column] public int Id        { get; set; }
+			[Column] public int ParentId  { get; set; }
+			[Column] public bool IsActive { get; set; }
+
+			public static readonly ChildRecord[] Items = new[]
+			{
+				new ChildRecord() { Id = 11, ParentId = 1, IsActive = true  },
+				new ChildRecord() { Id = 12, ParentId = 1, IsActive = false },
+				new ChildRecord() { Id = 13, ParentId = 1, IsActive = true  },
+			};
+		}
+
+		[Test]
+		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db      = GetDataContext(context))
+			using (var parents = db.CreateLocalTable(ParentRecord.Items))
+			using (              db.CreateLocalTable(ChildRecord.Items))
+			{
+				var result = parents
+					.LoadWith(p => p.Children)
+					.LoadWith(p => p.ActiveChildren)
+					.ToArray();
+
+
+				Assert.AreEqual(1, result.Length);
+				Assert.AreEqual(3, result[0].Children.Count);
+				Assert.AreEqual(2, result[0].ActiveChildren.Count);
+			}
+		}
 	}
 }
