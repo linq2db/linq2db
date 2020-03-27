@@ -1795,7 +1795,7 @@ namespace LinqToDB
 				await InsertWithIdentityAsync(currentSource, target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
-		class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
+		internal class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
 			public SelectInsertable(IQueryable<T> query)
 			{

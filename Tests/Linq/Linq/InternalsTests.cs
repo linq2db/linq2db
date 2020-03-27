@@ -39,6 +39,10 @@ namespace Tests.Linq
 
 				extracted = Internals.GetDataContext(table.Value(t => t.Value, 1));
 				Assert.That(extracted, Is.EqualTo(db));
+
+				extracted = Internals.GetDataContext(table.Into(db.GetTable<SampleClass>()).Value(t => t.Value, () => 1));
+				Assert.That(extracted, Is.EqualTo(db));
+
 			}
 		}
 
