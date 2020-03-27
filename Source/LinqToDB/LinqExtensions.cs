@@ -632,7 +632,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		class Updatable<T> : IUpdatable<T>
+		internal class Updatable<T> : IUpdatable<T>
 		{
 			public Updatable(IQueryable<T> query)
 			{
@@ -1077,7 +1077,7 @@ namespace LinqToDB
 
 		#region ValueInsertable
 
-		class ValueInsertable<T> : IValueInsertable<T>
+		internal class ValueInsertable<T> : IValueInsertable<T>
 		{
 			public ValueInsertable(IQueryable<T> query)
 			{
