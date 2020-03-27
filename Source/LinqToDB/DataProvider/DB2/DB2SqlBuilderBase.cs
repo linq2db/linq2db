@@ -159,8 +159,12 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp");             return;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");             return;
+				case DataType.DateTime  :
+				case DataType.DateTime2 :
+					StringBuilder.Append("timestamp");
+					if (type.Type.Precision != null && type.Type.Precision != 6)
+						StringBuilder.Append($"({type.Type.Precision})");
+					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar:

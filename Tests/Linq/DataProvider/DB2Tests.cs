@@ -25,7 +25,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
-
+	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
@@ -126,12 +126,12 @@ namespace Tests.DataProvider
 			}
 
 			// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
-			//Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			//Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			//Debug.WriteLine("{0} -> auto", typeof(T));
-			//Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			//Debug.WriteLine("{0} -> new",  typeof(T));
-			//Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = expectedValue }), Is.EqualTo(expectedValue));
+//			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
+//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+//			Debug.WriteLine("{0} -> auto", typeof(T));
+//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+//			Debug.WriteLine("{0} -> new",  typeof(T));
+//			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -619,6 +619,167 @@ namespace Tests.DataProvider
 			Assert.That(new DB2TimeStamp   ().IsNull, Is.True);
 			Assert.That(new DB2RowId       ().IsNull, Is.True);
 			Assert.That(new DB2DateTime    ().IsNull, Is.True);
+		}
+
+		[Table]
+		class TestTimeTypes
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime Date1 { get; set; }
+
+			[Column(DbType = "Date")]
+			public DateTime Date2 { get; set; }
+
+			[Column]
+			public TimeSpan Time { get; set; }
+
+			[Column(Precision = 0)]
+			public DateTime TimeStamp0 { get; set; }
+
+			// TODO: dbtype not passed from mapping to value builder. Fixed in 3.0
+			//[Column(DbType = "timestamp(1)")]
+			[Column(Precision = 1)]
+			public DateTime TimeStamp1 { get; set; }
+
+			[Column(Precision = 2)]
+			public DateTime TimeStamp2 { get; set; }
+
+			//[Column(DbType = "timestamp(3)")]
+			[Column(Precision = 3)]
+			public DateTime TimeStamp3 { get; set; }
+
+			[Column(Precision = 4)]
+			public DateTime TimeStamp4 { get; set; }
+
+			//[Column(DbType = "TimeStamp(5)")]
+			[Column(Precision = 5)]
+			public DateTime TimeStamp5 { get; set; }
+
+			[Column(Precision = 6)]
+			public DateTime TimeStamp6 { get; set; }
+
+			//[Column(DbType = "timestamp(7)")]
+			[Column(Precision = 7)]
+			public DateTime TimeStamp7 { get; set; }
+
+			[Column(Precision = 8)]
+			public DB2TimeStamp TimeStamp8 { get; set; }
+
+			//[Column(DbType = "timestamp(9)")]
+			[Column(Precision = 9)]
+			public DB2TimeStamp TimeStamp9 { get; set; }
+
+			[Column(Precision = 10)]
+			public DB2TimeStamp TimeStamp10 { get; set; }
+
+			//[Column(DbType = "timestamp(11)")]
+			[Column(Precision = 11)]
+			public DB2TimeStamp TimeStamp11 { get; set; }
+
+			[Column(Precision = 12)]
+			public DB2TimeStamp TimeStamp12 { get; set; }
+
+			static TestTimeTypes()
+			{
+				Data = new[]
+				{
+					new TestTimeTypes() { Id = 1, Date1 = new DateTime(1234, 5, 6), Date2 = new DateTime(1234, 5, 7), Time = new TimeSpan(21, 2, 3) },
+					new TestTimeTypes() { Id = 2, Date1 = new DateTime(6543, 2, 1), Date2 = new DateTime(1234, 5, 8), Time = new TimeSpan(23, 2, 1) }
+				};
+
+				for (var i = 1; i <= Data.Length; i++)
+				{
+					var idx = i - 1;
+					Data[idx].TimeStamp0  = new     DateTime(1000, 1, 10, 2, 20, 30 + i, 0);
+					Data[idx].TimeStamp1  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 100);
+					Data[idx].TimeStamp2  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 10);
+					Data[idx].TimeStamp3  = new     DateTime(1000, 1, 10, 2, 20, 30, i);
+					Data[idx].TimeStamp4  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1000 * i);
+					Data[idx].TimeStamp5  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(100 * i);
+					Data[idx].TimeStamp6  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(10 * i);
+					Data[idx].TimeStamp7  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1 * i);
+					Data[idx].TimeStamp8  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10000 * i, 8);
+					Data[idx].TimeStamp9  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 1000 * i, 9);
+					Data[idx].TimeStamp10 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 100 * i, 10);
+					Data[idx].TimeStamp11 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10 * i, 11);
+					Data[idx].TimeStamp12 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, i, 12);
+				}
+			}
+
+			public static TestTimeTypes[] Data;
+
+			public static Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
+		[Test]
+		public void TestTimespanAndTimeValues([IncludeDataSources(true, ProviderName.DB2)] string context, [Values] bool useParameters)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(TestTimeTypes.Data))
+			{
+				db.InlineParameters = !useParameters;
+
+				var record = table.Where(_ => _.Id == 1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Date1 == TestTimeTypes.Data[0].Date1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Date2 == TestTimeTypes.Data[0].Date2).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Time == TestTimeTypes.Data[0].Time).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp0 == TestTimeTypes.Data[0].TimeStamp0).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp1 == TestTimeTypes.Data[0].TimeStamp1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp2 == TestTimeTypes.Data[0].TimeStamp2).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp3 == TestTimeTypes.Data[0].TimeStamp3).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp4 == TestTimeTypes.Data[0].TimeStamp4).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp5 == TestTimeTypes.Data[0].TimeStamp5).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp6 == TestTimeTypes.Data[0].TimeStamp6).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp7 == TestTimeTypes.Data[0].TimeStamp7).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp8, TestTimeTypes.Data[0].TimeStamp8)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp9, TestTimeTypes.Data[0].TimeStamp9)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp10, TestTimeTypes.Data[0].TimeStamp10)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp11, TestTimeTypes.Data[0].TimeStamp11)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp12, TestTimeTypes.Data[0].TimeStamp12)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+			}
+		}
+
+		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, PreferServerSide = true)]
+		public static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
+		{
+			throw new InvalidOperationException();
 		}
 	}
 }

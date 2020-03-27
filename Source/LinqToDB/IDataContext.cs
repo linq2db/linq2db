@@ -62,13 +62,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns column value reader expression.
 		/// </summary>
-		/// <param name="mappingSchema">Current mapping schema.</param>
 		/// <param name="reader">Data reader instance.</param>
 		/// <param name="idx">Column index.</param>
 		/// <param name="readerExpression">Data reader accessor expression.</param>
 		/// <param name="toType">Expected value type.</param>
 		/// <returns>Column read expression.</returns>
-		Expression          GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression          GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType);
 		/// <summary>
 		/// Returns true, of data reader column could contain <see cref="DBNull"/> value.
 		/// </summary>

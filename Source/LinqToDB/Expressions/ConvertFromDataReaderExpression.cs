@@ -68,7 +68,7 @@ namespace LinqToDB.Expressions
 		{
 			var toType = type.ToNullableUnderlying();
 
-			var ex = dataContext.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, toType);
+			var ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, toType);
 
 			if (ex.NodeType == ExpressionType.Lambda)
 			{

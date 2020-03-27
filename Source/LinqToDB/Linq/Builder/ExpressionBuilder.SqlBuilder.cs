@@ -2400,7 +2400,7 @@ namespace LinqToDB.Linq.Builder
 				sizeAccessor.Compile(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
-					IsQueryParameter = !(dataContext.InlineParameters && accessorExpression.Type.IsScalar(false))
+					IsQueryParameter = !(dataContext.InlineParameters && dataContext.MappingSchema.ValueToSqlConverter.CanConvert(accessorExpression.Type))
 				}
 			);
 		}

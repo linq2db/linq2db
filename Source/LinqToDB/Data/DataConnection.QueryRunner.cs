@@ -221,8 +221,8 @@ namespace LinqToDB.Data
 
 						if (sqlp.IsQueryParameter)
 						{
-						AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
-					}
+							AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
+						}
 				}
 
 				pq.Parameters = parms.ToArray();

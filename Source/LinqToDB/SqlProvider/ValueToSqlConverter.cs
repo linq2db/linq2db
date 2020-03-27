@@ -21,6 +21,8 @@ namespace LinqToDB.SqlProvider
 
 		public bool CanConvert(Type type)
 		{
+			type = type.ToNullableUnderlying();
+
 			if (_converters.ContainsKey(type))
 				return true;
 

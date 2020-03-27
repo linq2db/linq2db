@@ -182,7 +182,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// TODO: update test to work with DB2 (was sql server)
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestParametersInListSourceProperty([IncludeDataSources(ProviderName.DB2)] string context)
 		{
@@ -193,8 +192,8 @@ namespace Tests.xUpdate
 				var parameterValues = new
 				{
 					// must be type that cannot be converted to literal but will be accepted by server
-					// DB2 provider doesn't generate TIME literals
-					val = TimeSpan.FromMinutes(12)
+					// for now we don't generate literals for provider-specific types
+					val = new IBM.Data.DB2Types.DB2Time(TimeSpan.FromMinutes(12))
 				};
 
 				var table = GetTarget(db);
@@ -205,11 +204,11 @@ namespace Tests.xUpdate
 						.ToList()
 						.Select(_ => new
 						{
-							Id = _.OtherId,
+							Id    = _.OtherId,
 							Field = parameterValues.val
 						}))
 					.On((t, s) => t.Id == s.Id)
-					.DeleteWhenMatchedAnd((t, s) => t.Field3 != 1 || s.Field != null)
+					.DeleteWhenMatchedAnd((t, s) => t.Field3 != 1 || Sql.ToNullable(s.Field) != null)
 					.Merge();
 
 				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));

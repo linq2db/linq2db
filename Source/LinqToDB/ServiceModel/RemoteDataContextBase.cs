@@ -141,7 +141,7 @@ namespace LinqToDB.ServiceModel
 
 		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
-		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
