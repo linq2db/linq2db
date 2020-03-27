@@ -85,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant41([DataSources(ProviderName.Informix)] string context)
+		public void ContainsConstant41([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -180,7 +180,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
+		public void ContainsNull([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -205,6 +205,38 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.FirstName.StartsWith("Jo") && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
+		[Test]
+		public void StartsWithSQL([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
+
+				// https://github.com/linq2db/linq2db/issues/2005
+				if (context.Contains("Firebird"))
+				{
+					Assert.True(db.LastQuery.Contains(" STARTING WITH 'Jo'"));
+					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
+				}
+				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE N'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
+				}
+				else if (context.Contains("Informix"))
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
+				}
+				else
+				{
+					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
+				}
 			}
 		}
 
@@ -312,7 +344,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -322,7 +354,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -332,7 +364,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,7 +373,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers")]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers (except HANA)")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
@@ -361,7 +393,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, ProviderName.Informix,
+			ProviderName.DB2, TestProvName.AllInformix,
 			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -374,7 +406,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
 			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -388,7 +420,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
 			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -401,7 +433,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -411,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -472,7 +504,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
 			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{

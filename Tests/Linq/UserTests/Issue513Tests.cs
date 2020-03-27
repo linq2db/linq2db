@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		// https://www-01.ibm.com/support/docview.wss?uid=swg1IC66046
 		[Test, Category("WindowsOnly")]
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
-		public void Test([DataSources(ProviderName.SQLiteMS, ProviderName.Informix)] string context)
+		public void Test([DataSources(ProviderName.SQLiteMS, TestProvName.AllInformix)] string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))
 			{

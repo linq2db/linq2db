@@ -523,7 +523,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 			var builder = mappingSchema.GetFluentMappingBuilder()

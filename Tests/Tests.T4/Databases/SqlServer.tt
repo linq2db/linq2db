@@ -15,6 +15,7 @@
 	GenerateAssociationExtensions = true;
 //	BaseEntityClass = "object";
 //GenerateSqlServerFreeText = true;
+	GenerateConstructors = false;
 
 //	GenerateBackReferences = false;
 //	GenerateAssociations = true;

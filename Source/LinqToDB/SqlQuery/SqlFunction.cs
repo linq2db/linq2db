@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -66,7 +65,7 @@ namespace LinqToDB.SqlQuery
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, action);
+				Parameters[i] = Parameters[i].Walk(options, action)!;
 
 			return action(this);
 		}

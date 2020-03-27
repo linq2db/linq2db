@@ -33,7 +33,7 @@ namespace Tests.DataProvider
 					var dp   = conn.DataProvider;
 					var p    = Expression.Parameter(typeof(IDataReader));
 					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
+					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd, 0, dr, typeof(int));
 					var func = ex.Compile();
 
 					do

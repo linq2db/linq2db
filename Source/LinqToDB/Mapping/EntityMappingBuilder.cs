@@ -24,7 +24,7 @@ namespace LinqToDB.Mapping
 		/// <param name="builder">Fluent mapping builder.</param>
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
-		public EntityMappingBuilder([JetBrains.Annotations.NotNull] FluentMappingBuilder builder, string? configuration)
+		public EntityMappingBuilder(FluentMappingBuilder builder, string? configuration)
 		{
 			_builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
@@ -177,7 +177,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasAttribute(Expression<Func<T,object>> func, Attribute attribute)
+		public EntityMappingBuilder<T> HasAttribute(Expression<Func<T,object?>> func, Attribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
 			return this;
@@ -229,10 +229,10 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, S>>   prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>> thisKey,
-			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>> otherKey,
-			                                bool                     canBeNull = true)
+			Expression<Func<T, S>>   prop,
+			Expression<Func<T, ID1>> thisKey,
+			Expression<Func<S, ID2>> otherKey,
+			bool                     canBeNull = true)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -258,10 +258,10 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<S>>> prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>>            thisKey,
-			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>>            otherKey,
-			                                bool                                canBeNull = true)
+			Expression<Func<T, IEnumerable<S>>> prop,
+			Expression<Func<T, ID1>>            thisKey,
+			Expression<Func<S, ID2>>            otherKey,
+			bool                                canBeNull = true)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -284,9 +284,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>> prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>>        predicate,
-			                                bool                                     canBeNull = true)
+			Expression<Func<T, IEnumerable<TOther>>> prop,
+			Expression<Func<T, TOther, bool>>        predicate,
+			bool                                     canBeNull = true)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -305,9 +305,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>> predicate,
-			                                bool                              canBeNull = true)
+			Expression<Func<T, TOther>>       prop,
+			Expression<Func<T, TOther, bool>> predicate,
+			bool                              canBeNull = true)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -326,9 +326,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>>              prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
-			                                bool                                     canBeNull = true)
+			Expression<Func<T, IEnumerable<TOther>>>              prop,
+			Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			bool                                     canBeNull = true)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
@@ -347,9 +347,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
-			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
-			                                bool                              canBeNull = true)
+			Expression<Func<T, TOther>>       prop,
+			Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			bool                              canBeNull = true)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
@@ -406,7 +406,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				func,
 				true,
-				 _    => new ColumnAttribute(Configuration),
+				 _    => new ColumnAttribute() { Configuration = Configuration, Order = order },
 				(_,a) => a.IsColumn = true,
 				a => a.Configuration);
 		}
@@ -423,7 +423,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				func,
 				true,
-				 _    => new NotColumnAttribute { Configuration = Configuration },
+				 _    => new NotColumnAttribute { Configuration = Configuration, Order = order },
 				(_,a) => a.IsColumn = false,
 				a => a.Configuration);
 		}

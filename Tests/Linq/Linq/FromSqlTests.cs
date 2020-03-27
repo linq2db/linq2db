@@ -7,7 +7,7 @@ using LinqToDB.Data;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -349,12 +349,106 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestScalar(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+			[IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSqlServer)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.Throws<LinqToDBException>(() => db.FromSql<int>("select 1 as value").ToArray());
+				var result = db.FromSql<int>($"select 1 as x").ToArray();
+			}
+		}
+
+		[Test]
+		public void TestScalarSubquery(
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// ::text hint needed for pgsql < 10
+				var query =
+					from c in db.SelectQuery(() => "hello world")
+					from s in db.FromSql<string>($"regexp_split_to_table({c}::text, E'\\\\s+') {Sql.AliasExpr()}")
+					select s;
+				var result = query.ToArray();
+				var expected = new[] { "hello", "world" };
+				AreEqual(expected, result);
+			}
+		}
+
+		public class UnnestEnvelope<T>
+		{
+			[Column("value")]
+			public T Value;
+			[Column("index")]
+			public int Index;
+		}
+
+		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
+		static IQueryable<UnnestEnvelope<TValue>> UnnestWithOrdinality<TValue>(IDataContext db, TValue[] member)
+			=> db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
+
+		static Expression<Func<IDataContext, TValue[], IQueryable<UnnestEnvelope<TValue>>>> UnnestWithOrdinalityImpl<TValue>()
+			=> (db, member) => db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
+
+
+		[Sql.Expression("{0}", ServerSideOnly = true, Precedence = Precedence.Primary)]
+		static T AsTyped<T>(string str)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Test]
+		public void TestUnnest(
+			// `with ordinality` added to pgsql 9.4
+			[IncludeDataSources(TestProvName.AllPostgreSQL95Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from c in db.SelectQuery(() => Sql.Expr<int[]>("ARRAY[1,2]::int[]"))
+					from s in db.FromSql<UnnestEnvelope<int>>($"unnest({c}) with ordinality {Sql.AliasExpr()} (value, index)")
+					select s.Value;
+				var result = query.ToArray();
+				var expected = new []{1, 2};
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void TestUnnestFunction(
+			// `with ordinality` added to pgsql 9.4
+			[IncludeDataSources(TestProvName.AllPostgreSQL95Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from c in db.SelectQuery(() => Sql.Expr<int[]>("ARRAY[10,20]::int[]"))
+					from s in UnnestWithOrdinality(db, c)
+					select s;
+				var result = query.ToArray();
+				var expected = new[]
+				{
+					new UnnestEnvelope<int> { Value = 10, Index = 1 }, new UnnestEnvelope<int> { Value = 20, Index = 2 }
+				};
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer<UnnestEnvelope<int>>());
+			}
+		}
+
+		[Test]
+		public void TestInvaildAliasExprUsage(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from c in db.FromSql<int>($"select {1} {Sql.AliasExpr()}")
+					select c;
+				Assert.Throws<Npgsql.PostgresException>(() => query.ToArray());
 			}
 		}
 

@@ -1,23 +1,22 @@
-﻿#nullable disable
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
+	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 	using SqlProvider;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
-		public SapHanaOdbcSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SapHanaOdbcSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 		
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaOdbcSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SapHanaOdbcSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -30,7 +29,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Money:
 					StringBuilder.Append("Decimal(19,4)");

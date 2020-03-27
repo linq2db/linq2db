@@ -1,13 +1,17 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
+using System.Data.Common;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using Reflection;
+
 	/// <summary>
 	/// Various general-purpose helpers.
 	/// </summary>
@@ -20,7 +24,7 @@ namespace LinqToDB.Common
 		/// <param name="args">Format parameters.</param>
 		/// <returns>String, generated from <paramref name="format"/> format string using <paramref name="args"/> parameters.</returns>
 		[Obsolete("Use either string interpolation or CodeJam.FormatWith instead."), StringFormatMethod("format")]
-		public static string Args(this string format, params object[] args)
+		public static string Args(this string format, params object?[] args)
 		{
 			return string.Format(format, args);
 		}
@@ -30,7 +34,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="array">Collection to check.</param>
 		/// <returns><c>true</c> if collection is null or contains no elements, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this ICollection array)
+		public static bool IsNullOrEmpty(this ICollection? array)
 		{
 			return array == null || array.Count == 0;
 		}
@@ -40,7 +44,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="str">String value to check.</param>
 		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this string str)
+		public static bool IsNullOrEmpty(this string? str)
 		{
 			return string.IsNullOrEmpty(str);
 		}
@@ -120,6 +124,44 @@ namespace LinqToDB.Common
 
 			return str.Trim();
 		}
-			
+
+		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		{
+			foreach (var item in items) 
+				hashSet.Add(item);
+		}
+
+		public static IQueryable<T> CreateEmptyQuery<T>()
+		{
+			return Enumerable.Empty<T>().AsQueryable();
+		}
+
+		public static IQueryable CreateEmptyQuery(Type elementType)
+		{
+			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
+			return (IQueryable)method.Invoke(null, Array<object>.Empty);
+		}
+
+		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
+		{
+			if (assemblyName != null)
+			{
+				try
+				{
+					return Assembly.Load(assemblyName);
+				}
+				catch {}
+			}
+
+#if !NETSTANDARD2_0
+			try
+			{
+				return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
+			}
+			catch {}
+#endif
+
+			return null;
+		}
 	}
 }

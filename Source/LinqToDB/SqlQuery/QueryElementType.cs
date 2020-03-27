@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public enum QueryElementType
 	{
@@ -12,6 +10,7 @@ namespace LinqToDB.SqlQuery
 		SqlValue,
 		SqlDataType,
 		SqlTable,
+		SqlAliasPlaceholder,
 
 		ExprPredicate,
 		NotExprPredicate,
@@ -46,6 +45,8 @@ namespace LinqToDB.SqlQuery
 		SqlCteTable,
 		SqlRawSqlTable,
 		SqlValuesTable,
+
+		OutputClause,
 
 		SelectStatement,
 		InsertStatement,

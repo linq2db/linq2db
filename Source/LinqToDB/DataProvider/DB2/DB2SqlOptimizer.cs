@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -11,24 +10,6 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-		}
-
-		static void SetQueryParameter(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-
-				if (p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
-					p.IsQueryParameter = true;
-			}
-		}
-
-		public override SqlStatement Finalize(SqlStatement statement)
-		{
-			new QueryVisitor().Visit(statement, SetQueryParameter);
-
-			return base.Finalize(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -53,7 +34,7 @@ namespace LinqToDB.DataProvider.DB2
 				{
 					case "%":
 						{
-							var expr1 = !be.Expr1.SystemType.IsIntegerType() ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
+							var expr1 = !be.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
 							return new SqlFunction(be.SystemType, "Mod", expr1, be.Expr2);
 						}
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
@@ -76,26 +57,22 @@ namespace LinqToDB.DataProvider.DB2
 								return ex;
 						}
 
-						if (func.Parameters[0] is SqlDataType)
+						if (func.Parameters[0] is SqlDataType type)
 						{
-							var type = (SqlDataType)func.Parameters[0];
-
-							if (type.Type == typeof(string) && func.Parameters[1].SystemType != typeof(string))
+							if (type.Type.SystemType == typeof(string) && func.Parameters[1].SystemType != typeof(string))
 								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", func.Parameters[1]));
 
-							if (type.Length > 0)
-								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Length));
+							if (type.Type.Length > 0)
+								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Type.Length));
 
-							if (type.Precision > 0)
-								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale));
+							if (type.Type.Precision > 0)
+								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
 
-							return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1]);
+							return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1]);
 						}
 
-						if (func.Parameters[0] is SqlFunction)
+						if (func.Parameters[0] is SqlFunction f)
 						{
-							var f = (SqlFunction)func.Parameters[0];
-
 							return
 								f.Name == "Char" ?
 									new SqlFunction(func.SystemType, f.Name, func.Parameters[1]) :
@@ -126,7 +103,7 @@ namespace LinqToDB.DataProvider.DB2
 					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
 					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
 					case "VarChar"       :
-						if (func.Parameters[0].SystemType.ToUnderlying() == typeof(decimal))
+						if (func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal))
 							return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
 						break;
 

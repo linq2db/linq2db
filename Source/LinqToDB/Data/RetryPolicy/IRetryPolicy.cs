@@ -2,8 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Data.RetryPolicy
 {
 	public interface IRetryPolicy
@@ -16,9 +14,9 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </param>
 		/// <typeparam name="TResult"> The return type of <paramref name="operation" />. </typeparam>
 		/// <returns> The result from the operation. </returns>
-		TResult Execute<TResult>([NotNull] Func<TResult> operation);
+		TResult Execute<TResult>(Func<TResult> operation);
 
-		void Execute([NotNull] Action operation);
+		void Execute(Action operation);
 
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
@@ -39,11 +37,11 @@ namespace LinqToDB.Data.RetryPolicy
 		///     the retry limit is reached, the returned task will become faulted and the exception must be observed.
 		/// </returns>
 		Task<TResult> ExecuteAsync<TResult>(
-			[NotNull] Func<CancellationToken, Task<TResult>> operation,
-			CancellationToken cancellationToken = default(CancellationToken));
+			Func<CancellationToken, Task<TResult>> operation,
+			CancellationToken cancellationToken = default);
 
 		Task ExecuteAsync(
-			[NotNull] Func<CancellationToken,Task> operation,
-			CancellationToken cancellationToken = default(CancellationToken));
+			Func<CancellationToken,Task> operation,
+			CancellationToken cancellationToken = default);
 	}
 }

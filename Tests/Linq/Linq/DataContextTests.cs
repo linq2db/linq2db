@@ -64,8 +64,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, ProviderName.Access, ProviderName.SapHanaOdbc)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -142,5 +143,25 @@ namespace Tests.Linq
 				var items1 = await db.GetTable<Child>().ToArrayAsync();
 			}
 		}
+
+		[Test]
+		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var db = new DataContext(context);
+
+			db.CommandTimeout = 10;
+			var dataConnection = db.GetDataConnection();
+			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(10));
+
+			db.CommandTimeout = -10;
+			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(-1));
+
+			db.CommandTimeout = 11;
+			var record = db.GetTable<Child>().First();
+
+			dataConnection = db.GetDataConnection();
+			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(11));
+		}
+
 	}
 }

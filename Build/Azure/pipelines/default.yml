@@ -2,7 +2,7 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  nugetVersion: 3.0.0-preview.1
+  nugetVersion: 3.0.0
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
@@ -52,9 +52,9 @@ stages:
 
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: UseDotNet@2
-      displayName: Install .NET Core 3.0
+      displayName: Install .NET Core 3.1
       inputs:
-        version: 3.0.x
+        version: 3.1.x
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -279,14 +279,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'
 
 #############################################
 #  Tests: Windows (NETFX 4.6)               #
@@ -354,14 +348,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
@@ -433,14 +421,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+      displayName: '$(title)'
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
@@ -487,14 +469,8 @@ stages:
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+      displayName: '$(title)'
 
 #################################
 #  Tests: Linux (NETCOREAPP2_1) #
@@ -562,10 +538,14 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
-        Oracle:
+        Oracle11:
           title: 'Oracle 11g XE'
-          config: 'oracle'
-          script: 'oracle.sh'
+          config: 'oracle11'
+          script: 'oracle11.sh'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
         Firebird25:
           title: 'Firebird 2.5'
           config: 'firebird25'
@@ -711,10 +691,15 @@ stages:
           config: 'sybase'
           script: 'sybase.sh'
           docker: 'true'
-        Oracle:
+        Oracle11:
           title: 'Oracle 11g XE'
-          config: 'oracle'
-          script: 'oracle.sh'
+          config: 'oracle11'
+          script: 'oracle11.sh'
+          docker: 'true'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
           docker: 'true'
         Firebird25:
           title: 'Firebird 2.5'

@@ -1,13 +1,12 @@
-﻿#nullable disable
-// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
+﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/rel/2.0.0-preview1/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Linq;
-
-using JetBrains.Annotations;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -16,26 +15,32 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// </summary>
 	public class SqlServerTransientExceptionDetector
 	{
-		internal static readonly Type[] ExceptionTypes;
+		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes
+			= new ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>>();
 
-		static SqlServerTransientExceptionDetector()
+		internal static void RegisterExceptionType(Type type, Func<Exception, IEnumerable<int>> errrorNumbersGetter)
 		{
-			ExceptionTypes = new[]
-			{
-#if NET45 || NET46
-				typeof(System.Data.SqlClient.SqlException),
-#endif
-				Type.GetType("System.Data.SqlClient.SqlException, System.Data.SqlClient", false),
-				Type.GetType("Microsoft.Data.SqlClient.SqlException, Microsoft.Data.SqlClient", false)
-			}.Where(_ => _ != null).Distinct().ToArray();
+			_exceptionTypes.TryAdd(type, errrorNumbersGetter);
 		}
 
-		public static bool ShouldRetryOn([NotNull] Exception ex)
+		internal static bool IsHandled(Exception ex, [NotNullWhen(true)] out IEnumerable<int>? errorNumbers)
 		{
-			if (ExceptionTypes.Any(e => e == ex.GetType()))
+			if (_exceptionTypes.TryGetValue(ex.GetType(), out var getter))
 			{
-				foreach (dynamic err in ((dynamic)ex).Errors)
-					switch (err.Number)
+				errorNumbers = getter(ex);
+				return true;
+			}
+
+			errorNumbers = null;
+			return false;
+		}
+
+		public static bool ShouldRetryOn(Exception ex)
+		{
+			if (IsHandled(ex, out var errors))
+			{
+				foreach (var err in errors)
+					switch (err)
 					{
 						// SQL Error Code: 49920
 						// Cannot process request. Too many operations in progress for subscription "%ld".

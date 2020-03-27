@@ -62,7 +62,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
-		public void Distinct6([DataSources(ProviderName.Informix)] string context)
+		public void Distinct6([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var id = 2;
 

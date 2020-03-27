@@ -130,6 +130,12 @@ namespace LinqToDB.Data
 		/// </returns>
 		public object Value { get; set; }
 
+		/// <summary>
+		/// Provider's parameter instance for out, in-out, return parameters.
+		/// Could be used to read parameter value for complex types like Oracle's BFile.
+		/// </summary>
+		public IDbDataParameter Output { get; internal set; }
+
 		public static DataParameter Char          (string name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string name, string         value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter VarChar       (string name, char           value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }

@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -13,14 +12,7 @@ namespace LinqToDB.DataProvider.SapHana
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-#if !NETSTANDARD2_0
-			if (assemblyName != null)
-				SapHanaTools.AssemblyName = assemblyName.Value;
-
-			return new SapHanaDataProvider();
-#else
-			throw new PlatformNotSupportedException();
-#endif
+			return SapHanaTools.GetDataProvider(null, assemblyName?.Value);
 		}
 	}
 }

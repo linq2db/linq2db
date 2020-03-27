@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -91,7 +91,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -115,7 +115,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -139,7 +139,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -163,7 +163,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -188,7 +188,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -215,7 +215,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -241,7 +241,7 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -282,7 +282,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]

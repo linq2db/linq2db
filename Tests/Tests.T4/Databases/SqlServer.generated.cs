@@ -54,22 +54,6 @@ namespace DataModel
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
-		public NorthwindDB(int i)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public NorthwindDB(string configuration)
-			: base(configuration)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
-
 		#region Alias members
 
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
@@ -1260,24 +1244,6 @@ namespace DataModel
 
 		#endregion
 
-		public TestData2014DB(int i)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestData2014DB(string configuration)
-			: base(configuration)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
-
 		#region Table Functions
 
 		#region GetParentByID
@@ -1287,6 +1253,24 @@ namespace DataModel
 		{
 			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				@id);
+		}
+
+		#endregion
+
+		#region Issue1921
+
+		[Sql.TableFunction(Name="Issue1921")]
+		public ITable<Issue1921Result> Issue1921()
+		{
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+		}
+
+		public partial class Issue1921Result
+		{
+			#nullable disable
+			public string name  { get; set; }
+			#nullable enable
+			public int?   objid { get; set; }
 		}
 
 		#endregion
@@ -1510,7 +1494,7 @@ namespace DataModel
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	/// <summary>

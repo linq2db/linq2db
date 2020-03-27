@@ -1291,6 +1291,24 @@ namespace DataContextMS
 
 		#endregion
 
+		#region Issue1921
+
+		[Sql.TableFunction(Name="Issue1921")]
+		public ITable<Issue1921Result> Issue1921()
+		{
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+		}
+
+		public partial class Issue1921Result
+		{
+			#nullable disable
+			public string name  { get; set; }
+			#nullable enable
+			public int?   objid { get; set; }
+		}
+
+		#endregion
+
 		#endregion
 	}
 
@@ -1510,7 +1528,7 @@ namespace DataContextMS
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTest_Column { get; set; } // int
+		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	/// <summary>

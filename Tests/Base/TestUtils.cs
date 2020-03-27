@@ -90,9 +90,12 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 				case ProviderName.Oracle:
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
+				case TestProvName.Oracle11Native:
+				case TestProvName.Oracle11Managed:
 				case ProviderName.PostgreSQL:
 				case ProviderName.PostgreSQL92:
 				case ProviderName.PostgreSQL93:
@@ -166,7 +169,10 @@ namespace Tests
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
+				case TestProvName.Oracle11Native:
+				case TestProvName.Oracle11Managed:
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 					return db.Select(() => ServerName());
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -212,6 +218,8 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.SQLiteClassic:
+				case TestProvName.SQLiteClassicMiniProfilerMapped:
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
 				case ProviderName.SQLiteMS:
 					return "main";
 				case ProviderName.Access:
@@ -238,6 +246,7 @@ namespace Tests
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First();
 			}
 

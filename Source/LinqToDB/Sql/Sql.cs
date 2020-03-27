@@ -659,7 +659,7 @@ namespace LinqToDB
 					{
 						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
 							100 :
-							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).DataType);
+							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).Type.DataType);
 
 						arr[i] = new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), arg);
 					}

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,11 +22,11 @@ namespace LinqToDB.SqlQuery
 		{
 			Columns.AddRange(clone.Columns.Select(c => (SqlColumn)c.Clone(objectTree, doClone)));
 			IsDistinct = clone.IsDistinct;
-			TakeValue  = (ISqlExpression)clone.TakeValue?.Clone(objectTree, doClone);
-			SkipValue  = (ISqlExpression)clone.SkipValue?.Clone(objectTree, doClone);
+			TakeValue  = (ISqlExpression?)clone.TakeValue?.Clone(objectTree, doClone);
+			SkipValue  = (ISqlExpression?)clone.SkipValue?.Clone(objectTree, doClone);
 		}
 
-		internal SqlSelectClause(bool isDistinct, ISqlExpression takeValue, TakeHints? takeHints, ISqlExpression skipValue, IEnumerable<SqlColumn> columns)
+		internal SqlSelectClause(bool isDistinct, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
 			IsDistinct = isDistinct;
@@ -169,7 +168,7 @@ namespace LinqToDB.SqlQuery
 			return Columns[AddNew(expr)];
 		}
 
-		public int Add(ISqlExpression expr, string alias)
+		public int Add(ISqlExpression expr, string? alias)
 		{
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr, alias));
 		}
@@ -259,15 +258,15 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Take(ISqlExpression value, TakeHints? hints)
+		public SqlSelectClause Take(ISqlExpression? value, TakeHints? hints)
 		{
 			TakeHints = hints;
 			TakeValue = value;
 			return this;
 		}
 
-		public ISqlExpression TakeValue { get; private set; }
-		public TakeHints?     TakeHints { get; private set; }
+		public ISqlExpression? TakeValue { get; private set; }
+		public TakeHints?      TakeHints { get; private set; }
 
 		#endregion
 
@@ -285,7 +284,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public ISqlExpression SkipValue { get; set; }
+		public ISqlExpression? SkipValue { get; set; }
 
 		#endregion
 
@@ -304,7 +303,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Columns.Count; i++)
 			{

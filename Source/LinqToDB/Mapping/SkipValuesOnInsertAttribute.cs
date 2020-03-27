@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -15,7 +14,7 @@ namespace LinqToDB.Mapping
 		/// <param name="values">
 		/// Values to skip on insert operations.
 		/// </param>
-		public SkipValuesOnInsertAttribute(params object[] values) : base(values ?? new object[] { null }) { }
+		public SkipValuesOnInsertAttribute(params object?[] values) : base(values ?? new object?[] { null }) { }
 
 		/// <summary>
 		/// Operations, affected by value skipping.

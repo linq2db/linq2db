@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -38,7 +39,7 @@ namespace Tests.UserTests
 
 			foreach (var value in values)
 			{
-				var param = new SqlParameter(value?.GetType() ?? typeof(object), parameterName, value);
+				var param = new SqlParameter(new DbDataType(value?.GetType() ?? typeof(object)), parameterName, value);
 				builder.AddParameter("values", param);
 			}
 		}

@@ -6,6 +6,10 @@ variables:
 
 # allways trigger on PRs
 trigger: none
+pr:
+  branches:
+    include:
+    - '*'
 
 stages:
 

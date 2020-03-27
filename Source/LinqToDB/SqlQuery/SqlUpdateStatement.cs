@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +10,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
 
-		private SqlUpdateClause _update;
+		private SqlUpdateClause? _update;
 
 		public SqlUpdateClause Update
 		{
@@ -36,10 +35,10 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			With?.Walk(options, func);
-			((ISqlExpressionWalkable)_update)?.Walk(options, func);
+			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
@@ -69,7 +68,7 @@ namespace LinqToDB.SqlQuery
 				yield return _update;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			var result = SelectQuery.GetTableSource(table);
 
@@ -77,7 +76,7 @@ namespace LinqToDB.SqlQuery
 				return result;
 
 			if (table == _update?.Table)
-				return _update?.Table;
+				return _update.Table;
 
 			if (Update != null)
 			{

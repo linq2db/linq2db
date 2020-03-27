@@ -1,11 +1,15 @@
-﻿using LinqToDB.SqlProvider;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2008SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2008SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2008)
+		{
+		}
+
+		protected SqlServer2008SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
 		{
 		}
 
@@ -14,7 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceTakeSkipWithRowNumber(statement, false);
 
-			CorrectRootSkip(statement.SelectQuery);
+			CorrectRootSkip(statement.SelectQuery!);
 
 			return statement;
 		}
