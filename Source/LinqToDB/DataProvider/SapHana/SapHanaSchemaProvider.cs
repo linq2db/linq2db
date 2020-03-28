@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR")).Select(x => new DataTypeInfo
 			{
 				DataType         = x.DataType,
-				CreateFormat     = x.CreateFormat.Replace("VAR", ""),
+				CreateFormat     = x.CreateFormat?.Replace("VAR", ""),
 				CreateParameters = x.CreateParameters,
 				ProviderDbType   = x.ProviderDbType,
 				TypeName         = x.TypeName.Replace("VAR", "")
@@ -398,15 +398,15 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType.ToLowerInvariant() == "tinyint")
+			if (dataType?.ToLowerInvariant() == "tinyint")
 				return typeof(byte);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -486,12 +486,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 				if (st != null)
 				{
-					procedure.ResultTable = new TableSchema
+					procedure.ResultTable = new TableSchema()
 					{
 						IsProcedureResult = true,
-						TypeName = ToValidName(procedure.ProcedureName + "Result"),
-						ForeignKeys = new List<ForeignKeySchema>(),
-						Columns = GetProcedureResultColumns(st, options)
+						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+						ForeignKeys       = new List<ForeignKeySchema>(),
+						Columns           = GetProcedureResultColumns(st, options)
 					};
 
 					foreach (var column in procedure.ResultTable.Columns)
@@ -542,7 +542,7 @@ namespace LinqToDB.DataProvider.SapHana
 			using (dataConnection.BeginTransaction())
 			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
 			{
-				return rd.Reader.GetSchemaTable();
+				return rd.Reader!.GetSchemaTable();
 			}
 		}
 
@@ -650,8 +650,8 @@ namespace LinqToDB.DataProvider.SapHana
 				where
 					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
 					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
-					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName)) &&
-					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName))
+					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName!)) &&
+					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName!))
 				select new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,
@@ -677,7 +677,7 @@ namespace LinqToDB.DataProvider.SapHana
 							IsOut                = pr.IsOut,
 							IsResult             = pr.IsResult,
 							Size                 = pr.Length,
-							ParameterName        = ToValidName(pr.ParameterName),
+							ParameterName        = ToValidName(pr.ParameterName!),
 							ParameterType        = ToTypeName(systemType, !pr.IsIn),
 							SystemType           = systemType ?? typeof(object),
 							DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),

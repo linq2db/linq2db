@@ -335,7 +335,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -383,7 +383,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		// spatial types (which is handled by T4 template for now)
 		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
@@ -423,7 +423,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -437,7 +437,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)

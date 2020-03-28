@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -24,8 +23,8 @@ namespace LinqToDB.Linq.Builder
 			Data = data;
 		}
 
-		public TKey  Key  { get; set; }
-		public TData Data { get; set; }
+		public TKey  Key  { get; set; } = default!;
+		public TData Data { get; set; } = default!;
 	}
 
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
@@ -41,8 +40,8 @@ namespace LinqToDB.Linq.Builder
 			Data = data;
 		}
 
-		public TKey  Key { get; set; }
-		public TData Data { get; set; }
+		public TKey  Key  { get; set; } = default!;
+		public TData Data { get; set; } = default!;
 	}
 
 }

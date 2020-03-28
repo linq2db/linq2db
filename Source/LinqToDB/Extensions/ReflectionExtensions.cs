@@ -642,12 +642,14 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
+		[return: NotNullIfNotNull("type")]
 		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
 
 			if (type == typeof(object))
+				// if it possible to have null here or we should remove check?
 				return type.HasElementType ? type.GetElementType(): null;
 
 			if (type.IsArray)

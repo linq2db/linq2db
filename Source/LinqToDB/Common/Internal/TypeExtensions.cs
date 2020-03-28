@@ -30,13 +30,13 @@ namespace LinqToDB.Common.Internal
             { typeof(void),    "void"    }
         };
 
-        public static bool IsDefaultValue([NotNull] this Type type, [CanBeNull] object value)
+        public static bool IsDefaultValue(this Type type, object? value)
             => (value == null) || value.Equals(type.GetDefaultValue());
 
-        public static string ShortDisplayName([NotNull] this Type type)
+        public static string ShortDisplayName(this Type type)
             => type.DisplayName(fullName: false);
 
-        public static string DisplayName([NotNull] this Type type, bool fullName = true)
+        public static string DisplayName(this Type type, bool fullName = true)
         {
             var stringBuilder = new StringBuilder();
             ProcessType(stringBuilder, type, fullName);
@@ -129,10 +129,10 @@ namespace LinqToDB.Common.Internal
             builder.Append('>');
         }
 
-        public static FieldInfo GetFieldInfo([NotNull] this Type type, [NotNull] string fieldName)
+        public static FieldInfo GetFieldInfo(this Type type, string fieldName)
             => type.GetRuntimeFields().FirstOrDefault(f => f.Name == fieldName && !f.IsStatic);
 
-        public static IEnumerable<string> GetNamespaces([NotNull] this Type type)
+        public static IEnumerable<string> GetNamespaces(this Type type)
         {
             if (_builtInTypeNames.ContainsKey(type))
             {

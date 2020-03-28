@@ -523,7 +523,7 @@ namespace LinqToDB.SqlProvider
 				BuildColumnExpression(selectQuery, col.Expression, col.Alias, ref addAlias);
 
 				if (!SkipAlias && addAlias && !col.Alias.IsNullOrEmpty())
-					StringBuilder.Append(" as ").Append(Convert(col.Alias!, ConvertType.NameToQueryFieldAlias));
+					StringBuilder.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
 			}
 
 			if (first)
@@ -2992,7 +2992,7 @@ namespace LinqToDB.SqlProvider
 
 			SequenceNameAttribute? defaultAttr = null;
 
-			foreach (var attr in attrs!)
+			foreach (var attr in attrs)
 			{
 				if (attr.Configuration == Name)
 					return attr;

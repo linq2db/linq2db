@@ -1,13 +1,10 @@
-﻿#nullable disable
-// TODO: violates ITable nullability contract: review contract, suppress errors or fix them
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using LinqToDB.Async;
 
 namespace LinqToDB.Linq
@@ -16,7 +13,7 @@ namespace LinqToDB.Linq
 	{
 		private readonly IQueryable<T> _query;
 
-		public PersistentTable([NotNull] IQueryable<T> query)
+		public PersistentTable(IQueryable<T> query)
 		{
 			_query = query ?? throw new ArgumentNullException(nameof(query));
 		}
@@ -38,8 +35,8 @@ namespace LinqToDB.Linq
 			set { throw new NotImplementedException(); }
 		}
 
-		public string         SqlText { get; }
-		public IDataContext   DataContext => null;
+		public string         SqlText        { get; } = null!;
+		public IDataContext   DataContext => null!;
 		public Type           ElementType => _query.ElementType;
 		public IQueryProvider Provider    => _query.Provider;
 
@@ -75,14 +72,14 @@ namespace LinqToDB.Linq
 
 		Expression IExpressionQuery.Expression => Expression;
 
-		public string DatabaseName { get; }
-		public string SchemaName   { get; }
-		public string TableName    { get; }
-		public string ServerName   { get; }
+		public string? DatabaseName { get; }
+		public string? SchemaName   { get; }
+		public string  TableName    { get; } = null!;
+		public string? ServerName   { get; }
 
 		public string GetTableName()
 		{
-			return null;
+			return null!;
 		}
 	}
 }

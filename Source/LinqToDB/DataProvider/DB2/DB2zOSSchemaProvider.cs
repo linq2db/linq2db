@@ -56,8 +56,8 @@ namespace LinqToDB.DataProvider.DB2
 				rd => new PrimaryKeyInfo
 				{
 					TableID        = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
-					PrimaryKeyName = rd.ToString(2),
-					ColumnName     = rd.ToString(3),
+					PrimaryKeyName = rd.ToString(2)!,
+					ColumnName     = rd.ToString(3)!,
 					Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
 				},@"
 					SELECT
@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.DB2
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-						Name        = rd.ToString(2),
+						Name        = rd.ToString(2)!,
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int> (rd[7]),
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.DB2
 				.Query(rd =>
 				{
 					var schema     = rd.ToString(0);
-					var name       = rd.ToString(1);
+					var name       = rd.ToString(1)!;
 					var isFunction = rd.ToString(2) == "F";
 
 					return new ProcedureInfo

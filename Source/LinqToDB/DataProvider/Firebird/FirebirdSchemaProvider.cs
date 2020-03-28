@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					ProcedureID         = catalog + "." + schema + "." + name,
 					CatalogName         = catalog,
-					SchemaName          = schema, //schema,
+					SchemaName          = schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = schema.IsNullOrEmpty(),
 					ProcedureDefinition = p.Field<string>("SOURCE")
@@ -215,9 +215,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "array"            : return DataType.VarBinary;
 				case "bigint"           : return DataType.Int64;

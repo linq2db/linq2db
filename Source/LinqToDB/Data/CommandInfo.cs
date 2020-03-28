@@ -21,6 +21,7 @@ namespace LinqToDB.Data
 	using Async;
 	using Linq;
 	using Reflection;
+	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -677,9 +678,7 @@ namespace LinqToDB.Data
 			bool                      _isFaulted;
 			bool                      _isFinished;
 
-#nullable disable
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd)
-#nullable enable
 			{
 				_commandInfo   = commandInfo;
 				_rd            = rd;
@@ -692,7 +691,7 @@ namespace LinqToDB.Data
 			{
 			}
 
-			public T Current { get; set; }
+			public T Current { get; set; } = default!;
 
 			public async Task<bool> MoveNext(CancellationToken cancellationToken)
 			{
@@ -1195,7 +1194,7 @@ namespace LinqToDB.Data
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
 				if (size                != null) p.Size      = size.               Value;
 
-				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType, size), value);
+				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType, size), value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}

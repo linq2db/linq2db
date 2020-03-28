@@ -111,10 +111,9 @@ namespace LinqToDB.Data
 				{
 					if (TraceSwitch.TraceError)
 					{
-						OnTraceConnection?.Invoke(new TraceInfo(TraceInfoStep.Error)
+						OnTraceConnection?.Invoke(new TraceInfo(this, TraceInfoStep.Error)
 						{
 							TraceLevel     = TraceLevel.Error,
-							DataConnection = this,
 							StartTime      = DateTime.UtcNow,
 							Exception      = ex,
 							IsAsync        = true,
@@ -231,11 +230,10 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
 					StartTime      = now,
-					DataConnection = this,
 					Command        = Command,
 					IsAsync        = true,
 				});
@@ -249,10 +247,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = this,
 						Command         = Command,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
@@ -267,10 +264,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -303,10 +299,9 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
 					Command        = Command,
 					StartTime      = now,
 					IsAsync        = true,
@@ -321,10 +316,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = this,
 						Command         = Command,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
@@ -338,10 +332,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -380,10 +373,9 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
 					Command        = Command,
 					StartTime      = now,
 					IsAsync        = true,
@@ -400,10 +392,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -417,10 +408,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,

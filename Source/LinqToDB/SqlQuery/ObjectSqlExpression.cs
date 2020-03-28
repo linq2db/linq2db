@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var ta        = TypeAccessor.GetAccessor(mi.DeclaringType);
 				var valueType = mi.GetMemberType();
-				getter        = ta[mi.Name].Getter;
+				getter        = ta[mi.Name].Getter!;
 
 				if (valueType.ToNullableUnderlying().IsEnum)
 				{

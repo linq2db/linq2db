@@ -416,7 +416,7 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema with conversion information.</param>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual object GetValue(MappingSchema mappingSchema, object obj)
+		public virtual object? GetValue(MappingSchema mappingSchema, object obj)
 		{
 			if (_getter == null)
 			{

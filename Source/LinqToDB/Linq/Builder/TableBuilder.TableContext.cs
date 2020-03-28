@@ -407,7 +407,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						exprs.AddRange(
 							members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-								m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+								m.Column.MemberAccessor.SetterExpression!.GetBody(obj, m.Expr)));
 					}
 
 					if (loadWith != null)

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
-using System.Text;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Common.Internal
 {
 	public static class MethodInfoExtensions
 	{
-		public static string ShortDisplayName([NotNull] this MethodInfo methodInfo)
+		public static string ShortDisplayName(this MethodInfo methodInfo)
 			=> methodInfo.DisplayName(fullName: false, multiline: false);
 
 		public static string DisplayName(this MethodInfo methodInfo, bool fullName = true, bool multiline = true)

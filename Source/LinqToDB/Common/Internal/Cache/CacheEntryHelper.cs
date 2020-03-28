@@ -1,8 +1,8 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace LinqToDB.Common.Internal.Cache
@@ -11,13 +11,14 @@ namespace LinqToDB.Common.Internal.Cache
     {
         private static readonly AsyncLocal<CacheEntryStack> _scopes = new AsyncLocal<CacheEntryStack>();
 
+        [MaybeNull]
         internal static CacheEntryStack Scopes
         {
             get { return _scopes.Value; }
             set { _scopes.Value = value; }
         }
 
-        internal static CacheEntry Current
+        internal static CacheEntry? Current
         {
             get
             {

@@ -82,10 +82,9 @@ namespace LinqToDB.DataProvider
 
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = dataConnection,
 					CommandText    = commandText(),
 					StartTime      = now,
 				});
@@ -97,10 +96,9 @@ namespace LinqToDB.DataProvider
 
 				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = dataConnection,
 						CommandText     = commandText(),
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
@@ -112,10 +110,9 @@ namespace LinqToDB.DataProvider
 			{
 				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = dataConnection,
 						CommandText    = commandText(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,

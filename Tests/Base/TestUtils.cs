@@ -280,7 +280,7 @@ namespace Tests
 
 		class FirebirdTempTable<T> : TempTable<T>
 		{
-			public FirebirdTempTable([NotNull] IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
+			public FirebirdTempTable(IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
 				: base(db, tableName, databaseName, schemaName)
 			{
 			}

@@ -244,9 +244,9 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataTypeInfo == null)
+			if (dataTypeInfo == null && dataType != null)
 			{
 				switch (dataType.ToLower())
 				{
@@ -258,9 +258,9 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "short"      : return DataType.Int16;
 				case "long"       : return DataType.Int32;

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -48,7 +47,7 @@ namespace LinqToDB
 				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
-			public string Name
+			public string? Name
 			{
 				get => Expression;
 				set => Expression = value;

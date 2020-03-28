@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace LinqToDB
@@ -82,7 +81,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -115,7 +114,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -148,7 +147,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{

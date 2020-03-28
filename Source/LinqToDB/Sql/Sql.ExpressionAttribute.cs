@@ -18,7 +18,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 		public class ExpressionAttribute : Attribute
 		{
-			public ExpressionAttribute(string expression)
+			public ExpressionAttribute(string? expression)
 			{
 				Expression = expression;
 				Precedence = SqlQuery.Precedence.Primary;
@@ -46,7 +46,7 @@ namespace LinqToDB
 				Precedence    = SqlQuery.Precedence.Primary;
 			}
 
-			public string         Expression       { get; set; }
+			public string?        Expression       { get; set; }
 			public int[]?         ArgIndices       { get; set; }
 			public int            Precedence       { get; set; }
 			public string?        Configuration    { get; set; }

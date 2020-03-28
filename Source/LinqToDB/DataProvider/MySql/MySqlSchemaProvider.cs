@@ -188,9 +188,9 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "bit"        : return DataType.UInt64;
 				case "blob"       : return DataType.Blob;
@@ -334,9 +334,9 @@ SELECT
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
 				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
@@ -349,9 +349,9 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (columnType != null && columnType.Contains("unsigned"))
+			if (dataType != null && columnType != null && columnType.Contains("unsigned"))
 			{
 				switch (dataType.ToLower())
 				{

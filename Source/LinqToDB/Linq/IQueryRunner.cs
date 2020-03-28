@@ -53,7 +53,7 @@ namespace LinqToDB.Linq
 		IDataContext   DataContext      { get; set; }
 		object?[]?     Parameters       { get; set; }
 		object?[]?     Preambles        { get; set; }
-		Expression     MapperExpression { get; set; }
+		Expression?    MapperExpression { get; set; }
 		int            RowsCount        { get; set; }
 		int            QueryNumber      { get; set; }
 	}

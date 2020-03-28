@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Reflection;
 
 // ReSharper disable CheckNamespace
@@ -30,7 +29,7 @@ namespace LinqToDB
 			{
 			}
 
-			public string Name
+			public string? Name
 			{
 				get => Expression;
 				set => Expression = value;

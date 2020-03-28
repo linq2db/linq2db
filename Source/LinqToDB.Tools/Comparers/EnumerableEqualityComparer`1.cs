@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.Comparers
 {
@@ -16,7 +14,7 @@ namespace LinqToDB.Tools.Comparers
 		{
 		}
 
-		public EnumerableEqualityComparer([NotNull] IEqualityComparer<T> elementComparer)
+		public EnumerableEqualityComparer(IEqualityComparer<T> elementComparer)
 		{
 			_elementComparer = elementComparer ?? throw new ArgumentNullException(nameof(elementComparer));
 		}

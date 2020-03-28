@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -19,11 +18,10 @@ namespace LinqToDB.Common
 		/// <param name="source">Collection to sort.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
-				[NotNull, InstantHandle] IEnumerable<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] IEnumerable<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
 			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -32,11 +30,10 @@ namespace LinqToDB.Common
 		/// <param name="source">Collection to sort.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
-				[NotNull, InstantHandle] ICollection<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] ICollection<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
 			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -46,12 +43,11 @@ namespace LinqToDB.Common
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
-				[NotNull] this IEnumerable<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				[NotNull] IEqualityComparer<T> equalityComparer) =>
+				this IEnumerable<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				IEqualityComparer<T> equalityComparer) =>
 			GroupTopoSort(source, dependsOnGetter, equalityComparer)
 				.Select(g => g.AsEnumerable())
 				.SelectMany(e => e);
@@ -63,12 +59,11 @@ namespace LinqToDB.Common
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
-				[NotNull] this ICollection<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				[NotNull] IEqualityComparer<T> equalityComparer) =>
+				this ICollection<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				IEqualityComparer<T> equalityComparer) =>
 			GroupTopoSort(source, dependsOnGetter, equalityComparer)
 				.Select(g => g.AsEnumerable())
 				.SelectMany(e => e);
@@ -81,11 +76,10 @@ namespace LinqToDB.Common
 		/// <param name="source">Collection to sort.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
-				[NotNull, InstantHandle] this IEnumerable<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] this IEnumerable<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
 			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -94,11 +88,10 @@ namespace LinqToDB.Common
 		/// <param name="source">Collection to sort.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
-				[NotNull, InstantHandle] this ICollection<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] this ICollection<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
 			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -108,12 +101,11 @@ namespace LinqToDB.Common
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
-				[NotNull, InstantHandle] this IEnumerable<T> source,
-				[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				[NotNull] IEqualityComparer<T> equalityComparer) =>
+				[InstantHandle] this IEnumerable<T> source,
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				IEqualityComparer<T> equalityComparer) =>
 			GroupTopoSort(source.ToArray(), dependsOnGetter, equalityComparer);
 
 		/// <summary>
@@ -125,12 +117,11 @@ namespace LinqToDB.Common
 		/// <returns>
 		/// Topologically sorted list of items in <paramref name="source"/>, separated by dependency level.
 		/// </returns>
-		[NotNull]
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
-			[NotNull, InstantHandle] this ICollection<T> source,
-			[NotNull, InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-			[NotNull] IEqualityComparer<T> equalityComparer)
+			[InstantHandle] this ICollection<T> source,
+			[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+			IEqualityComparer<T> equalityComparer)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (dependsOnGetter == null) throw new ArgumentNullException(nameof(dependsOnGetter));

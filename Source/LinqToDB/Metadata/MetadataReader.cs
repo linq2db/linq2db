@@ -1,10 +1,7 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.Metadata
 {
@@ -21,7 +18,7 @@ namespace LinqToDB.Metadata
 #endif
 		);
 
-		public MetadataReader([NotNull] params IMetadataReader[] readers)
+		public MetadataReader(params IMetadataReader[] readers)
 		{
 			if (readers == null)
 				throw new ArgumentNullException(nameof(readers));

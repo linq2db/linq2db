@@ -16,7 +16,15 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
 			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
-				return new DatabaseSchema();
+				return new DatabaseSchema()
+				{
+					DataSource      = string.Empty,
+					Database        = string.Empty,
+					ServerVersion   = string.Empty,
+					Tables          = new List<TableSchema>(),
+					Procedures      = new List<ProcedureSchema>(),
+					DataTypesSchema = new DataTable()
+				};
 
 			return base.GetSchema(dataConnection, options);
 		}
@@ -148,7 +156,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return ((DbConnection)connection.Connection).DataSource;
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -204,7 +212,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{

@@ -63,9 +63,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new PrimaryKeyInfo
 				{
-					TableID = string.Concat(schema, '.', tableName),
-					ColumnName = columnName,
-					Ordinal = position,
+					TableID        = string.Concat(schema, '.', tableName),
+					ColumnName     = columnName,
+					Ordinal        = position,
 					PrimaryKeyName = indexName
 				};
 			}, @"

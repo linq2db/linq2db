@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
@@ -41,9 +40,9 @@ namespace LinqToDB.Data
 			bool        _isAsync;
 			Expression? _mapperExpression;
 
-			public override Expression MapperExpression
+			public override Expression? MapperExpression
 			{
-				get => _mapperExpression!;
+				get => _mapperExpression;
 				set
 				{
 					_mapperExpression = value;
@@ -51,10 +50,9 @@ namespace LinqToDB.Data
 					if (value != null && Common.Configuration.Linq.TraceMapperExpression &&
 						TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
 					{
-						_dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.MapperCreated)
+						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated)
 						{
 							TraceLevel       = TraceLevel.Info,
-							DataConnection   = _dataConnection,
 							MapperExpression = MapperExpression,
 							StartTime        = _startedOn,
 							ExecutionTime    = _stopwatch.Elapsed,
@@ -123,10 +121,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
 				{
-					_dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
+					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed)
 					{
 						TraceLevel       = TraceLevel.Info,
-						DataConnection   = _dataConnection,
 						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
@@ -139,15 +136,13 @@ namespace LinqToDB.Data
 				base.Dispose();
 			}
 
-#nullable disable
 			public class PreparedQuery
 			{
-				public string[]           Commands;
-				public List<SqlParameter> SqlParameters;
-				public IDbDataParameter[] Parameters;
-				public SqlStatement       Statement;
-				public ISqlBuilder        SqlProvider;
-#nullable enable
+				public string[]           Commands      = null!;
+				public List<SqlParameter> SqlParameters = null!;
+				public IDbDataParameter[] Parameters    = null!;
+				public SqlStatement       Statement     = null!;
+				public ISqlBuilder        SqlProvider   = null!;
 				public List<string>?      QueryHints;
 			}
 
