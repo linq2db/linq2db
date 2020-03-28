@@ -1120,6 +1120,30 @@ namespace LinqToDB.SqlQuery
 					_selectQuery.From.Tables[i] = table;
 				}
 			}
+
+			//TODO: Failed SelectQueryTests.JoinScalarTest
+			//Needs optimization refactor for 3.X
+			/*
+			if (_selectQuery.IsSimple 
+			    && _selectQuery.From.Tables.Count == 1 
+				&& _selectQuery.From.Tables[0].Joins.Count == 0
+			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
+				&& selectQuery.IsSimple
+			    && selectQuery.From.Tables.Count == 0)
+			{
+				// we can merge queries without tables
+				_selectQuery.Walk(new WalkOptions(), e =>
+				{
+					if (e is SqlColumn column && column.Parent == selectQuery)
+					{
+						return column.Expression;
+					}
+
+					return e;
+				});
+				_selectQuery.From.Tables.Clear();
+			}
+			*/
 		}
 
 		void OptimizeApplies(bool isApplySupported, bool optimizeColumns)
