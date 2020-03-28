@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Common;
@@ -8,13 +7,13 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlValue : ISqlExpression, IValueContainer
 	{
-		public SqlValue(Type systemType, object value)
+		public SqlValue(Type systemType, object? value)
 		{
 			ValueType  = new DbDataType(systemType);
 			Value      = value;
 		}
 
-		public SqlValue(DbDataType valueType, object value)
+		public SqlValue(DbDataType valueType, object? value)
 		{
 			ValueType  = valueType;
 			Value      = value;
@@ -22,15 +21,14 @@ namespace LinqToDB.SqlQuery
 
 		public SqlValue(object value)
 		{
-			Value = value;
-
-			if (value != null)
-				ValueType = new DbDataType(value.GetType());
+			Value     = value ?? throw new ArgumentNullException("Untyped null value");
+			ValueType = new DbDataType(value.GetType());
 		}
 
-		public   object     Value      { get; internal set; }
+		public   object?    Value      { get; internal set; }
 		public   DbDataType ValueType  { get; set; }
-		public   Type       SystemType => ValueType.SystemType;
+		
+		Type ISqlExpression.SystemType => ValueType.SystemType;
 
 		#region Overrides
 
@@ -68,8 +66,8 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 			return
-				other is SqlValue value        &&
-				SystemType == value.SystemType &&
+				other is SqlValue value           &&
+				ValueType.Equals(value.ValueType) &&
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
 		}
 
@@ -77,8 +75,8 @@ namespace LinqToDB.SqlQuery
 		{
 			var hashCode = 17;
 
-			if (SystemType != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ ValueType.GetHashCode());
+
 			if (Value != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
 

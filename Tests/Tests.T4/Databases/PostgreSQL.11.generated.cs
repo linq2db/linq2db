@@ -6,7 +6,6 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
-#pragma warning disable 618
 #nullable enable
 
 using System;
@@ -15,6 +14,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 
@@ -37,6 +37,10 @@ namespace PostreSQL11DataContext
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
+		/// <summary>
+		/// This is the Issue2023 matview
+		/// </summary>
+		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
@@ -134,7 +138,7 @@ namespace PostreSQL11DataContext
 		#region GenerateSeries
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="generate_series")]
-		public ITable<GenerateSeriesResult> GenerateSeries(DateTimeOffset? par1917, DateTimeOffset? par1918, NpgsqlTimeSpan? par1919)
+		public ITable<GenerateSeriesResult> GenerateSeries(DateTimeOffset? par1917, DateTimeOffset? par1918, TimeSpan? par1919)
 		{
 			return this.GetTable<GenerateSeriesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				par1917,
@@ -943,7 +947,7 @@ namespace PostreSQL11DataContext
 			public DateTimeOffset? query_start      { get; set; }
 			public DateTimeOffset? backend_start    { get; set; }
 			public DateTimeOffset? state_change     { get; set; }
-			public NpgsqlInet?     client_addr      { get; set; }
+			public IPAddress?      client_addr      { get; set; }
 			public string?         client_hostname  { get; set; }
 			public int?            client_port      { get; set; }
 			public int?            backend_xid      { get; set; }
@@ -1012,17 +1016,17 @@ namespace PostreSQL11DataContext
 
 		public partial class PgStatGetWalSendersResult
 		{
-			public int?            pid           { get; set; }
-			public string?         state         { get; set; }
-			public object?         sent_lsn      { get; set; }
-			public object?         write_lsn     { get; set; }
-			public object?         flush_lsn     { get; set; }
-			public object?         replay_lsn    { get; set; }
-			public NpgsqlTimeSpan? write_lag     { get; set; }
-			public NpgsqlTimeSpan? flush_lag     { get; set; }
-			public NpgsqlTimeSpan? replay_lag    { get; set; }
-			public int?            sync_priority { get; set; }
-			public string?         sync_state    { get; set; }
+			public int?      pid           { get; set; }
+			public string?   state         { get; set; }
+			public object?   sent_lsn      { get; set; }
+			public object?   write_lsn     { get; set; }
+			public object?   flush_lsn     { get; set; }
+			public object?   replay_lsn    { get; set; }
+			public TimeSpan? write_lag     { get; set; }
+			public TimeSpan? flush_lag     { get; set; }
+			public TimeSpan? replay_lag    { get; set; }
+			public int?      sync_priority { get; set; }
+			public string?   sync_state    { get; set; }
 		}
 
 		#endregion
@@ -1072,9 +1076,9 @@ namespace PostreSQL11DataContext
 
 		public partial class PgTimezoneAbbrevsResult
 		{
-			public string?         abbrev     { get; set; }
-			public NpgsqlTimeSpan? utc_offset { get; set; }
-			public bool?           is_dst     { get; set; }
+			public string?   abbrev     { get; set; }
+			public TimeSpan? utc_offset { get; set; }
+			public bool?     is_dst     { get; set; }
 		}
 
 		#endregion
@@ -1089,10 +1093,10 @@ namespace PostreSQL11DataContext
 
 		public partial class PgTimezoneNamesResult
 		{
-			public string?         name       { get; set; }
-			public string?         abbrev     { get; set; }
-			public NpgsqlTimeSpan? utc_offset { get; set; }
-			public bool?           is_dst     { get; set; }
+			public string?   name       { get; set; }
+			public string?   abbrev     { get; set; }
+			public TimeSpan? utc_offset { get; set; }
+			public bool?     is_dst     { get; set; }
 		}
 
 		#endregion
@@ -1177,44 +1181,45 @@ namespace PostreSQL11DataContext
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			public int?             ID                  { get; set; }
-			public long?            bigintDataType      { get; set; }
-			public decimal?         numericDataType     { get; set; }
-			public short?           smallintDataType    { get; set; }
-			public int?             intDataType         { get; set; }
-			public decimal?         moneyDataType       { get; set; }
-			public double?          doubleDataType      { get; set; }
-			public float?           realDataType        { get; set; }
-			public DateTime?        timestampDataType   { get; set; }
-			public DateTimeOffset?  timestampTZDataType { get; set; }
-			public NpgsqlDate?      dateDataType        { get; set; }
-			public TimeSpan?        timeDataType        { get; set; }
-			public DateTimeOffset?  timeTZDataType      { get; set; }
-			public NpgsqlTimeSpan?  intervalDataType    { get; set; }
-			public char?            charDataType        { get; set; }
-			public string?          char20DataType      { get; set; }
-			public string?          varcharDataType     { get; set; }
-			public string?          textDataType        { get; set; }
-			public byte[]?          binaryDataType      { get; set; }
-			public Guid?            uuidDataType        { get; set; }
-			public BitArray?        bitDataType         { get; set; }
-			public bool?            booleanDataType     { get; set; }
-			public string?          colorDataType       { get; set; }
-			public NpgsqlPoint?     pointDataType       { get; set; }
-			public NpgsqlLSeg?      lsegDataType        { get; set; }
-			public NpgsqlBox?       boxDataType         { get; set; }
-			public NpgsqlPath?      pathDataType        { get; set; }
-			public NpgsqlPolygon?   polygonDataType     { get; set; }
-			public NpgsqlCircle?    circleDataType      { get; set; }
-			public NpgsqlLine?      lineDataType        { get; set; }
-			public NpgsqlInet?      inetDataType        { get; set; }
-			public NpgsqlInet?      cidrDataType        { get; set; }
-			public PhysicalAddress? macaddrDataType     { get; set; }
-			public PhysicalAddress? macaddr8DataType    { get; set; }
-			public string?          jsonDataType        { get; set; }
-			public string?          jsonbDataType       { get; set; }
-			public string?          xmlDataType         { get; set; }
-			public BitArray?        varBitDataType      { get; set; }
+			public int?                        ID                  { get; set; }
+			public long?                       bigintDataType      { get; set; }
+			public decimal?                    numericDataType     { get; set; }
+			public short?                      smallintDataType    { get; set; }
+			public int?                        intDataType         { get; set; }
+			public decimal?                    moneyDataType       { get; set; }
+			public double?                     doubleDataType      { get; set; }
+			public float?                      realDataType        { get; set; }
+			public DateTime?                   timestampDataType   { get; set; }
+			public DateTimeOffset?             timestampTZDataType { get; set; }
+			public DateTime?                   dateDataType        { get; set; }
+			public TimeSpan?                   timeDataType        { get; set; }
+			public DateTimeOffset?             timeTZDataType      { get; set; }
+			public TimeSpan?                   intervalDataType    { get; set; }
+			public TimeSpan?                   intervalDataType2   { get; set; }
+			public char?                       charDataType        { get; set; }
+			public string?                     char20DataType      { get; set; }
+			public string?                     varcharDataType     { get; set; }
+			public string?                     textDataType        { get; set; }
+			public byte[]?                     binaryDataType      { get; set; }
+			public Guid?                       uuidDataType        { get; set; }
+			public BitArray?                   bitDataType         { get; set; }
+			public bool?                       booleanDataType     { get; set; }
+			public string?                     colorDataType       { get; set; }
+			public NpgsqlPoint?                pointDataType       { get; set; }
+			public NpgsqlLSeg?                 lsegDataType        { get; set; }
+			public NpgsqlBox?                  boxDataType         { get; set; }
+			public NpgsqlPath?                 pathDataType        { get; set; }
+			public NpgsqlPolygon?              polygonDataType     { get; set; }
+			public NpgsqlCircle?               circleDataType      { get; set; }
+			public NpgsqlLine?                 lineDataType        { get; set; }
+			public IPAddress?                  inetDataType        { get; set; }
+			public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
+			public PhysicalAddress?            macaddrDataType     { get; set; }
+			public PhysicalAddress?            macaddr8DataType    { get; set; }
+			public string?                     jsonDataType        { get; set; }
+			public string?                     jsonbDataType       { get; set; }
+			public string?                     xmlDataType         { get; set; }
+			public BitArray?                   varBitDataType      { get; set; }
 		}
 
 		#endregion
@@ -1595,65 +1600,66 @@ namespace PostreSQL11DataContext
 	[Table(Schema="public", Name="testsamename")]
 	public partial class _testsamename
 	{
-		[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+		[Column("id", DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(),                      PrimaryKey, Identity] public int              ID                  { get; set; } // integer
-		[Column("bigintDataType"),      Nullable            ] public long?            BigintDataType      { get; set; } // bigint
-		[Column("numericDataType"),     Nullable            ] public decimal?         NumericDataType     { get; set; } // numeric
-		[Column("smallintDataType"),    Nullable            ] public short?           SmallintDataType    { get; set; } // smallint
-		[Column("intDataType"),         Nullable            ] public int?             IntDataType         { get; set; } // integer
-		[Column("moneyDataType"),       Nullable            ] public decimal?         MoneyDataType       { get; set; } // money
-		[Column("doubleDataType"),      Nullable            ] public double?          DoubleDataType      { get; set; } // double precision
-		[Column("realDataType"),        Nullable            ] public float?           RealDataType        { get; set; } // real
-		[Column("timestampDataType"),   Nullable            ] public DateTime?        TimestampDataType   { get; set; } // timestamp (6) without time zone
-		[Column("timestampTZDataType"), Nullable            ] public DateTimeOffset?  TimestampTZDataType { get; set; } // timestamp (6) with time zone
-		[Column("dateDataType"),        Nullable            ] public NpgsqlDate?      DateDataType        { get; set; } // date
-		[Column("timeDataType"),        Nullable            ] public TimeSpan?        TimeDataType        { get; set; } // time (6) without time zone
-		[Column("timeTZDataType"),      Nullable            ] public DateTimeOffset?  TimeTZDataType      { get; set; } // time (6) with time zone
-		[Column("intervalDataType"),    Nullable            ] public NpgsqlTimeSpan?  IntervalDataType    { get; set; } // interval(6)
-		[Column("charDataType"),        Nullable            ] public char?            CharDataType        { get; set; } // character(1)
-		[Column("char20DataType"),      Nullable            ] public string?          Char20DataType      { get; set; } // character(20)
-		[Column("varcharDataType"),     Nullable            ] public string?          VarcharDataType     { get; set; } // character varying(20)
-		[Column("textDataType"),        Nullable            ] public string?          TextDataType        { get; set; } // text
-		[Column("binaryDataType"),      Nullable            ] public byte[]?          BinaryDataType      { get; set; } // bytea
-		[Column("uuidDataType"),        Nullable            ] public Guid?            UuidDataType        { get; set; } // uuid
-		[Column("bitDataType"),         Nullable            ] public BitArray?        BitDataType         { get; set; } // bit(3)
-		[Column("booleanDataType"),     Nullable            ] public bool?            BooleanDataType     { get; set; } // boolean
-		[Column("colorDataType"),       Nullable            ] public object?          ColorDataType       { get; set; } // USER-DEFINED
-		[Column("pointDataType"),       Nullable            ] public NpgsqlPoint?     PointDataType       { get; set; } // point
-		[Column("lsegDataType"),        Nullable            ] public NpgsqlLSeg?      LsegDataType        { get; set; } // lseg
-		[Column("boxDataType"),         Nullable            ] public NpgsqlBox?       BoxDataType         { get; set; } // box
-		[Column("pathDataType"),        Nullable            ] public NpgsqlPath?      PathDataType        { get; set; } // path
-		[Column("polygonDataType"),     Nullable            ] public NpgsqlPolygon?   PolygonDataType     { get; set; } // polygon
-		[Column("circleDataType"),      Nullable            ] public NpgsqlCircle?    CircleDataType      { get; set; } // circle
-		[Column("lineDataType"),        Nullable            ] public NpgsqlLine?      LineDataType        { get; set; } // line
-		[Column("inetDataType"),        Nullable            ] public NpgsqlInet?      InetDataType        { get; set; } // inet
-		[Column("cidrDataType"),        Nullable            ] public NpgsqlInet?      CidrDataType        { get; set; } // cidr
-		[Column("macaddrDataType"),     Nullable            ] public PhysicalAddress? MacaddrDataType     { get; set; } // macaddr
-		[Column("macaddr8DataType"),    Nullable            ] public PhysicalAddress? Macaddr8DataType    { get; set; } // macaddr8
-		[Column("jsonDataType"),        Nullable            ] public string?          JsonDataType        { get; set; } // json
-		[Column("jsonbDataType"),       Nullable            ] public string?          JsonbDataType       { get; set; } // jsonb
-		[Column("xmlDataType"),         Nullable            ] public string?          XmlDataType         { get; set; } // xml
-		[Column("varBitDataType"),      Nullable            ] public BitArray?        VarBitDataType      { get; set; } // bit varying
+		[Column(                       DataType=DataType.Int32,          Precision=32, Scale=0), PrimaryKey, Identity] public int                         ID                  { get; set; } // integer
+		[Column("bigintDataType",      DataType=DataType.Int64,          Precision=64, Scale=0), Nullable            ] public long?                       BigintDataType      { get; set; } // bigint
+		[Column("numericDataType",     DataType=DataType.Decimal),                               Nullable            ] public decimal?                    NumericDataType     { get; set; } // numeric
+		[Column("smallintDataType",    DataType=DataType.Int16,          Precision=16, Scale=0), Nullable            ] public short?                      SmallintDataType    { get; set; } // smallint
+		[Column("intDataType",         DataType=DataType.Int32,          Precision=32, Scale=0), Nullable            ] public int?                        IntDataType         { get; set; } // integer
+		[Column("moneyDataType",       DataType=DataType.Money),                                 Nullable            ] public decimal?                    MoneyDataType       { get; set; } // money
+		[Column("doubleDataType",      DataType=DataType.Double,         Precision=53),          Nullable            ] public double?                     DoubleDataType      { get; set; } // double precision
+		[Column("realDataType",        DataType=DataType.Single,         Precision=24),          Nullable            ] public float?                      RealDataType        { get; set; } // real
+		[Column("timestampDataType",   DataType=DataType.DateTime2,      Precision=6),           Nullable            ] public DateTime?                   TimestampDataType   { get; set; } // timestamp (6) without time zone
+		[Column("timestampTZDataType", DataType=DataType.DateTimeOffset, Precision=6),           Nullable            ] public DateTimeOffset?             TimestampTZDataType { get; set; } // timestamp (6) with time zone
+		[Column("dateDataType",        DataType=DataType.Date,           Precision=0),           Nullable            ] public DateTime?                   DateDataType        { get; set; } // date
+		[Column("timeDataType",        DataType=DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?                   TimeDataType        { get; set; } // time (6) without time zone
+		[Column("timeTZDataType",      DataType=DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?             TimeTZDataType      { get; set; } // time (6) with time zone
+		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType    { get; set; } // interval(6)
+		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType2   { get; set; } // interval(6)
+		[Column("charDataType",        DataType=DataType.NChar,          Length=1),              Nullable            ] public char?                       CharDataType        { get; set; } // character(1)
+		[Column("char20DataType",      DataType=DataType.NChar,          Length=20),             Nullable            ] public string?                     Char20DataType      { get; set; } // character(20)
+		[Column("varcharDataType",     DataType=DataType.NVarChar,       Length=20),             Nullable            ] public string?                     VarcharDataType     { get; set; } // character varying(20)
+		[Column("textDataType",        DataType=DataType.Text),                                  Nullable            ] public string?                     TextDataType        { get; set; } // text
+		[Column("binaryDataType",      DataType=DataType.Binary),                                Nullable            ] public byte[]?                     BinaryDataType      { get; set; } // bytea
+		[Column("uuidDataType",        DataType=DataType.Guid),                                  Nullable            ] public Guid?                       UuidDataType        { get; set; } // uuid
+		[Column("bitDataType",         DataType=DataType.BitArray,       Length=3),              Nullable            ] public BitArray?                   BitDataType         { get; set; } // bit(3)
+		[Column("booleanDataType",     DataType=DataType.Boolean),                               Nullable            ] public bool?                       BooleanDataType     { get; set; } // boolean
+		[Column("colorDataType",       DataType=DataType.Udt),                                   Nullable            ] public object?                     ColorDataType       { get; set; } // USER-DEFINED
+		[Column("pointDataType",       DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPoint?                PointDataType       { get; set; } // point
+		[Column("lsegDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?                 LsegDataType        { get; set; } // lseg
+		[Column("boxDataType",         DataType=DataType.Udt),                                   Nullable            ] public NpgsqlBox?                  BoxDataType         { get; set; } // box
+		[Column("pathDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPath?                 PathDataType        { get; set; } // path
+		[Column("polygonDataType",     DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPolygon?              PolygonDataType     { get; set; } // polygon
+		[Column("circleDataType",      DataType=DataType.Udt),                                   Nullable            ] public NpgsqlCircle?               CircleDataType      { get; set; } // circle
+		[Column("lineDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLine?                 LineDataType        { get; set; } // line
+		[Column("inetDataType",        DataType=DataType.Udt),                                   Nullable            ] public IPAddress?                  InetDataType        { get; set; } // inet
+		[Column("cidrDataType",        DataType=DataType.Udt),                                   Nullable            ] public ValueTuple<IPAddress, int>? CidrDataType        { get; set; } // cidr
+		[Column("macaddrDataType",     DataType=DataType.Udt),                                   Nullable            ] public PhysicalAddress?            MacaddrDataType     { get; set; } // macaddr
+		[Column("macaddr8DataType",    DataType=DataType.Udt),                                   Nullable            ] public PhysicalAddress?            Macaddr8DataType    { get; set; } // macaddr8
+		[Column("jsonDataType",        DataType=DataType.Json),                                  Nullable            ] public string?                     JsonDataType        { get; set; } // json
+		[Column("jsonbDataType",       DataType=DataType.BinaryJson),                            Nullable            ] public string?                     JsonbDataType       { get; set; } // jsonb
+		[Column("xmlDataType",         DataType=DataType.Xml),                                   Nullable            ] public string?                     XmlDataType         { get; set; } // xml
+		[Column("varBitDataType",      DataType=DataType.BitArray),                              Nullable            ] public BitArray?                   VarBitDataType      { get; set; } // bit varying
 	}
 
 	[Table(Schema="public", Name="Child")]
 	public partial class Child
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // integer
-		[Column, Nullable] public int? ChildID  { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? ParentID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? ChildID  { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, NotNull] public int    PersonID { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, NotNull] public int    PersonID { get; set; } // integer
 		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50),                         NotNull] public string Taxonomy { get; set; } // character varying(50)
 		#nullable enable
 
 		#region Associations
@@ -1674,64 +1680,80 @@ namespace PostreSQL11DataContext
 	public partial class Entity
 	{
 		#nullable disable
-		[Column("the_name"), NotNull] public string TheName { get; set; } // character varying(255)
+		[Column("the_name", DataType=DataType.NVarChar, Length=255), NotNull] public string TheName { get; set; } // character varying(255)
 		#nullable enable
 	}
 
 	[Table(Schema="public", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column, Nullable] public int? ParentID     { get; set; } // integer
-		[Column, Nullable] public int? ChildID      { get; set; } // integer
-		[Column, Nullable] public int? GrandChildID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? ParentID     { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? ChildID      { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? GrandChildID { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // integer
-		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // integer
-		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // integer
-		[Column,        Nullable] public string? Name                { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0),              NotNull] public int     InheritanceParentId { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // integer
-		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // integer
-		[Column,        Nullable] public string? Name                { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
+	}
+
+	/// <summary>
+	/// This is the Issue2023 matview
+	/// </summary>
+	[Table(Schema="public", Name="Issue2023", IsView=true)]
+	public partial class Issue2023
+	{
+		/// <summary>
+		/// This is the Issue2023.PersonID column
+		/// </summary>
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0, SkipOnInsert=true, SkipOnUpdate=true), Nullable] public int?    PersonID   { get; set; } // int4
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? FirstName  { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? LastName   { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? MiddleName { get; set; } // character varying(50)
+		[Column(DataType=DataType.NChar,    Length=1, SkipOnInsert=true, SkipOnUpdate=true),              Nullable] public char?   Gender     { get; set; } // character(1)
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column, Nullable] public int?      ID             { get; set; } // integer
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
-		[Column, Nullable] public bool?     BoolValue      { get; set; } // boolean
-		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uuid
-		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // bytea
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
-		[Column, Nullable] public int?      IntValue       { get; set; } // integer
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column, Nullable] public string?   StringValue    { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,     Precision=32, Scale=0), Nullable] public int?      ID             { get; set; } // integer
+		[Column(DataType=DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
+		[Column(DataType=DataType.DateTime2, Precision=6),           Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
+		[Column(DataType=DataType.DateTime2, Precision=6),           Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
+		[Column(DataType=DataType.Boolean),                          Nullable] public bool?     BoolValue      { get; set; } // boolean
+		[Column(DataType=DataType.Guid),                             Nullable] public Guid?     GuidValue      { get; set; } // uuid
+		[Column(DataType=DataType.Binary),                           Nullable] public byte[]?   BinaryValue    { get; set; } // bytea
+		[Column(DataType=DataType.Int16,     Precision=16, Scale=0), Nullable] public short?    SmallIntValue  { get; set; } // smallint
+		[Column(DataType=DataType.Int32,     Precision=32, Scale=0), Nullable] public int?      IntValue       { get; set; } // integer
+		[Column(DataType=DataType.Int64,     Precision=64, Scale=0), Nullable] public long?     BigIntValue    { get; set; } // bigint
+		[Column(DataType=DataType.NVarChar,  Length=50),             Nullable] public string?   StringValue    { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // integer
-		[Column, Nullable] public int? Value1   { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? ParentID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), Nullable] public int? Value1   { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, NotNull] public int    PersonID  { get; set; } // integer
 		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // character varying(256)
+		[Column(DataType=DataType.NVarChar, Length=256),                        NotNull] public string Diagnosis { get; set; } // character varying(256)
 		#nullable enable
 
 		#region Associations
@@ -1757,15 +1779,15 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// This is the Person.PersonID column
 		/// </summary>
-		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // integer
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  Identity] public int     PersonID   { get; set; } // integer
 		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  FirstName  { get; set; } // character varying(50)
 		#nullable enable
 		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  LastName   { get; set; } // character varying(50)
 		#nullable enable
-		[Column,        Nullable] public string? MiddleName { get; set; } // character varying(50)
-		[Column,     NotNull    ] public char    Gender     { get; set; } // character(1)
+		[Column(DataType=DataType.NVarChar, Length=50),                Nullable          ] public string? MiddleName { get; set; } // character varying(50)
+		[Column(DataType=DataType.NChar,    Length=1),              NotNull              ] public char    Gender     { get; set; } // character(1)
 
 		#region Associations
 
@@ -1787,109 +1809,109 @@ namespace PostreSQL11DataContext
 	[Table(Schema="public", Name="SequenceCustomNamingTest")]
 	public partial class SequenceCustomNamingTest
 	{
-		[PrimaryKey, Identity] public int     ID    { get; set; } // integer
-		[Column,     Nullable] public string? Value { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, Identity] public int     ID    { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="SequenceTest1")]
 	public partial class SequenceTest1
 	{
-		[PrimaryKey, NotNull    ] public int     ID    { get; set; } // integer
-		[Column,        Nullable] public string? Value { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     ID    { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),                Nullable         ] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="SequenceTest2")]
 	public partial class SequenceTest2
 	{
-		[PrimaryKey, Identity] public int     ID    { get; set; } // integer
-		[Column,     Nullable] public string? Value { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, Identity] public int     ID    { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="SequenceTest3")]
 	public partial class SequenceTest3
 	{
-		[PrimaryKey, Identity] public int     ID    { get; set; } // integer
-		[Column,     Nullable] public string? Value { get; set; } // character varying(50)
+		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, Identity] public int     ID    { get; set; } // integer
+		[Column(DataType=DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="TestMerge1")]
 	public partial class TestMerge1
 	{
-		[PrimaryKey, NotNull    ] public int             Id              { get; set; } // integer
-		[Column,        Nullable] public int?            Field1          { get; set; } // integer
-		[Column,        Nullable] public int?            Field2          { get; set; } // integer
-		[Column,        Nullable] public int?            Field3          { get; set; } // integer
-		[Column,        Nullable] public int?            Field4          { get; set; } // integer
-		[Column,        Nullable] public int?            Field5          { get; set; } // integer
-		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
-		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // boolean
-		[Column,        Nullable] public string?         FieldString     { get; set; } // character varying(20)
-		[Column,        Nullable] public string?         FieldNString    { get; set; } // character varying(20)
-		[Column,        Nullable] public char?           FieldChar       { get; set; } // character(1)
-		[Column,        Nullable] public char?           FieldNChar      { get; set; } // character(1)
-		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
-		[Column,        Nullable] public double?         FieldDouble     { get; set; } // double precision
-		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // timestamp (6) with time zone
-		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // bytea
-		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uuid
-		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // numeric(24,10)
-		[Column,        Nullable] public NpgsqlDate?     FieldDate       { get; set; } // date
-		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time (6) without time zone
-		[Column,        Nullable] public string?         FieldEnumString { get; set; } // character varying(20)
-		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),  PrimaryKey,  NotNull] public int             Id              { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field1          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field2          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field3          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field4          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field5          { get; set; } // integer
+		[Column(DataType=DataType.Int64,          Precision=64, Scale=0),     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DataType=DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // boolean
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // character varying(20)
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // character varying(20)
+		[Column(DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // character(1)
+		[Column(DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // character(1)
+		[Column(DataType=DataType.Single,         Precision=24),              Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DataType=DataType.Double,         Precision=53),              Nullable         ] public double?         FieldDouble     { get; set; } // double precision
+		[Column(DataType=DataType.DateTime2,      Precision=6),               Nullable         ] public DateTime?       FieldDateTime   { get; set; } // timestamp (6) without time zone
+		[Column(DataType=DataType.DateTimeOffset, Precision=6),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // timestamp (6) with time zone
+		[Column(DataType=DataType.Binary),                                    Nullable         ] public byte[]?         FieldBinary     { get; set; } // bytea
+		[Column(DataType=DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uuid
+		[Column(DataType=DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // numeric(24,10)
+		[Column(DataType=DataType.Date,           Precision=0),               Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DataType=DataType.Time,           Precision=6),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time (6) without time zone
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // character varying(20)
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="TestMerge2")]
 	public partial class TestMerge2
 	{
-		[PrimaryKey, NotNull    ] public int             Id              { get; set; } // integer
-		[Column,        Nullable] public int?            Field1          { get; set; } // integer
-		[Column,        Nullable] public int?            Field2          { get; set; } // integer
-		[Column,        Nullable] public int?            Field3          { get; set; } // integer
-		[Column,        Nullable] public int?            Field4          { get; set; } // integer
-		[Column,        Nullable] public int?            Field5          { get; set; } // integer
-		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
-		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // boolean
-		[Column,        Nullable] public string?         FieldString     { get; set; } // character varying(20)
-		[Column,        Nullable] public string?         FieldNString    { get; set; } // character varying(20)
-		[Column,        Nullable] public char?           FieldChar       { get; set; } // character(1)
-		[Column,        Nullable] public char?           FieldNChar      { get; set; } // character(1)
-		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
-		[Column,        Nullable] public double?         FieldDouble     { get; set; } // double precision
-		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // timestamp (6) with time zone
-		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // bytea
-		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uuid
-		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // numeric(24,10)
-		[Column,        Nullable] public NpgsqlDate?     FieldDate       { get; set; } // date
-		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time (6) without time zone
-		[Column,        Nullable] public string?         FieldEnumString { get; set; } // character varying(20)
-		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),  PrimaryKey,  NotNull] public int             Id              { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field1          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field2          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field3          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field4          { get; set; } // integer
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            Field5          { get; set; } // integer
+		[Column(DataType=DataType.Int64,          Precision=64, Scale=0),     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DataType=DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // boolean
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // character varying(20)
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // character varying(20)
+		[Column(DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // character(1)
+		[Column(DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // character(1)
+		[Column(DataType=DataType.Single,         Precision=24),              Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DataType=DataType.Double,         Precision=53),              Nullable         ] public double?         FieldDouble     { get; set; } // double precision
+		[Column(DataType=DataType.DateTime2,      Precision=6),               Nullable         ] public DateTime?       FieldDateTime   { get; set; } // timestamp (6) without time zone
+		[Column(DataType=DataType.DateTimeOffset, Precision=6),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // timestamp (6) with time zone
+		[Column(DataType=DataType.Binary),                                    Nullable         ] public byte[]?         FieldBinary     { get; set; } // bytea
+		[Column(DataType=DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uuid
+		[Column(DataType=DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // numeric(24,10)
+		[Column(DataType=DataType.Date,           Precision=0),               Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DataType=DataType.Time,           Precision=6),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time (6) without time zone
+		[Column(DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // character varying(20)
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
 	[Table(Schema="test_schema", Name="testsamename")]
 	public partial class test_schema_Testsamename
 	{
-		[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+		[Column("id", DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
 	public partial class test_schema_TestSchemaIdentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
 	[Table(Schema="test_schema", Name="testserialidentity")]
 	public partial class test_schema_Testserialidentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // integer
+		[Column(DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
 	public static partial class SqlFunctions
@@ -2007,7 +2029,7 @@ namespace PostreSQL11DataContext
 		#region Abbrev
 
 		[Sql.Function(Name="pg_catalog.abbrev", ServerSideOnly=true)]
-		public static string? Abbrev(NpgsqlInet? par24)
+		public static string? Abbrev(ValueTuple<IPAddress, int>? par24)
 		{
 			throw new InvalidOperationException();
 		}
@@ -2247,7 +2269,7 @@ namespace PostreSQL11DataContext
 		#region Age
 
 		[Sql.Function(Name="pg_catalog.age", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? Age(DateTime? par101)
+		public static TimeSpan? Age(DateTime? par101)
 		{
 			throw new InvalidOperationException();
 		}
@@ -2927,7 +2949,7 @@ namespace PostreSQL11DataContext
 		#region Avg
 
 		[Sql.Function(Name="pg_catalog.avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static NpgsqlTimeSpan? Avg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlTimeSpan?>> par327)
+		public static TimeSpan? Avg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, TimeSpan?>> par327)
 		{
 			throw new InvalidOperationException();
 		}
@@ -4267,7 +4289,7 @@ namespace PostreSQL11DataContext
 		#region Broadcast
 
 		[Sql.Function(Name="pg_catalog.broadcast", ServerSideOnly=true)]
-		public static NpgsqlInet? Broadcast(NpgsqlInet? par732)
+		public static IPAddress? Broadcast(IPAddress? par732)
 		{
 			throw new InvalidOperationException();
 		}
@@ -5337,7 +5359,7 @@ namespace PostreSQL11DataContext
 		#region Cidr
 
 		[Sql.Function(Name="pg_catalog.cidr", ServerSideOnly=true)]
-		public static NpgsqlInet? Cidr(NpgsqlInet? par1022)
+		public static ValueTuple<IPAddress, int>? Cidr(IPAddress? par1022)
 		{
 			throw new InvalidOperationException();
 		}
@@ -5347,7 +5369,7 @@ namespace PostreSQL11DataContext
 		#region CidrIn
 
 		[Sql.Function(Name="pg_catalog.cidr_in", ServerSideOnly=true)]
-		public static NpgsqlInet? CidrIn(object? par1024)
+		public static ValueTuple<IPAddress, int>? CidrIn(object? par1024)
 		{
 			throw new InvalidOperationException();
 		}
@@ -5357,7 +5379,7 @@ namespace PostreSQL11DataContext
 		#region CidrOut
 
 		[Sql.Function(Name="pg_catalog.cidr_out", ServerSideOnly=true)]
-		public static object? CidrOut(NpgsqlInet? par1026)
+		public static object? CidrOut(ValueTuple<IPAddress, int>? par1026)
 		{
 			throw new InvalidOperationException();
 		}
@@ -5367,7 +5389,7 @@ namespace PostreSQL11DataContext
 		#region CidrRecv
 
 		[Sql.Function(Name="pg_catalog.cidr_recv", ServerSideOnly=true)]
-		public static NpgsqlInet? CidrRecv(object? par1028)
+		public static ValueTuple<IPAddress, int>? CidrRecv(object? par1028)
 		{
 			throw new InvalidOperationException();
 		}
@@ -5377,7 +5399,7 @@ namespace PostreSQL11DataContext
 		#region CidrSend
 
 		[Sql.Function(Name="pg_catalog.cidr_send", ServerSideOnly=true)]
-		public static byte[]? CidrSend(NpgsqlInet? par1030)
+		public static byte[]? CidrSend(ValueTuple<IPAddress, int>? par1030)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6157,7 +6179,7 @@ namespace PostreSQL11DataContext
 		#region Date
 
 		[Sql.Function(Name="pg_catalog.date", ServerSideOnly=true)]
-		public static NpgsqlDate? Date(DateTime? par1241)
+		public static DateTime? Date(DateTime? par1241)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6167,7 +6189,7 @@ namespace PostreSQL11DataContext
 		#region DateCmp
 
 		[Sql.Function(Name="pg_catalog.date_cmp", ServerSideOnly=true)]
-		public static int? DateCmp(NpgsqlDate? par1243, NpgsqlDate? par1244)
+		public static int? DateCmp(DateTime? par1243, DateTime? par1244)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6177,7 +6199,7 @@ namespace PostreSQL11DataContext
 		#region DateCmpTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_cmp_timestamp", ServerSideOnly=true)]
-		public static int? DateCmpTimestamp(NpgsqlDate? par1246, DateTime? par1247)
+		public static int? DateCmpTimestamp(DateTime? par1246, DateTime? par1247)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6187,7 +6209,7 @@ namespace PostreSQL11DataContext
 		#region DateCmpTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_cmp_timestamptz", ServerSideOnly=true)]
-		public static int? DateCmpTimestamptz(NpgsqlDate? par1249, DateTimeOffset? par1250)
+		public static int? DateCmpTimestamptz(DateTime? par1249, DateTimeOffset? par1250)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6197,7 +6219,7 @@ namespace PostreSQL11DataContext
 		#region DateEq
 
 		[Sql.Function(Name="pg_catalog.date_eq", ServerSideOnly=true)]
-		public static bool? DateEq(NpgsqlDate? par1252, NpgsqlDate? par1253)
+		public static bool? DateEq(DateTime? par1252, DateTime? par1253)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6207,7 +6229,7 @@ namespace PostreSQL11DataContext
 		#region DateEqTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_eq_timestamp", ServerSideOnly=true)]
-		public static bool? DateEqTimestamp(NpgsqlDate? par1255, DateTime? par1256)
+		public static bool? DateEqTimestamp(DateTime? par1255, DateTime? par1256)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6217,7 +6239,7 @@ namespace PostreSQL11DataContext
 		#region DateEqTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_eq_timestamptz", ServerSideOnly=true)]
-		public static bool? DateEqTimestamptz(NpgsqlDate? par1258, DateTimeOffset? par1259)
+		public static bool? DateEqTimestamptz(DateTime? par1258, DateTimeOffset? par1259)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6227,7 +6249,7 @@ namespace PostreSQL11DataContext
 		#region DateGe
 
 		[Sql.Function(Name="pg_catalog.date_ge", ServerSideOnly=true)]
-		public static bool? DateGe(NpgsqlDate? par1261, NpgsqlDate? par1262)
+		public static bool? DateGe(DateTime? par1261, DateTime? par1262)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6237,7 +6259,7 @@ namespace PostreSQL11DataContext
 		#region DateGeTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_ge_timestamp", ServerSideOnly=true)]
-		public static bool? DateGeTimestamp(NpgsqlDate? par1264, DateTime? par1265)
+		public static bool? DateGeTimestamp(DateTime? par1264, DateTime? par1265)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6247,7 +6269,7 @@ namespace PostreSQL11DataContext
 		#region DateGeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_ge_timestamptz", ServerSideOnly=true)]
-		public static bool? DateGeTimestamptz(NpgsqlDate? par1267, DateTimeOffset? par1268)
+		public static bool? DateGeTimestamptz(DateTime? par1267, DateTimeOffset? par1268)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6257,7 +6279,7 @@ namespace PostreSQL11DataContext
 		#region DateGt
 
 		[Sql.Function(Name="pg_catalog.date_gt", ServerSideOnly=true)]
-		public static bool? DateGt(NpgsqlDate? par1270, NpgsqlDate? par1271)
+		public static bool? DateGt(DateTime? par1270, DateTime? par1271)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6267,7 +6289,7 @@ namespace PostreSQL11DataContext
 		#region DateGtTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_gt_timestamp", ServerSideOnly=true)]
-		public static bool? DateGtTimestamp(NpgsqlDate? par1273, DateTime? par1274)
+		public static bool? DateGtTimestamp(DateTime? par1273, DateTime? par1274)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6277,7 +6299,7 @@ namespace PostreSQL11DataContext
 		#region DateGtTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_gt_timestamptz", ServerSideOnly=true)]
-		public static bool? DateGtTimestamptz(NpgsqlDate? par1276, DateTimeOffset? par1277)
+		public static bool? DateGtTimestamptz(DateTime? par1276, DateTimeOffset? par1277)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6287,7 +6309,7 @@ namespace PostreSQL11DataContext
 		#region DateIn
 
 		[Sql.Function(Name="pg_catalog.date_in", ServerSideOnly=true)]
-		public static NpgsqlDate? DateIn(object? par1279)
+		public static DateTime? DateIn(object? par1279)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6297,7 +6319,7 @@ namespace PostreSQL11DataContext
 		#region DateLarger
 
 		[Sql.Function(Name="pg_catalog.date_larger", ServerSideOnly=true)]
-		public static NpgsqlDate? DateLarger(NpgsqlDate? par1281, NpgsqlDate? par1282)
+		public static DateTime? DateLarger(DateTime? par1281, DateTime? par1282)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6307,7 +6329,7 @@ namespace PostreSQL11DataContext
 		#region DateLe
 
 		[Sql.Function(Name="pg_catalog.date_le", ServerSideOnly=true)]
-		public static bool? DateLe(NpgsqlDate? par1284, NpgsqlDate? par1285)
+		public static bool? DateLe(DateTime? par1284, DateTime? par1285)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6317,7 +6339,7 @@ namespace PostreSQL11DataContext
 		#region DateLeTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_le_timestamp", ServerSideOnly=true)]
-		public static bool? DateLeTimestamp(NpgsqlDate? par1287, DateTime? par1288)
+		public static bool? DateLeTimestamp(DateTime? par1287, DateTime? par1288)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6327,7 +6349,7 @@ namespace PostreSQL11DataContext
 		#region DateLeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_le_timestamptz", ServerSideOnly=true)]
-		public static bool? DateLeTimestamptz(NpgsqlDate? par1290, DateTimeOffset? par1291)
+		public static bool? DateLeTimestamptz(DateTime? par1290, DateTimeOffset? par1291)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6337,7 +6359,7 @@ namespace PostreSQL11DataContext
 		#region DateLt
 
 		[Sql.Function(Name="pg_catalog.date_lt", ServerSideOnly=true)]
-		public static bool? DateLt(NpgsqlDate? par1293, NpgsqlDate? par1294)
+		public static bool? DateLt(DateTime? par1293, DateTime? par1294)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6347,7 +6369,7 @@ namespace PostreSQL11DataContext
 		#region DateLtTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_lt_timestamp", ServerSideOnly=true)]
-		public static bool? DateLtTimestamp(NpgsqlDate? par1296, DateTime? par1297)
+		public static bool? DateLtTimestamp(DateTime? par1296, DateTime? par1297)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6357,7 +6379,7 @@ namespace PostreSQL11DataContext
 		#region DateLtTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_lt_timestamptz", ServerSideOnly=true)]
-		public static bool? DateLtTimestamptz(NpgsqlDate? par1299, DateTimeOffset? par1300)
+		public static bool? DateLtTimestamptz(DateTime? par1299, DateTimeOffset? par1300)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6367,7 +6389,7 @@ namespace PostreSQL11DataContext
 		#region DateMi
 
 		[Sql.Function(Name="pg_catalog.date_mi", ServerSideOnly=true)]
-		public static int? DateMi(NpgsqlDate? par1302, NpgsqlDate? par1303)
+		public static int? DateMi(DateTime? par1302, DateTime? par1303)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6377,7 +6399,7 @@ namespace PostreSQL11DataContext
 		#region DateMiInterval
 
 		[Sql.Function(Name="pg_catalog.date_mi_interval", ServerSideOnly=true)]
-		public static DateTime? DateMiInterval(NpgsqlDate? par1305, NpgsqlTimeSpan? par1306)
+		public static DateTime? DateMiInterval(DateTime? par1305, TimeSpan? par1306)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6387,7 +6409,7 @@ namespace PostreSQL11DataContext
 		#region DateMii
 
 		[Sql.Function(Name="pg_catalog.date_mii", ServerSideOnly=true)]
-		public static NpgsqlDate? DateMii(NpgsqlDate? par1308, int? par1309)
+		public static DateTime? DateMii(DateTime? par1308, int? par1309)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6397,7 +6419,7 @@ namespace PostreSQL11DataContext
 		#region DateNe
 
 		[Sql.Function(Name="pg_catalog.date_ne", ServerSideOnly=true)]
-		public static bool? DateNe(NpgsqlDate? par1311, NpgsqlDate? par1312)
+		public static bool? DateNe(DateTime? par1311, DateTime? par1312)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6407,7 +6429,7 @@ namespace PostreSQL11DataContext
 		#region DateNeTimestamp
 
 		[Sql.Function(Name="pg_catalog.date_ne_timestamp", ServerSideOnly=true)]
-		public static bool? DateNeTimestamp(NpgsqlDate? par1314, DateTime? par1315)
+		public static bool? DateNeTimestamp(DateTime? par1314, DateTime? par1315)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6417,7 +6439,7 @@ namespace PostreSQL11DataContext
 		#region DateNeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.date_ne_timestamptz", ServerSideOnly=true)]
-		public static bool? DateNeTimestamptz(NpgsqlDate? par1317, DateTimeOffset? par1318)
+		public static bool? DateNeTimestamptz(DateTime? par1317, DateTimeOffset? par1318)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6427,7 +6449,7 @@ namespace PostreSQL11DataContext
 		#region DateOut
 
 		[Sql.Function(Name="pg_catalog.date_out", ServerSideOnly=true)]
-		public static object? DateOut(NpgsqlDate? par1320)
+		public static object? DateOut(DateTime? par1320)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6447,7 +6469,7 @@ namespace PostreSQL11DataContext
 		#region DatePlInterval
 
 		[Sql.Function(Name="pg_catalog.date_pl_interval", ServerSideOnly=true)]
-		public static DateTime? DatePlInterval(NpgsqlDate? par1346, NpgsqlTimeSpan? par1347)
+		public static DateTime? DatePlInterval(DateTime? par1346, TimeSpan? par1347)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6457,7 +6479,7 @@ namespace PostreSQL11DataContext
 		#region DatePli
 
 		[Sql.Function(Name="pg_catalog.date_pli", ServerSideOnly=true)]
-		public static NpgsqlDate? DatePli(NpgsqlDate? par1349, int? par1350)
+		public static DateTime? DatePli(DateTime? par1349, int? par1350)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6467,7 +6489,7 @@ namespace PostreSQL11DataContext
 		#region DateRecv
 
 		[Sql.Function(Name="pg_catalog.date_recv", ServerSideOnly=true)]
-		public static NpgsqlDate? DateRecv(object? par1352)
+		public static DateTime? DateRecv(object? par1352)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6477,7 +6499,7 @@ namespace PostreSQL11DataContext
 		#region DateSend
 
 		[Sql.Function(Name="pg_catalog.date_send", ServerSideOnly=true)]
-		public static byte[]? DateSend(NpgsqlDate? par1354)
+		public static byte[]? DateSend(DateTime? par1354)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6487,7 +6509,7 @@ namespace PostreSQL11DataContext
 		#region DateSmaller
 
 		[Sql.Function(Name="pg_catalog.date_smaller", ServerSideOnly=true)]
-		public static NpgsqlDate? DateSmaller(NpgsqlDate? par1356, NpgsqlDate? par1357)
+		public static DateTime? DateSmaller(DateTime? par1356, DateTime? par1357)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6517,7 +6539,7 @@ namespace PostreSQL11DataContext
 		#region Daterange
 
 		[Sql.Function(Name="pg_catalog.daterange", ServerSideOnly=true)]
-		public static object? Daterange(NpgsqlDate? par1372, NpgsqlDate? par1373, string? par1374)
+		public static object? Daterange(DateTime? par1372, DateTime? par1373, string? par1374)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6537,7 +6559,7 @@ namespace PostreSQL11DataContext
 		#region DaterangeSubdiff
 
 		[Sql.Function(Name="pg_catalog.daterange_subdiff", ServerSideOnly=true)]
-		public static double? DaterangeSubdiff(NpgsqlDate? par1378, NpgsqlDate? par1379)
+		public static double? DaterangeSubdiff(DateTime? par1378, DateTime? par1379)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6547,7 +6569,7 @@ namespace PostreSQL11DataContext
 		#region DatetimePl
 
 		[Sql.Function(Name="pg_catalog.datetime_pl", ServerSideOnly=true)]
-		public static DateTime? DatetimePl(NpgsqlDate? par1381, TimeSpan? par1382)
+		public static DateTime? DatetimePl(DateTime? par1381, TimeSpan? par1382)
 		{
 			throw new InvalidOperationException();
 		}
@@ -6557,7 +6579,7 @@ namespace PostreSQL11DataContext
 		#region DatetimetzPl
 
 		[Sql.Function(Name="pg_catalog.datetimetz_pl", ServerSideOnly=true)]
-		public static DateTimeOffset? DatetimetzPl(NpgsqlDate? par1384, DateTimeOffset? par1385)
+		public static DateTimeOffset? DatetimetzPl(DateTime? par1384, DateTimeOffset? par1385)
 		{
 			throw new InvalidOperationException();
 		}
@@ -7307,7 +7329,7 @@ namespace PostreSQL11DataContext
 		#region Family
 
 		[Sql.Function(Name="pg_catalog.family", ServerSideOnly=true)]
-		public static int? Family(NpgsqlInet? par1629)
+		public static int? Family(IPAddress? par1629)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9137,7 +9159,7 @@ namespace PostreSQL11DataContext
 		#region Hashinet
 
 		[Sql.Function(Name="pg_catalog.hashinet", ServerSideOnly=true)]
-		public static int? Hashinet(NpgsqlInet? par2578)
+		public static int? Hashinet(IPAddress? par2578)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9147,7 +9169,7 @@ namespace PostreSQL11DataContext
 		#region Hashinetextended
 
 		[Sql.Function(Name="pg_catalog.hashinetextended", ServerSideOnly=true)]
-		public static long? Hashinetextended(NpgsqlInet? par2580, long? par2581)
+		public static long? Hashinetextended(IPAddress? par2580, long? par2581)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9367,7 +9389,7 @@ namespace PostreSQL11DataContext
 		#region Host
 
 		[Sql.Function(Name="pg_catalog.host", ServerSideOnly=true)]
-		public static string? Host(NpgsqlInet? par2635)
+		public static string? Host(IPAddress? par2635)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9377,7 +9399,7 @@ namespace PostreSQL11DataContext
 		#region Hostmask
 
 		[Sql.Function(Name="pg_catalog.hostmask", ServerSideOnly=true)]
-		public static NpgsqlInet? Hostmask(NpgsqlInet? par2637)
+		public static IPAddress? Hostmask(IPAddress? par2637)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9497,7 +9519,7 @@ namespace PostreSQL11DataContext
 		#region InetClientAddr
 
 		[Sql.Function(Name="pg_catalog.inet_client_addr", ServerSideOnly=true)]
-		public static NpgsqlInet? InetClientAddr()
+		public static IPAddress? InetClientAddr()
 		{
 			throw new InvalidOperationException();
 		}
@@ -9527,7 +9549,7 @@ namespace PostreSQL11DataContext
 		#region InetGistConsistent
 
 		[Sql.Function(Name="pg_catalog.inet_gist_consistent", ServerSideOnly=true)]
-		public static bool? InetGistConsistent(object? par2787, NpgsqlInet? par2788, short? par2789, int? par2790, object? par2791)
+		public static bool? InetGistConsistent(object? par2787, IPAddress? par2788, short? par2789, int? par2790, object? par2791)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9567,7 +9589,7 @@ namespace PostreSQL11DataContext
 		#region InetGistSame
 
 		[Sql.Function(Name="pg_catalog.inet_gist_same", ServerSideOnly=true)]
-		public static object? InetGistSame(NpgsqlInet? par2802, NpgsqlInet? par2803, object? par2804)
+		public static object? InetGistSame(IPAddress? par2802, IPAddress? par2803, object? par2804)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9577,7 +9599,7 @@ namespace PostreSQL11DataContext
 		#region InetGistUnion
 
 		[Sql.Function(Name="pg_catalog.inet_gist_union", ServerSideOnly=true)]
-		public static NpgsqlInet? InetGistUnion(object? par2806, object? par2807)
+		public static IPAddress? InetGistUnion(object? par2806, object? par2807)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9587,7 +9609,7 @@ namespace PostreSQL11DataContext
 		#region InetIn
 
 		[Sql.Function(Name="pg_catalog.inet_in", ServerSideOnly=true)]
-		public static NpgsqlInet? InetIn(object? par2809)
+		public static IPAddress? InetIn(object? par2809)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9597,7 +9619,7 @@ namespace PostreSQL11DataContext
 		#region InetMerge
 
 		[Sql.Function(Name="pg_catalog.inet_merge", ServerSideOnly=true)]
-		public static NpgsqlInet? InetMerge(NpgsqlInet? par2811, NpgsqlInet? par2812)
+		public static ValueTuple<IPAddress, int>? InetMerge(IPAddress? par2811, IPAddress? par2812)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9607,7 +9629,7 @@ namespace PostreSQL11DataContext
 		#region InetOut
 
 		[Sql.Function(Name="pg_catalog.inet_out", ServerSideOnly=true)]
-		public static object? InetOut(NpgsqlInet? par2814)
+		public static object? InetOut(IPAddress? par2814)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9617,7 +9639,7 @@ namespace PostreSQL11DataContext
 		#region InetRecv
 
 		[Sql.Function(Name="pg_catalog.inet_recv", ServerSideOnly=true)]
-		public static NpgsqlInet? InetRecv(object? par2816)
+		public static IPAddress? InetRecv(object? par2816)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9627,7 +9649,7 @@ namespace PostreSQL11DataContext
 		#region InetSameFamily
 
 		[Sql.Function(Name="pg_catalog.inet_same_family", ServerSideOnly=true)]
-		public static bool? InetSameFamily(NpgsqlInet? par2818, NpgsqlInet? par2819)
+		public static bool? InetSameFamily(IPAddress? par2818, IPAddress? par2819)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9637,7 +9659,7 @@ namespace PostreSQL11DataContext
 		#region InetSend
 
 		[Sql.Function(Name="pg_catalog.inet_send", ServerSideOnly=true)]
-		public static byte[]? InetSend(NpgsqlInet? par2821)
+		public static byte[]? InetSend(IPAddress? par2821)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9647,7 +9669,7 @@ namespace PostreSQL11DataContext
 		#region InetServerAddr
 
 		[Sql.Function(Name="pg_catalog.inet_server_addr", ServerSideOnly=true)]
-		public static NpgsqlInet? InetServerAddr()
+		public static IPAddress? InetServerAddr()
 		{
 			throw new InvalidOperationException();
 		}
@@ -9717,7 +9739,7 @@ namespace PostreSQL11DataContext
 		#region Inetand
 
 		[Sql.Function(Name="pg_catalog.inetand", ServerSideOnly=true)]
-		public static NpgsqlInet? Inetand(NpgsqlInet? par2836, NpgsqlInet? par2837)
+		public static IPAddress? Inetand(IPAddress? par2836, IPAddress? par2837)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9727,7 +9749,7 @@ namespace PostreSQL11DataContext
 		#region Inetmi
 
 		[Sql.Function(Name="pg_catalog.inetmi", ServerSideOnly=true)]
-		public static long? Inetmi(NpgsqlInet? par2839, NpgsqlInet? par2840)
+		public static long? Inetmi(IPAddress? par2839, IPAddress? par2840)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9737,7 +9759,7 @@ namespace PostreSQL11DataContext
 		#region InetmiInt8
 
 		[Sql.Function(Name="pg_catalog.inetmi_int8", ServerSideOnly=true)]
-		public static NpgsqlInet? InetmiInt8(NpgsqlInet? par2842, long? par2843)
+		public static IPAddress? InetmiInt8(IPAddress? par2842, long? par2843)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9747,7 +9769,7 @@ namespace PostreSQL11DataContext
 		#region Inetnot
 
 		[Sql.Function(Name="pg_catalog.inetnot", ServerSideOnly=true)]
-		public static NpgsqlInet? Inetnot(NpgsqlInet? par2845)
+		public static IPAddress? Inetnot(IPAddress? par2845)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9757,7 +9779,7 @@ namespace PostreSQL11DataContext
 		#region Inetor
 
 		[Sql.Function(Name="pg_catalog.inetor", ServerSideOnly=true)]
-		public static NpgsqlInet? Inetor(NpgsqlInet? par2847, NpgsqlInet? par2848)
+		public static IPAddress? Inetor(IPAddress? par2847, IPAddress? par2848)
 		{
 			throw new InvalidOperationException();
 		}
@@ -9767,7 +9789,7 @@ namespace PostreSQL11DataContext
 		#region Inetpl
 
 		[Sql.Function(Name="pg_catalog.inetpl", ServerSideOnly=true)]
-		public static NpgsqlInet? Inetpl(NpgsqlInet? par2850, long? par2851)
+		public static IPAddress? Inetpl(IPAddress? par2850, long? par2851)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11487,7 +11509,7 @@ namespace PostreSQL11DataContext
 		#region Int8plInet
 
 		[Sql.Function(Name="pg_catalog.int8pl_inet", ServerSideOnly=true)]
-		public static NpgsqlInet? Int8plInet(long? par3376, NpgsqlInet? par3377)
+		public static IPAddress? Int8plInet(long? par3376, IPAddress? par3377)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11607,7 +11629,7 @@ namespace PostreSQL11DataContext
 		#region IntegerPlDate
 
 		[Sql.Function(Name="pg_catalog.integer_pl_date", ServerSideOnly=true)]
-		public static NpgsqlDate? IntegerPlDate(int? par3411, NpgsqlDate? par3412)
+		public static DateTime? IntegerPlDate(int? par3411, DateTime? par3412)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11667,7 +11689,7 @@ namespace PostreSQL11DataContext
 		#region Interval
 
 		[Sql.Function(Name="pg_catalog.interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? Interval(TimeSpan? par3432)
+		public static TimeSpan? Interval(TimeSpan? par3432)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11677,7 +11699,7 @@ namespace PostreSQL11DataContext
 		#region IntervalAccum
 
 		[Sql.Function(Name="pg_catalog.interval_accum", ServerSideOnly=true)]
-		public static object? IntervalAccum(object? par3434, NpgsqlTimeSpan? par3435)
+		public static object? IntervalAccum(object? par3434, TimeSpan? par3435)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11687,7 +11709,7 @@ namespace PostreSQL11DataContext
 		#region IntervalAccumInv
 
 		[Sql.Function(Name="pg_catalog.interval_accum_inv", ServerSideOnly=true)]
-		public static object? IntervalAccumInv(object? par3437, NpgsqlTimeSpan? par3438)
+		public static object? IntervalAccumInv(object? par3437, TimeSpan? par3438)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11697,7 +11719,7 @@ namespace PostreSQL11DataContext
 		#region IntervalAvg
 
 		[Sql.Function(Name="pg_catalog.interval_avg", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalAvg(object? par3440)
+		public static TimeSpan? IntervalAvg(object? par3440)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11707,7 +11729,7 @@ namespace PostreSQL11DataContext
 		#region IntervalCmp
 
 		[Sql.Function(Name="pg_catalog.interval_cmp", ServerSideOnly=true)]
-		public static int? IntervalCmp(NpgsqlTimeSpan? par3442, NpgsqlTimeSpan? par3443)
+		public static int? IntervalCmp(TimeSpan? par3442, TimeSpan? par3443)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11727,7 +11749,7 @@ namespace PostreSQL11DataContext
 		#region IntervalDiv
 
 		[Sql.Function(Name="pg_catalog.interval_div", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalDiv(NpgsqlTimeSpan? par3448, double? par3449)
+		public static TimeSpan? IntervalDiv(TimeSpan? par3448, double? par3449)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11737,7 +11759,7 @@ namespace PostreSQL11DataContext
 		#region IntervalEq
 
 		[Sql.Function(Name="pg_catalog.interval_eq", ServerSideOnly=true)]
-		public static bool? IntervalEq(NpgsqlTimeSpan? par3451, NpgsqlTimeSpan? par3452)
+		public static bool? IntervalEq(TimeSpan? par3451, TimeSpan? par3452)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11747,7 +11769,7 @@ namespace PostreSQL11DataContext
 		#region IntervalGe
 
 		[Sql.Function(Name="pg_catalog.interval_ge", ServerSideOnly=true)]
-		public static bool? IntervalGe(NpgsqlTimeSpan? par3454, NpgsqlTimeSpan? par3455)
+		public static bool? IntervalGe(TimeSpan? par3454, TimeSpan? par3455)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11757,7 +11779,7 @@ namespace PostreSQL11DataContext
 		#region IntervalGt
 
 		[Sql.Function(Name="pg_catalog.interval_gt", ServerSideOnly=true)]
-		public static bool? IntervalGt(NpgsqlTimeSpan? par3457, NpgsqlTimeSpan? par3458)
+		public static bool? IntervalGt(TimeSpan? par3457, TimeSpan? par3458)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11767,7 +11789,7 @@ namespace PostreSQL11DataContext
 		#region IntervalHash
 
 		[Sql.Function(Name="pg_catalog.interval_hash", ServerSideOnly=true)]
-		public static int? IntervalHash(NpgsqlTimeSpan? par3460)
+		public static int? IntervalHash(TimeSpan? par3460)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11777,7 +11799,7 @@ namespace PostreSQL11DataContext
 		#region IntervalHashExtended
 
 		[Sql.Function(Name="pg_catalog.interval_hash_extended", ServerSideOnly=true)]
-		public static long? IntervalHashExtended(NpgsqlTimeSpan? par3462, long? par3463)
+		public static long? IntervalHashExtended(TimeSpan? par3462, long? par3463)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11787,7 +11809,7 @@ namespace PostreSQL11DataContext
 		#region IntervalIn
 
 		[Sql.Function(Name="pg_catalog.interval_in", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalIn(object? par3465, int? par3466, int? par3467)
+		public static TimeSpan? IntervalIn(object? par3465, int? par3466, int? par3467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11797,7 +11819,7 @@ namespace PostreSQL11DataContext
 		#region IntervalLarger
 
 		[Sql.Function(Name="pg_catalog.interval_larger", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalLarger(NpgsqlTimeSpan? par3469, NpgsqlTimeSpan? par3470)
+		public static TimeSpan? IntervalLarger(TimeSpan? par3469, TimeSpan? par3470)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11807,7 +11829,7 @@ namespace PostreSQL11DataContext
 		#region IntervalLe
 
 		[Sql.Function(Name="pg_catalog.interval_le", ServerSideOnly=true)]
-		public static bool? IntervalLe(NpgsqlTimeSpan? par3472, NpgsqlTimeSpan? par3473)
+		public static bool? IntervalLe(TimeSpan? par3472, TimeSpan? par3473)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11817,7 +11839,7 @@ namespace PostreSQL11DataContext
 		#region IntervalLt
 
 		[Sql.Function(Name="pg_catalog.interval_lt", ServerSideOnly=true)]
-		public static bool? IntervalLt(NpgsqlTimeSpan? par3475, NpgsqlTimeSpan? par3476)
+		public static bool? IntervalLt(TimeSpan? par3475, TimeSpan? par3476)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11827,7 +11849,7 @@ namespace PostreSQL11DataContext
 		#region IntervalMi
 
 		[Sql.Function(Name="pg_catalog.interval_mi", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalMi(NpgsqlTimeSpan? par3478, NpgsqlTimeSpan? par3479)
+		public static TimeSpan? IntervalMi(TimeSpan? par3478, TimeSpan? par3479)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11837,7 +11859,7 @@ namespace PostreSQL11DataContext
 		#region IntervalMul
 
 		[Sql.Function(Name="pg_catalog.interval_mul", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalMul(NpgsqlTimeSpan? par3481, double? par3482)
+		public static TimeSpan? IntervalMul(TimeSpan? par3481, double? par3482)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11847,7 +11869,7 @@ namespace PostreSQL11DataContext
 		#region IntervalNe
 
 		[Sql.Function(Name="pg_catalog.interval_ne", ServerSideOnly=true)]
-		public static bool? IntervalNe(NpgsqlTimeSpan? par3484, NpgsqlTimeSpan? par3485)
+		public static bool? IntervalNe(TimeSpan? par3484, TimeSpan? par3485)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11857,7 +11879,7 @@ namespace PostreSQL11DataContext
 		#region IntervalOut
 
 		[Sql.Function(Name="pg_catalog.interval_out", ServerSideOnly=true)]
-		public static object? IntervalOut(NpgsqlTimeSpan? par3487)
+		public static object? IntervalOut(TimeSpan? par3487)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11867,7 +11889,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPl
 
 		[Sql.Function(Name="pg_catalog.interval_pl", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalPl(NpgsqlTimeSpan? par3489, NpgsqlTimeSpan? par3490)
+		public static TimeSpan? IntervalPl(TimeSpan? par3489, TimeSpan? par3490)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11877,7 +11899,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPlDate
 
 		[Sql.Function(Name="pg_catalog.interval_pl_date", ServerSideOnly=true)]
-		public static DateTime? IntervalPlDate(NpgsqlTimeSpan? par3492, NpgsqlDate? par3493)
+		public static DateTime? IntervalPlDate(TimeSpan? par3492, DateTime? par3493)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11887,7 +11909,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPlTime
 
 		[Sql.Function(Name="pg_catalog.interval_pl_time", ServerSideOnly=true)]
-		public static TimeSpan? IntervalPlTime(NpgsqlTimeSpan? par3495, TimeSpan? par3496)
+		public static TimeSpan? IntervalPlTime(TimeSpan? par3495, TimeSpan? par3496)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11897,7 +11919,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPlTimestamp
 
 		[Sql.Function(Name="pg_catalog.interval_pl_timestamp", ServerSideOnly=true)]
-		public static DateTime? IntervalPlTimestamp(NpgsqlTimeSpan? par3498, DateTime? par3499)
+		public static DateTime? IntervalPlTimestamp(TimeSpan? par3498, DateTime? par3499)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11907,7 +11929,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPlTimestamptz
 
 		[Sql.Function(Name="pg_catalog.interval_pl_timestamptz", ServerSideOnly=true)]
-		public static DateTimeOffset? IntervalPlTimestamptz(NpgsqlTimeSpan? par3501, DateTimeOffset? par3502)
+		public static DateTimeOffset? IntervalPlTimestamptz(TimeSpan? par3501, DateTimeOffset? par3502)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11917,7 +11939,7 @@ namespace PostreSQL11DataContext
 		#region IntervalPlTimetz
 
 		[Sql.Function(Name="pg_catalog.interval_pl_timetz", ServerSideOnly=true)]
-		public static DateTimeOffset? IntervalPlTimetz(NpgsqlTimeSpan? par3504, DateTimeOffset? par3505)
+		public static DateTimeOffset? IntervalPlTimetz(TimeSpan? par3504, DateTimeOffset? par3505)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11927,7 +11949,7 @@ namespace PostreSQL11DataContext
 		#region IntervalRecv
 
 		[Sql.Function(Name="pg_catalog.interval_recv", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalRecv(object? par3507, int? par3508, int? par3509)
+		public static TimeSpan? IntervalRecv(object? par3507, int? par3508, int? par3509)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11937,7 +11959,7 @@ namespace PostreSQL11DataContext
 		#region IntervalSend
 
 		[Sql.Function(Name="pg_catalog.interval_send", ServerSideOnly=true)]
-		public static byte[]? IntervalSend(NpgsqlTimeSpan? par3511)
+		public static byte[]? IntervalSend(TimeSpan? par3511)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11947,7 +11969,7 @@ namespace PostreSQL11DataContext
 		#region IntervalSmaller
 
 		[Sql.Function(Name="pg_catalog.interval_smaller", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalSmaller(NpgsqlTimeSpan? par3513, NpgsqlTimeSpan? par3514)
+		public static TimeSpan? IntervalSmaller(TimeSpan? par3513, TimeSpan? par3514)
 		{
 			throw new InvalidOperationException();
 		}
@@ -11967,7 +11989,7 @@ namespace PostreSQL11DataContext
 		#region IntervalUm
 
 		[Sql.Function(Name="pg_catalog.interval_um", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? IntervalUm(NpgsqlTimeSpan? par3518)
+		public static TimeSpan? IntervalUm(TimeSpan? par3518)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12137,7 +12159,7 @@ namespace PostreSQL11DataContext
 		#region Issue1742Date
 
 		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
-		public static int? Issue1742Date(NpgsqlDate? p1)
+		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12887,7 +12909,7 @@ namespace PostreSQL11DataContext
 		#region JustifyDays
 
 		[Sql.Function(Name="pg_catalog.justify_days", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyDays(NpgsqlTimeSpan? par3785)
+		public static TimeSpan? JustifyDays(TimeSpan? par3785)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12897,7 +12919,7 @@ namespace PostreSQL11DataContext
 		#region JustifyHours
 
 		[Sql.Function(Name="pg_catalog.justify_hours", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyHours(NpgsqlTimeSpan? par3787)
+		public static TimeSpan? JustifyHours(TimeSpan? par3787)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12907,7 +12929,7 @@ namespace PostreSQL11DataContext
 		#region JustifyInterval
 
 		[Sql.Function(Name="pg_catalog.justify_interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyInterval(NpgsqlTimeSpan? par3789)
+		public static TimeSpan? JustifyInterval(TimeSpan? par3789)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14047,7 +14069,7 @@ namespace PostreSQL11DataContext
 		#region MakeDate
 
 		[Sql.Function(Name="pg_catalog.make_date", ServerSideOnly=true)]
-		public static NpgsqlDate? MakeDate(int? year, int? month, int? day)
+		public static DateTime? MakeDate(int? year, int? month, int? day)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14057,7 +14079,7 @@ namespace PostreSQL11DataContext
 		#region MakeInterval
 
 		[Sql.Function(Name="pg_catalog.make_interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? MakeInterval(int? years, int? months, int? weeks, int? days, int? hours, int? mins, double? secs)
+		public static TimeSpan? MakeInterval(int? years, int? months, int? weeks, int? days, int? hours, int? mins, double? secs)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14107,7 +14129,7 @@ namespace PostreSQL11DataContext
 		#region Masklen
 
 		[Sql.Function(Name="pg_catalog.masklen", ServerSideOnly=true)]
-		public static int? Masklen(NpgsqlInet? par4182)
+		public static int? Masklen(IPAddress? par4182)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14117,7 +14139,7 @@ namespace PostreSQL11DataContext
 		#region Max
 
 		[Sql.Function(Name="pg_catalog.max", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static NpgsqlInet? Max<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4224)
+		public static IPAddress? Max<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, IPAddress?>> par4224)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14297,7 +14319,7 @@ namespace PostreSQL11DataContext
 		#region Min
 
 		[Sql.Function(Name="pg_catalog.min", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static NpgsqlInet? Min<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4350)
+		public static IPAddress? Min<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, IPAddress?>> par4350)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14357,7 +14379,7 @@ namespace PostreSQL11DataContext
 		#region MulDInterval
 
 		[Sql.Function(Name="pg_catalog.mul_d_interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? MulDInterval(double? par4378, NpgsqlTimeSpan? par4379)
+		public static TimeSpan? MulDInterval(double? par4378, TimeSpan? par4379)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14587,7 +14609,7 @@ namespace PostreSQL11DataContext
 		#region Netmask
 
 		[Sql.Function(Name="pg_catalog.netmask", ServerSideOnly=true)]
-		public static NpgsqlInet? Netmask(NpgsqlInet? par4450)
+		public static IPAddress? Netmask(IPAddress? par4450)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14597,7 +14619,7 @@ namespace PostreSQL11DataContext
 		#region Network
 
 		[Sql.Function(Name="pg_catalog.network", ServerSideOnly=true)]
-		public static NpgsqlInet? Network(NpgsqlInet? par4452)
+		public static ValueTuple<IPAddress, int>? Network(IPAddress? par4452)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14607,7 +14629,7 @@ namespace PostreSQL11DataContext
 		#region NetworkCmp
 
 		[Sql.Function(Name="pg_catalog.network_cmp", ServerSideOnly=true)]
-		public static int? NetworkCmp(NpgsqlInet? par4454, NpgsqlInet? par4455)
+		public static int? NetworkCmp(IPAddress? par4454, IPAddress? par4455)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14617,7 +14639,7 @@ namespace PostreSQL11DataContext
 		#region NetworkEq
 
 		[Sql.Function(Name="pg_catalog.network_eq", ServerSideOnly=true)]
-		public static bool? NetworkEq(NpgsqlInet? par4457, NpgsqlInet? par4458)
+		public static bool? NetworkEq(IPAddress? par4457, IPAddress? par4458)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14627,7 +14649,7 @@ namespace PostreSQL11DataContext
 		#region NetworkGe
 
 		[Sql.Function(Name="pg_catalog.network_ge", ServerSideOnly=true)]
-		public static bool? NetworkGe(NpgsqlInet? par4460, NpgsqlInet? par4461)
+		public static bool? NetworkGe(IPAddress? par4460, IPAddress? par4461)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14637,7 +14659,7 @@ namespace PostreSQL11DataContext
 		#region NetworkGt
 
 		[Sql.Function(Name="pg_catalog.network_gt", ServerSideOnly=true)]
-		public static bool? NetworkGt(NpgsqlInet? par4463, NpgsqlInet? par4464)
+		public static bool? NetworkGt(IPAddress? par4463, IPAddress? par4464)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14647,7 +14669,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLarger
 
 		[Sql.Function(Name="pg_catalog.network_larger", ServerSideOnly=true)]
-		public static NpgsqlInet? NetworkLarger(NpgsqlInet? par4466, NpgsqlInet? par4467)
+		public static IPAddress? NetworkLarger(IPAddress? par4466, IPAddress? par4467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14657,7 +14679,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLe
 
 		[Sql.Function(Name="pg_catalog.network_le", ServerSideOnly=true)]
-		public static bool? NetworkLe(NpgsqlInet? par4469, NpgsqlInet? par4470)
+		public static bool? NetworkLe(IPAddress? par4469, IPAddress? par4470)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14667,7 +14689,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLt
 
 		[Sql.Function(Name="pg_catalog.network_lt", ServerSideOnly=true)]
-		public static bool? NetworkLt(NpgsqlInet? par4472, NpgsqlInet? par4473)
+		public static bool? NetworkLt(IPAddress? par4472, IPAddress? par4473)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14677,7 +14699,7 @@ namespace PostreSQL11DataContext
 		#region NetworkNe
 
 		[Sql.Function(Name="pg_catalog.network_ne", ServerSideOnly=true)]
-		public static bool? NetworkNe(NpgsqlInet? par4475, NpgsqlInet? par4476)
+		public static bool? NetworkNe(IPAddress? par4475, IPAddress? par4476)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14687,7 +14709,7 @@ namespace PostreSQL11DataContext
 		#region NetworkOverlap
 
 		[Sql.Function(Name="pg_catalog.network_overlap", ServerSideOnly=true)]
-		public static bool? NetworkOverlap(NpgsqlInet? par4478, NpgsqlInet? par4479)
+		public static bool? NetworkOverlap(IPAddress? par4478, IPAddress? par4479)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14697,7 +14719,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSmaller
 
 		[Sql.Function(Name="pg_catalog.network_smaller", ServerSideOnly=true)]
-		public static NpgsqlInet? NetworkSmaller(NpgsqlInet? par4481, NpgsqlInet? par4482)
+		public static IPAddress? NetworkSmaller(IPAddress? par4481, IPAddress? par4482)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14707,7 +14729,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSub
 
 		[Sql.Function(Name="pg_catalog.network_sub", ServerSideOnly=true)]
-		public static bool? NetworkSub(NpgsqlInet? par4484, NpgsqlInet? par4485)
+		public static bool? NetworkSub(IPAddress? par4484, IPAddress? par4485)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14717,7 +14739,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSubeq
 
 		[Sql.Function(Name="pg_catalog.network_subeq", ServerSideOnly=true)]
-		public static bool? NetworkSubeq(NpgsqlInet? par4487, NpgsqlInet? par4488)
+		public static bool? NetworkSubeq(IPAddress? par4487, IPAddress? par4488)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14727,7 +14749,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSup
 
 		[Sql.Function(Name="pg_catalog.network_sup", ServerSideOnly=true)]
-		public static bool? NetworkSup(NpgsqlInet? par4490, NpgsqlInet? par4491)
+		public static bool? NetworkSup(IPAddress? par4490, IPAddress? par4491)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14737,7 +14759,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSupeq
 
 		[Sql.Function(Name="pg_catalog.network_supeq", ServerSideOnly=true)]
-		public static bool? NetworkSupeq(NpgsqlInet? par4493, NpgsqlInet? par4494)
+		public static bool? NetworkSupeq(IPAddress? par4493, IPAddress? par4494)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15837,7 +15859,7 @@ namespace PostreSQL11DataContext
 		#region Overlaps
 
 		[Sql.Function(Name="pg_catalog.overlaps", ServerSideOnly=true)]
-		public static bool? Overlaps(DateTime? par4878, NpgsqlTimeSpan? par4879, DateTime? par4880, DateTime? par4881)
+		public static bool? Overlaps(DateTime? par4878, TimeSpan? par4879, DateTime? par4880, DateTime? par4881)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16107,7 +16129,7 @@ namespace PostreSQL11DataContext
 		#region PercentileCont
 
 		[Sql.Function(Name="pg_catalog.percentile_cont", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static object? PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object?>> par4983, Expression<Func<TSource, NpgsqlTimeSpan?>> par4984)
+		public static object? PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object?>> par4983, Expression<Func<TSource, TimeSpan?>> par4984)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16137,7 +16159,7 @@ namespace PostreSQL11DataContext
 		#region PercentileContIntervalFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_cont_interval_final", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? PercentileContIntervalFinal(object? par4992, double? par4993)
+		public static TimeSpan? PercentileContIntervalFinal(object? par4992, double? par4993)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17637,7 +17659,7 @@ namespace PostreSQL11DataContext
 		#region PgSleepFor
 
 		[Sql.Function(Name="pg_catalog.pg_sleep_for", ServerSideOnly=true)]
-		public static object? PgSleepFor(NpgsqlTimeSpan? par5362)
+		public static object? PgSleepFor(TimeSpan? par5362)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17747,7 +17769,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendClientAddr
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_client_addr", ServerSideOnly=true)]
-		public static NpgsqlInet? PgStatGetBackendClientAddr(int? par5376)
+		public static IPAddress? PgStatGetBackendClientAddr(int? par5376)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20577,7 +20599,7 @@ namespace PostreSQL11DataContext
 		#region Reltime
 
 		[Sql.Function(Name="pg_catalog.reltime", ServerSideOnly=true)]
-		public static object? Reltime(NpgsqlTimeSpan? par6116)
+		public static object? Reltime(TimeSpan? par6116)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21087,7 +21109,7 @@ namespace PostreSQL11DataContext
 		#region SetMasklen
 
 		[Sql.Function(Name="pg_catalog.set_masklen", ServerSideOnly=true)]
-		public static NpgsqlInet? SetMasklen(NpgsqlInet? par6273, int? par6274)
+		public static ValueTuple<IPAddress, int>? SetMasklen(ValueTuple<IPAddress, int>? par6273, int? par6274)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22407,7 +22429,7 @@ namespace PostreSQL11DataContext
 		#region TimeMiInterval
 
 		[Sql.Function(Name="pg_catalog.time_mi_interval", ServerSideOnly=true)]
-		public static TimeSpan? TimeMiInterval(TimeSpan? par6726, NpgsqlTimeSpan? par6727)
+		public static TimeSpan? TimeMiInterval(TimeSpan? par6726, TimeSpan? par6727)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22417,7 +22439,7 @@ namespace PostreSQL11DataContext
 		#region TimeMiTime
 
 		[Sql.Function(Name="pg_catalog.time_mi_time", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimeMiTime(TimeSpan? par6729, TimeSpan? par6730)
+		public static TimeSpan? TimeMiTime(TimeSpan? par6729, TimeSpan? par6730)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22447,7 +22469,7 @@ namespace PostreSQL11DataContext
 		#region TimePlInterval
 
 		[Sql.Function(Name="pg_catalog.time_pl_interval", ServerSideOnly=true)]
-		public static TimeSpan? TimePlInterval(TimeSpan? par6737, NpgsqlTimeSpan? par6738)
+		public static TimeSpan? TimePlInterval(TimeSpan? par6737, TimeSpan? par6738)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22497,7 +22519,7 @@ namespace PostreSQL11DataContext
 		#region TimedatePl
 
 		[Sql.Function(Name="pg_catalog.timedate_pl", ServerSideOnly=true)]
-		public static DateTime? TimedatePl(TimeSpan? par6751, NpgsqlDate? par6752)
+		public static DateTime? TimedatePl(TimeSpan? par6751, DateTime? par6752)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22567,7 +22589,7 @@ namespace PostreSQL11DataContext
 		#region TimestampCmpDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_cmp_date", ServerSideOnly=true)]
-		public static int? TimestampCmpDate(DateTime? par6777, NpgsqlDate? par6778)
+		public static int? TimestampCmpDate(DateTime? par6777, DateTime? par6778)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22597,7 +22619,7 @@ namespace PostreSQL11DataContext
 		#region TimestampEqDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_eq_date", ServerSideOnly=true)]
-		public static bool? TimestampEqDate(DateTime? par6786, NpgsqlDate? par6787)
+		public static bool? TimestampEqDate(DateTime? par6786, DateTime? par6787)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22627,7 +22649,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_ge_date", ServerSideOnly=true)]
-		public static bool? TimestampGeDate(DateTime? par6795, NpgsqlDate? par6796)
+		public static bool? TimestampGeDate(DateTime? par6795, DateTime? par6796)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22657,7 +22679,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGtDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_gt_date", ServerSideOnly=true)]
-		public static bool? TimestampGtDate(DateTime? par6804, NpgsqlDate? par6805)
+		public static bool? TimestampGtDate(DateTime? par6804, DateTime? par6805)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22737,7 +22759,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_le_date", ServerSideOnly=true)]
-		public static bool? TimestampLeDate(DateTime? par6827, NpgsqlDate? par6828)
+		public static bool? TimestampLeDate(DateTime? par6827, DateTime? par6828)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22767,7 +22789,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLtDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_lt_date", ServerSideOnly=true)]
-		public static bool? TimestampLtDate(DateTime? par6836, NpgsqlDate? par6837)
+		public static bool? TimestampLtDate(DateTime? par6836, DateTime? par6837)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22787,7 +22809,7 @@ namespace PostreSQL11DataContext
 		#region TimestampMi
 
 		[Sql.Function(Name="pg_catalog.timestamp_mi", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimestampMi(DateTime? par6842, DateTime? par6843)
+		public static TimeSpan? TimestampMi(DateTime? par6842, DateTime? par6843)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22797,7 +22819,7 @@ namespace PostreSQL11DataContext
 		#region TimestampMiInterval
 
 		[Sql.Function(Name="pg_catalog.timestamp_mi_interval", ServerSideOnly=true)]
-		public static DateTime? TimestampMiInterval(DateTime? par6845, NpgsqlTimeSpan? par6846)
+		public static DateTime? TimestampMiInterval(DateTime? par6845, TimeSpan? par6846)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22817,7 +22839,7 @@ namespace PostreSQL11DataContext
 		#region TimestampNeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_ne_date", ServerSideOnly=true)]
-		public static bool? TimestampNeDate(DateTime? par6851, NpgsqlDate? par6852)
+		public static bool? TimestampNeDate(DateTime? par6851, DateTime? par6852)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22847,7 +22869,7 @@ namespace PostreSQL11DataContext
 		#region TimestampPlInterval
 
 		[Sql.Function(Name="pg_catalog.timestamp_pl_interval", ServerSideOnly=true)]
-		public static DateTime? TimestampPlInterval(DateTime? par6859, NpgsqlTimeSpan? par6860)
+		public static DateTime? TimestampPlInterval(DateTime? par6859, TimeSpan? par6860)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22957,7 +22979,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzCmpDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_cmp_date", ServerSideOnly=true)]
-		public static int? TimestamptzCmpDate(DateTimeOffset? par6898, NpgsqlDate? par6899)
+		public static int? TimestamptzCmpDate(DateTimeOffset? par6898, DateTime? par6899)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22987,7 +23009,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzEqDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_eq_date", ServerSideOnly=true)]
-		public static bool? TimestamptzEqDate(DateTimeOffset? par6907, NpgsqlDate? par6908)
+		public static bool? TimestamptzEqDate(DateTimeOffset? par6907, DateTime? par6908)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23017,7 +23039,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ge_date", ServerSideOnly=true)]
-		public static bool? TimestamptzGeDate(DateTimeOffset? par6916, NpgsqlDate? par6917)
+		public static bool? TimestamptzGeDate(DateTimeOffset? par6916, DateTime? par6917)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23047,7 +23069,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGtDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_gt_date", ServerSideOnly=true)]
-		public static bool? TimestamptzGtDate(DateTimeOffset? par6925, NpgsqlDate? par6926)
+		public static bool? TimestamptzGtDate(DateTimeOffset? par6925, DateTime? par6926)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23097,7 +23119,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_le_date", ServerSideOnly=true)]
-		public static bool? TimestamptzLeDate(DateTimeOffset? par6941, NpgsqlDate? par6942)
+		public static bool? TimestamptzLeDate(DateTimeOffset? par6941, DateTime? par6942)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23127,7 +23149,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLtDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_lt_date", ServerSideOnly=true)]
-		public static bool? TimestamptzLtDate(DateTimeOffset? par6950, NpgsqlDate? par6951)
+		public static bool? TimestamptzLtDate(DateTimeOffset? par6950, DateTime? par6951)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23147,7 +23169,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzMi
 
 		[Sql.Function(Name="pg_catalog.timestamptz_mi", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimestamptzMi(DateTimeOffset? par6956, DateTimeOffset? par6957)
+		public static TimeSpan? TimestamptzMi(DateTimeOffset? par6956, DateTimeOffset? par6957)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23157,7 +23179,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzMiInterval
 
 		[Sql.Function(Name="pg_catalog.timestamptz_mi_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzMiInterval(DateTimeOffset? par6959, NpgsqlTimeSpan? par6960)
+		public static DateTimeOffset? TimestamptzMiInterval(DateTimeOffset? par6959, TimeSpan? par6960)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23177,7 +23199,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzNeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ne_date", ServerSideOnly=true)]
-		public static bool? TimestamptzNeDate(DateTimeOffset? par6965, NpgsqlDate? par6966)
+		public static bool? TimestamptzNeDate(DateTimeOffset? par6965, DateTime? par6966)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23207,7 +23229,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzPlInterval
 
 		[Sql.Function(Name="pg_catalog.timestamptz_pl_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzPlInterval(DateTimeOffset? par6973, NpgsqlTimeSpan? par6974)
+		public static DateTimeOffset? TimestamptzPlInterval(DateTimeOffset? par6973, TimeSpan? par6974)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23397,7 +23419,7 @@ namespace PostreSQL11DataContext
 		#region TimetzMiInterval
 
 		[Sql.Function(Name="pg_catalog.timetz_mi_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzMiInterval(DateTimeOffset? par7030, NpgsqlTimeSpan? par7031)
+		public static DateTimeOffset? TimetzMiInterval(DateTimeOffset? par7030, TimeSpan? par7031)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23427,7 +23449,7 @@ namespace PostreSQL11DataContext
 		#region TimetzPlInterval
 
 		[Sql.Function(Name="pg_catalog.timetz_pl_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzPlInterval(DateTimeOffset? par7038, NpgsqlTimeSpan? par7039)
+		public static DateTimeOffset? TimetzPlInterval(DateTimeOffset? par7038, TimeSpan? par7039)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23467,7 +23489,7 @@ namespace PostreSQL11DataContext
 		#region TimetzdatePl
 
 		[Sql.Function(Name="pg_catalog.timetzdate_pl", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzdatePl(DateTimeOffset? par7050, NpgsqlDate? par7051)
+		public static DateTimeOffset? TimetzdatePl(DateTimeOffset? par7050, DateTime? par7051)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23497,7 +23519,7 @@ namespace PostreSQL11DataContext
 		#region Timezone
 
 		[Sql.Function(Name="pg_catalog.timezone", ServerSideOnly=true)]
-		public static DateTimeOffset? Timezone(NpgsqlTimeSpan? par7072, DateTime? par7073)
+		public static DateTimeOffset? Timezone(TimeSpan? par7072, DateTime? par7073)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23757,7 +23779,7 @@ namespace PostreSQL11DataContext
 		#region ToDate
 
 		[Sql.Function(Name="pg_catalog.to_date", ServerSideOnly=true)]
-		public static NpgsqlDate? ToDate(string? par7169, string? par7170)
+		public static DateTime? ToDate(string? par7169, string? par7170)
 		{
 			throw new InvalidOperationException();
 		}

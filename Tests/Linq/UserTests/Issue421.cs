@@ -30,7 +30,6 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
 			{
-
 				db.Into(db.GetTable<BlobClass>())
 					.Value(p => p.Id,        1)
 					.Value(p => p.BlobValue, new byte[] { 1, 2, 3 })

@@ -1,21 +1,19 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
-	using Common;
 	using Data;
 	using Linq;
-	using Extensions;
 	using SqlQuery;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 	using System.Threading.Tasks;
+	using System.Data;
+	using System.Linq.Expressions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -33,8 +31,8 @@ namespace LinqToDB.ServiceModel
 
 		public bool AllowUpdates { get; set; }
 
-		private MappingSchema _mappingSchema;
-		public MappingSchema MappingSchema
+		private MappingSchema? _mappingSchema;
+		public MappingSchema? MappingSchema
 		{
 			get => _mappingSchema;
 			set
@@ -44,13 +42,13 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		private MappingSchema _serializationMappingSchema;
+		private MappingSchema? _serializationMappingSchema;
 		internal  MappingSchema SerializationMappingSchema
 		{
 			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema));
 		}
 
-		public static Func<string,Type> TypeResolver = _ => null;
+		public static Func<string,Type?> TypeResolver = _ => null;
 
 		public virtual DataConnection CreateDataContext(string configuration)
 		{
@@ -74,23 +72,22 @@ namespace LinqToDB.ServiceModel
 		{
 			using (var ctx = CreateDataContext(configuration))
 			{
-				return new LinqServiceInfo
+				return new LinqServiceInfo()
 				{
 					MappingSchemaType = ctx.DataProvider.MappingSchema.     GetType().AssemblyQualifiedName,
 					SqlBuilderType    = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName,
 					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer(). GetType().AssemblyQualifiedName,
-					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
-					ConfigurationList = ctx.MappingSchema.ConfigurationList,
+					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags
 				};
 			}
 		}
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement   Statement   { get; set; }
-			public object         Context     { get; set; }
-			public SqlParameter[] Parameters  { get; set; }
-			public List<string>   QueryHints  { get; set; }
+			public SqlStatement   Statement   { get; set; } = null!;
+			public object?        Context     { get; set; }
+			public SqlParameter[] Parameters  { get; set; } = null!;
+			public List<string>?  QueryHints  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -108,7 +105,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
@@ -126,7 +123,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public object ExecuteScalar(string configuration, string queryData)
+		public object? ExecuteScalar(string configuration, string queryData)
 		{
 			try
 			{
@@ -135,7 +132,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
@@ -162,7 +159,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
@@ -171,6 +168,15 @@ namespace LinqToDB.ServiceModel
 						QueryHints  = query.QueryHints
 					}))
 					{
+						var reader = rd;
+						var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);
+						if (converterExpr != null)
+						{
+							var param     = Expression.Parameter(typeof(IDataReader));
+							converterExpr = Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, rd.GetType())), param);
+							reader        = ((Func<IDataReader, IDataReader>)converterExpr.Compile())(rd);
+						}
+
 						var ret = new LinqServiceResult
 						{
 							QueryID    = Guid.NewGuid(),
@@ -181,6 +187,19 @@ namespace LinqToDB.ServiceModel
 						};
 
 						var names = new HashSet<string>();
+
+						SelectQuery select;
+						switch (query.Statement.QueryType)
+						{
+							case QueryType.Select:
+								select = query.Statement.SelectQuery!;
+								break;
+							case QueryType.Insert:
+								select = ((SqlInsertStatement)query.Statement).Output!.OutputQuery!;
+								break;
+							default:
+								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
+						}
 
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
@@ -199,7 +218,7 @@ namespace LinqToDB.ServiceModel
 							ret.FieldNames[i] = name;
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
-							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
+							ret.FieldTypes[i] = select.Select.Columns[i].SystemType;
 
 							// async compiled query support
 							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
@@ -221,7 +240,7 @@ namespace LinqToDB.ServiceModel
 							{
 								if (!rd.IsDBNull(i))
 								{
-									var value = columnReaders[i].GetValue(rd);
+									var value = columnReaders[i].GetValue(reader);
 
 									if (value != null)
 										data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
@@ -254,7 +273,7 @@ namespace LinqToDB.ServiceModel
 					ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					db.BeginTransaction();
 

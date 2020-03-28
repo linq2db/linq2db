@@ -67,14 +67,14 @@ namespace Tests.Samples
 				_context.Dispose();
 			}
 
-			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters, object[] preambles)
 			{
-				return _context.GetQueryRunner(query, queryNumber, expression, parameters);
+				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
-			public Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+			public Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
-				return _context.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
 			}
 
 			public bool? IsDBNullAllowed(IDataReader reader, int idx)

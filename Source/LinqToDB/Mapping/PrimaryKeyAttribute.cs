@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 
 namespace LinqToDB.Mapping
@@ -31,7 +30,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name. See <see cref="Configuration"/>.</param>
 		/// <param name="order">Column order in composite primary key.</param>
-		public PrimaryKeyAttribute(string configuration, int order)
+		public PrimaryKeyAttribute(string? configuration, int order)
 		{
 			Configuration = configuration;
 			Order         = order;
@@ -42,7 +41,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets order of current column in composite primary key.

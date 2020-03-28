@@ -23,12 +23,11 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Tests                     | Unit test projects folder                                                                                                        |
 |.\Tests\Base                | LINQ to DB testing framework                                                                                                     |
 |.\Tests\FSharp              | F# models and tests                                                                                                              |
-|.\Tests\IBM.Core            | Tests for IBM.Data.DB2.Core provider                                                                                             |
 |.\Tests\Linq                | Main project for LINQ to DB unit tests                                                                                           |
 |.\Tests\Model               | Model classes for tests                                                                                                          |
 |.\Tests\Tests.T4            | T4 templates test project                                                                                                        |
 |.\Tests\Tests.Android       | Xamarin Forms for Android test project                                                                                           |
-|.\Tests\Tests.Benchmark     | Benchmark tests                                                                                                                  |
+|.\Tests\Tests.Benchmark     | Benchmarks                                                                                                                       |
 |.\Tests\Tests.PLayground    | Test project for use with linq2db.playground.sln lite test solution<br>Used for work on specific test without full solution load |
 |.\Tests\VisualBasic         | Visual Basic models and tests support                                                                                            |
 
@@ -57,18 +56,17 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | Xamarin.Forms Android v8.1 |
-|---------------------------------------------------:|:-------:|:---------:|:-------------:|:--------------------------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |                            |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |                            |
-| `.\Tests\IBM.Core\Tests.IBM.Core.csproj`           |         |     √     |       √       |                            |
-| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |                            |
-| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |                            |
-| `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |              √             |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |                            |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |                            |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |                            |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |                            |
+| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | .NET Core 3.1 | Xamarin.Forms Android v8.1 |
+|---------------------------------------------------:|:-------:|:---------:|:-------------:|:-------------:|:--------------------------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |               |                            |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |               |                            |
+| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |               |                            |
+| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |               |                            |
+| `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |               |              √             |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |       √       |                            |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |               |                            |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |               |                            |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |               |                            |
 
 
 Allowed target defines:
@@ -177,7 +175,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2012", "SqlServer.2012.1",
             "SqlServer.2008", "SqlServer.2008.1",
             "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure.2012",
+            "SqlAzure",
             "DB2",
             "Firebird",
             "Informix",
@@ -213,7 +211,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2012", "SqlServer.2012.1",
             "SqlServer.2008", "SqlServer.2008.1",
             "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure.2012",
+            "SqlAzure",
             "Firebird",
             "MySql",
             "MariaDB",
@@ -229,9 +227,9 @@ The `[User]DataProviders.json` is a regular JSON file:
         "BasedOn"           : "CommonConnectionStrings",
         "Connections"       :
         {
-            // override connection string for SqlAzure.2012 provider
+            // override connection string for SqlAzure provider
             // all other providers will use default inherited connection strings from CommonConnectionStrings configuration
-            "SqlAzure.2012" :
+            "SqlAzure" :
             {
                  "Provider"         : "System.Data.SqlClient",
                  "ConnectionString" : "Server=tcp:xxxxxxxxx.database.windows.net,1433;Database=TestData;User ID=TestUser@zzzzzzzzz;Password=TestPassword;Trusted_Connection=False;Encrypt=True;"

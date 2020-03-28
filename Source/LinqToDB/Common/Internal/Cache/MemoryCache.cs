@@ -350,11 +350,7 @@ namespace LinqToDB.Common.Internal.Cache
 //            _logger.LogDebug("Overcapacity compaction triggered");
 
             // Spawn background thread for compaction
-#if !NETSTANDARD1_6
             ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache)s), this);
-#else
-	        Task.Factory.StartNew(() => OvercapacityCompaction(this));
-#endif
         }
 
         private static void OvercapacityCompaction(MemoryCache cache)

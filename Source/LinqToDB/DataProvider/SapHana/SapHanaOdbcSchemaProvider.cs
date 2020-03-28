@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -78,7 +77,7 @@ namespace LinqToDB.DataProvider.SapHana
 					COLUMN_NAME,
 					POSITION
 				FROM INDEX_COLUMNS")
-				.Where(x => x != null).ToList();
+				.Where(x => x != null).ToList()!;
 		}
 	}
 }

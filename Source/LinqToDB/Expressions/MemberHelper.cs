@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -56,7 +55,7 @@ namespace LinqToDB.Expressions
 				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter)
 					throw new ArgumentException("Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).");
 
-				var memberName = (string)methodCall.Arguments[1].EvaluateExpression();
+				var memberName = (string)methodCall.Arguments[1].EvaluateExpression()!;
 
 				// check if member exists on type
 				var existingMember = TypeAccessor.GetAccessor(arg1.Type).Members.SingleOrDefault(m =>
@@ -78,28 +77,28 @@ namespace LinqToDB.Expressions
 						: (MemberInfo)((NewExpression)expr).Constructor;
 		}
 
-		public static MemberInfo MemberOf<T>(Expression<Func<T,object>> func)
+		public static MemberInfo MemberOf<T>(Expression<Func<T,object?>> func)
 		{
 			return GetMemberInfo(func);
 		}
 
-		public static FieldInfo FieldOf<T>(Expression<Func<T,object>> func)
+		public static FieldInfo FieldOf<T>(Expression<Func<T,object?>> func)
 		{
 			return (FieldInfo)GetMemberInfo(func);
 		}
 
-		public static PropertyInfo PropertyOf<T>(Expression<Func<T,object>> func)
+		public static PropertyInfo PropertyOf<T>(Expression<Func<T,object?>> func)
 		{
 			return (PropertyInfo)GetMemberInfo(func);
 		}
 
-		public static MethodInfo MethodOf<T>(Expression<Func<T,object>> func)
+		public static MethodInfo MethodOf<T>(Expression<Func<T,object?>> func)
 		{
 			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo info ? info.GetGetMethod() : (MethodInfo)mi;
 		}
 
-		public static MethodInfo MethodOf(Expression<Func<object>> func)
+		public static MethodInfo MethodOf(Expression<Func<object?>> func)
 		{
 			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo info ? info.GetGetMethod() : (MethodInfo)mi;
@@ -109,6 +108,30 @@ namespace LinqToDB.Expressions
 		{
 			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo info ? info.GetGetMethod() : (MethodInfo)mi;
+		}
+
+		public static MethodInfo MethodOfGeneric<T>(Expression<Func<T,object?>> func)
+		{
+			var mi = MethodOf(func);
+			if (mi.IsGenericMethod)
+				mi = mi.GetGenericMethodDefinition();
+			return mi;
+		}
+
+		public static MethodInfo MethodOfGeneric(Expression<Func<object?>> func)
+		{
+			var mi = MethodOf(func);
+			if (mi.IsGenericMethod)
+				mi = mi.GetGenericMethodDefinition();
+			return mi;
+		}
+
+		public static MethodInfo MethodOfGeneric(Expression<Action> func)
+		{
+			var mi = MethodOf(func);
+			if (mi.IsGenericMethod)
+				mi = mi.GetGenericMethodDefinition();
+			return mi;
 		}
 
 		public static ConstructorInfo ConstructorOf<T>(Expression<Func<T,object>> func)

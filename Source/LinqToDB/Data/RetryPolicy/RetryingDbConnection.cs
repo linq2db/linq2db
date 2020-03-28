@@ -27,7 +27,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
-			return _dbConnection.BeginTransaction();
+			return _dbConnection.BeginTransaction(isolationLevel);
 		}
 
 		public override void Close()
@@ -110,7 +110,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			if (_connection is ICloneable cloneable)
 				return cloneable.Clone();
-			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString);
+			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString!);
 		}
 
 		public Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -123,9 +123,14 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public Task CloseAsync(CancellationToken cancellationToken = default)
+		public Task CloseAsync()
 		{
-			return _connection.CloseAsync(cancellationToken);
+			return _connection.CloseAsync();
+		}
+
+		public Task DisposeAsync()
+		{
+			return _connection.DisposeAsync();
 		}
 
 		public IAsyncDbConnection TryClone()

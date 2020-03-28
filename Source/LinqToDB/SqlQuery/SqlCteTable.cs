@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Mapping;
@@ -8,24 +7,24 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCteTable : SqlTable
 	{
-		[JetBrains.Annotations.NotNull]
-		public          CteClause Cte  { get; private set; }
+		public          CteClause? Cte  { get; private set; }
 
-		public override string    Name
+		public override string?    Name
 		{
 			get => Cte?.Name ?? base.Name;
 			set => base.Name = value;
 		}
 
-		public override string    PhysicalName
+		public override string?    PhysicalName
 		{
 			get => Cte?.Name ?? base.PhysicalName;
 			set => base.PhysicalName = value;
 		}
 
 		public SqlCteTable(
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType, cte.Name)
+			MappingSchema mappingSchema,
+			CteClause     cte)
+			: base(mappingSchema, cte.ObjectType, cte.Name)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 
@@ -34,7 +33,7 @@ namespace LinqToDB.SqlQuery
 				field.PhysicalName = field.Name;
 		}
 
-		internal SqlCteTable(int id, string alias, SqlField[] fields, [JetBrains.Annotations.NotNull] CteClause cte)
+		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
 			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
@@ -45,7 +44,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal void SetDelayedCteObject([JetBrains.Annotations.NotNull] CteClause cte)
+		internal void SetDelayedCteObject(CteClause cte)
 		{
 			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
 			Name         = cte.Name;

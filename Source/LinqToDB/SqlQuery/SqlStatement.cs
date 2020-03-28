@@ -1,12 +1,9 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
@@ -34,7 +31,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Used internally for SQL Builder
 		/// </summary>
-		public SqlStatement ParentStatement { get; set; }
+		public SqlStatement? ParentStatement { get; set; }
 
 		public SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
@@ -49,7 +46,7 @@ namespace LinqToDB.SqlQuery
 								var p = (SqlParameter)e;
 
 								if (p.Value == null)
-									return new SqlValue(null);
+									return new SqlValue(p.Type, null);
 							}
 
 							break;
@@ -60,8 +57,8 @@ namespace LinqToDB.SqlQuery
 
 								if (ee.Operator == SqlPredicate.Operator.Equal || ee.Operator == SqlPredicate.Operator.NotEqual)
 								{
-									object value1;
-									object value2;
+									object? value1;
+									object? value2;
 
 									if (ee.Expr1 is SqlValue v1)
 										value1 = v1.Value;
@@ -89,7 +86,7 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
+							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e)!;
 					}
 
 					return e;
@@ -133,7 +130,7 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-		static SqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
+		static SqlPredicate? ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
@@ -261,7 +258,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public abstract SelectQuery SelectQuery { get; set; }
+		public abstract SelectQuery? SelectQuery { get; set; }
 
 
 		#region IQueryElement
@@ -273,7 +270,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
+		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
 
 		#endregion
 
@@ -291,7 +288,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Aliases
 
-		HashSet<string> _aliases;
+		HashSet<string>? _aliases;
 
 		public void RemoveAlias(string alias)
 		{
@@ -389,7 +386,7 @@ namespace LinqToDB.SqlQuery
 									var a = f.PhysicalName;
 									return a.IsNullOrEmpty()
 										? "c1"
-										: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+										: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 								},
 								StringComparer.OrdinalIgnoreCase);
 
@@ -411,7 +408,9 @@ namespace LinqToDB.SqlQuery
 								var isRootQuery = query.ParentSelect == null;
 
 								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
+									n => !ReservedWords.IsReserved(n), 
+									c => c.Alias, 
+									(c, n) =>
 									{
 										if (isRootQuery)
 											allAliases.Add(n);
@@ -422,7 +421,7 @@ namespace LinqToDB.SqlQuery
 										var a = c.Alias;
 										return a.IsNullOrEmpty()
 											? "c1"
-											: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+											: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
 									StringComparer.OrdinalIgnoreCase);
 
@@ -458,14 +457,18 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							tablesVisited.Add(table);
+							if (tablesVisited.Add(table))
+							{
+								if (table.Source is SqlTable sqlTable)
+									allAliases.Add(sqlTable.PhysicalName!);
+							}
 							break;
 						}
 				}
 			});
 
 			Utils.MakeUniqueNames(tablesVisited,
-				n => !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
+				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
 				{
 					allAliases.Add(n);
 					ts.Alias = n;
@@ -473,7 +476,7 @@ namespace LinqToDB.SqlQuery
 				ts =>
 				{
 					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+					return a.IsNullOrEmpty() ? "t1" : a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 				},
 				StringComparer.OrdinalIgnoreCase);
 
@@ -491,7 +494,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public abstract ISqlTableSource GetTableSource(ISqlTableSource table);
+		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
 
 		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
 
@@ -501,9 +504,9 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e is SqlField f)
 				{
-					var ts = SelectQuery?.GetTableSource(f.Table) ?? GetTableSource(f.Table);
+					var ts = SelectQuery?.GetTableSource(f.Table!) ?? GetTableSource(f.Table!);
 
-					if (ts == null && f != f.Table.All)
+					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});

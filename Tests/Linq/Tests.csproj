@@ -4,28 +4,19 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
 		<Nullable>disable</Nullable>
+		<!--suppress complains about IBM.Data.DB2.Core.dll-->
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
 
 	<ItemGroup>
-
-		<Compile Remove="DataProvider\DB2Tests.cs" Condition="'$(Configuration)' == 'Azure'" />
-		<Compile Remove="DataProvider\InformixTests.cs" Condition="'$(Configuration)' == 'Azure'" />
-		<Compile Remove="DataProvider\OracleTests.cs" Condition="'$(Configuration)' == 'Azure'" />
-
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<Compile Remove="DataProvider\DB2Tests.cs" />
-		<Compile Remove="DataProvider\SybaseTests.cs" />
-		<Compile Remove="DataProvider\InformixTests.cs" />
-		<Compile Remove="DataProvider\SqlServerTypesTests.TVP.cs" />
-		<Compile Remove="Data\MiniProfilerTests.cs" />
-		<Compile Remove="Linq\DataServiceTests.cs" />
 		<Compile Remove="Metadata\AttributeReaderTests.cs" />
+		<Compile Remove="Linq\DataServiceTests.cs" />
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
-		<Compile Remove="**\PartialTrust*.cs" />
-		<Compile Remove="Linq\FSharpTests.cs" />
 	</ItemGroup>
+
 </Project>

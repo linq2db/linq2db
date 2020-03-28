@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -30,8 +29,8 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
@@ -42,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (param != null)
 				{
-					if (param.Type != info.Parameter.Type)
+					if (param.Type != info.Parameter!.Type)
 						param = Expression.Parameter(info.Parameter.Type, param.Name);
 
 					if (info.ExpressionsToReplace != null)

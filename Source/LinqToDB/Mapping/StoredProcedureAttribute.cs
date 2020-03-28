@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -19,9 +18,9 @@ namespace LinqToDB.Mapping
 			Name = name;
 		}
 
-		public string Name     { get; set; }
-		public string Schema   { get; set; }
-		public string Database { get; set; }
-		public string Server   { get; set; }
+		public string? Name     { get; set; }
+		public string? Schema   { get; set; }
+		public string? Database { get; set; }
+		public string? Server   { get; set; }
 	}
 }

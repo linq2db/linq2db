@@ -8,6 +8,10 @@ variables:
   netcore21_tests: 'netcoreapp21_tests'
 
 trigger: none
+pr:
+  branches:
+    include:
+    - '*'
 
 stages:
 
@@ -40,9 +44,9 @@ stages:
 
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: UseDotNet@2
-      displayName: Install .NET Core 3.0
+      displayName: Install .NET Core 3.1
       inputs:
-        version: 3.0.x
+        version: 3.1.x
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -122,15 +126,14 @@ stages:
       displayName: Publish linq2db.Tools build results
 
 #################################################
-#### delete it
 
   - job: test_linux_netcoreapp21_job
     pool:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: ne(variables['Build.SourceBranchName'], 'release')
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: ne(variables['Build.SourceBranchName'], 'release')
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -139,12 +142,20 @@ stages:
 #          config: 'informix'
 #          script: 'informix12.sh'
 #          nuget: 'IBM.Data.DB2.Core-lnx'
-        SAPHANA2:
-          title: 'SAP HANA 2 SPS 04r40'
-          config: 'hana2'
-          script: 'mac.hana2.sh'
-          docker: 'true'
-          docker_login: 'true'
+#        SAPHANA2:
+#          title: 'SAP HANA 2 SPS 04r40'
+#          config: 'hana2'
+#          script: 'mac.hana2.sh'
+#          docker: 'true'
+#          docker_login: 'true'
+        Oracle11:
+          title: 'Oracle 11g XE'
+          config: 'oracle11'
+          script: 'oracle11.sh'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
     steps:
     - checkout: none
 
@@ -205,8 +216,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -216,12 +227,22 @@ stages:
 #          script: 'mac.informix12.sh'
 #          docker: 'true'
 #          nuget: 'IBM.Data.DB2.Core-osx'
-        SAPHANA2:
-          title: 'SAP HANA 2 SPS 04r40'
-          config: 'hana2'
-          script: 'mac.hana2.sh'
+#        SAPHANA2:
+#          title: 'SAP HANA 2 SPS 04r40'
+#          config: 'hana2'
+#          script: 'mac.hana2.sh'
+#          docker: 'true'
+#          docker_login: 'true'
+        Oracle11:
+          title: 'Oracle 11g XE'
+          config: 'oracle11'
+          script: 'oracle11.sh'
           docker: 'true'
-          docker_login: 'true'
+        Oracle12:
+          title: 'Oracle 12c'
+          config: 'oracle12'
+          script: 'oracle12.sh'
+          docker: 'true'
 
     steps:
     - checkout: none
@@ -297,15 +318,23 @@ stages:
 ###################################
   - job: test_win2016_netcoreapp21_job
     pool:
-      vmImage: 'vs2017-win2016'
+#      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
         Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ACE_x64:
           title: 'Access ACE (x64)'
           config: 'access.ace'
           script: 'access.ace.x64.cmd'
@@ -344,11 +373,69 @@ stages:
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+        testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
 
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
+###################################
+#  Tests: Windows (NETCOREAPP2_1) #
+#  Windows 2016                   #
+###################################
+  - job: test_win2016_netcoreapp21_job_x86
+    pool:
+#      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
+    displayName: 'Tests: Win / NETCOREAPP2.1 (x86) / '
+    dependsOn: build_job
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
+        Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ACE_x64:
+          title: 'Access ACE (x64)'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
       inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
-        testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        configuration: '$(buildConfiguration)'
+        testFilterCriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 /Platform:x86'
+        testRunTitle: 'Windows / NETCOREAPP2.1 (x86) / $(title)'
+      displayName: '$(title)'
+

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace LinqToDB.Linq
 		{
 			static Query<int> CreateQuery(
 				IDataContext dataContext, EntityDescriptor descriptor, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -35,7 +34,7 @@ namespace LinqToDB.Linq
 
 				foreach (var field in sqlTable.Fields)
 				{
-					if (field.Value.IsInsertable && !field.Value.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
+					if (field.Value.IsInsertable && !field.Value.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
 						var param = GetParameter(type, dataContext, field.Value);
 						ei.Queries[0].Parameters.Add(param);
@@ -59,12 +58,12 @@ namespace LinqToDB.Linq
 
 			public static int Query(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName)
+				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
@@ -76,18 +75,18 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
+				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
 				IDataContext dataContext, T obj,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
@@ -99,9 +98,9 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (int)result;
+				return (int)result!;
 			}
 		}
 	}

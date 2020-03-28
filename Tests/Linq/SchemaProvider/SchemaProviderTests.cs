@@ -17,7 +17,6 @@ namespace Tests.SchemaProvider
 		// only tests that GetSchema call doesn't fail to detect incorrect calls to default implementation
 		// or other failures
 		// doesn't test that actual data returned
-		[ActiveIssue(Configuration = ProviderName.SQLiteMS, Details = "NotSupportedException")]
 		[Test]
 		public void TestApiImplemented([DataSources(false)] string context)
 		{
@@ -36,8 +35,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -97,6 +97,7 @@ namespace Tests.SchemaProvider
 						break;
 
 					case ProviderName.Informix      :
+					case ProviderName.InformixDB2   :
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
@@ -260,6 +261,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[SkipCI("It is insanely slow for oracle. Wether we should fix it or implement configurations support for SkipCI")]
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
@@ -283,7 +285,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))
@@ -322,8 +324,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var db = new DataConnection(context))

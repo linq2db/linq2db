@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -14,9 +13,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 	class FirebirdSchemaProvider : SchemaProviderBase
 	{
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(dbConnection));
+			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(connection));
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -60,19 +59,19 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
 				from c in tcs.AsEnumerable()
-				join dt in DataTypes on c.Field<string>("COLUMN_DATA_TYPE") equals dt.TypeName
+				let dt = GetDataType(c.Field<string>("COLUMN_DATA_TYPE"), options)
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
-					DataType     = dt.TypeName,
+					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					Length       = Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
@@ -86,7 +85,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
@@ -154,7 +153,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
 			return
 			(
@@ -163,7 +162,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let systemType   = r.Field<Type>("DataType")
 				let columnName   = r.Field<string>("ColumnName")
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType == null ? null : dataType.TypeName
 				let length       = r.Field<int> ("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int> (r["NumericPrecision"])
@@ -172,7 +171,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				select new ColumnSchema
 				{
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
 					ColumnName           = columnName,
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
@@ -184,7 +183,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			try
 			{
@@ -216,7 +215,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -240,9 +239,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 	}
 }

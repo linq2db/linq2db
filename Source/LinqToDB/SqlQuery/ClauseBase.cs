@@ -1,11 +1,10 @@
-﻿#nullable disable
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public abstract class ClauseBase
 	{
-		protected ClauseBase(SelectQuery selectQuery)
+		protected ClauseBase(SelectQuery? selectQuery)
 		{
-			SelectQuery = selectQuery;
+			SelectQuery = selectQuery!;
 		}
 
 		public SqlSelectClause  Select  => SelectQuery.Select;
@@ -16,7 +15,7 @@ namespace LinqToDB.SqlQuery
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 		public SelectQuery      End() { return SelectQuery; }
 
-		protected internal SelectQuery SelectQuery { get; private set; }
+		protected internal SelectQuery SelectQuery { get; private set; } = null!;
 
 		internal void SetSqlQuery(SelectQuery selectQuery)
 		{
@@ -27,9 +26,9 @@ namespace LinqToDB.SqlQuery
 	public abstract class ClauseBase<T1,T2> : ConditionBase<T1,T2>
 		where T1 : ClauseBase<T1,T2>
 	{
-		protected ClauseBase(SelectQuery selectQuery)
+		protected ClauseBase(SelectQuery? selectQuery)
 		{
-			SelectQuery = selectQuery;
+			SelectQuery = selectQuery!;
 		}
 
 		public SqlSelectClause  Select  => SelectQuery.Select;
@@ -39,7 +38,7 @@ namespace LinqToDB.SqlQuery
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 		public SelectQuery      End() { return SelectQuery; }
 
-		protected internal SelectQuery SelectQuery { get; private set; }
+		protected internal SelectQuery SelectQuery { get; private set; } = null!;
 
 		internal void SetSqlQuery(SelectQuery selectQuery)
 		{

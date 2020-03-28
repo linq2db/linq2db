@@ -534,7 +534,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue784Test([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -562,13 +562,15 @@ namespace Tests.DataProvider
 			switch (context)
 			{
 				case ProviderName.SQLiteClassic:
-					expectedVersion = "3.28.0";
+				case TestProvName.SQLiteClassicMiniProfilerMapped:
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
+					expectedVersion = "3.30.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET46
 					expectedVersion = "3.13.0";
 #else
-					expectedVersion = "3.26.0";
+					expectedVersion = "3.28.0";
 #endif
 					break;
 				default:

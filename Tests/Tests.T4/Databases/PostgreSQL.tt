@@ -5,11 +5,16 @@
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Npgsql.dll"             #>
 <#
 	NamespaceName = "PostreSQLDataContext";
+	GenerateConstructors = false;
+
+	GetSchemaOptions.PreferProviderSpecificTypes = true;
 
 	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL"));
 
 	GetTable("testsamename").TypeName = "_testsamename";
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
+	GenerateDataTypes                            = true;
 
 	GenerateModel();
 

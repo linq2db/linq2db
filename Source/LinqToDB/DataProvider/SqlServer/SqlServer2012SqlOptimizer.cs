@@ -1,5 +1,4 @@
-﻿#nullable disable
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -7,7 +6,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2012SqlOptimizer : SqlServer2008SqlOptimizer
 	{
-		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
+		{
+		}
+
+		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
 		{
 		}
 
@@ -18,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				statement = ReplaceTakeSkipWithRowNumber(statement, true);
-				CorrectRootSkip(statement.SelectQuery);
+				CorrectRootSkip(statement.SelectQuery!);
 			}
 
 			return statement;

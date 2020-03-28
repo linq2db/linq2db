@@ -13,6 +13,10 @@ namespace LinqToDB.SchemaProvider
 	public class DataTypeInfo
 	{
 		/// <summary>
+		/// Marks provider-specific types.
+		/// </summary>
+		public bool ProviderSpecific;
+		/// <summary>
 		/// Gets or sets SQL name of data type.
 		/// </summary>
 		public string TypeName;

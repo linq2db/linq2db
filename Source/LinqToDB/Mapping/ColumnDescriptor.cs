@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -25,7 +23,7 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
 		/// <param name="columnAttribute">Column attribute, from which descriptor data should be extracted.</param>
 		/// <param name="memberAccessor">Column mapping member accessor.</param>
-		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberAccessor memberAccessor)
+		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor)
 		{
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
@@ -41,20 +39,26 @@ namespace LinqToDB.Mapping
 				MemberType       = propertyInfo.PropertyType;
 			}
 
+			var dataType = mappingSchema.GetDataType(MemberType);
+			if (dataType.Type.DataType == DataType.Undefined)
+				dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+
 			if (columnAttribute == null)
 			{
 				columnAttribute = new ColumnAttribute();
-				var dataType = mappingSchema.GetDataType(MemberType);
 
-				if (dataType.DataType == DataType.Undefined)
-					dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+				columnAttribute.DataType  = dataType.Type.DataType;
+				columnAttribute.DbType    = dataType.Type.DbType;
 
-				columnAttribute.DataType  = dataType.DataType;
-				columnAttribute.DbType    = dataType.DbType;
-
-				if (dataType.Length    != null) columnAttribute.Length    = dataType.Length.Value;
-				if (dataType.Precision != null) columnAttribute.Precision = dataType.Precision.Value;
-				if (dataType.Scale     != null) columnAttribute.Scale     = dataType.Scale.Value;
+				if (dataType.Type.Length    != null) columnAttribute.Length    = dataType.Type.Length.Value;
+				if (dataType.Type.Precision != null) columnAttribute.Precision = dataType.Type.Precision.Value;
+				if (dataType.Type.Scale     != null) columnAttribute.Scale     = dataType.Type.Scale.Value;
+			}
+			else if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
+			{
+				if (dataType.Type.Length    != null && !columnAttribute.HasLength())    columnAttribute.Length    = dataType.Type.Length.Value;
+				if (dataType.Type.Precision != null && !columnAttribute.HasPrecision()) columnAttribute.Precision = dataType.Type.Precision.Value;
+				if (dataType.Type.Scale     != null && !columnAttribute.HasScale())     columnAttribute.Scale     = dataType.Type.Scale.Value;
 			}
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
@@ -158,7 +162,7 @@ namespace LinqToDB.Mapping
 					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType);
 
 					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).DataType;
+						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
 				}
 
 				if (DataType == DataType.Undefined && MemberType.IsNullable())
@@ -166,7 +170,7 @@ namespace LinqToDB.Mapping
 					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType.ToNullableUnderlying());
 
 					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).DataType;
+						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
 				}
 
 				if (DataType == DataType.Undefined)
@@ -174,22 +178,22 @@ namespace LinqToDB.Mapping
 					var enumtype = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
 
 					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).DataType;
+						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
 				}
 
 				if (DataType == DataType.Undefined)
 				{
-					DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).DataType;
+					DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).Type.DataType;
 					if (canBeNull)
 						CanBeNull = canBeNull;
 				}
 			}
 
 			if (DataType == DataType.Undefined)
-				DataType = mappingSchema.GetDataType(MemberType).DataType;
+				DataType = mappingSchema.GetDataType(MemberType).Type.DataType;
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
+			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
@@ -214,7 +218,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets type of column mapping member (field or property).
 		/// </summary>
-		public Type           MemberType      { get; }
+		public Type           MemberType      { get; } = null!;
 
 		/// <summary>
 		/// Gets type of column value storage member (field or property).
@@ -257,7 +261,7 @@ namespace LinqToDB.Mapping
 		/// Gets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be used.
 		/// </summary>
-		public string         ColumnName      { get; private set; }
+		public string        ColumnName      { get; private set; }
 
 		string IColumnChangeDescriptor.ColumnName
 		{
@@ -269,7 +273,7 @@ namespace LinqToDB.Mapping
 		/// Gets storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string         Storage         { get; }
+		public string?        Storage         { get; }
 
 		/// <summary>
 		/// Gets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
@@ -286,7 +290,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets the name of the database column type.
 		/// </summary>
-		public string         DbType          { get; }
+		public string?        DbType          { get; }
 
 		/// <summary>
 		/// Gets whether a column contains values that the database auto-generates.
@@ -314,7 +318,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		private SkipBaseAttribute[] SkipBaseAttributes { get; }
+		private SkipBaseAttribute[]? SkipBaseAttributes { get; }
 
 		/// <summary>
 		/// Gets flags for which operation values are skipped.
@@ -390,7 +394,7 @@ namespace LinqToDB.Mapping
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string         CreateFormat    { get; }
+		public string?        CreateFormat    { get; }
 
 		/// <summary>
 		/// Sort order for column list.
@@ -401,9 +405,9 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets sequence name for specified column.
 		/// </summary>
-		public SequenceNameAttribute SequenceName { get; }
+		public SequenceNameAttribute? SequenceName { get; }
 
-		Func<object,object> _getter;
+		Func<object,object>? _getter;
 
 		// TODO: passing mapping schema to generate converter in combination with converter caching looks wrong
 		/// <summary>
@@ -438,7 +442,7 @@ namespace LinqToDB.Mapping
 
 					if (type != null)
 					{
-						expr = mappingSchema.GetConvertExpression(MemberType, type);
+						expr = mappingSchema.GetConvertExpression(MemberType, type)!;
 						getterExpr = expr.GetBody(getterExpr);
 					}
 				}

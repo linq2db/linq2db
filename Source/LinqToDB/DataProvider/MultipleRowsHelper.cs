@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,7 +32,7 @@ namespace LinqToDB.DataProvider
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
 
@@ -44,7 +43,7 @@ namespace LinqToDB.DataProvider
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
 		public readonly SqlDataType[]       ColumnTypes;
-		public          string              TableName;
+		public          string?             TableName;
 		public readonly string              ParameterName;
 
 		public readonly List<DataParameter> Parameters    = new List<DataParameter>();
@@ -61,7 +60,7 @@ namespace LinqToDB.DataProvider
 			HeaderSize = StringBuilder.Length;
 		}
 
-		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool> skipConvert = null)
+		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool>? skipConvert = null)
 		{
 			skipConvert = skipConvert ?? (_ => false);
 

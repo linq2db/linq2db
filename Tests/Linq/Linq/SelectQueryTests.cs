@@ -15,7 +15,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void UnionTest([DataSources(ProviderName.Access)] string context)
 		{
@@ -43,7 +43,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void SubQueryTest([DataSources(ProviderName.Access)] string context)
 		{
@@ -164,5 +164,16 @@ namespace Tests.Linq
 				}).First();
 			}
 		}
+
+		[Test]
+		public void TestAliasesCollision([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Child.Where(child => child.ChildID == -1).ToString();
+				Assert.That(sql, Does.Contain("child_1"));
+			}
+		}
+
 	}
 }

@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -10,18 +8,35 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
+	using LinqToDB.Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		private readonly InformixDataProvider? _provider;
+
+		public InformixSqlBuilder(
+			InformixDataProvider? provider,
+			MappingSchema         mappingSchema,
+			ISqlOptimizer         sqlOptimizer,
+			SqlProviderFlags      sqlProviderFlags)
+			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+			_provider = provider;
+		}
+
+		// remote context
+		public InformixSqlBuilder(
+			MappingSchema    mappingSchema,
+			ISqlOptimizer    sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.Fields.Values.Count(f => f.IsIdentity) : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -29,10 +44,10 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder
 					.Append(" MODIFY ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -52,7 +67,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
@@ -63,11 +78,6 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NOT NULL", "1=0")
 				.Replace("NULL IS NULL",     "1=1");
 		}
-
-//		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
-//		{
-//			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
-//		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -119,7 +129,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
@@ -127,7 +137,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
 					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
-					StringBuilder.AppendFormat("({0})", (type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					StringBuilder.AppendFormat("({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -135,17 +145,17 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
-					if (type.Precision != null && type.Scale != null)
+					if (type.Type.Precision != null && type.Type.Scale != null)
 						StringBuilder.AppendFormat(
 							"({0}, {1})",
-							type.Precision.Value.ToString(CultureInfo.InvariantCulture),
-							type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+							type.Type.Precision.Value.ToString(CultureInfo.InvariantCulture),
+							type.Type.Scale.Value.ToString(CultureInfo.InvariantCulture));
 					return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 255 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(255)");
 						return;
 					}
@@ -175,35 +185,24 @@ namespace LinqToDB.DataProvider.Informix
 					c == '_');
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Convert(string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && !IsValidIdentifier(name))
-						{
-							// I wonder what to do if identifier has " in name?
-							return '"' + name + '"';
-						}
-					}
+					if (value.Length > 0 && !IsValidIdentifier(value))
+						// I wonder what to do if identifier has " in name?
+						return '"' + value + '"';
 
 					break;
-				case ConvertType.NameToQueryParameter   : return "?";
+				case ConvertType.NameToQueryParameter   :
+					return SqlProviderFlags.IsParameterOrderDependent ? "?" : "@" + value;
 				case ConvertType.NameToCommandParameter :
 				case ConvertType.NameToSprocParameter   : return ":" + value;
 				case ConvertType.SprocParameterToName   :
-					if (value != null)
-					{
-						var str = value.ToString();
-						return (str.Length > 0 && str[0] == ':')? str.Substring(1): str;
-					}
-
-					break;
+					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
 			}
 
 			return value;
@@ -213,13 +212,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (field.IsIdentity)
 			{
-				if (field.DataType == DataType.Int32)
+				if (field.Type!.Value.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.DataType == DataType.Int64)
+				if (field.Type!.Value.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("SERIAL8");
 					return;
@@ -238,7 +237,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
 		{
 			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
@@ -262,14 +261,19 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			dynamic p = parameter;
+			if (_provider != null)
+			{
+				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					if (_provider.Adapter.GetIfxType != null)
+						return _provider.Adapter.GetIfxType(param).ToString();
+					else
+						return _provider.Adapter.GetDB2Type!(param).ToString();
+			}
 
-			if (parameter.GetType().Name == "DB2Parameter")
-				return p.DB2Type.ToString();
-
-			return p.IfxType.ToString();
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)

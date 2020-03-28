@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,9 +12,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlMergeOperationClause(
-			MergeOperationType type,
-			SqlSearchCondition where,
-			SqlSearchCondition whereDelete,
+			MergeOperationType            type,
+			SqlSearchCondition?           where,
+			SqlSearchCondition?           whereDelete,
 			IEnumerable<SqlSetExpression> items)
 		{
 			OperationType = type;
@@ -28,23 +27,23 @@ namespace LinqToDB.SqlQuery
 
 		public MergeOperationType     OperationType { get; }
 
-		public SqlSearchCondition     Where         { get; internal set; }
+		public SqlSearchCondition?    Where         { get; internal set; }
 
-		public SqlSearchCondition     WhereDelete   { get; internal set; }
+		public SqlSearchCondition?    WhereDelete   { get; internal set; }
 
 		public List<SqlSetExpression> Items         { get; } = new List<SqlSetExpression>();
 
 
 		#region ISqlExpressionWalkable
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Where)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Where)?.Walk(options, func);
 
 			foreach (var t in Items)
 				((ISqlExpressionWalkable)t).Walk(options, func);
 
-			((ISqlExpressionWalkable)WhereDelete)?.Walk(options, func);
+			((ISqlExpressionWalkable?)WhereDelete)?.Walk(options, func);
 
 			return null;
 		}
@@ -157,7 +156,7 @@ namespace LinqToDB.SqlQuery
 					if (WhereDelete != null)
 					{
 						sb.Append(" DELETE WHERE ");
-						((IQueryElement)Where).ToString(sb, dic);
+						((IQueryElement)WhereDelete).ToString(sb, dic);
 					}
 
 					break;

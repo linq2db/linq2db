@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
 #if DEBUG
@@ -32,8 +29,8 @@ namespace LinqToDB.Linq.Builder
 
 			while (true)
 			{
-				context = context.Parent;
-				if (context == null) 
+				context = context.Parent!;
+				if (context == null)
 					break;
 				str = $"{GetContextInfo(context)} <- {str}";
 				if (!alreadyProcessed.Add(context))
@@ -51,20 +48,20 @@ namespace LinqToDB.Linq.Builder
 	interface IBuildContext
 	{
 #if DEBUG
-		string _sqlQueryText { get; }
-		string Path { get; }
+		string? _sqlQueryText { get; }
+		string   Path         { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }
-		Expression         Expression  { get; }
+		Expression?        Expression  { get; }
 		SelectQuery        SelectQuery { get; set; }
-		SqlStatement       Statement   { get; set; }
-		IBuildContext      Parent      { get; set; }
+		SqlStatement?      Statement   { get; set; }
+		IBuildContext?     Parent      { get; set; }
 
 		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
-		Expression         BuildExpression     (Expression expression, int level, bool enforceServerSide);
-		SqlInfo[]          ConvertToSql        (Expression expression, int level, ConvertFlags flags);
-		SqlInfo[]          ConvertToIndex      (Expression expression, int level, ConvertFlags flags);
+		Expression         BuildExpression     (Expression? expression, int level, bool enforceServerSide);
+		SqlInfo[]          ConvertToSql        (Expression? expression, int level, ConvertFlags flags);
+		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 
@@ -73,12 +70,12 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="level">Member level.</param>
 		/// <param name="requestFlag">Which test or request has to be performed.</param>
 		/// <returns><see cref="IsExpressionResult"/> instance.</returns>
-		IsExpressionResult IsExpression        (Expression expression, int level, RequestFor requestFlag);
+		IsExpressionResult IsExpression        (Expression? expression, int level, RequestFor requestFlag);
 
-		IBuildContext      GetContext          (Expression expression, int level, BuildInfo buildInfo);
+		IBuildContext?     GetContext          (Expression? expression, int level, BuildInfo buildInfo);
 		int                ConvertToParentIndex(int index, IBuildContext context);
 		void               SetAlias            (string alias);
-		ISqlExpression     GetSubQuery         (IBuildContext context);
+		ISqlExpression?    GetSubQuery         (IBuildContext context);
 
 		SqlStatement       GetResultStatement();
 	}

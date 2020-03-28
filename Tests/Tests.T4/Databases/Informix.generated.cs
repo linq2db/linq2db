@@ -17,13 +17,12 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	public partial class Linq2dbDB : LinqToDB.Data.DataConnection
+	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
-		public ITable<Informix>          Informixes         { get { return this.GetTable<Informix>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
@@ -37,13 +36,13 @@ namespace InformixDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testunique>        Testuniques        { get { return this.GetTable<Testunique>(); } }
 
-		public Linq2dbDB()
+		public TestdataidsDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Linq2dbDB(string configuration)
+		public TestdataidsDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -115,15 +114,6 @@ namespace InformixDataContext
 		[Column("parentid"),     Nullable] public int? Parentid     { get; set; } // INTEGER
 		[Column("childid"),      Nullable] public int? Childid      { get; set; } // INTEGER
 		[Column("grandchildid"), Nullable] public int? Grandchildid { get; set; } // INTEGER
-	}
-
-	[Table(Schema="informix", Name="informix")]
-	public partial class Informix
-	{
-		[Column("id"),            PrimaryKey,  NotNull] public int     Id            { get; set; } // INTEGER
-		[Column("duplicatedata"),    Nullable         ] public string? Duplicatedata { get; set; } // NVARCHAR(255)
-		[Column("orderdata1"),                 NotNull] public int     Orderdata1    { get; set; } // INTEGER
-		[Column("orderdata2"),                 NotNull] public int     Orderdata2    { get; set; } // INTEGER
 	}
 
 	[Table(Schema="informix", Name="inheritancechild")]
@@ -358,12 +348,6 @@ namespace InformixDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.Personid == Personid);
-		}
-
-		public static Informix Find(this ITable<Informix> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
 		}
 
 		public static Inheritancechild Find(this ITable<Inheritancechild> table, int Inheritancechildid)

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -30,7 +29,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.DbType ?? "timestamp";
+			var dbType = dt.Type.DbType ?? "timestamp";
 			var format = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
 
 			if (value.Millisecond == 0)

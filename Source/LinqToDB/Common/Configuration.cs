@@ -28,14 +28,6 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible.
-		/// This option could be useful if you need to intercept
-		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static bool AvoidSpecificDataProviderAPI;
-
-		/// <summary>
 		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
 		/// Default value: <c>true</c>.
 		/// </summary>
@@ -72,7 +64,7 @@ namespace LinqToDB.Common
 			/// Controls behavior of linq2db when multiple queries required to load requested data:
 			/// - if <c>true</c> - multiple queries allowed;
 			/// - if <c>false</c> - <see cref="LinqToDB.Linq.LinqException"/> will be thrown.
-			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
+			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool AllowMultipleQuery;

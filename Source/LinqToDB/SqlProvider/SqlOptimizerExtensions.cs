@@ -6,8 +6,8 @@ namespace LinqToDB.SqlProvider
 {
 	internal static class SqlOptimizerExtensions
 	{
-		public static SqlStatement OptimizeStatement([JetBrains.Annotations.NotNull] this ISqlOptimizer optimizer, [JetBrains.Annotations.NotNull] SqlStatement statement,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public static SqlStatement OptimizeStatement(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema, bool inlineParameters)
 		{
 			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));
@@ -19,7 +19,7 @@ namespace LinqToDB.SqlProvider
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
 			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement);
+			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters);
 
 			newStatement.SetAliases();
 

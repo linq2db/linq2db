@@ -79,7 +79,7 @@ namespace LinqToDB.Mapping
 			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
-			var schemaInfo = new MappingSchemaInfo(configuration);
+			var schemaInfo = new MappingSchemaInfo(configuration!);
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -331,7 +331,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Database value.</returns>
 		public object? EnumToValue(Enum value)
 		{
-			var toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType());
+			var toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType())!;
 			return Converter.ChangeType(value, toType, this);
 		}
 
@@ -439,9 +439,9 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression(
-			[JetBrains.Annotations.NotNull] Type fromType,
-			[JetBrains.Annotations.NotNull] Type toType,
-			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			Type fromType,
+			Type toType,
+			LambdaExpression expr,
 			bool addNullCheck = true)
 		{
 			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
@@ -469,7 +469,7 @@ namespace LinqToDB.Mapping
 		public void SetConvertExpression(
 			DbDataType                      fromType,
 			DbDataType                      toType,
-			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			LambdaExpression                expr,
 			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
@@ -493,7 +493,7 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression<TFrom,TTo>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
+			Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
@@ -513,8 +513,8 @@ namespace LinqToDB.Mapping
 		/// <param name="checkNullExpr"><c>null</c> values conversion expression.</param>
 		/// <param name="expr">Conversion expression.</param>
 		public void SetConvertExpression<TFrom,TTo>(
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
-			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
+			Expression<Func<TFrom,TTo>> checkNullExpr,
+			Expression<Func<TFrom,TTo>> expr)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -527,7 +527,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
 		/// <param name="func">Conversion delegate.</param>
-		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
+		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -546,7 +546,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		/// <param name="from">Source type detalization</param>
 		/// <param name="to">Target type detalization</param>
-		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func, DbDataType from, DbDataType to)
+		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func, DbDataType from, DbDataType to)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -938,12 +938,11 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Attribute owner type.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		//[return: MaybeNull]
-		public T GetAttribute<T>(Type type, bool inherit = true)
+		public T? GetAttribute<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type, inherit);
-			return attrs.Length == 0 ? null! : attrs[0];
+			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
@@ -954,12 +953,11 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Attribute owner member.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		//[return: MaybeNull]
-		public T GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
+		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
-			return attrs.Length == 0 ? null! : attrs[0];
+			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
@@ -1030,12 +1028,11 @@ namespace LinqToDB.Mapping
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		//[return: MaybeNull]
-		public T GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
+		public T? GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes(type, configGetter, inherit);
-			return attrs.Length == 0 ? null! : attrs[0];
+			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
@@ -1048,12 +1045,11 @@ namespace LinqToDB.Mapping
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		//[return: MaybeNull]
-		public T GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
+		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
-			return attrs.Length == 0 ? null! : attrs[0];
+			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
@@ -1175,6 +1171,8 @@ namespace LinqToDB.Mapping
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
+				SetConverter<DBNull, object?>(_ => null);
+
 				ValueToSqlConverter.SetDefaults();
 			}
 		}
@@ -1211,8 +1209,6 @@ namespace LinqToDB.Mapping
 				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
 			}
-
-			SetScalarType(type, ret);
 
 			return ret;
 		}
@@ -1392,11 +1388,11 @@ namespace LinqToDB.Mapping
 
 					var dt = GetDataType(valueType);
 
-					if (dt.DataType == DataType.NVarChar && minLen == length)
+					if (dt.Type.DataType == DataType.NVarChar && minLen == length)
 						return new SqlDataType(DataType.NChar, valueType, length.Value);
 
 					if (length.HasValue && dt.IsCharDataType)
-						return new SqlDataType(dt.DataType, valueType, length.Value);
+						return new SqlDataType(dt.Type.DataType, valueType, length.Value);
 
 					return dt;
 				}
@@ -1420,7 +1416,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
 		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
-		public virtual MapValue[]? GetMapValues([JetBrains.Annotations.NotNull] Type type)
+		public virtual MapValue[]? GetMapValues(Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
@@ -1472,7 +1468,7 @@ namespace LinqToDB.Mapping
 						StringComparer.Ordinal;
 				}
 
-				return Schemas[0].ColumnNameComparer;
+				return Schemas[0].ColumnNameComparer!;
 			}
 
 			set => Schemas[0].ColumnNameComparer = value;

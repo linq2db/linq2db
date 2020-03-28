@@ -81,7 +81,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar1([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -92,7 +92,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
+			TestProvName.AllInformix, TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -126,7 +126,21 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{
@@ -143,12 +157,12 @@ namespace Tests.Linq
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent select p.Children.FirstOrDefault(),
-					from p in db.Parent select p.Children.FirstOrDefault());
+					from p in    Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+					from p in db.Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, TestProvName.AllSapHana)]
+		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -158,7 +172,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault4([DataSources(ProviderName.Informix, TestProvName.AllPostgreSQLLess10)] string context)
+		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQLLess10)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -167,14 +181,15 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault());
 		}
 
+		//TODO: Access has nonstandard join, we have to improve it
 		[Test]
-		public void NestedFirstOrDefault5([DataSources] string context)
+		public void NestedFirstOrDefault5([DataSources(ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    GrandChild select p.Child.Parent.Children.FirstOrDefault(),
-					from p in db.GrandChild select p.Child.Parent.Children.FirstOrDefault());
+					from p in    GrandChild select p.Child.Parent.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+					from p in db.GrandChild select p.Child.Parent.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]

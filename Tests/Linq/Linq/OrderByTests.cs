@@ -431,7 +431,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Min3([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(

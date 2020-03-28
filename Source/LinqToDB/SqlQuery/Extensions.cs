@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public static class Extensions
 	{

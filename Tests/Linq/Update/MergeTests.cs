@@ -23,6 +23,8 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteClassic,
+				TestProvName.SQLiteClassicMiniProfilerMapped,
+				TestProvName.SQLiteClassicMiniProfilerUnmapped,
 				ProviderName.SQLiteMS,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,
@@ -244,7 +246,7 @@ namespace Tests.xUpdate
 			// another sybase quirk, nothing surprising
 			if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				Assert.LessOrEqual(expected, actual);
-			else if (provider == ProviderName.OracleNative && actual == -1)
+			else if ((provider == ProviderName.OracleNative || provider == TestProvName.Oracle11Native) && actual == -1)
 			{ }
 			else
 				Assert.AreEqual(expected, actual);

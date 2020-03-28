@@ -98,6 +98,22 @@ GO
 GRANT EXEC ON Person_SelectByKey TO PUBLIC
 GO
 
+-- Person_SelectByKeyLowercase
+
+DROP Procedure Person_SelectByKeyLowercase
+GO
+
+CREATE Procedure Person_SelectByKeyLowercase
+	@id int
+AS
+
+SELECT personid, firstname FROM Person WHERE PersonID = @id
+
+GO
+
+GRANT EXEC ON Person_SelectByKeyLowercase TO PUBLIC
+GO
+
 -- Person_SelectAll
 
 DROP Procedure Person_SelectAll

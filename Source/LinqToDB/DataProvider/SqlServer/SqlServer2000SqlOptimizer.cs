@@ -1,14 +1,11 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
 
 	class SqlServer2000SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2000SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2000SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2000)
 		{
 		}
 
@@ -18,11 +15,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (statement.IsUpdate())
 			{
-				var selectQuery = statement.SelectQuery;
+				var selectQuery = statement.SelectQuery!;
 				if (selectQuery.Select.SkipValue != null || selectQuery.Select.TakeValue != null)
 					throw new LinqToDBException("SQL Server 2000 do not support Skip, Take in Update statement.");
 
-				if (!statement.SelectQuery.OrderBy.IsEmpty)
+				if (!statement.SelectQuery!.OrderBy.IsEmpty)
 				{
 					statement.SelectQuery.OrderBy.Items.Clear();
 				}

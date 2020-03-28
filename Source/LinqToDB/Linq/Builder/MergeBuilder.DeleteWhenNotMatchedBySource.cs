@@ -1,7 +1,5 @@
-﻿#nullable disable
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
-using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -33,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
+						new ExpressionContext(null, new[] { mergeContext.TargetContext }, condition),
 						conditionExpr,
 						operation.Where.Conditions,
 						false);
@@ -42,8 +40,8 @@ namespace LinqToDB.Linq.Builder
 				return mergeContext;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

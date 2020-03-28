@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -48,12 +47,12 @@ namespace LinqToDB
 				ArgIndices    = argIndices;
 			}
 
-			public string Configuration { get; set; }
-			public string Name          { get; set; }
-			public string Schema        { get; set; }
-			public string Database      { get; set; }
-			public string Server        { get; set; }
-			public int[]  ArgIndices    { get; set; }
+			public string? Configuration { get; set; }
+			public string? Name          { get; set; }
+			public string? Schema        { get; set; }
+			public string? Database      { get; set; }
+			public string? Server        { get; set; }
+			public int[]?  ArgIndices    { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
 			{

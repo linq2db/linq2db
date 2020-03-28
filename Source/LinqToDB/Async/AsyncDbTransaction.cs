@@ -43,6 +43,13 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
+		public virtual Task DisposeAsync()
+		{
+			Dispose();
+
+			return TaskEx.CompletedTask;
+		}
+
 		public virtual void Rollback()
 		{
 			Transaction.Rollback();

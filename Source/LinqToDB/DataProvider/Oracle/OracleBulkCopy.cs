@@ -1,108 +1,75 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Configuration;
 	using Data;
 	using SqlProvider;
-	using Extensions;
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
-		public OracleBulkCopy(OracleDataProvider dataProvider, Type connectionType)
+		private readonly OracleDataProvider _provider;
+
+		public OracleBulkCopy(OracleDataProvider provider)
 		{
-			_dataProvider   = dataProvider;
-			_connectionType = connectionType;
+			_provider = provider;
 		}
 
-		readonly OracleDataProvider _dataProvider;
-		readonly Type               _connectionType;
-
-		Func<IDbConnection,int,IDisposable> _bulkCopyCreator;
-		Func<int,string,object>             _columnMappingCreator;
-		Action<object,Action<object>>       _bulkCopySubscriber;
-
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table,
+			ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			var dataConnection = table?.DataContext as DataConnection;
-
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, options, table);
-
-			if (dataConnection.Transaction == null)
+			if (table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null && _provider.Adapter.BulkCopy != null)
 			{
-				if (_bulkCopyCreator == null)
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+
+				if (connection != null)
 				{
-					var clientNamespace    = ((OracleDataProvider)dataConnection.DataProvider).AssemblyName + ".Client.";
-					var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
-					var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyOptions",       false);
-					var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
+					var ed        = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+					var sb        = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+					var rd        = new BulkCopyReader(dataConnection, columns, source);
+					var sqlopt    = OracleProviderAdapter.OracleBulkCopyOptions.Default;
+					var rc        = new BulkCopyRowsCopied();
+					var tableName = GetTableName(sb, options, table);
 
-					if (bulkCopyType != null)
+					if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
+
+					using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt))
 					{
-						_bulkCopyCreator      = CreateBulkCopyCreator(_connectionType, bulkCopyType, bulkCopyOptionType);
-						_columnMappingCreator = CreateColumnMappingCreator(columnMappingType);
-					}
-				}
-
-				if (_bulkCopyCreator != null)
-				{
-					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
-					var rc      = new BulkCopyRowsCopied();
-
-					var bcOptions = 0; // Default
-
-					if (options.UseInternalTransaction == true) bcOptions |= 1; // UseInternalTransaction = 1,
-
-					using (var bc = _bulkCopyCreator(Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection), bcOptions))
-					{
-						dynamic dbc = bc;
-
-						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue ?
-							options.MaxBatchSize.Value : options.NotifyAfter;
+						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
+							? options.MaxBatchSize.Value
+							: options.NotifyAfter;
 
 						if (notifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
-							if (_bulkCopySubscriber == null)
-								_bulkCopySubscriber = CreateBulkCopySubscriber(bc, "OracleRowsCopied");
+							bc.NotifyAfter = options.NotifyAfter;
 
-							dbc.NotifyAfter = notifyAfter;
-
-							_bulkCopySubscriber(bc, arg =>
+							bc.OracleRowsCopied += (sender, args) =>
 							{
-								dynamic darg = arg;
-								rc.RowsCopied = darg.RowsCopied;
+								rc.RowsCopied = args.RowsCopied;
 								options.RowsCopiedCallback(rc);
 								if (rc.Abort)
-									darg.Abort = true;
-							});
+									args.Abort = true;
+							};
 						}
 
-						if (options.MaxBatchSize.   HasValue) dbc.BatchSize       = options.MaxBatchSize.   Value;
-						if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+						if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
+						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						dbc.DestinationTableName = tableName;
+						bc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
+							bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
 
 						TraceAction(
 							dataConnection,
-							() => "INSERT BULK " + tableName + Environment.NewLine,
-							() => { dbc.WriteToServer(rd); return rd.Count; });
+							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+							() => { bc.WriteToServer(rd); return rd.Count; });
 					}
 
 					if (rc.RowsCopied != rd.Count)
@@ -116,8 +83,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return rc;
 				}
 			}
-
-			//options.BulkCopyType = BulkCopyType.MultipleRows;
+			
 
 			return MultipleRowsCopy(table, options, source);
 		}
@@ -282,9 +248,8 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
-					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).DataType
+					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
-				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(helper.DataConnection.MappingSchema, o)).ToArray(), dataType, column.DbType)
 				{
