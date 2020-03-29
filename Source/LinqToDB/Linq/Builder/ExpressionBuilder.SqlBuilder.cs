@@ -1440,15 +1440,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var body = convertExpr.GetBody(newExpr.ValueExpression);
 
-						newExpr.ValueExpression    = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-						newExpr.DataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DataType));
-						newExpr.DbTypeExpression   = Expression.PropertyOrField(body, nameof(DataParameter.DbType));
-						newExpr.SizeExpression     = Expression.PropertyOrField(body, nameof(DataParameter.Size));
+						newExpr.ValueExpression      = Expression.PropertyOrField(body, nameof(DataParameter.Value));
+						newExpr.DbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
 					}
 				}
 
 				p = CreateParameterAccessor(
-					DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, newExpr.DbTypeExpression, newExpr.SizeExpression, expr, ExpressionParam, ParametersParam, name!, buildParameterType, expr: convertExpr);
+					DataContext, newExpr.ValueExpression, newExpr.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, name!, buildParameterType, expr: convertExpr);
 				CurrentSqlParameters.Add(p);
 			}
 
@@ -1459,10 +1457,8 @@ namespace LinqToDB.Linq.Builder
 
 		class ValueTypeExpression
 		{
-			public Expression ValueExpression = null!;
-			public Expression DataTypeExpression = null!;
-			public Expression DbTypeExpression = null!;
-			public Expression SizeExpression = null!;
+			public Expression ValueExpression      = null!;
+			public Expression DbDataTypeExpression = null!;
 
 			public DbDataType DataType;
 		}
@@ -1471,10 +1467,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression
 			{
-				DataType           = new DbDataType(expression.Type),
-				DataTypeExpression = Expression.Constant(DataType.Undefined),
-				DbTypeExpression   = Expression.Constant(null, typeof(string)),
-				SizeExpression     = Expression.Constant(null, typeof(int?))
+				DataType             = new DbDataType(expression.Type),
+				DbDataTypeExpression = Expression.Constant(new DbDataType(expression.Type), typeof(DbDataType)),
 			};
 
 			var unwrapped = expression.Unwrap();
@@ -1504,20 +1498,20 @@ namespace LinqToDB.Linq.Builder
 
 								if (mt.DataType != DataType.Undefined)
 								{
-									result.DataType           = result.DataType.WithDataType(mt.DataType);
-									result.DataTypeExpression = Expression.Constant(mt.DataType);
+									result.DataType             = result.DataType.WithDataType(mt.DataType);
+									result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.DbType != null)
 								{
-									result.DataType         = result.DataType.WithDbType(mt.DbType);
-									result.DbTypeExpression = Expression.Constant(mt.DbType);
+									result.DataType             = result.DataType.WithDbType(mt.DbType);
+									result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.Length != null)
 								{
-									result.DataType         = result.DataType.WithLength(mt.Length);
-									result.SizeExpression   = Expression.Constant(mt.Length);
+									result.DataType             = result.DataType.WithLength(mt.Length);
+									result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								setName(ma.Member.Name);
@@ -2190,7 +2184,7 @@ namespace LinqToDB.Linq.Builder
 			var vte  = ReplaceParameter(_expressionAccessors, ex, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(DataContext, expr, vte.DataTypeExpression, vte.DbTypeExpression, vte.SizeExpression, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -2289,9 +2283,7 @@ namespace LinqToDB.Linq.Builder
 		internal static ParameterAccessor CreateParameterAccessor(
 			IDataContext        dataContext,
 			Expression          accessorExpression,
-			Expression          dataTypeAccessorExpression,
-			Expression          dbTypeAccessorExpression,
-			Expression          sizeAccessorExpression,
+			Expression          dbDataTypeAccessorExpression,
 			Expression          expression,
 			ParameterExpression expressionParam,
 			ParameterExpression parametersParam,
@@ -2308,14 +2300,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr != null)
 			{
-				if (dataTypeAccessorExpression == null || dbTypeAccessorExpression == null || sizeAccessorExpression == null)
+				if (dbDataTypeAccessorExpression == null)
 				{
 					var body = expr.GetBody(accessorExpression);
 
-					accessorExpression         = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-					dataTypeAccessorExpression = Expression.PropertyOrField(body, nameof(DataParameter.DataType));
-					dbTypeAccessorExpression   = Expression.PropertyOrField(body, nameof(DataParameter.DbType));
-					sizeAccessorExpression     = Expression.PropertyOrField(body, nameof(DataParameter.Size));
+					accessorExpression           = Expression.PropertyOrField(body, nameof(DataParameter.Value));
+					dbDataTypeAccessorExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
 				}
 			}
 			else
@@ -2326,10 +2316,8 @@ namespace LinqToDB.Linq.Builder
 					if (dp?.Name?.IsNullOrEmpty() == false)
 						name = dp.Name;
 
-					dataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.DataType));
-					dbTypeAccessorExpression   = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.DbType));
-					sizeAccessorExpression     = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.Size));
-					accessorExpression         = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.Value));
+					dbDataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.DbDataType));
+					accessorExpression           = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.Value));
 				}
 				else
 				{
@@ -2379,25 +2367,15 @@ namespace LinqToDB.Linq.Builder
 				Expression.Convert(accessorExpression, typeof(object)),
 				new [] { expressionParam, parametersParam });
 
-			var dataTypeAccessor = Expression.Lambda<Func<Expression,object?[]?,DataType>>(
-				Expression.Convert(dataTypeAccessorExpression, typeof(DataType)),
+			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,object?[]?,DbDataType>>(
+				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
 				new [] { expressionParam, parametersParam });
-
-			var dbTypeAccessor = Expression.Lambda<Func<Expression,object?[]?,string?>>(
-				Expression.Convert(dbTypeAccessorExpression, typeof(string)),
-				new [] { expressionParam, parametersParam });
-
-			var sizeAccessor = Expression.Lambda<Func<Expression, object?[]?, int?>>(
-				Expression.Convert(sizeAccessorExpression, typeof(int?)),
-				new[] { expressionParam, parametersParam });
 
 			return new ParameterAccessor
 			(
 				expression,
 				mapper.Compile(),
-				dataTypeAccessor.Compile(),
-				dbTypeAccessor.Compile(),
-				sizeAccessor.Compile(),
+				dbDataTypeAccessor.Compile(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
 					IsQueryParameter = !(dataContext.InlineParameters && dataContext.MappingSchema.ValueToSqlConverter.CanConvert(accessorExpression.Type))
@@ -2528,9 +2506,7 @@ namespace LinqToDB.Linq.Builder
 				(
 					ep.Expression,
 					ep.Accessor,
-					ep.DataTypeAccessor,
-					ep.DbTypeAccessor,
-					ep.SizeAccessor,
+					ep.DbDataTypeAccessor,
 					new SqlParameter(p.Type.WithSystemType(ep.Expression.Type), p.Name, p.Value)
 					{
 						LikeStart        = start,
