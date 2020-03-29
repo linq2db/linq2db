@@ -1,12 +1,10 @@
-﻿#nullable disable
-namespace LinqToDB.ServiceModel
+﻿namespace LinqToDB.ServiceModel
 {
 	using LinqToDB.Common;
 	using Mapping;
 	using System;
 	using System.Data.Linq;
 	using System.Globalization;
-	using System.Text;
 
 	/// <summary>
 	/// Mapping schema, that defines remote context values de-/serialization converters.
@@ -19,7 +17,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		public SerializationMappingSchema(MappingSchema mappingSchema)
+		public SerializationMappingSchema(MappingSchema? mappingSchema)
 			: base("RemoteContextSerialization", mappingSchema == null ? Array<MappingSchema>.Empty : new[] { mappingSchema })
 		{
 			SetConvertExpression<bool          , string>(value => value ? "1" : "0");
@@ -63,7 +61,7 @@ namespace LinqToDB.ServiceModel
 			SetConvertExpression<string, byte[]        >(value => Convert.FromBase64String(value));
 		}
 
-		// DTO converted as two fields to preserve offset information
+		// DTO serialized as two fields to preserve offset information
 		private static DateTimeOffset StringToDateTimeOffset(string data)
 		{
 			var parts = data.Split(':');

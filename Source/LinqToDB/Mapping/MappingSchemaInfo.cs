@@ -12,12 +12,12 @@ namespace LinqToDB.Mapping
 
 	class MappingSchemaInfo
 	{
-		public MappingSchemaInfo(string configuration)
+		public MappingSchemaInfo(string? configuration)
 		{
 			Configuration = configuration;
 		}
 
-		public string           Configuration;
+		public string?          Configuration;
 		public IMetadataReader? MetadataReader;
 
 		#region Default Values

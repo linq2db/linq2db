@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,6 +9,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using Mapper;
 	using Mapping;
@@ -31,8 +31,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-		[CanBeNull]
-		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
+		public IReadOnlyDictionary<T,EntityMapEntry<T>>? Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -58,8 +57,8 @@ namespace LinqToDB.Tools.EntityServices
 
 		class KeyComparer<TK> : IKeyComparer
 		{
-			Func<TK,T>           _mapper;
-			List<MemberAccessor> _keyColumns;
+			Func<TK,T>?           _mapper;
+			List<MemberAccessor>? _keyColumns;
 
 			void CreateMapper(MappingSchema mappingSchema)
 			{
@@ -74,7 +73,7 @@ namespace LinqToDB.Tools.EntityServices
 
 				if (typeof(T) == typeof(TK))
 				{
-					_mapper = k => (T)(object)k;
+					_mapper = k => (T)(object)k!;
 					return;
 				}
 
@@ -86,7 +85,7 @@ namespace LinqToDB.Tools.EntityServices
 					_mapper = v =>
 					{
 						var e = entityDesc.TypeAccessor.CreateInstanceEx();
-						_keyColumns[0].Setter(e, v);
+						_keyColumns![0].Setter!(e, v);
 						return (T)e;
 					};
 				}
@@ -106,7 +105,7 @@ namespace LinqToDB.Tools.EntityServices
 			{
 				CreateMapper(mappingSchema);
 
-				return _mapper((TK)key);
+				return _mapper!((TK)key);
 			}
 
 			public Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key)
@@ -120,7 +119,7 @@ namespace LinqToDB.Tools.EntityServices
 					var keyExpression = Expression.Constant(new { Value = key });
 
 					bodyExpression = Expression.Equal(
-						Expression.PropertyOrField(p, _keyColumns[0].Name),
+						Expression.PropertyOrField(p, _keyColumns![0].Name),
 						Expression.Convert(Expression.PropertyOrField(keyExpression, "Value"), _keyColumns[0].Type));
 				}
 				else
@@ -138,10 +137,10 @@ namespace LinqToDB.Tools.EntityServices
 			}
 		}
 
-		volatile ConcurrentDictionary<Type,IKeyComparer> _keyComparers;
+		volatile ConcurrentDictionary<Type,IKeyComparer>? _keyComparers;
 
-		[CanBeNull]
-		public T GetEntity([JetBrains.Annotations.NotNull] IDataContext context, [JetBrains.Annotations.NotNull] object key)
+		[return: MaybeNull]
+		public T GetEntity(IDataContext context, object key)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));

@@ -221,8 +221,8 @@ namespace LinqToDB.Mapping
 			if (type == null)
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
-			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
-				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod!);
+			if (!ExpressionQueryMethod.IsNullOrEmpty())
+				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod);
 			else
 				queryExpression = ExpressionQuery!;
 

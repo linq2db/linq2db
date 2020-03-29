@@ -54,7 +54,7 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(string configurationString, MappingSchema mappingSchema)
+		public DataConnection(string? configurationString, MappingSchema mappingSchema)
 			: this(configurationString)
 		{
 			AddMappingSchema(mappingSchema);
@@ -590,7 +590,7 @@ namespace LinqToDB.Data
 					var dataProviderType = Type.GetType(provider.TypeName, true);
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType);
 
-					if (!string.IsNullOrEmpty(provider.Name))
+					if (!provider.Name.IsNullOrEmpty())
 						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));
 				}
 			}
@@ -789,7 +789,7 @@ namespace LinqToDB.Data
 				{
 					var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
 
-					if (string.IsNullOrEmpty(providerName))
+					if (providerName.IsNullOrEmpty())
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
 					else if (_dataProviders.ContainsKey(providerName))
 						dataProvider = _dataProviders[providerName];
@@ -1146,10 +1146,9 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
 					Command        = Command,
 					StartTime      = now,
 				});
@@ -1163,10 +1162,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = this,
 						Command         = Command,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
@@ -1180,10 +1178,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -1215,10 +1212,9 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
 					Command        = Command,
 					StartTime      = now,
 				});
@@ -1232,10 +1228,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -1248,10 +1243,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -1288,10 +1282,9 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
 					Command        = Command,
 					StartTime      = now,
 				});
@@ -1306,10 +1299,9 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -1322,10 +1314,9 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
 						Command        = Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,

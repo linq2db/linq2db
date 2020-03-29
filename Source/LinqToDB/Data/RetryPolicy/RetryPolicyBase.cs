@@ -1,5 +1,4 @@
-﻿#nullable disable
-// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
+﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -8,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.Data.RetryPolicy
 {
@@ -231,7 +228,7 @@ namespace LinqToDB.Data.RetryPolicy
 		///     Returns the delay indicating how long to wait for before the next execution attempt if the operation should be retried;
 		///     <c>null</c> otherwise
 		/// </returns>
-		protected virtual TimeSpan? GetNextDelay([NotNull] Exception lastException)
+		protected virtual TimeSpan? GetNextDelay(Exception lastException)
 		{
 			var currentRetryCount = ExceptionsEncountered.Count - 1;
 
@@ -258,6 +255,6 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <returns>
 		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
 		/// </returns>
-		protected abstract bool ShouldRetryOn([NotNull] Exception exception);
+		protected abstract bool ShouldRetryOn(Exception exception);
 	}
 }

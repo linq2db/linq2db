@@ -1215,7 +1215,7 @@ namespace LinqToDB.Linq.Builder
 						if (ed.Aliases != null)
 						{
 							if (ed.Aliases.TryGetValue(member.Name, out var value))
-								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type, sourceExpression);
+								return GetMemberExpression(ed.TypeAccessor[value!].MemberInfo, add, type, sourceExpression);
 
 							foreach (var a in ed.Aliases)
 							{

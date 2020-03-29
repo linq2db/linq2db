@@ -811,7 +811,7 @@ namespace LinqToDB.ServiceModel
 								Builder.Append(" -");
 							else
 							{
-								Append(elem.SequenceAttributes!.Length);
+								Append(elem.SequenceAttributes.Length);
 
 								foreach (var a in elem.SequenceAttributes)
 								{
@@ -2214,8 +2214,8 @@ namespace LinqToDB.ServiceModel
 
 				NextLine();
 
-				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString();              NextLine(); }
-				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString()); NextLine(); }
+				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString()!;              NextLine(); }
+				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString())!; NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)
 				{

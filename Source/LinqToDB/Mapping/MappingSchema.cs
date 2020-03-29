@@ -79,7 +79,7 @@ namespace LinqToDB.Mapping
 			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
-			var schemaInfo = new MappingSchemaInfo(configuration!);
+			var schemaInfo = new MappingSchemaInfo(configuration);
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -1097,7 +1097,7 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
+						if (!s.Configuration.IsNullOrEmpty() && hash.Add(s.Configuration))
 							list.Add(s.Configuration);
 
 					_configurationList = list.ToArray();

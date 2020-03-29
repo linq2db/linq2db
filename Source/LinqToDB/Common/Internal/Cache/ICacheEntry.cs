@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -20,7 +19,7 @@ namespace LinqToDB.Common.Internal.Cache
         /// <summary>
         /// Gets or set the value of the cache entry.
         /// </summary>
-        object Value { get; set; }
+        object? Value { get; set; }
 
         /// <summary>
         /// Gets or sets an absolute expiration date for the cache entry.

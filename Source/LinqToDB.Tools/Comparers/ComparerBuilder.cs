@@ -136,7 +136,7 @@ namespace LinqToDB.Tools.Comparers
 		/// </summary>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
-		[NotNull, Pure]
+		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(IEnumerable<T> ignored) =>
 			GetEqualityComparer<T>();
 

@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Specialized;
 using System.Configuration;

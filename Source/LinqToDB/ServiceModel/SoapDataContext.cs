@@ -1,9 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
@@ -15,38 +12,38 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		public SoapDataContext([NotNull] string endpointConfigurationName)
+		public SoapDataContext(string endpointConfigurationName)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
-		public SoapDataContext([NotNull] string endpointConfigurationName, [NotNull] string remoteAddress)
+		public SoapDataContext(string endpointConfigurationName, string remoteAddress)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
-		public SoapDataContext([NotNull] string endpointConfigurationName, [NotNull] EndpointAddress endpointAddress)
+		public SoapDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public SoapDataContext([NotNull] Binding binding, [NotNull] EndpointAddress endpointAddress)
+		public SoapDataContext(Binding binding, EndpointAddress endpointAddress)
 			: this()
 		{
 			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
 			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		string          _endpointConfigurationName;
-		string          _remoteAddress;
-		EndpointAddress _endpointAddress;
+		string?          _endpointConfigurationName;
+		string?          _remoteAddress;
+		EndpointAddress? _endpointAddress;
 
-		public Binding Binding { get; private set; }
+		public Binding?  Binding { get; private set; }
 
 		#endregion
 
@@ -55,15 +52,15 @@ namespace LinqToDB.ServiceModel
 		protected override ILinqClient GetClient()
 		{
 			if (Binding != null)
-				return new LinqSoapServiceClient(Binding, _endpointAddress);
+				return new LinqSoapServiceClient(Binding, _endpointAddress!);
 
 			if (_endpointAddress != null)
-				return new LinqSoapServiceClient(_endpointConfigurationName, _endpointAddress);
+				return new LinqSoapServiceClient(_endpointConfigurationName!, _endpointAddress);
 
 			if (_remoteAddress != null)
-				return new LinqSoapServiceClient(_endpointConfigurationName, _remoteAddress);
+				return new LinqSoapServiceClient(_endpointConfigurationName!, _remoteAddress);
 
-			return new LinqSoapServiceClient(_endpointConfigurationName);
+			return new LinqSoapServiceClient(_endpointConfigurationName!);
 		}
 
 		protected override IDataContext Clone()

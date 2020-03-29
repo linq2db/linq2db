@@ -172,8 +172,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty() && table != null)
-						table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias,
+					if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty() && table != null)
+						table.Alias = string.Format(Configuration.Sql.AssociationAlias,
 							association.MemberInfo.Name);
 				}
 			}
@@ -559,7 +559,7 @@ namespace LinqToDB.Linq.Builder
 				if (Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
-				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association);
+				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association)!;
 
 				return detailExpression;
 			}

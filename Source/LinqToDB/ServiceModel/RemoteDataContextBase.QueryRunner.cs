@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
@@ -9,11 +8,12 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	using Linq;
+	using LinqToDB.Common.Internal;
 	using SqlProvider;
 
 	public abstract partial class RemoteDataContextBase
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters, object[] preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
@@ -21,7 +21,7 @@ namespace LinqToDB.ServiceModel
 
 		class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters, object[] preambles)
+			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataContext, expression, parameters, preambles)
 			{
 				_dataContext = dataContext;
@@ -29,9 +29,9 @@ namespace LinqToDB.ServiceModel
 
 			readonly RemoteDataContextBase _dataContext;
 
-			ILinqClient _client;
+			ILinqClient? _client;
 
-			public override Expression MapperExpression { get; set; }
+			public override Expression? MapperExpression { get; set; }
 
 			protected override void SetQuery()
 			{
@@ -144,7 +144,7 @@ namespace LinqToDB.ServiceModel
 
 				if (_dataContext._batchCounter > 0)
 				{
-					_dataContext._queryBatch.Add(data);
+					_dataContext._queryBatch!.Add(data);
 					return -1;
 				}
 
@@ -153,7 +153,7 @@ namespace LinqToDB.ServiceModel
 				return _client.ExecuteNonQuery(_dataContext.Configuration, data);
 			}
 
-			public override object ExecuteScalar()
+			public override object? ExecuteScalar()
 			{
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
@@ -221,12 +221,6 @@ namespace LinqToDB.ServiceModel
 
 				public IDataReader DataReader { get; }
 
-				static Task<bool> _trueTask;
-				static Task<bool> _falseTask;
-
-				static Task<bool> TrueTask  => _trueTask  ?? (_trueTask  = Task.FromResult(true));
-				static Task<bool> FalseTask => _falseTask ?? (_falseTask = Task.FromResult(false));
-
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
 					if (cancellationToken.IsCancellationRequested)
@@ -238,7 +232,7 @@ namespace LinqToDB.ServiceModel
 
 					try
 					{
-						return DataReader.Read() ? TrueTask : FalseTask;
+						return DataReader.Read() ? TaskCache.True : TaskCache.False;
 					}
 					catch (Exception ex)
 					{
@@ -286,7 +280,7 @@ namespace LinqToDB.ServiceModel
 				return new DataReaderAsync(reader);
 			}
 
-			public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+			public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
@@ -332,8 +326,8 @@ namespace LinqToDB.ServiceModel
 
 				if (_dataContext._batchCounter > 0)
 				{
-					_dataContext._queryBatch.Add(data);
-					return Task.FromResult(-1);
+					_dataContext._queryBatch!.Add(data);
+					return TaskCache.MinusOne;
 				}
 
 				_client = _dataContext.GetClient();

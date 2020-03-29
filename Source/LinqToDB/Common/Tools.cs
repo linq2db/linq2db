@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Reflection;
 
 	/// <summary>
@@ -34,7 +35,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="array">Collection to check.</param>
 		/// <returns><c>true</c> if collection is null or contains no elements, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this ICollection? array)
+		public static bool IsNullOrEmpty([NotNullWhen(false)] this ICollection? array)
 		{
 			return array == null || array.Count == 0;
 		}
@@ -44,9 +45,20 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="str">String value to check.</param>
 		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this string? str)
+		public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str)
 		{
 			return string.IsNullOrEmpty(str);
+		}
+
+		// another reason to use those shortcuts - nullability annotations not available for string methods
+		/// <summary>
+		/// Shortcut extension method for <see cref="string.IsNullOrWhiteSpace(string)"/> method.
+		/// </summary>
+		/// <param name="str">String value to check.</param>
+		/// <returns><c>true</c> if string is null or contains only whitespace characters, <c>false</c> otherwise.</returns>
+		public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str)
+		{
+			return string.IsNullOrWhiteSpace(str);
 		}
 
 		/// <summary>

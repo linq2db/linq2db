@@ -1,13 +1,10 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
-
-using JANotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace LinqToDB.Tools.Mapper
 {
@@ -23,7 +20,6 @@ namespace LinqToDB.Tools.Mapper
 	[PublicAPI]
 	public class MapperBuilder<TFrom,TTo> : IMapperBuilder
 	{
-		[JANotNull]
 		private MappingSchema _mappingSchema = MappingSchema.Default;
 
 		/// <summary>
@@ -42,20 +38,19 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Mapping expression.</returns>
 		[Pure]
 		public Expression<Func<TFrom,TTo>> GetMapperExpression()
-			=> (Expression<Func<TFrom,TTo>>)GetExpressionMapper().GetExpression();
+			=> (Expression<Func<TFrom,TTo>>)GetExpressionMapper().GetExpression()!;
 
 		LambdaExpression IMapperBuilder.GetMapperLambdaExpression()
-			=> GetExpressionMapper().GetExpression();
+			=> GetExpressionMapper().GetExpression()!;
 
 		/// <summary>
 		/// Returns a mapper expression to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
-		[Pure, JANotNull]
+		[Pure]
 		public Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>> GetMapperExpressionEx()
 			=> (Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>>)GetExpressionMapper().GetExpressionEx();
 
-		[JANotNull]
 		LambdaExpression IMapperBuilder.GetMapperLambdaExpressionEx()
 			=> GetExpressionMapper().GetExpressionEx();
 
@@ -63,7 +58,7 @@ namespace LinqToDB.Tools.Mapper
 		/// Returns a mapper to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
-		[Pure, JANotNull]
+		[Pure]
 		public Mapper<TFrom,TTo> GetMapper()
 			=> new Mapper<TFrom,TTo>(this);
 
@@ -72,8 +67,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="schema">Mapping schema to set.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> SetMappingSchema([JANotNull] MappingSchema schema)
+		public MapperBuilder<TFrom,TTo> SetMappingSchema(MappingSchema schema)
 		{
 			_mappingSchema = schema ?? throw new ArgumentNullException(nameof(schema));
 			return this;
@@ -89,8 +83,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="predicate">Predicate to filter members to map.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> SetToMemberFilter([JANotNull] Func<MemberAccessor,bool> predicate)
+		public MapperBuilder<TFrom,TTo> SetToMemberFilter(Func<MemberAccessor,bool> predicate)
 		{
 			ToMemberFilter = predicate ?? throw new ArgumentNullException(nameof(predicate));
 			return this;
@@ -99,7 +92,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <summary>
 		/// Defines member name mapping for source types.
 		/// </summary>
-		public Dictionary<Type,Dictionary<string,string>> FromMappingDictionary { get; set; }
+		public Dictionary<Type,Dictionary<string,string>>? FromMappingDictionary { get; set; }
 
 		/// <summary>
 		/// Defines member name mapping for source types.
@@ -108,8 +101,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> FromMapping([JANotNull] Type type, [JANotNull] string memberName, [JANotNull] string mapName)
+		public MapperBuilder<TFrom,TTo> FromMapping(Type type, string memberName, string mapName)
 		{
 			if (type       == null) throw new ArgumentNullException(nameof(type));
 			if (memberName == null) throw new ArgumentNullException(nameof(memberName));
@@ -134,8 +126,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> FromMapping<T>(
-			[JANotNull] string memberName,
-			[JANotNull] string mapName)
+			string memberName,
+			string mapName)
 			=> FromMapping(typeof(T), memberName, mapName);
 
 		/// <summary>
@@ -144,7 +136,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> FromMapping([JANotNull] string memberName, [JANotNull] string mapName)
+		public MapperBuilder<TFrom,TTo> FromMapping(string memberName, string mapName)
 			=> FromMapping(typeof(TFrom), memberName, mapName);
 
 		/// <summary>
@@ -153,8 +145,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="type">Type to map.</param>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> FromMapping([JANotNull] Type type, [JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> FromMapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
 			if (type    == null) throw new ArgumentNullException(nameof(type));
 			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
@@ -171,7 +162,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <typeparam name="T">Type to map.</typeparam>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> FromMapping<T>([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> FromMapping<T>(IReadOnlyDictionary<string,string> mapping)
 			=> FromMapping(typeof(T), mapping);
 
 		/// <summary>
@@ -179,13 +170,13 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> FromMapping([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> FromMapping(IReadOnlyDictionary<string,string> mapping)
 			=> FromMapping(typeof(TFrom), mapping);
 
 		/// <summary>
 		/// Defines member name mapping for destination types.
 		/// </summary>
-		public Dictionary<Type,Dictionary<string,string>> ToMappingDictionary { get; set; }
+		public Dictionary<Type,Dictionary<string,string>>? ToMappingDictionary { get; set; }
 
 		/// <summary>
 		/// Defines member name mapping for destination types.
@@ -194,8 +185,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> ToMapping([JANotNull] Type type, [JANotNull] string memberName, string mapName)
+		public MapperBuilder<TFrom,TTo> ToMapping(Type type, string memberName, string mapName)
 		{
 			if (ToMappingDictionary == null)
 				ToMappingDictionary = new Dictionary<Type,Dictionary<string,string>>();
@@ -233,8 +223,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="type">Type to map.</param>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> ToMapping([JANotNull] Type type, [JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> ToMapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
 			if (type    == null) throw new ArgumentNullException(nameof(type));
 			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
@@ -251,7 +240,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <typeparam name="T">Type to map.</typeparam>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> ToMapping<T>([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> ToMapping<T>(IReadOnlyDictionary<string,string> mapping)
 			=> ToMapping(typeof(T), mapping);
 
 		/// <summary>
@@ -259,7 +248,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> ToMapping([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> ToMapping(IReadOnlyDictionary<string,string> mapping)
 			=> ToMapping(typeof(TTo), mapping);
 
 		/// <summary>
@@ -269,8 +258,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> Mapping([JANotNull] Type type, [JANotNull] string memberName, [JANotNull] string mapName)
+		public MapperBuilder<TFrom,TTo> Mapping(Type type, string memberName, string mapName)
 			=> FromMapping(type, memberName, mapName).ToMapping(type, memberName, mapName);
 
 		/// <summary>
@@ -280,8 +268,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> Mapping<T>([JANotNull] string memberName, [JANotNull] string mapName)
+		public MapperBuilder<TFrom,TTo> Mapping<T>(string memberName, string mapName)
 			=> Mapping(typeof(T), memberName, mapName);
 
 		/// <summary>
@@ -290,7 +277,6 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="memberName">Type member name.</param>
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
 		public MapperBuilder<TFrom,TTo> Mapping(string memberName, string mapName)
 			=> Mapping(typeof(TFrom), memberName, mapName).Mapping(typeof(TTo), memberName, mapName);
 
@@ -300,8 +286,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="type">Type to map.</param>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
-		public MapperBuilder<TFrom,TTo> Mapping([JANotNull] Type type, [JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> Mapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
 			if (type    == null) throw new ArgumentNullException(nameof(type));
 			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
@@ -318,7 +303,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <typeparam name="T">Type to map.</typeparam>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> Mapping<T>([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> Mapping<T>(IReadOnlyDictionary<string,string> mapping)
 			=> Mapping(typeof(T), mapping);
 
 		/// <summary>
@@ -326,13 +311,13 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
-		public MapperBuilder<TFrom,TTo> Mapping([JANotNull] IReadOnlyDictionary<string,string> mapping)
+		public MapperBuilder<TFrom,TTo> Mapping(IReadOnlyDictionary<string,string> mapping)
 			=> Mapping(typeof(TFrom), mapping).Mapping(typeof(TFrom), mapping);
 
 		/// <summary>
 		/// Member mappers.
 		/// </summary>
-		public List<MemberMapperInfo> MemberMappers { get; set; }
+		public List<MemberMapperInfo>? MemberMappers { get; set; }
 
 		/// <summary>
 		/// Adds member mapper.
@@ -344,10 +329,9 @@ namespace LinqToDB.Tools.Mapper
 		/// <example>
 		/// This example shows how to explicitly convert one value to another.
 		/// </example>
-		[JANotNull]
 		public MapperBuilder<TFrom,TTo> MapMember<T>(
-			[JANotNull] Expression<Func<TTo,T>>   toMember,
-			[JANotNull] Expression<Func<TFrom,T>> setter)
+			Expression<Func<TTo,T>>   toMember,
+			Expression<Func<TFrom,T>> setter)
 		{
 			if (toMember == null) throw new ArgumentNullException(nameof(toMember));
 			if (setter   == null) throw new ArgumentNullException(nameof(setter));
@@ -372,7 +356,6 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="doProcess">If true, processes object cross references.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
 		public MapperBuilder<TFrom, TTo> SetProcessCrossReferences(bool? doProcess)
 		{
 			ProcessCrossReferences = doProcess;
@@ -401,7 +384,6 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <param name="deepCopy">If true, performs deep copy.</param>
 		/// <returns>Returns this mapper.</returns>
-		[JANotNull]
 		public MapperBuilder<TFrom,TTo> SetDeepCopy(bool? deepCopy)
 		{
 			DeepCopy = deepCopy;
@@ -412,7 +394,6 @@ namespace LinqToDB.Tools.Mapper
 		/// Gets an instance of <see cref="ExpressionBuilder"/> class.
 		/// </summary>
 		/// <returns><see cref="ExpressionBuilder"/>.</returns>
-		[JANotNull]
 		internal ExpressionBuilder GetExpressionMapper()
 			=> new ExpressionBuilder(this, MemberMappers?.Select(mm => Tuple.Create(GetMembersInfo(mm.ToMember), mm.Setter)).ToArray());
 
@@ -423,8 +404,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>
 		/// The <see cref="MemberInfo"/> instance.
 		/// </returns>
-		[JANotNull, Pure]
-		internal static MemberInfo[] GetMembersInfo([JANotNull] LambdaExpression expression)
+		[Pure]
+		internal static MemberInfo[] GetMembersInfo(LambdaExpression expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -435,10 +416,9 @@ namespace LinqToDB.Tools.Mapper
 			return GetMembers(body).Reverse().ToArray();
 		}
 
-		[JANotNull, ItemNotNull]
-		static IEnumerable<MemberInfo> GetMembers([JANotNull] Expression expression, bool passIndexer = true)
+		static IEnumerable<MemberInfo> GetMembers(Expression expression, bool passIndexer = true)
 		{
-			MemberInfo lastMember = null;
+			MemberInfo? lastMember = null;
 
 			for (;;)
 			{

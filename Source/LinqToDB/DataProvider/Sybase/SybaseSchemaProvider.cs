@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Sybase
 		// sybase provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

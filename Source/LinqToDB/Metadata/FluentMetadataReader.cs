@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,7 +68,7 @@ namespace LinqToDB.Metadata
 
 			foreach(var p in parents)
 			{
-				var pattrs = GetAttributes<T>(p.Type, p.Member, inherit);
+				var pattrs = GetAttributes<T>(p.Type, p.Member!, inherit);
 				if (pattrs.Length > 0)
 					return pattrs;
 			}

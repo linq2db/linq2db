@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Database procedure or function parameter description.
@@ -12,7 +9,7 @@ namespace LinqToDB.SchemaProvider
 		/// Gets or sets unique procedure identifier.
 		/// NOTE: this is not fully-qualified procedure name (even if it used right now for some providers as procedure identifier).
 		/// </summary>
-		public string ProcedureID;
+		public string ProcedureID = null!;
 		/// <summary>
 		/// Gets or sets parameter position.
 		/// </summary>
@@ -20,11 +17,11 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets or sets parameter name.
 		/// </summary>
-		public string ParameterName;
+		public string? ParameterName;
 		/// <summary>
 		/// Get or sets database type for parameter.
 		/// </summary>
-		public string DataType;
+		public string? DataType;
 		/// <summary>
 		/// Gets or sets parameter type length attribute.
 		/// </summary>
@@ -52,15 +49,15 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Parameter's user-defined type(UDT) catalog/database.
 		/// </summary>
-		public string UDTCatalog;
+		public string? UDTCatalog;
 		/// <summary>
 		/// Parameter's user-defined type(UDT) schema/owner.
 		/// </summary>
-		public string UDTSchema;
+		public string? UDTSchema;
 		/// <summary>
 		/// Parameter's user-defined type(UDT) name.
 		/// </summary>
-		public string UDTName;
+		public string? UDTName;
 		/// <summary>
 		/// Gets flag indicating that it is nullable parameter.
 		/// </summary>

@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
@@ -9,8 +8,8 @@ namespace LinqToDB.ServiceModel
 		public int            FieldCount   { get; set; }
 		public int            RowCount     { get; set; }
 		public Guid           QueryID      { get; set; }
-		public string[]       FieldNames   { get; set; }
-		public Type[]         FieldTypes   { get; set; }
-		public List<string[]> Data         { get; set; }
+		public string[]       FieldNames   { get; set; } = null!;
+		public Type[]         FieldTypes   { get; set; } = null!;
+		public List<string[]> Data         { get; set; } = null!;
 	}
 }

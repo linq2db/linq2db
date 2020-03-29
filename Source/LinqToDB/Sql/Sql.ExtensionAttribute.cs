@@ -163,9 +163,8 @@ namespace LinqToDB
 
 		public class SqlExtension
 		{
-			public Dictionary<string,List<SqlExtensionParam>> NamedParameters => _namedParameters;
+			public Dictionary<string, List<SqlExtensionParam>> NamedParameters { get; }
 
-			readonly Dictionary<string,List<SqlExtensionParam>> _namedParameters;
 			public int ChainPrecedence { get; set; }
 
 			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, bool isAggregate,
@@ -176,13 +175,13 @@ namespace LinqToDB
 				foreach (var value in parameters)
 					if (value == null) throw new ArgumentNullException(nameof(parameters));
 
-				SystemType       = systemType;
-				Expr             = expr;
-				Precedence       = precedence;
-				ChainPrecedence  = chainPrecedence;
-				IsAggregate      = isAggregate;
-				CanBeNull        = canBeNull;
-				_namedParameters = parameters.ToLookup(p => p.Name ?? string.Empty).ToDictionary(p => p.Key, p => p.ToList());
+				SystemType      = systemType;
+				Expr            = expr;
+				Precedence      = precedence;
+				ChainPrecedence = chainPrecedence;
+				IsAggregate     = isAggregate;
+				CanBeNull       = canBeNull;
+				NamedParameters = parameters.ToLookup(p => p.Name ?? string.Empty).ToDictionary(p => p.Key, p => p.ToList());
 			}
 
 			public SqlExtension(string expr, params SqlExtensionParam[] parameters)
@@ -205,10 +204,10 @@ namespace LinqToDB
 			{
 				var key = param.Name ?? string.Empty;
 
-				if (!_namedParameters.TryGetValue(key, out var list))
+				if (!NamedParameters.TryGetValue(key, out var list))
 				{
 					list = new List<SqlExtensionParam>();
-					_namedParameters.Add(key, list);
+					NamedParameters.Add(key, list);
 				}
 
 				list.Add(param);
@@ -217,14 +216,14 @@ namespace LinqToDB
 
 			public IEnumerable<SqlExtensionParam> GetParametersByName(string name)
 			{
-				if (_namedParameters.TryGetValue(name, out var list))
+				if (NamedParameters.TryGetValue(name, out var list))
 					return list;
 				return Enumerable.Empty<SqlExtensionParam>();
 			}
 
 			public SqlExtensionParam[] GetParameters()
 			{
-				return _namedParameters.Values.SelectMany(_ => _).ToArray();
+				return NamedParameters.Values.SelectMany(_ => _).ToArray();
 			}
 		}
 
@@ -606,7 +605,7 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence, IsAggregate, _canBeNull);
+				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, _canBeNull);
 
 				SqlExtensionParam? result = null;
 

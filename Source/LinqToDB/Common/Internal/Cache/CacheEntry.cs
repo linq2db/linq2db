@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -15,11 +14,11 @@ namespace LinqToDB.Common.Internal.Cache
         private static readonly Action<object> ExpirationCallback = ExpirationTokensExpired;
         private readonly Action<CacheEntry> _notifyCacheOfExpiration;
         private readonly Action<CacheEntry> _notifyCacheEntryDisposed;
-        private IList<IDisposable> _expirationTokenRegistrations;
-        private IList<PostEvictionCallbackRegistration> _postEvictionCallbacks;
+        private IList<IDisposable>? _expirationTokenRegistrations;
+        private IList<PostEvictionCallbackRegistration>? _postEvictionCallbacks;
         private bool _isExpired;
 
-        internal IList<IChangeToken> _expirationTokens;
+        internal IList<IChangeToken>? _expirationTokens;
         internal DateTimeOffset? _absoluteExpiration;
         internal TimeSpan? _absoluteExpirationRelativeToNow;
         private TimeSpan? _slidingExpiration;
@@ -173,7 +172,7 @@ namespace LinqToDB.Common.Internal.Cache
 
         public object Key { get; private set; }
 
-        public object Value { get; set; }
+        public object? Value { get; set; }
 
         internal DateTimeOffset LastAccessed { get; set; }
 
@@ -325,7 +324,7 @@ namespace LinqToDB.Common.Internal.Cache
             }
         }
 
-        internal void PropagateOptions(CacheEntry parent)
+        internal void PropagateOptions(CacheEntry? parent)
         {
             if (parent == null)
             {

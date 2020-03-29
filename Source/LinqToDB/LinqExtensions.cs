@@ -2806,8 +2806,7 @@ namespace LinqToDB
 		/// <returns>Unsorted query.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<TSource> RemoveOrderBy<TSource>(
-			[NotNull]                this IQueryable<TSource> source)
+		public static IQueryable<TSource> RemoveOrderBy<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 

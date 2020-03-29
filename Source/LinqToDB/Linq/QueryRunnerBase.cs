@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 		public Expression           Expression       { get; set; }
 		public object?[]?           Parameters       { get; set; }
 		public object?[]?           Preambles        { get; set; }
-		public abstract Expression  MapperExpression { get; set; }
+		public abstract Expression? MapperExpression { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();

@@ -386,7 +386,7 @@ namespace LinqToDB.SqlQuery
 									var a = f.PhysicalName;
 									return a.IsNullOrEmpty()
 										? "c1"
-										: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+										: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 								},
 								StringComparer.OrdinalIgnoreCase);
 
@@ -421,7 +421,7 @@ namespace LinqToDB.SqlQuery
 										var a = c.Alias;
 										return a.IsNullOrEmpty()
 											? "c1"
-											: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+											: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
 									StringComparer.OrdinalIgnoreCase);
 
@@ -476,7 +476,7 @@ namespace LinqToDB.SqlQuery
 				ts =>
 				{
 					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+					return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 				},
 				StringComparer.OrdinalIgnoreCase);
 

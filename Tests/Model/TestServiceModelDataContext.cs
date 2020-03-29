@@ -21,7 +21,7 @@ namespace Tests.Model
 			},
 			new EndpointAddress("net.tcp://localhost:" + ip + "/LinqOverWCF"))
 		{
-			((NetTcpBinding)Binding).ReaderQuotas.MaxStringContentLength = 1000000;
+			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 		}
 
 		public ITable<Person>                 Person                 { get { return this.GetTable<Person>();                 } }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -17,6 +15,7 @@ namespace LinqToDB.Linq
 	using Async;
 	using Extensions;
 	using Data;
+	using LinqToDB.Common.Internal;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
@@ -89,9 +88,6 @@ namespace LinqToDB.Linq
 		}
 		}
 
-		static readonly Task<DataConnectionTransaction?> CompletedTransactionTask =
-			Task.FromResult<DataConnectionTransaction?>(null);
-
 		DataConnectionTransaction? StartLoadTransaction(Query query)
 		{
 			if (!query.IsAnyPreambles())
@@ -112,7 +108,7 @@ namespace LinqToDB.Linq
 		Task<DataConnectionTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
 			if (!query.IsAnyPreambles())
-				return CompletedTransactionTask;
+				return TaskCache.CompletedTransaction;
 
 			DataConnection? dc = null;
 			if (DataContext is DataConnection dataConnection)
@@ -121,7 +117,7 @@ namespace LinqToDB.Linq
 				dc = dataContext.GetDataConnection();
 
 			if (dc == null || dc.TransactionAsync != null)
-				return CompletedTransactionTask;
+				return TaskCache.CompletedTransaction;
 
 			return dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!;
 		}

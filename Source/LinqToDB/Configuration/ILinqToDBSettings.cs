@@ -1,5 +1,3 @@
-#nullable disable
-using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.Configuration
@@ -16,11 +14,11 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets name of default connection configuration.
 		/// </summary>
-		string                                 DefaultConfiguration { get; }
+		string?                                DefaultConfiguration { get; }
 		/// <summary>
 		/// Gets name of default data provider configuration.
 		/// </summary>
-		string                                 DefaultDataProvider  { get; }
+		string?                                DefaultDataProvider  { get; }
 		/// <summary>
 		/// Gets list of connection configurations.
 		/// </summary>

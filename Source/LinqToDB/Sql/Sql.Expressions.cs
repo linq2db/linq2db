@@ -606,7 +606,7 @@ namespace LinqToDB
 		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[JetBrains.Annotations.NotNull, DataExtensions.SqlFormattableComparer] FormattableString sql
+			[DataExtensions.SqlFormattableComparer] FormattableString sql
 			)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");

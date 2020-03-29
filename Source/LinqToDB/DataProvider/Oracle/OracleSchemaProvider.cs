@@ -305,7 +305,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -327,13 +327,13 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
-			if (dataType.StartsWith("TIMESTAMP"))
+			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -359,7 +359,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case "XMLTYPE"                : return DataType.Xml;
 				case "ROWID"                  : return DataType.VarChar;
 				default:
-					if (dataType.StartsWith("TIMESTAMP"))
+					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
 					break;
 			}
@@ -372,7 +372,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
