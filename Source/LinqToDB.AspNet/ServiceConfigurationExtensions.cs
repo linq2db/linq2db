@@ -12,15 +12,15 @@ namespace LinqToDB.AspNet
 	{
 		public static IServiceCollection AddLinqToDb(
 			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDbConnectionOptions> configure,
+			Action<IServiceProvider, LinqToDbConnectionOptionsBuilder> configure,
 			ServiceLifetime lifetime = ServiceLifetime.Scoped)
 		{
-			return AddLinqToDbContext<DataConnection>(serviceCollection, configure, lifetime);
+			return AddLinqToDbContext<IDataContext, DataConnection>(serviceCollection, configure, lifetime);
 		}
 		
 		public static IServiceCollection AddLinqToDbContext<TContext>(
 			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDbConnectionOptions> configure,
+			Action<IServiceProvider, LinqToDbConnectionOptionsBuilder> configure,
 			ServiceLifetime lifetime = ServiceLifetime.Scoped) where TContext : IDataContext
 		{
 			return AddLinqToDbContext<TContext, TContext>(serviceCollection, configure, lifetime);
@@ -28,17 +28,17 @@ namespace LinqToDB.AspNet
 
 		public static IServiceCollection AddLinqToDbContext<TContext, TContextImplementation>(
 			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDbConnectionOptions> configure,
-			ServiceLifetime lifetime = ServiceLifetime.Scoped) where TContextImplementation : IDataContext
+			Action<IServiceProvider, LinqToDbConnectionOptionsBuilder> configure,
+			ServiceLifetime lifetime = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
 		{
 			CheckContextConstructor<TContextImplementation>();
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions<TContextImplementation>),
 				provider =>
 				{
-					var options = new LinqToDbConnectionOptions<TContextImplementation>();
-					configure(provider, options);
-					return options;
+					var builder = new LinqToDbConnectionOptionsBuilder();
+					configure(provider, builder);
+					return builder.Build<TContextImplementation>();
 				},
 				lifetime));
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),

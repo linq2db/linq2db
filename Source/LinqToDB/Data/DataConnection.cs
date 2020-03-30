@@ -236,8 +236,8 @@ namespace LinqToDB.Data
 			
 			switch (options.SetupType)
 			{
-				case LinqToDbConnectionOptions.ConnectionSetupType.ConfigurationString:
-				case LinqToDbConnectionOptions.ConnectionSetupType.DefaultConfiguration:
+				case ConnectionSetupType.ConfigurationString:
+				case ConnectionSetupType.DefaultConfiguration:
 					{
 						ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
 						if (ConfigurationString == null)
@@ -252,7 +252,7 @@ namespace LinqToDB.Data
 						break;
 					}
 
-				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionString:
+				case ConnectionSetupType.ConnectionString:
 					{
 						if (options.ProviderName == null && options.DataProvider == null)
 
@@ -273,7 +273,7 @@ namespace LinqToDB.Data
 						break;
 					}			
 				
-				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionFactory:
+				case ConnectionSetupType.ConnectionFactory:
 					{
 						//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 						//is this expected?
@@ -293,7 +293,7 @@ namespace LinqToDB.Data
 						break;
 					}			
 				
-				case LinqToDbConnectionOptions.ConnectionSetupType.Connection:
+				case ConnectionSetupType.Connection:
 					{
 						if (!Configuration.AvoidSpecificDataProviderAPI
 						    && !options.DataProvider.IsCompatibleConnection(options.DbConnection))
@@ -306,7 +306,7 @@ namespace LinqToDB.Data
 						break;
 					}
 
-				case LinqToDbConnectionOptions.ConnectionSetupType.Transaction:
+				case ConnectionSetupType.Transaction:
 					{ 
 						if (!Configuration.AvoidSpecificDataProviderAPI
 						    && !options.DataProvider.IsCompatibleConnection(options.DbTransaction.Connection))
