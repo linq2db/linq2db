@@ -64,12 +64,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 == parameterValues.Val2 + 123)
 					.Merge();
 
-				var parametersCount = 8;
-
-				if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
-					parametersCount = 7;
-
-				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -128,12 +123,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				var parametersCount = 7;
-
-				if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
-					parametersCount = 6;
-
-				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(7, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
