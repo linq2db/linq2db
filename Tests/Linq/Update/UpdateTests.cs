@@ -471,6 +471,39 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Update14([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Insert(new Person()
+				{
+					FirstName = "Update14",
+					LastName  = ""
+				});
+
+				try
+				{
+					var name = "Update14";
+					var idx = 4;
+
+					db.Person
+						.Where(_ => _.FirstName.StartsWith("Update14"))
+						.Update(p => new Person()
+						{
+							LastName = (Sql.AsSql(name).Length + idx).ToString(),
+						});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Update14")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Update14")).Delete();
+				}
+			}
+		}
+
+		[Test]
 		public void UpdateComplex1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

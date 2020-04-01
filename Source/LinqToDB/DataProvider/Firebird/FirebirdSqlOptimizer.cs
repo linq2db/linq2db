@@ -82,13 +82,8 @@
 			// - parameter used as direct inserted/updated value in insert/update queries (including merge)
 			//
 			// When CAST is needed:
-			// - in select column expression at any position (except subquery)
-			// - in composite expression in merge update setter
-
-			// TODO: following cases need testing as it is not clear yet wether they work or not
-			// - composite expression in merge insert setter
-			// - composite expression in insert setter
-			// - composite expression in update setter
+			// - in select column expression at any position (except nested subquery): select, subquery, merge source
+			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
 			var visitor = new QueryVisitor();
 			statement = visitor.ConvertImmutable(statement, e =>
@@ -127,12 +122,20 @@
 							break;
 						}
 
-						// complex update statement in merge
+						// enumerable merge source
+						if (visitor.Stack[i] is SqlValuesTable)
+						{
+							replace = true;
+							break;
+						}
+
+						// complex insert/update statement, including merge
 						if (visitor.Stack[i] is SqlSetExpression
-							&& i == 2
+							&& i >= 2
 							&& i < visitor.Stack.Count - 1 // not just parameter setter
-							&& visitor.Stack[i - 1] is SqlUpdateClause
-							&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement)
+							&& (visitor.Stack[i - 1] is SqlUpdateClause
+								|| visitor.Stack[i - 1] is SqlInsertClause
+								|| visitor.Stack[i - 1] is SqlMergeOperationClause))
 						{
 							replace = true;
 							break;

@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -587,6 +588,72 @@ namespace Tests.xUpdate
 				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+			}
+		}
+
+		[Test]
+		public void TestParametersInSourceQueryFirebird([IncludeDataSources(false, TestProvName.AllFirebird)]
+			string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var param = DateTime.Now;
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db).Select(_ => new { _.Id, Val = (DateTime?)param }))
+					.On((t, s) => t.Id == s.Id && s.Val != null)
+					.UpdateWhenMatched((t, s) => new TestMapping1()
+					{
+						Field1 = 111,
+					})
+					.Merge();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+
+				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(111, result[0].Field1);
+			}
+		}
+
+		[Test]
+		public void TestParametersInSourceEnumerableFirebird([IncludeDataSources(false, TestProvName.AllFirebird)]
+			string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var param = TimeSpan.FromMinutes(5);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db).ToList().Select(_ => new { _.Id, Val = (TimeSpan?)param }))
+					.On((t, s) => t.Id == s.Id && s.Val != null)
+					.UpdateWhenMatched((t, s) => new TestMapping1()
+					{
+						Field1 = 111,
+					})
+					.Merge();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+
+				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(111, result[0].Field1);
 			}
 		}
 	}
