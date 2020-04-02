@@ -280,7 +280,7 @@ namespace LinqToDB.Expressions
 					var handlerGenerator = new ExpressionGenerator(this);
 					var delegateVariable = handlerGenerator.DeclareVariable(wrapperEvent.EventHandlerType, "handler");
 
-					handlerGenerator.Assign(delegateVariable, Expression.Field(pWrapper, "_" + eventName));
+					handlerGenerator.Assign(delegateVariable, ExpressionHelper.Field(pWrapper, "_" + eventName));
 
 					// returning event is a bad idea
 					if (returnType != typeof(void))
@@ -297,7 +297,7 @@ namespace LinqToDB.Expressions
 
 					subscribeGenerator.AddExpression(
 						Expression.Call(
-							Expression.Convert(Expression.Property(pWrapper, nameof(TypeWrapper.instance_)), targetType),
+							Expression.Convert(ExpressionHelper.Property(pWrapper, nameof(TypeWrapper.instance_)), targetType),
 							ei.AddMethod,
 							Expression.Lambda(delegateType, handlerGenerator.ResultExpression, parameters)));
 				}
@@ -326,7 +326,7 @@ namespace LinqToDB.Expressions
 					expr = MapExpressionInternal(Expression.Lambda(expr, paramExpressions), paramValues);
 
 					if (returnType != null && typeof(TypeWrapper).IsSameOrParentOf(returnType))
-						expr = Expression.Property(Expression.Convert(expr, returnType), nameof(TypeWrapper.instance_));
+						expr = ExpressionHelper.Property(Expression.Convert(expr, returnType), nameof(TypeWrapper.instance_));
 
 					return expr;
 				}
@@ -1011,7 +1011,7 @@ namespace LinqToDB.Expressions
 					if (typeof(TypeWrapper).IsSameOrParentOf(oldParameter.Type))
 						parametersMap.Add(
 							mappedLambda.Parameters[i],
-							Expression.Convert(Expression.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
+							Expression.Convert(ExpressionHelper.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
 					else if (oldParameter.Type.IsEnum)
 						parametersMap.Add(
 							mappedLambda.Parameters[i],

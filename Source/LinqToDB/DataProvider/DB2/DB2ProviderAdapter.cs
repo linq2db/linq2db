@@ -300,7 +300,7 @@ namespace LinqToDB.DataProvider.DB2
 
 							if (register)
 							{
-								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
+								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).Compile();
 								mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 							}
 

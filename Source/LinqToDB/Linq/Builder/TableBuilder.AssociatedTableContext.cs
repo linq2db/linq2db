@@ -470,8 +470,8 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							var thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
-							var otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
+							var thisProp  = ExpressionHelper.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
+							var otherProp = ExpressionHelper.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 
 							var ex = ExpressionBuilder.Equal(tableContext.Builder.MappingSchema, otherProp, thisProp);
 

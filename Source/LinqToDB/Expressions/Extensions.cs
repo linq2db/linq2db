@@ -32,7 +32,7 @@ namespace LinqToDB.Expressions
 				try
 				{
 					var l = Expression.Lambda<Func<Expression,string>>(
-						Expression.PropertyOrField(p, "DebugView"),
+						ExpressionHelper.PropertyOrField(p, "DebugView"),
 						p);
 
 					_getDebugView = l.Compile();
@@ -1717,7 +1717,7 @@ namespace LinqToDB.Expressions
 					Expression.Constant(mi.Name));
 			}
 			else
-				return Expression.PropertyOrField(obj, mi.Name);
+				return Expression.MakeMemberAccess(obj, mi);
 		}
 	}
 }

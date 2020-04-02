@@ -1440,8 +1440,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var body = convertExpr.GetBody(newExpr.ValueExpression);
 
-						newExpr.ValueExpression      = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-						newExpr.DbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+						newExpr.ValueExpression      = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+						newExpr.DbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 					}
 				}
 
@@ -1581,7 +1581,7 @@ namespace LinqToDB.Linq.Builder
 
 							var expr = Expression.Call(
 								minf,
-								Expression.PropertyOrField(e.Object, "Values"),
+								ExpressionHelper.PropertyOrField(e.Object!, "Values"),
 								e.Arguments[0]);
 
 							predicate = ConvertInPredicate(context!, expr);
@@ -1595,7 +1595,7 @@ namespace LinqToDB.Linq.Builder
 
 							var expr = Expression.Call(
 								minf,
-								Expression.PropertyOrField(e.Object, "Keys"),
+								ExpressionHelper.PropertyOrField(e.Object!, "Keys"),
 								e.Arguments[0]);
 
 							predicate = ConvertInPredicate(context!, expr);
@@ -2304,8 +2304,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var body = expr.GetBody(accessorExpression);
 
-					accessorExpression           = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-					dbDataTypeAccessorExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+					accessorExpression           = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+					dbDataTypeAccessorExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 				}
 			}
 			else
@@ -2316,8 +2316,8 @@ namespace LinqToDB.Linq.Builder
 					if (dp?.Name?.IsNullOrEmpty() == false)
 						name = dp.Name;
 
-					dbDataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.DbDataType));
-					accessorExpression           = Expression.PropertyOrField(accessorExpression, nameof(DataParameter.Value));
+					dbDataTypeAccessorExpression = ExpressionHelper.Property(accessorExpression, nameof(DataParameter.DbDataType));
+					accessorExpression           = ExpressionHelper.Property(accessorExpression, nameof(DataParameter.Value));
 				}
 				else
 				{
@@ -2698,7 +2698,7 @@ namespace LinqToDB.Linq.Builder
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
-				var left = Expression.PropertyOrField(obj, field.Name);
+				var left = ExpressionHelper.PropertyOrField(obj, field.Name);
 				var code = m.m.Code;
 
 				if (code == null)

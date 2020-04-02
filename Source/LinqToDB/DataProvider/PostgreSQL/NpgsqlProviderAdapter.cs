@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var pEntity   = Expression.Parameter(typeof(TEntity));
 
 			var pWriter = generator.AddVariable(Expression.Parameter(_npgsqlBinaryImporterType));
-			generator.Assign(pWriter, Expression.Convert(Expression.PropertyOrField(pWriterIn, "instance_"), _npgsqlBinaryImporterType));
+			generator.Assign(pWriter, Expression.Convert(ExpressionHelper.Property(pWriterIn, nameof(TypeWrapper.instance_)), _npgsqlBinaryImporterType));
 
 			generator.AddExpression(generator.MapAction((NpgsqlBinaryImporter importer) => importer.StartRow(), pWriter));
 
@@ -319,8 +319,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								var tupleToInetTypeMapper = Expression.Lambda(
 										Expression.New(
 											npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), typeof(int) }),
-											Expression.Field(p, "Item1"),
-											Expression.Field(p, "Item2")),
+											ExpressionHelper.Field(p, "Item1"),
+											ExpressionHelper.Field(p, "Item2")),
 										p);
 								mappingSchema.SetConvertExpression(inetTupleType!, npgsqlInetType, tupleToInetTypeMapper);
 							}

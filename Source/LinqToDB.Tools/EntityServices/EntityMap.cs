@@ -11,6 +11,7 @@ namespace LinqToDB.Tools.EntityServices
 {
 	using System.Diagnostics.CodeAnalysis;
 	using Common;
+	using LinqToDB.Expressions;
 	using Mapper;
 	using Mapping;
 	using Reflection;
@@ -119,16 +120,16 @@ namespace LinqToDB.Tools.EntityServices
 					var keyExpression = Expression.Constant(new { Value = key });
 
 					bodyExpression = Expression.Equal(
-						Expression.PropertyOrField(p, _keyColumns![0].Name),
-						Expression.Convert(Expression.PropertyOrField(keyExpression, "Value"), _keyColumns[0].Type));
+						ExpressionHelper.PropertyOrField(p, _keyColumns![0].Name),
+						Expression.Convert(ExpressionHelper.PropertyOrField(keyExpression, "Value"), _keyColumns[0].Type));
 				}
 				else
 				{
 					var keyExpression = Expression.Constant(key);
 					var expressions   = _keyColumns.Select(kc =>
 						Expression.Equal(
-							Expression.PropertyOrField(p, kc.Name),
-							Expression.Convert(Expression.PropertyOrField(keyExpression, kc.Name), kc.Type)) as Expression);
+							ExpressionHelper.PropertyOrField(p, kc.Name),
+							Expression.Convert(ExpressionHelper.PropertyOrField(keyExpression, kc.Name), kc.Type)) as Expression);
 
 					bodyExpression = expressions.Aggregate(Expression.AndAlso);
 				}

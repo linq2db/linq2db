@@ -541,7 +541,7 @@ namespace LinqToDB.Common
 
 				if (from.IsNullable())
 					ex = Tuple.Create(
-						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
+						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
 				else if (from.IsClass)
 					ex = Tuple.Create(

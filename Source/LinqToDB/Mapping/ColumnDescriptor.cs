@@ -82,7 +82,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var expr = Expression.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
 				StorageType = expr.Type;
 				StorageInfo = expr.Member;
 			}
@@ -433,7 +433,7 @@ namespace LinqToDB.Mapping
 					getterExpr = Expression.Block(new[] { variable },
 						Expression.Assign(variable, expr.GetBody(getterExpr)),
 						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
-							Expression.PropertyOrField(variable, "Value"), Expression.Constant(null))
+							ExpressionHelper.PropertyOrField(variable, "Value"), Expression.Constant(null))
 					);
 				}
 				else

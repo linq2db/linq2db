@@ -8,6 +8,7 @@ namespace LinqToDB.ServiceModel
 {
 	using Extensions;
 	using Linq;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 
@@ -281,7 +282,7 @@ namespace LinqToDB.ServiceModel
 					{
 						var p = Expression.Parameter(typeof(object), "p");
 						var l = Expression.Lambda<Func<object?,IQueryable>>(
-							Expression.PropertyOrField(
+							ExpressionHelper.PropertyOrField(
 								Expression.Convert(p, typeof(T)),
 								resourceSet.Name),
 							p);
