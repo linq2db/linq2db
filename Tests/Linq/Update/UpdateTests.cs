@@ -478,7 +478,7 @@ namespace Tests.xUpdate
 				db.Insert(new Person()
 				{
 					FirstName = "Update14",
-					LastName  = ""
+					LastName  = "whatever"
 				});
 
 				try
