@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -16,14 +15,13 @@ namespace LinqToDB.DataProvider.Informix
 		static void SetQueryParameter(IQueryElement element)
 		{
 			if (element is SqlParameter p)
-				// enforce binary as parameters
-				if (p.Type.SystemType == typeof(byte[]) || p.Type.SystemType == typeof(Binary))
-					p.IsQueryParameter = true;
+			{
 				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
 				// intervals explicitly
-				else if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
+				if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
 						&& p.Type.DataType != DataType.Int64)
 					p.IsQueryParameter = false;
+			}
 		}
 
 		static void ClearQueryParameter(IQueryElement element)
@@ -38,6 +36,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
+			// TODO: could we move it to SqlFlags? it is needed for Firebird too
 			// Informix doesn't support parameters in select list
 			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;

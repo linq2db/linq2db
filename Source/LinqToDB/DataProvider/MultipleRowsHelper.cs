@@ -81,7 +81,9 @@ namespace LinqToDB.DataProvider
 					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
 						column.DataType, column.DbType)
 					{
-						Size = column.Length
+						Size      = column.Length,
+						Precision = column.Precision,
+						Scale     = column.Scale
 					});
 				}
 

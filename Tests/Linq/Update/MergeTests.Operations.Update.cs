@@ -261,6 +261,57 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void SameSourceUpdateWithComplexUpdateSet([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var name = "test";
+				var idx  = 6;
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatched((t, s) => new TestMapping1()
+					{
+						Field1 = t.Field1 + s.Field1,
+						Field2 = Sql.AsSql(name).Length + idx,
+						Field3 = t.Field3 + s.Field3,
+						Field4 = t.Field4 + s.Field4,
+						Field5 = t.Field5 + s.Field5
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+
+				Assert.AreEqual(3, result[2].Id);
+				Assert.IsNull(result[2].Field1);
+				Assert.AreEqual(10, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.IsNull(result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(10, result[3].Field1);
+				Assert.AreEqual(10, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.IsNull(result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
+
+		[Test]
 		public void UpdatePartialSourceProjection_KnownFieldInSetter([MergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))

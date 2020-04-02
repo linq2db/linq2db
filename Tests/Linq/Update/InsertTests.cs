@@ -1314,6 +1314,47 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertOrUpdate4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					}));
+
+					for (var i = 0; i < 3; i++)
+					{
+						var diagnosis = "abc";
+						db.Patient.InsertOrUpdate(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = (Sql.AsSql(diagnosis).Length + i).ToString(),
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							});
+					}
+
+					Assert.AreEqual("3", db.Patient.Single(p => p.PersonID == id).Diagnosis);
+				}
+				finally
+				{
+					db.Patient.Delete(p => p.PersonID == id);
+					db.Person.Delete(p => p.ID == id);
+				}
+			}
+		}
+
+		[Test]
 		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
@@ -1491,6 +1532,35 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+				}
+			}
+		}
+
+		[Test]
+		public void Insert16([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+
+				try
+				{
+					var name = "Insert16";
+					var idx = 4;
+
+					db.Person.Insert(() => new Person()
+					{
+						FirstName = "Insert16",
+						LastName  = (Sql.AsSql(name).Length + idx).ToString(),
+						Gender    = Gender.Male,
+					});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
 				}
 			}
 		}
