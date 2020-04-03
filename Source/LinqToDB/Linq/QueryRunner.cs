@@ -269,6 +269,20 @@ namespace LinqToDB.Linq
 
 		private static SqlStatement NormalizeParameters(SqlStatement statement, List<ParameterAccessor> accessors)
 		{
+			// remember accessor indexes
+			new QueryVisitor().VisitAll(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						var idx = accessors.FindIndex(a => object.ReferenceEquals(a.SqlParameter, parameter));
+						parameter.AccessorId = idx >= 0 ? (int?)idx : null;
+					}
+				}
+			});
+
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
 			statement = NormalizeExpressions(statement);
 
