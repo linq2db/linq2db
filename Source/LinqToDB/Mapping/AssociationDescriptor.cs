@@ -118,6 +118,21 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Generates table alias for association.
+		/// </summary>
+		/// <returns>Generated alias.</returns>
+		public string GenerateAlias()
+		{
+			if (!AliasName.IsNullOrEmpty())
+				return AliasName;
+
+			if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+
+			return string.Empty;
+		}
+
+		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
 		/// </summary>
 		/// <param name="parentType">Type of object that declares association</param>

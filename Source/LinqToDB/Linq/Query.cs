@@ -165,6 +165,11 @@ namespace LinqToDB.Linq
 			return _preambles?.Length > 0;
 		}
 
+		public int PreamblesCount()
+		{
+			return _preambles?.Length ?? 0;
+		}
+
 		public object?[]? InitPreambles(IDataContext dc)
 		{
 			if (_preambles == null)

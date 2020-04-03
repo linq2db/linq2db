@@ -627,7 +627,9 @@ namespace LinqToDB.Linq.Builder
 			Expression? detailQuery;
 
 			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
-			var masterParm            = Expression.Parameter(mainQueryElementType, "lw_" + association.MemberInfo.Name);
+			var alias = "lw_" + (association.MemberInfo.DeclaringType?.Name ?? "master");
+			
+			var masterParm            = Expression.Parameter(mainQueryElementType, alias);
 
 			var associationPath = new List<MemberInfo>();
 			associationPath.Insert(0, association.MemberInfo);
