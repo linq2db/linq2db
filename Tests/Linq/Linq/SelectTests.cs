@@ -1486,5 +1486,88 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		class SelectExpressionTable
+		{
+			[PrimaryKey] public int ID { get; set; }
+
+			public static readonly SelectExpressionTable[] Data = new[]
+			{
+				new SelectExpressionTable() { ID = 1 }
+			};
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		public static T Wrap1<T>(T value) => throw new InvalidOperationException();
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		public static T Wrap2<T>(T value) => value;
+
+		[Sql.Expression("{0}", ServerSideOnly = false)]
+		public static T Wrap3<T>(T value) => throw new InvalidOperationException();
+
+		[Sql.Expression("{0}", ServerSideOnly = false)]
+		public static T Wrap4<T>(T value) => value;
+
+		[Test]
+		public void SelectExpression1([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap1(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap1(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[Test]
+		public void SelectExpression2([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap2(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap2(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectExpression3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => new Guid("b3d9b51c89f9442a893bcd8a6f667d37") != new Guid("61efdcd4659d41e8910c506a9c2f31c5")).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectExpression4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
+			}
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectExpression5([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap4(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap4(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
 	}
 }
