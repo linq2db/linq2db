@@ -45,7 +45,7 @@ namespace Tests.Mapping
 			{
 				var sql = db.LastQuery;
 
-				Assert.AreEqual(sql, @"CREATE TABLE [TestTable]
+				Assert.AreEqual(sql.Replace("\r", ""), @"CREATE TABLE [TestTable]
 (
 	[ID]      INTEGER       NOT NULL,
 	[Field1]  INTEGER       NOT NULL,
@@ -57,12 +57,12 @@ namespace Tests.Mapping
 
 	CONSTRAINT [PK_TestTable] PRIMARY KEY ([ID])
 )
-");
+".Replace("\r", ""));
 			}
 		}
 
 		[Test]
-		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource] string context)
+		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource(true, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestTable>())
