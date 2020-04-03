@@ -1407,6 +1407,13 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly HashSet<Expression> AsParameters = new HashSet<Expression>();
 
+		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
+		{
+			var idx = CurrentSqlParameters.Count;
+			CurrentSqlParameters.Add(parameterAccessor);
+			parameterAccessor.SqlParameter.AccessorId = idx;
+		}
+
 		internal enum BuildParameterType
 		{
 			Default,
@@ -1447,7 +1454,7 @@ namespace LinqToDB.Linq.Builder
 
 				p = CreateParameterAccessor(
 					DataContext, newExpr.ValueExpression, newExpr.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, name!, buildParameterType, expr: convertExpr);
-				CurrentSqlParameters.Add(p);
+				AddCurrentSqlParameter(p);
 			}
 
 			_parameters.Add(expr, p);
@@ -2187,7 +2194,7 @@ namespace LinqToDB.Linq.Builder
 			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
-			CurrentSqlParameters.Add(p);
+			AddCurrentSqlParameter(p);
 
 			return p.SqlParameter;
 		}
@@ -2516,7 +2523,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				);
 
-				CurrentSqlParameters.Add(ep);
+				AddCurrentSqlParameter(ep);
 
 				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), false);
 			}

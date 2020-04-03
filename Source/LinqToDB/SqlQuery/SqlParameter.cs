@@ -176,7 +176,8 @@ namespace LinqToDB.SqlQuery
 			return
 				other is SqlParameter p
 				&& Name == p.Name
-				&& Type.Equals(p.Type);
+				&& Type.Equals(p.Type)
+				&& AccessorId == p.AccessorId;
 		}
 
 		public override int GetHashCode()
