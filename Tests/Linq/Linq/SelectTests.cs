@@ -1510,7 +1510,7 @@ namespace Tests.Linq
 		public static T Wrap4<T>(T value) => value;
 
 		[Test]
-		public void SelectExpression1([DataSources] string context)
+		public void SelectExpression1([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
@@ -1522,7 +1522,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectExpression2([DataSources] string context)
+		public void SelectExpression2([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
@@ -1533,6 +1533,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression3([DataSources] string context)
 		{
@@ -1545,6 +1546,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression4([DataSources] string context)
 		{
@@ -1555,6 +1557,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression5([DataSources] string context)
 		{
