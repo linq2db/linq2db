@@ -6,9 +6,20 @@ namespace LinqToDB.Tools
 {
 	using Common;
 	using Data;
+	using LinqToDB.Mapping;
 
 	public static class DataExtensions
 	{
+		/// <summary>
+		/// Initializes source columns, marked with <see cref="ColumnAttribute.IsIdentity"/> with values.
+		/// If column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <c>true</c>, values from sequence used.
+		/// Otherwise column initialized with values, incremented by 1 starting with max value from database for this column plus 1.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Ordered list of entities to initialize.</param>
+		/// <param name="context">Data connection to use to retrieve sequence values of max used value for column.</param>
+		/// <param name="useSequenceName">Enables identity values retrieval from sequence for columns with sequence name specified in mapping using <see cref="SequenceNameAttribute"/>.</param>
+		/// <returns>Returns new collection of identity fields initialized or <paramref name="source"/> if entity had no identity columns.</returns>
 		public static IEnumerable<T> RetrieveIdentity<T>(
 			this IEnumerable<T> source,
 			DataConnection      context,

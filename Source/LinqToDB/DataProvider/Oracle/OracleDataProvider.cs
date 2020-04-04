@@ -305,18 +305,6 @@ namespace LinqToDB.DataProvider.Oracle
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this);
 
-#pragma warning disable 618
-			if (options.RetrieveSequence)
-			{
-				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
-
-				if (!ReferenceEquals(list, source))
-					options = new BulkCopyOptions(options) { KeepIdentity = true };
-
-				source = list;
-			}
-#pragma warning restore 618
-
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,

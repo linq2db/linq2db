@@ -17,7 +17,6 @@ namespace LinqToDB.Data
 			BulkCopyTimeout        = options.BulkCopyTimeout;
 			BulkCopyType           = options.BulkCopyType;
 #pragma warning disable 612, 618
-			RetrieveSequence       = options.RetrieveSequence;
 			IgnoreSkipOnInsert     = options.IgnoreSkipOnInsert;
 #pragma warning restore 612, 618
 			CheckConstraints       = options.CheckConstraints;
@@ -39,8 +38,6 @@ namespace LinqToDB.Data
 		public int?         MaxBatchSize           { get; set; }
 		public int?         BulkCopyTimeout        { get; set; }
 		public BulkCopyType BulkCopyType           { get; set; }
-		[Obsolete("Use the Tools.RetrieveIdentity method instead.")]
-		public bool         RetrieveSequence       { get; set; }
 		[Obsolete]
 		public bool?        IgnoreSkipOnInsert     { get; set; }
 		public bool?        CheckConstraints       { get; set; }

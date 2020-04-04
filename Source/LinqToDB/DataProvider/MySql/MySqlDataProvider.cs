@@ -121,18 +121,6 @@ namespace LinqToDB.DataProvider.MySql
 			if (source == null)
 				throw new ArgumentException(nameof(source));
 
-#pragma warning disable 618
-			if (options.RetrieveSequence)
-			{
-				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
-
-				if (!ReferenceEquals(list, source))
-					options = new BulkCopyOptions(options) { KeepIdentity = true };
-
-				source = list;
-			}
-#pragma warning restore 618
-
 			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
