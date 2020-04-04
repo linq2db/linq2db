@@ -19,8 +19,6 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{
-			var firebirdQuote = FirebirdSqlBuilder.IdentifierQuoteMode;
-
 			var schema = new MappingSchema();
 
 			schema.SetDataType(typeof(MyInt), DataType.Int32);
@@ -38,11 +36,10 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value);
 
 			using (var db = new  DataConnection(context).AddMappingSchema(schema))
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			{
 				try
 				{
-					FirebirdSqlBuilder.IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto;
-
 					var temptable = db.CreateTable<Entity>();
 
 					var data = new[]
@@ -59,8 +56,6 @@ namespace Tests.UserTests
 				finally
 				{
 					db.DropTable<Entity>();
-
-					FirebirdSqlBuilder.IdentifierQuoteMode = firebirdQuote;
 				}
 
 			}
