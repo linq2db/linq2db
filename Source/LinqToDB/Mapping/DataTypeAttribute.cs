@@ -2,14 +2,13 @@
 
 namespace LinqToDB.Mapping
 {
-	// TODO: V2 - why it allows Class and Interface as target?
 	/// <summary>
 	/// This attribute allows to override default types, defined in mapping schema, for current column.
 	/// Also see <seealso cref="ColumnAttribute.DataType"/> and <seealso cref="ColumnAttribute.DbType"/>.
 	/// Applying this attribute to class or interface will have no effect.
 	/// </summary>
 	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
+		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
 	public class DataTypeAttribute : Attribute
 	{
