@@ -778,5 +778,29 @@ namespace Tests.DataProvider
 		{
 			throw new InvalidOperationException();
 		}
+
+		[Table]
+		class TestParametersTable
+		{
+			[ Column] public int Id      { get; set; }
+			[ Column] public string Text { get; set; }
+		}
+		// https://github.com/linq2db/linq2db/issues/2091
+		[Test]
+		public void TestParametersUsed([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db    = new DataConnection(context))
+			using (var table = db.CreateLocalTable<TestParametersTable>())
+			{
+				var newText = new TestParametersTable() { Id = 12, Text = "Hallo Welt!" };
+				db.Insert(newText);
+
+				var text = "bla";
+				var query = from f in table where f.Text == text select f;
+				var result = query.ToArray();
+
+				Assert.True(db.LastQuery.Contains("@"));
+			}
+		}
 	}
 }
