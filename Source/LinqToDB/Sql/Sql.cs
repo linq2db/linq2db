@@ -957,16 +957,5 @@ namespace LinqToDB
 		}
 
 		#endregion
-
-		#region Text Functions
-
-		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
-		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
-		public static bool FreeText(object table, string text)
-		{
-			throw new LinqException("'FreeText' is only server-side method.");
-		}
-
-		#endregion
 	}
 }

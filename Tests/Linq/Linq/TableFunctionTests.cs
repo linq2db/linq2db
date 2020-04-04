@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.DataProvider.SqlServer;
 	using Model;
 
 	[TestFixture]
@@ -203,7 +204,6 @@ namespace Tests.Linq
 			}
 		}
 
-#pragma warning disable CS0618
 		[Test, Category("FreeText")]
 		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
@@ -211,7 +211,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(t.Description, "sweet")
+					where Sql.Ext.SqlServer().FreeText(t.Description, "sweet")
 					select t;
 
 				var list = q.ToList();
@@ -227,7 +227,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(Sql.AllColumns(), "sweet")
+					where Sql.Ext.SqlServer().FreeText(Sql.AllColumns(), "sweet")
 					select t;
 
 				var list = q.ToList();
@@ -243,7 +243,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(t, "sweet")
+					where Sql.Ext.SqlServer().FreeText(t, "sweet")
 					select t;
 
 				var list = q.ToList();
@@ -259,7 +259,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where !Sql.FreeText(t, "sweet")
+					where !Sql.Ext.SqlServer().FreeText(t, "sweet")
 					select t;
 
 				var list = q.ToList();
@@ -267,7 +267,6 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
-#pragma warning restore CS0618
 
 		[Test]
 		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)
