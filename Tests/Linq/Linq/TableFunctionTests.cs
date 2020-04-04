@@ -166,7 +166,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>("[Description]", "sweetest candy bread and dry meat")
+					join t in db.FreeTextTable<Northwind.Category,int>(db.Category, c => c.Description, "sweetest candy bread and dry meat")
 					on c.CategoryID equals t.Key
 					select c;
 
@@ -180,22 +180,7 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
-					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>(c1 => c1.Description, "sweetest candy bread and dry meat")
-					on c.CategoryID equals t.Key
-					select c;
-
-				q.ToList();
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void FreeTextTable3([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from t in db.FreeTextTable<Northwind.Category,int>(c => c.Description, "sweetest candy bread and dry meat")
+					from t in db.FreeTextTable<Northwind.Category,int>(db.Category, c => c.Description, "sweetest candy bread and dry meat")
 					join c in db.Category
 					on t.Key equals c.CategoryID
 					select c;
@@ -288,7 +273,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Product
-					join c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
+					join c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
@@ -303,7 +288,7 @@ namespace Tests.Linq
 			{
 				var q = 
 					from t in db.Product
-					from c in db.FreeTextTable<Northwind.Category, int>("Description", "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
@@ -319,7 +304,7 @@ namespace Tests.Linq
 			{
 				var q 
 					= from t in db.Product
-					from c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
