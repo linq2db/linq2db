@@ -497,7 +497,7 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : null);
+			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : e);
 
 			return selectQuery;
 		}
@@ -1420,7 +1420,7 @@ namespace LinqToDB.SqlProvider
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = new QueryVisitor().ConvertImmutable(item, e =>
+					var newItem = new QueryVisitor().Convert(item, e =>
 					{
 						if (e is SqlField field && field.Table == tableToCompare)
 						{
@@ -1676,7 +1676,7 @@ namespace LinqToDB.SqlProvider
 				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
 				{
 					statement.Update.Table = newUpdateTable;
-					statement.Update = new QueryVisitor().ConvertImmutable(statement.Update, e =>
+					statement.Update = new QueryVisitor().Convert(statement.Update, e =>
 					{
 						if (e is SqlField field && field.Table == updateTable)
 						{
@@ -1828,7 +1828,7 @@ namespace LinqToDB.SqlProvider
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
 		{
 			var visitor = new QueryVisitor();
-			statement = visitor.ConvertImmutable(statement, e =>
+			statement = visitor.Convert(statement, e =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);
