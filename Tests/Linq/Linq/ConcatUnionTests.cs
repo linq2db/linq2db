@@ -681,7 +681,7 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void ConcatToString([DataSources] string context)
 		{
 			string pattern = "1";

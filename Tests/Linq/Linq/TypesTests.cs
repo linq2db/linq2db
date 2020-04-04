@@ -523,7 +523,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void Unicode([DataSources(
 			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllSybase)]
 			string context)

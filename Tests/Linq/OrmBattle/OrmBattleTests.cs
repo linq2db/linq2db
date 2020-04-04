@@ -337,7 +337,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void SelectSubqueryTest([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -1412,7 +1412,7 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void ComplexTest1([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
