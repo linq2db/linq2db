@@ -90,15 +90,6 @@ namespace LinqToDB
 			return value;
 		}
 
-		[Obsolete("Use ToNotNullable instead.")]
-		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static T ConvertNullable<T>(T? value)
-			where T : struct
-		{
-			return value ?? default;
-		}
-
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNull<T>(T? value)
