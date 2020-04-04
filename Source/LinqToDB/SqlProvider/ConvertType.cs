@@ -84,9 +84,6 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		NameToSchema,
 
-		[Obsolete("Use NameToSchema instead.")]
-		NameToOwner = NameToSchema,
-
 		/// <summary>
 		/// Provided name should be converted to query table name.
 		/// For example:
