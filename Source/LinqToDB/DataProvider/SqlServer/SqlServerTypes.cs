@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using System.Linq.Expressions;
 	using System.Reflection;
 	using LinqToDB.Common;
+	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
 	internal static class SqlServerTypes
@@ -71,7 +72,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var type = assembly.GetType($"{TypesNamespace}.{typeName}", true);
 
-				var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Property(null, type, "Null"), typeof(object))).Compile();
+				var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Property(type, "Null"), typeof(object))).Compile();
 
 				return new TypeInfo()
 				{ 

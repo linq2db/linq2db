@@ -441,7 +441,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (hasNull)
 				{
 					// if native provider fails here, check that you have ODAC installed properly
-					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
+					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).Compile();
 					mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 				}
 				else
@@ -457,10 +457,10 @@ namespace LinqToDB.DataProvider.Oracle
 				if (!hasValue)
 					memberExpression = valueParam;
 				else
-					memberExpression = Expression.Property(valueParam, "Value");
+					memberExpression = ExpressionHelper.Property(valueParam, "Value");
 
 				var condition = Expression.Condition(
-					Expression.Equal(valueParam, Expression.Field(null, type, "Null")),
+					Expression.Equal(valueParam, ExpressionHelper.Field(type, "Null")),
 					Expression.Constant(null, typeof(object)),
 					Expression.Convert(memberExpression, typeof(object)));
 

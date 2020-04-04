@@ -430,7 +430,7 @@ namespace LinqToDB.Linq
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
 
 			var argAccess = Expression.MakeIndex(
-				Expression.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
+				ExpressionHelper.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
 				typeof(ReadOnlyCollection<Expression>).GetProperty("Item"),
 				new[] { Expression.Constant(argIndex) });
 
@@ -452,8 +452,8 @@ namespace LinqToDB.Linq
 			if (convertExpression != null)
 			{
 				var body             = convertExpression.GetBody(getter);
-				getter               = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
@@ -493,8 +493,8 @@ namespace LinqToDB.Linq
 			if (convertExpression != null)
 			{
 				var body             = convertExpression.GetBody(getter);
-				getter               = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(

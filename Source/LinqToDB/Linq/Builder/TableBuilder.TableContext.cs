@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							exprs.Add(Expression.Assign(
 								attr?.Storage != null
-									? Expression.PropertyOrField(parentObject, attr.Storage)
+									? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
 									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
 								ex));
 						}
@@ -1317,7 +1317,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (column.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 									{
-										expression = memberExpression = Expression.PropertyOrField(
+										expression = memberExpression = ExpressionHelper.PropertyOrField(
 											Expression.Convert(memberExpression.Expression, column.MemberInfo.DeclaringType), column.MemberName);
 										break;
 									}
@@ -1330,7 +1330,7 @@ namespace LinqToDB.Linq.Builder
 								if (alias.MemberInfo.DeclaringType != memberExpression.Member.DeclaringType)
 									expr = Expression.Convert(memberExpression.Expression, alias.MemberInfo.DeclaringType);
 
-								expression = memberExpression = Expression.PropertyOrField(expr, alias.MemberName);
+								expression = memberExpression = ExpressionHelper.PropertyOrField(expr, alias.MemberName);
 							}
 						}
 					}
