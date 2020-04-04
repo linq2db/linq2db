@@ -4,7 +4,6 @@ using System.Data.SqlTypes;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
@@ -18,18 +17,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public partial class SqlServerTypesTests : DataProviderTestBase
 	{
-		[SetUp]
-		public void SetUp()
-		{
-			Configuration.LinqService.SerializeAssemblyQualifiedName = true;
-		}
-
-		[TearDown]
-		public void TearDown()
-		{
-			Configuration.LinqService.SerializeAssemblyQualifiedName = false;
-		}
-
 		[Table(Name="AllTypes2")]
 		class AllTypes2
 		{
@@ -51,6 +38,7 @@ namespace Tests.DataProvider
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
 				conn.GetTable<AllTypes2>()
@@ -79,6 +67,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
 				conn.CreateTable<MyTable>();
@@ -92,6 +81,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
@@ -154,6 +144,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -172,6 +163,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -190,6 +182,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -208,6 +201,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -226,6 +220,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -244,6 +239,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -270,6 +266,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -288,6 +285,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
 				var hid = SqlHierarchyId.Parse("/1/");
@@ -328,6 +326,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
+			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			using (var t  = db.CreateLocalTable(Issue1836.Data))
 			{

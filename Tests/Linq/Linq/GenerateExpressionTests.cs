@@ -10,21 +10,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GenerateExpressionTests : TestBase
 	{
-		[OneTimeSetUp]
-		public void SetUp()
-		{
-			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
-		}
-
-		[OneTimeTearDown]
-		public void TearDown()
-		{
-			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
-		}
-
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			using(new GenerateExpressionTest(true))
 			using (var db = GetDataContext(context))
 			{
 				var q2 =

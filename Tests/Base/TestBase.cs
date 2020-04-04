@@ -1189,6 +1189,96 @@ namespace Tests
 		}
 	}
 
+	public class PreloadGroups : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.PreloadGroups;
+
+		public PreloadGroups(bool enable)
+		{
+			Configuration.Linq.PreloadGroups = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.PreloadGroups = _oldValue;
+		}
+	}
+
+	public class GenerateExpressionTest : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.GenerateExpressionTest;
+
+		public GenerateExpressionTest(bool enable)
+		{
+			Configuration.Linq.GenerateExpressionTest = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GenerateExpressionTest = _oldValue;
+		}
+	}
+
+	public class DoNotClearOrderBys : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.DoNotClearOrderBys;
+
+		public DoNotClearOrderBys(bool enable)
+		{
+			Configuration.Linq.DoNotClearOrderBys = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.DoNotClearOrderBys = _oldValue;
+		}
+	}
+
+	public class UseBinaryAggregateExpression : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.UseBinaryAggregateExpression;
+
+		public UseBinaryAggregateExpression(bool enable)
+		{
+			Configuration.Linq.UseBinaryAggregateExpression = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.UseBinaryAggregateExpression = _oldValue;
+		}
+	}
+
+	public class GenerateFinalAliases : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Sql.GenerateFinalAliases;
+
+		public GenerateFinalAliases(bool enable)
+		{
+			Configuration.Sql.GenerateFinalAliases = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Sql.GenerateFinalAliases = _oldValue;
+		}
+	}
+
+	public class SerializeAssemblyQualifiedName : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.LinqService.SerializeAssemblyQualifiedName;
+
+		public SerializeAssemblyQualifiedName(bool enable)
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = _oldValue;
+		}
+	}
+
 	public class DisableLogging : IDisposable
 	{
 		private TraceSwitch _traceSwitch;
@@ -1207,14 +1297,16 @@ namespace Tests
 
 	public class DisableQueryCache : IDisposable
 	{
-		public DisableQueryCache()
+		private readonly bool _oldValue = Configuration.Linq.DisableQueryCache;
+
+		public DisableQueryCache(bool value = true)
 		{
-			Configuration.Linq.DisableQueryCache = true;
+			Configuration.Linq.DisableQueryCache = value;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.DisableQueryCache = false;
+			Configuration.Linq.DisableQueryCache = _oldValue;
 		}
 	}
 

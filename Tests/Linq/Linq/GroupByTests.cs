@@ -17,8 +17,8 @@ namespace Tests.Linq
 		[Test]
 		public void Simple1([DataSources] string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
-
+			using (new PreloadGroups(true))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
@@ -47,8 +47,8 @@ namespace Tests.Linq
 		[Test]
 		public void Simple2([DataSources] string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
-
+			using (new PreloadGroups(false))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -167,6 +167,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple10([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from ch in    Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
@@ -1751,6 +1752,7 @@ namespace Tests.Linq
 		[Test]
 		public void FirstGroupBy([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{

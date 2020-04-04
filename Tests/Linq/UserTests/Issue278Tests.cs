@@ -6,12 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -73,147 +71,87 @@ namespace Tests.UserTests
 		[Issue278TestData(CacheMode.CacheEnabled)]
 		public void TestPerformanceWithCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
-
-			try
-			{
-				Configuration.Linq.DisableQueryCache = false;
-
+			using (new DisableQueryCache(false))
 				TestIt(context, caseName, threadCount, actions, CacheMode.CacheEnabled);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		[Issue278TestData(CacheMode.CacheDisabled)]
 		public void TestPerformanceWithoutCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
-
-			try
-			{
-				Configuration.Linq.DisableQueryCache = true;
-
+			using (new DisableQueryCache(true))
 				TestIt(context, caseName, threadCount, actions, CacheMode.CacheDisabled);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		[Issue278TestData(CacheMode.ClearCache)]
 		public void TestPerformanceWithCacheClear(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
-
-			try
-			{
-				Configuration.Linq.DisableQueryCache = false;
-
+			using (new DisableQueryCache(false))
 				TestIt(context, caseName, threadCount, actions, CacheMode.ClearCache);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		[Issue278TestData(CacheMode.NoCacheScope)]
 		public void TestPerformanceWithNoCacheScope(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
-
-			try
-			{
-				Configuration.Linq.DisableQueryCache = false;
-
+			using (new DisableQueryCache(false))
 				TestIt(context, caseName, threadCount, actions, CacheMode.NoCacheScope);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		[Test]
 		public void TestQueryCacheFull([IncludeDataSources(TestProvName.NoopProvider)] string context)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
+			var actions     = new Action<ITestDataContext>[100];
 
-			var actions = new Action<ITestDataContext>[100];
-
-			var dbParam = Expression.Parameter(typeof(ITestDataContext), "db");
+			var dbParam     = Expression.Parameter(typeof(ITestDataContext), "db");
 			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
-			var table = Expression.Call(tableMethod, dbParam);
+			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
 
 			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
 
 			for (var i = 0; i < actions.Length; i++)
 			{
 				var predicateBody = Expression.Equal(Expression.PropertyOrField(recordParam, "ID"), Expression.Constant(i));
-				var predicate = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
-				var body = Expression.Call(where, table, predicate);
+				var predicate     = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
+				var body          = Expression.Call(where, table, predicate);
 
 				body = Expression.Call(toListMethod, body);
 
 				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
 			}
 
-			try
-			{
-				Configuration.Linq.DisableQueryCache = false;
-
+			using (new DisableQueryCache(false))
 				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		[Test]
 		public void TestQueryCacheOverflow([IncludeDataSources(TestProvName.NoopProvider)] string context)
 		{
-			var oldValue = Configuration.Linq.DisableQueryCache;
+			var actions     = new Action<ITestDataContext>[100 + 50];
 
-			var actions = new Action<ITestDataContext>[100 + 50];
-
-			var dbParam = Expression.Parameter(typeof(ITestDataContext), "db");
+			var dbParam     = Expression.Parameter(typeof(ITestDataContext), "db");
 			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
-			var table = Expression.Call(tableMethod, dbParam);
+			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
 
 			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
 
 			for (var i = 0; i < actions.Length; i++)
 			{
 				var predicateBody = Expression.Equal(Expression.PropertyOrField(recordParam, "ID"), Expression.Constant(i));
-				var predicate = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
-				var body = Expression.Call(where, table, predicate);
+				var predicate     = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
+				var body          = Expression.Call(where, table, predicate);
 
 				body = Expression.Call(toListMethod, body);
 
 				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
 			}
 
-			try
-			{
-				Configuration.Linq.DisableQueryCache = false;
-
+			using (new DisableQueryCache(false))
 				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
-			}
-			finally
-			{
-				Configuration.Linq.DisableQueryCache = oldValue;
-			}
 		}
 
 		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)

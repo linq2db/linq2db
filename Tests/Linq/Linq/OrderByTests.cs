@@ -161,31 +161,23 @@ namespace Tests.Linq
 		[Test]
 		public void OrderBy7([DataSources] string context)
 		{
-			try
+			using (new DoNotClearOrderBys(true))
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = true;
 
-				using (var db = GetDataContext(context))
-				{
+				var expected =
+					from ch in Child
+					orderby ch.ChildID % 2, ch.ChildID
+					select ch;
 
-					var expected =
-						from ch in Child
-						orderby ch.ChildID%2, ch.ChildID
-						select ch;
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID % 2
+					select new { ch };
 
-					var qry =
-						from ch in db.Child
-						orderby ch.ChildID%2
-						select new {ch};
+				var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
 
-					var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
-
-					AreEqual(expected, result);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = false;
+				AreEqual(expected, result);
 			}
 		}
 

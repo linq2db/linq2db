@@ -148,16 +148,14 @@ namespace LinqToDB.Common
 			/// <remarks>
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 			/// </remarks>
-			public static bool GuardGrouping;
+			public static bool GuardGrouping = true;
 
-#pragma warning disable 1574
 			/// <summary>
 			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseBinaryAggregateExpression;
-#pragma warning restore 1574
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
@@ -202,7 +200,7 @@ namespace LinqToDB.Common
 		public static class LinqService
 		{
 			/// <summary>
-			/// Controls format of type name, sent over WCF:
+			/// Controls format of type name, sent over remote context:
 			/// - if <c>true</c> - name from <see cref="Type.AssemblyQualifiedName"/> used;
 			/// - if <c>false</c> - name from <see cref="Type.FullName"/> used.
 			/// Default value: <c>false</c>.
