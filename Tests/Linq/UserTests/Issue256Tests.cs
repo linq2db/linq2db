@@ -19,6 +19,7 @@ namespace Tests.UserTests
 	/// Tests executed against all providers, because they could also uncover memory leaks in providers.
 	/// </summary>
 	[TestFixture]
+	[Category(TestCategory.Explicit)]
 	public class Issue256Tests : TestBase
 	{
 		static readonly DateTime _date = DateTime.Now;
@@ -63,7 +64,6 @@ namespace Tests.UserTests
 		};
 
 		[Test, Explicit("Demonstrates memory leak when fails")]
-		[Category("Explicit")]
 		public void SimpleTest(
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
@@ -72,7 +72,6 @@ namespace Tests.UserTests
 		}
 
 		[Test, Explicit("Demonstrates memory leak when fails")]
-		[Category("Explicit")]
 		public void RetryTest(
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)

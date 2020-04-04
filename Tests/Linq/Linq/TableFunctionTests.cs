@@ -159,7 +159,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeTextTable1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -174,7 +174,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeTextTable2([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -189,7 +189,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -205,7 +205,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText2([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -221,7 +221,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText3([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -237,7 +237,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText4([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -266,7 +266,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -281,7 +281,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -296,7 +296,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		[ActiveIssue(386)]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{

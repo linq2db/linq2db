@@ -7,10 +7,11 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
+	[Category(TestCategory.FTS)]
 	public partial class FullTextTests : TestBase
 	{
 		#region Issue 386 Tests
-		[Test, Category("FreeText")]
+		[Test]
 		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -27,7 +28,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -46,7 +47,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region FreeTextTable
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -70,7 +71,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -88,7 +89,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -106,7 +107,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -124,7 +125,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -142,7 +143,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -160,7 +161,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -183,7 +184,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -204,7 +205,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -226,7 +227,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -247,7 +248,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -268,7 +269,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -290,7 +291,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumns([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -313,7 +314,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -331,7 +332,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -349,7 +350,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -367,7 +368,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -385,7 +386,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -403,7 +404,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
@@ -425,7 +426,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -448,7 +449,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -465,7 +466,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -482,7 +483,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -499,7 +500,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -516,7 +517,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -533,7 +534,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -555,7 +556,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -575,7 +576,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -596,7 +597,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -616,7 +617,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -636,7 +637,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByAllTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -657,7 +658,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -679,7 +680,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -696,7 +697,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -713,7 +714,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -730,7 +731,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -747,7 +748,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableByColumnsTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3, 2)] int top)
 		{
 			using (var db = new NorthwindDB(context))
@@ -764,7 +765,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableWithParameters2(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
@@ -785,7 +786,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextTableWithLinqService([IncludeDataSources(true, TestProvName.Northwind)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -806,7 +807,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region ContainsTable
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -824,7 +825,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -842,7 +843,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -860,7 +861,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -878,7 +879,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -896,7 +897,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -914,7 +915,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -935,7 +936,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -956,7 +957,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -977,7 +978,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -995,7 +996,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1013,7 +1014,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1031,7 +1032,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumns([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1049,7 +1050,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1067,7 +1068,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageNameTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1085,7 +1086,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1103,7 +1104,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageCodeTop([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1121,7 +1122,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsTop([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3, 2)] int top)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1139,7 +1140,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1156,7 +1157,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1173,7 +1174,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1190,7 +1191,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1207,7 +1208,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1224,7 +1225,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1241,7 +1242,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1261,7 +1262,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1281,7 +1282,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1301,7 +1302,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1318,7 +1319,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1335,7 +1336,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByAllTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1352,7 +1353,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1369,7 +1370,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageNameAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1386,7 +1387,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageNameTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1403,7 +1404,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageCodeAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1420,7 +1421,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsLanguageCodeTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1437,7 +1438,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableByColumnsTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1454,7 +1455,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
@@ -1475,7 +1476,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsTableWithLinqService([IncludeDataSources(true, TestProvName.Northwind)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1495,7 +1496,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region FreeText
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByTableAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1518,7 +1519,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByTableAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1541,7 +1542,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByTableAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1564,7 +1565,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1587,7 +1588,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1610,7 +1611,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1630,7 +1631,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumns([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1653,7 +1654,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumnsLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1676,7 +1677,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByColumnsLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1699,7 +1700,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("sweetest candy bread and dry meat")] string search,
@@ -1733,7 +1734,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextWithLinqService([IncludeDataSources(true, TestProvName.Northwind)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1754,7 +1755,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void FreeTextByTwoTables([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1779,7 +1780,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Contains
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByTableAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1799,7 +1800,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByTableAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1818,7 +1819,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByTableAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1837,7 +1838,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1856,7 +1857,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1875,7 +1876,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1895,7 +1896,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumns([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1914,7 +1915,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumnsLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1933,7 +1934,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByColumnsLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -1953,7 +1954,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("bread", "meat")] string search,
@@ -1973,7 +1974,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsWithLinqService([IncludeDataSources(true, TestProvName.Northwind)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1990,7 +1991,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsByTwoTables([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -2015,7 +2016,7 @@ namespace Tests.Linq
 		#region ContainsProperty
 		// TODO: we don't test ContainsProperty against database right now as we don't have configured test database for it
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -2030,7 +2031,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -2045,7 +2046,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -2060,7 +2061,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumnWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("Title", "Author", "Title")] string property,
@@ -2078,7 +2079,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumnLanguageNameWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("Title", "Author", "Title")] string property,
@@ -2097,7 +2098,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void ContainsPropertyByColumnLanguageCodeWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("Title", "Author", "Title")] string property,

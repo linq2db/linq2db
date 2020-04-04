@@ -5,13 +5,12 @@
 	using System.Linq.Expressions;
 
 	using NUnit.Framework;
-	using LinqToDB.Common;
 
 	[TestFixture]
 	public class Issue447Tests : TestBase
 	{
 		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
-		[Category("Explicit")]
+		[Category(TestCategory.Explicit)]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestLinq2DbComplexQuery2([DataSources] string context)
 		{

@@ -53,7 +53,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Category("SkipCI")]
+		[SkipCI]
 		[Test]
 		public void Test2()
 		{

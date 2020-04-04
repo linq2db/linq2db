@@ -15,7 +15,7 @@ namespace Tests.Linq
 	using LinqToDB.Common;
 	using Model;
 
-	[TestFixture, Category("MapValue")]
+	[TestFixture]
 	public class EnumMappingTests : TestBase
 	{
 		enum TestEnum1

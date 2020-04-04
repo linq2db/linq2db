@@ -15,7 +15,7 @@ namespace Tests._Create
 	using Model;
 
 	[TestFixture]
-	[Category("Create")]
+	[Category(TestCategory.Create)]
 	// ReSharper disable once InconsistentNaming
 	// ReSharper disable once TestClassNameSuffixWarning
 	public class _CreateData : TestBase

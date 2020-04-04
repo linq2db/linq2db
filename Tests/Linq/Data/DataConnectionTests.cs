@@ -386,7 +386,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[Category("SkipCI")]
+		[SkipCI]
 		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
 		{
 			using (var db = new TestDataConnection(context))

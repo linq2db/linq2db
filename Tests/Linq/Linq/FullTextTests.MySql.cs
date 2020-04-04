@@ -7,6 +7,7 @@ using System.Linq;
 namespace Tests.Linq
 {
 	[TestFixture]
+	[Category(TestCategory.FTS)]
 	public partial class FullTextTests : TestBase
 	{
 		[Table("FullTextIndexTest")]
@@ -23,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		#region MATCH
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchPredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -41,7 +42,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchPredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +58,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchPredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))
@@ -77,7 +78,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region MATCH
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchRelevancePredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -94,7 +95,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchRelevancePredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -111,7 +112,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchRelevancePredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))

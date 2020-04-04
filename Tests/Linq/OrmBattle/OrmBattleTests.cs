@@ -92,7 +92,7 @@ namespace Tests.OrmBattle
 
 		#region Filtering tests
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -107,7 +107,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereParameterTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -128,7 +128,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereConditionsTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -139,7 +139,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(1, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereNullTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -150,7 +150,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(507, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereNullParameterTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -166,7 +166,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(19, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereNullableTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -177,7 +177,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(21, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereNullableParameterTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -189,7 +189,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(21, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereCoalesceTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -200,7 +200,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(507, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereConditionalTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -211,7 +211,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereConditionalBooleanTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -222,7 +222,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereAnonymousParameterTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -234,7 +234,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test, Category("Filtering")]
+		[Test]
 		public void WhereEntityParameterTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -252,7 +252,7 @@ namespace Tests.OrmBattle
 
 		#region Projection tests
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -265,7 +265,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectBooleanTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -278,7 +278,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectCalculatedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -299,7 +299,7 @@ namespace Tests.OrmBattle
 			CollectionAssert.AreEquivalent(expectedList, list);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectNestedCalculatedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -324,7 +324,7 @@ namespace Tests.OrmBattle
 			CollectionAssert.AreEquivalent(expectedList, list);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectAnonymousTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -364,7 +364,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectDtoTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -374,7 +374,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(Order.Count(), list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectNestedDtoTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -387,7 +387,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(267, list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectManyAnonymousTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -399,7 +399,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(817, list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectManyLetTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -412,7 +412,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(817, list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectManyGroupByTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -425,7 +425,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectManyOuterProjectionTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -435,7 +435,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test, Category("Projections")]
+		[Test]
 		public void SelectManyLeftJoinTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -452,7 +452,7 @@ namespace Tests.OrmBattle
 
 		#region Take / Skip tests
 
-		[Test, Category("Take/Skip")]
+		[Test]
 		public void TakeTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -467,7 +467,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, Category("Take/Skip")]
+		[Test]
 		public void SkipTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -482,7 +482,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, Category("Take/Skip")]
+		[Test]
 		public void TakeSkipTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -497,7 +497,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, Category("Take/Skip")]
+		[Test]
 		public void TakeNestedTest([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -520,7 +520,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Take/Skip")]
+		[Test]
 		public void ComplexTakeSkipTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -554,7 +554,7 @@ namespace Tests.OrmBattle
 
 		#region Ordering tests
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -573,7 +573,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByWhereTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -590,7 +590,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByCalculatedColumnTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -605,7 +605,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByEntityTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -620,7 +620,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByAnonymousTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -635,7 +635,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void OrderByDistinctTest([NorthwindDataContext] string context)
 		{
@@ -656,7 +656,6 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		[Category("Ordering")]
 		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void OrderBySelectManyTest([NorthwindDataContext] string context)
 		{
@@ -674,7 +673,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test, Category("Ordering")]
+		[Test]
 		public void OrderByPredicateTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -690,7 +689,7 @@ namespace Tests.OrmBattle
 
 		#region Grouping tests
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByTest([NorthwindDataContext] string context)
 		{
 			using (new GuardGrouping(false))
@@ -703,7 +702,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByReferenceTest([NorthwindDataContext] string context)
 		{
 			using (new GuardGrouping(false))
@@ -716,7 +715,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByWhereTest([NorthwindDataContext] string context)
 		{
 			using (new GuardGrouping(false))
@@ -733,7 +732,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByTestAnonymous([NorthwindDataContext] string context)
 		{
 			using (new GuardGrouping(false))
@@ -746,7 +745,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByCalculatedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -759,7 +758,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(3, list.Count);
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupBySelectManyTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -771,7 +770,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByCalculateAggregateTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -785,7 +784,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByCalculateManyAggreagetes([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -805,7 +804,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test, Category("Grouping")]
+		[Test]
 		public void GroupByAggregate([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -818,7 +817,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(71, firstGroupList.Count);
 		}
 
-		[Test, Category("Grouping"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void ComplexGroupingTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: Nested queries support is not implemented. Possible in V2
@@ -854,7 +853,7 @@ namespace Tests.OrmBattle
 
 		#region Set operations / Distinct tests
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void ConcatTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -864,7 +863,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void UnionTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -883,7 +882,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(167, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void ExceptTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -893,7 +892,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void IntersectTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -903,7 +902,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void DistinctTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -912,7 +911,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(799, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void DistinctTakeLastTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -924,7 +923,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(5, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void DistinctTakeFirstTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -936,7 +935,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(4, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void DistinctEntityTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -945,7 +944,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test, Category("Set operations")]
+		[Test]
 		public void DistinctAnonymousTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -958,7 +957,7 @@ namespace Tests.OrmBattle
 
 		#region Type casts
 
-		[Test, Category("Type casts")]
+		[Test]
 		public void TypeCastIsChildTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -969,7 +968,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test, Category("Type casts")]
+		[Test]
 		public void TypeCastIsParentTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -980,7 +979,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test, Category("Type casts"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void TypeCastIsChildConditionalTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: strange test for me
@@ -1002,7 +1001,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(list.Contains(null));
 		}
 
-		[Test, Category("Type casts")]
+		[Test]
 		public void TypeCastOfTypeTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1013,7 +1012,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test, Category("Type casts")]
+		[Test]
 		public void TypeCastAsTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1041,7 +1040,7 @@ namespace Tests.OrmBattle
 
 		#region Element operations
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void FirstTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1049,7 +1048,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void FirstOrDefaultTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1057,7 +1056,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void FirstPredicateTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1065,7 +1064,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void NestedFirstOrDefaultTest([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			Setup(context);
@@ -1084,7 +1083,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void FirstOrDefaultEntitySetTest([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			Setup(context);
@@ -1094,7 +1093,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void NestedSingleOrDefaultTest([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			Setup(context);
@@ -1104,7 +1103,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void NestedSingleTest([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			Setup(context);
@@ -1113,7 +1112,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void ElementAtTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1122,7 +1121,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual("CONSH", customer.CustomerID);
 		}
 
-		[Test, Category("Element operations")]
+		[Test]
 		public void NestedElementAtTest([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			Setup(context);
@@ -1139,7 +1138,7 @@ namespace Tests.OrmBattle
 
 		#region Contains / Any / All tests
 
-		[Test, Category("All/Any/Contains")]
+		[Test]
 		public void AllNestedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1153,7 +1152,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, Category("All/Any/Contains")]
+		[Test]
 		public void ComplexAllTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1174,7 +1173,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(result.ToList().Count, 366);
 		}
 
-		[Test, Category("All/Any/Contains")]
+		[Test]
 		public void ContainsNestedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1204,7 +1203,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, resultList.Count(i => i.HasNewOrder));
 		}
 
-		[Test, Category("All/Any/Contains")]
+		[Test]
 		public void AnyTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1214,7 +1213,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(10, result.ToList().Count);
 		}
 
-		[Test, Category("All/Any/Contains"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void AnyParameterizedTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: It may take many efforts to implement. And I don't see any benefits.
@@ -1225,7 +1224,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("All/Any/Contains")]
+		[Test]
 		public void ContainsParameterizedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1240,7 +1239,7 @@ namespace Tests.OrmBattle
 
 		#region Aggregates tests
 
-		[Test, Category("Aggregates")]
+		[Test]
 		public void SumTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1249,7 +1248,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual((double)sum1, (double)sum, doubleDelta);
 		}
 
-		[Test, Category("Aggregates")]
+		[Test]
 		public void CountPredicateTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1258,7 +1257,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(count1, count);
 		}
 
-		[Test, Category("Aggregates")]
+		[Test]
 		public void NestedCountTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1268,7 +1267,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.Except(result).Count() == 0);
 		}
 
-		[Test, Category("Aggregates")]
+		[Test]
 		public void NullableSumTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1277,7 +1276,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(sum1, sum);
 		}
 
-		[Test, Category("Aggregates")]
+		[Test]
 		public void MaxCountTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1290,7 +1289,7 @@ namespace Tests.OrmBattle
 
 		#region Join tests
 
-		[Test, Category("Join"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void GroupJoinTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: o.Customer.CustomerID - it is association that means additional JOIN. We have to decide if it is a bug.
@@ -1308,7 +1307,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test, Category("Join")]
+		[Test]
 		public void JoinTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1321,7 +1320,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Join")]
+		[Test]
 		public void JoinByAnonymousTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1335,7 +1334,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Join")]
+		[Test]
 		public void LeftJoinTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1353,7 +1352,7 @@ namespace Tests.OrmBattle
 
 		#region References tests
 
-		[Test, Category("References")]
+		[Test]
 		public void JoinByReferenceTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1366,7 +1365,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test, Category("References")]
+		[Test]
 		public void CompareReferenceTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1380,7 +1379,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test, Category("References")]
+		[Test]
 		public void ReferenceNavigationTestTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1399,7 +1398,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("References")]
+		[Test]
 		public void EntitySetCountTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1437,7 +1436,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Complex"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1464,7 +1463,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(result).Count());
 		}
 
-		[Test, Category("Complex")]
+		[Test]
 		public void ComplexTest3([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -1488,7 +1487,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Complex"), ActiveIssue(573)]
+		[Test, ActiveIssue(573)]
 		public void ComplexTest4([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: This is a bug
@@ -1508,7 +1507,7 @@ namespace Tests.OrmBattle
 				item.ToList();
 		}
 
-		[Test, Category("Complex")]
+		[Test]
 		public void ComplexTest5([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -1552,7 +1551,7 @@ namespace Tests.OrmBattle
 
 		#region Standard functions tests
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringStartsWithTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1562,7 +1561,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(13, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringStartsWithParameterizedTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1574,7 +1573,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(13, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringLengthTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1582,7 +1581,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringContainsTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1590,7 +1589,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringToLowerTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1598,7 +1597,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringRemoveTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1606,7 +1605,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringIndexOfTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1614,7 +1613,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringLastIndexOfTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1622,7 +1621,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringPadLeftTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1630,7 +1629,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void DateTimeTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1638,7 +1637,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void DateTimeDayTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1646,7 +1645,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void DateTimeDayOfWeek([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1654,7 +1653,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void DateTimeDayOfYear([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1662,7 +1661,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathAbsTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1670,7 +1669,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathTrignometricTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1678,7 +1677,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathFloorTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1687,7 +1686,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathCeilingTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1696,7 +1695,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathTruncateTest([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1705,7 +1704,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathRoundAwayFromZeroTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1714,7 +1713,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(7, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathRoundToEvenTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1723,7 +1722,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(6, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void MathRoundDefaultTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1732,7 +1731,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(6, list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void ConvertToInt32([NorthwindDataContext(false, true)] string context)
 		{
 			Setup(context);
@@ -1742,7 +1741,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void StringCompareToTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1750,7 +1749,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void ComparisonWithNullTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1758,7 +1757,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, Category("Standard functions")]
+		[Test]
 		public void EqualsWithNullTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
