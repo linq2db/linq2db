@@ -12,11 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
 using Microsoft.SqlServer.Types;
@@ -58,6 +61,15 @@ namespace DataModel
 
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
 		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
+
+		#endregion
+
+		#region FreeTextTable
+
+		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(ITable<TTable> table, Expression<Func<TTable,object?>> columns, string search)
+		{
+			return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);
+		}
 
 		#endregion
 	}
@@ -1276,6 +1288,15 @@ namespace DataModel
 		#endregion
 
 		#endregion
+
+		#region FreeTextTable
+
+		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(ITable<TTable> table, Expression<Func<TTable,object?>> columns, string search)
+		{
+			return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);
+		}
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -1942,6 +1963,24 @@ namespace DataModel
 			#nullable enable
 			public string? MiddleName { get; set; }
 			public char    Gender     { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectByKeyLowercase
+
+		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2014DB dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]",
+				new DataParameter("@id", @id, DataType.Int32)).ToList();
+		}
+
+		public partial class PersonSelectByKeyLowercaseResult
+		{
+			public int    personid  { get; set; }
+			#nullable disable
+			public string firstname { get; set; }
+			#nullable enable
 		}
 
 		#endregion

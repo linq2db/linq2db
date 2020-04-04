@@ -14,7 +14,7 @@
 	GenerateSchemaAsType = true;
 	GenerateAssociationExtensions = true;
 //	BaseEntityClass = "object";
-//GenerateSqlServerFreeText = true;
+	GenerateSqlServerFreeText = true;
 	GenerateConstructors = false;
 
 //	GenerateBackReferences = false;
