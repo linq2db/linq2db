@@ -83,7 +83,6 @@ namespace LinqToDB.Mapping
 			set => ServerName = value;
 		}
 
-		// TODO: V2: remove?
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
