@@ -21,8 +21,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static object _ifxSyncRoot = new object();
-		private static object _db2SyncRoot = new object();
+		private static readonly object _ifxSyncRoot = new object();
+		private static readonly object _db2SyncRoot = new object();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;

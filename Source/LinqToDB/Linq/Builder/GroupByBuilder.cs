@@ -267,9 +267,7 @@ namespace LinqToDB.Linq.Builder
 
 					var groupExpression = context._sequenceExpr.Transform(e =>
 					{
-						int idx;
-
-						if (parameters.TryGetValue(e, out idx))
+						if (parameters.TryGetValue(e, out var idx))
 						{
 							return
 								Expression.Convert(
@@ -599,9 +597,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var key = Tuple.Create(expression, level, flags);
 
-				SqlInfo[] info;
-
-				if (!_expressionIndex.TryGetValue(key, out info))
+				if (!_expressionIndex.TryGetValue(key, out var info))
 				{
 					info = ConvertToSql(expression, level, flags);
 

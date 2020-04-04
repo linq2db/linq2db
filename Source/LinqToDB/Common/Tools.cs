@@ -98,7 +98,7 @@ namespace LinqToDB.Common
 
 		public static string ToDebugDisplay(string str)
 		{
-			string RemoveDuplicates(string pattern, string input)
+			static string RemoveDuplicates(string pattern, string input)
 			{
 				var toSearch = pattern + pattern;
 				do

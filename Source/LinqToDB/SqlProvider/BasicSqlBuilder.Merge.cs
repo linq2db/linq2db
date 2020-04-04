@@ -213,7 +213,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("(");
 
 				if (MergeSupportsSourceDirectValues)
-					BuildValues(merge.Source, true);
+					BuildValues(merge.Source);
 				else
 					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable);
 
@@ -324,7 +324,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		private void BuildValues(SqlMergeSourceTable mergeSource, bool typed)
+		private void BuildValues(SqlMergeSourceTable mergeSource)
 		{
 			var columnTypes = new SqlDataType[mergeSource.SourceFields.Count];
 			for (var i = 0; i < mergeSource.SourceFields.Count; i++)

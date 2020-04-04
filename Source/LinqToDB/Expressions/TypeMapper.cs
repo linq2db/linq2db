@@ -370,7 +370,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		private static MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
+		private static readonly MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
 
 		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
 		{
@@ -409,7 +409,7 @@ namespace LinqToDB.Expressions
 				.Select(p => TryMapType(p.Type, out var replacement) ? Expression.Parameter(replacement, p.Name) : p)
 				.ToArray();
 
-			MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
+			static MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
 			{
 				var newMembers = targetType.GetMember(memberInfo.Name);
 				if (newMembers.Length == 0)

@@ -65,9 +65,7 @@ namespace LinqToDB.Common
 
 		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
 		{
-			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
-
-			if (!expressions.TryGetValue(from, out dic))
+			if (!expressions.TryGetValue(from, out var dic))
 				expressions[from] = dic = new ConcurrentDictionary<DbDataType, LambdaInfo>();
 
 			dic[to] = expr;
@@ -75,18 +73,12 @@ namespace LinqToDB.Common
 
 		public LambdaInfo? Get(DbDataType from, DbDataType to)
 		{
-			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
-			LambdaInfo li;
-
-			return _expressions.TryGetValue(from, out dic) && dic.TryGetValue(to, out li) ? li : null;
+			return _expressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li) ? li : null;
 		}
 
 		public LambdaInfo? Get(Type from, Type to)
 		{
-			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
-			LambdaInfo li;
-
-			return _expressions.TryGetValue(new DbDataType(from), out dic) && dic.TryGetValue(new DbDataType(to), out li) ? li : null;
+			return _expressions.TryGetValue(new DbDataType(from), out var dic) && dic.TryGetValue(new DbDataType(to), out var li) ? li : null;
 		}
 
 		public LambdaInfo Create(MappingSchema? mappingSchema, Type from, Type to)

@@ -575,13 +575,13 @@ namespace LinqToDB.Data
 			return indexMap;
 		}
 
-		static MethodInfo _readAsArrayMethodInfo =
+		static readonly MethodInfo _readAsArrayMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArray<int>(null!)).GetGenericMethodDefinition();
 
-		static MethodInfo _readAsListMethodInfo =
+		static readonly MethodInfo _readAsListMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
-		static MethodInfo _readSingletMethodInfo =
+		static readonly MethodInfo _readSingletMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(IDataReader rd)
@@ -643,13 +643,13 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		static MethodInfo _readAsArrayAsyncMethodInfo =
+		static readonly MethodInfo _readAsArrayAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArrayAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		static MethodInfo _readAsListAsyncMethodInfo =
+		static readonly MethodInfo _readAsListAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		static MethodInfo _readSingletAsyncMethodInfo =
+		static readonly MethodInfo _readSingletAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
@@ -1206,7 +1206,7 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		private static MethodInfo _convertParameterValueMethodInfo =
+		private static readonly MethodInfo _convertParameterValueMethodInfo =
 			MemberHelper.MethodOf(() => ConvertParameterValue(1, MappingSchema.Default)).GetGenericMethodDefinition();
 
 		static object? ConvertParameterValue(object? value, MappingSchema mappingSchema)

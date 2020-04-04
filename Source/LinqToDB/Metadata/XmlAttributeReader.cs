@@ -137,9 +137,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			MetaTypeInfo t;
-
-			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
+			if (_types.TryGetValue(type.FullName, out var t) || _types.TryGetValue(type.Name, out t))
 				return t.GetAttribute(typeof(T)).Select(a => (T) a.MakeAttribute(typeof(T))).ToArray();
 
 			return Array<T>.Empty;
@@ -148,13 +146,9 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			MetaTypeInfo t;
-
-			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
+			if (_types.TryGetValue(type.FullName, out var t) || _types.TryGetValue(type.Name, out t))
 			{
-				MetaMemberInfo m;
-
-				if (t.Members.TryGetValue(memberInfo.Name, out m))
+				if (t.Members.TryGetValue(memberInfo.Name, out var m))
 				{
 					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute(typeof(T))).ToArray();
 				}

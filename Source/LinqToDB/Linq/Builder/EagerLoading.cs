@@ -310,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression? newParam     = null;
 			var                  needsTruncation = false;
 
-			bool IsNotSupported(MethodCallExpression methodCall)
+			static bool IsNotSupported(MethodCallExpression methodCall)
 			{
 				return methodCall.IsQueryable(true) &&
 					   methodCall.Method.Name.In(

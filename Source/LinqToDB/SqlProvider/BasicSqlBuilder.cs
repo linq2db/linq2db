@@ -1342,7 +1342,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias)
 		{

@@ -123,10 +123,8 @@ namespace LinqToDB.SqlQuery
 
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			ICloneableElement parentClone;
-
 			if (clone.ParentSelect != null)
-				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
+				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out var parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
 			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);

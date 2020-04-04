@@ -455,20 +455,18 @@ namespace LinqToDB.SchemaProvider
 			if (typeName == null)
 				return null;
 
-			DataTypeInfo dt;
 			return
 				options.PreferProviderSpecificTypes == true
-				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
-				: (DataTypesDic                .TryGetValue(typeName, out dt) ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
+				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
+				: (DataTypesDic                .TryGetValue(typeName, out dt)     ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
 
 		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
-			DataTypeInfo dt;
 			return
 				options.PreferProviderSpecificTypes == true
-				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
-				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
+				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out var dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
+				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt)     ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
 
 		protected virtual DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)

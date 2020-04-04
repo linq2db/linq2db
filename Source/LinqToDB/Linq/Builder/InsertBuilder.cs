@@ -53,8 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			LambdaExpression GetOutputExpression(Type outputType)
 			{
-				int index;
-				if (!indexedParameters.TryGetValue("outputExpression", out index))
+				if (!indexedParameters.TryGetValue("outputExpression", out var index))
 				{
 					var param = Expression.Parameter(outputType);
 					return Expression.Lambda(param, param);
@@ -430,7 +429,6 @@ namespace LinqToDB.Linq.Builder
 				else
 					UpdateBuilder.ParseSet(
 						builder,
-						buildInfo,
 						extract,
 						update,
 						sequence,

@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (context.SelectQuery == null)
 				return $"{context.GetType()}(<none>)";
-			return $"{context.GetType()}({context.SelectQuery.SourceID.ToString()})";
+			return $"{context.GetType()}({context.SelectQuery.SourceID})";
 		}
 
 		public static string GetPath(this IBuildContext context)

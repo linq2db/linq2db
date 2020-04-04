@@ -454,10 +454,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override int GetHashCode()
-		{
-			return Type.GetHashCode();
-		}
+		public override int GetHashCode() => Type.GetHashCode();
 
 		#region ISqlExpression Members
 

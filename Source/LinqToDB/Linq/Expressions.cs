@@ -42,9 +42,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, MemberInfo memberInfo, LambdaExpression expression)
 		{
-			Dictionary<MemberInfo,IExpressionInfo> dic;
-
-			if (!Members.TryGetValue(providerName, out dic))
+			if (!Members.TryGetValue(providerName, out var dic))
 				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
 
 			var expr = new LazyExpressionInfo();
@@ -58,9 +56,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
-			Dictionary<MemberInfo,IExpressionInfo> dic;
-
-			if (!Members.TryGetValue(providerName, out dic))
+			if (!Members.TryGetValue(providerName, out var dic))
 				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
 
 			dic[memberInfo] = expressionInfo;
@@ -204,7 +200,7 @@ namespace LinqToDB.Linq
 
 		#region IGenericInfoProvider
 
-		static volatile Dictionary<Type,List<Type[]>> _genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+		static readonly Dictionary<Type,List<Type[]>> _genericConvertProviders = new Dictionary<Type,List<Type[]>>();
 
 		static bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
 		{
@@ -496,7 +492,7 @@ namespace LinqToDB.Linq
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>? _members;
 		static readonly object                                            _memberSync = new object();
 
-		static Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries = 
+		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries = 
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
 
 		#region Common
@@ -1523,9 +1519,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{
-			Dictionary<TypeMember,IExpressionInfo> dic;
-
-			if (!_typeMembers.TryGetValue(providerName, out dic))
+			if (!_typeMembers.TryGetValue(providerName, out var dic))
 				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
 
 			var expr = new LazyExpressionInfo();
@@ -1539,9 +1533,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
-			Dictionary<TypeMember,IExpressionInfo> dic;
-
-			if (!_typeMembers.TryGetValue(providerName, out dic))
+			if (!_typeMembers.TryGetValue(providerName, out var dic))
 				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
 
 			dic[new TypeMember(objectType, memberInfo.Name)] = expressionInfo;

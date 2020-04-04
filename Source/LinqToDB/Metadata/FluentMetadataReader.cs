@@ -20,8 +20,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			List<Attribute> attrs;
-			if (_types.TryGetValue(type, out attrs))
+			if (_types.TryGetValue(type, out var attrs))
 				return attrs.OfType<T>().ToArray();
 
 			if (!inherit)

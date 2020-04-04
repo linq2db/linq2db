@@ -423,7 +423,6 @@ namespace LinqToDB.Linq.Builder
 
 		internal static void ParseSet(
 			ExpressionBuilder               builder,
-			BuildInfo                       buildInfo,
 			LambdaExpression                extract,
 			Expression                      update,
 			IBuildContext                   select,
@@ -569,7 +568,6 @@ namespace LinqToDB.Linq.Builder
 				else
 					ParseSet(
 						builder,
-						buildInfo,
 						extract,
 						update,
 						sequence,

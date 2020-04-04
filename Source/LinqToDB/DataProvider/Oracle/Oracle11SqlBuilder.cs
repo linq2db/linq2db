@@ -424,7 +424,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			string GetSchemaPrefix(SqlTable table)
+			static string GetSchemaPrefix(SqlTable table)
 			{
 				return string.IsNullOrWhiteSpace(table.Schema)
 					? string.Empty

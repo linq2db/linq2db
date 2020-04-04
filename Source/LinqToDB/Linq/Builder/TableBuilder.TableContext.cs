@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
-			private bool            _associationsToSubQueries;
+			private readonly bool   _associationsToSubQueries;
 			#endregion
 
 			#region Init

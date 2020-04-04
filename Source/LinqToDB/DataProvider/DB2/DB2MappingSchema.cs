@@ -74,8 +74,7 @@ namespace LinqToDB.DataProvider.DB2
 				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
-					int fromDbType;
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out fromDbType))
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out var fromDbType))
 						precision = fromDbType;
 				}
 			}

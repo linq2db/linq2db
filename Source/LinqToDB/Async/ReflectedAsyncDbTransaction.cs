@@ -12,9 +12,9 @@ namespace LinqToDB.Async
 	/// </summary>
 	internal class ReflectedAsyncDbTransaction : AsyncDbTransaction
 	{
-		private Func<IDbTransaction, CancellationToken, Task>? _commitAsync;
-		private Func<IDbTransaction, CancellationToken, Task>? _rollbackAsync;
-		private Func<IDbConnection, Task>?                     _disposeAsync;
+		private readonly Func<IDbTransaction, CancellationToken, Task>? _commitAsync;
+		private readonly Func<IDbTransaction, CancellationToken, Task>? _rollbackAsync;
+		private readonly Func<IDbConnection, Task>?                     _disposeAsync;
 
 		public ReflectedAsyncDbTransaction(
 			IDbTransaction                                 transaction,

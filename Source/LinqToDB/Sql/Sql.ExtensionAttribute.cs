@@ -249,7 +249,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class ExtensionAttribute : ExpressionAttribute
 		{
-			private static ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ConcurrentDictionary<Type, IExtensionCallBuilder>();
+			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ConcurrentDictionary<Type, IExtensionCallBuilder>();
 
 			public string? TokenName { get; set; }
 
