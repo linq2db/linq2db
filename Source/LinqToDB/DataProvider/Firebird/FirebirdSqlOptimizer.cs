@@ -86,7 +86,7 @@
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
 			var visitor = new QueryVisitor();
-			statement = visitor.ConvertImmutable(statement, e =>
+			statement = visitor.Convert(statement, e =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)
 				{

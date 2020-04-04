@@ -217,7 +217,7 @@ namespace LinqToDB.Linq
 			where T : class, IQueryElement
 		{
 			var queryVisitor = new QueryVisitor();
-			var result = queryVisitor.ConvertImmutable(expression, e =>
+			var result = queryVisitor.Convert(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -289,7 +289,7 @@ namespace LinqToDB.Linq
 			var found                     = new HashSet<ISqlExpression>();
 			var columnExpressions         = new HashSet<ISqlExpression>();
 			var parameterDuplicateVisitor = new QueryVisitor();
-			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
+			statement = parameterDuplicateVisitor.Convert(statement, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{

@@ -566,7 +566,7 @@ namespace LinqToDB.SqlQuery
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
 			var visitor = new QueryVisitor();
-			statement = visitor.ConvertImmutable(statement, element =>
+			statement = visitor.Convert(statement, element =>
 			{
 				if (!(element is SelectQuery q))
 					return element;
@@ -659,7 +659,7 @@ namespace LinqToDB.SqlQuery
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
 			var visitor = new QueryVisitor();
-			var newStatement = visitor.ConvertImmutable(statement, element =>
+			var newStatement = visitor.Convert(statement, element =>
 			{
 				if (element is SelectQuery query)
 				{
@@ -852,7 +852,7 @@ namespace LinqToDB.SqlQuery
 			for (int i = 0; i < searchCondition.Conditions.Count; i++)
 			{
 				var visitor      = new QueryVisitor();
-				var newCondition = visitor.ConvertImmutable(searchCondition.Conditions[i], e =>
+				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
 				{
 					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 					{
