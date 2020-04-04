@@ -179,6 +179,8 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
+			Dictionary<MemberInfo, Expression>? _loadWithCache;
+
 			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
 			{
 				var loadWith = GetLoadWith();
@@ -201,7 +203,15 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedType, member.MemberInfo);
-						var ex   = BuildExpression(ma, 1, parentObject);
+
+
+						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.MemberInfo, out var ex))
+						{
+							ex = BuildExpression(ma, 1, parentObject);
+							if (_loadWithCache == null)
+								_loadWithCache = new Dictionary<MemberInfo, Expression>();
+							_loadWithCache.Add(member.MemberInfo, ex);
+						}
 
 						if (member.MemberInfo.IsDynamicColumnPropertyEx())
 						{
@@ -214,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							exprs.Add(Expression.Assign(
 								attr?.Storage != null
-									? Expression.PropertyOrField(parentObject, attr.Storage)
+									? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
 									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
 								ex));
 						}
@@ -1317,7 +1327,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (column.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 									{
-										expression = memberExpression = Expression.PropertyOrField(
+										expression = memberExpression = ExpressionHelper.PropertyOrField(
 											Expression.Convert(memberExpression.Expression, column.MemberInfo.DeclaringType), column.MemberName);
 										break;
 									}
@@ -1330,7 +1340,7 @@ namespace LinqToDB.Linq.Builder
 								if (alias.MemberInfo.DeclaringType != memberExpression.Member.DeclaringType)
 									expr = Expression.Convert(memberExpression.Expression, alias.MemberInfo.DeclaringType);
 
-								expression = memberExpression = Expression.PropertyOrField(expr, alias.MemberName);
+								expression = memberExpression = ExpressionHelper.PropertyOrField(expr, alias.MemberName);
 							}
 						}
 					}
@@ -1571,7 +1581,7 @@ namespace LinqToDB.Linq.Builder
 						isNew = true;
 
 						if (!_associationsToSubQueries)
-						_associations.Add(memberExpression.Member, tableAssociation);
+							_associations.Add(memberExpression.Member, tableAssociation);
 					}
 				}
 

@@ -291,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 
 							expr = Expression.New(
 								nctor.Constructor,
-								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
+								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
 								members);
 
 							var ex = Builder.BuildExpression(this, expr, enforceServerSide);

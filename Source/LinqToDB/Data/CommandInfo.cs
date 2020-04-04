@@ -1323,7 +1323,7 @@ namespace LinqToDB.Data
 											new[] { pobj },
 											new Expression[]
 											{
-												Expression.Assign(pobj, Expression.PropertyOrField(obj, column.MemberName)),
+												Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
 												Expression.MemberInit(
 													Expression.New(typeof(DataParameter)),
 													Expression.Bind(
@@ -1343,7 +1343,7 @@ namespace LinqToDB.Data
 									}
 
 									var memberType  = column.MemberType.ToNullableUnderlying();
-									var valueGetter = Expression.PropertyOrField(obj, column.MemberName) as Expression;
+									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
 									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)

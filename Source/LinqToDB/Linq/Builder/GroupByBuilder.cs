@@ -678,7 +678,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							Sequence.Expression,
 							_key.Lambda.Parameters[0],
-							Expression.PropertyOrField(sm.Lambda.Parameters[0], "Key"),
+							ExpressionHelper.PropertyOrField(sm.Lambda.Parameters[0], "Key"),
 							_key.Lambda.Body);
 
 						return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -692,7 +692,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							_sequenceExpr,
 							_key.Lambda.Parameters[0],
-							Expression.PropertyOrField(buildInfo.Expression, "Key"),
+							ExpressionHelper.PropertyOrField(buildInfo.Expression, "Key"),
 							_key.Lambda.Body);
 
 						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));

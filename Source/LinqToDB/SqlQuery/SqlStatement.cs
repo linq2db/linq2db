@@ -37,7 +37,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (IsParameterDependent)
 			{
-				var statement = new QueryVisitor().ConvertImmutable(this, e =>
+				var statement = new QueryVisitor().Convert(this, e =>
 				{
 					switch (e.ElementType)
 					{

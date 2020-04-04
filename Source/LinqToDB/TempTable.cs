@@ -197,7 +197,7 @@ namespace LinqToDB
 					return Expression.Lambda<Func<T,T>>(
 						Expression.New(
 							nctor.Constructor,
-							members.Select(m => Expression.PropertyOrField(p, m.Name)),
+							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
 							members),
 						p);
 				}

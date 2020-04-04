@@ -974,9 +974,9 @@ namespace LinqToDB.Linq.Builder
 					Expression ex = parm;
 
 					for (var j = i; j < exprs.Count - 1; j++)
-						ex = Expression.PropertyOrField(ex, "p");
+						ex = ExpressionHelper.PropertyOrField(ex, "p");
 
-					ex = Expression.PropertyOrField(ex, "ex");
+					ex = ExpressionHelper.PropertyOrField(ex, "ex");
 
 					dic.Add(exprs[i], ex);
 
@@ -987,7 +987,7 @@ namespace LinqToDB.Linq.Builder
 
 				var newBody = lbody.Transform(ex => dic.TryGetValue(ex, out var e) ? e : ex);
 
-				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => Expression.PropertyOrField(c, "p"));
+				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 
 				newBody   = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
 				predicate = Expression.Lambda(newBody, parm);
@@ -1014,7 +1014,7 @@ namespace LinqToDB.Linq.Builder
 					methodInfo = methodInfo.MakeGenericMethod(expr.Type, lparam.Type);
 					method     = Expression.Call(methodInfo, method,
 						Expression.Lambda(
-							exprs.Aggregate((Expression)parameter, (current,_) => Expression.PropertyOrField(current, "p")),
+							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
 				}
 			}
@@ -1218,7 +1218,7 @@ namespace LinqToDB.Linq.Builder
 						Expression obj = elemArg!;
 
 						if (_wrapInSubQuery)
-							obj = Expression.PropertyOrField(elemArg, "Element");
+							obj = ExpressionHelper.PropertyOrField(elemArg!, "Element");
 
 						if (_elementSelector == null)
 							return obj;
@@ -1230,7 +1230,7 @@ namespace LinqToDB.Linq.Builder
 						return _resultSelector!.Body.Transform(e =>
 						{
 							if (ReferenceEquals(e, _resultSelector.Parameters[0]))
-								return Expression.PropertyOrField(resArg, "Key");
+								return ExpressionHelper.PropertyOrField(resArg!, "Key");
 
 							if (ReferenceEquals(e, _resultSelector.Parameters[1]))
 								return resArg!;

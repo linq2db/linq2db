@@ -1015,7 +1015,7 @@ namespace LinqToDB.SqlQuery
 						foreach (var condition in searchCondition)
 						{
 							var visitor = new QueryVisitor();
-							var newPredicate = visitor.ConvertImmutable(condition.Predicate, e =>
+							var newPredicate = visitor.Convert(condition.Predicate, e =>
 							{
 								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
 								{

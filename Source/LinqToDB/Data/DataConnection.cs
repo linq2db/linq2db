@@ -109,7 +109,8 @@ namespace LinqToDB.Data
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
+			IDataProvider ? dataProvider;
+			if (!_dataProviders.TryGetValue(providerName, out dataProvider))
 				dataProvider = GetDataProvider(providerName, connectionString);
 			
 			if (dataProvider == null)

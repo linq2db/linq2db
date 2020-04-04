@@ -569,7 +569,7 @@ namespace LinqToDB.Mapping
 			if (p.Type.IsNullable())
 				return Expression.Lambda(
 					Expression.Condition(
-						Expression.PropertyOrField(p, "HasValue"),
+						ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)),
 						expr.Body,
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);

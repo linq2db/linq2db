@@ -24,7 +24,7 @@ namespace LinqToDB.Reflection
 
 			if (memberName.IndexOf('.') < 0)
 			{
-				SetSimple(Expression.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
+				SetSimple(ExpressionHelper.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
 			}
 			else
 			{
@@ -37,7 +37,7 @@ namespace LinqToDB.Reflection
 				var expr     = (Expression)objParam;
 				var infos    = members.Select(m =>
 				{
-					expr = Expression.PropertyOrField(expr, m);
+					expr = ExpressionHelper.PropertyOrField(expr, m);
 					return new
 					{
 						member = ((MemberExpression)expr).Member,

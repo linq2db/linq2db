@@ -627,7 +627,9 @@ namespace LinqToDB.Linq.Builder
 			Expression? detailQuery;
 
 			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
-			var masterParm            = Expression.Parameter(mainQueryElementType, "lw_" + association.MemberInfo.Name);
+			var alias = "lw_" + (association.MemberInfo.DeclaringType?.Name ?? "master");
+			
+			var masterParm            = Expression.Parameter(mainQueryElementType, alias);
 
 			var associationPath = new List<MemberInfo>();
 			associationPath.Insert(0, association.MemberInfo);
@@ -662,7 +664,7 @@ namespace LinqToDB.Linq.Builder
 				var prevKeys       = ExtractKeys(context, keyExpression).ToArray();
 				var subMasterKeys  = ExtractKeys(context, detailExpression).ToArray();
 
-				var prevKeysByParameter = ExtractTupleValues(keyExpression, Expression.PropertyOrField(masterParm, "Key")).ToArray();
+				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParm, nameof(KeyDetailEnvelope<object, object>.Key))).ToArray();
 
 				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
 				foreach (var key in prevKeys)
@@ -671,7 +673,7 @@ namespace LinqToDB.Linq.Builder
 						key.ForSelect = correctLookup[key.ForSelect].First();
 				}
 
-				var detailProp = Expression.PropertyOrField(masterParm, "Detail");
+				var detailProp = ExpressionHelper.Property(masterParm, nameof(KeyDetailEnvelope<object, object>.Detail));
 				var subMasterObj = detailExpression;
 				foreach (var key in subMasterKeys)
 				{
@@ -1065,7 +1067,7 @@ namespace LinqToDB.Linq.Builder
 					var keyExpression = ((MemberAssignment)envelopeCreateMethod.Bindings[0]).Expression;
 					var prevKeys      = ExtractKeys(context, keyExpression).ToArray();
 
-					var keysPath      = Expression.PropertyOrField(Expression.PropertyOrField(resultParameter, "Data"), "Key");
+					var keysPath      = ExpressionHelper.PropertyOrField(ExpressionHelper.PropertyOrField(resultParameter, "Data"), "Key");
 					var prevPairs     = ExtractTupleValues(keyExpression, keysPath)
 						.ToLookup(p => p.Item1);
 
@@ -1081,7 +1083,7 @@ namespace LinqToDB.Linq.Builder
 				var keySelectExpression     = GenerateKeyExpression(keysInfo.Select(k => k.ForSelect).ToArray(), 0);
 				var keyParametersExpression = GenerateKeyExpression(dependencyParameters.Cast<Expression>().ToArray(), 0);
 
-				var keyField = Expression.PropertyOrField(resultParameter, "Key");
+				var keyField = ExpressionHelper.PropertyOrField(resultParameter, "Key");
 				var pairs    = ExtractTupleValues(keyParametersExpression, keyField)
 					.ToArray();
 
@@ -1673,7 +1675,7 @@ namespace LinqToDB.Linq.Builder
 														newParameters[j] = newParam;
 
 														var accessExpr =
-															Expression.PropertyOrField(newParam, "Data");
+															ExpressionHelper.PropertyOrField(newParam, "Data");
 														newBody = newBody.Transform(e => e == prm ? accessExpr : e);
 													}
 													else if (typeof(IGrouping<,>).IsSameOrParentOf(replacedType))
@@ -1705,7 +1707,7 @@ namespace LinqToDB.Linq.Builder
 														if (i == mc.Arguments.Count - 1)
 														{
 															var neededKey =
-																Expression.PropertyOrField(transientParam, "Key");
+																ExpressionHelper.PropertyOrField(transientParam, "Key");
 															var itemType = GetEnumerableElementType(newBody.Type,
 																replaceInfo.MappingSchema);
 															var parameter = Expression.Parameter(itemType, "t");
@@ -1732,7 +1734,7 @@ namespace LinqToDB.Linq.Builder
 														if (!isTransient)
 														{
 															var neededKey =
-																Expression.PropertyOrField(transientParam, "Key");
+																ExpressionHelper.PropertyOrField(transientParam, "Key");
 															newBody = CreateKDH(neededKey, newBody);
 														}
 													}
@@ -1792,7 +1794,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								updated = updated.NodeType == ExpressionType.MemberInit
 									? ((MemberAssignment)((MemberInitExpression)updated).Bindings[0]).Expression
-									: Expression.PropertyOrField(updated, "Key");
+									: ExpressionHelper.PropertyOrField(updated, "Key");
 							}	
 							newExpr = CreateKDH(updated, mi);
 						}
@@ -1820,7 +1822,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								updated = updated.NodeType == ExpressionType.MemberInit
 									? ((MemberAssignment)((MemberInitExpression)updated).Bindings[0]).Expression
-									: Expression.PropertyOrField(updated, "Key");
+									: ExpressionHelper.PropertyOrField(updated, "Key");
 							}
 							else if (IsEnumerableType(updated.Type, replaceInfo.MappingSchema))
 							{
@@ -1828,7 +1830,7 @@ namespace LinqToDB.Linq.Builder
 								if (typeof(KDH<,>).IsSameOrParentOf(elementType))
 								{
 									var p          = Expression.Parameter(elementType, "t");
-									var body       = Expression.PropertyOrField(p, "Key");
+									var body       = ExpressionHelper.PropertyOrField(p, "Key");
 									var methodInfo = (typeof(IQueryable<>).IsSameOrParentOf(
 										updated.Type)
 										? Methods.Queryable.Select

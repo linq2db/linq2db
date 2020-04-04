@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			readonly Dictionary<ISqlExpression, SqlField>? _replaceMap;
-			internal IBuildContext?                        _innerContext;
+			internal IBuildContext?               _innerContext;
 
 			public AssociatedTableContext(
 				ExpressionBuilder     builder,
@@ -166,15 +166,11 @@ namespace LinqToDB.Linq.Builder
 
 			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource? table)
 			{
-				if (!association.AliasName.IsNullOrEmpty() && table != null)
+				if (table != null)
 				{
-					table.Alias = association.AliasName;
-				}
-				else
-				{
-					if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty() && table != null)
-						table.Alias = string.Format(Configuration.Sql.AssociationAlias,
-							association.MemberInfo.Name);
+					var alias = association.GenerateAlias();
+					if (!alias.IsNullOrEmpty())
+						table.Alias = alias;
 				}
 			}
 

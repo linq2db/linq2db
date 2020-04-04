@@ -216,7 +216,7 @@ namespace LinqToDB.Linq
 			where T : class, IQueryElement
 		{
 			var queryVisitor = new QueryVisitor();
-			var result = queryVisitor.ConvertImmutable(expression, e =>
+			var result = queryVisitor.Convert(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq
 			var found                     = new HashSet<ISqlExpression>();
 			var columnExpressions         = new HashSet<ISqlExpression>();
 			var parameterDuplicateVisitor = new QueryVisitor();
-			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
+			statement = parameterDuplicateVisitor.Convert(statement, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
@@ -429,7 +429,7 @@ namespace LinqToDB.Linq
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
 
 			var argAccess = Expression.MakeIndex(
-				Expression.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
+				ExpressionHelper.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
 				typeof(ReadOnlyCollection<Expression>).GetProperty("Item"),
 				new[] { Expression.Constant(argIndex) });
 
@@ -451,8 +451,8 @@ namespace LinqToDB.Linq
 			if (convertExpression != null)
 			{
 				var body             = convertExpression.GetBody(getter);
-				getter               = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
@@ -492,8 +492,8 @@ namespace LinqToDB.Linq
 			if (convertExpression != null)
 			{
 				var body             = convertExpression.GetBody(getter);
-				getter               = Expression.PropertyOrField(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = Expression.PropertyOrField(body, nameof(DataParameter.DbDataType));
+				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
+				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
