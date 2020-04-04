@@ -643,7 +643,8 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test]
+		[ActiveIssue]
+		[Test]
 		public void AssociationUnion1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -656,7 +657,8 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		// TODO: [Test]
+		[ActiveIssue]
+		[Test]
 		public void AssociationUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -667,7 +669,8 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		// TODO: [Test]
+		[ActiveIssue]
+		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

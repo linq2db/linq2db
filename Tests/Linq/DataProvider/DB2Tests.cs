@@ -9,7 +9,6 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.DB2;
 using LinqToDB.Mapping;
 
 #if NET46
@@ -639,9 +638,7 @@ namespace Tests.DataProvider
 			[Column(Precision = 0)]
 			public DateTime TimeStamp0 { get; set; }
 
-			// TODO: dbtype not passed from mapping to value builder. Fixed in 3.0
-			//[Column(DbType = "timestamp(1)")]
-			[Column(Precision = 1)]
+			[Column(DbType = "timestamp(1)")]
 			public DateTime TimeStamp1 { get; set; }
 
 			[Column(Precision = 2)]
