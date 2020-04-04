@@ -1074,11 +1074,10 @@ namespace LinqToDB.Mapping
 		#region Configuration
 
 		private string? _configurationID;
-		// TODO: V2 - make internal
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		public  string  ConfigurationID
+		internal  string  ConfigurationID
 		{
 			get { return _configurationID ?? (_configurationID = string.Join(".", ConfigurationList)); }
 		}
