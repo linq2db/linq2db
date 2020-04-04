@@ -147,9 +147,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(this, expr =>
 			{
-				var sb = expr as SelectQuery;
-
-				if (sb != null && sb.ParentSelect == clone)
+				if (expr is SelectQuery sb && sb.ParentSelect == clone)
 					sb.ParentSelect = this;
 			});
 		}

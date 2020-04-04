@@ -2,8 +2,6 @@
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"            #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.Tests.Base.dll" #>
 <#
-	// https://github.com/dotnet/roslyn/issues/37829
-	AddNullablePragma = true;
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo = false;
 

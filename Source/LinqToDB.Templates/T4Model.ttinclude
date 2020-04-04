@@ -11,7 +11,6 @@ Action BeforeGenerateModel = () => {};
 bool GenerateProcedureErrors             = true;
 
 static bool EnableNullableReferenceTypes = false;
-static bool AddNullablePragma            = false;
 static Func<string, bool> IsValueType    = IsValueTypeDefault;
 
 void GenerateModel()
@@ -30,8 +29,8 @@ void GenerateModel()
 
 	WriteLine("");
 	WriteLine("#pragma warning disable 1591");
-	if (AddNullablePragma)
-		WriteLine($"#nullable {(EnableNullableReferenceTypes ? "enable" : "disable")}");
+	if (EnableNullableReferenceTypes)
+		WriteLine($"#nullable enable");
 	WriteLine("");
 
 	BeforeGenerateModel();
@@ -39,8 +38,6 @@ void GenerateModel()
 	Model.Render(this);
 
 	WriteLine("");
-	if (AddNullablePragma)
-		WriteLine($"#nullable restore");
 	WriteLine("#pragma warning restore 1591");
 }
 

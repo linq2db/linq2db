@@ -689,5 +689,4 @@ namespace EquatableDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

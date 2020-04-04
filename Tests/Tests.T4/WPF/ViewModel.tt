@@ -6,8 +6,6 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       #>
 <#
-	// https://github.com/dotnet/roslyn/issues/37829
-	AddNullablePragma = true;
 	EnableNullableReferenceTypes = true;
 	Model.Usings.Add("System.Windows.Media");
 	Model.Namespace.Name = "Tests.T4.Wpf";
