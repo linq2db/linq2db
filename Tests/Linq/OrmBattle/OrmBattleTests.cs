@@ -693,45 +693,57 @@ namespace Tests.OrmBattle
 		[Test, Category("Grouping")]
 		public void GroupByTest([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var result = from o in db.Order
-				group o by o.OrderDate;
-			var list = result.ToList();
-			Assert.AreEqual(480, list.Count);
+			using (new GuardGrouping(false))
+			{
+				Setup(context);
+				var result = from o in db.Order
+							 group o by o.OrderDate;
+				var list = result.ToList();
+				Assert.AreEqual(480, list.Count);
+			}
 		}
 
 		[Test, Category("Grouping")]
 		public void GroupByReferenceTest([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var result = from o in db.Order
-				group o by o.Customer;
-			var list = result.ToList();
-			Assert.AreEqual(89, list.Count);
+			using (new GuardGrouping(false))
+			{
+				Setup(context);
+				var result = from o in db.Order
+							 group o by o.Customer;
+				var list = result.ToList();
+				Assert.AreEqual(89, list.Count);
+			}
 		}
 
 		[Test, Category("Grouping")]
 		public void GroupByWhereTest([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var result =
-				from o in db.Order
-				group o by o.OrderDate
-				into g
-				where g.Count() > 5
-				select g;
-			var list = result.ToList();
-			Assert.AreEqual(1, list.Count);
+			using (new GuardGrouping(false))
+			{
+				Setup(context);
+				var result =
+					from o in db.Order
+					group o by o.OrderDate
+					into g
+					where g.Count() > 5
+					select g;
+				var list = result.ToList();
+				Assert.AreEqual(1, list.Count);
+			}
 		}
 
 		[Test, Category("Grouping")]
 		public void GroupByTestAnonymous([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var result = from c in db.Customer
-				group c by new {c.Region, c.City};
-			var list = result.ToList();
-			Assert.AreEqual(69, list.Count);
+			using (new GuardGrouping(false))
+			{
+				Setup(context);
+				var result = from c in db.Customer
+							 group c by new { c.Region, c.City };
+				var list = result.ToList();
+				Assert.AreEqual(69, list.Count);
+			}
 		}
 
 		[Test, Category("Grouping")]
