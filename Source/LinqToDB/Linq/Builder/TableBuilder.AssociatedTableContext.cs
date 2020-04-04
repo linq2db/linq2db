@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 						t.Source is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, parent.SqlTable));
 
 					// try to search table by object type
-					// TODO: review maybe there are another ways to do that
+					// TODO: review maybe there are another way to do that
 					if (foundIndex < 0)
 						foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
 							t.Source is SqlTable sqlTable && sqlTable.ObjectType == parent.SqlTable.ObjectType);

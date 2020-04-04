@@ -394,7 +394,6 @@ namespace LinqToDB.Mapping
 				a => a.Configuration);
 		}
 
-		// TODO: V2 - remove unused parameters
 		/// <summary>
 		/// Adds column mapping to current entity.
 		/// </summary>
@@ -411,7 +410,6 @@ namespace LinqToDB.Mapping
 				a => a.Configuration);
 		}
 
-		// TODO: V2 - remove unused parameters
 		/// <summary>
 		/// Instruct LINQ to DB to not incude specified member into mapping.
 		/// </summary>

@@ -1548,8 +1548,6 @@ namespace LinqToDB.Linq.Builder
 								aa.AliasName),
 							ForceLeftJoinAssociations,
 							_associationsToSubQueries);
-							// TODO: parent is r/o on context
-							// { Parent = Parent };
 
 					isNew = true;
 				}
@@ -1566,7 +1564,7 @@ namespace LinqToDB.Linq.Builder
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries);// TODO: parent is r/o on context { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries);
 
 						tableAssociation = q.FirstOrDefault();
 

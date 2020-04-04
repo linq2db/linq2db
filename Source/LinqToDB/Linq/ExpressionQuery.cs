@@ -132,7 +132,7 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext);
 
-			return Query<TResult>.GetQuery(DataContext, ref expression)
+				return Query<TResult>.GetQuery(DataContext, ref expression)
 					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
 			}
 		}

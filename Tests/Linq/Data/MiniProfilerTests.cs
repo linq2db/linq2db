@@ -1084,8 +1084,6 @@ namespace Tests.Data
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
 
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
-
 				// dbcommand properties
 				db.DisposeCommand();
 				// clean instance
@@ -1175,8 +1173,6 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
-
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
 
 				// dbcommand properties
 				db.DisposeCommand();

@@ -144,12 +144,9 @@ namespace Tests.DataProvider
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
 #endif
 
-				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
-				{
-					var res = "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
+				var res = "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
 
-					TestType(conn, "XMLSERIALIZE(DOCUMENT xmlDataType AS CLOB NO INDENT)", res);
-				}
+				TestType(conn, "XMLSERIALIZE(DOCUMENT xmlDataType AS CLOB NO INDENT)", res);
 			}
 		}
 

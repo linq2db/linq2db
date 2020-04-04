@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using Tools;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -80,9 +79,6 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public OracleVersion Version { get; }
-
-		// TODO: remove? both managed and unmanaged providers support it
-		public bool          IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
