@@ -70,12 +70,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources] string context)
 		{
-#pragma warning disable 183
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceBase select p,
 					from p in db.ParentInheritance where p is ParentInheritanceBase select p);
-#pragma warning restore 183
 		}
 
 		[Test]
@@ -516,7 +514,6 @@ namespace Tests.Linq
 		{
 			[Column] public Guid GuidValue { get; set; }
 
-			[JetBrains.Annotations.NotNull]
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
 			public InheritanceA1? A1 { get; set; }
 

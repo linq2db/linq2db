@@ -27,8 +27,6 @@ using NUnit.Framework.Internal.Builders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-#pragma warning disable 618
-
 namespace Tests.DataProvider
 {
 	using Model;
@@ -160,8 +158,9 @@ namespace Tests.DataProvider
 						new TypeTestData("polygonDataType",     (n,t,c) => t.TestTypeEx<NpgsqlPolygon?>    (c, n, skipNull:true, skipNotNull:true), new NpgsqlPolygon(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
 						new TypeTestData("circleDataType",      (n,t,c) => t.TestTypeEx<NpgsqlCircle?>     (c, n, skipDefaultNull:true),            new NpgsqlCircle (new NpgsqlPoint(1, 2), 3)),
 
+#pragma warning disable CS0618 // NpgsqlInet obsolete
 						new TypeTestData("inetDataType",        (n,t,c) => t.TestTypeEx<NpgsqlInet?>       (c, n, skipDefaultNull:true),            new NpgsqlInet(new IPAddress(new byte[] { 192, 168, 1, 1 }))),
-
+#pragma warning restore CS0618
 						new TypeTestData("xmlDataType",     0,  (n,t,c) => t.TestTypeEx<string>            (c, n, DataType.Xml, skipNull:true, skipNotNull:true),
 							"<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"),
 						new TypeTestData("xmlDataType",     1,  (n,t,c) => t.TestTypeEx<XDocument>         (c, n, DataType.Xml, skipNull:true, skipNotNull:true).ToString(),
@@ -838,7 +837,9 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlLine?    lineDataType               { get; set; }
 			// inet types
 			[Column]                                   public IPAddress?       inetDataType             { get; set; }
+#pragma warning disable CS0618 // NpgsqlInet obsolete
 			[Column  (DbType = "cidr")]                public NpgsqlInet?      cidrDataType             { get; set; }
+#pragma warning restore CS0618
 			[Column  (DbType = "macaddr")]             public PhysicalAddress? macaddrDataType          { get; set; }
 			// PGSQL10+
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
@@ -913,7 +914,9 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#pragma warning disable CS0618 // NpgsqlInet obsolete
 					cidrDataType        = new NpgsqlInet("::ffff:1.2.3.0/120"),
+#pragma warning restore CS0618
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 

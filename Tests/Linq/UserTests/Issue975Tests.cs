@@ -112,9 +112,9 @@ namespace Tests.UserTests
 								  && (a.DateRevoke == null || a.DateRevoke > SqlServer.GetDate())
 							select t)
 						.Distinct()
-#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning disable CS0472 // comparison of non-null int? with null
 						.Where(it => it.ActualStage.Any(d => d.StageId < 9000 || ((int?)d.StageId) == null));
-#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning restore CS0472
 
 					var zz = query.ToArray();
 				}

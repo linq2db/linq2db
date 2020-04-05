@@ -506,9 +506,9 @@ namespace Tests.Linq
 				var ts = q.GetTableSource();
 				Assert.AreEqual(1, ts.Joins.Count, "Join should be optimized");
 
-#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning disable CS0472 // comparison of int with null
 				var qw = q.Where(v => v.OrderID1 != null);
-#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning restore CS0472
 				var str = qw.ToString();
 				Assert.AreEqual(2, qw.GetTableSource().Joins.Count, "If LEFT join is used in where condition - it can not be optimized");
 

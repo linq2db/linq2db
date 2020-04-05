@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 #if DEBUG
 // ReSharper disable InconsistentNaming
 
-#pragma warning disable 3010
 #endif
 
 namespace LinqToDB.Linq.Builder

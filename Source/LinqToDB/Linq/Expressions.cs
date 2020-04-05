@@ -564,9 +564,7 @@ namespace LinqToDB.Linq
 
 			#region Binary
 
-#pragma warning disable 1720
 			{ M(() => ((Binary)null!).Length ), N(() => L<Binary,Int32>((Binary obj) => Sql.Length(obj)!.Value)) },
-#pragma warning restore 1720
 
 			#endregion
 
@@ -1634,8 +1632,6 @@ namespace LinqToDB.Linq
 		{
 			return guid == null ? null : guid.ToString();
 		}
-
-#pragma warning disable 3019
 
 		// DB2, PostgreSQL, Access, MS SQL, SqlCe
 		//

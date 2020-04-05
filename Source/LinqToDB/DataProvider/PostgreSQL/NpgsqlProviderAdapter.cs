@@ -512,18 +512,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// </summary>
 			[Obsolete("Marked obsolete to avoid unintentional use")]
 			TimestampTz                    = 26,
-#pragma warning disable 3005
+#pragma warning disable CS3005 // not CLS-compliant: members with same name but different case
 			TimestampTZ                    = 26,
-#pragma warning restore 3005
+#pragma warning restore CS3005
 			/// <summary>
 			/// Added as alias to <see cref="TimeTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
 			[Obsolete("Marked obsolete to avoid unintentional use")]
 			TimeTz                         = 31,
-#pragma warning disable 3005
-			TimeTZ                         = 31,
-#pragma warning restore 3005
+#pragma warning disable CS3005 // not CLS-compliant: members with same name but different case
+			TimeTZ = 31,
+#pragma warning restore CS3005
 			TsQuery                        = 46,
 			TsVector                       = 45,
 			Unknown                        = 40,

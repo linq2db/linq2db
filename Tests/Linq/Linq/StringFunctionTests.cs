@@ -525,13 +525,11 @@ namespace Tests.Linq
 			}
 		}
 
-#pragma warning disable 0109
-		new class Category
+		class Category
 		{
 			[PrimaryKey, Identity] public int     Id;
 			[Column, NotNull]      public string? Name;
 		}
-#pragma warning restore 0109
 
 		class Task
 		{

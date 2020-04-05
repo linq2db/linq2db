@@ -11,8 +11,6 @@ using NUnit.Framework;
 
 using JetBrains.Annotations;
 
-#pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
-
 namespace Tests.Linq
 {
 	using Model;
@@ -581,7 +579,12 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent!.Value1).First();
+				var value = db.GetTable<Parent170>()
+#pragma warning disable CS0472 // comparison of int with null
+					.Where(x => x.Value1 == null)
+#pragma warning restore CS0472
+					.Select(x => (int?)x.Parent!.Value1)
+					.First();
 
 				Assert.That(value, Is.Null);
 			}
@@ -594,7 +597,9 @@ namespace Tests.Linq
 			{
 				var value = db.GetTable<Parent170>()
 					.SelectMany(x => x.Children)
+#pragma warning disable CS0472 // comparison of int with null
 					.Where(x => x.Parent!.Value1 == null)
+#pragma warning restore CS0472
 					.Select(x => (int?)x.Parent!.Value1)
 					.First();
 

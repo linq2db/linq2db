@@ -1377,9 +1377,9 @@ namespace Tests.Linq
 				var results = from p in db.GetTable<Parent1788>()
 							  select new
 							  {
-#pragma warning disable 472
+#pragma warning disable CS0472 // comparison of non-null int? with null
 								  f1 = ((int?)p.Value1) != null,
-#pragma warning restore 472
+#pragma warning restore CS0472
 								  f2 = (int?)p.Value1
 							  };
 

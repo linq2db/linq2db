@@ -560,9 +560,7 @@ namespace Tests.DataProvider
 			Assert.That(int32Value.Value, Is.TypeOf<int>     ().And.EqualTo(2));
 			Assert.That(int16Value.Value, Is.TypeOf<short>   ().And.EqualTo(3));
 
-#pragma warning disable CS0618
 			var decimalValue          = new DB2Decimal     (4m);
-#pragma warning restore CS0618
 			var decimalValueAsDecimal = new DB2DecimalFloat(5m);
 			var decimalValueAsDouble  = new DB2DecimalFloat(6.0);
 			var decimalValueAsLong    = new DB2DecimalFloat(7);

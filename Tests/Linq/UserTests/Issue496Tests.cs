@@ -7,15 +7,13 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-#pragma warning disable 0108
-
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue496Tests : TestBase
 	{
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent1
+		new class Parent1
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
@@ -65,7 +63,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent4
+		new class Parent4
 		{
 			[Column]
 			public MyInt? ParentID;
@@ -81,7 +79,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent5
+		new class Parent5
 		{
 			[Column]
 			public MyInt? ParentID;
@@ -241,5 +239,3 @@ namespace Tests.UserTests
 		}
 	}
 }
-
-#pragma warning restore 0108

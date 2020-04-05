@@ -4,8 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -15,11 +13,11 @@ namespace Tests.Linq
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType, 
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner,
+			SqlJoinType                   joinType, 
+			Func<TOuter, TInner, bool>    predicate,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));

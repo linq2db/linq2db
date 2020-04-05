@@ -87,12 +87,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources(false)] string context)
 		{
-#pragma warning disable 183
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceBase select p,
 					from p in QueryTable<ParentInheritanceBase>(db) where p is ParentInheritanceBase select p);
-#pragma warning restore 183
 		}
 
 		[Test]

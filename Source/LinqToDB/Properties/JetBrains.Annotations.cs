@@ -1,6 +1,5 @@
 ﻿using System;
 
-#pragma warning disable 1591
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -10,21 +9,6 @@
 
 namespace JetBrains.Annotations
 {
-	/// <summary>
-	/// Indicates that the value of the marked element could never be <c>null</c>.
-	/// </summary>
-	/// <example><code>
-	/// [NotNull] object Foo() {
-	///   return null; // Warning: Possible 'null' assignment
-	/// }
-	/// </code></example>
-	[AttributeUsage(
-		AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property |
-		AttributeTargets.Delegate | AttributeTargets.Field | AttributeTargets.Event)]
-	internal sealed class NotNullAttribute : Attribute
-	{
-	}
-
 	/// <summary>
 	/// Indicates that the marked method builds string by format pattern and (optional) arguments.
 	/// Parameter, which contains format string, should be given in constructor. The format string
@@ -52,29 +36,6 @@ namespace JetBrains.Annotations
 		}
 
 		public string FormatParameterName { get; private set; }
-	}
-
-	/// <summary>
-	/// When applied to a target attribute, specifies a requirement for any type marked
-	/// with the target attribute to implement or inherit specific type or types.
-	/// </summary>
-	/// <example><code>
-	/// [BaseTypeRequired(typeof(IComponent)] // Specify requirement
-	/// class ComponentAttribute : Attribute { }
-	///
-	/// [Component] // ComponentAttribute requires implementing IComponent interface
-	/// class MyComponent : IComponent { }
-	/// </code></example>
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	[BaseTypeRequired(typeof(Attribute))]
-	internal sealed class BaseTypeRequiredAttribute : Attribute
-	{
-		public BaseTypeRequiredAttribute([NotNull] Type baseType)
-		{
-			BaseType = baseType;
-		}
-
-		[NotNull] public Type BaseType { get; private set; }
 	}
 
 	/// <summary>
@@ -184,7 +145,7 @@ namespace JetBrains.Annotations
 		{
 		}
 
-		public PublicAPIAttribute([NotNull] string comment)
+		public PublicAPIAttribute(string comment)
 		{
 			Comment = comment;
 		}
@@ -216,25 +177,6 @@ namespace JetBrains.Annotations
 	[AttributeUsage(AttributeTargets.Method)]
 	internal sealed class PureAttribute : Attribute
 	{
-	}
-
-	/// <summary>
-	/// Indicates that a parameter is a path to a file or a folder within a web project.
-	/// Path can be relative or absolute, starting from web root (~).
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Parameter)]
-	internal sealed class PathReferenceAttribute : Attribute
-	{
-		public PathReferenceAttribute()
-		{
-		}
-
-		public PathReferenceAttribute([PathReference] string basePath)
-		{
-			BasePath = basePath;
-		}
-
-		public string? BasePath { get; private set; }
 	}
 
 	/// <summary>

@@ -270,7 +270,7 @@ namespace Tests.Tools
 			public string? Name { get; set; }
 		}
 
-		static IEnumerable<MemberAccessor> GetIdentifiers([NotNull] TypeAccessor typeAccessor)
+		static IEnumerable<MemberAccessor> GetIdentifiers(TypeAccessor typeAccessor)
 		{
 			foreach (var member in typeAccessor.Members)
 				if (member.MemberInfo.GetCustomAttribute<IdentifierAttribute>() != null)
