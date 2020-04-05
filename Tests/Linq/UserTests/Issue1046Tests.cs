@@ -17,7 +17,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public string TargetName { get; set; }
+			public string? TargetName { get; set; }
 		}
 
 		[Table("Task")]
@@ -27,10 +27,10 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public string TargetName { get; set; }
+			public string? TargetName { get; set; }
 
 			[Column]
-			public string BdaValue { get; set; }
+			public string? BdaValue { get; set; }
 		}
 
 		[Table("Task")]
@@ -39,12 +39,12 @@ namespace Tests.UserTests
 			public const string Code = "bda.Requests";
 
 			[Column]
-			public string BdaValue { get; set; }
+			public string? BdaValue { get; set; }
 		}
 
 		class SelectAllAndExpand<T>
 		{
-			public T Instance { get; set; }
+			public T Instance { get; set; } = default!;
 		}
 
 		[Test]

@@ -17,10 +17,10 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column("TestField1")]
-			public string TestField1 { get; set; }
+			public string? TestField1 { get; set; }
 
 			[Column("TestField2")]
-			public string TestField2 { get; set; }
+			public string? TestField2 { get; set; }
 		}
 
 		#region MATCH

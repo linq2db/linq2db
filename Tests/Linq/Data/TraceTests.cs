@@ -61,9 +61,9 @@ namespace Tests.Data
 				var _ = db.GetTable<Northwind.Category>().ToList();
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once
@@ -98,9 +98,9 @@ namespace Tests.Data
 				}
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once
@@ -135,9 +135,9 @@ namespace Tests.Data
 				}
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once

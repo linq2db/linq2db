@@ -252,7 +252,7 @@ namespace Tests.Data
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
 				Assert.AreEqual(null, n);
 			}
@@ -273,7 +273,7 @@ namespace Tests.Data
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
 				Assert.AreEqual(null, n);
 			}

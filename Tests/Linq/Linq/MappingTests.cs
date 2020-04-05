@@ -163,9 +163,9 @@ namespace Tests.Linq
 		public class Person9
 		{
 			public int     PersonID;
-			public string  FirstName;
-			public string  LastName;
-			public string  MiddleName;
+			public string  FirstName = null!;
+			public string  LastName = null!;
+			public string? MiddleName;
 			public Gender9 Gender;
 		}
 
@@ -217,7 +217,7 @@ namespace Tests.Linq
 			[Column] public int ChildID;
 
 			[Association(ThisKey="ParentID", OtherKey="ParentID")]
-			public ParentObject Parent;
+			public ParentObject? Parent;
 		}
 
 		[Test]
@@ -225,7 +225,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var e = db.GetTable<ChildObject>().First(c => c.Parent.Value.Value1 == 1);
+				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
 				Assert.AreEqual(1, e.ParentID);
 			}
 		}
@@ -277,7 +277,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType3()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -310,7 +310,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -457,7 +457,7 @@ namespace Tests.Linq
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
 					// field name casing depends on database
-					Assert.AreEqual("firstname", ex.ColumnName.ToLowerInvariant());
+					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
 
 				}
 
@@ -481,7 +481,7 @@ namespace Tests.Linq
 #endif
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-					Assert.AreEqual("lastname", ex.ColumnName.ToLower());
+					Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
 				}
 			}
 		}

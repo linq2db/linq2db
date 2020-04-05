@@ -197,9 +197,9 @@ namespace Tests.xUpdate
 			using (var db = new TestDataConnection(context))
 			{
 				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 				patient++;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 			}
 		}
 
@@ -223,7 +223,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
+				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 			}
 		}
 
@@ -231,8 +231,8 @@ namespace Tests.xUpdate
 		class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
-			[Column(DataType = DataType.Char,  Length = 1)]  public char   charDataType;
-			[Column(DataType = DataType.NChar, Length = 20)] public string ncharDataType;
+			[Column(DataType = DataType.Char,  Length = 1)]  public char    charDataType;
+			[Column(DataType = DataType.NChar, Length = 20)] public string? ncharDataType;
 		}
 
 		[Test]

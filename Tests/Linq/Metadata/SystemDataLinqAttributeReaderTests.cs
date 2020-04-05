@@ -21,9 +21,9 @@ namespace Tests.Metadata
 
 			private int _ShipperID;
 
-			private string _CompanyName;
+			private string? _CompanyName;
 
-			private string _Phone;
+			private string? _Phone;
 
 			#region Extensibility Method Definitions
 			partial void OnLoaded();
@@ -31,9 +31,9 @@ namespace Tests.Metadata
 			partial void OnCreated();
 			partial void OnShipperIDChanging(int value);
 			partial void OnShipperIDChanged();
-			partial void OnCompanyNameChanging(string value);
+			partial void OnCompanyNameChanging(string? value);
 			partial void OnCompanyNameChanged();
-			partial void OnPhoneChanging(string value);
+			partial void OnPhoneChanging(string? value);
 			partial void OnPhoneChanged();
 			#endregion
 
@@ -59,7 +59,7 @@ namespace Tests.Metadata
 			}
 
 			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CompanyName", DbType = "NVarChar(40) NOT NULL", CanBeNull = false)]
-			public string CompanyName {
+			public string? CompanyName {
 				get {
 					return this._CompanyName;
 				}
@@ -75,7 +75,7 @@ namespace Tests.Metadata
 			}
 
 			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Phone", DbType = "NVarChar(24)")]
-			public string Phone {
+			public string? Phone {
 				get {
 					return this._Phone;
 				}
@@ -90,9 +90,9 @@ namespace Tests.Metadata
 				}
 			}
 
-			public event PropertyChangingEventHandler PropertyChanging;
+			public event PropertyChangingEventHandler? PropertyChanging;
 
-			public event PropertyChangedEventHandler PropertyChanged;
+			public event PropertyChangedEventHandler?  PropertyChanged;
 
 			protected virtual void SendPropertyChanging()
 			{

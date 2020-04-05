@@ -18,14 +18,14 @@ namespace Tests.UserTests
 		class A
 		{
 			[PrimaryKey, Identity] public int       ID       { get; set; }
-			[Column,     NotNull ] public string    Value    { get; set; }
+			[Column,     NotNull ] public string    Value    { get; set; } = null!;
 			[Column,     NotNull ] public DateTime  DateTime { get; set; }
 		}
 
 		class B
 		{
-			public int    ID;
-			public string Name;
+			public int     ID;
+			public string? Name;
 		}
 
 		static IQueryable<B> GenerateQuery(ITestDataContext db, DateTime? asOfDate = null)

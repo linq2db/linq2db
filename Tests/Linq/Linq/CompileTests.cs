@@ -81,13 +81,13 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledTest5([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
-				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
+			var query = CompiledQuery.Compile((ITestDataContext db, object?[] ps) =>
+				db.Parent.Where(p => p.ParentID == (int)ps[0]! && p.Value1 == (int?)ps[1]));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, new object[] { 1, 1    }).ToList().Count());
-				Assert.AreEqual(1, query(db, new object[] { 2, null }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count());
 			}
 		}
 

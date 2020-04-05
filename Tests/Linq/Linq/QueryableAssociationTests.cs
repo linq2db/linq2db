@@ -6,7 +6,6 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Playground
 {
@@ -20,15 +19,15 @@ namespace Tests.Playground
 		    public int Id { get; set; }
 
 			[Column]
-			public string OwnerStr { get; set; }
+			public string? OwnerStr { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
-			public SomeOtherEntity Other { get; set; }
+			public SomeOtherEntity? Other { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
 			public List<SomeOtherEntity> Others { get; set; } = new List<SomeOtherEntity>();
 
-			public SomeOtherEntity       OtherMapped  { get; set; }
+			public SomeOtherEntity?      OtherMapped  { get; set; }
 			public List<SomeOtherEntity> OthersMapped { get; set; } = new List<SomeOtherEntity>();
 
 			private static Expression<Func<SomeEntity, IDataContext, IQueryable<SomeOtherEntity>>> OtherImpl()
@@ -47,7 +46,7 @@ namespace Tests.Playground
 			}
 
 			[Association(QueryExpressionMethod = nameof(OtherFromSqlImpl), CanBeNull = true)]
-			public SomeOtherEntity OtherFromSql { get; set; }
+			public SomeOtherEntity? OtherFromSql { get; set; }
 
 			private static Expression<Func<SomeEntity, IDataContext, IQueryable<SomeOtherEntity>>> OtherFromSqlImpl()
 			{
@@ -89,7 +88,7 @@ namespace Tests.Playground
 		    public int Id { get; set; }
 
 			[Column]
-			public string StrValue { get; set; }
+			public string? StrValue { get; set; }
 
 			protected bool Equals(SomeOtherEntity other)
 			{
@@ -189,7 +188,7 @@ namespace Tests.Playground
 				var query = from e in db.GetTable<SomeEntity>()
 					select new
 					{
-						V1 = e.Other.StrValue + "_B",
+						V1 = e.Other!.StrValue + "_B",
 						V2 = Sql.AsSql(e.Other.StrValue + "_C"),
 						e.Other,
 						Inner = new
@@ -202,7 +201,7 @@ namespace Tests.Playground
 				var expectedQuery = from e in entities
 					select new
 					{
-						V1 = e.Other.StrValue + "_B",
+						V1 = e.Other!.StrValue + "_B",
 						V2 = e.Other.StrValue + "_C",
 						e.Other,
 						Inner = new
@@ -464,7 +463,7 @@ AS RETURN
 			public int Id { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(GetSomeValue), CanBeNull = false)]
-			public SomeTableType SomeValue { get; set; }
+			public SomeTableType SomeValue { get; set; } = null!;
 
 			private static Expression<Func<LargeNumberEntity, IDataContext, IQueryable<SomeTableType>>> GetSomeValue()
 			{
@@ -519,9 +518,9 @@ WHERE
 			public int Id { get; set; }
 			[Column]
 			public int? ParentId { get; set; }
-			
+
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
-			public IList<TreeItem> Children { get; set; }
+			public IList<TreeItem> Children { get; set; } = null!;
 		}
 
 		[Test]

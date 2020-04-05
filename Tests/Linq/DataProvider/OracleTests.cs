@@ -24,6 +24,7 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
+	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.Linq;
 	using LinqToDB.SchemaProvider;
 	using Model;
@@ -59,17 +60,17 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection connection,
-			string         dataTypeName,
-			T              value,
-			string         tableName       = "AllTypes",
-			bool           convertToString = false,
-			bool           throwException  = false)
+			DataConnection   connection,
+			string           dataTypeName,
+			[DisallowNull] T value,
+			string           tableName       = "AllTypes",
+			bool             convertToString = false,
+			bool             throwException  = false)
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 2");
+			object actualValue   = connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 2")!;
 			object expectedValue = value;
 
 			if (convertToString)
@@ -163,7 +164,7 @@ namespace Tests.DataProvider
 					"binary_double"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
 
@@ -400,7 +401,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>(PathThroughSql, new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -530,7 +531,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>(PathThroughSql, new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>(PathThroughSql, new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -552,8 +553,8 @@ namespace Tests.DataProvider
 				AreEqual(expected, table.Where(_ => _.StringValue1 == null));
 				AreEqual(expected, table.Where(_ => _.StringValue2 == null));
 
-				string emptyString = string.Empty;
-				string nullString  = null;
+				string  emptyString = string.Empty;
+				string? nullString  = null;
 
 				AreEqual(expected, table.Where(_ => _.StringValue1 == emptyString));
 				AreEqual(expected, table.Where(_ => _.StringValue2 == emptyString));
@@ -575,13 +576,13 @@ namespace Tests.DataProvider
 			}
 		}
 
-		private IEnumerable<OracleSpecific.StringTest> GetStringTest1(IDataContext db, string value)
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest1(IDataContext db, string? value)
 		{
 			return db.GetTable<OracleSpecific.StringTest>()
 				.Where(_ => value == _.StringValue1);
 		}
 
-		private IEnumerable<OracleSpecific.StringTest> GetStringTest2(IDataContext db, string value)
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest2(IDataContext db, string? value)
 		{
 			return db.GetTable<OracleSpecific.StringTest>()
 				.Where(_ => value == _.StringValue2);
@@ -609,17 +610,17 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
 			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
 			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
-			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
-			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string          TEXTDATATYPE           { get; set; } // CLOB
-			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string          NCHARDATATYPE          { get; set; } // NCHAR(40)
-			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string          NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
-			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string          NTEXTDATATYPE          { get; set; } // NCLOB
-			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
-			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
-			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]          GUIDDATATYPE           { get; set; } // RAW(16)
-			[Column(DataType=DataType.Long),                                                Nullable         ] public string          LONGDATATYPE           { get; set; } // LONG
-			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object          URIDATATYPE            { get; set; } // URITYPE
-			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
+			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
+			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         TEXTDATATYPE           { get; set; } // CLOB
+			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string?         NCHARDATATYPE          { get; set; } // NCHAR(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string?         NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         NTEXTDATATYPE          { get; set; } // NCLOB
+			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
+			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
+			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GUIDDATATYPE           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Long),                                                Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
+			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         URIDATATYPE            { get; set; } // URITYPE
+			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         XMLDATATYPE            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
@@ -1058,8 +1059,8 @@ namespace Tests.DataProvider
 			[Column("STG_TRADE_ID")]          public int       ID             { get; set; }
 			[Column("STG_TRADE_VERSION")]     public int       Version        { get; set; }
 			[Column("INFORMATION_TYPE_ID")]   public int       TypeID         { get; set; }
-			[Column("INFORMATION_TYPE_NAME")] public string    TypeName       { get; set; }
-			[Column("value")]                 public string    Value          { get; set; }
+			[Column("INFORMATION_TYPE_NAME")] public string?   TypeName       { get; set; }
+			[Column("value")]                 public string?   Value          { get; set; }
 			[Column("value_as_integer")]      public int?      ValueAsInteger { get; set; }
 			[Column("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
 		}
@@ -1389,9 +1390,9 @@ namespace Tests.DataProvider
 
 		class XmlData
 		{
-			public int    Field1;
+			public int     Field1;
 			[Column(Length = 2)]
-			public string Field2;
+			public string? Field2;
 		}
 
 		[Test]
@@ -1411,7 +1412,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static string _data;
+		static string? _data;
 
 		[Test]
 		public void XmlTableTest5([IncludeDataSources(TestProvName.AllOracle)] string context)
@@ -1582,7 +1583,7 @@ namespace Tests.DataProvider
 				var start = 0;
 				var n     = 0;
 
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+				while ((start = db.LastQuery!.IndexOf("FROM", start) + 1) > 0)
 					n++;
 
 				Assert.That(n, Is.EqualTo(context.Contains("11") ? 2 : 1));
@@ -1604,7 +1605,7 @@ namespace Tests.DataProvider
 				var start = 0;
 				var n     = 0;
 
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+				while ((start = db.LastQuery!.IndexOf("FROM", start) + 1) > 0)
 					n++;
 
 				Assert.That(n, Is.EqualTo(1));
@@ -1627,7 +1628,7 @@ namespace Tests.DataProvider
 				var start = 0;
 				var n     = 0;
 
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+				while ((start = db.LastQuery!.IndexOf("FROM", start) + 1) > 0)
 					n++;
 
 				Assert.That(n, Is.EqualTo(context.Contains("11") ? 3 : 1));
@@ -1795,10 +1796,10 @@ namespace Tests.DataProvider
 			public int Id;
 
 			[Column(DataType = DataType.Text)]
-			public string ClobValue;
+			public string? ClobValue;
 
 			[Column(DataType = DataType.NText)]
-			public string NClobValue;
+			public string? NClobValue;
 
 			public override int GetHashCode()
 			{
@@ -1965,9 +1966,9 @@ namespace Tests.DataProvider
 		public partial class ALLTYPE2
 		{
 			[Column, PrimaryKey, Identity] public decimal ID             { get; set; } // NUMBER
-			[Column,             Nullable] public byte[]  BINARYDATATYPE { get; set; } // BLOB
-			[Column,             Nullable] public byte[]  BFILEDATATYPE  { get; set; } // BFILE
-			[Column,             Nullable] public byte[]  GUIDDATATYPE   { get; set; } // RAW(16)
+			[Column,             Nullable] public byte[]? BINARYDATATYPE { get; set; } // BLOB
+			[Column,             Nullable] public byte[]? BFILEDATATYPE  { get; set; } // BFILE
+			[Column,             Nullable] public byte[]? GUIDDATATYPE   { get; set; } // RAW(16)
 		}
 
 		[Test]
@@ -1993,7 +1994,7 @@ namespace Tests.DataProvider
 							Count = qry.Count()
 						}).First();
 
-					AreEqual(val, data.BINARYDATATYPE);
+					AreEqual(val, data.BINARYDATATYPE!);
 
 				}
 				finally
@@ -2008,7 +2009,7 @@ namespace Tests.DataProvider
 			[PrimaryKey, Identity, NotNull]
 			public int Id;
 
-			public string StringValue;
+			public string? StringValue;
 		}
 
 		[Test]
@@ -2037,7 +2038,7 @@ namespace Tests.DataProvider
 					db.Execute($"ALTER USER C##Issue723Schema quota unlimited on {tableSpace}");
 
 					db.CreateTable<Issue723Table>(schemaName: "C##Issue723Schema");
-					Assert.That(db.LastQuery.Contains("C##Issue723Schema.Issue723Table"));
+					Assert.That(db.LastQuery!.Contains("C##Issue723Schema.Issue723Table"));
 
 					try
 					{
@@ -2077,13 +2078,13 @@ namespace Tests.DataProvider
 
 		public class Issue731Table
 		{
-			public int    Id;
-			public Guid   Guid;
+			public int     Id;
+			public Guid    Guid;
 			[Column(DataType = DataType.Binary)]
-			public Guid   BinaryGuid;
-			public byte[] BlobValue;
+			public Guid    BinaryGuid;
+			public byte[]? BlobValue;
 			[Column(Length = 5)]
-			public byte[] RawValue;
+			public byte[]? RawValue;
 
 		}
 
@@ -2123,7 +2124,7 @@ namespace Tests.DataProvider
 			public int    Minute;
 			public int    Second;
 			public int    Nanosecond;
-			public string TimeZone;
+			public string TimeZone = null!;
 		}
 
 		static MyDate OracleTimeStampTZToMyDate(OracleTimeStampTZ tz)
@@ -2152,7 +2153,7 @@ namespace Tests.DataProvider
 		class MappingTest
 		{
 			[Column] public int    ID;
-			[Column("datetimeoffsetDataType")] public MyDate MyDate;
+			[Column("datetimeoffsetDataType")] public MyDate? MyDate;
 		}
 
 		[Test]
@@ -2373,33 +2374,33 @@ namespace Tests.DataProvider
 				db.ExecuteProc("AllOutputParameters", pms);
 
 				// assert types converted
-				Assert.AreEqual(typeof(decimal)       , pms[0] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[1] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[2] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[3] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[4] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[5] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[6] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[7] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[8] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[9] .Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[10].Value.GetType());
-				Assert.AreEqual(typeof(decimal)       , pms[11].Value.GetType());
-				Assert.AreEqual(typeof(DateTime)      , pms[12].Value.GetType());
-				Assert.AreEqual(typeof(DateTime)      , pms[13].Value.GetType());
-				Assert.AreEqual(typeof(DateTimeOffset), pms[14].Value.GetType());
-				Assert.AreEqual(typeof(DateTimeOffset), pms[15].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[16].Value.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[0] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[1] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[2] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[3] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[4] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[5] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[6] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[7] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[8] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[9] .Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[10].Value!.GetType());
+				Assert.AreEqual(typeof(decimal)       , pms[11].Value!.GetType());
+				Assert.AreEqual(typeof(DateTime)      , pms[12].Value!.GetType());
+				Assert.AreEqual(typeof(DateTime)      , pms[13].Value!.GetType());
+				Assert.AreEqual(typeof(DateTimeOffset), pms[14].Value!.GetType());
+				Assert.AreEqual(typeof(DateTimeOffset), pms[15].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[16].Value!.GetType());
 				// [17] is char20 which is not set now for some reason
-				Assert.AreEqual(typeof(string)        , pms[18].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[19].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[20].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[21].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[22].Value.GetType());
-				Assert.AreEqual(typeof(byte[])        , pms[23].Value.GetType());
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleBFileType, pms[24].Value.GetType());
-				Assert.AreEqual(typeof(byte[])        , pms[25].Value.GetType());
-				Assert.AreEqual(typeof(string)        , pms[26].Value.GetType());
+				Assert.AreEqual(typeof(string)        , pms[18].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[19].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[20].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[21].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[22].Value!.GetType());
+				Assert.AreEqual(typeof(byte[])        , pms[23].Value!.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleBFileType, pms[24].Value!.GetType());
+				Assert.AreEqual(typeof(byte[])        , pms[25].Value!.GetType());
+				Assert.AreEqual(typeof(string)        , pms[26].Value!.GetType());
 
 				// assert values
 				Assert.AreEqual(2                     , pms[0].Value);
@@ -2428,7 +2429,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new byte[] { 0, 0xAA }, pms[23].Value);
 
 				// default converter for BFile missing intentionally
-				var bfile = pms[24].Output.Value;
+				var bfile = pms[24].Output!.Value;
 				if (isNative)
 				{
 #if NET46
@@ -2450,7 +2451,7 @@ namespace Tests.DataProvider
 				}
 
 				// guid is autogenerated
-				Assert.AreEqual(16                    , ((byte[])pms[25].Value).Length);
+				Assert.AreEqual(16                    , ((byte[])pms[25].Value!).Length);
 				Assert.AreEqual("<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n", pms[26].Value);
 			}
 		}
@@ -2544,7 +2545,7 @@ namespace Tests.DataProvider
 		class LongRawTable
 		{
 			[Column(Name =  "ID")] public int Id { get; set; }
-			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[] LONGRAWDATATYPE { get; set; } // LONG RAW
+			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
 		}
 
 		[Test]
@@ -2732,7 +2733,7 @@ namespace Tests.DataProvider
 			using (var db    = new TestDataConnection(context))
 			using (var table = db.CreateLocalTable<TestDateTimeTypes>())
 			{
-				Assert.True(db.LastQuery.Contains("\"Date\"           date                        NOT NULL"));
+				Assert.True(db.LastQuery!.Contains("\"Date\"           date                        NOT NULL"));
 				Assert.True(db.LastQuery.Contains("DateTime         timestamp                   NOT NULL"));
 				Assert.True(db.LastQuery.Contains("DateTime_        date                        NOT NULL"));
 				Assert.True(db.LastQuery.Contains("DateTime2        timestamp                   NOT NULL"));

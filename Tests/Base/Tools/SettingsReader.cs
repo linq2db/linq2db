@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,24 +12,24 @@ namespace Tests.Tools
 {
 	public class TestConnection
 	{
-		public string ConnectionString;
-		public string Provider;
+		public string  ConnectionString = null!;
+		public string? Provider;
 	}
 
 	public class TestSettings
 	{
-		public string   BasedOn;
-		public string[] Providers;
-		public string[] Skip;
-		public string   TraceLevel;
-		public string   DefaultConfiguration;
-		public string   NoLinqService;
+		public string?   BasedOn;
+		public string[]? Providers;
+		public string[]? Skip;
+		public string?   TraceLevel;
+		public string?   DefaultConfiguration;
+		public string?   NoLinqService;
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
 	public static class SettingsReader
 	{
-		public static TestSettings Deserialize(string configName, string defaultJson, string userJson)
+		public static TestSettings Deserialize(string configName, string defaultJson, string? userJson)
 		{
 			void Merge(TestSettings settings1, TestSettings settings2)
 			{

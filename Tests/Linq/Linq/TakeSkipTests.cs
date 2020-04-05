@@ -509,10 +509,10 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "BatchId", CanBeNull = false)]
-			public List<Confirmation> Confirmations { get; set; }
+			public List<Confirmation> Confirmations { get; set; } = null!;
 		}
 
 		public class Confirmation
@@ -571,7 +571,7 @@ namespace Tests.Linq
 		class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			protected bool Equals(TakeSkipClass other)
 			{

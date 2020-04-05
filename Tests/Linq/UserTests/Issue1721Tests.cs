@@ -74,7 +74,7 @@ namespace Tests.UserTests
 		{
 			using (var temp = connection.CreateTempTable<T>())
 			{
-				return connection.LastQuery;
+				return connection.LastQuery!;
 			}
 		}
 

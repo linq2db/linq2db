@@ -108,7 +108,7 @@ namespace Tests.Data
 			{
 				case ProviderName.DB2:
 				{
-					dataProvider = DataConnection.GetDataProvider("DB2", connectionString);
+					dataProvider = DataConnection.GetDataProvider("DB2", connectionString)!;
 
 					Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
 
@@ -121,7 +121,7 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2005:
 				{
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString);
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString)!;
 
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -129,7 +129,7 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
@@ -139,7 +139,7 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2008:
 				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString);
+					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString)!;
 
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -147,7 +147,7 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
@@ -157,7 +157,7 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2012:
 				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString);
+					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString)!;
 
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -165,7 +165,7 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
@@ -175,7 +175,7 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2014:
 				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString);
+					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString)!;
 
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -183,7 +183,7 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
@@ -193,7 +193,7 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2017:
 					{
-						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString);
+						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString)!;
 
 						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -201,7 +201,7 @@ namespace Tests.Data
 
 						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));

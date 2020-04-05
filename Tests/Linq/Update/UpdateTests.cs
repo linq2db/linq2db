@@ -126,7 +126,7 @@ namespace Tests.xUpdate
 					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-					Assert.AreEqual(1, db.Child.Where(c => c.ChildID == id && c.Parent.Value1 == 1).Update(c => new Child { ChildID = c.ChildID + 1 }));
+					Assert.AreEqual(1, db.Child.Where(c => c.ChildID == id && c.Parent!.Value1 == 1).Update(c => new Child { ChildID = c.ChildID + 1 }));
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
 				}
 				finally
@@ -151,7 +151,7 @@ namespace Tests.xUpdate
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 					Assert.AreEqual(1,
 						db.Child
-							.Where(c => c.ChildID == id && c.Parent.Value1 == 1)
+							.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 								.Set(c => c.ChildID, c => c.ChildID + 1)
 							.Update());
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
@@ -178,7 +178,7 @@ namespace Tests.xUpdate
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
 					Assert.AreEqual(1,
 						await db.Child
-							.Where(c => c.ChildID == id && c.Parent.Value1 == 1)
+							.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 								.Set(c => c.ChildID, c => c.ChildID + 1)
 							.UpdateAsync());
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id + 1));
@@ -205,7 +205,7 @@ namespace Tests.xUpdate
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 					Assert.AreEqual(1,
 						db.Child
-							.Where(c => c.ChildID == id && c.Parent.Value1 == 1)
+							.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 								.Set(c => c.ChildID, () => id + 1)
 							.Update());
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
@@ -329,7 +329,7 @@ namespace Tests.xUpdate
 					var q =
 						from c in db.Child
 						join p in db.Parent on c.ParentID equals p.ParentID
-						where c.ChildID == id && c.Parent.Value1 == 1
+						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -369,7 +369,7 @@ namespace Tests.xUpdate
 					var q =
 						from p in db.Parent
 						join c in db.Child on p.ParentID equals c.ParentID
-						where c.ChildID == id && c.Parent.Value1 == 1
+						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -791,7 +791,7 @@ namespace Tests.xUpdate
 			[Column] public bool BoolValue;
 
 			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
-			public List<Table2> Tables2;
+			public List<Table2> Tables2 = null!;
 #pragma warning restore 649
 		}
 
@@ -803,7 +803,7 @@ namespace Tests.xUpdate
 			[Column] public int? Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
-			public Table1 Table1;
+			public Table1 Table1 = null!;
 #pragma warning restore 649
 		}
 
@@ -832,7 +832,7 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				var idx = db.LastQuery.IndexOf("INNER JOIN");
+				var idx = db.LastQuery!.IndexOf("INNER JOIN");
 
 				Assert.That(idx, Is.Not.EqualTo(-1));
 
@@ -856,7 +856,7 @@ namespace Tests.xUpdate
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 
-					var q  = db.Child.Where(c => c.ChildID == id && c.Parent.Value1 == 1);
+					var q  = db.Child.Where(c => c.ChildID == id && c.Parent!.Value1 == 1);
 					var uq = q.AsUpdatable();
 
 					uq = uq.Set(c => c.ChildID, c => c.ChildID + 1);
@@ -887,12 +887,12 @@ namespace Tests.xUpdate
 				db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
 
 				if (db is DataConnection)
-					Assert.IsTrue(((DataConnection)db).LastQuery.Contains("IS NULL"));
+					Assert.IsTrue(((DataConnection)db).LastQuery!.Contains("IS NULL"));
 
 				db.Update(new Table3 { ParentID = 10000, ChildID = 111, GrandChildID = 1000 });
 
 				if (db is DataConnection)
-					Assert.IsFalse(((DataConnection)db).LastQuery.Contains("IS NULL"));
+					Assert.IsFalse(((DataConnection)db).LastQuery!.Contains("IS NULL"));
 			}
 		}
 
@@ -1175,7 +1175,7 @@ namespace Tests.xUpdate
 							_ => _.ID == id,
 							_ => new LinqDataTypes2
 							{
-								SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
+								SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue!))
 							});
 
 					var dbResult = db.GetTable<LinqDataTypes2>()
@@ -1237,7 +1237,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = InsertTests.GetTableName(context, "32");
 
 			using (var db = GetDataContext(context))
@@ -1280,7 +1280,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = InsertTests.GetTableName(context, "33");
 
 			using (var db = GetDataContext(context))
@@ -1324,12 +1324,12 @@ namespace Tests.xUpdate
 		class UpdateFromJoin
 		{
 			[PrimaryKey] public int id  { get; set; }
-			[Column] public string col1 { get; set; }
-			[Column] public string col2 { get; set; }
-			[Column] public string col3 { get; set; }
-			[Column] public string col4 { get; set; }
-			[Column] public string col5 { get; set; }
-			[Column] public string col6 { get; set; }
+			[Column] public string? col1 { get; set; }
+			[Column] public string? col2 { get; set; }
+			[Column] public string? col3 { get; set; }
+			[Column] public string? col4 { get; set; }
+			[Column] public string? col5 { get; set; }
+			[Column] public string? col6 { get; set; }
 
 			public static UpdateFromJoin[] Data = new UpdateFromJoin[]
 			{
@@ -1343,7 +1343,7 @@ namespace Tests.xUpdate
 			public int id { get; set; }
 
 			[Column]
-			public string code { get; set; }
+			public string? code { get; set; }
 
 			public static AccessMode[] Data = new AccessMode[]
 			{
@@ -1364,8 +1364,8 @@ namespace Tests.xUpdate
 				gt_s_one
 					.GroupJoin(
 						access_mode,
-						l => l.col3.Replace("auth.", "").ToUpper(),
-						am => am.code.ToUpper(),
+						l => l.col3!.Replace("auth.", "").ToUpper(),
+						am => am.code!.ToUpper(),
 						(l, am) => new
 						{
 							l,
@@ -1384,7 +1384,7 @@ namespace Tests.xUpdate
 						{
 							col1 = s.gt.col1,
 							col2 = s.gt.col2,
-							col3 = s.gt.col3.Replace("auth.", ""),
+							col3 = s.gt.col3!.Replace("auth.", ""),
 							col4 = s.gt.col4,
 							col5 = s.gt.col3 == "empty" ? "1" : "0",
 							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
@@ -1607,10 +1607,10 @@ namespace Tests.xUpdate
 			public int Id { get; set; }
 
 			[Column(Length = int.MaxValue)]
-			public string Items1 { get; set; }
+			public string? Items1 { get; set; }
 
 			[Column(Length = int.MaxValue)]
-			public string Items2 { get; set; }
+			public string? Items2 { get; set; }
 		}
 
 

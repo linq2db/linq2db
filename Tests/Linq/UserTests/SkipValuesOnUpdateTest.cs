@@ -15,7 +15,7 @@ namespace Tests.UserTests
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
 			[Column("Name"), SkipValuesOnUpdate("John")]
-			public String Name { get; set; }
+			public String? Name { get; set; }
 			[Column("Age"), SkipValuesOnUpdate(2, 5)]
 			public Int32? Age { get; set; }
 		}
@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public String? Name { get; set; }
 			[Column("Age"), SkipValuesOnUpdate(null)]
 			public Int32? Age { get; set; }
 		}
@@ -37,7 +37,7 @@ namespace Tests.UserTests
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public String? Name { get; set; }
 			[Column("Age")]
 			public Int32? Age { get; set; }
 		}
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public String? Name { get; set; }
 			[Column("Age")]
 			public Int32? Age { get; set; }
 			[Column("Gender"), SkipValuesOnUpdate(GenderType.Female)]

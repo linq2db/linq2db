@@ -284,7 +284,7 @@ namespace Tests.Linq
 		public abstract class InheritanceA : InheritanceBase
 		{
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public List<InheritanceB> Bs { get; set; }
+			public List<InheritanceB> Bs { get; set; } = null!;
 
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A;

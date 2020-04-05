@@ -15,7 +15,7 @@ namespace Tests.UserTests
 			public ref DataPack Data => ref _Data;
 
 			[Column]
-			public string Str;
+			public string? Str;
 		}
 
 

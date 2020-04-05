@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child1> Children;
+			public ICollection<Child1> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -34,7 +34,7 @@ namespace Tests.UserTests
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child2> Children;
+			public ICollection<Child2> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -54,23 +54,23 @@ namespace Tests.UserTests
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child3> Children;
+			public ICollection<Child3> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
 		class Child3
 		{
-			        public int   ChildID;
-			[Column]public MyInt ParentID;
+			        public int    ChildID;
+			[Column]public MyInt? ParentID;
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
 		class Parent4
 		{
 			[Column]
-			public MyInt ParentID;
+			public MyInt? ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child4> Children;
+			public ICollection<Child4> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -84,16 +84,16 @@ namespace Tests.UserTests
 		class Parent5
 		{
 			[Column]
-			public MyInt ParentID;
+			public MyInt? ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child5> Children;
+			public ICollection<Child5> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
 		class Child5
 		{
-			         public int   ChildID;
-			[Column] public MyInt ParentID;
+			         public int    ChildID;
+			[Column] public MyInt? ParentID;
 		}
 
 		[Test]
@@ -109,7 +109,7 @@ namespace Tests.UserTests
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child { ChildID = _.ChildID, ParentID = _.ParentID.Value });
+				var result = children.Select(_ => new Model.Child { ChildID = _.ChildID, ParentID = _.ParentID!.Value });
 
 				AreEqual(expected, result);
 			}
@@ -196,7 +196,7 @@ namespace Tests.UserTests
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.RealValue });
+				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}
@@ -208,7 +208,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent4>()
-					.Where(_ => _.ParentID.RealValue == 1)
+					.Where(_ => _.ParentID!.RealValue == 1)
 					.SelectMany(_ => _.Children)
 					.ToList();
 
@@ -227,14 +227,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent5>()
-					.Where(_ => _.ParentID.RealValue == 1)
+					.Where(_ => _.ParentID!.RealValue == 1)
 					.SelectMany(_ => _.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.RealValue });
+				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}

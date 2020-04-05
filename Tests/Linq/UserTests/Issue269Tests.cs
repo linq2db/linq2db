@@ -34,7 +34,7 @@ namespace Tests.UserTests
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Take(1)
 						.Any(_ => _.Contains("with")));
 
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Take(1)
 						.Any(_ => _.Contains("with")));
 
@@ -59,7 +59,7 @@ namespace Tests.UserTests
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
@@ -70,7 +70,7 @@ namespace Tests.UserTests
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
@@ -87,7 +87,7 @@ namespace Tests.UserTests
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Skip(0)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
@@ -96,7 +96,7 @@ namespace Tests.UserTests
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Skip(0)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
@@ -114,7 +114,7 @@ namespace Tests.UserTests
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Distinct()
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
@@ -123,7 +123,7 @@ namespace Tests.UserTests
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Distinct()
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
@@ -141,7 +141,7 @@ namespace Tests.UserTests
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 
@@ -149,7 +149,7 @@ namespace Tests.UserTests
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
-						.Select(c => c.Patient.Diagnosis)
+						.Select(c => c.Patient!.Diagnosis)
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 

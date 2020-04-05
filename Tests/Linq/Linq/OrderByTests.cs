@@ -154,7 +154,7 @@ namespace Tests.Linq
 
 				q.ToList();
 
-				Assert.IsFalse(db.LastQuery.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
+				Assert.IsFalse(db.LastQuery!.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
 			}
 		}
 
@@ -341,7 +341,7 @@ namespace Tests.Linq
 				var expected =
 					from p in Parent1.OrderBy(p => p.ParentID)
 					from c in Child.  OrderBy(c => c.ChildID)
-					where p.ParentID == c.Parent1.ParentID
+					where p.ParentID == c.Parent1!.ParentID
 					select new { p.ParentID, c.ChildID };
 
 				var result =

@@ -23,10 +23,10 @@ namespace Tests.UserTests
 
 			[Column(IsDiscriminator = true)]
 			public OrderType OrderType { get; set; }
-			public string OrderName { get; set; }
+			public string? OrderName { get; set; }
 
 			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(OrderDetail.OrderId))]
-			public IEnumerable<OrderDetail> Details { get; set; }
+			public IEnumerable<OrderDetail> Details { get; set; } = null!;
 		}
 
 		public class OrderType1 : Order
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			[PrimaryKey]
 			public int OrderDetailId { get; set; }
 
-			public string Title { get; set; }
+			public string? Title { get; set; }
 
 			public int OrderId { get; set; }
 		}

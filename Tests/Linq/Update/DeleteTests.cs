@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 					db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1002 });
 
 					Assert.AreEqual(3, db.Child.Count(c => c.ParentID == 1));
-					Assert.AreEqual(2, db.Child.Where(c => c.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
+					Assert.AreEqual(2, db.Child.Where(c => c.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
 					Assert.AreEqual(1, db.Child.Count(c => c.ParentID == 1));
 				}
 				finally
@@ -94,18 +94,18 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value));
+					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
 
 					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
 					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 2, GrandChildID = 1002 });
 
 					Assert.AreEqual(3, db.GrandChild1.Count(gc => gc.ParentID == 1));
-					Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value)).Delete());
+					Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value)).Delete());
 					Assert.AreEqual(1, db.GrandChild1.Count(gc => gc.ParentID == 1));
 				}
 				finally
 				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value));
+					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
 				}
 			}
 		}
@@ -149,7 +149,7 @@ namespace Tests.xUpdate
 
 				q.Delete();
 
-				var sql = ((DataConnection)db).LastQuery;
+				var sql = ((DataConnection)db).LastQuery!;
 
 				if (sql.Contains("EXISTS"))
 					Assert.That(sql.IndexOf("(("), Is.GreaterThan(0));
@@ -339,7 +339,7 @@ namespace Tests.xUpdate
 				select p
 			).Delete();
 
-			return db.LastQuery;
+			return db.LastQuery!;
 		}
 
 		[Test]
@@ -431,7 +431,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = InsertTests.GetTableName(context, "30");
 
 			using (var db = GetDataContext(context))

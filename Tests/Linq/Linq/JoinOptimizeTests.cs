@@ -541,7 +541,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q2.GetTableSource().Joins.Count);
 
 				var q3 = from od in db.Order
-					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID.Value} equals new {ID1 = od2.EmployeeID.Value, ID2 = od2.OrderID}
+					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID!.Value} equals new {ID1 = od2.EmployeeID!.Value, ID2 = od2.OrderID}
 					select od;
 
 				Assert.AreEqual(1, q3.GetTableSource().Joins.Count);
@@ -578,7 +578,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 

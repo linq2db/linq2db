@@ -123,7 +123,7 @@ namespace Tests.Linq
 				{
 					ID     = c.ChildID,
 					c.ParentID,
-					Sum    = gc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID * g.GrandChildID),
+					Sum    = gc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID! * g.GrandChildID),
 					Count1 = gc.Count(g => g.ChildID == c.ChildID && g.GrandChildID > 0)
 				});
 
@@ -137,7 +137,7 @@ namespace Tests.Linq
 				{
 					ID     = c.ChildID,
 					c.ParentID,
-					Sum    = rgc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID * g.GrandChildID),
+					Sum    = rgc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID! * g.GrandChildID),
 					Count1 = rgc.Count(g => g.ChildID == c.ChildID && g.GrandChildID > 0),
 				});
 
@@ -496,7 +496,7 @@ namespace Tests.Linq
 					{
 						Count =
 						(
-							from c in p1.p2.p2.Parent.GrandChildren
+							from c in p1.p2.p2.Parent!.GrandChildren
 							select new { c, ID = c.ParentID + 1 } into c
 							where c.ID < p1.ID
 							select new { c.c, ID = c.c.ParentID + 1 } into c
@@ -514,7 +514,7 @@ namespace Tests.Linq
 					{
 						Count =
 						(
-							from c in p1.p2.p2.Parent.GrandChildren
+							from c in p1.p2.p2.Parent!.GrandChildren
 							select new { c, ID = c.ParentID + 1 } into c
 							where c.ID < p1.ID
 							select new { c.c, ID = c.c.ParentID + 1 } into c

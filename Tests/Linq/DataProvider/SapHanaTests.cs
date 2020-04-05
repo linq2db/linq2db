@@ -307,7 +307,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -345,29 +345,29 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public char? charDataType { get; set; } // char(1)
 			[Column, Nullable]
-			public string varcharDataType { get; set; } // varchar(20)
+			public string? varcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
-			public string textDataType { get; set; } // text
+			public string? textDataType { get; set; } // text
 			[Column, Nullable]
-			public string shorttextDataType { get; set; } // text
+			public string? shorttextDataType { get; set; } // text
 			[Column, Nullable]
 			public char? ncharDataType { get; set; } // char(1)
 			[Column, Nullable]
-			public string nvarcharDataType { get; set; } // varchar(20)
+			public string? nvarcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
-			public string alphanumDataType { get; set; } // varchar(20)
+			public string? alphanumDataType { get; set; } // varchar(20)
 
 			[Column, Nullable]
-			public byte[] binaryDataType { get; set; } // binary(3)
+			public byte[]? binaryDataType { get; set; } // binary(3)
 			[Column, Nullable]
-			public byte[] varbinaryDataType { get; set; } // varbinary(5)
+			public byte[]? varbinaryDataType { get; set; } // varbinary(5)
 
 			[Column, Nullable]
-			public byte[] blobDataType { get; set; } // blob
+			public byte[]? blobDataType { get; set; } // blob
 			[Column, Nullable]
-			public string clobDataType { get; set; } // clob
+			public string? clobDataType { get; set; } // clob
 			[Column, Nullable]
-			public string nclobDataType { get; set; } // nclob
+			public string? nclobDataType { get; set; } // nclob
 		}
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
@@ -380,33 +380,33 @@ namespace Tests.DataProvider
 					Enumerable.Range(0, 100).Select(n =>
 						new AllType
 						{
-							ID = 2000 + n,
-							bigintDataType = 3000 + n,
-							smallintDataType = (short)(4000 + n),
-							decimalDataType = 900000 + n,
+							ID                   = 2000 + n,
+							bigintDataType       = 3000 + n,
+							smallintDataType     = (short)(4000 + n),
+							decimalDataType      = 900000 + n,
 							smalldecimalDataType = 90000 + n,
-							intDataType = 7000 + n,
-							tinyintDataType = (byte)(5000 + n),
-							floatDataType = 7700 + n,
-							realDataType = 7600 + n,
+							intDataType          = 7000 + n,
+							tinyintDataType      = (byte)(5000 + n),
+							floatDataType        = 7700 + n,
+							realDataType         = 7600 + n,
 
-							dateDataType = DateTime.Now,
-							timeDataType = DateTime.Now - DateTime.Today,
+							dateDataType       = DateTime.Now,
+							timeDataType       = DateTime.Now - DateTime.Today,
 							seconddateDataType = DateTime.Now,
-							timestampDataType = DateTime.Now,
+							timestampDataType  = DateTime.Now,
 
-							charDataType = 'A',
-							varcharDataType = "AA",
-							textDataType = "text",
+							charDataType      = 'A',
+							varcharDataType   = "AA",
+							textDataType      = "text",
 							shorttextDataType = "shorttext",
-							ncharDataType = '\u00fc',
-							nvarcharDataType = "A\u00fcfsdf\u00fc",
-							alphanumDataType = "abcQWE654",
-							binaryDataType = new byte[] { 1 },
+							ncharDataType     = '\u00fc',
+							nvarcharDataType  = "A\u00fcfsdf\u00fc",
+							alphanumDataType  = "abcQWE654",
+							binaryDataType    = new byte[] { 1 },
 							varbinaryDataType = new byte[] { 1, 2, 3 },
-							blobDataType = new byte[] { 1, 2, 3, 4, 5, 6 },
-							clobDataType = "clobclobclob",
-							nclobDataType = "nclob\u00fcnclob\u00fcnclob\u00fc"
+							blobDataType      = new byte[] { 1, 2, 3, 4, 5, 6 },
+							clobDataType      = "clobclobclob",
+							nclobDataType     = "nclob\u00fcnclob\u00fcnclob\u00fc"
 						}));
 
 				conn.GetTable<AllType>().Delete(p => p.ID >= 2000);
@@ -553,13 +553,13 @@ namespace Tests.DataProvider
 			[Column, NotNull]
 			public double doublemandatory { get; set; }
 			[Column, NotNull]
-			public string stringmandatory { get; set; }
+			public string stringmandatory { get; set; } = null!;
 			[Column, Nullable]
 			public int intoptional { get; set; }
 			[Column, Nullable]
 			public double doubleoptional { get; set; }
 			[Column, Nullable]
-			public string stringoptional { get; set; }
+			public string? stringoptional { get; set; }
 		}
 	}
 }

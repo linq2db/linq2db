@@ -257,15 +257,15 @@ namespace Tests.Linq
 
 		class GroupByInfo
 		{
-			public GroupByInfo Prev;
-			public object      Field;
+			public GroupByInfo? Prev;
+			public object?      Field;
 
 			public override bool Equals(object obj)
 			{
 				return Equals(obj as GroupByInfo);
 			}
 
-			public bool Equals(GroupByInfo other)
+			public bool Equals(GroupByInfo? other)
 			{
 				if (ReferenceEquals(null, other)) return false;
 				if (ReferenceEquals(this, other)) return true;
@@ -1466,7 +1466,7 @@ namespace Tests.Linq
 
 				const string fieldName = "LastName";
 
-				var lastQuery  = db.LastQuery;
+				var lastQuery  = db.LastQuery!;
 				var groupByPos = lastQuery.IndexOf("GROUP BY");
 				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
 
@@ -1674,7 +1674,7 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					from t in Types2
-					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
@@ -1682,7 +1682,7 @@ namespace Tests.Linq
 						month = grp.Key.Month
 					},
 					from t in db.Types2
-					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
@@ -1699,19 +1699,19 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					from t in Types2
-					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
-						year  = grp.Key.Date.Value.Year,
+						year  = grp.Key.Date!.Value.Year,
 						month = grp.Key.Date.Value.Month
 					},
 					from t in db.Types2
-					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
-						year  = grp.Key.Date.Value.Year,
+						year  = grp.Key.Date!.Value.Year,
 						month = grp.Key.Date.Value.Month
 					});
 			}
@@ -1738,13 +1738,13 @@ namespace Tests.Linq
 					group t by t.ParentID into grp
 					select new
 					{
-						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+						Value = grp.Sum(c => c.Parent!.Value1 ?? 0)
 					},
 					from t in db.Child
 					group t by t.ParentID into grp
 					select new
 					{
-						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+						Value = grp.Sum(c => c.Parent!.Value1 ?? 0)
 					});
 			}
 		}
@@ -1873,12 +1873,12 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					from c in Child
-					from g in c.Parent.Children
+					from g in c.Parent!.Children
 					group g by g.ParentID into gc
 					select gc.Key
 					,
 					from c in db.Child
-					from g in c.Parent.Children
+					from g in c.Parent!.Children
 					group g by g.ParentID into gc
 					select gc.Key
 				);
@@ -1963,10 +1963,10 @@ namespace Tests.Linq
 		[Table("Stone")]
 		public class Stone
 		{
-			[PrimaryKey, Identity] public int    Id           { get; set; } // int
-			[Column, NotNull     ] public string Name         { get; set; } // nvarchar(256)
-			[Column, Nullable    ] public bool?  Enabled      { get; set; } // bit
-			[Column, Nullable    ] public string ImageFullUrl { get; set; } // nvarchar(255)
+			[PrimaryKey, Identity] public int     Id           { get; set; } // int
+			[Column, NotNull     ] public string  Name         { get; set; } = null!; // nvarchar(256)
+			[Column, Nullable    ] public bool?   Enabled      { get; set; } // bit
+			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
 		[ActiveIssue]
@@ -1985,7 +1985,7 @@ namespace Tests.Linq
 				stones = from s in db.GetTable<Stone>() where s.Enabled == true select s;
 
 				stones = from s in stones
-						 where !s.Name.StartsWith("level - ") && s.ImageFullUrl.Length > 0
+						 where !s.Name.StartsWith("level - ") && s.ImageFullUrl!.Length > 0
 						 group s by s.Name
 							  into sG
 						 select sG.First();

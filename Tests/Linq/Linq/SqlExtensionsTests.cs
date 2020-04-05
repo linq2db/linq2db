@@ -120,7 +120,7 @@ namespace Tests.Linq
 
 				string GetColumnValue(int index)
 				{
-					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value;
+					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value!;
 				}
 
 				Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
@@ -220,7 +220,7 @@ namespace Tests.Linq
 
 		public class FreeTextKey<T>
 		{
-			public T   Key;
+			public T   Key = default!;
 			public int Rank;
 		}
 

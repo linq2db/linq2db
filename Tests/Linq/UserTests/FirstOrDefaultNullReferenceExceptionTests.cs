@@ -27,7 +27,7 @@ namespace Tests.UserTests
 			[Column] public int ParentID { get; set; }
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = true)]
-			public List<Table1> GrandChildren { get; set; }
+			public List<Table1> GrandChildren { get; set; } = null!;
 		}
 
 		[Table("Parent")]
@@ -36,7 +36,7 @@ namespace Tests.UserTests
 			[Column] public int ParentID { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
-			public List<Table2> Children { get; set; }
+			public List<Table2> Children { get; set; } = null!;
 		}
 
 		[Test]

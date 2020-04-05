@@ -63,13 +63,13 @@ namespace Tests.UserTests
 
 		public class Entity
 		{
-			public int   Id    { get; set; }
-			public MyInt Value { get; set; }
+			public int    Id    { get; set; }
+			public MyInt? Value { get; set; }
 
 			public override bool Equals(object obj)
 			{
 				var e = (Entity) obj;
-				return Id == e.Id && Value.Value == Id;
+				return Id == e.Id && Value!.Value == Id;
 			}
 
 			public override int GetHashCode()

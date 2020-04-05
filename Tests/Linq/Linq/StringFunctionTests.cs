@@ -184,8 +184,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				string firstName = null;
-				int?   id        = null;
+				string? firstName = null;
+				int?    id        = null;
 
 				var _ =
 				(
@@ -219,22 +219,22 @@ namespace Tests.Linq
 				// https://github.com/linq2db/linq2db/issues/2005
 				if (context.Contains("Firebird"))
 				{
-					Assert.True(db.LastQuery.Contains(" STARTING WITH 'Jo'"));
+					Assert.True(db.LastQuery!.Contains(" STARTING WITH 'Jo'"));
 					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
 				}
 				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE N'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE N'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
 				}
 				else if (context.Contains("Informix"))
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
 				}
 				else
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
 				}
 			}
@@ -528,15 +528,15 @@ namespace Tests.Linq
 #pragma warning disable 0109
 		new class Category
 		{
-			[PrimaryKey, Identity] public int    Id;
-			[Column, NotNull]      public string Name;
+			[PrimaryKey, Identity] public int     Id;
+			[Column, NotNull]      public string? Name;
 		}
 #pragma warning restore 0109
 
 		class Task
 		{
-			[PrimaryKey, Identity] public int    Id;
-			[Column, NotNull]      public string Name;
+			[PrimaryKey, Identity] public int     Id;
+			[Column, NotNull]      public string? Name;
 		}
 
 		class TaskCategory

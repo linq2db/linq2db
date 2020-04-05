@@ -22,7 +22,7 @@ namespace Tests
 		public bool            Disposed          { get; private set; }
 		public string          ConnectionString  { get; set;}
 		public int             ConnectionTimeout { get; }
-		public string          Database          { get; }
+		public string?         Database          { get; }
 		public ConnectionState State             { get; private set; }
 
 		public IDbTransaction BeginTransaction(                   ) => throw new NotImplementedException();
@@ -96,7 +96,7 @@ namespace Tests
 	{
 		private readonly DbParameterCollection _parameters = new TestNoopDbParameterCollection();
 
-		public override string CommandText { get; set; }
+		public override string? CommandText { get; set; }
 
 		public override int CommandTimeout
 		{
@@ -134,7 +134,7 @@ namespace Tests
 
 		public override    void         Cancel             (                        ) => throw new NotImplementedException();
 		public override    int          ExecuteNonQuery    (                        ) => 0;
-		public override    object       ExecuteScalar      (                        ) => null;
+		public override    object?      ExecuteScalar      (                        ) => null;
 		public override    void         Prepare            (                        ) => throw new NotImplementedException();
 		protected override DbParameter  CreateDbParameter  (                        ) => new TestNoopDbParameter();
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => new TestNoopDbDataReader();
@@ -156,7 +156,7 @@ namespace Tests
 			set => throw new NotImplementedException();
 		}
 
-		public override string ParameterName { get; set; }
+		public override string? ParameterName { get; set; }
 
 		public override int Size
 		{
@@ -182,7 +182,7 @@ namespace Tests
 			set => throw new NotImplementedException();
 		}
 
-		public override object Value { get; set; }
+		public override object? Value { get; set; }
 
 		public override void ResetDbType() => throw new NotImplementedException();
 	}

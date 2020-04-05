@@ -274,7 +274,7 @@ namespace Tests.Linq
 		[Column("Value1", "Value.ID")]
 		public class Parent222 : Parent111
 		{
-			public Value111 Value;
+			public Value111 Value = null!;
 		}
 
 		public class Value111
@@ -330,7 +330,7 @@ namespace Tests.Linq
 			{
 				var result =
 					from od in db.OrderDetail
-					where od.Product.Category.CategoryName == "Seafood"
+					where od.Product.Category!.CategoryName == "Seafood"
 					select new { od.Order, od.Product };
 
 				var list = result.ToList();
@@ -480,7 +480,7 @@ namespace Tests.Linq
 		public abstract class InheritanceA : InheritanceBase
 		{
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public List<InheritanceB> Bs { get; set; }
+			public List<InheritanceB> Bs { get; set; } = null!;
 
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
@@ -518,10 +518,10 @@ namespace Tests.Linq
 
 			[JetBrains.Annotations.NotNull]
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public InheritanceA1 A1 { get; set; }
+			public InheritanceA1? A1 { get; set; }
 
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public InheritanceA2 A2 { get; set; }
+			public InheritanceA2? A2 { get; set; }
 		}
 
 		[Test]
@@ -554,12 +554,12 @@ namespace Tests.Linq
 
 		public class Test17John : Test17Person
 		{
-			public string FirstName { get; set; }
+			public string FirstName { get; set; } = null!;
 		}
 
 		public class Test17Tester : Test17Person
 		{
-			public string LastName { get; set; }
+			public string LastName { get; set; } = null!;
 		}
 
 		[Test]
@@ -569,7 +569,7 @@ namespace Tests.Linq
 			{
 				var db = (TestDataConnection)context;
 				db.GetTable<Test17Person>().OfType<Test17John>().ToList();
-				Assert.False(db.LastQuery.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
 			}
 		}
 
@@ -584,13 +584,13 @@ namespace Tests.Linq
 
 		public class Test18Male : Test18Person
 		{
-			[Column] public string FirstName { get; set; }
+			[Column] public string FirstName { get; set; } = null!;
 		}
 
 		public class Test18Female : Test18Person
 		{
-			[Column] public string FirstName { get; set; }
-			[Column] public string LastName  { get; set; }
+			[Column] public string FirstName { get; set; } = null!;
+			[Column] public string LastName  { get; set; } = null!;
 		}
 
 		[Test]
@@ -650,8 +650,8 @@ namespace Tests.Linq
 				var result = db.GetTable<InheritanceAssociation>().Select(ia =>
 					new
 					{
-						TC1 = ia.A1.TypeCode,
-						TC2 = ia.A2.TypeCode
+						TC1 = ia.A1!.TypeCode,
+						TC2 = ia.A2!.TypeCode
 					});
 
 				var items = db.GetTable<LinqDataTypes>().ToList();

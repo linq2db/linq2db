@@ -44,13 +44,13 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public DateTime  DateBegin   { get; set; } // DateTime
 			[Column,        Nullable] public DateTime? DateEnd     { get; set; } // DateTime
 			[Column,     NotNull    ] public Guid      DirectionId { get; set; } // UniqueIdentifier
-			[Column,     NotNull    ] public string    Text        { get; set; } // varchar(1000)
-			[Column,     NotNull    ] public string    TargetName  { get; set; } // nvarchar(128)
+			[Column,     NotNull    ] public string    Text        { get; set; } = null!; // varchar(1000)
+			[Column,     NotNull    ] public string    TargetName  { get; set; } = null!; // nvarchar(128)
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 			[Column,        Nullable] public int?      ParentId    { get; set; } // Int
 
 			[Association(ThisKey =nameof(Id), OtherKey =nameof(TaskStage.TaskId), ExpressionPredicate = nameof(ActualTaskExp), CanBeNull =true)]
-			public IEnumerable<TaskStage> ActualStage { get; set; }
+			public IEnumerable<TaskStage> ActualStage { get; set; } = null!;
 
 			private static Expression<Func<Task, TaskStage, bool>> ActualTaskExp() => (t, ts) => ts.Actual == true;
 		  }
@@ -63,7 +63,7 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public DateTime  DateAssign  { get; set; } // DateTime
 			[Column,        Nullable] public DateTime? DateRevoke  { get; set; } // DateTime
 			[Column,     NotNull    ] public Guid      DirectionId { get; set; } // UniqueIdentifier
-			[Column,     NotNull    ] public string    TargetName  { get; set; } // nvarchar(128)
+			[Column,     NotNull    ] public string    TargetName  { get; set; } = null!; // nvarchar(128)
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 		}
 

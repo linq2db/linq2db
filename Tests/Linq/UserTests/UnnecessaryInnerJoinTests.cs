@@ -27,7 +27,7 @@ namespace Tests.UserTests
 			public Int64 Field2 { get; set; }
 
 			[Association(ThisKey = "Field2", OtherKey = "Field2", CanBeNull = false)]
-			public List<Table1> Field3 { get; set; }
+			public List<Table1> Field3 { get; set; } = null!;
 		}
 
 		[Test]

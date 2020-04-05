@@ -14,7 +14,7 @@ namespace Tests.UserTests
 		public partial class billing_Devtype
 		{
 			[Column("devtypeid"), PrimaryKey, Identity] public int Devtypeid   { get; set; } // integer
-			[Column("typename", Length = 50), NotNull]  public string Typename { get; set; } // character varying(255)
+			[Column("typename", Length = 50), NotNull]  public string Typename { get; set; } = null!; // character varying(255)
 			[Column(), NotNull]                         public int GlobalType  { get; set; } // integer
 
 			#region Associations
@@ -23,13 +23,13 @@ namespace Tests.UserTests
 			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId_BackReference
 			/// </summary>
 			[Association(ThisKey = "Devtypeid", OtherKey = "DevTypeId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<billing_DevReadingType> BillingDevReadingTypebillingdevtypesDevTypeIds { get; set; }
+			public IEnumerable<billing_DevReadingType> BillingDevReadingTypebillingdevtypesDevTypeIds { get; set; } = null!;
 
 			/// <summary>
 			/// fk_devices_devtypeid_devtypes_devtypeid_BackReference
 			/// </summary>
 			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<billing_Device> Fkdevicesdevtypeiddevtypeids { get; set; }
+			public IEnumerable<billing_Device> Fkdevicesdevtypeiddevtypeids { get; set; } = null!;
 
 			#endregion
 		}
@@ -37,8 +37,8 @@ namespace Tests.UserTests
 		[Table(Name = "billing_devices")]
 		public partial class billing_Device
 		{
-			[Column("devid", Length = 50), PrimaryKey, NotNull] public string Devid  { get; set; } // character varying(255)
-			[Column("sernum", Length = 50), Nullable]           public string Sernum { get; set; } // character varying(255)
+			[Column("devid", Length = 50), PrimaryKey, NotNull] public string  Devid  { get; set; } = null!; // character varying(255)
+			[Column("sernum", Length = 50), Nullable]           public string? Sernum { get; set; } // character varying(255)
 
 			[Column("devtypeid"), NotNull]                      public int Devtypeid { get; set; } // integer
 
@@ -48,13 +48,13 @@ namespace Tests.UserTests
 			/// FK_billing.TempReading_billing.devices_devid_BackReference
 			/// </summary>
 			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<billing_TempReading> BillingTempReadingbillingdevicesdevids { get; set; }
+			public IEnumerable<billing_TempReading> BillingTempReadingbillingdevicesdevids { get; set; } = null!;
 
 			/// <summary>
 			/// fk_devices_devtypeid_devtypes_devtypeid
 			/// </summary>
 			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = false, Relationship = Relationship.ManyToOne, KeyName = "fk_devices_devtypeid_devtypes_devtypeid", BackReferenceName = "Fkdevicesdevtypeiddevtypeids")]
-			public billing_Devtype Devtype { get; set; }
+			public billing_Devtype Devtype { get; set; } = null!;
 
 			#endregion
 		}
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey, Identity]         public int Id             { get; set; } // integer
 			[Column, NotNull]              public int? DevTypeId     { get; set; } // integer
-			[Column(Length = 50), NotNull] public string Name        { get; set; } // text
+			[Column(Length = 50), NotNull] public string Name        { get; set; } = null!; // text
 			[Column, NotNull]              public int Responsibility { get; set; } // integer
 
 			#region Associations
@@ -75,31 +75,31 @@ namespace Tests.UserTests
 			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId_BackReference
 			/// </summary>
 			[Association(ThisKey = "Id", OtherKey = "DevReadingTypeId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<billing_TempReading> BillingTempReadingbillingDevReadingTypeDevReadingTypeIds { get; set; }
+			public IEnumerable<billing_TempReading> BillingTempReadingbillingDevReadingTypeDevReadingTypeIds { get; set; } = null!;
 
 			/// <summary>
 			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId
 			/// </summary>
 			[Association(ThisKey = "DevTypeId", OtherKey = "Devtypeid", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.DevReadingType_billing.devtypes_DevTypeId", BackReferenceName = "BillingDevReadingTypebillingdevtypesDevTypeIds")]
-			public billing_Devtype DevType { get; set; }
+			public billing_Devtype? DevType { get; set; }
 			#endregion
 		}
 
 		[Table(Name = "billing_TempReading")]
 		public partial class billing_TempReading
 		{
-			[Column("id"), PrimaryKey, Identity]     public int Id                 { get; set; } // integer
+			[Column("id"), PrimaryKey, Identity]     public int Id                  { get; set; } // integer
 
-			[Column(Length = 50), NotNull]           public string DevSerNum       { get; set; } // text
+			[Column(Length = 50), NotNull]           public string DevSerNum        { get; set; } = null!; // text
 
-			[Column("devid", Length = 50), Nullable] public string Devid           { get; set; } // character varying(255)
-			[Column("tsdevice"), NotNull]            public DateTime Ts            { get; set; } // timestamp (6) without time zone
-			[Column("value"), NotNull]               public decimal Value          { get; set; } // numeric(18,2)
-			[Column(), Nullable]                     public int? Devtypeid         { get; set; } // integer
-			[Column(), Nullable]                     public int? DevReadingTypeId  { get; set; } // integer
-			[Column(Length = 50), Nullable]          public string ReadingTypeName { get; set; } // text
-			[Column(), NotNull]                      public int DevGlobalType      { get; set; } // integer
-			[Column(), NotNull]                      public int Responsibility     { get; set; } // integer
+			[Column("devid", Length = 50), Nullable] public string? Devid           { get; set; } // character varying(255)
+			[Column("tsdevice"), NotNull]            public DateTime Ts             { get; set; } // timestamp (6) without time zone
+			[Column("value"), NotNull]               public decimal Value           { get; set; } // numeric(18,2)
+			[Column(), Nullable]                     public int? Devtypeid          { get; set; } // integer
+			[Column(), Nullable]                     public int? DevReadingTypeId   { get; set; } // integer
+			[Column(Length = 50), Nullable]          public string? ReadingTypeName { get; set; } // text
+			[Column(), NotNull]                      public int DevGlobalType       { get; set; } // integer
+			[Column(), NotNull]                      public int Responsibility      { get; set; } // integer
 
 			#region Associations
 
@@ -107,13 +107,13 @@ namespace Tests.UserTests
 			/// FK_billing.TempReading_billing.devices_devid
 			/// </summary>
 			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.TempReading_billing.devices_devid", BackReferenceName = "BillingTempReadingbillingdevicesdevids")]
-			public billing_Device Dev { get; set; }
+			public billing_Device? Dev { get; set; }
 
 			/// <summary>
 			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId
 			/// </summary>
 			[Association(ThisKey = "DevReadingTypeId", OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId", BackReferenceName = "BillingTempReadingbillingDevReadingTypeDevReadingTypeIds")]
-			public billing_DevReadingType DevReadingType { get; set; }
+			public billing_DevReadingType? DevReadingType { get; set; }
 
 			#endregion
 		}

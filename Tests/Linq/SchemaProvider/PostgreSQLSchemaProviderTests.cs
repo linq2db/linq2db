@@ -322,15 +322,15 @@ namespace Tests.SchemaProvider
 					var expectedTable = expectedProc.ResultTable;
 					var actualTable = procedure.ResultTable;
 
-					Assert.AreEqual(expectedTable.ID, actualTable.ID);
-					Assert.AreEqual(expectedTable.CatalogName, actualTable.CatalogName);
-					Assert.AreEqual(expectedTable.SchemaName, actualTable.SchemaName);
-					Assert.AreEqual(expectedTable.TableName, actualTable.TableName);
-					Assert.AreEqual(expectedTable.Description, actualTable.Description);
-					Assert.AreEqual(expectedTable.IsDefaultSchema, actualTable.IsDefaultSchema);
-					Assert.AreEqual(expectedTable.IsView, actualTable.IsView);
-					Assert.AreEqual(expectedTable.IsProcedureResult, actualTable.IsProcedureResult);
-					Assert.AreEqual(expectedTable.TypeName, actualTable.TypeName);
+					Assert.AreEqual(expectedTable.ID                , actualTable!.ID);
+					Assert.AreEqual(expectedTable.CatalogName       , actualTable.CatalogName);
+					Assert.AreEqual(expectedTable.SchemaName        , actualTable.SchemaName);
+					Assert.AreEqual(expectedTable.TableName         , actualTable.TableName);
+					Assert.AreEqual(expectedTable.Description       , actualTable.Description);
+					Assert.AreEqual(expectedTable.IsDefaultSchema   , actualTable.IsDefaultSchema);
+					Assert.AreEqual(expectedTable.IsView            , actualTable.IsView);
+					Assert.AreEqual(expectedTable.IsProcedureResult , actualTable.IsProcedureResult);
+					Assert.AreEqual(expectedTable.TypeName          , actualTable.TypeName);
 					Assert.AreEqual(expectedTable.IsProviderSpecific, actualTable.IsProviderSpecific);
 
 					Assert.IsNotNull(actualTable.ForeignKeys);
@@ -393,7 +393,7 @@ namespace Tests.SchemaProvider
 
 					Assert.IsNotNull(procedure.SimilarTables);
 
-					foreach (var table in procedure.SimilarTables)
+					foreach (var table in procedure.SimilarTables!)
 					{
 						var tbl = expectedProc.SimilarTables
 							.Where(_ => _.TableName == table.TableName)

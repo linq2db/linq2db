@@ -140,11 +140,11 @@ namespace Tests.xUpdate
 				var patient = person.ID;
 				var merge = db.GetTable<Person>()
 					.Merge()
-					.Using(db.Person.Where(t => t.Patient.PersonID == patient))
+					.Using(db.Person.Where(t => t.Patient!.PersonID == patient))
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.PersonID == patient);
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.PersonID == patient);
 				merge.Merge();
 				patient++;
 				merge.Merge();
@@ -159,10 +159,10 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<Child>()
 					.Merge()
-					.Using(db.Child.Where(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22)))
+					.Using(db.Child.Where(t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22)))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22))
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22))
 					.Merge();
 			}
 		}
@@ -177,9 +177,9 @@ namespace Tests.xUpdate
 			[Column("CHARDATATYPE", DataType = DataType.Char, Length = 1, Configuration = ProviderName.DB2)]
 			public char charDataType;
 			[Column(DataType = DataType.NChar, Length = 20)]
-			public string ncharDataType;
+			public string? ncharDataType;
 			[Column(DataType = DataType.NVarChar, Length = 20)]
-			public string nvarcharDataType;
+			public string? nvarcharDataType;
 		}
 
 		// DB2: ncharDataType field missing in AllTypes

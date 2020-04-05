@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -12,11 +13,11 @@ namespace Tests.UserTests
 	{
 		public class CustomFieldType
 		{
-			public string Field1 { get; set; }
+			public string Field1 { get; set; } = null!;
 
-			public static CustomFieldType FromString(string str)
+			public static CustomFieldType? FromString(string? str)
 			{
-				if (string.IsNullOrEmpty(str))
+				if (str.IsNullOrEmpty())
 					return null;
 				return new CustomFieldType { Field1 = str };
 			}
@@ -34,7 +35,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column]
-			public string Field1 { get; set; }
+			public string? Field1 { get; set; }
 		}
 
 		[Table("Issue1373Tests")]
@@ -44,7 +45,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column]
-			public CustomFieldType Field1 { get; set; }
+			public CustomFieldType? Field1 { get; set; }
 		}
 
 		[Table("Issue1373Tests")]
@@ -54,7 +55,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(DataType = DataType.NVarChar)]
-			public CustomFieldType Field1 { get; set; }
+			public CustomFieldType? Field1 { get; set; }
 		}
 
 		[Test]
@@ -63,7 +64,7 @@ namespace Tests.UserTests
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
@@ -97,7 +98,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
@@ -131,7 +132,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context,  ms))
@@ -164,7 +165,7 @@ namespace Tests.UserTests
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
@@ -199,7 +200,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
@@ -234,7 +235,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<string, CustomFieldType>(s => CustomFieldType.FromString(s));
+			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context, ms))
@@ -272,7 +273,7 @@ namespace Tests.UserTests
 			NUnit.Framework.Assert.IsNull(result[1].Field1);
 			NUnit.Framework.Assert.AreEqual(3, result[2].Id);
 			NUnit.Framework.Assert.IsNotNull(result[2].Field1);
-			NUnit.Framework.Assert.AreEqual("test", result[2].Field1.Field1);
+			NUnit.Framework.Assert.AreEqual("test", result[2].Field1!.Field1);
 		}
 	}
 }

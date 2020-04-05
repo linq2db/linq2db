@@ -17,9 +17,9 @@ namespace Tests.Linq
 		#region Mappings
 		public class FtsTable
 		{
-			public string text1 { get; set; }
+			public string? text1 { get; set; }
 
-			public string text2 { get; set; }
+			public string? text2 { get; set; }
 		}
 
 		public enum SQLiteFTS

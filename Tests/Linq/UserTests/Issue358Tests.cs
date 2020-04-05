@@ -47,7 +47,7 @@ namespace Tests.UserTests
 
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
-					where !!filter.Contains(p.MyEnum.Value)
+					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
 				var sql = qry.ToString();
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
-					where !!filter.Contains(p.MyEnum.Value)
+					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
 				var sql = qry.ToString();
@@ -132,8 +132,8 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(FixData,
-					   Types2.Where(_ => !_.BoolValue.Value),
-					db.Types2.Where(_ => !_.BoolValue.Value));
+					   Types2.Where(_ => !_.BoolValue!.Value),
+					db.Types2.Where(_ => !_.BoolValue!.Value));
 			}
 		}
 

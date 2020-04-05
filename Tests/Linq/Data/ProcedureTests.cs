@@ -58,8 +58,8 @@ namespace Tests.Data
 
 		class VariableResult
 		{
-			public int Code      { get; set; }
-			public string Value1 { get; set; }
+			public int     Code   { get; set; }
+			public string? Value1 { get; set; }
 
 			protected bool Equals(VariableResult other)
 			{
@@ -85,7 +85,7 @@ namespace Tests.Data
 				}
 			}
 
-			public string Value2 { get; set; }
+			public string? Value2 { get; set; }
 		}
 
 		[Test]

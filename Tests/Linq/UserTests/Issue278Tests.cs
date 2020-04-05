@@ -102,11 +102,11 @@ namespace Tests.UserTests
 			var actions     = new Action<ITestDataContext>[100];
 
 			var dbParam     = Expression.Parameter(typeof(ITestDataContext), "db");
-			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
+			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null!));
 			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>?)null));
 
 			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
 
@@ -131,11 +131,11 @@ namespace Tests.UserTests
 			var actions     = new Action<ITestDataContext>[100 + 50];
 
 			var dbParam     = Expression.Parameter(typeof(ITestDataContext), "db");
-			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
+			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null!));
 			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>?)null));
 
 			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
 

@@ -35,7 +35,7 @@ namespace Tests.Linq
 						join p   in Parent on ch.ParentID equals p.ParentID
 						join gc2 in q1     on p.ParentID  equals gc2.ParentID into g
 						from gc3 in g.DefaultIfEmpty()
-					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
+					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 					select new { p.ParentID, gc3 };
 
 				var q2 =
@@ -52,7 +52,7 @@ namespace Tests.Linq
 						join p   in db.Parent on ch.ParentID equals p.ParentID
 						join gc2 in q2        on p.ParentID  equals gc2.ParentID into g
 						from gc3 in g.DefaultIfEmpty()
-				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
+				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 				select new { p.ParentID, gc3 };
 
 				AreEqual(expected, result);
@@ -136,7 +136,7 @@ namespace Tests.Linq
 						join p  in Parent on ch.ParentID equals p.ParentID
 						join gc in q1     on p.ParentID  equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
 				var q2 =
@@ -153,7 +153,7 @@ namespace Tests.Linq
 						join p  in db.Parent on ch.ParentID equals p.ParentID
 						join gc in q2        on p.ParentID  equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
 				AreEqual(expected, result);
@@ -176,9 +176,9 @@ namespace Tests.Linq
 
 				var expected =
 					from ch in Child
-						join gc in q1 on ch.Parent.ParentID equals gc.ParentID into g
+						join gc in q1 on ch.Parent!.ParentID equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { ch.Parent, gc };
 
 				var q2 =
@@ -192,9 +192,9 @@ namespace Tests.Linq
 
 				var result =
 					from ch in db.Child
-						join gc in q2 on ch.Parent.ParentID equals gc.ParentID into g
+						join gc in q2 on ch.Parent!.ParentID equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-				where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+				where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 				select new { ch.Parent, gc };
 
 				AreEqual(expected, result);
@@ -272,8 +272,8 @@ namespace Tests.Linq
 
 		public class MyObject
 		{
-			public Parent Parent;
-			public Child  Child;
+			public Parent? Parent;
+			public Child?  Child;
 		}
 
 		IQueryable<MyObject> GetData(ITestDataContext db, int id)
@@ -294,7 +294,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from o in GetData(db, 1)
-					from g in o.Parent.GrandChildren
+					from g in o.Parent!.GrandChildren
 					select new { o, g };
 
 				var _ = q.ToList();
@@ -354,7 +354,7 @@ namespace Tests.Linq
 		[Column("ParentID",     "InnerEntityType")]
 		public class LookupEntity : Entity
 		{
-			public Entity         InnerEntity     { get; set; }
+			public Entity?        InnerEntity     { get; set; }
 			public TestEntityType InnerEntityType { get; set; }
 		}
 
@@ -365,7 +365,7 @@ namespace Tests.Linq
 		public class TestEntityBase : Entity
 		{
 			public TestEntityType EntityType { get; set; }
-			public SuperAccount   Owner      { get; set; }
+			public SuperAccount?  Owner      { get; set; }
 		}
 
 		public class TestEntity : TestEntityBase, IEnumerable<object>
@@ -400,7 +400,7 @@ namespace Tests.Linq
 		[Column("ParentID",     "Type")]
 		public class SuperAccount : Entity, IEnumerable<object>
 		{
-			public List<Entity>     InnerAccounts { get; set; }
+			public List<Entity>     InnerAccounts { get; set; } = null!;
 			public SuperAccountType Type          { get; set; }
 
 			#region IEnumerable<object> Members
@@ -429,7 +429,7 @@ namespace Tests.Linq
 			{
 				var res =
 					from rc in db.GetTable<TestEntity>()
-					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity.Id
+					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity!.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 
@@ -444,7 +444,7 @@ namespace Tests.Linq
 			{
 				var zones =
 					from z in db.GetTable<TestEntity2>()
-					join o in db.GetTable<SuperAccount>() on z.Owner.Id equals o.Id
+					join o in db.GetTable<SuperAccount>() on z.Owner!.Id equals o.Id
 					select z;
 
 				var _ = zones.ToList();
@@ -456,10 +456,10 @@ namespace Tests.Linq
 		[Table("T1")]
 		public class T1
 		{
-			[PrimaryKey] public int InstrumentId { get; set; }
-			[Column] public string InstrumentCode { get; set; }
-			[Column] public DateTime CreateDate { get; set; }
-			[Column] public string SourceInstrumentCode { get; set; }
+			[PrimaryKey] public int      InstrumentId         { get; set; }
+			[Column]     public string?  InstrumentCode       { get; set; }
+			[Column]     public DateTime CreateDate           { get; set; }
+			[Column]     public string?  SourceInstrumentCode { get; set; }
 		}
 
 		[Table("T2")]
@@ -498,7 +498,7 @@ namespace Tests.Linq
 				db.Insert(new T1() { InstrumentId = 2, CreateDate = DateTime.Now.AddDays(-1), InstrumentCode = "aaa2", SourceInstrumentCode = null });
 
 				var res = db.GetTable<T1>()
-									.Where(_ => _.InstrumentCode.StartsWith(cond) && _.CreateDate <= uptoDate)
+									.Where(_ => _.InstrumentCode!.StartsWith(cond) && _.CreateDate <= uptoDate)
 									.Join(db.GetTable<T2>(), _ => _.InstrumentId, _ => _.InstrumentId, (ins, idx) => idx.IndexId)
 									.Join(db.GetTable<T3>(), _ => _, _ => _.IndexId, (idx, w) => w.InstrumentId)
 									.Join(db.GetTable<T1>(), _ => _, _ => _.InstrumentId

@@ -189,28 +189,28 @@ namespace Tests.UserTests
 		public class WmsGlobalTaskCombinedDTO : MCC.Common.ServiceInterfaces.DTO.Base.IInterlinqDTO
 		{
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.GlobalTaskDTO GlobalTask { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.GlobalTaskDTO? GlobalTask { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.WmsLoadCarrierDTO LoadCarrier { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.WmsLoadCarrierDTO? LoadCarrier { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO Source { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO? Source { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.StorageShelfDTO SourceShelf { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.StorageShelfDTO? SourceShelf { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO Destination { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO? Destination { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.StorageShelfDTO DestinationShelf { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.StorageShelfDTO? DestinationShelf { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO OriginDestination { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.WmsResourcePointDTO? OriginDestination { get; set; }
 
 			[System.Runtime.Serialization.DataMemberAttribute()]
-			public MCC.WMS.ServiceInterfaces.DTO.OutfeedTransportOrderDTO OutfeedTransportOrder { get; set; }
+			public MCC.WMS.ServiceInterfaces.DTO.OutfeedTransportOrderDTO? OutfeedTransportOrder { get; set; }
 		}
 	}
 

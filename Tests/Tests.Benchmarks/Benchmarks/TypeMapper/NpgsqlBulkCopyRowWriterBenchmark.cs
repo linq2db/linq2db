@@ -13,22 +13,22 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private static readonly MappingSchema MappingSchema = new MappingSchema();
 
-		private Wrapped.NpgsqlBinaryImporter           _wrappedImporter;
+		private Wrapped.NpgsqlBinaryImporter           _wrappedImporter = null!;
 		private readonly Original.NpgsqlBinaryImporter _originalImporter = new Original.NpgsqlBinaryImporter();
 
-		private ColumnDescriptor[] _columns;
+		private ColumnDescriptor[] _columns = null!;
 
 		[Table]
 		public class TestEntity
 		{
-			[Column] public int    Column1 { get; set; }
-			[Column] public string Column2 { get; set; }
-			[Column] public int?   Column3 { get; set; }
+			[Column] public int     Column1 { get; set; }
+			[Column] public string? Column2 { get; set; }
+			[Column] public int?    Column3 { get; set; }
 
 			public static TestEntity Instance { get; } = new TestEntity();
 		}
 
-		private Action<MappingSchema, Wrapped.NpgsqlBinaryImporter, ColumnDescriptor[], TestEntity> _rowWriter;
+		private Action<MappingSchema, Wrapped.NpgsqlBinaryImporter, ColumnDescriptor[], TestEntity> _rowWriter = null!;
 
 		class Original
 		{

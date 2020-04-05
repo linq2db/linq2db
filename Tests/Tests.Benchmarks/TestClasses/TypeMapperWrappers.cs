@@ -28,7 +28,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
 			}
 
-			public string StringProperty
+			public string? StringProperty
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
@@ -55,7 +55,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			public DataTable GetOleDbSchemaTable(Guid schema, object[] restrictions) => _GetOleDbSchemaTableResult;
+			public DataTable GetOleDbSchemaTable(Guid schema, object?[]? restrictions) => _GetOleDbSchemaTableResult;
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public static void ClearAllPools() { }
@@ -142,7 +142,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
 			}
 
-			public string StringProperty
+			public string? StringProperty
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
@@ -154,7 +154,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
 			}
 
-			public TestClass2 WrapperProperty
+			public TestClass2? WrapperProperty
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 				[MethodImpl(MethodImplOptions.NoInlining)] set;
@@ -165,7 +165,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 			}
 
-			public Version VersionProperty
+			public Version? VersionProperty
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)] get;
 			}
@@ -182,7 +182,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		public class TestEventClass
 		{
-			public event TestEventHandler TestEvent;
+			public event TestEventHandler? TestEvent;
 
 			public void Fire()
 			{
@@ -190,7 +190,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		public delegate void TestEventHandler(object sender, TestClass2 e);
+		public delegate void TestEventHandler(object? sender, TestClass2 e);
 
 		public enum TestEnum
 		{
@@ -244,7 +244,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			public decimal   DecimalProperty   { get; }
 			public bool      BooleanProperty   { get; }
 			public int       IntProperty       { get; }
-			public string    StringProperty    { get; set; }
+			public string?   StringProperty    { get; set; }
 			public SqlDbType KnownEnumProperty { get; set; }
 
 			public DataTable GetOleDbSchemaTable(Guid schema, object[] restrictions) => throw new NotImplementedException();
@@ -268,11 +268,11 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			{
 			}
 
-			private      TestEventHandler _TestEvent;
-			public event TestEventHandler  TestEvent
+			private      TestEventHandler? _TestEvent;
+			public event TestEventHandler?  TestEvent
 			{
-				add    => _TestEvent = (TestEventHandler)Delegate.Combine(_TestEvent, value);
-				remove => _TestEvent = (TestEventHandler)Delegate.Remove (_TestEvent, value);
+				add    => _TestEvent = (TestEventHandler?)Delegate.Combine(_TestEvent, value);
+				remove => _TestEvent = (TestEventHandler?)Delegate.Remove (_TestEvent, value);
 			}
 		}
 
@@ -297,15 +297,15 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				// [6]: get IntProperty
 				(Expression<Func<TestClass2, int>>)((TestClass2 this_)                                     => this_.IntProperty),
 				// [7]: get StringProperty
-				(Expression<Func<TestClass2, string>>)((TestClass2 this_)                                  => this_.StringProperty),
+				(Expression<Func<TestClass2, string?>>)((TestClass2 this_)                                 => this_.StringProperty),
 				// [8]: get BooleanProperty
 				(Expression<Func<TestClass2, bool>>)((TestClass2 this_)                                    => this_.BooleanProperty),
 				// [9]: get WrapperProperty
-				(Expression<Func<TestClass2, TestClass2>>)((TestClass2 this_)                              => this_.WrapperProperty),
+				(Expression<Func<TestClass2, TestClass2?>>)((TestClass2 this_)                             => this_.WrapperProperty),
 				// [10]: get EnumProperty
 				(Expression<Func<TestClass2, TestEnum>>)((TestClass2 this_)                                => this_.EnumProperty),
 				// [11]: get VersionProperty
-				(Expression<Func<TestClass2, Version>>)((TestClass2 this_)                                 => this_.VersionProperty),
+				(Expression<Func<TestClass2, Version?>>)((TestClass2 this_)                                => this_.VersionProperty),
 				// [12]: get LongProperty
 				(Expression<Func<TestClass2, long>>)((TestClass2 this_)                                    => this_.LongProperty),
 				// [13]: set IntProperty
@@ -351,10 +351,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				set => ((Action<TestClass2, int>)CompiledWrappers[13])(this, value);
 			}
 
-			public string StringProperty
+			public string? StringProperty
 			{
-				get => ((Func<TestClass2, string>)  CompiledWrappers[7])(this);
-				set => ((Action<TestClass2, string>)CompiledWrappers[14])(this, value);
+				get => ((Func<TestClass2, string?>)  CompiledWrappers[7])(this);
+				set => ((Action<TestClass2, string?>)CompiledWrappers[14])(this, value);
 			}
 
 			public bool BooleanProperty
@@ -363,14 +363,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				set => ((Action<TestClass2, bool>)CompiledWrappers[15])(this, value);
 			}
 
-			public TestClass2 WrapperProperty
+			public TestClass2? WrapperProperty
 			{
-				get => ((Func<TestClass2, TestClass2>)  CompiledWrappers[9])(this);
-				set => ((Action<TestClass2, TestClass2>)CompiledWrappers[16])(this, value);
+				get => ((Func<TestClass2, TestClass2?>)  CompiledWrappers[9])(this);
+				set => ((Action<TestClass2, TestClass2?>)CompiledWrappers[16])(this, value);
 			}
 
 			public TestEnum EnumProperty    => ((Func<TestClass2, TestEnum>)CompiledWrappers[10])(this);
-			public Version  VersionProperty => ((Func<TestClass2, Version> )CompiledWrappers[11])(this);
+			public Version? VersionProperty => ((Func<TestClass2, Version?>)CompiledWrappers[11])(this);
 			public long     LongProperty    => ((Func<TestClass2, long>    )CompiledWrappers[12])(this);
 
 			public TestEnum  TestEnumConvert (TestEnum  value) => ((Func<TestClass2, TestEnum , TestEnum >)CompiledWrappers[17])(this, value);

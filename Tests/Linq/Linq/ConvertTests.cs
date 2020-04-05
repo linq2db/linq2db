@@ -747,7 +747,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -764,7 +764,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -781,7 +781,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -798,7 +798,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -815,7 +815,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -832,7 +832,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -849,7 +849,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -866,7 +866,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -883,7 +883,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -900,7 +900,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -917,7 +917,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -934,7 +934,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -951,7 +951,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -968,7 +968,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -985,7 +985,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1002,7 +1002,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1019,7 +1019,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1036,7 +1036,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1053,7 +1053,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1070,7 +1070,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1087,7 +1087,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1104,7 +1104,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1121,7 +1121,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1138,7 +1138,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1155,7 +1155,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1172,7 +1172,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1189,7 +1189,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1206,7 +1206,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1223,7 +1223,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1240,7 +1240,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1257,7 +1257,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1274,7 +1274,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 		#endregion

@@ -38,7 +38,7 @@ namespace Tests.UserTests
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public String? Name { get; set; }
 			[Column("Age"), SkipCustom()]
 			public Int32? Age { get; set; }
 		}

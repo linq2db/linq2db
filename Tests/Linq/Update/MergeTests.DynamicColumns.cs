@@ -14,13 +14,13 @@ namespace Tests.xUpdate
 		class DynamicColumns1
 		{
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		class DynamicColumns2
 		{
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		private MappingSchema ConfigureDynamicColumnsMappingSchema()

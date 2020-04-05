@@ -1114,8 +1114,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, result.Length);
 				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target.Value.TargetID);
-				Assert.AreEqual(TestEnum1.Value2, result[0].Target.Value.TargetType);
+				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
+				Assert.AreEqual(TestEnum1.Value2, result[0].Target!.Value.TargetType);
 			}
 		}
 
@@ -1163,8 +1163,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, result.Length);
 				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target.Value.TargetID);
-				Assert.AreEqual(TestEnum2.Value2, result[0].Target.Value.TargetType);
+				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
+				Assert.AreEqual(TestEnum2.Value2, result[0].Target!.Value.TargetType);
 			}
 		}
 
@@ -1372,9 +1372,9 @@ namespace Tests.Linq
 		[Table("LinqDataTypes")]
 		class RawTable2
 		{
-			[PrimaryKey, Column("ID")] public int    Id;
-			[Column("IntValue")]       public int?   Int32;
-			[Column("StringValue")]    public string String;
+			[PrimaryKey, Column("ID")] public int     Id;
+			[Column("IntValue")]       public int?    Int32;
+			[Column("StringValue")]    public string? String;
 		}
 
 		[Test]
@@ -1760,7 +1760,7 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
-			public string SomeText { get; set; }
+			public string? SomeText { get; set; }
 		}
 
 		public enum Issue1622Enum
@@ -1769,7 +1769,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
+		public static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
 
 		[Test]
 		public void Issue1622Test([DataSources] string context)

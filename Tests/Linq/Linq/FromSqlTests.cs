@@ -24,10 +24,10 @@ namespace Tests.Linq
 			public int Id    { get; set; }
 
 			[Column("value", Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 
-			public SomeOtherClass AssociatedOne { get; set; }
+			public SomeOtherClass? AssociatedOne { get; set; }
 
 		}
 
@@ -41,7 +41,7 @@ namespace Tests.Linq
 			public int ParentId { get; set; }
 
 			[Column("value", Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 		}
 
 		static SampleClass[] GenerateTestData()
@@ -379,7 +379,7 @@ namespace Tests.Linq
 		public class UnnestEnvelope<T>
 		{
 			[Column("value")]
-			public T Value;
+			public T Value = default!;
 			[Column("index")]
 			public int Index;
 		}

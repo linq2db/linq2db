@@ -23,7 +23,7 @@
 
 				// Build "where" conditions
 				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>> predicate = null;
+				Expression<Func<Model.Child, bool>>? predicate = null;
 
 				for (var i = 0; i < array.Length; i++)
 				{
@@ -57,7 +57,7 @@
 
 				// Build "where" conditions
 				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>> predicate = null;
+				Expression<Func<Model.Child, bool>>? predicate = null;
 
 				for (var i = 0; i < array.Length; i++)
 				{
@@ -91,8 +91,8 @@
 
 				// Build "where" conditions
 				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>> predicate1 = null;
-				Expression<Func<Model.Child, bool>> predicate2 = null;
+				Expression<Func<Model.Child, bool>>? predicate1 = null;
+				Expression<Func<Model.Child, bool>>? predicate2 = null;
 
 				for (var i = 0; i < array.Length; i++)
 				{

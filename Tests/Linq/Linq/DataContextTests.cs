@@ -70,7 +70,7 @@ namespace Tests.Linq
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString));
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString!));
 			}
 
 		}
@@ -89,7 +89,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))
+			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
 				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
 				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);

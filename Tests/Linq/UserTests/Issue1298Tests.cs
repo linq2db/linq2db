@@ -2,11 +2,7 @@
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tests.UserTests
 {
@@ -19,7 +15,7 @@ namespace Tests.UserTests
 			public long Id { get; set; }
 
 			[Column]
-			public System.String asdfgh { get; set; }
+			public string? asdfgh { get; set; }
 		}
 
 		[Table("mega_composites")]
@@ -55,8 +51,8 @@ namespace Tests.UserTests
 
 		public class __mega_composites_View : mega_composites
 		{
-			public System.String __face_y1_q1_ref1 { get; set; }
-			public System.String __face_ref1 { get; set; }
+			public string? __face_y1_q1_ref1 { get; set; }
+			public string? __face_ref1 { get; set; }
 		}
 
 		[Test]

@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			[Column(DataType=DataType.DateTime)] public DateTime DateTimeValue;
 			[Column]                             public bool     BoolValue;
 			[Column]                             public Guid     GuidValue;
-			[Column]                             public Binary   BinaryValue;
+			[Column]                             public Binary?  BinaryValue;
 			[Column]                             public short    SmallIntValue;
 		}
 
@@ -225,7 +225,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -249,7 +249,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -267,7 +267,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -297,7 +297,7 @@ namespace Tests.UserTests
 
 			Assert.AreEqual(1, result.Count);
 			Assert.AreEqual(10256, result[0].ID);
-			Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+			Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 		}
 
 		private static void NonLinqUpdate(ITestDataContext db, byte[] value, int calls)
@@ -318,7 +318,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}

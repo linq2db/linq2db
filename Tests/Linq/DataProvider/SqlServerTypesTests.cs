@@ -26,8 +26,8 @@ namespace Tests.DataProvider
 			[Column(DbType="datetime2(7)"),      Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
 			[Column(DbType="time(7)"),           Nullable] public TimeSpan?       timeDataType           { get; set; } // time(7)
 			[Column(DbType="hierarchyid"),       Nullable] public SqlHierarchyId  hierarchyidDataType    { get; set; } // hierarchyid
-			[Column(DbType="geography"),         Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
-			[Column(DbType="geometry"),          Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
+			[Column(DbType="geography"),         Nullable] public SqlGeography?   geographyDataType      { get; set; } // geography
+			[Column(DbType="geometry"),          Nullable] public SqlGeometry?    geometryDataType       { get; set; } // geometry
 		}
 
 		[Test]
@@ -89,7 +89,7 @@ namespace Tests.DataProvider
 				conn.GetTable<AllTypes2>()
 					.Select(t => new
 					{
-						v1  = t.geographyDataType.STSrid,
+						v1  = t.geographyDataType!.STSrid,
 						v2  = t.geographyDataType.Lat,
 						v3  = t.geographyDataType.Long,
 						v4  = t.geographyDataType.Z,
@@ -116,7 +116,7 @@ namespace Tests.DataProvider
 			[Column] public int            ID;
 			[Column] public SqlHierarchyId HID;
 
-			static List<SqlTypes> _data;
+			static List<SqlTypes>? _data;
 			public  static IEnumerable<SqlTypes> Data([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 			{
 				if (_data == null)
@@ -305,7 +305,7 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 
 			[Column]
-			public SqlGeography HomeLocation { get; set; }
+			public SqlGeography? HomeLocation { get; set; }
 
 			public static Issue1836[] Data { get; } = new[]
 			{
@@ -334,11 +334,11 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(2, records.Count);
 				Assert.AreEqual(1, records[0].Id);
-				Assert.True(records[0].HomeLocation.IsNull);
+				Assert.True(records[0].HomeLocation!.IsNull);
 				Assert.AreEqual(2, records[1].Id);
 				// missing API
 #if !NETCOREAPP2_1
-				Assert.True(Issue1836.Data[1].HomeLocation.STEquals(records[1].HomeLocation).IsTrue);
+				Assert.True(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue);
 #endif
 			}
 		}
