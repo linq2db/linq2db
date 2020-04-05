@@ -18,11 +18,11 @@ namespace LinqToDB.Tools.Mapper
 	[PublicAPI]
 	public class Mapper<TFrom,TTo>
 	{
-		MapperBuilder<TFrom,TTo>                                    _mapperBuilder;
-		Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>>? _mapperExpression;
-		Expression<Func<TFrom,TTo>>?                                _mapperExpressionEx;
-		Func<TFrom,TTo,IDictionary<object,object>,TTo>?             _mapperEx;
-		Func<TFrom,TTo>?                                            _mapper;
+		MapperBuilder<TFrom,TTo>                                     _mapperBuilder;
+		Expression<Func<TFrom,TTo,IDictionary<object,object>?,TTo>>? _mapperExpression;
+		Expression<Func<TFrom,TTo>>?                                 _mapperExpressionEx;
+		Func<TFrom,TTo,IDictionary<object,object>?,TTo>?             _mapperEx;
+		Func<TFrom,TTo>?                                             _mapper;
 
 		internal Mapper(MapperBuilder<TFrom,TTo> mapperBuilder) => _mapperBuilder = mapperBuilder;
 
@@ -40,7 +40,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>> GetMapperExpressionEx()
+		public Expression<Func<TFrom,TTo,IDictionary<object,object>?,TTo>> GetMapperExpressionEx()
 			=> _mapperExpression ?? (_mapperExpression = _mapperBuilder.GetMapperExpressionEx());
 
 		/// <summary>
@@ -56,7 +56,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public Func<TFrom,TTo,IDictionary<object,object>,TTo> GetMapperEx()
+		public Func<TFrom,TTo,IDictionary<object,object>?,TTo> GetMapperEx()
 			=> _mapperEx ?? (_mapperEx = GetMapperExpressionEx().Compile());
 
 		/// <summary>
@@ -85,7 +85,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="crossReferenceDictionary">Storage for cress references if applied.</param>
 		/// <returns>Destination object.</returns>
 		[Pure]
-		public TTo Map(TFrom source, TTo destination, IDictionary<object,object> crossReferenceDictionary)
+		public TTo Map(TFrom source, TTo destination, IDictionary<object,object>? crossReferenceDictionary)
 			=> GetMapperEx()(source, destination, crossReferenceDictionary);
 	}
 }

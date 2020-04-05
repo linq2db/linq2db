@@ -48,8 +48,8 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>> GetMapperExpressionEx()
-			=> (Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>>)GetExpressionMapper().GetExpressionEx();
+		public Expression<Func<TFrom,TTo,IDictionary<object,object>?,TTo>> GetMapperExpressionEx()
+			=> (Expression<Func<TFrom,TTo,IDictionary<object,object>?,TTo>>)GetExpressionMapper().GetExpressionEx();
 
 		LambdaExpression IMapperBuilder.GetMapperLambdaExpressionEx()
 			=> GetExpressionMapper().GetExpressionEx();

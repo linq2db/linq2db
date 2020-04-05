@@ -142,7 +142,7 @@ namespace LinqToDB
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
 		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
-		public static T Property<T>(object entity, [SqlQueryDependent] string propertyName)
+		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 		{
 			throw new LinqException("'Property' is only server-side method.");
 		}
@@ -817,8 +817,8 @@ namespace LinqToDB
 
 		[Sql.Function] public static Double?  Cot    (Double?  value) { return value == null ? null : (Double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
-		[Sql.Function] public static Decimal? Degrees(Decimal? value) { return value == null ? null : (Decimal?)(value.Value * 180m / (Decimal)Math.PI); }
-		[Sql.Function] public static Double?  Degrees(Double?  value) { return value == null ? null : (Double?) (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static Decimal? Degrees(decimal? value) { return value == null ? null : (decimal?)(value.Value * 180m / (Decimal)Math.PI); }
+		[Sql.Function] public static Double?  Degrees(double?  value) { return value == null ? null : (double?) (value.Value * 180 / Math.PI); }
 		[Sql.Function] public static Int16?   Degrees(Int16?   value) { return value == null ? null : (Int16?)  (value.Value * 180 / Math.PI); }
 		[Sql.Function] public static Int32?   Degrees(Int32?   value) { return value == null ? null : (Int32?)  (value.Value * 180 / Math.PI); }
 		[Sql.Function] public static Int64?   Degrees(Int64?   value) { return value == null ? null : (Int64?)  (value.Value * 180 / Math.PI); }

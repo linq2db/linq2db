@@ -462,7 +462,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
-		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object entityOrColumn)
+		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
 		{
 			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}

@@ -27,14 +27,14 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchImpl1))]
-		public static bool Match(this ISQLiteExtensions? ext, object entityOrColumn, string match)
+		public static bool Match(this ISQLiteExtensions? ext, object? entityOrColumn, string match)
 		{
 			throw new LinqException($"'{nameof(Match)}' is server-side method.");
 		}
 
-		static Expression<Func<ISQLiteExtensions, object, string, bool>> MatchImpl1()
+		static Expression<Func<ISQLiteExtensions?, object?, string, bool>> MatchImpl1()
 		{
-			return (ext, entityOrColumn, match) => Sql.Expr<bool>($"{Sql.TableOrColumnAsField<string>(entityOrColumn)} MATCH {match}");
+			return (ext, entityOrColumn, match) => Sql.Expr<bool>($"{Sql.TableOrColumnAsField<string?>(entityOrColumn)} MATCH {match}");
 		}
 
 		/// <summary>

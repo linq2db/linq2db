@@ -22,10 +22,10 @@ namespace LinqToDB.SchemaProvider
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
 		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection) => null;
 
-		protected HashSet<string>    IncludedSchemas  = null!;
-		protected HashSet<string>    ExcludedSchemas  = null!;
-		protected HashSet<string>    IncludedCatalogs = null!;
-		protected HashSet<string>    ExcludedCatalogs = null!;
+		protected HashSet<string?>   IncludedSchemas  = null!;
+		protected HashSet<string?>   ExcludedSchemas  = null!;
+		protected HashSet<string?>   IncludedCatalogs = null!;
+		protected HashSet<string?>   ExcludedCatalogs = null!;
 		protected bool               GenerateChar1AsString;
 		protected DataTable          DataTypesSchema  = null!;
 
@@ -87,8 +87,8 @@ namespace LinqToDB.SchemaProvider
 					where
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
-						(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(t.CatalogName!)) &&
-						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName!)) &&
+						(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(t.CatalogName)) &&
+						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName)) &&
 						(options.LoadTable == null   ||  options.LoadTable(new LoadTableData(t)))
 					select new TableSchema
 					{
@@ -226,10 +226,10 @@ namespace LinqToDB.SchemaProvider
 					(
 						from sp in procs
 						where
-							(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(sp.SchemaName!))  &&
-							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName!))  &&
-							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName!)) &&
-							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName!))
+							(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(sp.SchemaName))  &&
+							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName))  &&
+							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName)) &&
+							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName))
 						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
 						into gr
 						select new ProcedureSchema
@@ -334,9 +334,9 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
 
-		protected static HashSet<string> GetHashSet(string[]? data, IEqualityComparer<string> comparer)
+		protected static HashSet<string?> GetHashSet(string?[]? data, IEqualityComparer<string?> comparer)
 		{
-			var set = new HashSet<string>(comparer ?? StringComparer.OrdinalIgnoreCase);
+			var set = new HashSet<string?>(comparer ?? StringComparer.OrdinalIgnoreCase);
 
 			if (data == null)
 				return set;

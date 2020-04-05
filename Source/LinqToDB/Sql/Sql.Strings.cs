@@ -215,7 +215,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] this IQueryable<string> source,
+			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
@@ -245,7 +245,7 @@ namespace LinqToDB
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 							this IEnumerable<T> source,
 			[ExprParameter] string separator,
-			[ExprParameter] Func<T, string> selector)
+			[ExprParameter] Func<T, string?> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
@@ -264,7 +264,7 @@ namespace LinqToDB
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 							this IQueryable<T> source,
 			[ExprParameter] string separator,
-			[ExprParameter] Expression<Func<T, string>> selector)
+			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -292,7 +292,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] this IEnumerable<string> source,
+			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");

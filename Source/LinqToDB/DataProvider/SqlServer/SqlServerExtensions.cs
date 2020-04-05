@@ -631,7 +631,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({columns, ', '}), {term})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool FreeText<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] params object[] columns)
+		public static bool FreeText<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] params object?[] columns)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
@@ -649,7 +649,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({columns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool FreeTextWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] string language, [ExprParameter] params object[] columns)
+		public static bool FreeTextWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] string language, [ExprParameter] params object?[] columns)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FreeTextWithLanguage)}' is server-side method.");
@@ -667,7 +667,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({columns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool FreeTextWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] int language, [ExprParameter] params object[] columns)
+		public static bool FreeTextWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string term, [ExprParameter] int language, [ExprParameter] params object?[] columns)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FreeTextWithLanguage)}' is server-side method.");
@@ -737,7 +737,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({columns, ', '}), {search})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool Contains<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] params object[] columns)
+		public static bool Contains<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 			where TEntity: class
 		{
 			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
@@ -755,7 +755,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({columns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool ContainsWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] string language, [ExprParameter] params object[] columns)
+		public static bool ContainsWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] string language, [ExprParameter] params object?[] columns)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(ContainsWithLanguage)}' is server-side method.");
@@ -773,7 +773,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({columns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool ContainsWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] int language, [ExprParameter] params object[] columns)
+		public static bool ContainsWithLanguage<TEntity>(this ISqlServerExtensions? ext, TEntity entity, [ExprParameter] string search, [ExprParameter] int language, [ExprParameter] params object?[] columns)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(ContainsWithLanguage)}' is server-side method.");
@@ -789,12 +789,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="search">Full-text search condition.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl1))]
-		public static bool ContainsProperty(this ISqlServerExtensions? ext, object column, string property, string search)
+		public static bool ContainsProperty(this ISqlServerExtensions? ext, object? column, string property, string search)
 		{
 			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
 		}
 
-		static Expression<Func<ISqlServerExtensions, object, string, string, bool>> ContainsPropertyImpl1()
+		static Expression<Func<ISqlServerExtensions, object?, string, string, bool>> ContainsPropertyImpl1()
 		{
 			return (ext, column, property, search) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search})");
 		}
@@ -810,12 +810,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="language">Language name (see syslanguages.alias).</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl2))]
-		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object column, string property, string search, string language)
+		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, string language)
 		{
 			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
 		}
 
-		static Expression<Func<ISqlServerExtensions, object, string, string, string, bool>> ContainsPropertyImpl2()
+		static Expression<Func<ISqlServerExtensions, object?, string, string, string, bool>> ContainsPropertyImpl2()
 		{
 			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
 		}
@@ -831,12 +831,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl3))]
-		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object column, string property, string search, int language)
+		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, int language)
 		{
 			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
 		}
 
-		static Expression<Func<ISqlServerExtensions, object, string, string, int, bool>> ContainsPropertyImpl3()
+		static Expression<Func<ISqlServerExtensions, object?, string, string, int, bool>> ContainsPropertyImpl3()
 		{
 			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
 		}

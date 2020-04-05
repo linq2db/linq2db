@@ -23,6 +23,7 @@ namespace LinqToDB.Mapping
 	using SqlProvider;
 	using SqlQuery;
 	using Common.Internal.Cache;
+	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
 	/// Mapping schema.
