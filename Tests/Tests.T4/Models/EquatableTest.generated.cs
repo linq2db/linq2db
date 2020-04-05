@@ -121,20 +121,15 @@ namespace EquatableDataContext
 	public partial class Doctor : IEquatable<Doctor>
 	{
 		[PrimaryKey, NotNull] public long   PersonID { get; set; } // integer
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 
@@ -176,9 +171,7 @@ namespace EquatableDataContext
 		[PrimaryKey(0), NotNull] public long   Company    { get; set; } // integer
 		[PrimaryKey(1), NotNull] public long   Department { get; set; } // integer
 		[PrimaryKey(2), NotNull] public long   PositionID { get; set; } // integer
-		#nullable disable
-		[Column,        NotNull] public string Name       { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,        NotNull] public string Name       { get; set; } = null!; // nvarchar(50)
 
 		#region IEquatable support
 
@@ -210,20 +203,15 @@ namespace EquatableDataContext
 	public partial class ForeignKeyTable
 	{
 		[Column, NotNull] public long   PrimaryKeyTableID { get; set; } // integer
-		#nullable disable
-		[Column, NotNull] public string Name              { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column, NotNull] public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
 		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
-		public PrimaryKeyTable PrimaryKeyTable { get; set; }
-
-		#nullable enable
+		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 
 		#endregion
 	}
@@ -280,20 +268,15 @@ namespace EquatableDataContext
 	public partial class Patient : IEquatable<Patient>
 	{
 		[PrimaryKey, NotNull] public long   PersonID  { get; set; } // integer
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 
@@ -327,12 +310,8 @@ namespace EquatableDataContext
 	public partial class Person : IEquatable<Person>
 	{
 		[PrimaryKey, Identity   ] public long    PersonID   { get; set; } // integer
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
@@ -382,20 +361,15 @@ namespace EquatableDataContext
 	public partial class PrimaryKeyTable : IEquatable<PrimaryKeyTable>
 	{
 		[PrimaryKey, NotNull] public long   ID   { get; set; } // integer
-		#nullable disable
-		[Column,     NotNull] public string Name { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; }
-
-		#nullable enable
+		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 
 		#endregion
 
