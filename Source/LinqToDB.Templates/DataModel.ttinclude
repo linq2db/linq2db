@@ -774,7 +774,7 @@ public partial class Column : Property
 
 	public ModelType ModelType { get; }
 
-	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
+	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
 }
 
 public enum AssociationType
@@ -821,7 +821,7 @@ public partial class ForeignKey : Property
 		}
 	}
 
-	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
+	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
 }
 
 public partial class Procedure : Method

@@ -127,20 +127,15 @@ namespace FirebirdDataContext
 	public partial class DOCTOR
 	{
 		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    PERSONID { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string TAXONOMY { get; set; } // varchar(50)
-		#nullable enable
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string TAXONOMY { get; set; } = null!; // varchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
-		public PERSON PERSON { get; set; }
-
-		#nullable enable
+		public PERSON PERSON { get; set; } = null!;
 
 		#endregion
 	}
@@ -203,20 +198,15 @@ namespace FirebirdDataContext
 	public partial class PATIENT
 	{
 		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey, NotNull] public int    PERSONID  { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(256)", DataType=DataType.NVarChar, Length=256, Precision=0, Scale=0),             NotNull] public string DIAGNOSIS { get; set; } // varchar(256)
-		#nullable enable
+		[Column(DbType="varchar(256)", DataType=DataType.NVarChar, Length=256, Precision=0, Scale=0),             NotNull] public string DIAGNOSIS { get; set; } = null!; // varchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
-		/// INTEG_55471
+		/// INTEG_51
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_55471", BackReferenceName="INTEG")]
-		public PERSON PERSON { get; set; }
-
-		#nullable enable
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_51", BackReferenceName="INTEG")]
+		public PERSON PERSON { get; set; } = null!;
 
 		#endregion
 	}
@@ -225,12 +215,8 @@ namespace FirebirdDataContext
 	public partial class PERSON
 	{
 		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     PERSONID   { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  FIRSTNAME  { get; set; } // varchar(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  LASTNAME   { get; set; } // varchar(50)
-		#nullable enable
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  FIRSTNAME  { get; set; } = null!; // varchar(50)
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  LASTNAME   { get; set; } = null!; // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string? MIDDLENAME { get; set; } // varchar(50)
 		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               NotNull] public char    GENDER     { get; set; } // char(1)
 
@@ -243,7 +229,7 @@ namespace FirebirdDataContext
 		public DOCTOR? DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_55471_BackReference
+		/// INTEG_51_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT? INTEG { get; set; }
@@ -265,9 +251,7 @@ namespace FirebirdDataContext
 	public partial class SEQUENCETEST
 	{
 		[Column(          DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID    { get; set; } // integer
-		#nullable disable
-		[Column("VALUE_", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string Value { get; set; } // varchar(50)
-		#nullable enable
+		[Column("VALUE_", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string Value { get; set; } = null!; // varchar(50)
 	}
 
 	[Table("TESTIDENTITY")]
@@ -767,5 +751,4 @@ namespace FirebirdDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591
