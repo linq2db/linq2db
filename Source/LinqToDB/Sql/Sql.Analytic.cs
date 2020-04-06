@@ -449,13 +449,13 @@ namespace LinqToDB
 		#region Corr
 
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal Corr<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
+		public static decimal Corr<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
 		{
 			throw new LinqException($"'{nameof(Corr)}' is server-side method.");
 		}
 
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal Corr<TEntity>(
+		public static decimal Corr<TEntity>(
 			           this IQueryable<TEntity>               source,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
@@ -466,7 +466,7 @@ namespace LinqToDB
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.Execute<Decimal>(
+			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Corr, source, expr1, expr2),
@@ -535,13 +535,13 @@ namespace LinqToDB
 		#region CovarPop
 
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal CovarPop<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
+		public static decimal CovarPop<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
 		{
 			throw new LinqException($"'{nameof(CovarPop)}' is server-side method.");
 		}
 
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal CovarPop<TEntity>(
+		public static decimal CovarPop<TEntity>(
 			           this IQueryable<TEntity>               source,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
@@ -552,7 +552,7 @@ namespace LinqToDB
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.Execute<Decimal>(
+			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarPop, source, expr1, expr2),
@@ -571,13 +571,13 @@ namespace LinqToDB
 		#region CovarSamp
 
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal CovarSamp<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
+		public static decimal CovarSamp<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
 		{
 			throw new LinqException($"'{nameof(CovarSamp)}' is server-side method.");
 		}
 
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
-		public static Decimal CovarSamp<TEntity>(
+		public static decimal CovarSamp<TEntity>(
 			           this IQueryable<TEntity>                source,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
@@ -588,7 +588,7 @@ namespace LinqToDB
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.Execute<Decimal>(
+			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarSamp, source, expr1, expr2),

@@ -92,7 +92,7 @@ namespace LinqToDB.Common.Internal
 <#
 	}
 #>	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 

@@ -170,7 +170,7 @@ namespace Tests.UserTests
 
 			schema.SetConvertExpression<MyInt,   int>          (x => x.RealValue);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { RealValue = x });
-			schema.SetConvertExpression<Int64,   MyInt>        (x => new MyInt { RealValue = (int)x }); //SQLite
+			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { RealValue = (int)x }); //SQLite
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { RealValue = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.RealValue });
 

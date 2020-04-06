@@ -740,60 +740,60 @@ namespace LinqToDB.Mapping
 		/// <param name="info">Culture with format providers for conversions.</param>
 		public void SetCultureInfo(CultureInfo info)
 		{
-			SetConvertExpression((SByte     v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((SByte?    v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>             SByte.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>     (SByte?)SByte.Parse(s, info.NumberFormat));
+			SetConvertExpression((sbyte     v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((sbyte?    v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>             sbyte.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>     (sbyte?)sbyte.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Int16     v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Int16?    v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>             Int16.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>     (Int16?)Int16.Parse(s, info.NumberFormat));
+			SetConvertExpression((short     v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((short?    v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>             short.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>     (short?)short.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Int32     v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Int32?    v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>             Int32.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>     (Int32?)Int32.Parse(s, info.NumberFormat));
+			SetConvertExpression((int       v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((int?      v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>               int.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>         (int?)int.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Int64     v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Int64?    v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>             Int64.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>     (Int64?)Int64.Parse(s, info.NumberFormat));
+			SetConvertExpression((long      v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((long?     v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>              long.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>       (long?)long.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Byte      v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Byte?     v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>              Byte.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>       (Byte?)Byte.Parse(s, info.NumberFormat));
+			SetConvertExpression((byte      v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((byte?     v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>              byte.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>       (byte?)byte.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((UInt16    v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((UInt16?   v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>            UInt16.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>   (UInt16?)UInt16.Parse(s, info.NumberFormat));
+			SetConvertExpression((ushort    v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((ushort?   v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>            ushort.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>   (ushort?)ushort.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((UInt32    v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((UInt32?   v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>            UInt32.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>   (UInt32?)UInt32.Parse(s, info.NumberFormat));
+			SetConvertExpression((uint      v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((uint?     v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>              uint.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>       (uint?)uint.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((UInt64    v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((UInt64?   v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>            UInt64.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>   (UInt64?)UInt64.Parse(s, info.NumberFormat));
+			SetConvertExpression((ulong     v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((ulong?    v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>             ulong.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>     (ulong?)ulong.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Single    v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Single?   v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>            Single.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>   (Single?)Single.Parse(s, info.NumberFormat));
+			SetConvertExpression((float     v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((float?    v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>             float.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>     (float?)float.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Double    v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Double?   v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>            Double.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) =>   (Double?)Double.Parse(s, info.NumberFormat));
+			SetConvertExpression((double    v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((double?   v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>            double.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>   (double?)double.Parse(s, info.NumberFormat));
 
-			SetConvertExpression((Decimal   v) =>           v.      ToString(info.NumberFormat));
-			SetConvertExpression((Decimal?  v) =>           v!.Value.ToString(info.NumberFormat));
-			SetConvertExpression((string    s) =>           Decimal.Parse(s, info.NumberFormat));
-			SetConvertExpression((string    s) => (Decimal?)Decimal.Parse(s, info.NumberFormat));
+			SetConvertExpression((decimal   v) =>           v.      ToString(info.NumberFormat));
+			SetConvertExpression((decimal?  v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>           decimal.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) => (decimal?)decimal.Parse(s, info.NumberFormat));
 
 			SetConvertExpression((DateTime  v) =>                       v.      ToString(info.DateTimeFormat));
 			SetConvertExpression((DateTime? v) =>                       v!.Value.ToString(info.DateTimeFormat));

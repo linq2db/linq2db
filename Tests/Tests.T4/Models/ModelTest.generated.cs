@@ -417,7 +417,7 @@ namespace Tests.T4.Model
 
 		public bool IsEditableDouble1Dirty
 		{
-			get { return Math.Abs(_currentEditableDouble1 - _originalEditableDouble1) <= 16 * Double.Epsilon * Math.Max(Math.Abs(_currentEditableDouble1), Math.Abs(_originalEditableDouble1)); }
+			get { return Math.Abs(_currentEditableDouble1 - _originalEditableDouble1) <= 16 * double.Epsilon * Math.Max(Math.Abs(_currentEditableDouble1), Math.Abs(_originalEditableDouble1)); }
 		}
 
 		#endregion

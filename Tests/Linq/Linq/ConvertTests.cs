@@ -52,8 +52,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (Int64)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (long)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (long)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -79,8 +79,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int32)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int32)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (int)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (int)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -106,8 +106,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int16)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int16)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (short)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (short)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -173,8 +173,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (UInt64)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (ulong)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (ulong)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -191,8 +191,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (UInt32)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (uint)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (uint)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -210,8 +210,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt16)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt16)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (ushort)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (ushort)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -322,8 +322,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (int)(Double)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (int)(Double)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (int)(double)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (int)(double)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]

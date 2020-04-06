@@ -27,13 +27,13 @@ namespace Tests.UserTests
 			public Gender Gender { get; set; }
 
 			[Column]
-			public String FirstName { get; private set; } = null!;
+			public string FirstName { get; private set; } = null!;
 
 			[Column]
-			public String MiddleName { get; set; } = null!;
+			public string MiddleName { get; set; } = null!;
 
 			[Column]
-			public String? LastName { get; set; }
+			public string? LastName { get; set; }
 
 			public void SetFirstName(string firstName)
 			{

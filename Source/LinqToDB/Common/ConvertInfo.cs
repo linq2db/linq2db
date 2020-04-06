@@ -37,10 +37,10 @@ namespace LinqToDB.Common
 				{
 					if (_convertValueToParameter == null)
 					{
-						var type = this.Lambda.Parameters[0].Type;
+						var type = Lambda.Parameters[0].Type;
 						var parameterExpression = Expression.Parameter(typeof(object));
 						var lambdaExpression = Expression.Lambda<Func<object?, DataParameter>>(
-							Expression.Invoke(this.Lambda, Expression.Convert(parameterExpression, type)), parameterExpression);
+							Expression.Invoke(Lambda, Expression.Convert(parameterExpression, type)), parameterExpression);
 						var convertFunc = lambdaExpression.Compile();
 						_convertValueToParameter = convertFunc;
 					}

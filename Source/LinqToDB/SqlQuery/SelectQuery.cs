@@ -259,7 +259,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = this.DoNotRemove };
+				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = DoNotRemove };
 
 			return clone;
 		}

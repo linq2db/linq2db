@@ -729,8 +729,8 @@ namespace Tests.Linq
 			public GenericConcatQuery(ITestDataContext ds, object[] args)
 				: base(ds)
 			{
-				@p1 = (System.String)args[0];
-				@p2 = (System.Int32)args[1];
+				@p1 = (string)args[0];
+				@p2 = (int)   args[1];
 			}
 
 			public override IEnumerable<object> Query()

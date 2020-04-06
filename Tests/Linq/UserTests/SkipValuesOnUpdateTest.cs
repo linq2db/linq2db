@@ -13,33 +13,33 @@ namespace Tests.UserTests
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name"), SkipValuesOnUpdate("John")]
-			public String? Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipValuesOnUpdate(2, 5)]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Update_Null_Table")]
 		public class TestTableNull
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String? Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipValuesOnUpdate(null)]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Update_Fluent_Table")]
 		public class TestTableFluent
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String? Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age")]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Update_Enum_Table")]
@@ -56,11 +56,11 @@ namespace Tests.UserTests
 			}
 
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String? Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age")]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 			[Column("Gender"), SkipValuesOnUpdate(GenderType.Female)]
 			public GenderType Gender { get; set; }
 		}

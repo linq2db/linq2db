@@ -25,7 +25,7 @@ namespace Tests.UserTests
 
 			schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
-			schema.SetConvertExpression<Int64,   MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
+			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
 

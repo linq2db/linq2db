@@ -24,27 +24,27 @@ namespace Tests.UserTests
 			public mega_composites() : base()
 			{
 				{
-					this.y1 = new mega_composites__y1();
+					y1 = new mega_composites__y1();
 				}
 			}
 
 			public virtual mega_composites__y1 y1 { get; set; }
 
 			[Column]
-			public System.Nullable<System.Int64> ref1 { get; set; }
+			public long? ref1 { get; set; }
 
 			public class mega_composites__y1
 			{
 				public mega_composites__y1() : base()
 				{
-					this.q1 = new mega_composites__y1__q1();
+					q1 = new mega_composites__y1__q1();
 				}
 				public virtual mega_composites__y1__q1 q1 { get; set; }
 
 				public class mega_composites__y1__q1
 				{
 					[Column("\"y1.q1.ref1\"")]
-					public System.Nullable<System.Int64> ref1 { get; set; }
+					public long? ref1 { get; set; }
 				}
 			}
 		}

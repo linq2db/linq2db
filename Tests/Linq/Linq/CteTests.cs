@@ -468,7 +468,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((CteDMLTests)obj);
 			}
 
@@ -843,7 +843,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				var result = Equals((TestWrapper)obj);
 				return result;
 			}
@@ -868,7 +868,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((TestWrapper2)obj);
 			}
 
