@@ -8,6 +8,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private Original.TestEventClass _emptyOriginalInstance = null!;
 		private Original.TestEventClass _emptyOriginalWrappedInstance = null!;
+		private Wrapped.TestEventClass  _emptyWrapperInstance = null!;
 
 		private Original.TestEventClass _onOffOriginalInstance = null!;
 		private Original.TestEventClass _onOffOriginalWrappedInstance = null!;
@@ -26,8 +27,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			_emptyOriginalInstance             = new Original.TestEventClass();
 			_emptyOriginalWrappedInstance      = new Original.TestEventClass();
+			_emptyWrapperInstance              = _typeMapper.Wrap<Wrapped.TestEventClass>(_emptyOriginalWrappedInstance);
 
-			_onOffOriginalInstance             = new Original.TestEventClass();
+			_onOffOriginalInstance = new Original.TestEventClass();
 			_onOffOriginalWrappedInstance      = new Original.TestEventClass();
 			_onOffWrapperInstance              = _typeMapper.Wrap<Wrapped.TestEventClass>(_onOffOriginalWrappedInstance);
 			
