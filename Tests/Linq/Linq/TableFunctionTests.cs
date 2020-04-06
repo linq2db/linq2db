@@ -196,7 +196,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.Ext.SqlServer().FreeText(t.Description, "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", t.Description)
 					select t;
 
 				var list = q.ToList();
@@ -212,7 +212,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.Ext.SqlServer().FreeText(Sql.AllColumns(), "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", Sql.AllColumns())
 					select t;
 
 				var list = q.ToList();
@@ -228,7 +228,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where Sql.Ext.SqlServer().FreeText(t, "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", t)
 					select t;
 
 				var list = q.ToList();
@@ -244,7 +244,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Category
-					where !Sql.Ext.SqlServer().FreeText(t, "sweet")
+					where !Sql.Ext.SqlServer().FreeText("sweet", t)
 					select t;
 
 				var list = q.ToList();
@@ -297,7 +297,6 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		[ActiveIssue(386)]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))

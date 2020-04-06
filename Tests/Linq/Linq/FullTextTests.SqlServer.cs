@@ -1503,7 +1503,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat")
+					where Sql.Ext.SqlServer().FreeText("sweetest candy bread and dry meat", c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1515,7 +1515,7 @@ namespace Tests.Linq
 				Assert.AreEqual(5, results[2].CategoryID);
 				Assert.AreEqual(3, results[3].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("FREETEXT([c_1].*, N'sweetest candy bread and dry meat')"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat')"));
 			}
 		}
 
@@ -1526,7 +1526,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English")
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", "English", c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1538,7 +1538,7 @@ namespace Tests.Linq
 				Assert.AreEqual(5, results[2].CategoryID);
 				Assert.AreEqual(3, results[3].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("FREETEXT([c_1].*, N'sweetest candy bread and dry meat', LANGUAGE N'English')"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat', LANGUAGE N'English')"));
 			}
 		}
 
@@ -1549,7 +1549,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", 1033, c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1561,7 +1561,7 @@ namespace Tests.Linq
 				Assert.AreEqual(5, results[2].CategoryID);
 				Assert.AreEqual(3, results[3].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("FREETEXT([c_1].*, N'sweetest candy bread and dry meat', LANGUAGE 1033)"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat', LANGUAGE 1033)"));
 			}
 		}
 
@@ -1572,7 +1572,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat", c.Description)
+					where Sql.Ext.SqlServer().FreeText("sweetest candy bread and dry meat", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1595,7 +1595,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", "English", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1618,7 +1618,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033, c.CategoryName)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", 1033, c.CategoryName)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1638,7 +1638,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat", c.Description, c.Description)
+					where Sql.Ext.SqlServer().FreeText("sweetest candy bread and dry meat", c.Description, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1661,7 +1661,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1684,7 +1684,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", 1033, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1710,7 +1710,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, search, lang, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(search, lang, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage("sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1762,7 +1762,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c1 in db.Category
-					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().FreeText(c, "bread") && Sql.Ext.SqlServer().FreeText(c1, "meat"))
+					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().FreeText("bread", c) && Sql.Ext.SqlServer().FreeText("meat", c1))
 					orderby c1.CategoryID descending
 					select c1;
 
@@ -1772,8 +1772,8 @@ namespace Tests.Linq
 				Assert.AreEqual(6, results[0].CategoryID);
 				Assert.AreEqual(6, results[1].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("FREETEXT([c_1].*, N'bread')"));
-				Assert.That(db.LastQuery!.Contains("FREETEXT([c1].*, N'meat')"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c_1].*), N'bread')"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c1].*), N'meat')"));
 			}
 		}
 
@@ -1787,7 +1787,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().Contains(c, "candy OR meat")
+					where Sql.Ext.SqlServer().Contains("candy OR meat", c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1796,7 +1796,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, results.Count);
 				Assert.AreEqual(6, results[0].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS([c_1].*, N'candy OR meat')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].*), N'candy OR meat')"));
 			}
 		}
 
@@ -1807,7 +1807,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "dry", "English")
+					where Sql.Ext.SqlServer().ContainsWithLanguage("dry", "English", c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1815,7 +1815,7 @@ namespace Tests.Linq
 
 				Assert.AreEqual(0, results.Count);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS([c_1].*, N'dry', LANGUAGE N'English')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].*), N'dry', LANGUAGE N'English')"));
 			}
 		}
 
@@ -1826,7 +1826,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "sweetest", 1033)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("sweetest", 1033, c)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1834,7 +1834,7 @@ namespace Tests.Linq
 
 				Assert.AreEqual(0, results.Count);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS([c_1].*, N'sweetest', LANGUAGE 1033)"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].*), N'sweetest', LANGUAGE 1033)"));
 			}
 		}
 
@@ -1845,7 +1845,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().Contains(c, "bread", c.Description)
+					where Sql.Ext.SqlServer().Contains("bread", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1864,7 +1864,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "dry & bread", "English", c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("dry & bread", "English", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1883,7 +1883,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "candy | meat", 1033, c.CategoryName)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("candy | meat", 1033, c.CategoryName)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1903,7 +1903,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().Contains(c, "aнанас", c.Description, c.Description)
+					where Sql.Ext.SqlServer().Contains("aнанас", c.Description, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1922,7 +1922,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "salo & bread", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("salo & bread", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1941,7 +1941,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "meat", 1033, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("meat", 1033, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1964,7 +1964,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, search, code, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(search, code, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1981,7 +1981,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "candy", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage("candy", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1998,7 +1998,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c1 in db.Category
-					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().Contains(c, "bread") && Sql.Ext.SqlServer().Contains(c1, "meat"))
+					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().Contains("bread", c) && Sql.Ext.SqlServer().Contains("meat", c1))
 					orderby c1.CategoryID descending
 					select c1;
 
@@ -2006,8 +2006,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(0, results.Count);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS([c_1].*, N'bread')"));
-				Assert.That(db.LastQuery!.Contains("CONTAINS([c1].*, N'meat')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].*), N'bread')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c1].*), N'meat')"));
 			}
 		}
 
