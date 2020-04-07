@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -318,6 +319,92 @@ namespace Tests.Linq
 		{
 			var list = db.Child.ToList();
 			return db.Child.Where(c => list.Where(filter).Select(r => r.ChildID).Contains(c.ChildID));
+		}
+
+		enum Issue404
+		{
+			Value1,
+			Value2,
+		}
+
+		[Table]
+		class Table404One
+		{
+			[Column] public int Id { get; set; }
+
+			public static readonly Table404One[] Data = new[]
+			{
+				new Table404One() { Id = 1 },
+				new Table404One() { Id = 2 }
+			};
+		}
+
+		[Table]
+		class Table404Two
+		{
+			[Column] public int Id { get; set; }
+
+			[Column] public Issue404 Usage { get; set; }
+
+			[Column] public int FirstTableId { get; set; }
+
+			public static readonly Table404Two[] Data = new[]
+			{
+				new Table404Two() { Id = 1, Usage = Issue404.Value1, FirstTableId = 1 },
+				new Table404Two() { Id = 2, Usage = Issue404.Value1, FirstTableId = 1 },
+				new Table404Two() { Id = 3, Usage = Issue404.Value2, FirstTableId = 1 },
+				new Table404Two() { Id = 4, Usage = Issue404.Value1, FirstTableId = 2 },
+				new Table404Two() { Id = 5, Usage = Issue404.Value2, FirstTableId = 2 },
+				new Table404Two() { Id = 6, Usage = Issue404.Value2, FirstTableId = 2 },
+			};
+		}
+
+		class FirstTable
+		{
+			public int Id;
+			public List<Table404Two>? Values;
+		}
+
+		[Test]
+		public void Issue404Test([DataSources] string context)
+		{
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			using (var t1 = db.CreateLocalTable(Table404One.Data))
+			using (var t2 = db.CreateLocalTable(Table404Two.Data))
+			{
+				Issue404? usage = null;
+				var allUsages = !usage.HasValue;
+				var res1 = Test();
+				Assert.AreEqual(1, res1.Id);
+				Assert.AreEqual(3, res1.Values.Count());
+				Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+
+				usage = Issue404.Value1;
+				allUsages = false;
+				var res2 = Test();
+				Assert.AreEqual(1, res2.Id);
+				Assert.AreEqual(2, res2.Values.Count());
+				Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
+				Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+
+				usage = Issue404.Value2;
+				allUsages = false;
+				var res3 = Test();
+				Assert.AreEqual(1, res2.Id);
+				Assert.AreEqual(1, res3.Values.Count());
+				Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
+				Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+
+				FirstTable Test()
+				{
+					return t1
+					  .GroupJoin(t2.Where(v =>
+						allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
+						 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
+					  .FirstOrDefault();
+				}
+			}
 		}
 	}
 }

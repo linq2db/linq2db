@@ -87,7 +87,7 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert2(db);
 		}
 
-		[ActiveIssue(416)]
+		[ActiveIssue(417)]
 		[Test]
 		public void SelectLeftJoin([DataSources] string context)
 		{
