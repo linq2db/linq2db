@@ -1969,11 +1969,10 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
-		[ActiveIssue]
 		[Test]
-		public void Issue672Test([DataSources] string context, [Values] bool enableGroupByguard)
+		public void Issue672Test([DataSources] string context)
 		{
-			using (new GuardGrouping(enableGroupByguard))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Stone>())
 			{
