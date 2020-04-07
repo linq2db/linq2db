@@ -1531,5 +1531,37 @@ namespace Tests.DataProvider
 
 			}
 		}
+
+		[Test]
+		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue449')
+	BEGIN DROP FUNCTION Issue449
+END
+");
+
+				db.Execute(@"
+CREATE FUNCTION dbo.Issue449( @s varchar(20) = '*')
+RETURNS TABLE
+AS
+	RETURN ( SELECT * FROM dbo.Categories WHERE CONTAINS( *, @s ) )
+");
+				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue449");
+				Assert.NotNull(proc);
+				Assert.True(proc.IsFunction);
+				Assert.True(proc.IsTableFunction);
+				Assert.IsNull(proc.ResultException);
+			}
+		}
 	}
 }
