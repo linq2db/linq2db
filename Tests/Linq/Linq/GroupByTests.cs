@@ -1993,5 +1993,32 @@ namespace Tests.Linq
 				var list = stones.ToList();
 			}
 		}
+
+		[Table]
+		class Issue680Table
+		{
+			[Column] public DateTime TimeStamp;
+		}
+
+		[ActiveIssue(680)]
+		[Test]
+		public void Issue680Test([DataSources(false)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue680Table>())
+			{
+				var result = (from record in table
+							  group record by record.TimeStamp into g
+							  select new
+							  {
+								  res = g.Count(r => r.TimeStamp > DateTime.Now),
+							  }).ToList();
+
+				var index = db.LastQuery!.IndexOf("SELECT");
+				Assert.AreNotEqual(-1, index);
+				index = db.LastQuery.IndexOf("SELECT", index + 1);
+				Assert.AreEqual(-1, index);
+			}
+		}
 	}
 }

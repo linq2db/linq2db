@@ -786,7 +786,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		[Test(Description = "TODO: Issue not reproduced")]
 		public void Issue1993([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
