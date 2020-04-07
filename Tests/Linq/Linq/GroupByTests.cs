@@ -2019,5 +2019,22 @@ namespace Tests.Linq
 				Assert.AreEqual(-1, index);
 			}
 		}
+
+		[Test]
+		public void Issue434Test([DataSources(false)] string context)
+		{
+			var input = "test";
+
+			using (new AllowMultipleQuery(true))
+			using (var db = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue680Table>())
+			{
+				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
+				{
+					Name = re.FirstName,
+					Roles = ri.ToList().Select(p => p.Diagnosis)
+				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
+			}
+		}
 	}
 }
