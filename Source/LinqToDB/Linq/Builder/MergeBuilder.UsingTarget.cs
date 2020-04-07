@@ -18,12 +18,9 @@ namespace LinqToDB.Linq.Builder
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 				var source = new MergeSourceQueryContext(
-					builder,
-					new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()),
 					mergeContext.Merge,
 					// is it ok to reuse context like that?
-					mergeContext.TargetContext,
-					methodCall.Method.GetGenericArguments()[0]);
+					mergeContext.TargetContext);
 				mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 
 				return mergeContext;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -17,32 +18,32 @@ namespace Tests.UserTests
 		public class EmployeeWithList : Northwind.EntityBase<int>
 		{
 			[PrimaryKey, Identity] public int EmployeeID;
-			[Column, NotNull] public string LastName;
-			[Column, NotNull] public string FirstName;
-			[Column] public string Title;
-			[Column] public string TitleOfCourtesy;
+			[Column, NotNull] public string LastName = null!;
+			[Column, NotNull] public string FirstName = null!;
+			[Column] public string? Title;
+			[Column] public string? TitleOfCourtesy;
 			[Column] public DateTime? BirthDate;
 			[Column] public DateTime? HireDate;
-			[Column] public string Address;
-			[Column] public string City;
-			[Column] public string Region;
-			[Column] public string PostalCode;
-			[Column] public string Country;
-			[Column] public string HomePhone;
-			[Column] public List<string> Extension;
-			[Column] public Binary Photo;
-			[Column] public string Notes;
+			[Column] public string? Address;
+			[Column] public string? City;
+			[Column] public string? Region;
+			[Column] public string? PostalCode;
+			[Column] public string? Country;
+			[Column] public string? HomePhone;
+			[Column] public List<string>? Extension;
+			[Column] public Binary? Photo;
+			[Column] public string? Notes;
 			[Column] public int? ReportsTo;
-			[Column] public string PhotoPath;
+			[Column] public string? PhotoPath;
 
-			[Association(ThisKey = "EmployeeID", OtherKey = "ReportsTo")] public List<Northwind.Employee> Employees;
-			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.EmployeeTerritory> EmployeeTerritories;
-			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.Order> Orders;
-			[Association(ThisKey = "ReportsTo", OtherKey = "EmployeeID")] public Northwind.Employee ReportsToEmployee;
+			[Association(ThisKey = "EmployeeID", OtherKey = "ReportsTo")]  public List<Northwind.Employee>          Employees           = null!;
+			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.EmployeeTerritory> EmployeeTerritories = null!;
+			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.Order>             Orders              = null!;
+			[Association(ThisKey = "ReportsTo", OtherKey = "EmployeeID")]  public Northwind.Employee                ReportsToEmployee   = null!;
 
-			public Northwind.Employee Employee2 { get; set; }
-			public Northwind.Order Order { get; set; }
-			public Northwind.EmployeeTerritory EmployeeTerritory { get; set; }
+			public Northwind.Employee? Employee2 { get; set; }
+			public Northwind.Order? Order { get; set; }
+			public Northwind.EmployeeTerritory? EmployeeTerritory { get; set; }
 
 			protected override int Key
 			{
@@ -53,7 +54,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
-			MappingSchema.Default.SetConverter<List<string>, string>((obj) =>
+			MappingSchema.Default.SetConverter<List<string>?, string?>((obj) =>
 			{
 				if (obj == null)
 					return null;
@@ -65,9 +66,9 @@ namespace Tests.UserTests
 					return new DataParameter();
 				return new DataParameter { Value = string.Join(";", obj) };
 			});
-			MappingSchema.Default.SetConverter<string, List<string>>((txt) =>
+			MappingSchema.Default.SetConverter<string?, List<string>?>((txt) =>
 			{
-				if (string.IsNullOrEmpty(txt))
+				if (txt.IsNullOrEmpty())
 					return null;
 				return txt.Split(';').ToList();
 			});

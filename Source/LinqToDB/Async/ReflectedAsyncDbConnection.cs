@@ -11,11 +11,11 @@ namespace LinqToDB.Async
 	/// </summary>
 	internal class ReflectedAsyncDbConnection : AsyncDbConnection
 	{
-		private Func<IDbConnection, CancellationToken, Task>?                                      _openAsync;
-		private Func<IDbConnection, Task>?                                                         _closeAsync;
-		private Func<IDbConnection, Task>?                                                         _disposeAsync;
-		private Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                 _beginTransactionAsync;
-		private Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>? _beginTransactionIlAsync;
+		private readonly Func<IDbConnection, CancellationToken, Task>?                                      _openAsync;
+		private readonly Func<IDbConnection, Task>?                                                         _closeAsync;
+		private readonly Func<IDbConnection, Task>?                                                         _disposeAsync;
+		private readonly Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                 _beginTransactionAsync;
+		private readonly Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>? _beginTransactionIlAsync;
 
 		public ReflectedAsyncDbConnection(
 			IDbConnection connection,

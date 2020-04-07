@@ -188,8 +188,8 @@ namespace Tests.Linq
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    GrandChild select p.Child.Parent.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
-					from p in db.GrandChild select p.Child.Parent.Children.OrderBy(c => c.ChildID).FirstOrDefault());
+					from p in    GrandChild select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+					from p in db.GrandChild select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]

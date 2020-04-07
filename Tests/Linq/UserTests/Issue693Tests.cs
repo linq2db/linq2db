@@ -23,10 +23,10 @@ namespace Tests.UserTests
 			        public int     ID         { get; set; }
 
 			[Column]public Gender  Gender     { get; set; }
-			[Column]public string  FirstName  { get; set; }
+			[Column]public string  FirstName  { get; set; } = null!;
 			[DataType(DataType.NVarChar, Configuration = ProviderName.Sybase)]
 			[Column]public Test?   MiddleName { get; set; }
-			[Column]public string  LastName   { get; set; }
+			[Column]public string  LastName   { get; set; } = null!;
 		}
 
 		public enum Test
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConverter<Test?, string>((obj) =>
+			ms.SetConverter<Test?, string?>((obj) =>
 			{
 				if (obj != null)
 					return obj.ToString();

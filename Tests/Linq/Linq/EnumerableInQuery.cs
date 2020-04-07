@@ -27,7 +27,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			{
 
-				IQueryable<SampleClass> itemsQuery = null;
+				IQueryable<SampleClass>? itemsQuery = null;
 
 				for (int i = 0; i < items.Length; i++)
 				{
@@ -47,7 +47,7 @@ namespace Tests.Playground
 					itemsQuery = itemsQuery == null ? current : itemsQuery.Concat(current);
 				}
 
-				var result = itemsQuery.AsCte().ToArray();
+				var result = itemsQuery!.AsCte().ToArray();
 
 				AreEqual(items, result, ComparerBuilder.GetEqualityComparer<SampleClass>());
 			}

@@ -88,24 +88,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <see cref="SchemaName{T}(ITable{T}, string)"/> method is a synonym of this method.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="table">Table-like query source.</param>
-		/// <param name="name">Name of owner/schema.</param>
-		/// <returns>Table-like query source with new owner/schema name.</returns>
-		[LinqTunnel]
-		[Pure]
-		[Obsolete("Use SchemaName instead.")]
-		public static ITable<T> OwnerName<T>(this ITable<T> table, [SqlQueryDependent] string name)
-		{
-			return SchemaName(table, name);
-		}
-
-		/// <summary>
-		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
-		/// owner/schema name in fully-qualified table name.
 		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>

@@ -88,7 +88,7 @@ namespace Tests.Linq
 			return (_count4Expression ?? (_count4Expression = Count4Expression().Compile()))(p, id, n);
 		}
 
-		static Func<Parent,int,int,int> _count4Expression;
+		static Func<Parent,int,int,int>? _count4Expression;
 
 		static Expression<Func<Parent,int,int,int>> Count4Expression()
 		{
@@ -112,7 +112,7 @@ namespace Tests.Linq
 			return (_count5Expression ?? (_count5Expression = Count5Expression().Compile()))(db, p, n);
 		}
 
-		static Func<ITestDataContext,Parent,int,int> _count5Expression;
+		static Func<ITestDataContext,Parent,int,int>? _count5Expression;
 
 		static Expression<Func<ITestDataContext,Parent,int,int>> Count5Expression()
 		{
@@ -136,7 +136,7 @@ namespace Tests.Linq
 			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
 		}
 
-		static Func<ITable<Child>,Parent,int> _count6Expression;
+		static Func<ITable<Child>,Parent,int>? _count6Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int>> Count6Expression()
 		{
@@ -158,7 +158,7 @@ namespace Tests.Linq
 			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
 		}
 
-		static Func<ITable<Child>,Parent,int,int> _count7Expression;
+		static Func<ITable<Child>,Parent,int,int>? _count7Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int,int>> Count7Expression()
 		{
@@ -301,12 +301,12 @@ namespace Tests.Linq
 		class TestClass<T>
 		{
 			[ExpressionMethod(nameof(GetBoolExpression3))]
-			public static bool GetBool3(Parent obj)
+			public static bool GetBool3(Parent? obj)
 			{
 				throw new InvalidOperationException();
 			}
 
-			static Expression<Func<Parent,bool>> GetBoolExpression3()
+			static Expression<Func<Parent?,bool>> GetBoolExpression3()
 			{
 				return obj => obj != null;
 			}
@@ -737,10 +737,10 @@ namespace Tests.Linq
 		[LinqToDB.Mapping.Table("AllTypes")]
 		class AllTypes
 		{
-			[LinqToDB.Mapping.Column] public int    ID              { get; set; }
-			[LinqToDB.Mapping.Column] public int?   intDataType     { get; set; }
-			[LinqToDB.Mapping.Column] public string varcharDataType { get; set; }
-			[LinqToDB.Mapping.Column] public string char20DataType  { get; set; }
+			[LinqToDB.Mapping.Column] public int     ID              { get; set; }
+			[LinqToDB.Mapping.Column] public int?    intDataType     { get; set; }
+			[LinqToDB.Mapping.Column] public string? varcharDataType { get; set; }
+			[LinqToDB.Mapping.Column] public string? char20DataType  { get; set; }
 		}
 
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
@@ -750,7 +750,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(Func2Expr))]
-		public static int? FirstIfNullOrSecondAsNumber(string value, string intValue)
+		public static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
 		{
 			throw new InvalidOperationException();
 		}
@@ -771,8 +771,8 @@ namespace Tests.Linq
 	{
 		public class LeftJoinInfo<TOuter,TInner>
 		{
-			public TOuter Outer;
-			public TInner Inner;
+			public TOuter Outer = default!;
+			public TInner Inner = default!;
 		}
 
 		[ExpressionMethod(nameof(LeftJoinImpl))]

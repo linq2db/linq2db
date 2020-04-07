@@ -4,8 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -15,11 +13,11 @@ namespace Tests.Linq
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType, 
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner,
+			SqlJoinType                   joinType, 
+			Func<TOuter, TInner, bool>    predicate,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -51,12 +49,12 @@ namespace Tests.Linq
 		}
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
-			                                SqlJoinType                   joinType,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
-			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner, 
+			SqlJoinType                   joinType,
+			Func<TOuter, TKey>            outerKeySelector,
+			Func<TInner, TKey>            innerKeySelector,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer            == null) throw new ArgumentNullException(nameof(outer));
 			if (inner            == null) throw new ArgumentNullException(nameof(inner));
@@ -87,7 +85,7 @@ namespace Tests.Linq
 							res.AddRange(pair1.Join(keys2[pair1.Key], outerKeySelector, innerKeySelector, resultSelector));
 							continue;
 						}
-						res.AddRange(pair1.Select(r => resultSelector(r, default)));
+						res.AddRange(pair1.Select(r => resultSelector(r, default!)));
 					}
 
 					foreach (var pair2 in keys2)
@@ -96,7 +94,7 @@ namespace Tests.Linq
 						{
 							continue;
 						}
-						res.AddRange(pair2.Select(r => resultSelector(default, r)));
+						res.AddRange(pair2.Select(r => resultSelector(default!, r)));
 					}
 
 					return res;
@@ -224,11 +222,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from g in GrandChild
-					join p in Parent4 on g.Child.ParentID equals p.ParentID
+					join p in Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g,
 					from g in db.GrandChild
-					join p in db.Parent4 on g.Child.ParentID equals p.ParentID
+					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g);
 		}
@@ -1030,7 +1028,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from ch in db.Child
-					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
+					from p in new Model.Functions(db).GetParentByID(ch.Parent!.ParentID)
 					select p;
 
 				var _ = q.ToList();
@@ -2144,7 +2142,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<Tag> TagFactIdIds { get; set; }
+			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
 			{
@@ -2158,8 +2156,8 @@ namespace Tests.Linq
 		public partial class Tag
 		{
 			[PrimaryKey]      public int    Id     { get; set; }
-			[Column]          public int   FactId { get; set; }
-			[Column, NotNull] public string Name   { get; set; }
+			[Column]          public int    FactId { get; set; }
+			[Column, NotNull] public string Name   { get; set; } = null!;
 
 			public static readonly Tag[] Data = new[]
 			{
@@ -2677,7 +2675,7 @@ namespace Tests.Linq
 			[Column("inIdMain")]         public int InIdMain { get; set; }
 
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
-			public StMain Main { get; set; }
+			public StMain Main { get; set; } = null!;
 
 			public static StVersion[] Data = new StVersion[]
 			{

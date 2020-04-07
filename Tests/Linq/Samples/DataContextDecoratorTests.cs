@@ -48,9 +48,11 @@ namespace Tests.Samples
 				set => _context.InlineParameters = value;
 			}
 
-#pragma warning disable 0067
-			public event EventHandler OnClosing;
-#pragma warning restore 0067
+			event EventHandler? IDataContext.OnClosing
+			{
+				add { }
+				remove { }
+			}
 
 			public IDataContext Clone(bool forNestedQuery)
 			{
@@ -67,7 +69,7 @@ namespace Tests.Samples
 				_context.Dispose();
 			}
 
-			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters, object[] preambles)
+			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 			{
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
@@ -82,13 +84,13 @@ namespace Tests.Samples
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+			public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 		}
 
 		public class Entity
 		{
-			public int    Id;
-			public string Name;
+			public int     Id;
+			public string? Name;
 		}
 
 //		[Test]

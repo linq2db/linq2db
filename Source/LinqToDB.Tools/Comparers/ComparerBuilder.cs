@@ -44,7 +44,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <returns>GetEqualsFunc function.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
-		public static Func<T,T,bool> GetEqualsFunc<T>(params Expression<Func<T,object>>[] members)
+		public static Func<T,T,bool> GetEqualsFunc<T>(params Expression<Func<T,object?>>[] members)
 			=> CreateEqualsFunc<T>(members);
 
 		/// <summary>
@@ -75,7 +75,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <returns>GetHashCode function.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
-		public static Func<T,int> GetGetHashCodeFunc<T>(params Expression<Func<T, object>>[] members)
+		public static Func<T,int> GetGetHashCodeFunc<T>(params Expression<Func<T, object?>>[] members)
 			=> CreateGetHashCodeFunc<T>(members);
 
 		class Comparer<T> : EqualityComparer<T>
@@ -124,7 +124,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
-		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object>>[] membersToCompare)
+		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
 		{
 			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
 			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare), CreateGetHashCodeFunc<T>(membersToCompare));

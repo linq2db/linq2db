@@ -64,7 +64,7 @@ namespace Tests.UserTests
 			using (new AllowMultipleQuery())
 			using (var db = new IssueDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace Tests.UserTests
 			using (new AllowMultipleQuery())
 			using (var db = new FactoryDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 	}

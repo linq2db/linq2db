@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -20,7 +19,7 @@ namespace Tests.Update
 			[Column] public int? RelationId { get; set; } 
 
 			[Association(ThisKey = "RelationId", OtherKey = "id")]
-			public UpdateRelation Relation;
+			public UpdateRelation? Relation;
 
 		}
 
@@ -344,13 +343,13 @@ namespace Tests.Update
 			{
 
 				var affected = forUpdates
-					.Where(v => v.Relation.RelatedValue1 == 11)
-					.Set(v => v.Value1, v => v.Relation.RelatedValue3)
+					.Where(v => v.Relation!.RelatedValue1 == 11)
+					.Set(v => v.Value1, v => v.Relation!.RelatedValue3)
 					.Update();
 
 				Assert.AreEqual(1, affected);
 
-				var updatedValue = forUpdates.Where(v => v.Relation.RelatedValue1 == 11).Select(v => v.Value1).First();
+				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
 				Assert.AreEqual(13, updatedValue);
 
@@ -369,16 +368,16 @@ namespace Tests.Update
 			{
 
 				var query = forUpdates
-					.Where(v => v.Relation.RelatedValue1 == 11);
+					.Where(v => v.Relation!.RelatedValue1 == 11);
 
 				var updatable = query.AsUpdatable();
-				updatable = updatable.Set(v => v.Value1, v => v.Relation.RelatedValue3);
+				updatable = updatable.Set(v => v.Value1, v => v.Relation!.RelatedValue3);
 
 				var affected = updatable.Update();
 
 				Assert.AreEqual(1, affected);
 
-				var updatedValue = forUpdates.Where(v => v.Relation.RelatedValue1 == 11).Select(v => v.Value1).First();
+				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
 				Assert.AreEqual(13, updatedValue);
 
@@ -397,7 +396,7 @@ namespace Tests.Update
 			{
 
 				var affected = forUpdates
-					.Where(v => v.Relation.RelatedValue1 == 11)
+					.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Set(v => v.Value1, v => v.Value1 + v.Value2 + v.Value3)
 					.Set(v => v.Value2, v => v.Value1 + v.Value2 + v.Value3)
 					.Set(v => v.Value3, v => 1)
@@ -405,7 +404,7 @@ namespace Tests.Update
 
 				Assert.AreEqual(1, affected);
 
-				var updatedValue = forUpdates.Where(v => v.Relation.RelatedValue1 == 11)
+				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
@@ -427,7 +426,7 @@ namespace Tests.Update
 			{
 
 				var query = forUpdates
-					.Where(v => v.Relation.RelatedValue1 == 11);
+					.Where(v => v.Relation!.RelatedValue1 == 11);
 
 				var updatable = query.AsUpdatable();
 				updatable = updatable.Set(v => v.Value1, v => v.Value1 + v.Value2 + v.Value3);
@@ -438,7 +437,7 @@ namespace Tests.Update
 
 				Assert.AreEqual(1, affected);
 
-				var updatedValue = forUpdates.Where(v => v.Relation.RelatedValue1 == 11)
+				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 

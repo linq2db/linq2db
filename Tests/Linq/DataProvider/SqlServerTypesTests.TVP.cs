@@ -22,9 +22,9 @@ namespace Tests.DataProvider
 		internal const string TYPE_NAME = "[dbo].[TestTableType]";
 		public class TVPRecord
 		{
-			public int?   Id   { get; set; }
+			public int?    Id   { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		internal static TVPRecord[] TestData = new[]
@@ -140,7 +140,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null));
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
 
 		public static ITable<TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
@@ -183,7 +183,7 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		[Test]
@@ -201,7 +201,7 @@ namespace Tests.DataProvider
 					.On((t, s) => t.Id == s.Id)
 					.InsertWhenNotMatched(s => new TestMergeTVPTable()
 					{
-						Id = s.Id.Value,
+						Id   = s.Id!.Value,
 						Name = s.Name
 					})
 					.Merge();

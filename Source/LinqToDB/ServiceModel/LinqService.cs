@@ -24,7 +24,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		public LinqService(MappingSchema mappingSchema)
+		public LinqService(MappingSchema? mappingSchema)
 		{
 			_mappingSchema = mappingSchema;
 		}

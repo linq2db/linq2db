@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 
 		protected virtual void SetCommand(bool clearQueryHints)
 		{
-			// TODO: can we refactory query to be thread-safe to remove this lock?
+			// TODO: can we refactor query to be thread-safe to remove this lock?
 			lock (Query)
 			{
 				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))

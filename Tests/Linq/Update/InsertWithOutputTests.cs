@@ -16,17 +16,17 @@ namespace Tests.Playground
 		[Table]
 		class TableWithData
 		{
-			[Column]              public int    Id       { get; set; }
-			[Column]              public int    Value    { get; set; }
-			[Column(Length = 50)] public string ValueStr { get; set; }
+			[Column]              public int     Id       { get; set; }
+			[Column]              public int     Value    { get; set; }
+			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
 
 		[Table]
 		class DestinationTable
 		{
-			[Column]              public int    Id       { get; set; }
-			[Column]              public int    Value    { get; set; }
-			[Column(Length = 50)] public string ValueStr { get; set; }
+			[Column]              public int     Id       { get; set; }
+			[Column]              public int     Value    { get; set; }
+			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
 
 		static TableWithData[] GetSourceData()

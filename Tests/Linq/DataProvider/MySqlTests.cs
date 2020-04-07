@@ -95,7 +95,7 @@ namespace Tests.DataProvider
 					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
 					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
 					{
-						TimezoneOffset = dt1.Value.TimezoneOffset
+						TimezoneOffset = dt1!.Value.TimezoneOffset
 					};
 
 					Assert.That(dt1, Is.EqualTo(dt2));
@@ -255,7 +255,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -280,14 +280,14 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
 			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
 			[Column,     Nullable] public char?     charDataType        { get; set; } // char(1)
-			[Column,     Nullable] public string    varcharDataType     { get; set; } // varchar(20)
-			[Column,     Nullable] public string    textDataType        { get; set; } // text
-			[Column,     Nullable] public byte[]    binaryDataType      { get; set; } // binary(3)
-			[Column,     Nullable] public byte[]    varbinaryDataType   { get; set; } // varbinary(5)
-			[Column,     Nullable] public byte[]    blobDataType        { get; set; } // blob
-			[Column,     Nullable] public UInt64?   bitDataType         { get; set; } // bit(3)
-			[Column,     Nullable] public string    enumDataType        { get; set; } // enum('Green','Red','Blue')
-			[Column,     Nullable] public string    setDataType         { get; set; } // set('one','two')
+			[Column,     Nullable] public string?   varcharDataType     { get; set; } // varchar(20)
+			[Column,     Nullable] public string?   textDataType        { get; set; } // text
+			[Column,     Nullable] public byte[]?   binaryDataType      { get; set; } // binary(3)
+			[Column,     Nullable] public byte[]?   varbinaryDataType   { get; set; } // varbinary(5)
+			[Column,     Nullable] public byte[]?   blobDataType        { get; set; } // blob
+			[Column,     Nullable] public ulong?    bitDataType         { get; set; } // bit(3)
+			[Column,     Nullable] public string?   enumDataType        { get; set; } // enum('Green','Red','Blue')
+			[Column,     Nullable] public string?   setDataType         { get; set; } // set('one','two')
 			[Column,     Nullable] public uint?     intUnsignedDataType { get; set; } // int(10) unsigned
 		}
 
@@ -460,7 +460,7 @@ namespace Tests.DataProvider
 				var sp = db.DataProvider.GetSchemaProvider();
 				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
-				var systemTables = schema.Tables.Where(_ => _.CatalogName.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
+				var systemTables = schema.Tables.Where(_ => _.CatalogName!.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
 
 				Assert.That(systemTables.All(_ => _.IsProviderSpecific));
 
@@ -663,7 +663,7 @@ namespace Tests.DataProvider
 
 				var procedure = procedures[0];
 
-				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName.ToLower());
+				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName!.ToLower());
 				Assert.AreEqual(expectedProc.SchemaName,            procedure.SchemaName);
 				Assert.AreEqual(expectedProc.MemberName,            procedure.MemberName);
 				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
@@ -717,7 +717,7 @@ namespace Tests.DataProvider
 					Assert.IsNotNull(procedure.ResultTable);
 
 					var expectedTable = expectedProc.ResultTable;
-					var actualTable = procedure.ResultTable;
+					var actualTable = procedure.ResultTable!;
 
 					Assert.AreEqual(expectedTable.ID,                 actualTable.ID);
 					Assert.AreEqual(expectedTable.CatalogName,        actualTable.CatalogName);
@@ -764,10 +764,10 @@ namespace Tests.DataProvider
 
 					Assert.IsNotNull(procedure.SimilarTables);
 
-					foreach (var table in procedure.SimilarTables)
+					foreach (var table in procedure.SimilarTables!)
 					{
 						var tbl = expectedProc.SimilarTables
-							.SingleOrDefault(_ => _.TableName.ToLower() == table.TableName.ToLower());
+							.SingleOrDefault(_ => _.TableName!.ToLower() == table.TableName!.ToLower());
 
 						Assert.IsNotNull(tbl);
 					}
@@ -781,7 +781,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var res = schema.Tables.FirstOrDefault(c => c.ID.ToLower().Contains("fulltextindex"));
+				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLower().Contains("fulltextindex"));
 				Assert.AreNotEqual(null, res);
 			}
 		}
@@ -844,29 +844,29 @@ namespace Tests.DataProvider
 		[Table]
 		public class CreateTable
 		{
-			[Column                                                 ] public string VarChar255;
-			[Column(Length = 1)                                     ] public string VarChar1;
-			[Column(Length = 112)                                   ] public string VarChar112;
-			[Column                                                 ] public char Char;
-			[Column(DataType = DataType.Char)                       ] public string Char255;
-			[Column(DataType = DataType.Char, Length = 1)           ] public string Char1;
-			[Column(DataType = DataType.Char, Length = 112)         ] public string Char112;
-			[Column(Length = 1)                                     ] public byte[] VarBinary1;
-			[Column                                                 ] public byte[] VarBinary255;
-			[Column(Length = 3)                                     ] public byte[] VarBinary3;
-			[Column(DataType = DataType.Binary, Length = 1)         ] public byte[] Binary1;
-			[Column(DataType = DataType.Binary)                     ] public byte[] Binary255;
-			[Column(DataType = DataType.Binary, Length = 3)         ] public byte[] Binary3;
-			[Column(DataType = DataType.Blob, Length = 200)         ] public byte[] TinyBlob;
-			[Column(DataType = DataType.Blob, Length = 2000)        ] public byte[] Blob;
-			[Column(DataType = DataType.Blob, Length = 200000)      ] public byte[] MediumBlob;
-			[Column(DataType = DataType.Blob)                       ] public byte[] BlobDefault;
-			[Column(DataType = DataType.Blob, Length = int.MaxValue)] public byte[] LongBlob;
-			[Column(DataType = DataType.Text, Length = 200)         ] public string TinyText;
-			[Column(DataType = DataType.Text, Length = 2000)        ] public string Text;
-			[Column(DataType = DataType.Text, Length = 200000)      ] public string MediumText;
-			[Column(DataType = DataType.Text, Length = int.MaxValue)] public string LongText;
-			[Column(DataType = DataType.Text)                       ] public string TextDefault;
+			[Column                                                 ] public string? VarChar255;
+			[Column(Length = 1)                                     ] public string? VarChar1;
+			[Column(Length = 112)                                   ] public string? VarChar112;
+			[Column                                                 ] public char    Char;
+			[Column(DataType = DataType.Char)                       ] public string? Char255;
+			[Column(DataType = DataType.Char, Length = 1)           ] public string? Char1;
+			[Column(DataType = DataType.Char, Length = 112)         ] public string? Char112;
+			[Column(Length = 1)                                     ] public byte[]? VarBinary1;
+			[Column                                                 ] public byte[]? VarBinary255;
+			[Column(Length = 3)                                     ] public byte[]? VarBinary3;
+			[Column(DataType = DataType.Binary, Length = 1)         ] public byte[]? Binary1;
+			[Column(DataType = DataType.Binary)                     ] public byte[]? Binary255;
+			[Column(DataType = DataType.Binary, Length = 3)         ] public byte[]? Binary3;
+			[Column(DataType = DataType.Blob, Length = 200)         ] public byte[]? TinyBlob;
+			[Column(DataType = DataType.Blob, Length = 2000)        ] public byte[]? Blob;
+			[Column(DataType = DataType.Blob, Length = 200000)      ] public byte[]? MediumBlob;
+			[Column(DataType = DataType.Blob)                       ] public byte[]? BlobDefault;
+			[Column(DataType = DataType.Blob, Length = int.MaxValue)] public byte[]? LongBlob;
+			[Column(DataType = DataType.Text, Length = 200)         ] public string? TinyText;
+			[Column(DataType = DataType.Text, Length = 2000)        ] public string? Text;
+			[Column(DataType = DataType.Text, Length = 200000)      ] public string? MediumText;
+			[Column(DataType = DataType.Text, Length = int.MaxValue)] public string? LongText;
+			[Column(DataType = DataType.Text)                       ] public string? TextDefault;
 			[Column(DataType = DataType.Date)                       ] public DateTime Date;
 			[Column                                                 ] public DateTime DateTime;
 			[NotColumn(Configuration = TestProvName.MySql55)]
@@ -902,7 +902,7 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.BitArray, Length = 10)      ] public int Bit10;
 			[Column(DataType = DataType.BitArray)                   ] public long Bit64;
 			[NotColumn(Configuration = TestProvName.MySql55)]
-			[Column(DataType = DataType.Json)                       ] public string Json;
+			[Column(DataType = DataType.Json)                       ] public string? Json;
 			// not mysql type, just mapping testing
 			[Column                                                 ] public Guid Guid;
 		}
@@ -934,7 +934,7 @@ namespace Tests.DataProvider
 					db.AddMappingSchema(new MappingSchema(context));
 				using (var table = db.CreateLocalTable<CreateTable>())
 				{
-					var sql = db.LastQuery;
+					var sql = db.LastQuery!;
 
 					Assert.True(sql.Contains("\t`VarChar255`       VARCHAR(255)          NULL"));
 					Assert.True(sql.Contains("\t`VarChar1`         VARCHAR(1)            NULL"));

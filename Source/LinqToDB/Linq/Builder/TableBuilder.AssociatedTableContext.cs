@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 				set { }
 			}
 
-			Dictionary<ISqlExpression, SqlField>? _replaceMap;
+			readonly Dictionary<ISqlExpression, SqlField>? _replaceMap;
 			internal IBuildContext?               _innerContext;
 
 			public AssociatedTableContext(
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 						t.Source is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, parent.SqlTable));
 
 					// try to search table by object type
-					// TODO: review maybe there are another ways to do that
+					// TODO: review maybe there are another way to do that
 					if (foundIndex < 0)
 						foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
 							t.Source is SqlTable sqlTable && sqlTable.ObjectType == parent.SqlTable.ObjectType);
@@ -219,8 +219,6 @@ namespace LinqToDB.Linq.Builder
 
 			public LambdaExpression GetAssociationQueryExpressionAsSubQuery(Expression dataContextExpr, LambdaExpression queryMethod)
 			{
-				var resultParam = Expression.Parameter(ObjectType);
-
 				var parentParameter = queryMethod.Parameters[0];
 
 				var body = queryMethod.GetBody(parentParameter, dataContextExpr);
@@ -235,8 +233,6 @@ namespace LinqToDB.Linq.Builder
 				if (queryMethod != null)
 				{
 					var subquery = GetAssociationQueryExpressionAsSubQuery(Expression.Constant(builder.DataContext), queryMethod);
-
-					var ownerTableSource = parent.SelectQuery.From.Tables[0];
 
 					// TODO: need to build without join here
 					_innerContext = builder.BuildSequence(
@@ -394,142 +390,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return LoadWith;
-			}
-
-			interface ISubQueryHelper
-			{
-				Expression GetSubquery(
-					ExpressionBuilder      builder,
-					AssociatedTableContext tableContext,
-					ParameterExpression    parentObject);
-			}
-
-			class SubQueryHelper<T> : ISubQueryHelper
-				where T : class
-			{
-				public Expression GetSubquery(
-					ExpressionBuilder      builder,
-					AssociatedTableContext tableContext,
-					ParameterExpression    parentObject)
-				{
-					var lContext = Expression.Parameter(typeof(IDataContext), "ctx");
-					var lParent  = Expression.Parameter(typeof(object), "parentObject");
-
-					Expression expression;
-
-					var queryMethod = tableContext.Association.GetQueryMethod(parentObject.Type, typeof(T));
-					if (queryMethod != null)
-					{
-						var ownerParam = queryMethod.Parameters[0];
-						var dcParam    = queryMethod.Parameters[1];
-						var ownerExpr  = Expression.Convert(lParent, parentObject.Type);
-
-						expression = queryMethod.Body.Transform(e =>
-							e == ownerParam ? ownerExpr : (e == dcParam ? lContext : e));
-					}
-					else
-					{
-						IQueryable<T> tableExpression = builder.DataContext.GetTable<T>();
-
-						var loadWith = tableContext.GetLoadWith();
-
-						if (loadWith != null)
-						{
-							foreach (var members in loadWith)
-							{
-								var pLoadWith  = Expression.Parameter(typeof(T), "t");
-								var isPrevList = false;
-
-								Expression obj = pLoadWith;
-
-								foreach (var member in members)
-								{
-									if (isPrevList)
-										obj = new GetItemExpression(obj, builder.MappingSchema);
-
-									obj = Expression.MakeMemberAccess(obj, member.Item1);
-
-									isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
-								}
-
-								var method = Methods.LinqToDB.LoadWith.MakeGenericMethod(typeof(T), obj.Type);
-
-								var loadLambda = Expression.Lambda(obj, pLoadWith);
-								tableExpression = (IQueryable<T>)method.Invoke(null, new object[] {tableExpression, loadLambda });
-							}
-						}
-						
-						// Where
-						var pWhere = Expression.Parameter(typeof(T), "t");
-
-						Expression? expr = null;
-
-						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
-						{
-							var thisProp  = ExpressionHelper.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
-							var otherProp = ExpressionHelper.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
-
-							var ex = ExpressionBuilder.Equal(tableContext.Builder.MappingSchema, otherProp, thisProp);
-
-							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
-						}
-
-						var predicate = tableContext.Association.GetPredicate(parentObject.Type, typeof(T));
-						if (predicate != null)
-						{
-							var ownerParam = predicate.Parameters[0];
-							var childParam = predicate.Parameters[1];
-							var ownerExpr  = Expression.Convert(lParent, parentObject.Type);
-
-							var body = predicate.Body.Transform(e =>
-								e == ownerParam ? ownerExpr : (e == childParam ? pWhere : e));
-
-							expr = expr == null ? body : Expression.AndAlso(expr, body);
-						}
-
-						expression = tableExpression.Where(Expression.Lambda<Func<T,bool>>(expr, pWhere)).Expression;
-					}
-
-					var lambda      = Expression.Lambda<Func<IDataContext,object,IEnumerable<T>>>(expression, lContext, lParent);
-					var queryReader = CompiledQuery.Compile(lambda);
-
-					expression = Expression.Call(
-						null,
-						MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
-							ExpressionBuilder.QueryRunnerParam,
-							Expression.Convert(parentObject, typeof(object)),
-							Expression.Constant(queryReader));
-
-					var memberType = tableContext.Association.MemberInfo.GetMemberType();
-
-					if (memberType == typeof(T[]))
-						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToArray<T>(null)), expression);
-
-					if (memberType.IsSameOrParentOf(typeof(List<T>)))
-						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
-
-					var ctor = memberType.GetConstructor(new[] { typeof(IEnumerable<T>) });
-
-					if (ctor != null)
-						return Expression.New(ctor, expression);
-
-					var l = builder.MappingSchema.GetConvertExpression(expression.Type, memberType, false, false);
-
-					if (l != null)
-						return l.GetBody(expression);
-
-					throw new LinqToDBException($"Expected constructor '{memberType.Name}(IEnumerable<{tableContext.ObjectType}>)'");
-				}
-
-				static IEnumerable<T> ExecuteSubQuery(
-					IQueryRunner                             queryRunner,
-					object                                   parentObject,
-					Func<IDataContext,object,IEnumerable<T>> queryReader)
-				{
-					using (var db = queryRunner.DataContext.Clone(true))
-						foreach (var item in queryReader(db, parentObject))
-							yield return item;
-				}
 			}
 
 			protected override ISqlExpression? GetField(Expression expression, int level, bool throwException)

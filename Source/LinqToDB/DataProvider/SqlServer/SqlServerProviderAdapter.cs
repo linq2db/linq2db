@@ -207,9 +207,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			var builder = typeMapper.BuildWrappedFactory(() => new SqlCommandBuilder());
 
-			Func<Exception, IEnumerable<int>> exceptionErrorsGettter = (Exception ex)
-				=> typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
-
 			SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
 			return new SqlServerProviderAdapter(
@@ -234,6 +231,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				typeMapper.BuildWrappedFactory((IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction) => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
+
+			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 		}
 
 		#region Wrappers

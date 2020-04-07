@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -18,7 +17,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column]
-			public string DuplicateData { get; set; }
+			public string? DuplicateData { get; set; }
 
 			[Column]
 			public int OrderData1 { get; set; }

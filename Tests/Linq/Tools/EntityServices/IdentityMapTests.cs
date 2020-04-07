@@ -61,8 +61,8 @@ namespace Tests.Tools.EntityServices
 				Assert.AreSame(p1, p2);
 				Assert.AreSame(p1, p3);
 
-				var p4 = map.GetEntity<Person>(2);
-				var p5 = map.GetEntity<Person>(new { ID = 3L });
+				var p4 = map.GetEntity<Person>(2)!;
+				var p5 = map.GetEntity<Person>(new { ID = 3L })!;
 
 				Assert.That(
 					map.GetEntityEntries<Person>().Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),

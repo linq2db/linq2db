@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using Tools;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -80,9 +79,6 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public OracleVersion Version { get; }
-
-		// TODO: remove? both managed and unmanaged providers support it
-		public bool          IsXmlTypeSupported  => Adapter.OracleXmlTypeType != null;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -304,18 +300,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this);
-
-#pragma warning disable 618
-			if (options.RetrieveSequence)
-			{
-				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
-
-				if (!ReferenceEquals(list, source))
-					options = new BulkCopyOptions(options) { KeepIdentity = true };
-
-				source = list;
-			}
-#pragma warning restore 618
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,

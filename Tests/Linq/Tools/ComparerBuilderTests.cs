@@ -88,7 +88,7 @@ namespace Tests.Tools
 		[TestCase("Alpha", "Beta", false)]
 		public void ComplexMemberTest(string p1, string p2, bool expected)
 		{
-			var comparer = ComparerBuilder.GetEqualityComparer<TestClass>(c => c.Prop2.Length);
+			var comparer = ComparerBuilder.GetEqualityComparer<TestClass>(c => c.Prop2!.Length);
 			var o1       = new TestClass { Prop2 = p1 };
 			var o2       = new TestClass { Prop2 = p2 };
 
@@ -120,8 +120,8 @@ namespace Tests.Tools
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 		class TestClass
 		{
-			public int    Field1;
-			public string Prop2 { get; set; }
+			public int     Field1;
+			public string? Prop2 { get; set; }
 
 			static int _n;
 			       int _field = ++_n;
@@ -130,7 +130,7 @@ namespace Tests.Tools
 		[Test]
 		public void GetHashCodeTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>();
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 
 			Assert.That(eq.GetHashCode(new TestClass()), Is.Not.EqualTo(0));
 			Assert.That(eq.GetHashCode(null),        Is.    EqualTo(0));
@@ -139,7 +139,7 @@ namespace Tests.Tools
 		[Test]
 		public void EqualsTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>();
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 
 			Assert.That(eq.Equals(new TestClass(), new TestClass()), Is.True);
 			Assert.That(eq.Equals(null, null), Is.True);
@@ -155,7 +155,7 @@ namespace Tests.Tools
 		[Test]
 		public void NoMemberTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<NoMemberClass>();
+			var eq = ComparerBuilder.GetEqualityComparer<NoMemberClass?>();
 
 			Assert.That(eq.GetHashCode(new NoMemberClass()), Is.Not.EqualTo(0));
 
@@ -172,7 +172,7 @@ namespace Tests.Tools
 		[Test]
 		public void OneMemberTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<OneMemberClass>();
+			var eq = ComparerBuilder.GetEqualityComparer<OneMemberClass?>();
 
 			Assert.That(eq.GetHashCode(new OneMemberClass()), Is.Not.EqualTo(0));
 
@@ -184,7 +184,7 @@ namespace Tests.Tools
 		[Test]
 		public void DistinctTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>();
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 			var arr = new[]
 			{
 				new TestClass { Field1 = 1, Prop2 = "2"  },
@@ -202,7 +202,7 @@ namespace Tests.Tools
 		[Test]
 		public void DistinctByMember1Test()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>(t => t.Field1);
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>(t => t!.Field1);
 			var arr = new[]
 			{
 				new TestClass { Field1 = 1, Prop2 = "2"  },
@@ -220,7 +220,7 @@ namespace Tests.Tools
 		[Test]
 		public void DistinctByMember2Test()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>(t => t.Field1, t => t.Prop2);
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>(t => t!.Field1, t => t!.Prop2);
 			var arr = new[]
 			{
 				new TestClass { Field1 = 1, Prop2 = "2"  },
@@ -238,7 +238,7 @@ namespace Tests.Tools
 		[Test]
 		public void DistinctByMember3Test()
 		{
-			var eq  = ComparerBuilder.GetEqualityComparer<TestClass>(ta => ta.Members.Where(m => m.Name.EndsWith("1")));
+			var eq  = ComparerBuilder.GetEqualityComparer<TestClass?>(ta => ta.Members.Where(m => m.Name.EndsWith("1")));
 			var eq1 = ComparerBuilder.GetEqualityComparer<TestClass>(m => m.Name.EndsWith("1"));
 			var arr = new[]
 			{
@@ -267,10 +267,10 @@ namespace Tests.Tools
 			[Identifier]
 			public int EntityID { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
-		static IEnumerable<MemberAccessor> GetIdentifiers([NotNull] TypeAccessor typeAccessor)
+		static IEnumerable<MemberAccessor> GetIdentifiers(TypeAccessor typeAccessor)
 		{
 			foreach (var member in typeAccessor.Members)
 				if (member.MemberInfo.GetCustomAttribute<IdentifierAttribute>() != null)
@@ -280,7 +280,7 @@ namespace Tests.Tools
 		[Test]
 		public void AttributeTest()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass2>(GetIdentifiers);
+			var eq = ComparerBuilder.GetEqualityComparer<TestClass2?>(GetIdentifiers);
 			var arr = new[]
 			{
 				null,

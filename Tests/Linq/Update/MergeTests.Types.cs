@@ -29,11 +29,11 @@ namespace Tests.xUpdate
 			public bool? FieldBoolean;
 
 			[Column("FieldString")]
-			public string FieldString;
+			public string? FieldString;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column("FieldNString")]
-			public string FieldNString;
+			public string? FieldNString;
 
 			[Column("FieldChar")]
 			public char? FieldChar;
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)] // for some reason it breaks merge
 			[Column("FieldBinary")]
-			public byte[] FieldBinary;
+			public byte[]? FieldBinary;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column("FieldGuid")]
@@ -430,7 +430,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(expected.FieldEnumNumber, actual.FieldEnumNumber);
 		}
 
-		private static void AssertNString(string expected, string actual, string provider)
+		private static void AssertNString(string? expected, string? actual, string provider)
 		{
 			if (expected != null)
 			{
@@ -444,7 +444,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertBinary(byte[] expected, byte[] actual, string provider)
+		private static void AssertBinary(byte[]? expected, byte[]? actual, string provider)
 		{
 			if (provider.Contains(ProviderName.Informix)
 				|| provider.Contains("Oracle")
@@ -569,7 +569,7 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertString(string expected, string actual, string provider, bool isIDS)
+		private static void AssertString(string? expected, string? actual, string provider, bool isIDS)
 		{
 			if (expected != null)
 			{

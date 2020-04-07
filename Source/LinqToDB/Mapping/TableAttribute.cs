@@ -71,9 +71,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool   IsColumnAttributeRequired { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property currently not implemented and setting it will have no any effect.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public bool   IsView                    { get; set; }
 	}

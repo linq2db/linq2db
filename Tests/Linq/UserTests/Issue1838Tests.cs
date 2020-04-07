@@ -25,8 +25,8 @@ namespace Tests.UserTests
 
 		public class InvoiceReferenceNumber
 		{
-			public long InvoiceReferenceNumberID { get; set; }
-			public string ReferenceNumber { get; set; }
+			public long    InvoiceReferenceNumberID { get; set; }
+			public string? ReferenceNumber          { get; set; }
 		}
 
 		[Test]

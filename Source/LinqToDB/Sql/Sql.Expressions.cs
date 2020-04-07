@@ -171,13 +171,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr)
 		{
 			return FieldsExpr(table, fieldsExpr, true);
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr, bool qualified)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr, bool qualified)
 		{
 			var mappingSchema = MappingSchema.Default;
 
@@ -462,7 +462,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
-		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object entityOrColumn)
+		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
 		{
 			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}

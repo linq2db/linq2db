@@ -1,6 +1,3 @@
-#nullable disable
-using System;
-
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -13,7 +10,7 @@ namespace Tests.Model
 			public int    ID;
 
 			[Column("VALUE_")] // 'Value' reserved by firebird
-			public string Value;
+			public string? Value;
 		}
 	}
 }

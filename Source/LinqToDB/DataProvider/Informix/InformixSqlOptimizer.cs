@@ -36,11 +36,9 @@ namespace LinqToDB.DataProvider.Informix
 
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
-			// TODO: could we move it to SqlFlags? it is needed for Firebird too
+			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
-			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
-			// whould be better if our insert AST had no SelectQuery when it is not used...
 			if (!ignore)
 				new QueryVisitor().VisitAll(statement, e =>
 				{

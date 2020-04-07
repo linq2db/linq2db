@@ -126,20 +126,15 @@ namespace AccessDataContext
 	public partial class Doctor
 	{
 		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10), PrimaryKey, Identity] public int    PersonID { get; set; } // Long
-		#nullable disable
-		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull             ] public string Taxonomy { get; set; } // text(50)
-		#nullable enable
+		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull             ] public string Taxonomy { get; set; } = null!; // text(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// PersonDoctor
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="PersonDoctor", BackReferenceName="PersonDoctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -220,20 +215,15 @@ namespace AccessDataContext
 	public partial class Patient
 	{
 		[Column(DbType="Long",      DataType=DataType.Int32, Precision=10), PrimaryKey, Identity] public int    PersonID  { get; set; } // Long
-		#nullable disable
-		[Column(DbType="text(255)", DataType=DataType.NText, Length=255),   NotNull             ] public string Diagnosis { get; set; } // text(255)
-		#nullable enable
+		[Column(DbType="text(255)", DataType=DataType.NText, Length=255),   NotNull             ] public string Diagnosis { get; set; } = null!; // text(255)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// PersonPatient
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="PersonPatient", BackReferenceName="PersonPatient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -253,12 +243,8 @@ namespace AccessDataContext
 	public partial class Person
 	{
 		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10), PrimaryKey,  Identity] public int     PersonID   { get; set; } // Long
-		#nullable disable
-		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull              ] public string  FirstName  { get; set; } // text(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull              ] public string  LastName   { get; set; } // text(50)
-		#nullable enable
+		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull              ] public string  FirstName  { get; set; } = null!; // text(50)
+		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),    NotNull              ] public string  LastName   { get; set; } = null!; // text(50)
 		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),       Nullable          ] public string? MiddleName { get; set; } // text(50)
 		[Column(DbType="text(1)",  DataType=DataType.NText, Length=1),     NotNull              ] public char    Gender     { get; set; } // text(1)
 
@@ -505,5 +491,4 @@ namespace AccessDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

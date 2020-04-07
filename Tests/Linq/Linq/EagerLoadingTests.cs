@@ -19,13 +19,13 @@ namespace Tests.Linq
 		{
 			[Column] [PrimaryKey] public int Id1    { get; set; }
 			[Column] [PrimaryKey] public int Id2    { get; set; }
-			[Column] public string Value { get; set; }
+			[Column] public string? Value { get; set; }
 
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
-			public List<DetailClass> Details { get; set; }
+			public List<DetailClass> Details { get; set; } = null!;
 
 			[Association(QueryExpressionMethod = nameof(DetailsQueryImpl))]
-			public DetailClass[] DetailsQuery { get; set; }
+			public DetailClass[] DetailsQuery { get; set; } = null!;
 
 			static Expression<Func<MasterClass, IDataContext, IQueryable<DetailClass>>> DetailsQueryImpl()
 			{
@@ -46,35 +46,35 @@ namespace Tests.Linq
 			[Column] public int Id8    { get; set; }
 			[Column] public int Id9    { get; set; }
 
-			[Column] public string Value { get; set; }
+			[Column] public string? Value { get; set; }
 
-			public List<DetailClass> Details { get; set; }
-		}
+			public List<DetailClass> Details { get; set; } = null!;
+}
 
 		[Table]
 		class DetailClass
 		{
 			[Column] [PrimaryKey] public int DetailId    { get; set; }
 			[Column] public int? MasterId    { get; set; }
-			[Column] public string DetailValue { get; set; }
+			[Column] public string? DetailValue { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
-			public SubDetailClass[] SubDetails { get; set; }
-		}
+			public SubDetailClass[] SubDetails { get; set; } = null!;
+}
 
 		[Table]
 		class SubDetailClass
 		{
 			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
 			[Column] public int? DetailId    { get; set; }
-			[Column] public string SubDetailValue { get; set; }
+			[Column] public string? SubDetailValue { get; set; }
 		}
 
 		class SubDetailDTO
 		{
 			public int SubDetailId    { get; set; }
 			public int? DetailId    { get; set; }
-			public string SubDetailValue { get; set; }
+			public string? SubDetailValue { get; set; }
 		}
 
 		static IQueryable<SubDetailDTO> MakeDTO(IQueryable<SubDetailClass> details)

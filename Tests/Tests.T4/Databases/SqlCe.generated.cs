@@ -96,20 +96,15 @@ namespace SqlCeDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -147,14 +142,11 @@ namespace SqlCeDataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
 		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Issue695_Parent", BackReferenceName="FKIssue695ParentBackReferences")]
-		public Issue695Parent Parent { get; set; }
-
-		#nullable enable
+		public Issue695Parent Parent { get; set; } = null!;
 
 		#endregion
 	}
@@ -166,14 +158,11 @@ namespace SqlCeDataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference
 		/// </summary>
 		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<Issue695> FKIssue695ParentBackReferences { get; set; }
-
-		#nullable enable
+		public IEnumerable<Issue695> FKIssue695ParentBackReferences { get; set; } = null!;
 
 		#endregion
 	}
@@ -205,20 +194,15 @@ namespace SqlCeDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -227,12 +211,8 @@ namespace SqlCeDataContext
 	public partial class Person
 	{
 		[PrimaryKey, NotNull    ] public int     PersonID   { get; set; } // int
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // nchar(1)
 
@@ -502,5 +482,4 @@ namespace SqlCeDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

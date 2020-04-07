@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			[Nullable]                public int? ChildID { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "ChildID", CanBeNull = true)]
-			public List<Child> Children { get; set; }
+			public List<Child> Children { get; set; } = null!;
 		}
 
 		public new class Parent
@@ -27,10 +27,10 @@ namespace Tests.UserTests
 			[Nullable]                public int? Value1   { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
-			public List<Parent> Values { get; set; }
+			public List<Parent> Values { get; set; } = null!;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
-			public List<Child> Children { get; set; }
+			public List<Child> Children { get; set; } = null!;
 		}
 
 		[Test]

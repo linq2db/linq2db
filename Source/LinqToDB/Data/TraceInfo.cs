@@ -81,12 +81,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public bool IsAsync { get; set; }
 
-		/// <summary>
-		/// Gets a flag indicating whether this step was executed before the operation.
-		/// </summary>
-		[Obsolete("Use TraceInfoStep instead.")]
-		public bool BeforeExecute { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
-
 		private string? _sqlText;
 
 		/// <summary>

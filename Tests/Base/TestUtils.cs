@@ -1,11 +1,8 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-
-using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -14,6 +11,7 @@ using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Model;
 
 	public static class TestUtils
@@ -120,7 +118,8 @@ namespace Tests
 			return NO_SCHEMA_NAME;
 		}
 
-		public static GetSchemaOptions GetDefaultSchemaOptions(string context, GetSchemaOptions baseOptions = null)
+		[return: NotNullIfNotNull("baseOptions")]
+		public static GetSchemaOptions? GetDefaultSchemaOptions(string context, GetSchemaOptions? baseOptions = null)
 		{
 			if (context.Contains("SapHana"))
 			{
@@ -200,11 +199,11 @@ namespace Tests
 		{
 #if !NETCOREAPP2_1
 			if (db is TestServiceModelDataContext linqDb)
-				return linqDb.Configuration;
+				return linqDb.Configuration!;
 #endif
 
 			if (db is TestDataConnection testDb)
-				return testDb.ConfigurationString;
+				return testDb.ConfigurationString!;
 
 			return db.ContextID;
 		}
@@ -280,7 +279,7 @@ namespace Tests
 
 		class FirebirdTempTable<T> : TempTable<T>
 		{
-			public FirebirdTempTable(IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null) 
 				: base(db, tableName, databaseName, schemaName)
 			{
 			}
@@ -293,7 +292,7 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string tableName) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName) =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName) : 
 				new         TempTable<T>(db, tableName);
@@ -307,8 +306,7 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db,
-			string tableName = null)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null)
 		{
 			try
 			{
@@ -322,7 +320,7 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items)
 		{
 			var table = CreateLocalTable<T>(db, tableName);
 

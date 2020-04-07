@@ -9,20 +9,20 @@ namespace Tests.Playground
 	{
 		public class Address
 		{
-		    public string City     { get; set; }
-		    public string Street   { get; set; }
-		    public int    Building { get; set; }
+		    public string? City     { get; set; }
+		    public string? Street   { get; set; }
+		    public int     Building { get; set; }
 		}
 
 		[Column("city", "Residence.Street")]
 		[Column("user_name", "Name")]
 		public class User
 		{
-		    public string Name;
+		    public string? Name;
 
 		    [Column("street", ".Street")]
 		    [Column("building_number", MemberName = ".Building")]
-		    public Address Residence { get; set; }
+		    public Address? Residence { get; set; }
 		}
 
 		[ActiveIssue(999)]
@@ -32,7 +32,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			using (var users = db.CreateLocalTable<User>())
 			{
-				var query = users.Select(u => u.Residence.City);
+				var query = users.Select(u => u.Residence!.City);
 				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
 			}
 		}

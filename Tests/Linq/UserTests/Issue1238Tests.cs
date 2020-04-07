@@ -17,9 +17,9 @@ namespace Tests.UserTests
 		[Table("InheritanceParent")]
 		public class TestTable
 		{
-			[Column("InheritanceParentId"), PrimaryKey]           public int    Key1;
-			[Column("Name"),                PrimaryKey, Nullable] public string Key2;
-			[Column("TypeDiscriminator")]                         public int?   Data;
+			[Column("InheritanceParentId"), PrimaryKey]           public int     Key1;
+			[Column("Name"),                PrimaryKey, Nullable] public string? Key2;
+			[Column("TypeDiscriminator")]                         public int?    Data;
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side

@@ -74,7 +74,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick")
+						s => s.Patient!.Diagnosis.Contains("sick")
 						, s => new Model.Person()
 						{
 							ID = nextId + 1,
@@ -124,7 +124,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick"),
+						s => s.Patient!.Diagnosis.Contains("sick"),
 						s => new Model.Person()
 						{
 							FirstName = "Inserted 1",

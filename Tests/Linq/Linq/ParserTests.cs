@@ -435,7 +435,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Child
 					.Select    (p => new { p, p.Parent })
-					.Select    (p => new { p.Parent.ParentID, p.p.ChildID })
+					.Select    (p => new { p.Parent!.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
 					.GetMyContext();
 
@@ -453,7 +453,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.GrandChild
 					.Select    (p => new { p, p.Child })
-					.Select    (p => new { p.Child.Parent.ParentID, p.p.ChildID })
+					.Select    (p => new { p.Child!.Parent!.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
 					.GetMyContext();
 
@@ -747,7 +747,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Child
 					.Select    (p => new { p, p.Parent })
-					.Select    (p => new { p.Parent.ParentID, p.p.ChildID })
+					.Select    (p => new { p.Parent!.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
 					.GetMyContext();
 
@@ -874,7 +874,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from g in db.GrandChild
-					join p in db.Parent4 on g.Child.ParentID equals p.ParentID
+					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
 					select g;
 
 				var ctx = q.GetMyContext();
@@ -961,7 +961,7 @@ namespace Tests.Linq
 			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -990,7 +990,7 @@ namespace Tests.Linq
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			var methodInfo = MemberHelper.MethodOf(() => GetMyContext<T>(null));
+			var methodInfo = MemberHelper.MethodOf(() => GetMyContext<T>(null!));
 
 			return source.Provider.Execute<MyContextParser.Context>(
 				Expression.Call(

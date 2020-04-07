@@ -22,14 +22,14 @@ namespace Tests
 			return new ExpectedExceptionCommand(command, _expectedExceptionType, ExpectedMessage);
 		}
 
-		public string ExpectedMessage;
+		public string? ExpectedMessage;
 
 		class ExpectedExceptionCommand : DelegatingTestCommand
 		{
-			readonly Type   _expectedType;
-			readonly string _expectedMessage;
+			readonly Type    _expectedType;
+			readonly string? _expectedMessage;
 
-			public ExpectedExceptionCommand(TestCommand innerCommand, Type expectedType, string expectedMessage)
+			public ExpectedExceptionCommand(TestCommand innerCommand, Type expectedType, string? expectedMessage)
 				: base(innerCommand)
 			{
 				_expectedType    = expectedType;
@@ -38,8 +38,8 @@ namespace Tests
 
 			public override TestResult Execute(TestExecutionContext context)
 			{
-				Type      caughtType = null;
-				Exception exception = null;
+				Type?      caughtType = null;
+				Exception? exception  = null;
 
 				try
 				{
@@ -57,7 +57,7 @@ namespace Tests
 
 				if (caughtType == _expectedType)
 				{
-					if (_expectedMessage == null || _expectedMessage == exception.Message)
+					if (_expectedMessage == null || _expectedMessage == exception!.Message)
 						context.CurrentResult.SetResult(ResultState.Success);
 					else
 						context.CurrentResult.SetResult(ResultState.Failure,

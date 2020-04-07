@@ -469,7 +469,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var sql = base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 
-			// TODO: v3.0: refactor method to use query as parameter instead of manual escaping...
+			// TODO: refactor method to use query as parameter instead of manual escaping...
 			// https://github.com/linq2db/linq2db/issues/1921
 			if (_compatibilityLevel >= 140)
 				sql = $"EXEC('{sql.Replace("'", "''")}')";

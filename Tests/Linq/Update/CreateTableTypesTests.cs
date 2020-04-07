@@ -42,15 +42,15 @@ namespace Tests.xUpdate
 			public IntEnum?    IntEnumNullable    { get; set; }
 			public StringEnum  StringEnum         { get; set; }
 			public StringEnum? StringEnumNullable { get; set; }
-			public string      String             { get; set; }
+			public string?     String             { get; set; }
 
 			// converters test
 			// see https://github.com/linq2db/linq2db/issues/1032
-			public List<(uint field1, string field2)> StringConverted;
+			public List<(uint field1, string field2)> StringConverted = null!;
 
 			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
-			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
+			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>()
 			{
 				(1, "one"),
 				(2, "two")
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		// TODO: add more cases: other types, different DataType values
 		// TODO: add length validation to fields with length (text/binary)
-		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
+		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder?, Func<string, bool>?, Func<string, bool>?)> TestCases
 		{
 			[UsedImplicitly]
 			get
@@ -125,11 +125,11 @@ namespace Tests.xUpdate
 		public void TestCreateTableColumnType(
 			[DataSources] string context,
 			[ValueSource(nameof(TestCases))] (
-				ColumnBuilder columnBuilder,
-				ValueBuilder valueBuilder,
-				DefaultValueBuilder defaultValueBuilder,
-				Func<string, bool> skipAssert,
-				Func<string, bool> skipCase) testCase)
+				ColumnBuilder        columnBuilder,
+				ValueBuilder         valueBuilder,
+				DefaultValueBuilder? defaultValueBuilder,
+				Func<string, bool>?  skipAssert,
+				Func<string, bool>?  skipCase) testCase)
 		{
 			if (testCase.skipCase?.Invoke(context) == true)
 			{

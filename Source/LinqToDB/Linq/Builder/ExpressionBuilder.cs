@@ -985,11 +985,7 @@ namespace LinqToDB.Linq.Builder
 					_subQueryExpressions.Add(ex);
 				}
 
-				var newBody = lbody.Transform(ex =>
-				{
-					Expression e;
-					return dic.TryGetValue(ex, out e) ? e : ex;
-				});
+				var newBody = lbody.Transform(ex => dic.TryGetValue(ex, out var e) ? e : ex);
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 

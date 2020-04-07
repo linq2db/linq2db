@@ -168,7 +168,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(Length = 255, DataType = DataType.VarChar)]
-			public string Content { get; set; }
+			public string? Content { get; set; }
 		}
 
 		// server and client should run with DB_LOCALE=en_us.utf8;CLIENT_LOCALE=en_us.utf8 options

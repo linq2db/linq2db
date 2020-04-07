@@ -73,7 +73,7 @@ namespace Tests.Linq
 				var q =
 					from t in dbSchema.Tables
 					from c in t.Columns
-					where c.ColumnType.StartsWith("tinyint") && c.MemberType.StartsWith("sbyte")
+					where c.ColumnType!.StartsWith("tinyint") && c.MemberType.StartsWith("sbyte")
 					select c;
 
 				var column = q.FirstOrDefault();
@@ -257,6 +257,7 @@ namespace Tests.Linq
 		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
@@ -275,6 +276,7 @@ namespace Tests.Linq
 		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
@@ -293,6 +295,7 @@ namespace Tests.Linq
 		public void Issue528Test3([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
@@ -340,8 +343,8 @@ namespace Tests.Linq
 		public class PersonWrapper
 		{
 			public int    ID;
-			public string FirstName;
-			public string SecondName;
+			public string FirstName  = null!;
+			public string SecondName = null!;
 		}
 
 		[Test]
@@ -372,27 +375,27 @@ namespace Tests.Linq
 			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[Column("PersonID"), Identity, PrimaryKey]
 			public int ID;
-			[NotNull] public string FirstName { get; set; }
-			[NotNull] public string LastName;
-			[Nullable] public string MiddleName;
+			[NotNull] public string FirstName { get; set; } = null!;
+			[NotNull] public string LastName = null!;
+			[Nullable] public string? MiddleName;
 
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
-			public Doctor Doctor { get; set; }
+			public Doctor? Doctor { get; set; }
 		}
 
 		public class PersonDto
 		{
 			public int    Id;
-			public string Name;
+			public string Name = null!;
 
-			public DoctorDto Doc;
+			public DoctorDto? Doc;
 		}
 
 		public class DoctorDto
 		{
 			public int    PersonId;
-			public string Taxonomy;
+			public string Taxonomy = null!;
 		}
 
 		[ExpressionMethod("MapToDtoExpr1")]
@@ -434,7 +437,7 @@ namespace Tests.Linq
 			{
 				var l = db
 					.GetTable<Person376>()
-					.Where(_ => _.Doctor.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
+					.Where(_ => _.Doctor!.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
 					.Select(_ => MapToDto(_)).ToList();
 
 				Assert.IsNotEmpty(l);
@@ -448,11 +451,11 @@ namespace Tests.Linq
 		public class Person88
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey] public int    ID;
-			[NotNull]                                  public string FirstName { get; set; }
-			[NotNull]                                  public string LastName;
-			[Nullable]                                 public string MiddleName;
-			                                           public char   Gender;
+			[Column("PersonID"), Identity, PrimaryKey] public int     ID;
+			[NotNull]                                  public string  FirstName { get; set; } = null!;
+			[NotNull]                                  public string  LastName = null!;
+			[Nullable]                                 public string? MiddleName;
+			                                           public char    Gender;
 		}
 
 		[Test]
@@ -566,7 +569,7 @@ namespace Tests.Linq
 
 				var actual = from c in db.GetTable<Child>()
 					where (from p in db.GetTable<Parent>()
-						where p.ParentID == c.ParentID && !values.Contains(p.Value1.Value)
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1!.Value)
 						select p).Any()
 					select c;
 

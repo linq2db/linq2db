@@ -30,7 +30,7 @@ namespace LinqToDB.Expressions
 
 		readonly int           _idx;
 		readonly Expression    _dataReaderParam;
-		         Type          _type;
+		readonly Type          _type;
 		readonly IDataContext? _slowModeDataContext;
 
 		public override Type           Type        => _type;

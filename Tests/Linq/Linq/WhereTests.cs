@@ -97,8 +97,8 @@ namespace Tests.Linq
 		[Test]
 		public void NullParam1([DataSources] string context)
 		{
-			var    id   = 1;
-			string name = null;
+			var     id   = 1;
+			string? name = null;
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == id && p.MiddleName == name select p);
 		}
@@ -106,8 +106,8 @@ namespace Tests.Linq
 		[Test]
 		public void NullParam2([DataSources] string context)
 		{
-			var    id   = 1;
-			string name = null;
+			var     id   = 1;
+			string? name = null;
 
 			using (var db = GetDataContext(context))
 			{
@@ -441,8 +441,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				string str = null;
-				var    q   = from p in db.Person where p.MiddleName == str select p;
+				string? str = null;
+				var     q   = from p in db.Person where p.MiddleName == str select p;
 
 				var list = q.ToList();
 				Assert.AreNotEqual(0, list.Count);
@@ -473,7 +473,7 @@ namespace Tests.Linq
 		public void Value([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, (from p in db.Parent where p.Value1.Value == 1 select p).ToList().Count);
+				Assert.AreEqual(2, (from p in db.Parent where p.Value1!.Value == 1 select p).ToList().Count);
 		}
 
 		[Test]
@@ -1250,10 +1250,10 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					   AdjustExpectedData(db, Types2
-						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
+						.Where(_ => _.DateTimeValue!.Value.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _)),
 					db.Types2
-						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
+						.Where(_ => _.DateTimeValue!.Value.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _));
 			}
 		}
@@ -1327,7 +1327,7 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => t.BoolValue == false && t.Id > 0);
 
 				AreEqualLocalPredicate(local, table,
-					t => !t.NullableBoolValue.Value && t.Id > 0,
+					t => !t.NullableBoolValue!.Value && t.Id > 0,
 					t => (!t.NullableBoolValue.HasValue || !t.NullableBoolValue.Value) && t.Id > 0);
 
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);

@@ -7,10 +7,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	public class WrapActionBenchmark
 	{
 		private static readonly string      Parameter            = "TestString";
-		private static readonly IDataReader IDataReaderParameter = null;
+		private static readonly IDataReader IDataReaderParameter = null!;
 
-		private Original.TestClass2 _originalInstance;
-		private Wrapped.TestClass2  _wrapperInstance;
+		private Original.TestClass2 _originalInstance = null!;
+		private Wrapped.TestClass2  _wrapperInstance = null!;
 
 		[GlobalSetup]
 		public void Setup()

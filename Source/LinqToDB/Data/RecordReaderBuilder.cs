@@ -93,8 +93,7 @@ namespace LinqToDB.Data
 
 		int GetReaderIndex(string columnName)
 		{
-			int value;
-			if (!ReaderIndexes.TryGetValue(columnName, out value))
+			if (!ReaderIndexes.TryGetValue(columnName, out var value))
 				return -1;
 			return value;
 		}

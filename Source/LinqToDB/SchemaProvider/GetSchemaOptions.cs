@@ -32,19 +32,19 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// List of allowed schemas/owners.
 		/// </summary>
-		public string[]? IncludedSchemas;
+		public string?[]? IncludedSchemas;
 		/// <summary>
 		/// List of disallowed schemas/owners.
 		/// </summary>
-		public string[]? ExcludedSchemas;
+		public string?[]? ExcludedSchemas;
 		/// <summary>
 		/// List of allowed databases/catalogs.
 		/// </summary>
-		public string[]? IncludedCatalogs;
+		public string?[]? IncludedCatalogs;
 		/// <summary>
 		/// List of disallowed databases/catalogs.
 		/// </summary>
-		public string[]? ExcludedCatalogs;
+		public string?[]? ExcludedCatalogs;
 
 		/// <summary>
 		/// String comparison logic for <see cref="IncludedSchemas"/>, <see cref="ExcludedSchemas"/>, <see cref="IncludedCatalogs"/> and <see cref="ExcludedCatalogs"/> values.

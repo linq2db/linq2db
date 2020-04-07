@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 #if DEBUG
 // ReSharper disable InconsistentNaming
 
-#pragma warning disable 3010
 #endif
 
 namespace LinqToDB.Linq.Builder
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (context.SelectQuery == null)
 				return $"{context.GetType()}(<none>)";
-			return $"{context.GetType()}({context.SelectQuery.SourceID.ToString()})";
+			return $"{context.GetType()}({context.SelectQuery.SourceID})";
 		}
 
 		public static string GetPath(this IBuildContext context)

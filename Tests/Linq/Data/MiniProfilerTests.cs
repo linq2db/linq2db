@@ -218,7 +218,7 @@ namespace Tests.Data
 
 		class MapperExpressionTest3
 		{
-			public object Value { get; set; }
+			public object? Value { get; set; }
 		}
 
 		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
@@ -235,7 +235,7 @@ namespace Tests.Data
 
 				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
 				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
+				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue!).Value);
 			}
 		}
 
@@ -347,7 +347,7 @@ namespace Tests.Data
 				// test readers + mapper.map
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
-				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
+				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value!;
 				Assert.True    (rawDtValue is MySqlDataDateTime);
 				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
 
@@ -562,7 +562,7 @@ namespace Tests.Data
 
 				// test SqlException handing
 				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
-				Exception sex = null;
+				Exception? sex = null;
 				try
 				{
 					db.Execute<object>("SELECT 1 / 0");
@@ -572,7 +572,7 @@ namespace Tests.Data
 					sex = ex;
 				}
 
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
@@ -701,7 +701,7 @@ namespace Tests.Data
 
 				// test SqlException handing
 				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
-				Exception sex = null;
+				Exception? sex = null;
 				try
 				{
 					db.Execute<object>("SELECT 1 / 0");
@@ -710,7 +710,7 @@ namespace Tests.Data
 				{
 					sex = ex;
 				}
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
@@ -1084,8 +1084,6 @@ namespace Tests.Data
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
 
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
-
 				// dbcommand properties
 				db.DisposeCommand();
 				// clean instance
@@ -1175,8 +1173,6 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
-
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
 
 				// dbcommand properties
 				db.DisposeCommand();
@@ -1328,20 +1324,20 @@ namespace Tests.Data
 			MiniProfilerNoMappings
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null)
 		{
 			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(connectionType, cs), csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null)
 		{
 			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName), cs), csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string? csExtra = null)
 		{
 			var ms = new MappingSchema(context);
-			DataConnection db = null;
+			DataConnection? db = null;
 			db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types

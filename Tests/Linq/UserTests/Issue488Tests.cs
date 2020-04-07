@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
 			public bool BoolValue;
 			public Guid GuidValue;
-			public Binary BinaryValue;
+			public Binary? BinaryValue;
 			public short SmallIntValue;
 		}
 

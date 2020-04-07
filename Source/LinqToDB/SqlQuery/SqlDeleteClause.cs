@@ -42,7 +42,6 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		[Obsolete]
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			((ISqlExpressionWalkable?)Table)?.Walk(options, func);

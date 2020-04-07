@@ -15,12 +15,12 @@ namespace Tests._Create
 	using Model;
 
 	[TestFixture]
-	[Category("Create")]
+	[Category(TestCategory.Create)]
 	// ReSharper disable once InconsistentNaming
 	// ReSharper disable once TestClassNameSuffixWarning
 	public class _CreateData : TestBase
 	{
-		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null, string database = null)
+		static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? database = null)
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
@@ -54,7 +54,7 @@ namespace Tests._Create
 			if (DataConnection.TraceSwitch.TraceInfo)
 				Console.WriteLine("Commands count: {0}", cmds.Length);
 
-			Exception exception = null;
+			Exception? exception = null;
 
 			using (var db = new TestDataConnection(configString))
 			{

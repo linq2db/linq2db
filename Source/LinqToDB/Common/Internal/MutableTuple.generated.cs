@@ -58,7 +58,7 @@ namespace LinqToDB.Common.Internal
 	{
 		public T1 Item1 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -79,7 +79,7 @@ namespace LinqToDB.Common.Internal
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -103,7 +103,7 @@ namespace LinqToDB.Common.Internal
 		public T2 Item2 { get; set; }
 		public T3 Item3 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -130,7 +130,7 @@ namespace LinqToDB.Common.Internal
 		public T3 Item3 { get; set; }
 		public T4 Item4 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -160,7 +160,7 @@ namespace LinqToDB.Common.Internal
 		public T4 Item4 { get; set; }
 		public T5 Item5 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -193,7 +193,7 @@ namespace LinqToDB.Common.Internal
 		public T5 Item5 { get; set; }
 		public T6 Item6 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -229,7 +229,7 @@ namespace LinqToDB.Common.Internal
 		public T6 Item6 { get; set; }
 		public T7 Item7 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -268,7 +268,7 @@ namespace LinqToDB.Common.Internal
 		public T7 Item7 { get; set; }
 		public T8 Item8 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -310,7 +310,7 @@ namespace LinqToDB.Common.Internal
 		public T8 Item8 { get; set; }
 		public T9 Item9 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
@@ -355,7 +355,7 @@ namespace LinqToDB.Common.Internal
 		public T9 Item9 { get; set; }
 		public T10 Item10 { get; set; }
 	
-		public override Boolean Equals(object other) 
+		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
 
