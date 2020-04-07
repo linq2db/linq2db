@@ -485,5 +485,62 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Test, ActiveIssue(1592)]
+		public void Issue1592CallbackWithDefaultMappingSchema([DataSources] string context)
+		{
+			bool result = false;
+
+			MappingSchema.Default.EntityDescriptorCreatedCallback = (ms, ed) =>
+			{
+				result = true;
+			};
+
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
+			}
+		}
+
+		[Test]
+		public void Issue1592CallbackWithContextProperty([DataSources] string context)
+		{
+			bool result = false;
+
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.EntityDescriptorCreatedCallback = (ms, ed) =>
+				{
+					result = true;
+				};
+
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
+			}
+		}
+
+		[Test, ActiveIssue(1592)]
+		public void Issue1592CallbackWithContextConstructor([DataSources] string context)
+		{
+			bool result = false;
+
+			var mappingSchema = new MappingSchema
+			{
+				EntityDescriptorCreatedCallback = (ms, ed) =>
+				{
+					result = true;
+				}
+			};
+
+			using (var db = GetDataContext(context, mappingSchema))
+			{
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
+			}
+		}
 	}
 }
