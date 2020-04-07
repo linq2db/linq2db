@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections.Generic;
 	using Model;
 
 	[TestFixture]
@@ -348,7 +349,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue535Test([DataSources] string context)
+		public void Issue535Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -366,6 +367,81 @@ namespace Tests.Linq
 					select p;
 
 				Assert.IsNotNull(q.FirstOrDefault());
+			}
+		}
+
+		[Table]
+		class CustomerBase
+		{
+			[PrimaryKey, Identity] public int        Id           { get; set; }
+			[Column, NotNull]      public ClientType ClientType   { get; set; }
+			[Column, Nullable]     public string?    Name         { get; set; }
+			[Column, Nullable]     public string?    ContactEmail { get; set; }
+			[Column, Nullable]     public bool?      Enabled      { get; set; }
+		}
+
+		public class PersonBase
+		{
+			public   int     Id              { get; set; }
+			public   string? Name            { get; set; }
+			internal string? CompositeEmails { get; set; }
+		}
+
+		public class PersonCustomer : PersonBase
+		{
+			public List<string>? Emails { get; set; }
+			public bool          IsEnabled { get; set; }
+		}
+
+		enum ClientType
+		{
+			[MapValue("Client")]
+			Client
+		}
+
+		[ActiveIssue(535)]
+		[Test]
+		public void Issue535Test2([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CustomerBase>())
+			{
+				var query = from cb in table
+							where cb.ClientType == ClientType.Client
+						//orderby cb.Name
+						select new PersonCustomer
+						{
+							Id = cb.Id,
+							Name = cb.Name,
+							CompositeEmails = cb.ContactEmail,
+							IsEnabled = cb.Enabled ?? false
+						};
+
+				var filter = "test";
+
+				query = from q in query where q.Name!.Contains(filter) || q.CompositeEmails!.Contains(filter) select q;
+
+				query.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue535Test3([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CustomerBase>())
+			{
+				var query = from cb in table
+							 where cb.ClientType == ClientType.Client
+							 select new
+							 {
+								 Id = cb.Id,
+								 Name = cb.Name,
+								 CompositeEmails = cb.ContactEmail,
+								 IsEnabled = cb.Enabled ?? false
+							 };
+
+				query.ToList();
 			}
 		}
 
