@@ -1569,5 +1569,59 @@ namespace Tests.Linq
 				Assert.True(res);
 			}
 		}
+
+		[Table]
+		class Table860_1
+		{
+			[Column] public int Id  { get; set; }
+			[Column] public int bId { get; set; }
+
+			[Association(ThisKey = nameof(bId), OtherKey = nameof(Table860_2.Id))]
+			public IList<Table860_2> Table2 { get; set; } = null!;
+		}
+
+		[Table]
+		class Table860_2
+		{
+			[Column] public int Id  { get; set; }
+			[Column] public int cId { get; set; }
+
+			[Association(ThisKey = nameof(cId), OtherKey = nameof(Table860_3.Id))]
+			public Table860_3? Table3 { get; set; }
+		}
+
+		[Table]
+		class Table860_3
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Prop { get; set; }
+		}
+
+		[ActiveIssue(860)]
+		[Test]
+		public void Issue860Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Table860_1>())
+			using (db.CreateLocalTable<Table860_2>())
+			using (db.CreateLocalTable<Table860_3>())
+			{
+				var q = db.GetTable<Table860_1>()
+					.Where(it => (
+						(it.Table2 == null)
+							? null
+							: ((bool?)it.Table2.Any(d =>
+								 (
+									 ((d == null ? null : d.Table3) == null)
+										 ? null
+										 : d.Table3!.Prop
+								 ) == "aaa")
+							)
+					) == true
+				);
+
+				q.ToArray();
+			}
+		}
 	}
 }
