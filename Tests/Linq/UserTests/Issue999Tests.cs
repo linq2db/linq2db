@@ -14,7 +14,7 @@ namespace Tests.Playground
 		    public int     Building { get; set; }
 		}
 
-		[Column("city", "Residence.Street")]
+		[Column("city", "Residence.City")]
 		[Column("user_name", "Name")]
 		public class User
 		{
@@ -25,7 +25,6 @@ namespace Tests.Playground
 		    public Address? Residence { get; set; }
 		}
 
-		[ActiveIssue(999)]
 		[Test]
 		public void SampleSelectTest([DataSources] string context)
 		{
@@ -34,6 +33,8 @@ namespace Tests.Playground
 			{
 				var query = users.Select(u => u.Residence!.City);
 				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
 			}
 		}
 	}
