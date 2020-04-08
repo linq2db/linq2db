@@ -995,6 +995,44 @@ namespace Tests.Linq
 				//No assert, just need to get past here without an exception
 			}
 		}
+
+		[Table]
+		class Employee
+		{
+			[Column] public int  Id           { get; set; }
+			[Column] public int? DepartmentId { get; set; }
+
+			[Association(ExpressionPredicate = nameof(DepartmentPredicate), CanBeNull = true)]
+			public Department? Department { get; set; }
+
+			public static Expression<Func<Employee, Department, bool>> DepartmentPredicate => (e, d) => e.DepartmentId == d.DepartmentId && !d.Deleted;
+		}
+
+		[Table]
+		class Department
+		{
+			[Column] public int     DepartmentId { get; set; }
+			[Column] public string? Name         { get; set; }
+			[Column] public bool    Deleted      { get; set; }
+		}
+
+		[ActiveIssue(845)]
+		[Test]
+		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<Employee>())
+			using (db.CreateLocalTable<Department>())
+			{
+				var result = db.GetTable<Employee>()
+					.Select(e => new { e.Id, e.Department!.Name})
+					.ToList();
+
+				Assert.False(db.LastQuery!.Contains(" NOT"));
+				//Assert.True(db.LastQuery!.Contains("AND 1 <> [a_Department].[Deleted]"));
+				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
+			}
+		}
 	}
 
 	public static class AssociationExtension
