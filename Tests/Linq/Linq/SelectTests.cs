@@ -1614,7 +1614,7 @@ namespace Tests.Linq
 								 (
 									 ((d == null ? null : d.Table3) == null)
 										 ? null
-										 : d.Table3!.Prop
+										 : d!.Table3!.Prop
 								 ) == "aaa")
 							)
 					) == true

@@ -2049,5 +2049,54 @@ namespace Tests.Linq
 				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
 			}
 		}
+
+		[Table(Name = "Issue913Test")]
+		public class Instrument
+		{
+			[Column, PrimaryKey, NotNull] public int InstrumentID { get; set; } // int
+			[Column(Length = 1), Nullable] public TradingStatus? TradingStatus { get; set; } // char(1)
+
+			public static readonly Instrument[] Data = new[]
+			{
+				new Instrument() { InstrumentID = 1 },
+				new Instrument() { InstrumentID = 2, TradingStatus = GroupByTests.TradingStatus.Active },
+				new Instrument() { InstrumentID = 3, TradingStatus = GroupByTests.TradingStatus.Delisted }
+			};
+		}
+
+		public enum TradingStatus
+		{
+			[MapValue("A")] Active,
+			[MapValue("D")] Delisted,
+		}
+
+		[ActiveIssue(913)]
+		[Test]
+		public void Issue913Test([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Instrument.Data))
+			{
+				var q = from i in table
+					group i by new
+					{
+						IsDelisted = i.TradingStatus == TradingStatus.Delisted
+					}
+					into g
+						select new
+						{
+							g.Key.IsDelisted,
+							Count = g.Count(),
+						};
+
+				var x = q.ToList().OrderBy(_ => _.Count).ToArray();
+
+				Assert.AreEqual(2, x.Length);
+				Assert.True(x[0].IsDelisted);
+				Assert.AreEqual(1, x[0].Count);
+				Assert.False(x[1].IsDelisted);
+				Assert.AreEqual(2, x[1].Count);
+			}
+		}
 	}
 }
