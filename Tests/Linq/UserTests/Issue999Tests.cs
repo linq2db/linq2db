@@ -35,6 +35,11 @@ namespace Tests.Playground
 				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
 
 				query.ToList();
+
+				query = users.Select(u => u.Residence!.Street);
+				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
 			}
 		}
 	}
