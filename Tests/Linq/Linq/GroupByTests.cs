@@ -2098,5 +2098,38 @@ namespace Tests.Linq
 				Assert.AreEqual(2, x[1].Count);
 			}
 		}
+
+		class Issue1078Table
+		{
+			[Identity]
+			public int UserID { get; set; }
+			[Column, NotNull]
+			public int SiteID { get; set; }
+			[Column, NotNull]
+			public string Username { get; set; } = null!;
+			[Column, NotNull]
+			public bool Active { get; set; }
+		}
+
+		[ActiveIssue(1078)]
+		[Test]
+		public void Issue1078Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1078Table>())
+			{
+				var query =
+					from u in table
+					group u.Active ? 1 : 0 by u.SiteID into grp
+					select new
+					{
+						SiteID   = grp.Key,
+						Total    = grp.Count(),
+						Inactive = grp.Count(_ => _ == 0)
+					};
+
+				query.ToList();
+			}
+		}
 	}
 }

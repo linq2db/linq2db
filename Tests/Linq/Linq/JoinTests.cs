@@ -2748,8 +2748,8 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
-			public string? AlertKey { get; set; }
-			public string? AlertCode { get; set; }
+			public string?   AlertKey     { get; set; }
+			public string?   AlertCode    { get; set; }
 			public DateTime? CreationDate { get { return DateTime.Today; } }
 		}
 		public class AuditAlert : Alert
@@ -2758,27 +2758,27 @@ namespace Tests.Linq
 		}
 		public class Trade
 		{
-			public int DealId { get; set; }
-			public int ParcelId { get; set; }
+			public int     DealId       { get; set; }
+			public int     ParcelId     { get; set; }
 			public string? CounterParty { get; set; }
 		}
 		public class Nomin
 		{
-			public int CargoId { get; set; }
-			public int DeliveryId { get; set; }
+			public int     CargoId              { get; set; }
+			public int     DeliveryId           { get; set; }
 			public string? DeliveryCounterParty { get; set; }
 		}
 		public class Flat
 		{
-			public string? AlertKey { get; set; }
-			public string? AlertCode { get; set; }
-			public int? CargoId { get; set; }
-			public int? DeliveryId { get; set; }
-			public string? DeliveryCounterParty { get; set; }
-			public int? DealId { get; set; }
-			public int? ParcelId { get; set; }
-			public string? CounterParty { get; set; }
-			public DateTime? TransactionDate { get; set; }
+			public string?   AlertKey             { get; set; }
+			public string?   AlertCode            { get; set; }
+			public int?      CargoId              { get; set; }
+			public int?      DeliveryId           { get; set; }
+			public string?   DeliveryCounterParty { get; set; }
+			public int?      DealId               { get; set; }
+			public int?      ParcelId             { get; set; }
+			public string?   CounterParty         { get; set; }
+			public DateTime? TransactionDate      { get; set; }
 		}
 
 		[Test]
@@ -2826,15 +2826,15 @@ namespace Tests.Linq
 				extract
 					.Select(sql => new Flat()
 					{
-						AlertCode = sql.alert.AlertCode,
-						AlertKey = sql.alert.AlertKey,
-						TransactionDate = sql.first?.LastUpdate,
-						CargoId = sql.first?.nomin?.CargoId,
-						DeliveryId = sql.first?.nomin?.DeliveryId,
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
 						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
-						DealId = sql.first?.trade?.DealId,
-						ParcelId = sql.first?.trade?.ParcelId,
-						CounterParty = sql.first?.trade?.CounterParty
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
 					}).ToArray();
 			}
 		}
@@ -2885,15 +2885,15 @@ namespace Tests.Linq
 				extract
 					.Select(sql => new Flat()
 					{
-						AlertCode = sql.alert.AlertCode,
-						AlertKey = sql.alert.AlertKey,
-						TransactionDate = sql.first?.LastUpdate,
-						CargoId = sql.first?.nomin?.CargoId,
-						DeliveryId = sql.first?.nomin?.DeliveryId,
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
 						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
-						DealId = sql.first?.trade?.DealId,
-						ParcelId = sql.first?.trade?.ParcelId,
-						CounterParty = sql.first?.trade?.CounterParty
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
 					}).ToArray();
 			}
 		}
