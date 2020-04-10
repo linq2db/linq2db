@@ -2131,5 +2131,28 @@ namespace Tests.Linq
 				query.ToList();
 			}
 		}
+
+		class Issue1192Table
+		{
+			public int IdId { get; internal set; }
+			public int MyOtherId { get; internal set; }
+			public int Status { get; internal set; }
+		}
+
+		[Test]
+		public void Issue1192Test([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1192Table>())
+			{
+				var stats = (from t in table
+							 where t.MyOtherId == 12
+							 group t by 1 into g
+							 select new
+							 {
+								 MyGroupedCount = g.Count(i => i.Status == 3),
+							 }).FirstOrDefault();
+			}
+		}
 	}
 }
