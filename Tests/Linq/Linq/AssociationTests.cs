@@ -1033,6 +1033,60 @@ namespace Tests.Linq
 				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
 			}
 		}
+
+		class Entity1711
+		{ 
+			public long Id { get; set; }
+		}
+
+		class Relationship1711
+		{
+			public long EntityId { get; set; }
+
+			public bool Deleted { get; set; }
+		}
+
+		[Test]
+		public void Issue1711Test1([DataSources(ProviderName.Access)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<Entity1711>()
+				.HasTableName("Entity1711")
+				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId); ;
+
+			using (var db = GetDataContext(context, ms))
+			using (var entity = db.CreateLocalTable<Entity1711>())
+			using (db.CreateLocalTable<Relationship1711>())
+			{
+				var result1 = entity
+					.Where(t => Sql.Property<IQueryable<Relationship1711>>(t, "relationship").Any())
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(1711)]
+		[Test]
+		public void Issue1711Test2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<Entity1711>()
+				.HasTableName("Entity1711")
+				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), (e, db) => db.GetTable<Relationship1711>()
+						.Where(r => r.Deleted == false && r.EntityId == e.Id));
+
+			using (var db = GetDataContext(context, ms))
+			using (var entity = db.CreateLocalTable<Entity1711>())
+			using (db.CreateLocalTable<Relationship1711>())
+			{
+				var result1 = entity
+					.Where(t => Sql.Property<IQueryable<Relationship1711>>(t, "relationship").Any())
+					.ToList();
+			}
+		}
 	}
 
 	public static class AssociationExtension
