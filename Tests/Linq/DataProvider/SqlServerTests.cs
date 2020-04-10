@@ -1563,5 +1563,57 @@ AS
 				Assert.IsNull(proc.ResultException);
 			}
 		}
+
+		public class Issue1294Table
+		{
+			public int Id { get; set; }
+		}
+
+		[Sql.TableFunction(Name = "Issue1294")]
+		public LinqToDB.ITable<Issue1294Table> GetPermissions(int p1, int p2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Test]
+		[ActiveIssue(1294)]
+		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) });
+
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<Issue1294Table>())
+			{
+				db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
+	BEGIN DROP FUNCTION Issue1294
+END
+");
+
+				db.Execute(@"
+CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
+RETURNS TABLE
+AS
+	RETURN SELECT @p1 + @p2 as Id
+");
+
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
+				var permissions = CallFunc(p1, p2)
+					.Select(x => x.Id)
+					.Union(CallFunc(p11, p2).Select(x => x.Id));
+				var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.True(db.LastQuery!.Contains("@"));
+
+				LinqToDB.ITable<Issue1294Table> CallFunc(int p1, int p2)
+				{
+					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
+				}
+			}
+		}
 	}
 }
