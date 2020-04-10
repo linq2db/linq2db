@@ -2140,7 +2140,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1192Test([DataSources(ProviderName.Access)] string context)
+		public void Issue1198Test([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1192Table>())
