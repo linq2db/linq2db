@@ -1091,7 +1091,7 @@ namespace Tests.Linq
 		[Table]
 		class Issue1096Task
 		{
-			[Column(IsPrimaryKey = true)]
+			[Column]
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
@@ -1125,12 +1125,20 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<Issue1096TaskStage>())
 			{
 				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
 				db.Insert(new Issue1096TaskStage { Id = 1, TaskId = 1, Actual = true });
 
 				var query = db.GetTable<Issue1096Task>()
 					.Distinct()
 					.Select(t => new { t, t.ActualStage });
 				var res = query.ToArray();
+
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(1, res[0].t.Id);
+				Assert.AreEqual("bda.Requests", res[0].t.TargetName);
+				Assert.AreEqual(1, res[0].ActualStage.Id);
+				Assert.AreEqual(1, res[0].ActualStage.TaskId);
+				Assert.AreEqual(true, res[0].ActualStage.Actual);
 			}
 		}
 	}
