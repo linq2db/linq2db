@@ -1087,6 +1087,52 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Table]
+		class Issue1096Task
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string? TargetName { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ActualStageExp))]
+			public Issue1096TaskStage ActualStage { get; set; } = null!;
+
+			private static Expression<Func<Issue1096Task, Issue1096TaskStage, bool>> ActualStageExp()
+				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
+		}
+
+		[Table]
+		class Issue1096TaskStage
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public int TaskId { get; set; }
+
+			[Column]
+			public bool Actual { get; set; }
+		}
+
+		[Test]
+		public void Issue1096Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1096Task>())
+			using (db.CreateLocalTable<Issue1096TaskStage>())
+			{
+				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Issue1096TaskStage { Id = 1, TaskId = 1, Actual = true });
+
+				var query = db.GetTable<Issue1096Task>()
+					.Distinct()
+					.Select(t => new { t, t.ActualStage });
+				var res = query.ToArray();
+			}
+		}
 	}
 
 	public static class AssociationExtension
