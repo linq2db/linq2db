@@ -132,7 +132,27 @@ namespace LinqToDB.Linq.Builder
 			switch (type)
 			{
 				case BuildContextType.None                   : return null;
-				case BuildContextType.TableConstant          : return new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType);
+				case BuildContextType.TableConstant:
+					{
+						var queryExpression = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
+						var tableContext    = new TableContext(builder, buildInfo, queryExpression.ElementType);
+
+						var ed = builder.MappingSchema.GetEntityDescriptor(queryExpression.ElementType);
+						var filterFunc = ed.QueryFilterFunc;
+						if (filterFunc != null)
+						{
+							var filtered = (IQueryable)filterFunc.DynamicInvoke(queryExpression, builder.DataContext);
+
+							var refExpression = new ContextRefExpression(queryExpression.GetType(), tableContext);
+							var filteredExpr = filtered.Expression.Transform(e =>
+								e == queryExpression.Expression ? refExpression : e);
+								
+							var ctx = builder.BuildSequence(new BuildInfo(buildInfo, filteredExpr));
+							return ctx;
+						}
+					
+						return tableContext;
+					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
 				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);

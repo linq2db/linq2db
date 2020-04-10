@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Expressions
 {
@@ -43,6 +45,9 @@ namespace LinqToDB.Expressions
 
 			if (type.IsNullable())
 				return type.GetGenericArguments()[0].IsConstantable();
+
+			if (type.IsArray)
+				return type.GetElementType().IsConstantable();
 
 			return false;
 		}
@@ -1208,5 +1213,101 @@ namespace LinqToDB.Expressions
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Optimizes expression context by evaluating constants and simplifying boolean operations. 
+		/// </summary>
+		/// <param name="expression">Expression to optimize.</param>
+		/// <returns>Optimized expression.</returns>
+		public static Expression? OptimizeExpression(this Expression? expression)
+		{
+			var optimized = expression?.Transform(e =>
+				{
+					if (e is BinaryExpression binary)
+					{
+						var left  = OptimizeExpression(binary.Left)!;
+						var right = OptimizeExpression(binary.Right)!;
+
+						if (left.Type != binary.Left.Type)
+							left = Expression.Convert(left, binary.Left.Type);
+
+						if (right.Type != binary.Right.Type)
+							right = Expression.Convert(right, binary.Right.Type);
+
+						e = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
+					}
+					else if (e is UnaryExpression unaryExpression)
+					{
+						e = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
+					}
+					else if (e is MemberExpression memberExpression)
+					{
+						e = memberExpression.Update(OptimizeExpression(memberExpression.Expression));
+					}
+
+					switch (e)
+					{
+						case UnaryExpression unary when unary.Operand.NodeType == ExpressionType.Constant:
+							{
+								return Expression.Constant(EvaluateExpression(unary));
+							}
+						case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
+							{
+								return Expression.Constant(EvaluateExpression(me));
+							}
+						case BinaryExpression be when be.Left.NodeType == ExpressionType.Constant && be.Right.NodeType == ExpressionType.Constant:
+							{
+								return Expression.Constant(EvaluateExpression(be));
+							}
+						case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
+							{
+								if (be.Left.NodeType == ExpressionType.Constant)
+								{
+									var leftBool = EvaluateExpression(be.Left) as bool?;
+									if (leftBool == true)
+										return be.Right;
+									if (leftBool == false)
+										return Expression.Constant(false);
+								}
+								else
+								if (be.Right.NodeType == ExpressionType.Constant)
+								{
+									var rightBool = EvaluateExpression(be.Right) as bool?;
+									if (rightBool == true)
+										return be.Left;
+									if (rightBool == false)
+										return Expression.Constant(false);
+								}
+								break;
+							}
+						case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
+							{
+								if (be.Left.NodeType == ExpressionType.Constant)
+								{
+									var leftBool = EvaluateExpression(be.Left) as bool?;
+									if (leftBool == false)
+										return be.Right;
+									if (leftBool == true)
+										return Expression.Constant(true);
+								}
+								else
+								if (be.Right.NodeType == ExpressionType.Constant)
+								{
+									var rightBool = EvaluateExpression(be.Right) as bool?;
+									if (rightBool == false)
+										return be.Left;
+									if (rightBool == true)
+										return Expression.Constant(true);
+								}
+								break;
+							}
+					}
+
+					return e;
+				}
+			);
+			return optimized;
+		}
+
 	}
 }

@@ -27,6 +27,7 @@ namespace LinqToDB.Linq.Builder
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
 			new TableBuilder               (),
+			new ContextRefBuilder		   (),
 			new SelectBuilder              (),
 			new SelectManyBuilder          (),
 			new WhereBuilder               (),

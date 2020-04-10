@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,7 +11,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
@@ -18,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
+		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		public class TableContext : IBuildContext
 		{
 			#region Properties
@@ -595,7 +597,7 @@ namespace LinqToDB.Linq.Builder
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
 					if (info.Length != 1)
 						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
-					var parentIndex = ConvertToParentIndex(info[0].Index, null);
+					var parentIndex = ConvertToParentIndex(info[0].Index, this);
 					return Builder.BuildSql(tableType, parentIndex);
 				}
 
@@ -635,7 +637,7 @@ namespace LinqToDB.Linq.Builder
 					info = matchedFields.ToArray();
 				}
 
-				var index = info.Select(idx => ConvertToParentIndex(idx.Index, null)).ToArray();
+				var index = info.Select(idx => ConvertToParentIndex(idx.Index, this)).ToArray();
 
 				if (ObjectType != tableType || InheritanceMapping.Count == 0)
 					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
@@ -663,7 +665,7 @@ namespace LinqToDB.Linq.Builder
 						(
 							from f in SqlTable.Fields.Values
 							where f.Name == InheritanceMapping[0].DiscriminatorName
-							select ConvertToParentIndex(_indexes[f].Index, null)
+							select ConvertToParentIndex(_indexes[f].Index, this)
 						).First();
 
 					expr = Expression.Convert(
@@ -683,7 +685,7 @@ namespace LinqToDB.Linq.Builder
 						(
 							from f in SqlTable.Fields.Values
 							where f.Name == InheritanceMapping[mapping.i].DiscriminatorName
-							select ConvertToParentIndex(_indexes[f].Index, null)
+							select ConvertToParentIndex(_indexes[f].Index, this)
 						).First();
 
 					Expression testExpr;
@@ -794,7 +796,7 @@ namespace LinqToDB.Linq.Builder
 				// Build field.
 				//
 				var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-				var idx  = ConvertToParentIndex(info.Index, null);
+				var idx  = ConvertToParentIndex(info.Index, this);
 
 				return Builder.BuildSql(expression!, idx);
 			}
@@ -1089,7 +1091,7 @@ namespace LinqToDB.Linq.Builder
 					Expression? expr  = null;
 					var         param = Expression.Parameter(typeof(T), "c");
 
-					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+					var queryMethod = association.GetSelectManyQueryMethod(parent.Type, typeof(T), true, false, out var isLeft);
 
 					if (queryMethod != null)
 					{
@@ -1214,8 +1216,8 @@ namespace LinqToDB.Linq.Builder
 
 								buildInfo.IsAssociationBuilt = true;
 
-								if (association.ParentAssociationJoin != null && (tableLevel.IsNew || buildInfo.CopyTable))
-									association.ParentAssociationJoin.IsWeak = true;
+								if (tableLevel.IsNew || buildInfo.CopyTable)
+									association.MarkIsWeak();
 
 								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 							}
@@ -1248,6 +1250,9 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
 			{
+				if (!ReferenceEquals(context.SelectQuery, SelectQuery))
+					index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
+
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
@@ -1512,6 +1517,37 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call         :
 							result = GetAssociation(expression, level);
 							break;
+					default:
+						{
+							if (levelExpression is ContextRefExpression refExpression)
+							{
+								if (expression != levelExpression)
+									result = FindTable(expression, level + 1, throwException, throwExceptionForNull);
+								else if (refExpression.BuildContext is TableContext tableContext)
+								 	return new TableLevel { Table = tableContext };
+
+								break;
+
+								// if (expression != levelExpression)
+								// 	return FindTable(expression, level + 1, throwException, throwExceptionForNull);
+
+								// if (refExpression.BuildContext is TableContext tableContext)
+								// 	return new TableLevel { Table = tableContext };
+								//
+								// goto case ExpressionType.Call;
+
+
+								// var field = expression != levelExpression ?
+								// 	GetField(expression, level + 1, throwException) : 
+								// 	GetField(expression, level, throwException);
+								
+								// if (field != null || (level == 0 && levelExpression == expression))
+								// 	return new TableLevel { Table = this, Field = field, Level = level };
+								
+								goto case ExpressionType.Call;
+							}
+							break;
+						}
 				}
 
 				if (throwExceptionForNull && result == null)

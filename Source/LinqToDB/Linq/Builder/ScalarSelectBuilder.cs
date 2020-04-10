@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -37,6 +38,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class ScalarSelectContext : IBuildContext
 		{
 			public ScalarSelectContext(ExpressionBuilder builder)

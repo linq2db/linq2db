@@ -19,12 +19,13 @@ namespace LinqToDB.Linq.Builder
 		public class AssociatedTableContext : TableContext
 		{
 			public readonly TableContext             ParentAssociation;
-			public readonly SqlJoinedTable?       ParentAssociationJoin;
+			public readonly SqlJoinedTable?          ParentAssociationJoin;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
 			public readonly bool                     IsSubQuery;
 			public          int                      RegularConditionCount;
-			public          LambdaExpression?     ExpressionPredicate;
+			public          LambdaExpression?        ExpressionPredicate;
+			public readonly bool                     IsLeft;
 
 			public override IBuildContext? Parent
 			{
@@ -33,14 +34,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Dictionary<ISqlExpression, SqlField>? _replaceMap;
-			internal IBuildContext?               _innerContext;
+			internal IBuildContext                _innerContext;
 
 			public AssociatedTableContext(
 				ExpressionBuilder     builder,
 				TableContext          parent,
 				AssociationDescriptor association,
-				                                bool                  forceLeft,
-				                                bool                  asSubquery
+				bool                  forceLeft,
+				bool                  asSubquery
 			)
 				: base(builder, asSubquery ? new SelectQuery() { ParentSelect = parent.SelectQuery } : parent.SelectQuery)
 			{
@@ -50,6 +51,11 @@ namespace LinqToDB.Linq.Builder
 
 				var type = association.MemberInfo.GetMemberType();
 				var left = forceLeft || association.CanBeNull;
+
+				if (!left && parent is AssociatedTableContext parentAssociation)
+				{
+					left = parentAssociation.IsLeft;
+				}
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
@@ -75,96 +81,59 @@ namespace LinqToDB.Linq.Builder
 					return;
 				}
 
-				SqlJoinedTable join;
+				SqlJoinedTable join = null;
 
-				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
-				if (queryMethod != null)
-				{
-					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
-						queryMethod.Parameters[0], parent.ObjectType, parent.Expression!, queryMethod);
+				//TODO: Find better way to understand for which class association is building
+				var parentObjectType = Association.MemberInfo.DeclaringType;
+				if (Association.MemberInfo.IsMethodEx())
+					parentObjectType = parent.ObjectType;
 
-					var ownerTableSource = SelectQuery.From.Tables[0];
 
-					var buildInfo = new BuildInfo(this, selectManyMethod, new SelectQuery()) { IsAssociationBuilt = true };
-					_innerContext = builder.BuildSequence(buildInfo);
+				// var parentContext = parent.Parent;
+				 var parentContext = parent;
+				// while (parentContext is ExpressionContext || parentContext is AssociatedTableContext)
+				// {
+				// 	parentContext = parentContext.Parent;
+				// }
+				//
+				// if (parentContext == null)
+				// 	parentContext = parent;
 
-					if (Association.CanBeNull)
-					{
-						_innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, _innerContext, null);
-					}
+				var parentRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(parentObjectType), parentContext);
 
-					var associationQuery = _innerContext.SelectQuery;
+				var queryMethod = GetSelectManyQueryMethod(parentObjectType, ObjectType, IsList, left, out IsLeft);
 
-					if (associationQuery.Select.From.Tables.Count < 1)
-						throw new LinqToDBException("Invalid association query. It is not possible to inline query.");
+				var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
+					queryMethod.Parameters[0], parentObjectType, parentRef, queryMethod);
 
-					var foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
-						t.Source is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, parent.SqlTable));
+				// var parentContext = parent.Parent;
+				// var parentQuery = parentContext == null ? parent.SelectQuery : parentContext.SelectQuery;
+				//
+				// var buildInfo = new BuildInfo(parentContext, selectManyMethod, parentQuery)
+				// 	{ IsAssociationBuilt = true };
 
-					// try to search table by object type
-					// TODO: review maybe there are another ways to do that
-					if (foundIndex < 0)
-						foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
-							t.Source is SqlTable sqlTable && sqlTable.ObjectType == parent.SqlTable.ObjectType);
 
-					if (foundIndex < 0)
-						throw new LinqToDBException("Invalid association query. It is not possible to inline query. Can not find owner table.");
+				var parentQuery = parentContext == null ? parent.SelectQuery : parentContext.SelectQuery;
 
-					var sourceToReplace = associationQuery.Select.From.Tables[foundIndex];
+				var buildInfo = new BuildInfo((IBuildContext)null, selectManyMethod, parentQuery)
+					{ IsAssociationBuilt = true };
 
-					if (left)
-					{
-						foreach (var joinedTable in sourceToReplace.Joins)
-						{
-							if (joinedTable.JoinType == JoinType.Inner)
-								joinedTable.JoinType = JoinType.Left;
-							else if (joinedTable.JoinType == JoinType.CrossApply)
-								joinedTable.JoinType = JoinType.OuterApply;
+				// var saveParent = parent.Parent;
 
-							joinedTable.IsWeak = true;
-						}
-					}
+				_innerContext = builder.BuildSequence(buildInfo);
 
-					ownerTableSource.Joins.AddRange(sourceToReplace.Joins);
+				// Builder.ReplaceParent(_innerContext, saveParent);
 
-					// prepare fields mapping to replace fields that will be generated by association query
-					_replaceMap =
-						((SqlTable)sourceToReplace.Source).Fields.Values.ToDictionary(f => (ISqlExpression)f,
-							f => parent.SqlTable.Fields[f.Name]);
+				// _innerContext.Parent = this;
 
-					ownerTableSource.Walk(new WalkOptions(), e =>
-					{
-						if (_replaceMap.TryGetValue(e, out var newField))
-							return newField;
-						return e;
-					});
+				MarkIsWeak();
 
-					ParentAssociationJoin = sourceToReplace.Joins.FirstOrDefault();
-					join = ParentAssociationJoin;
-
-					// add rest of tables
-					SelectQuery.From.Tables.AddRange(associationQuery.Select.From.Tables.Where(t => t != sourceToReplace));
-
-					//TODO: Change AssociatedTableContext base class
-					//SqlTable = null;
-				}
-				else
-				{
-					var psrc = parent.SelectQuery.From[parent.SqlTable]!;
-					join = left ? SqlTable.WeakLeftJoin().JoinedTable : SqlTable.WeakInnerJoin().JoinedTable;
-
-					ParentAssociationJoin = join;
-
-					psrc.Joins.Add(join);
-					BuildAssociationCondition(builder, parent, association, join.Condition);
-				}
-
-				SetTableAlias(association, join?.Table);
+				SetTableAlias(association, _innerContext.SelectQuery);
 
 				Init(false);
 			}
 
-			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource? table)
+			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource table)
 			{
 				if (table != null)
 				{
@@ -172,6 +141,128 @@ namespace LinqToDB.Linq.Builder
 					if (!alias.IsNullOrEmpty())
 						table.Alias = alias;
 				}
+			}
+
+			private static void SetTableAlias(AssociationDescriptor association, SelectQuery selectQuery)
+			{
+				if (selectQuery.From.Tables.Count > 0)
+				{
+					var table = selectQuery.From.Tables[0];
+					if (table.Joins.Count > 0)
+					{
+						table = table.Joins[0].Table;
+						SetTableAlias(association, table);
+					}
+				}
+			}
+
+			public LambdaExpression GetSelectManyQueryMethod(Type parentType, Type objectType, bool isList, bool enforceDefault, out bool isLeft)
+			{
+				var definedQueryMethod = Association.GetQueryMethod(parentType, objectType);
+
+				var shouldAddDefaultIfEmpty = enforceDefault;
+
+				if (definedQueryMethod == null)
+				{
+					var parentParam = Expression.Parameter(parentType, "parent");
+					var childParam  = Expression.Parameter(objectType, "child");
+
+					var parentAccessor = TypeAccessor.GetAccessor(parentType);
+					var childAccessor  = TypeAccessor.GetAccessor(objectType);
+
+					Expression predicate = null;
+					for (var i = 0; i < Association.ThisKey.Length; i++)
+					{
+						var parentName   = Association.ThisKey[i];
+						var parentMember = parentAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
+
+						if (parentMember == null)
+							throw new LinqException("Association key '{0}' not found for type '{1}.", parentName,
+								parentType);
+
+						var childName = Association.OtherKey[i];
+						var childMember = childAccessor.Members.Find(m => m.MemberInfo.Name == childName);
+
+						if (childMember == null)
+							throw new LinqException("Association key '{0}' not found for type '{1}.", childName,
+								ObjectType);
+
+						var current = ExpressionBuilder.Equal(Builder.MappingSchema,
+							Expression.MakeMemberAccess(parentParam, parentMember.MemberInfo),
+							Expression.MakeMemberAccess(childParam, childMember.MemberInfo));
+
+						predicate = predicate == null ? current : Expression.AndAlso(predicate, current);
+					}
+
+					ExpressionPredicate = Association.GetPredicate(parentType, objectType);
+
+					if (ExpressionPredicate != null)
+					{
+						shouldAddDefaultIfEmpty = true;
+						// ExpressionPredicate = (LambdaExpression)Builder.ConvertExpressionTree(ExpressionPredicate);
+						//
+						// ExpressionPredicate = (LambdaExpression)Builder.ConvertExpression(ExpressionPredicate);
+
+						var replacedBody = ExpressionPredicate.GetBody(parentParam, childParam);
+
+						predicate = predicate == null ? replacedBody : Expression.AndAlso(predicate, replacedBody);
+					}
+
+					if (predicate == null)
+						throw new LinqException("Can not generate Association predicate");
+
+					if (!isList && !shouldAddDefaultIfEmpty)
+					{
+						var ed = Builder.MappingSchema.GetEntityDescriptor(objectType);
+						if (ed.QueryFilterFunc != null)
+							shouldAddDefaultIfEmpty = true;
+					}
+
+					var dcParam    = Expression.Parameter(Builder.DataContext.GetType(), "dc");
+					var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dcParam);
+
+					var filterLambda = Expression.Lambda(predicate, childParam);
+					Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType), queryParam,
+						filterLambda);
+
+					//TODO: Move EnsureEnumerable to appropriate place.
+					body = EagerLoading.EnsureEnumerable(body, Builder.MappingSchema);
+					definedQueryMethod = Expression.Lambda(body, parentParam, dcParam);
+				}
+				else
+				{
+					shouldAddDefaultIfEmpty = true;
+					var bodyExpression = definedQueryMethod.Body.Unwrap();
+					if (bodyExpression.NodeType == ExpressionType.Call)
+					{
+						var mc = (MethodCallExpression)bodyExpression;
+						if (mc.IsSameGenericMethod(Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue))
+							shouldAddDefaultIfEmpty = false;
+					}
+				}
+
+				// if (objectType != OriginalType)
+				// {
+				// 	var body = definedQueryMethod.Body.Unwrap();
+				// 	body = Expression.Call(Methods.Queryable.OfType.MakeGenericMethod(OriginalType), body);
+				// 	body = EagerLoading.EnsureEnumerable(body, Builder.MappingSchema);
+				// 	definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+				// }
+				//
+				if (!isList && shouldAddDefaultIfEmpty)
+				{
+					var body = definedQueryMethod.Body.Unwrap();
+					body = Expression.Call(Methods.Queryable.DefaultIfEmpty.MakeGenericMethod(OriginalType), body);
+					body = EagerLoading.EnsureEnumerable(body, Builder.MappingSchema);
+					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+				}
+
+				definedQueryMethod = (LambdaExpression)Builder.ConvertExpressionTree(definedQueryMethod);
+				definedQueryMethod = (LambdaExpression)Builder.ConvertExpression(definedQueryMethod);
+				definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression()!;
+
+				isLeft = shouldAddDefaultIfEmpty;
+				return definedQueryMethod;
 			}
 
 			private void BuildAssociationCondition(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association, SqlSearchCondition condition)
@@ -219,8 +310,6 @@ namespace LinqToDB.Linq.Builder
 
 			public LambdaExpression GetAssociationQueryExpressionAsSubQuery(Expression dataContextExpr, LambdaExpression queryMethod)
 			{
-				var resultParam = Expression.Parameter(ObjectType);
-
 				var parentParameter = queryMethod.Parameters[0];
 
 				var body = queryMethod.GetBody(parentParameter, dataContextExpr);
@@ -269,8 +358,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				var resultParam = Expression.Parameter(ObjectType);
 
-				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr);
-				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
+				var parentObjType = EagerLoading.GetEnumerableElementType(parentTableExpression.Type, Builder.MappingSchema);
+				if (parentObjType != parentType)
+				{
+					parentTableExpression = Expression.Call(Methods.Queryable.OfType.MakeGenericMethod(parentType), parentTableExpression);
+				}
+
+				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr).Unwrap();
+				body        = EagerLoading.EnsureEnumerable(body, Builder.MappingSchema);
 				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
 
 				var selectManyMethodInfo = Methods.Queryable.SelectManyProjection.MakeGenericMethod(parentType, ObjectType, ObjectType);
@@ -308,23 +403,24 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression CorrectExpression(ISqlExpression expression)
 			{
-				return new QueryVisitor().Convert(expression, e =>
-				{
-					if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
-						return newField;
-					return e;
-
-				}); 
+				return expression;
+				// return new QueryVisitor().Convert(expression, e =>
+				// {
+				// 	if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
+				// 		return newField;
+				// 	return e;
+				//
+				// }); 
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext? context)
 			{
-				if (_innerContext != null)
-				{
-					var column = _innerContext.SelectQuery.Select.Columns[index];
-					index = SelectQuery.Select.Add(CorrectExpression(column.Expression));
-				}
-
+				// if (context == _innerContext)
+				// {
+				// 	var column = context.SelectQuery.Select.Columns[index];
+				// 	index = SelectQuery.Select.Add(column);
+				// }	
+				//
 				return base.ConvertToParentIndex(index, context);
 			}
 
@@ -536,8 +632,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_innerContext != null)
 				{
-					var infos = _innerContext.ConvertToSql(expression, level, ConvertFlags.Field);
-					return infos.FirstOrDefault()?.Sql;
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+					if (levelExpression.NodeType == ExpressionType.MemberAccess)
+					{
+						var infos = _innerContext.ConvertToSql(expression, level, ConvertFlags.Field);
+						return infos.FirstOrDefault()?.Sql;
+					}
 				}
 
 				return base.GetField(expression, level, throwException);
@@ -558,6 +659,18 @@ namespace LinqToDB.Linq.Builder
 				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association)!;
 
 				return detailExpression;
+			}
+
+			public void MarkIsWeak()
+			{
+				if (_innerContext.SelectQuery.From.Tables.Count > 0)
+				{
+					var table = _innerContext.SelectQuery.From.Tables[0];
+					foreach (var join in table.Joins)
+					{
+						join.IsWeak = true;
+					}
+				}
 			}
 		}
 	}

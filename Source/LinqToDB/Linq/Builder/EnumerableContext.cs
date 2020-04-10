@@ -4,11 +4,13 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	// based on ArrayContext
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;

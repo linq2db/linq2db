@@ -18,6 +18,8 @@ namespace LinqToDB.Linq.Builder
 	// But the class means to have a lot of inheritors, and functionality of the inheritors
 	// will be doubled as well. So lets double it once here.
 	//
+
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SelectContext : IBuildContext
 	{
 		#region Init
@@ -206,6 +208,15 @@ namespace LinqToDB.Linq.Builder
 																	var sequence = GetSequence(e, 0)!;
 																	return Builder.BuildExpression(sequence, e, enforceServerSide);
 																}
+															default:
+																{
+																	if (e is ContextRefExpression refExpression)
+																	{
+																		return Builder.BuildExpression(refExpression.BuildContext, e, enforceServerSide);
+																	}
+
+																	break;
+																}
 														}
 
 														if (enforceServerSide)
@@ -254,6 +265,14 @@ namespace LinqToDB.Linq.Builder
 										{
 											var mmExpression = GetMemberExpression(memberExpression, expression, level + 1);
 											return Builder.BuildExpression(this, mmExpression, enforceServerSide);
+										}
+									default:
+										{
+											if (memberExpression is ContextRefExpression refExpression)
+											{
+												return refExpression.BuildContext.BuildExpression(memberExpression, level + 1, enforceServerSide);
+											}
+											break;
 										}
 								}
 
@@ -794,7 +813,12 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.New          :
 								case ExpressionType.MemberInit   : return new IsExpressionResult(requestFlag == RequestFor.Object);
-								default                          : return new IsExpressionResult(requestFlag == RequestFor.Expression);
+								default:
+									{
+										if (levelExpression is ContextRefExpression refExpression)
+											return refExpression.BuildContext.IsExpression(null, 0, requestFlag);
+										return new IsExpressionResult(requestFlag == RequestFor.Expression);
+									}
 							}
 
 							break;
@@ -869,6 +893,22 @@ namespace LinqToDB.Linq.Builder
 							}
 							else if (level == 0)
 								return sequence.GetContext(expression, 1, buildInfo);
+
+							break;
+						}
+					default:
+						{
+							if (levelExpression is ContextRefExpression refExpression)
+							{
+								var sequence = GetSequence(expression, level);
+
+								if (ReferenceEquals(levelExpression, expression))
+								{
+									return sequence.GetContext(null, 0, buildInfo);
+								}
+								if (level == 0)
+									return sequence.GetContext(expression, 1, buildInfo);
+							}
 
 							break;
 						}
@@ -985,7 +1025,19 @@ namespace LinqToDB.Linq.Builder
 
 					return result;
 				}
-			}
+				else if (root is ContextRefExpression refExpression)
+				{
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
+					var newExpression   = GetExpression(expression, levelExpression, Body);
+
+					Builder.UpdateConvertedExpression(expression, newExpression);
+
+					var result = action(refExpression.BuildContext, newExpression, 0);
+
+					Builder.RemoveConvertedExpression(newExpression);
+
+					return result;
+				}			}
 
 			throw new NotImplementedException();
 		}
@@ -1094,6 +1146,11 @@ namespace LinqToDB.Linq.Builder
 
 							root =  memberExpression.GetRootObject(Builder.MappingSchema);
 
+							if (root is ContextRefExpression refExpression)
+							{
+								return refExpression.BuildContext;
+							}
+
 							if (root.NodeType != ExpressionType.Parameter)
 								return null;
 
@@ -1103,6 +1160,12 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Parameter :
 						{
 							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
+							break;
+						}
+					case ExpressionType.Extension:
+						{
+							if (expression is ContextRefExpression refExpression)
+								return refExpression.BuildContext;
 							break;
 						}
 				}

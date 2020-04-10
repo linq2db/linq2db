@@ -682,6 +682,17 @@ namespace LinqToDB.Linq.Builder
 						}
 						break;
 					}
+
+				// case ExpressionType.MemberAccess:
+				// 	{
+				// 		var memberCtx = GetContext(context, expression);
+				// 		if (memberCtx != null)
+				// 		{
+				// 			var level = expression.GetLevel();
+				// 			return memberCtx.ConvertToSql(expression, level, queryConvertFlag);
+				// 		}
+				// 		break;
+				// 	}
 			}
 
 			var ctx = GetContext(context, expression);
@@ -1355,6 +1366,12 @@ namespace LinqToDB.Linq.Builder
 							if (cnt.Value is ISqlExpression)
 								return true;
 							break;
+						}
+					case ExpressionType.Extension:
+						{
+							if (ex is ContextRefExpression)
+								return true;
+							return !ex.CanReduce;
 						}
 				}
 
@@ -3080,6 +3097,9 @@ namespace LinqToDB.Linq.Builder
 			var root = expression.GetRootObject(MappingSchema);
 			root = root.Unwrap();
 
+			if (root is ContextRefExpression refExpression)
+				return refExpression.BuildContext;
+
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
 					return current;
@@ -3339,6 +3359,31 @@ namespace LinqToDB.Linq.Builder
 				_preambles = new List<Tuple<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>>();
 			_preambles.Add(Tuple.Create<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>(dc => func(dc), async dc => await funcAsync(dc)) );
 			return _preambles.Count - 1;
+		}
+
+		#endregion
+
+		#region Query Filter
+
+		private Dictionary<Expression, IBuildContext>? _filteringTables;
+
+		public void AddExpressionTableContext(Expression tableExpression, IBuildContext context)
+		{
+			if (_filteringTables == null)
+				_filteringTables = new Dictionary<Expression, IBuildContext>();
+			_filteringTables.Add(tableExpression, context);
+		}
+
+		public IBuildContext? GetExpressionTableContext(Expression tableExpression)
+		{
+			if (_filteringTables != null && _filteringTables.TryGetValue(tableExpression, out var context))
+				return context;
+			return null;
+		}
+
+		public void RemoveExpressionTableContext(Expression tableExpression)
+		{
+			_filteringTables?.Remove(tableExpression);
 		}
 
 		#endregion

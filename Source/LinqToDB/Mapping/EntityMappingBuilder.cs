@@ -6,6 +6,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping
 {
@@ -536,6 +537,37 @@ namespace LinqToDB.Mapping
 			Property(objProp).IsDiscriminator();
 
 			return this;
+		}
+
+		public EntityMappingBuilder<T> HasQueryFilter(Func<IQueryable<T>, IDataContext, IQueryable<T>> filterFunc)
+		{
+			return HasQueryFilter<IDataContext>(filterFunc);
+		}
+
+		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Func<IQueryable<T>, TDataContext, IQueryable<T>> filterFunc)
+			where TDataContext : IDataContext
+		{
+			HasAttribute(new QueryFilterAttribute { FilterFunc = filterFunc });
+			return this;
+		}
+
+		public EntityMappingBuilder<T> HasQueryFilter(Expression<Func<T, IDataContext, bool>> filterExpression)
+		{
+			return HasQueryFilter<IDataContext>(filterExpression);
+		}
+
+		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Expression<Func<T, TDataContext, bool>> filterExpression)
+			where TDataContext : IDataContext
+		{
+			var queryParam   = Expression.Parameter(typeof(IQueryable<T>), "q");
+			var dcParam      = Expression.Parameter(typeof(TDataContext), "dc");
+			var replaceParam = filterExpression.Parameters[1];
+			var filterBody   = filterExpression.Body.Transform(e => e == replaceParam ? dcParam : e);
+			var filterLambda = Expression.Lambda(filterBody, filterExpression.Parameters[0]);
+			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(T)), queryParam, filterLambda);
+			var lambda       = Expression.Lambda<Func<IQueryable<T>, TDataContext, IQueryable<T>>>(body, queryParam, dcParam);
+
+			return HasQueryFilter(lambda.Compile());
 		}
 
 		#region Dynamic Properties

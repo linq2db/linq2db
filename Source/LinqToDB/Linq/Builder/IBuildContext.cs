@@ -14,11 +14,11 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 	internal static class BuildContextDebuggingHelper
 	{
-		static string GetContextInfo(IBuildContext context)
+		public static string GetContextInfo(IBuildContext context)
 		{
 			if (context.SelectQuery == null)
-				return $"{context.GetType()}(<none>)";
-			return $"{context.GetType()}({context.SelectQuery.SourceID.ToString()})";
+				return $"{context.GetType().Name}(<none>)";
+			return $"{context.GetType().Name}({context.SelectQuery.SourceID})";
 		}
 
 		public static string GetPath(this IBuildContext context)
