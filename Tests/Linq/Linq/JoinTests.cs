@@ -2744,5 +2744,159 @@ namespace Tests.Linq
 				q.ToList();
 			}
 		}
+
+		#region issue 1455
+		public class Alert
+		{
+			public string? AlertKey { get; set; }
+			public string? AlertCode { get; set; }
+			public DateTime? CreationDate { get { return DateTime.Today; } }
+		}
+		public class AuditAlert : Alert
+		{
+			public DateTime? TransactionDate { get; set; }
+		}
+		public class Trade
+		{
+			public int DealId { get; set; }
+			public int ParcelId { get; set; }
+			public string? CounterParty { get; set; }
+		}
+		public class Nomin
+		{
+			public int CargoId { get; set; }
+			public int DeliveryId { get; set; }
+			public string? DeliveryCounterParty { get; set; }
+		}
+		public class Flat
+		{
+			public string? AlertKey { get; set; }
+			public string? AlertCode { get; set; }
+			public int? CargoId { get; set; }
+			public int? DeliveryId { get; set; }
+			public string? DeliveryCounterParty { get; set; }
+			public int? DealId { get; set; }
+			public int? ParcelId { get; set; }
+			public string? CounterParty { get; set; }
+			public DateTime? TransactionDate { get; set; }
+		}
+
+		[Test]
+		public void Issue1455Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 u.nomin.DeliveryCounterParty!.Contains(cpty)
+						 ||
+						 u.trade.CounterParty!.Contains(cpty)
+						 ||
+						 u.al.alert.AlertCode!.Contains(cpty)
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode = sql.alert.AlertCode,
+						AlertKey = sql.alert.AlertKey,
+						TransactionDate = sql.first?.LastUpdate,
+						CargoId = sql.first?.nomin?.CargoId,
+						DeliveryId = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId = sql.first?.trade?.DealId,
+						ParcelId = sql.first?.trade?.ParcelId,
+						CounterParty = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+
+		[ActiveIssue(1455)]
+		[Test]
+		public void Issue1455Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 Sql.Like(u.nomin.DeliveryCounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.trade.CounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.al.alert.AlertCode, $"%{cpty}%")
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode = sql.alert.AlertCode,
+						AlertKey = sql.alert.AlertKey,
+						TransactionDate = sql.first?.LastUpdate,
+						CargoId = sql.first?.nomin?.CargoId,
+						DeliveryId = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId = sql.first?.trade?.DealId,
+						ParcelId = sql.first?.trade?.ParcelId,
+						CounterParty = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+		#endregion
 	}
 }
