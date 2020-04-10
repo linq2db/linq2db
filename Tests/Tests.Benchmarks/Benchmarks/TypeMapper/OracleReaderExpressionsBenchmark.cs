@@ -13,12 +13,12 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private static readonly ITestDataReader DataReaderParameter = new Original.OracleDataReader();
 		private const           int             NanosecondsPerTick  = 100;
 
-		private Func<ITestDataReader, int, DateTimeOffset> _readDateTimeOffsetFromOracleTimeStampTZ;
-		private Func<ITestDataReader, int, DateTimeOffset> _readDateTimeOffsetFromOracleTimeStampLTZ;
-		private Func<ITestDataReader, int, decimal>        _readOracleDecimalToDecimalAdv;
-		private Func<ITestDataReader, int, int>            _readOracleDecimalToInt;
-		private Func<ITestDataReader, int, long>           _readOracleDecimalToLong;
-		private Func<ITestDataReader, int, decimal>        _readOracleDecimalToDecimal;
+		private Func<ITestDataReader, int, DateTimeOffset> _readDateTimeOffsetFromOracleTimeStampTZ = null!;
+		private Func<ITestDataReader, int, DateTimeOffset> _readDateTimeOffsetFromOracleTimeStampLTZ = null!;
+		private Func<ITestDataReader, int, decimal>        _readOracleDecimalToDecimalAdv = null!;
+		private Func<ITestDataReader, int, int>            _readOracleDecimalToInt = null!;
+		private Func<ITestDataReader, int, long>           _readOracleDecimalToLong = null!;
+		private Func<ITestDataReader, int, decimal>        _readOracleDecimalToDecimal = null!;
 
 		interface ITestDataReader
 		{ 

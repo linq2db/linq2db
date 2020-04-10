@@ -27,7 +27,7 @@ namespace Tests.Exceptions
 		public class TestPerson1
 		{
 			[Column] public int    PersonID;
-			         public string FirstName;
+			         public string FirstName = null!;
 		}
 
 		[Test]

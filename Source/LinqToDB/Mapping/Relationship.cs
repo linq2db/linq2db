@@ -1,6 +1,5 @@
 ﻿namespace LinqToDB.Mapping
 {
-	// TODO: V2 - remove?
 	/// <summary>
 	/// Defines relationship types for associations.
 	/// See <see cref="AssociationAttribute.Relationship"/> for more details.

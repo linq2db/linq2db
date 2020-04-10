@@ -11,8 +11,6 @@ using NUnit.Framework;
 
 using JetBrains.Annotations;
 
-#pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
-
 namespace Tests.Linq
 {
 	using Model;
@@ -136,11 +134,11 @@ namespace Tests.Linq
 					Child
 						.GroupBy(ch => ch.Parent)
 						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent.ParentID)),
+						.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)),
 					db.Child
 						.GroupBy(ch => ch.Parent)
 						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent.ParentID)));
+						.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)));
 		}
 
 		[Test]
@@ -182,6 +180,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupBy2([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
@@ -191,6 +190,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task GroupBy2Async([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
@@ -202,8 +202,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent group p by p.Types.DateTimeValue.Year into g select g.Key,
-					from p in db.Parent group p by p.Types.DateTimeValue.Year into g select g.Key);
+					from p in    Parent group p by p.Types!.DateTimeValue.Year into g select g.Key,
+					from p in db.Parent group p by p.Types!.DateTimeValue.Year into g select g.Key);
 		}
 
 		[Test]
@@ -295,8 +295,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from g in    GrandChild where g.Child.Parent.Value1 == 1 select g,
-					from g in db.GrandChild where g.Child.Parent.Value1 == 1 select g);
+					from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
+					from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
 		}
 
 		[Test]
@@ -306,7 +306,7 @@ namespace Tests.Linq
 				AreEqual(
 					from c in
 						from c in Child
-						where c.Parent.ParentID == 2
+						where c.Parent!.ParentID == 2
 						select c
 					join g in GrandChild on c.ParentID equals g.ParentID
 					where g.ChildID == 22
@@ -314,7 +314,7 @@ namespace Tests.Linq
 					,
 					from c in
 						from c in db.Child
-						where c.Parent.ParentID == 2
+						where c.Parent!.ParentID == 2
 						select c
 					join g in db.GrandChild on c.ParentID equals g.ParentID
 					where g.ChildID == 22
@@ -328,14 +328,14 @@ namespace Tests.Linq
 			[Column] public int? Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
-			public Middle Middle { get; set; }
+			public Middle? Middle { get; set; }
 
-			[Association(ExpressionPredicate = "MiddleGenericPredicate" , CanBeNull = true)]
-			public Middle MiddleGeneric { get; set; }
+			[Association(ExpressionPredicate = nameof(MiddleGenericPredicate) , CanBeNull = true)]
+			public Middle? MiddleGeneric { get; set; }
 
-			public Middle MiddleRuntime { get; set; }
+			public Middle? MiddleRuntime { get; set; }
 
-			public IEnumerable<Middle> MiddlesRuntime { get; set; }
+			public IEnumerable<Middle> MiddlesRuntime { get; set; } = null!;
 
 			[UsedImplicitly]
 			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate =>
@@ -349,10 +349,10 @@ namespace Tests.Linq
 			[PrimaryKey] public int ChildID;
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = false)]
-			public Bottom Bottom { get; set; }
+			public Bottom Bottom { get; set; } = null!;
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = true)]
-			public Bottom Bottom1 { get; set; }
+			public Bottom? Bottom1 { get; set; }
 		}
 
 		[Table("GrandChild", IsColumnAttributeRequired=false)]
@@ -394,7 +394,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
-					select t.Middle.Bottom;
+					select t.Middle!.Bottom;
 
 				var list = q.ToList();
 
@@ -414,7 +414,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
-					select t.Middle.Bottom1;
+					select t.Middle!.Bottom1;
 
 				var list = q.ToList();
 
@@ -435,7 +435,7 @@ namespace Tests.Linq
 		{
 			public int ParentID { get; set; }
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
-			public Parent Parent { get; set; }
+			public Parent? Parent { get; set; }
 		}
 
 		[Test]
@@ -520,7 +520,7 @@ namespace Tests.Linq
 
 				var _ = q.ToList();
 
-				var idx = db.LastQuery.IndexOf("OUTER APPLY");
+				var idx = db.LastQuery!.IndexOf("OUTER APPLY");
 
 				Assert.That(db.LastQuery.IndexOf("OUTER APPLY", idx + 1), Is.EqualTo(-1));
 			}
@@ -557,10 +557,10 @@ namespace Tests.Linq
 			[Column] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
-			public Parent170 Parent;
+			public Parent170? Parent;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-			public List<Child170> Children;
+			public List<Child170> Children = null!;
 		}
 
 		[Table("Child")]
@@ -571,7 +571,7 @@ namespace Tests.Linq
 			[Column] public int ChildID;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
-			public Parent170 Parent;
+			public Parent170? Parent;
 		}
 
 		[Test]
@@ -579,7 +579,12 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
+				var value = db.GetTable<Parent170>()
+#pragma warning disable CS0472 // comparison of int with null
+					.Where(x => x.Value1 == null)
+#pragma warning restore CS0472
+					.Select(x => (int?)x.Parent!.Value1)
+					.First();
 
 				Assert.That(value, Is.Null);
 			}
@@ -592,8 +597,10 @@ namespace Tests.Linq
 			{
 				var value = db.GetTable<Parent170>()
 					.SelectMany(x => x.Children)
-					.Where(x => x.Parent.Value1 == null)
-					.Select(x => (int?)x.Parent.Value1)
+#pragma warning disable CS0472 // comparison of int with null
+					.Where(x => x.Parent!.Value1 == null)
+#pragma warning restore CS0472
+					.Select(x => (int?)x.Parent!.Value1)
 					.First();
 
 				Assert.That(value, Is.Null);
@@ -607,7 +614,7 @@ namespace Tests.Linq
 			[Column] public int ParentID;
 			[Column] public int ChildID;
 
-			Parent _parent;
+			Parent _parent = null!;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent")]
 			public Parent Parent
@@ -658,7 +665,7 @@ namespace Tests.Linq
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 );
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -807,7 +814,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-				   Child.Select(_ => new { p = _.Parent   }).Select(_ => _.p.ParentID),
+				   Child.Select(_ => new { p = _.Parent!  }).Select(_ => _.p.ParentID),
 				db.Child.Select(_ => new { p = _.Parent() }).Select(_ => _.p.ParentID));
 
 			}
@@ -898,7 +905,7 @@ namespace Tests.Linq
 						.Select(_ => _.Parent)
 						// this fails without ConvertFlags.Key support
 						.Where(_ => _ != null)
-						.Select(_ => _.ParentID),
+						.Select(_ => _!.ParentID),
 					id1))
 				.OrderBy(с => с.ChildID)
 				.Select(с => (int?)с.ChildID)
@@ -915,7 +922,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 
 			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(ComplexManyToMany.ParentID), CanBeNull = false)]
-			public IQueryable<ComplexManyToMany> ManyToMany { get; }
+			public IQueryable<ComplexManyToMany> ManyToMany { get; } = null!;
 		}
 
 		[Table("Child")]
@@ -927,7 +934,7 @@ namespace Tests.Linq
 			public int ChildID  { get; set; }
 
 			[Association(ThisKey = nameof(ChildID), OtherKey = nameof(ComplexChild.ChildID), CanBeNull = false)]
-			public ComplexChild  Child { get; }
+			public ComplexChild  Child { get; } = null!;
 		}
 
 		[Table("GrandChild")]
@@ -939,7 +946,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 
 			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(ComplexParent.ParentID), CanBeNull = true)]
-			public ComplexParent Parent { get; }
+			public ComplexParent? Parent { get; }
 		}
 
 		public class User
@@ -949,8 +956,8 @@ namespace Tests.Linq
 
 		public class Lookup
 		{
-			public int    Id   { get; set; }
-			public string Type { get; set; }
+			public int     Id   { get; set; }
+			public string? Type { get; set; }
 		}
 
 		public class Resource
@@ -964,13 +971,13 @@ namespace Tests.Linq
 				OtherKey     = nameof(Lookup.Id),
 				CanBeNull    = true,
 				Relationship = Relationship.ManyToOne)]
-			public Lookup AssociationTypeCode { get; set; }
+			public Lookup? AssociationTypeCode { get; set; }
 
 			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
-				(r, db) => db.GetTable<User>().Where(c => r.AssociationTypeCode.Type == "us" && c.Id == r.AssociatedObjectId);
+				(r, db) => db.GetTable<User>().Where(c => r.AssociationTypeCode!.Type == "us" && c.Id == r.AssociatedObjectId);
 
 			[Association(QueryExpressionMethod = nameof(UserExpression))]
-			public User User { get; set; }
+			public User? User { get; set; }
 		}
 
 		[Test]

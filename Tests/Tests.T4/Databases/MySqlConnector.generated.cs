@@ -23,9 +23,11 @@ namespace MySqlConnectorDataContext
 	public partial class TestmysqlconnectordbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
+		public ITable<Animals1>          Animals1           { get { return this.GetTable<Animals1>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
+		public ITable<Eyes1>             Eyes1              { get { return this.GetTable<Eyes1>(); } }
 		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
@@ -95,6 +97,19 @@ namespace MySqlConnectorDataContext
 		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
+	[Table("animals1")]
+	public partial class Animals1
+	{
+		[Column,     NotNull    ] public string  AnimalType    { get; set; } = null!; // varchar(40)
+		[Column,     NotNull    ] public string  AnimalType2   { get; set; } = null!; // varchar(40)
+		[PrimaryKey, NotNull    ] public int     Id            { get; set; } // int(11)
+		[Column,        Nullable] public string? Name          { get; set; } // varchar(255)
+		[Column,     NotNull    ] public string  Discriminator { get; set; } = null!; // varchar(40)
+		[Column,        Nullable] public int?    EyeId         { get; set; } // int(11)
+		[Column,        Nullable] public string? Second        { get; set; } // varchar(40)
+		[Column,        Nullable] public string? First         { get; set; } // varchar(40)
+	}
+
 	[Table("child")]
 	public partial class Child
 	{
@@ -133,22 +148,24 @@ namespace MySqlConnectorDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // varchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // varchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
+	}
+
+	[Table("eyes1")]
+	public partial class Eyes1
+	{
+		[PrimaryKey, NotNull    ] public int     Id { get; set; } // int(11)
+		[Column,        Nullable] public string? Xy { get; set; } // varchar(40)
 	}
 
 	[Table("fulltextindextest")]
@@ -218,20 +235,15 @@ namespace MySqlConnectorDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // varchar(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // varchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -240,12 +252,8 @@ namespace MySqlConnectorDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // varchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // varchar(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // varchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // varchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // varchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
@@ -406,6 +414,12 @@ namespace MySqlConnectorDataContext
 				t.ID == ID);
 		}
 
+		public static Animals1 Find(this ITable<Animals1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static Datatypetest Find(this ITable<Datatypetest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
@@ -416,6 +430,12 @@ namespace MySqlConnectorDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Eyes1 Find(this ITable<Eyes1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)
@@ -480,5 +500,4 @@ namespace MySqlConnectorDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

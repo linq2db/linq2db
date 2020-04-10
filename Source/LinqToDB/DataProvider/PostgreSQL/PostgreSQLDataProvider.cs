@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// This map shouldn't be used directly, you should resolve PostgreSQL types using
 		/// <see cref="GetNativeType(string, bool)"/> method, which takes into account different type aliases.
 		/// </summary>
-		private IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
+		private readonly IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
 
 		private static string GetProviderName(PostgreSQLVersion version)
 		{

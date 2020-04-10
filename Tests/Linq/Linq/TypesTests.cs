@@ -247,12 +247,12 @@ namespace Tests.Linq
 					.Update();
 
 				Assert.That(
-					(from t in db.Types where t.ID == 1 select t.BinaryValue.Length).First(),
+					(from t in db.Types where t.ID == 1 select t.BinaryValue!.Length).First(),
 					Is.EqualTo(5));
 
 				db.Types
 					.Where(t => t.ID == 1)
-					.Set(t => t.BinaryValue, (Binary)null)
+					.Set(t => t.BinaryValue, (Binary?)null)
 					.Update();
 			}
 		}
@@ -268,7 +268,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Binary data = null;
+				Binary? data = null;
 
 				db.Types.Delete(_ => _.ID > 1000);
 				db.Types.Insert(() => new LinqDataTypes
@@ -318,7 +318,7 @@ namespace Tests.Linq
 				var g = from t in db.Types where new[] { 1, 2 }.Contains(t.ID) select t;
 
 				foreach (var binary in g)
-					Assert.AreEqual(binaries[binary.ID - 1], binary.BinaryValue.ToArray());
+					Assert.AreEqual(binaries[binary.ID - 1], binary.BinaryValue!.ToArray());
 			}
 		}
 
@@ -329,8 +329,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					AdjustExpectedData(db,	from t in    Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t),
-											from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
+					AdjustExpectedData(db,	from t in    Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t),
+											from t in db.Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t);
 		}
 
 		[Test]
@@ -347,7 +347,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue = pdt });
 
-				Assert.AreNotEqual(dt.Ticks, dt2.Value.Ticks);
+				Assert.AreNotEqual(dt.Ticks, dt2!.Value.Ticks);
 			}
 		}
 
@@ -508,7 +508,7 @@ namespace Tests.Linq
 				select new
 					{
 						t.DateTimeValue,
-						dateTime.Value
+						dateTime!.Value
 					};
 
 			return q.First().Value;
@@ -523,7 +523,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void Unicode([DataSources(
 			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllSybase)]
 			string context)
@@ -585,11 +585,11 @@ namespace Tests.Linq
 		[Table("Person", IsColumnAttributeRequired=false)]
 		public class PersonCharTest
 		{
-			public int    PersonID;
-			public string FirstName;
-			public string LastName;
-			public string MiddleName;
-			public char   Gender;
+			public int     PersonID;
+			public string  FirstName = null!;
+			public string  LastName  = null!;
+			public string? MiddleName;
+			public char    Gender;
 		}
 
 		[Test]
@@ -640,7 +640,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					AdjustExpectedData(db,	from t in    Types2 where (t.BoolValue ?? false) select t),
-											from t in db.Types2 where t.BoolValue.Value      select t);
+											from t in db.Types2 where t.BoolValue!.Value      select t);
 		}
 
 		[Test]

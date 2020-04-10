@@ -42,7 +42,6 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_TestMerge1>        TestMerge1          { get { return this.GetTable<DB2ADMIN_TestMerge1>(); } }
 		public ITable<DB2ADMIN_Testmerge2>        Testmerge2          { get { return this.GetTable<DB2ADMIN_Testmerge2>(); } }
 		public ITable<DB2ADMIN_TestMerge2>        TestMerge2          { get { return this.GetTable<DB2ADMIN_TestMerge2>(); } }
-		public ITable<DB2ADMIN_TestTimeType>      TestTimeTypes       { get { return this.GetTable<DB2ADMIN_TestTimeType>(); } }
 
 		public TESTDATADB()
 		{
@@ -98,20 +97,15 @@ namespace DB2DataContext
 	public partial class DB2ADMIN_Doctor
 	{
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
-		#nullable disable
-		[Column(DbType="VARCHAR(50)", DataType=DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(DbType="VARCHAR(50)", DataType=DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // VARCHAR(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public DB2ADMIN_Person Person { get; set; }
-
-		#nullable enable
+		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -172,14 +166,11 @@ namespace DB2DataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE_BackReference
 		/// </summary>
 		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<DB2ADMIN_SLAVETABLE> Slavetables { get; set; }
-
-		#nullable enable
+		public IEnumerable<DB2ADMIN_SLAVETABLE> Slavetables { get; set; } = null!;
 
 		#endregion
 	}
@@ -195,20 +186,15 @@ namespace DB2DataContext
 	public partial class DB2ADMIN_Patient
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
-		#nullable disable
-		[Column(DbType="VARCHAR(256)", DataType=DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column(DbType="VARCHAR(256)", DataType=DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // VARCHAR(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public DB2ADMIN_Person Person { get; set; }
-
-		#nullable enable
+		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -217,12 +203,8 @@ namespace DB2DataContext
 	public partial class DB2ADMIN_Person
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),              PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
-		#nullable disable
-		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string  LastName   { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
 		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50),    Nullable          ] public string? MiddleName { get; set; } // VARCHAR(50)
 		[Column(DbType="CHARACTER(1)", DataType=DataType.Char,    Length=1),  NotNull              ] public char    Gender     { get; set; } // CHARACTER(1)
 
@@ -247,12 +229,8 @@ namespace DB2DataContext
 	public partial class DB2ADMIN_PERSONVIEW
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
-		#nullable disable
-		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
 		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
 		[Column(DbType="CHARACTER(1)", DataType=DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
 	}
@@ -266,14 +244,11 @@ namespace DB2DataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE
 		/// </summary>
 		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_SLAVETABLE_MASTERTABLE", BackReferenceName="Slavetables")]
-		public DB2ADMIN_MASTERTABLE MASTERTABLE { get; set; }
-
-		#nullable enable
+		public DB2ADMIN_MASTERTABLE MASTERTABLE { get; set; } = null!;
 
 		#endregion
 	}
@@ -365,28 +340,6 @@ namespace DB2DataContext
 		[Column(DbType="TIME",                      DataType=DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
 		[Column(DbType="VARCHAR(20)",               DataType=DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VARCHAR(20)
 		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
-	}
-
-	[Table(Schema="DB2ADMIN", Name="TestTimeTypes")]
-	public partial class DB2ADMIN_TestTimeType
-	{
-		[Column(DbType="INTEGER",   DataType=DataType.Int32),     NotNull    ] public int       Id          { get; set; } // INTEGER
-		[Column(DbType="DATE",      DataType=DataType.Date),      NotNull    ] public DateTime  Date1       { get; set; } // DATE
-		[Column(DbType="DATE",      DataType=DataType.Date),      NotNull    ] public DateTime  Date2       { get; set; } // DATE
-		[Column(DbType="TIME",      DataType=DataType.Time),      NotNull    ] public TimeSpan  Time        { get; set; } // TIME
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp0  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp1  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp2  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp3  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp4  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp5  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp6  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp), NotNull    ] public DateTime  TimeStamp7  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp8  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp9  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp10 { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp11 { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP", DataType=DataType.Timestamp),    Nullable] public DateTime? TimeStamp12 { get; set; } // TIMESTAMP
 	}
 
 	public static partial class TESTDATADBStoredProcedures
@@ -494,5 +447,4 @@ namespace DB2DataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

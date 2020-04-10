@@ -494,7 +494,7 @@ namespace Tests.xUpdate
 			[Column] public DateTime? DateTimeValue;
 			[Column] public bool      BoolValue;
 			[Column] public Guid      GuidValue;
-			[Column] public byte[]    BinaryValue;
+			[Column] public byte[]?   BinaryValue;
 			[Column] public short     SmallIntValue;
 		}
 
@@ -530,7 +530,7 @@ namespace Tests.xUpdate
 				{
 					types.Delete(t => t.ID > 1000);
 
-					byte[] arr = null;
+					byte[]? arr = null;
 
 					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
@@ -1669,7 +1669,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		internal static string GetTableName(string context, [CallerMemberName] string methodName = null)
+		internal static string GetTableName(string context, [CallerMemberName] string? methodName = null)
 		{
 			var tableName  = "xxPerson";
 
@@ -1697,7 +1697,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "35");
 
 			using (var db = GetDataContext(context))
@@ -1743,7 +1743,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "31");
 
 			using (var db = GetDataContext(context))
@@ -1786,7 +1786,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
@@ -1832,7 +1832,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))

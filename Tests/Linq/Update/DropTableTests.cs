@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 
 				table.Drop();
 
-				var sql = db.LastQuery;
+				var sql = db.LastQuery!;
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());

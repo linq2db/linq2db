@@ -24,7 +24,8 @@ namespace LinqToDB.Linq.Builder
 		public  SelectQuery          SelectQuery   { get; set; }
 		public  SqlStatement?        Statement     { get; set; }
 		public  IBuildContext?       Parent        { get; set; }
-		private EntityDescriptor     _entityDescriptor;
+
+		private readonly EntityDescriptor _entityDescriptor;
 
 		public SqlValuesTable Table = new SqlValuesTable();
 		private readonly IList<SqlValue> _records;

@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
-			private bool            _associationsToSubQueries;
+			private readonly bool   _associationsToSubQueries;
 			#endregion
 
 			#region Init
@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
-			Dictionary<MemberInfo, Expression> _loadWithCache;
+			Dictionary<MemberInfo, Expression>? _loadWithCache;
 
 			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
 			{
@@ -1594,8 +1594,6 @@ namespace LinqToDB.Linq.Builder
 								aa.AliasName),
 							ForceLeftJoinAssociations,
 							_associationsToSubQueries);
-							// TODO: parent is r/o on context
-							// { Parent = Parent };
 
 					isNew = true;
 				}
@@ -1612,7 +1610,7 @@ namespace LinqToDB.Linq.Builder
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries);// TODO: parent is r/o on context { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries);
 
 						tableAssociation = q.FirstOrDefault();
 

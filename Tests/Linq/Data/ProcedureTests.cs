@@ -58,8 +58,8 @@ namespace Tests.Data
 
 		class VariableResult
 		{
-			public int Code      { get; set; }
-			public string Value1 { get; set; }
+			public int     Code   { get; set; }
+			public string? Value1 { get; set; }
 
 			protected bool Equals(VariableResult other)
 			{
@@ -70,7 +70,7 @@ namespace Tests.Data
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((VariableResult)obj);
 			}
 
@@ -85,7 +85,7 @@ namespace Tests.Data
 				}
 			}
 
-			public string Value2 { get; set; }
+			public string? Value2 { get; set; }
 		}
 
 		[Test]

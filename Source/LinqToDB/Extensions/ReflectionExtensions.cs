@@ -227,9 +227,7 @@ namespace LinqToDB.Extensions
 
 		static void GetAttributesInternal(List<object> list, Type type)
 		{
-			object[] attrs;
-
-			if (_typeAttributesTopInternal.TryGetValue(type, out attrs))
+			if (_typeAttributesTopInternal.TryGetValue(type, out var attrs))
 			{
 				list.AddRange(attrs);
 			}
@@ -302,9 +300,7 @@ namespace LinqToDB.Extensions
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
-			T[] attrs;
-
-			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out attrs))
+			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out var attrs))
 			{
 				var list = new List<object>();
 

@@ -11,14 +11,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private Original.TestClass _classInstance = new Original.TestClass();
 
-		private Func<ITestClass, Wrapped.TestEnum> _enumPropertyGetter;
-		private Func<ITestClass, object          > _enumPropertyGetterAsObject;
-		private Func<object    , decimal         > _decimalPropertyGetter;
-		private Func<object    , bool            > _booleanPropertyGetter;
-		private Func<ITestClass, SqlDbType       > _knownEnumPropertyGetter;
-		private Func<ITestClass, string          > _stringPropertyGetter;
-		private Func<ITestClass, bool            > _boolPropertyGetter;
-		private Func<ITestClass, int             > _intPropertyGetter;
+		private Func<ITestClass, Wrapped.TestEnum> _enumPropertyGetter = null!;
+		private Func<ITestClass, object          > _enumPropertyGetterAsObject = null!;
+		private Func<object    , decimal         > _decimalPropertyGetter = null!;
+		private Func<object    , bool            > _booleanPropertyGetter = null!;
+		private Func<ITestClass, SqlDbType       > _knownEnumPropertyGetter = null!;
+		private Func<ITestClass, string?         > _stringPropertyGetter = null!;
+		private Func<ITestClass, bool            > _boolPropertyGetter = null!;
+		private Func<ITestClass, int             > _intPropertyGetter = null!;
 
 		[GlobalSetup]
 		public void Setup()
@@ -86,13 +86,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Benchmark]
-		public string TypeMapperAsString()
+		public string? TypeMapperAsString()
 		{
 			return _stringPropertyGetter(_classInstance);
 		}
 
 		[Benchmark]
-		public string DirectAccessAsString()
+		public string? DirectAccessAsString()
 		{
 			return _classInstance.StringProperty;
 		}

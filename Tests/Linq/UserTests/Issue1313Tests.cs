@@ -114,7 +114,7 @@ namespace Tests.UserTests
 				{
 					table.Insert(() => new ValueItem { Value = 123 });
 
-					IQueryable<I1313_Derived> query = null;
+					IQueryable<I1313_Derived>? query = null;
 					Assert.DoesNotThrow(() =>
 						query =
 							from row in table

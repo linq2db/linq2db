@@ -145,10 +145,10 @@ namespace Tests.Linq
 		class AllTypes
 		{
 			public decimal DecimalDataType;
-			public byte[]  BinaryDataType;
-			public byte[]  VarBinaryDataType;
+			public byte[]? BinaryDataType;
+			public byte[]? VarBinaryDataType;
 			[Column(DataType = DataType.VarChar)]
-			public string  VarcharDataType;
+			public string? VarcharDataType;
 		}
 
 		// Excluded providers inline such parameter

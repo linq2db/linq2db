@@ -18,7 +18,7 @@ namespace Tests.Playground
 			public int    Value    { get; set; }
 
 			public string EntityValue => Id.ToString() + Value;
-			public string EntityMaterialized { get; set; }
+			public string? EntityMaterialized { get; set; }
 		}
 
 		MappingSchema CreateMappingSchema()

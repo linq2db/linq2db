@@ -177,7 +177,7 @@ namespace Tests.Update
 			public int ID { get; set; }
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 	}
 }

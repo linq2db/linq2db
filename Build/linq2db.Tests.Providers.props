@@ -10,9 +10,9 @@
 		<PackageReference Include="System.Memory" Version="4.5.4" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.1" />
 		<PackageReference Include="MySql.Data" Version="8.0.19" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.62.0" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.63.1" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 

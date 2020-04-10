@@ -109,8 +109,7 @@ namespace LinqToDB.Data
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			IDataProvider? dataProvider;
-
+			IDataProvider ? dataProvider;
 			if (!_dataProviders.TryGetValue(providerName, out dataProvider))
 				dataProvider = GetDataProvider(providerName, connectionString);
 			
@@ -945,7 +944,8 @@ namespace LinqToDB.Data
 		bool                 _disposeConnection = true;
 		bool                 _closeTransaction;
 		IAsyncDbConnection?  _connection;
-		Func<IDbConnection>? _connectionFactory;
+		
+		readonly Func<IDbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.

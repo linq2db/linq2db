@@ -268,8 +268,8 @@ namespace Tests.Linq
 			{
 				var expected = Person.GroupBy(p => p.Patient?.Diagnosis).Select(p => new {p.Key, Count = p.Count()}).ToList();
 				var result   = db.GetTable<PersonWithDynamicStore>()
-					.GroupBy(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
-					.Select(p => new {p.Key, Count = p.Count()})
+					.GroupBy(x => Sql.Property<string?>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
+					.Select(p => new { p.Key, Count = p.Count() })
 					.ToList();
 
 				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
@@ -441,7 +441,7 @@ namespace Tests.Linq
 			public int ID { get; set; }
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		[Table("Person")]
@@ -473,11 +473,11 @@ namespace Tests.Linq
 
 		public class SomeClassWithDynamic
 		{
-			public string Description { get; set; }
+			public string? Description { get; set; }
 
 			private sealed class SomeClassEqualityComparer : IEqualityComparer<SomeClassWithDynamic>
 			{
-				public bool Equals(SomeClassWithDynamic x, SomeClassWithDynamic y)
+				public bool Equals(SomeClassWithDynamic? x, SomeClassWithDynamic? y)
 				{
 					if (ReferenceEquals(x, y))      return true;
 					if (ReferenceEquals(x, null))   return false;
@@ -519,7 +519,7 @@ namespace Tests.Linq
 			public static IEqualityComparer<SomeClassWithDynamic> SomeClassComparer { get; } = new SomeClassEqualityComparer();
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		[Test]

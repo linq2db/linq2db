@@ -52,9 +52,9 @@ namespace Tests.UserTests
 		public class ColumnOrderTest : VersionedRecord
 		{
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 			[Column]
-			public string Code { get; set; }
+			public string? Code { get; set; }
 		}
 
 		/// <summary>
@@ -70,7 +70,7 @@ namespace Tests.UserTests
 				// Get table schema
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase));
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);
 
 				// Confirm order of specified fields only
@@ -113,7 +113,7 @@ namespace Tests.UserTests
 					// Get table schema
 					var sp = db.DataProvider.GetSchemaProvider();
 					var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-					var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase));
+					var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase));
 					Assert.IsNotNull(table);
 
 					// Confirm order of specified fields only

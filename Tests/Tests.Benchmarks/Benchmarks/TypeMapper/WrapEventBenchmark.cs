@@ -6,18 +6,19 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows reasonable performance degradation and allocations due to events remapping being not free
 	public class WrapEventBenchmark
 	{
-		private Original.TestEventClass _emptyOriginalInstance;
-		private Original.TestEventClass _emptyOriginalWrappedInstance;
+		private Original.TestEventClass _emptyOriginalInstance = null!;
+		private Original.TestEventClass _emptyOriginalWrappedInstance = null!;
+		private Wrapped.TestEventClass  _emptyWrapperInstance = null!;
 
-		private Original.TestEventClass _onOffOriginalInstance;
-		private Original.TestEventClass _onOffOriginalWrappedInstance;
-		private Wrapped.TestEventClass  _onOffWrapperInstance;
+		private Original.TestEventClass _onOffOriginalInstance = null!;
+		private Original.TestEventClass _onOffOriginalWrappedInstance = null!;
+		private Wrapped.TestEventClass  _onOffWrapperInstance = null!;
 
-		private Original.TestEventClass _subscribedOriginalInstance;
-		private Original.TestEventClass _subscribedOriginalWrappedInstance;
-		private Wrapped.TestEventClass  _subscribedWrapperInstance;
+		private Original.TestEventClass _subscribedOriginalInstance = null!;
+		private Original.TestEventClass _subscribedOriginalWrappedInstance = null!;
+		private Wrapped.TestEventClass  _subscribedWrapperInstance = null!;
 
-		private TypeMapper _typeMapper;
+		private TypeMapper _typeMapper = null!;
 
 		[GlobalSetup]
 		public void Setup()
@@ -26,8 +27,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			_emptyOriginalInstance             = new Original.TestEventClass();
 			_emptyOriginalWrappedInstance      = new Original.TestEventClass();
+			_emptyWrapperInstance              = _typeMapper.Wrap<Wrapped.TestEventClass>(_emptyOriginalWrappedInstance);
 
-			_onOffOriginalInstance             = new Original.TestEventClass();
+			_onOffOriginalInstance = new Original.TestEventClass();
 			_onOffOriginalWrappedInstance      = new Original.TestEventClass();
 			_onOffWrapperInstance              = _typeMapper.Wrap<Wrapped.TestEventClass>(_onOffOriginalWrappedInstance);
 			
@@ -97,10 +99,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			original.TestEvent -= OriginalHandler;
 		}
 
-		private void WrappedHandler(object sender, Wrapped.TestClass2 e)
+		private void WrappedHandler(object? sender, Wrapped.TestClass2 e)
 		{ }
 
-		private void OriginalHandler(object sender, Original.TestClass2 e)
+		private void OriginalHandler(object? sender, Original.TestClass2 e)
 		{ }
 	}
 }

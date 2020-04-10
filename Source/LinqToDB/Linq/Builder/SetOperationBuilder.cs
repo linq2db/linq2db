@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
+					static string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
 					{
 						if (aliases.Contains(expression))
 							return aliases[expression].FirstOrDefault();

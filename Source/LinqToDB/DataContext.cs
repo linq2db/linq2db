@@ -265,7 +265,7 @@ namespace LinqToDB
 		private void AssertDisposed()
 		{
 			if (_disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
+				throw new ObjectDisposedException(GetType().FullName);
 		}
 
 		/// <summary>

@@ -1,6 +1,3 @@
-#nullable disable
-using System;
-
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -10,29 +7,29 @@ namespace Tests.Model
 		public class SequenceTest1
 		{
 			[Column(IsIdentity = true), SequenceName("sequencetestseq")]
-			public int    ID;
-			public string Value;
+			public int     ID;
+			public string? Value;
 		}
 
 		public class SequenceTest2
 		{
 			[Column(IsIdentity = true)]
-			public int    ID;
-			public string Value;
+			public int     ID;
+			public string? Value;
 		}
 
 		public class SequenceTest3
 		{
 			[Identity, SequenceName("sequencetestseq")]
-			public int    ID;
-			public string Value;
+			public int     ID;
+			public string? Value;
 		}
 
 		public class SequenceCustomNamingTest
 		{
 			[Identity, SequenceName("SequenceCustomNamingTest__seq__", Schema = "test_schema")]
-			public int ID;
-			public string Value;
+			public int     ID;
+			public string? Value;
 		}
 
 		[Table(Schema = "test_schema")]

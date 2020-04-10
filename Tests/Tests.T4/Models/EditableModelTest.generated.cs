@@ -215,5 +215,4 @@ namespace Tests.T4.Model
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

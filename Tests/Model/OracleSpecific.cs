@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -11,14 +8,14 @@ namespace Tests.Model
 		{
 			[Identity, SequenceName("SequenceTestSeq")]
 			public int    ID;
-			public string Value;
+			public string Value = null!;
 		}
 
 		public class StringTest
 		{
-			public string KeyValue;
-			public string StringValue1;
-			public string StringValue2;
+			public string  KeyValue = null!;
+			public string? StringValue1;
+			public string? StringValue2;
 
 			public override bool Equals(object obj)
 			{

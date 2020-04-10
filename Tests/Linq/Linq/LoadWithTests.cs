@@ -37,13 +37,13 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from t in db.GrandChild.LoadWith(p => p.Child.Parent)
+					from t in db.GrandChild.LoadWith(p => p.Child!.Parent)
 					select t;
 
 				var ch = q.First();
 
 				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child.Parent);
+				Assert.IsNotNull(ch.Child!.Parent);
 			}
 		}
 
@@ -109,7 +109,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child.Parent)
+					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child!.Parent)
 					select new
 					{
 						p.GrandChildren.Count,
@@ -120,7 +120,7 @@ namespace Tests.Linq
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child.Parent);
+				Assert.IsNotNull(ch.Child!.Parent);
 			}
 		}
 
@@ -131,7 +131,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child.Parent)
+					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
 					select new
 					{
 						p.GrandChildren.Count,
@@ -142,7 +142,7 @@ namespace Tests.Linq
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child.Parent);
+				Assert.IsNotNull(ch.Child!.Parent);
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child.Parent)
+					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
 					select new
 					{
 						p.GrandChildren.Count,
@@ -164,7 +164,7 @@ namespace Tests.Linq
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child.Parent);
+				Assert.IsNotNull(ch.Child!.Parent);
 			}
 		}
 
@@ -175,14 +175,14 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.GrandChild.LoadWith(p => p.Child.GrandChildren[0].Child.Parent)
+					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child.Parent);
+				Assert.IsNotNull(ch.Child!.Parent);
 			}
 		}
 
@@ -193,10 +193,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.GrandChild.LoadWith(p => p.Child.GrandChildren)
+					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
 
 				Assert.IsNotNull(ch);
 				Assert.IsNull   (ch.Child);
@@ -251,7 +251,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
-					(from p in db.Parent.LoadWith(p => p.Children[0].Parent.Children)
+					(from p in db.Parent.LoadWith(p => p.Children[0].Parent!.Children)
 					where p.ParentID < 2
 					select new
 					{
@@ -260,7 +260,7 @@ namespace Tests.Linq
 
 				var result = q1.FirstOrDefault();
 
-				Assert.DoesNotThrow(() => result.p.Children.Single().Parent.Children.Single());
+				Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
 			}
 		}
 
@@ -270,13 +270,13 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem1.ParentId))]
-			public SubItem1[] SubItems1 { get; set; }
+			public SubItem1[] SubItems1 { get; set; } = null!;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem2.ParentId))]
-			public SubItem2[] SubItems2 { get; set; }
+			public SubItem2[] SubItems2 { get; set; } = null!;
 		}
 
 		class MainItem2
@@ -284,13 +284,13 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			[Column]
 			public int? MainItemId { get; set; }
 
 			[Association(ThisKey = nameof(MainItemId), OtherKey = nameof(LoadWithTests.MainItem.Id), CanBeNull = true)]
-			public MainItem MainItem { get;set; }
+			public MainItem? MainItem { get;set; }
 		}
 
 		class SubItem1
@@ -298,14 +298,14 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 			[Column]
 			public int? ParentId { get; set; }
 
-			public MainItem Parent { get; set; }
+			public MainItem? Parent { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem1_Sub.ParentId))]
-			public SubItem1_Sub[] SubSubItems { get; set; }
+			public SubItem1_Sub[] SubSubItems { get; set; } = null!;
 		}
 
 		class SubItem1_Sub
@@ -313,12 +313,12 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 			[Column]
 			public int? ParentId { get; set; }
 
 			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(SubItem1.Id))]
-			public SubItem1 ParentSubItem { get; set; }
+			public SubItem1? ParentSubItem { get; set; }
 		}
 
 
@@ -327,12 +327,12 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 			[Column]
 			public int? ParentId { get; set; }
 
 			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(MainItem.Id))]
-			public MainItem Parent { get; set; }
+			public MainItem? Parent { get; set; }
 		}
 
 		Tuple<MainItem[], MainItem2[], SubItem1[], SubItem1_Sub[], SubItem2[]> GenerateTestData()
@@ -491,7 +491,7 @@ namespace Tests.Linq
 
 				var query = filterQuery
 					.LoadWith(m => m.MainItem)
-					.ThenLoad(m => m.SubItems2);
+					.ThenLoad(m => m!.SubItems2);
 
 				var result = query.ToArray();
 
@@ -504,10 +504,10 @@ namespace Tests.Linq
 			[Column] public int Id { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildRecord.ParentId))]
-			public List<ChildRecord> Children;
+			public List<ChildRecord> Children = null!;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildRecord.ParentId), ExpressionPredicate = nameof(ActiveChildrenPredicate))]
-			public List<ChildRecord> ActiveChildren;
+			public List<ChildRecord> ActiveChildren = null!;
 
 			public static Expression<Func<ParentRecord, ChildRecord, bool>> ActiveChildrenPredicate => (p, c) => c.IsActive;
 

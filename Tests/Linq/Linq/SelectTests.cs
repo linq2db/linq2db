@@ -230,64 +230,64 @@ namespace Tests.Linq
 				var q =
 					from p in db.Parent
 					from  g1 in p.GrandChildren.DefaultIfEmpty()
-					let   c1 = g1.Child.ChildID
+					let   c1 = g1.Child!.ChildID
 					where c1 == 1
 					from  g2 in p.GrandChildren.DefaultIfEmpty()
-					let   c2 = g2.Child.ChildID
+					let   c2 = g2.Child!.ChildID
 					where c2 == 2
 					from  g3 in p.GrandChildren.DefaultIfEmpty()
-					let   c3 = g3.Child.ChildID
+					let   c3 = g3.Child!.ChildID
 					where c3 == 3
 					from  g4 in p.GrandChildren.DefaultIfEmpty()
-					let   c4 = g4.Child.ChildID
+					let   c4 = g4.Child!.ChildID
 					where c4 == 4
 					from  g5 in p.GrandChildren.DefaultIfEmpty()
-					let   c5 = g5.Child.ChildID
+					let   c5 = g5.Child!.ChildID
 					where c5 == 5
 					from  g6 in p.GrandChildren.DefaultIfEmpty()
-					let   c6 = g6.Child.ChildID
+					let   c6 = g6.Child!.ChildID
 					where c6 == 6
 					from  g7 in p.GrandChildren.DefaultIfEmpty()
-					let   c7 = g7.Child.ChildID
+					let   c7 = g7.Child!.ChildID
 					where c7 == 7
 					from  g8 in p.GrandChildren.DefaultIfEmpty()
-					let   c8 = g8.Child.ChildID
+					let   c8 = g8.Child!.ChildID
 					where c8 == 8
 					from  g9 in p.GrandChildren.DefaultIfEmpty()
-					let   c9 = g9.Child.ChildID
+					let   c9 = g9.Child!.ChildID
 					where c9 == 9
 					from  g10 in p.GrandChildren.DefaultIfEmpty()
-					let   c10 = g10.Child.ChildID
+					let   c10 = g10.Child!.ChildID
 					where c10 == 10
 					from  g11 in p.GrandChildren.DefaultIfEmpty()
-					let   c11 = g11.Child.ChildID
+					let   c11 = g11.Child!.ChildID
 					where c11 == 11
 					from  g12 in p.GrandChildren.DefaultIfEmpty()
-					let   c12 = g12.Child.ChildID
+					let   c12 = g12.Child!.ChildID
 					where c12 == 12
 					from  g13 in p.GrandChildren.DefaultIfEmpty()
-					let   c13 = g13.Child.ChildID
+					let   c13 = g13.Child!.ChildID
 					where c13 == 13
 					from  g14 in p.GrandChildren.DefaultIfEmpty()
-					let   c14 = g14.Child.ChildID
+					let   c14 = g14.Child!.ChildID
 					where c14 == 14
 					from  g15 in p.GrandChildren.DefaultIfEmpty()
-					let   c15 = g15.Child.ChildID
+					let   c15 = g15.Child!.ChildID
 					where c15 == 15
 					from  g16 in p.GrandChildren.DefaultIfEmpty()
-					let   c16 = g16.Child.ChildID
+					let   c16 = g16.Child!.ChildID
 					where c16 == 16
 					from  g17 in p.GrandChildren.DefaultIfEmpty()
-					let   c17 = g17.Child.ChildID
+					let   c17 = g17.Child!.ChildID
 					where c17 == 17
 					from  g18 in p.GrandChildren.DefaultIfEmpty()
-					let   c18 = g18.Child.ChildID
+					let   c18 = g18.Child!.ChildID
 					where c18 == 18
 					from  g19 in p.GrandChildren.DefaultIfEmpty()
-					let   c19 = g19.Child.ChildID
+					let   c19 = g19.Child!.ChildID
 					where c19 == 19
 					from  g20 in p.GrandChildren.DefaultIfEmpty()
-					let   c20 = g20.Child.ChildID
+					let   c20 = g20.Child!.ChildID
 					where c20 == 20
 					orderby c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20
 					select new
@@ -314,7 +314,7 @@ namespace Tests.Linq
 					select grandChild;
 				q.ToList();
 
-				var selectCount = ((DataConnection)db).LastQuery
+				var selectCount = ((DataConnection)db).LastQuery!
 					.Split(' ', '\t', '\n', '\r')
 					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
@@ -419,9 +419,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from c in    Child
-					select Sql.AsSql((from ch in    Child where ch.ChildID == c.ChildID select ch.Parent.Value1).FirstOrDefault() ?? c.ChildID),
+					select Sql.AsSql((from ch in    Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID),
 					from c in db.Child
-					select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent.Value1).FirstOrDefault() ?? c.ChildID));
+					select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID));
 		}
 
 		[Test]
@@ -491,7 +491,7 @@ namespace Tests.Linq
 				var lines =
 					q.Select(
 						(m, i) =>
-							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
 				Assert.AreEqual("7.77.True.0",  lines[0]);
 				Assert.AreEqual("6.66.False.1", lines[1]);
@@ -505,7 +505,7 @@ namespace Tests.Linq
 				lines =
 					q.Select(
 						(m, i) =>
-							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
 				Assert.AreEqual("7.77.True.0", lines[0]);
 			}
@@ -526,8 +526,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from c in    Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
-					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
+					from c in    Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
+					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
 		}
 
 		[Table(Name="Person")]
@@ -546,8 +546,8 @@ namespace Tests.Linq
 				#endregion
 			}
 
-			public int    PersonID;
-			public string FirstName;
+			public int     PersonID;
+			public string? FirstName = null!;
 		}
 
 		[ActiveIssue(
@@ -781,12 +781,12 @@ namespace Tests.Linq
 							: new
 							{
 								ParentID = q.Info1 != null ? (int?)q.Info1.ParentID : (int?)null,
-								q.Info1.Value1,
+								q.Info1!.Value1,
 								Value2 = q.Info2.Value1
 							}
 					};
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
 
 				var _ = query3.ToArray();
 			}
@@ -879,12 +879,12 @@ namespace Tests.Linq
 									 : new
 									 {
 										 ParentID = null != q.Info1 ? (int?)q.Info1.ParentID : (int?)null,
-										 q.Info1.Value1,
+										 q.Info1!.Value1,
 										 Value2 = q.Info2.Value1
 									 }
 							 };
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
 
 				var _ = query3.ToArray();
 			}
@@ -958,7 +958,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column(Length = 50)]
-			public string MainValue { get; set; }
+			public string? MainValue { get; set; }
 		}
 
 		public class ChildEntityObject
@@ -966,16 +966,16 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 		}
 
 		public class DtoChildEntityObject
 		{
 			public int Id { get; set; }
 
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
-			static Expression<Func<ChildEntityObject, DtoChildEntityObject>> OwnerImpl()
+			static Expression<Func<ChildEntityObject?, DtoChildEntityObject?>> OwnerImpl()
 			{
 				return a => a == null
 					? null
@@ -987,7 +987,7 @@ namespace Tests.Linq
 			}
 
 			[ExpressionMethod("OwnerImpl")]
-			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
+			public static implicit operator DtoChildEntityObject?(ChildEntityObject a)
 			{
 				if (a == null) return null;
 				return OwnerImpl().Compile()(a);
@@ -997,8 +997,8 @@ namespace Tests.Linq
 
 		public class DtoResult
 		{
-			public DtoChildEntityObject Child { get; set; }
-			public string Value { get; set; }
+			public DtoChildEntityObject? Child { get; set; }
+			public string? Value { get; set; }
 		}
 
 		[Test]
@@ -1024,7 +1024,7 @@ namespace Tests.Linq
 						Value = c.Value
 					};
 
-				query = query.OrderByDescending(c => c.Child.Id);
+				query = query.OrderByDescending(c => c.Child!.Id);
 				var result = query.ToArray();
 
 				Assert.NotNull(result[0].Child);
@@ -1272,7 +1272,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value.Value));
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
 				Assert.AreEqual(value, result);
 			}
@@ -1286,7 +1286,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value.Value) : (int?)null);
+				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
 				Assert.AreEqual(value, result);
 			}
@@ -1298,7 +1298,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
 				Assert.AreEqual(value, result);
 			}
@@ -1310,7 +1310,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
 				Assert.AreEqual(value, result);
 			}
@@ -1377,9 +1377,9 @@ namespace Tests.Linq
 				var results = from p in db.GetTable<Parent1788>()
 							  select new
 							  {
-#pragma warning disable 472
+#pragma warning disable CS0472 // comparison of non-null int? with null
 								  f1 = ((int?)p.Value1) != null,
-#pragma warning restore 472
+#pragma warning restore CS0472
 								  f2 = (int?)p.Value1
 							  };
 

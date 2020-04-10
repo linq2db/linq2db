@@ -124,7 +124,7 @@ namespace Tests.Common
 		[Test]
 		public void ParseChar()
 		{
-			Assert.AreEqual('\0', ConvertTo<char>.From((string)null));
+			Assert.AreEqual('\0', ConvertTo<char>.From((string?)null));
 			Assert.AreEqual('\0', ConvertTo<char>.From(""));
 		}
 
@@ -214,7 +214,7 @@ namespace Tests.Common
 		[Test]
 		public void ConvertFromEnum2()
 		{
-			var cf = MappingSchema.Default.GetConverter<Enum4,int>();
+			var cf = MappingSchema.Default.GetConverter<Enum4,int>()!;
 
 			Assert.AreEqual(15, cf(Enum4.Value1));
 			Assert.AreEqual(25, cf(Enum4.Value2));
@@ -224,7 +224,7 @@ namespace Tests.Common
 		[Test]
 		public void ConvertFromEnum3()
 		{
-			var cf = new MappingSchema("1").GetConverter<Enum4,int>();
+			var cf = new MappingSchema("1").GetConverter<Enum4,int>()!;
 
 			Assert.AreEqual(15, cf(Enum4.Value1));
 			Assert.AreEqual(25, cf(Enum4.Value2));
@@ -234,11 +234,11 @@ namespace Tests.Common
 		[Test]
 		public void ConvertFromEnum4()
 		{
-			var cf = MappingSchema.Default.GetConverter<Enum4,int>();
+			var cf = MappingSchema.Default.GetConverter<Enum4,int>()!;
 
 			Assert.AreEqual(0,  cf(Enum4.Value3));
 
-			cf = new MappingSchema("1").GetConverter<Enum4,int>();
+			cf = new MappingSchema("1").GetConverter<Enum4,int>()!;
 
 			Assert.AreEqual(35, cf(Enum4.Value3));
 		}
@@ -369,7 +369,7 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum12()
 		{
-			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>();
+			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>()!;
 
 			Assert.Throws(
 				typeof(LinqToDBConvertException),
@@ -384,7 +384,7 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum13()
 		{
-			var cf = new MappingSchema("2").GetConverter<Enum10,Enum11>();
+			var cf = new MappingSchema("2").GetConverter<Enum10,Enum11>()!;
 
 			Assert.AreEqual(Enum11.Value1, cf(Enum10.Value2));
 			Assert.AreEqual(Enum11.Value2, cf(Enum10.Value1));
@@ -439,15 +439,15 @@ namespace Tests.Common
 
 			Assert.AreEqual("B",  ConvertTo<string>.From((Enum14?)Enum14.BB));
 
-			Assert.AreEqual("B",  new MappingSchema().   GetConverter<Enum14?,string>()(Enum14.BB));
-			Assert.AreEqual("C",  new MappingSchema("1").GetConverter<Enum14?,string>()(Enum14.BB));
+			Assert.AreEqual("B",  new MappingSchema().   GetConverter<Enum14?,string>()!(Enum14.BB));
+			Assert.AreEqual("C",  new MappingSchema("1").GetConverter<Enum14?,string>()!(Enum14.BB));
 		}
 
 		[Test]
 		public void ConvertToNullableEnum1()
 		{
-			Assert.AreEqual(Enum14.BB,  new MappingSchema().   GetConverter<string,Enum14?>()("B"));
-			Assert.AreEqual(Enum14.BB,  new MappingSchema("1").GetConverter<string,Enum14?>()("C"));
+			Assert.AreEqual(Enum14.BB,  new MappingSchema().   GetConverter<string,Enum14?>()!("B"));
+			Assert.AreEqual(Enum14.BB,  new MappingSchema("1").GetConverter<string,Enum14?>()!("C"));
 		}
 
 		enum Enum15
@@ -471,7 +471,7 @@ namespace Tests.Common
 				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(CustomMoneyType));
 
 			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.Compile();
-			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2.Compile();
+			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2!.Compile();
 
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc1(1.11m));
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc2(1.11m));
@@ -480,7 +480,7 @@ namespace Tests.Common
 				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(CustomMoneyType));
 
 			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.Compile();
-			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2.Compile();
+			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2!.Compile();
 
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc1(1.11m));
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc2(1.11m));

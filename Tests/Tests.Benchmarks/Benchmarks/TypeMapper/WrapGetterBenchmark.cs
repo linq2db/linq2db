@@ -7,8 +7,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// also one benchmark shows allocation due to boxing in enum coverter edge-case
 	public class WrapGetterBenchmark
 	{
-		private Original.TestClass2 _originalInstance;
-		private Wrapped.TestClass2  _wrapperInstance;
+		private Original.TestClass2 _originalInstance = null!;
+		private Wrapped.TestClass2  _wrapperInstance = null!;
 
 		[GlobalSetup]
 		public void Setup()
@@ -19,13 +19,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Benchmark]
-		public string TypeMapperString()
+		public string? TypeMapperString()
 		{
 			return _wrapperInstance.StringProperty;
 		}
 
 		[Benchmark(Baseline = true)]
-		public string DirectAccessString()
+		public string? DirectAccessString()
 		{
 			return _originalInstance.StringProperty;
 		}
@@ -67,13 +67,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Benchmark]
-		public Wrapped.TestClass2 TypeMapperWrapper()
+		public Wrapped.TestClass2? TypeMapperWrapper()
 		{
 			return _wrapperInstance.WrapperProperty;
 		}
 
 		[Benchmark]
-		public Original.TestClass2 DirectAccessWrapper()
+		public Original.TestClass2? DirectAccessWrapper()
 		{
 			return _originalInstance.WrapperProperty;
 		}
@@ -91,13 +91,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		}
 
 		[Benchmark]
-		public Version TypeMapperVersion()
+		public Version? TypeMapperVersion()
 		{
 			return _wrapperInstance.VersionProperty;
 		}
 
 		[Benchmark]
-		public Version DirectAccessVersion()
+		public Version? DirectAccessVersion()
 		{
 			return _originalInstance.VersionProperty;
 		}

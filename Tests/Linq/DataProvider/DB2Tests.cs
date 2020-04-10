@@ -9,7 +9,6 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.DB2;
 using LinqToDB.Mapping;
 
 #if NET46
@@ -116,7 +115,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM SYSIBM.SYSDUMMY1", sqlValue ?? "NULL", sqlType);
 
@@ -299,7 +298,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nchar(3))    FROM SYSIBM.SYSDUMMY1", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char(3))     FROM SYSIBM.SYSDUMMY1", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -387,7 +386,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -561,9 +560,7 @@ namespace Tests.DataProvider
 			Assert.That(int32Value.Value, Is.TypeOf<int>     ().And.EqualTo(2));
 			Assert.That(int16Value.Value, Is.TypeOf<short>   ().And.EqualTo(3));
 
-#pragma warning disable CS0618
 			var decimalValue          = new DB2Decimal     (4m);
-#pragma warning restore CS0618
 			var decimalValueAsDecimal = new DB2DecimalFloat(5m);
 			var decimalValueAsDouble  = new DB2DecimalFloat(6.0);
 			var decimalValueAsLong    = new DB2DecimalFloat(7);
@@ -639,9 +636,7 @@ namespace Tests.DataProvider
 			[Column(Precision = 0)]
 			public DateTime TimeStamp0 { get; set; }
 
-			// TODO: dbtype not passed from mapping to value builder. Fixed in 3.0
-			//[Column(DbType = "timestamp(1)")]
-			[Column(Precision = 1)]
+			[Column(DbType = "timestamp(1)")]
 			public DateTime TimeStamp1 { get; set; }
 
 			[Column(Precision = 2)]
@@ -780,6 +775,30 @@ namespace Tests.DataProvider
 		public static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
 		{
 			throw new InvalidOperationException();
+		}
+
+		[Table]
+		class TestParametersTable
+		{
+			[ Column] public int     Id   { get; set; }
+			[ Column] public string? Text { get; set; }
+		}
+		// https://github.com/linq2db/linq2db/issues/2091
+		[Test]
+		public void TestParametersUsed([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db    = new DataConnection(context))
+			using (var table = db.CreateLocalTable<TestParametersTable>())
+			{
+				var newText = new TestParametersTable() { Id = 12, Text = "Hallo Welt!" };
+				db.Insert(newText);
+
+				var text   = "bla";
+				var query  = from f in table where f.Text == text select f;
+				var result = query.ToArray();
+
+				Assert.True(db.LastQuery!.Contains("@"));
+			}
 		}
 	}
 }

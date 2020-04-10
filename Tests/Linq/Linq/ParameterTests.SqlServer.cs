@@ -19,32 +19,32 @@ namespace Tests.Linq
 		[Table("AllTypes")]
 		class AllTypesWithLength
 		{
-			[Column(                             Length = 1)]  public byte[] VarBinaryDataType;
-			[Column(DataType = DataType.VarChar, Length = 20)] public string VarcharDataType;
-			[Column(                             Length = 20)] public string NVarcharDataType;
+			[Column(                             Length = 1)]  public byte[]? VarBinaryDataType;
+			[Column(DataType = DataType.VarChar, Length = 20)] public string? VarcharDataType;
+			[Column(                             Length = 20)] public string? NVarcharDataType;
 		}
 
 		[Table("AllTypes")]
 		class AllTypesCustom
 		{
-			[Column] public VarBinary VarBinaryDataType;
-			[Column] public VarChar   VarcharDataType;
-			[Column] public NVarChar  NVarcharDataType;
+			[Column] public VarBinary? VarBinaryDataType;
+			[Column] public VarChar?   VarcharDataType;
+			[Column] public NVarChar?  NVarcharDataType;
 		}
 
 		[Table("AllTypes")]
 		class AllTypesCustomWithLength
 		{
-			[Column(Length = 1)]  public VarBinary VarBinaryDataType;
-			[Column(Length = 20)] public VarChar   VarcharDataType;
-			[Column(Length = 20)] public NVarChar  NVarcharDataType;
+			[Column(Length = 1)]  public VarBinary? VarBinaryDataType;
+			[Column(Length = 20)] public VarChar?   VarcharDataType;
+			[Column(Length = 20)] public NVarChar?  NVarcharDataType;
 		}
 
 		class AllTypesCustomMaxLength
 		{
-			public VarBinary VarBinary;
-			public VarChar   VarChar;
-			public NVarChar  NVarChar;
+			public VarBinary? VarBinary;
+			public VarChar?   VarChar;
+			public NVarChar?  NVarChar;
 		}
 
 		class VarChar : CustomBase<string>
@@ -76,7 +76,7 @@ namespace Tests.Linq
 
 		abstract class CustomBase<TValue> : IConvertible
 		{
-			public TValue Value { get; set; }
+			public TValue Value { get; set; } = default!;
 
 			TypeCode IConvertible.GetTypeCode()
 			{
@@ -445,7 +445,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].NVarChar);
-					Assert.AreEqual(value, records[0].NVarChar.Value);
+					Assert.AreEqual(value, records[0].NVarChar!.Value);
 					Assert.That(sql.Contains("NVarChar -- String"));
 				}
 			}
@@ -471,7 +471,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarChar);
-					Assert.AreEqual(value, records[0].VarChar.Value);
+					Assert.AreEqual(value, records[0].VarChar!.Value);
 					Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
 				}
 			}
@@ -500,7 +500,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarBinary);
-					Assert.AreEqual(value, records[0].VarBinary.Value);
+					Assert.AreEqual(value, records[0].VarBinary!.Value);
 					Assert.That(sql.Contains("VarBinary -- Binary"));
 				}
 			}
@@ -661,7 +661,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].NVarChar);
-					Assert.AreEqual(value, records[0].NVarChar.Value);
+					Assert.AreEqual(value, records[0].NVarChar!.Value);
 					Assert.That(sql.Contains("NVarChar(5000) -- String"));
 				}
 			}
@@ -687,7 +687,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarChar);
-					Assert.AreEqual(value, records[0].VarChar.Value);
+					Assert.AreEqual(value, records[0].VarChar!.Value);
 					Assert.That(sql.Contains(" VarChar(10000) -- AnsiString"));
 				}
 			}
@@ -716,7 +716,7 @@ namespace Tests.Linq
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarBinary);
-					Assert.AreEqual(value, records[0].VarBinary.Value);
+					Assert.AreEqual(value, records[0].VarBinary!.Value);
 					Assert.That(sql.Contains("VarBinary(10000) -- Binary"));
 				}
 			}
@@ -733,18 +733,18 @@ namespace Tests.Linq
 				ms.SetConvertExpression<string, VarChar>  (v => new VarChar()   { Value = v });
 				ms.SetConvertExpression<string, NVarChar> (v => new NVarChar()  { Value = v });
 				ms.SetConvertExpression<byte[], VarBinary>(v => new VarBinary() { Value = v });
-				ms.SetConvertExpression<VarChar, string>  (v => v == null ? null : v.Value);
-				ms.SetConvertExpression<NVarChar, string> (v => v == null ? null : v.Value);
-				ms.SetConvertExpression<VarBinary, byte[]>(v => v == null ? null : v.Value);
+				ms.SetConvertExpression<VarChar?, string?>  (v => v == null ? null : v.Value);
+				ms.SetConvertExpression<NVarChar?, string?> (v => v == null ? null : v.Value);
+				ms.SetConvertExpression<VarBinary?, byte[]?>(v => v == null ? null : v.Value);
 			}
 			else
 			{
 				ms.SetConvertExpression<string, VarChar>  (v => new VarChar()   { Value = v });
 				ms.SetConvertExpression<string, NVarChar> (v => new NVarChar()  { Value = v });
 				ms.SetConvertExpression<byte[], VarBinary>(v => new VarBinary() { Value = v });
-				ms.SetConvertExpression<VarChar, DataParameter>  (v => v == null ? null : DataParameter.VarChar(null, v.Value));
-				ms.SetConvertExpression<NVarChar, DataParameter> (v => v == null ? null : DataParameter.NVarChar(null, v.Value));
-				ms.SetConvertExpression<VarBinary, DataParameter>(v => v == null ? null : DataParameter.VarBinary(null, v.Value));
+				ms.SetConvertExpression<VarChar?, DataParameter?>  (v => v == null ? null : DataParameter.VarChar(null, v.Value));
+				ms.SetConvertExpression<NVarChar?, DataParameter?> (v => v == null ? null : DataParameter.NVarChar(null, v.Value));
+				ms.SetConvertExpression<VarBinary?, DataParameter?>(v => v == null ? null : DataParameter.VarBinary(null, v.Value));
 			}
 		}
 	}

@@ -39,8 +39,8 @@ namespace Tests.ComplexTests2
 
 		public class Eye
 		{
-			public int    Id { get; set; }
-			public string Xy { get; set; }
+			public int     Id { get; set; }
+			public string? Xy { get; set; }
 		}
 
 		public class SauronsEye : Eye
@@ -50,8 +50,8 @@ namespace Tests.ComplexTests2
 
 		public class Name
 		{
-			public string First  { get; set; }
-			public string Second { get; set; }
+			public string? First  { get; set; }
+			public string? Second { get; set; }
 		}
 
 		public class Animal
@@ -59,8 +59,8 @@ namespace Tests.ComplexTests2
 			public AnimalType  AnimalType    { get; set; }
 			public AnimalType2 AnimalType2   { get; set; }
 			public int         Id            { get; set; }
-			public string      Name          { get; set; }
-			public string      Discriminator { get; set; }
+			public string?     Name          { get; set; }
+			public string?     Discriminator { get; set; }
 		}
 
 		public class WildAnimal : Animal
@@ -86,9 +86,9 @@ namespace Tests.ComplexTests2
 				Discriminator = "Dog";
 			}
 
-			public Eye  Bla     { get; set; }
-			public int? EyeId   { get; set; }
-			public Name DogName { get; set; }
+			public Eye?  Bla     { get; set; }
+			public int?  EyeId   { get; set; }
+			public Name? DogName { get; set; }
 		}
 
 		public class BadDog : Dog
@@ -101,9 +101,9 @@ namespace Tests.ComplexTests2
 
 		public class Test
 		{
-			public int    Id           { get; set; }
-			public int?   TestAnimalId { get; set; }
-			public Animal TestAnimal   { get; set; }
+			public int     Id           { get; set; }
+			public int?    TestAnimalId { get; set; }
+			public Animal? TestAnimal   { get; set; }
 		}
 
 		private void InsertData(ITestDataContext db)
@@ -193,9 +193,9 @@ namespace Tests.ComplexTests2
 				.HasTableName(animalsTableName)
 				.Property(x => x.Bla           ).IsNotColumn()
 				.Property(x => x.EyeId         ).IsColumn().IsNullable().HasColumnName("EyeId")
-				.Property(x => x.DogName.Second).HasColumnName("Second").HasDataType(DataType.NVarChar).HasLength(40)
-				.Property(x => x.DogName.First ).HasColumnName("First").HasDataType(DataType.NVarChar).HasLength(40)
-				.Association(x => x.Bla, x => x.EyeId, x => x.Id);
+				.Property(x => x.DogName!.Second).HasColumnName("Second").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.DogName!.First ).HasColumnName("First").HasDataType(DataType.NVarChar).HasLength(40)
+				.Association(x => x.Bla, x => x.EyeId, x => x!.Id);
 
 			mappingBuilder.Entity<WildAnimal>()
 				.HasTableName(animalsTableName);
@@ -213,7 +213,7 @@ namespace Tests.ComplexTests2
 
 			mappingBuilder.Entity<Test>()
 				.HasTableName("TestAnimalTable")
-				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x.Id)
+				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x!.Id)
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
 				.Property(x => x.TestAnimal  ).IsNotColumn();
 
@@ -271,14 +271,14 @@ namespace Tests.ComplexTests2
 				{
 					InsertData(db);
 					var data = db.GetTable<Test>()
-						.LoadWith(x => ((Dog)x.TestAnimal).Bla)
+						.LoadWith(x => ((Dog)x.TestAnimal!).Bla)
 						.OrderBy(x => x.Id)
 						.ToList();
 
 					Assert.Null(data.First().TestAnimal);
-					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).Bla);
-					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.First);
-					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.Second);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).Bla);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.First);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.Second);
 				}
 				finally
 				{
@@ -299,8 +299,8 @@ namespace Tests.ComplexTests2
 					InsertData(db);
 					var data = db.GetTable<Dog>().ToList();
 
-					Assert.NotNull(data[0].DogName.First);
-					Assert.NotNull(data[0].DogName.Second);
+					Assert.NotNull(data[0].DogName!.First);
+					Assert.NotNull(data[0].DogName!.Second);
 				}
 				finally
 				{
@@ -506,8 +506,8 @@ namespace Tests.ComplexTests2
 						Assert.AreEqual(dog.AnimalType    , data.AnimalType);
 						Assert.AreEqual(dog.AnimalType2   , data.AnimalType2);
 						Assert.AreEqual(dog.Name          , data.Name);
-						Assert.AreEqual(dog.DogName.First , data.DogName.First);
-						Assert.AreEqual(dog.DogName.Second, data.DogName.Second);
+						Assert.AreEqual(dog.DogName.First , data.DogName!.First);
+						Assert.AreEqual(dog.DogName.Second, data.DogName!.Second);
 						Assert.AreEqual(dog.EyeId         , data.EyeId);
 					}
 				}

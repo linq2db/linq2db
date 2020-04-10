@@ -1,6 +1,4 @@
-﻿#pragma warning disable 649
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
 	class ExpressionHolder<TP,TE>
 	{

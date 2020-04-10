@@ -13,10 +13,10 @@ namespace Tests.UserTests
 	{
 		public class Entity
 		{
-			[Column(DataType = DataType.Char)]     public string CharValue;
-			[Column(DataType = DataType.VarChar)]  public string VarCharValue;
-			[Column(DataType = DataType.NChar)]    public string NCharValue;
-			[Column(DataType = DataType.NVarChar)] public string NVarCharValue;
+			[Column(DataType = DataType.Char)]     public string? CharValue;
+			[Column(DataType = DataType.VarChar)]  public string? VarCharValue;
+			[Column(DataType = DataType.NChar)]    public string? NCharValue;
+			[Column(DataType = DataType.NVarChar)] public string? NVarCharValue;
 		}
 
 		[Test]

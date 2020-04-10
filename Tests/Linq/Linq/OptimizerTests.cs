@@ -33,7 +33,7 @@ namespace Tests.Linq
 			public int DataKey33 { get; set; }
 
 			[Column(Length = 50)]
-			public string ValueStr { get; set; }
+			public string? ValueStr { get; set; }
 		}
 
 		static IEnumerable<T[]> GetPermutations<T>(IEnumerable<T> items, int count)
@@ -353,7 +353,7 @@ namespace Tests.Linq
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
@@ -391,7 +391,7 @@ namespace Tests.Linq
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);

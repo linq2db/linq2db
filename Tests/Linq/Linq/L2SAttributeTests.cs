@@ -47,28 +47,28 @@ namespace Tests.Linq
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
-		public string FirstName { get; set; }
+		public string FirstName { get; set; } = null!;
 
 #if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
-		public string LastName;
+		public string LastName = null!;
 
 #if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
-		public string MiddleName;
+		public string? MiddleName;
 
 #if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
-		public string Gender;
+		public string Gender = null!;
 	}
 
 	[TestFixture]

@@ -11,9 +11,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		private Original.TestClass _classInstance = new Original.TestClass();
 
-		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter;
-		private Action<ITestClass, SqlDbType       > _knownEnumPropertySetter;
-		private Action<ITestClass, string          > _stringPropertySetter;
+		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter = null!;
+		private Action<ITestClass, SqlDbType       > _knownEnumPropertySetter = null!;
+		private Action<ITestClass, string          > _stringPropertySetter = null!;
 
 		[GlobalSetup]
 		public void Setup()

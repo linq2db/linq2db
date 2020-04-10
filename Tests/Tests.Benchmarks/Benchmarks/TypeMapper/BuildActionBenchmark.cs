@@ -6,7 +6,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class BuildActionBenchmark
 	{
-		private Action _action;
+		private Action _action = null!;
 
 		[GlobalSetup]
 		public void Setup()

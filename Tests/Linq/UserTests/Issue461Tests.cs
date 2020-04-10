@@ -30,7 +30,7 @@ namespace Tests.UserTests
 
 			public int ParentId;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var vh = obj as ValueHolder;
 				if (vh == null)
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 
 		public class ValueValueHolder
 		{
-			public ValueHolder Child;
+			public ValueHolder? Child;
 
 			public override bool Equals(object obj)
 			{

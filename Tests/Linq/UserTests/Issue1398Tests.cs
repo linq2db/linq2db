@@ -19,10 +19,10 @@ namespace Tests.UserTests
 		internal sealed class Animal
 		{
 			[PrimaryKey, Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 
 			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Color { get; set; }
+			public string Color { get; set; } = null!;
 
 			[Column(CanBeNull = false)]
 			public int Length { get; set; }
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		internal sealed class AnimalUpdate
 		{
 			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 
 			[Column(CanBeNull = false)]
 			public int Length { get; set; }
@@ -43,9 +43,9 @@ namespace Tests.UserTests
 
 		internal sealed class Data
 		{
-			public string Color { get; set; }
+			public string Color { get; set; } = null!;
 
-			public List<AnimalUpdate> Updates { get; set; }
+			public List<AnimalUpdate> Updates { get; set; } = null!;
 		}
 
 		[Table("InsertTable1398")]

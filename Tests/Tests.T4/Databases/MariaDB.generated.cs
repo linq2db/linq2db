@@ -132,20 +132,15 @@ namespace MariaDBDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // varchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // varchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -210,20 +205,15 @@ namespace MariaDBDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // varchar(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // varchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -232,12 +222,8 @@ namespace MariaDBDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int(11)
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // varchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // varchar(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // varchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // varchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // varchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
@@ -466,5 +452,4 @@ namespace MariaDBDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

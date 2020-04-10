@@ -307,5 +307,4 @@ namespace Tests.T4.Wpf
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

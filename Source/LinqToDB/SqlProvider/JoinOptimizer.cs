@@ -266,9 +266,7 @@ namespace LinqToDB.SqlProvider
 
 			var sourceIndex = GetSourceIndex(fromTable, sourceId);
 
-			HashSet<Tuple<int, VirtualField>> sameFields;
-
-			if (_equalityMap.TryGetValue(field, out sameFields))
+			if (_equalityMap.TryGetValue(field, out var sameFields))
 				foreach (var pair in sameFields)
 				{
 					var itemIndex = GetSourceIndex(fromTable, pair.Item1);

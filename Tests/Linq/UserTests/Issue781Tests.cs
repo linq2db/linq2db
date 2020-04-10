@@ -19,7 +19,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual   = db.GetTable<Person>()
-					.GroupBy(_ => Sql.Concat("test", _.Patient.Diagnosis))
+					.GroupBy(_ => Sql.Concat("test", _.Patient!.Diagnosis))
 					.Count();
 
 				var expected = Person
@@ -27,7 +27,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -37,15 +37,15 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual    = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
 				var expected = db.GetTable<Person>()
-					.GroupBy(_ => Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Count();
 
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -75,7 +75,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.LongCount();
 
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.Count();
 
@@ -105,7 +105,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -115,7 +115,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();
 
@@ -125,7 +125,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -135,7 +135,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
@@ -147,7 +147,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -160,7 +160,7 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
@@ -172,7 +172,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 	}

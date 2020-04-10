@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool Equals(ISqlExpression other)
 		{
-			return other.GetType() == this.GetType();
+			return other.GetType() == GetType();
 		}
 
 		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)

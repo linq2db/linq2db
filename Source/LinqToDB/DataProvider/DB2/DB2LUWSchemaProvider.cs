@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.DB2
 			_provider = provider;
 		}
 
-		readonly HashSet<string> _systemSchemas =
+		readonly HashSet<string?> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
 				StringComparer.OrdinalIgnoreCase);
 

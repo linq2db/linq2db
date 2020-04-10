@@ -162,14 +162,6 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		/// <summary>
-		/// Specifies how identifiers like table and field names should be quoted.
-		/// </summary>
-		/// <remarks>
-		/// Default value: <see cref="FirebirdIdentifierQuoteMode.Auto"/>.
-		/// </remarks>
-		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto;
-
-		/// <summary>
 		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
 		/// </summary>
 		private bool IsValidIdentifier(string name)
@@ -192,8 +184,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryFieldAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
-					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
 						// I wonder what to do if identifier has " in name?
 						return '"' + value + '"';
@@ -281,8 +273,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-					    IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 
 					BuildValue(null, identifierValue);

@@ -69,9 +69,8 @@ namespace LinqToDB.Linq
 				ParameterExpression? newVariable;
 				LambdaExpression?    converterExpr;
 				Type                variableType;
-				ReaderMapperInfo    mapperInfo;
 
-				if (!_mappers.TryGetValue(dataReaderType, out mapperInfo))
+				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
 				{
 					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
 					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;

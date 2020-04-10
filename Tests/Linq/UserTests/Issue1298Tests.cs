@@ -2,11 +2,7 @@
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tests.UserTests
 {
@@ -19,7 +15,7 @@ namespace Tests.UserTests
 			public long Id { get; set; }
 
 			[Column]
-			public System.String asdfgh { get; set; }
+			public string? asdfgh { get; set; }
 		}
 
 		[Table("mega_composites")]
@@ -28,35 +24,35 @@ namespace Tests.UserTests
 			public mega_composites() : base()
 			{
 				{
-					this.y1 = new mega_composites__y1();
+					y1 = new mega_composites__y1();
 				}
 			}
 
 			public virtual mega_composites__y1 y1 { get; set; }
 
 			[Column]
-			public System.Nullable<System.Int64> ref1 { get; set; }
+			public long? ref1 { get; set; }
 
 			public class mega_composites__y1
 			{
 				public mega_composites__y1() : base()
 				{
-					this.q1 = new mega_composites__y1__q1();
+					q1 = new mega_composites__y1__q1();
 				}
 				public virtual mega_composites__y1__q1 q1 { get; set; }
 
 				public class mega_composites__y1__q1
 				{
 					[Column("\"y1.q1.ref1\"")]
-					public System.Nullable<System.Int64> ref1 { get; set; }
+					public long? ref1 { get; set; }
 				}
 			}
 		}
 
 		public class __mega_composites_View : mega_composites
 		{
-			public System.String __face_y1_q1_ref1 { get; set; }
-			public System.String __face_ref1 { get; set; }
+			public string? __face_y1_q1_ref1 { get; set; }
+			public string? __face_ref1 { get; set; }
 		}
 
 		[Test]

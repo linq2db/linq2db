@@ -23,7 +23,7 @@ namespace Tests.Mapping
 
 			ms.SetDefaultValue(typeof(int), -1);
 
-			var c = ms.GetConverter<int?,int>();
+			var c = ms.GetConverter<int?,int>()!;
 
 			Assert.AreEqual(-1, c(null));
 		}
@@ -37,8 +37,8 @@ namespace Tests.Mapping
 			ms1.SetConvertExpression<int?,int>(i => i.HasValue ? i.Value * 2 : DefaultValue<int>.Value, false);
 			ms2.SetDefaultValue(typeof(int), -1);
 
-			var c1 = ms1.GetConverter<int?,int>();
-			var c2 = ms2.GetConverter<int?,int>();
+			var c1 = ms1.GetConverter<int?,int>()!;
+			var c2 = ms2.GetConverter<int?,int>()!;
 
 			Assert.AreEqual( 4, c1(2));
 			Assert.AreEqual( 0, c1(null));
@@ -52,11 +52,11 @@ namespace Tests.Mapping
 			var ms1 = new MappingSchema();
 			var ms2 = new MappingSchema(ms1);
 
-			ms1.SetConvertExpression<int?,int>(i => i.Value * 2);
+			ms1.SetConvertExpression<int?,int>(i => i!.Value * 2);
 			ms2.SetDefaultValue(typeof(int), -1);
 
-			var c1 = ms1.GetConverter<int?,int>();
-			var c2 = ms2.GetConverter<int?,int>();
+			var c1 = ms1.GetConverter<int?,int>()!;
+			var c2 = ms2.GetConverter<int?,int>()!;
 
 			Assert.AreEqual( 4, c1(2));
 			Assert.AreEqual( 0, c1(null));
@@ -73,8 +73,8 @@ namespace Tests.Mapping
 			ms1.SetDefaultValue(typeof(int), -1);
 			ms2.SetDefaultValue(typeof(int), -2);
 
-			var c1 = ms1.GetConverter<int?,int>();
-			var c2 = ms2.GetConverter<int?,int>();
+			var c1 = ms1.GetConverter<int?,int>()!;
+			var c2 = ms2.GetConverter<int?,int>()!;
 
 			Assert.AreEqual(-1, c1(null));
 			Assert.AreEqual(-2, c2(null));
@@ -93,8 +93,8 @@ namespace Tests.Mapping
 
 			{
 				var c0 = Convert<DateTime,string>.Lambda;
-				var c1 = ms1.GetConverter<DateTime,string>();
-				var c2 = ms2.GetConverter<DateTime,string>();
+				var c1 = ms1.GetConverter<DateTime,string>()!;
+				var c2 = ms2.GetConverter<DateTime,string>()!;
 
 				Assert.AreEqual("01/20/2012 16:30:40",  c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)));
 				Assert.AreEqual("1/20/2012 4:30:40",    c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)));
@@ -108,8 +108,8 @@ namespace Tests.Mapping
 
 			{
 				var c0 = Convert<string,DateTime>.Lambda;
-				var c1 = ms1.GetConverter<string,DateTime>();
-				var c2 = ms2.GetConverter<string,DateTime>();
+				var c1 = ms1.GetConverter<string,DateTime>()!;
+				var c2 = ms2.GetConverter<string,DateTime>()!;
 
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c0("01/20/2012 16:30:40"));
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c1("1/20/2012 4:30:40 PM"));
@@ -188,13 +188,13 @@ namespace Tests.Mapping
 			ci.DateTimeFormat.ShortTimePattern = "HH:mm:ss";
 
 			ms.SetCultureInfo(ci);
-			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()(new DateTime(2012, 1, 20, 16, 30, 40)));
-			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()("20.01.2012 16:30:40"));
-			Assert.AreEqual("100000,999",                          ms.GetConverter<decimal,string> ()(100000.999m));
-			Assert.AreEqual(100000.999m,                           ms.GetConverter<string,decimal> ()("100000,999"));
+			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()!(new DateTime(2012, 1, 20, 16, 30, 40)));
+			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()!("20.01.2012 16:30:40"));
+			Assert.AreEqual("100000,999",                          ms.GetConverter<decimal,string> ()!(100000.999m));
+			Assert.AreEqual(100000.999m,                           ms.GetConverter<string,decimal> ()!("100000,999"));
 			//Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999")); this will fail if System Locale is ru-RU
-			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()(100000.999));
-			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()("100000,999"));
+			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()!(100000.999));
+			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()!("100000,999"));
 		}
 
 
@@ -362,14 +362,14 @@ namespace Tests.Mapping
 		[Test]
 		public void ConvertEnum1()
 		{
-			var conv = MappingSchema.Default.GetConverter<int,Enum1>();
+			var conv = MappingSchema.Default.GetConverter<int, Enum1>()!;
 			Assert.That(conv(2), Is.EqualTo(Enum1.Value1));
 		}
 
 		[Test]
 		public void ConvertEnum2()
 		{
-			var conv = new MappingSchema("1").GetConverter<int,Enum1>();
+			var conv = new MappingSchema("1").GetConverter<int,Enum1>()!;
 			Assert.That(conv(2), Is.EqualTo(Enum1.Value2));
 		}
 
@@ -378,7 +378,7 @@ namespace Tests.Mapping
 		{
 			var schema = new MappingSchema("2");
 			Assert.That(schema.GetDefaultValue(typeof(Enum1?)), Is.Null);
-			var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(schema, typeof(Enum1?));
+			var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(schema, typeof(Enum1?))!;
 			Assert.That(mapType, Is.EqualTo(typeof(int?)));
 			var convertedValue = Converter.ChangeType(null, mapType, schema);
 			Assert.IsNull(convertedValue);
@@ -397,7 +397,7 @@ namespace Tests.Mapping
 			[PrimaryKey]
 			public int Id;
 
-			public PkTable Parent;
+			public PkTable? Parent;
 		}
 
 		[Test]

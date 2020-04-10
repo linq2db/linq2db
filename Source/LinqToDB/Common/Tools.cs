@@ -6,8 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Common
 {
 	using System.Diagnostics.CodeAnalysis;
@@ -18,18 +16,6 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Tools
 	{
-		/// <summary>
-		/// Shortcut extension method for <see cref="string.Format(string, object)"/> method.
-		/// </summary>
-		/// <param name="format">Format string.</param>
-		/// <param name="args">Format parameters.</param>
-		/// <returns>String, generated from <paramref name="format"/> format string using <paramref name="args"/> parameters.</returns>
-		[Obsolete("Use either string interpolation or CodeJam.FormatWith instead."), StringFormatMethod("format")]
-		public static string Args(this string format, params object?[] args)
-		{
-			return string.Format(format, args);
-		}
-
 		/// <summary>
 		/// Checks that collection is not null and have at least one element.
 		/// </summary>
@@ -112,7 +98,7 @@ namespace LinqToDB.Common
 
 		public static string ToDebugDisplay(string str)
 		{
-			string RemoveDuplicates(string pattern, string input)
+			static string RemoveDuplicates(string pattern, string input)
 			{
 				var toSearch = pattern + pattern;
 				do

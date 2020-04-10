@@ -11,7 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionsTests : TestBase
 	{
-		static string AggregateStrings(string separator, IEnumerable<string> arguments)
+		static string? AggregateStrings(string separator, IEnumerable<string?> arguments)
 		{
 			var result = arguments.Aggregate((v1, v2) =>
 			{
@@ -30,11 +30,11 @@ namespace Tests.Linq
 		class SampleClass
 		{
 			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string Value4 { get; set; }
+			                                        public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
