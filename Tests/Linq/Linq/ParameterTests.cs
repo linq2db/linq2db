@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -404,6 +404,34 @@ namespace Tests.Linq
 						 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
 					  .FirstOrDefault();
 				}
+			}
+		}
+
+		[Table(IsColumnAttributeRequired = true)]
+		public partial class Issue1189Customer
+		{
+
+			[Column("ID"), PrimaryKey, NotNull] public int Id { get; set; } // integer
+
+			[Column("NAME"), NotNull] public string Name { get; set; } = null!; // varchar(20)
+
+			[ExpressionMethod(nameof(DefaultDateTime), IsColumn = true)]
+			public DateTime? ToDelete { get; set; }
+
+			static Expression<Func<Issue1189Customer, DateTime>> DefaultDateTime()
+			{
+				return p => Sql.AsSql(DateTime.Now);
+			}
+		}
+
+		[ActiveIssue(1189)]
+		[Test]
+		public void Issue1189Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1189Customer>())
+			{
+				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
 			}
 		}
 	}
