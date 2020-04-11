@@ -30,6 +30,9 @@ stages:
 
     steps:
 
+    # mitigate https://status.dev.azure.com/_event/182998791
+    - task: NuGetToolInstaller@1
+
     - task: PowerShell@2
       inputs:
         filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'

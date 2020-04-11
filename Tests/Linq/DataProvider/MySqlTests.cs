@@ -786,6 +786,20 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test(Description = "TODO: Issue not reproduced")]
+		public void Issue1993([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"));
+				Assert.IsNotNull(table);
+				Assert.AreEqual(2, table.Columns.Count);
+				Assert.AreEqual("id",          table.Columns[0].ColumnName);
+				Assert.AreEqual("description", table.Columns[1].ColumnName);
+			}
+		}
+
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
 		static int IncrementIndex()
 		{

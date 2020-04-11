@@ -561,5 +561,74 @@ namespace Tests.Linq
 			}
 		}
 
+
+		class BananaTable
+		{
+			public int Id { get; set; }
+			public string? Property { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue(Details = "https://stackoverflow.com/questions/61081571")]
+		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		{
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BananaTable>())
+			{
+				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
+				
+				var res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("test1", res[0].Property);
+
+				Test(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
+
+				res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("banana", res[0].Property);
+
+				void Test(string entity, string filterProperty, string changedProperty, object filter, object value)
+				{
+					db.GetTable<object>()
+						.TableName(entity)
+						.Where(t => Sql.Property<object>(t, filterProperty).Equals(filter))
+						.Set(t => Sql.Property<object>(t, changedProperty), value)
+						.Update();
+				}
+			}
+		}
+
+		[Test]
+		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		{
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BananaTable>())
+			{
+				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
+
+				var res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("test1", res[0].Property);
+
+				Test<BananaTable>(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
+
+				res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("banana", res[0].Property);
+
+				void Test<TEntity>(string entity, string filterProperty, string changedProperty, object filter, object value)
+					where TEntity : class
+				{
+					db.GetTable<TEntity>()
+						.TableName(entity)
+						.Where(t => Sql.Property<TEntity>(t, filterProperty)!.Equals(filter))
+						.Set(t => Sql.Property<TEntity>(t, changedProperty)!, value)
+						.Update();
+				}
+			}
+		}
+
 	}
 }
