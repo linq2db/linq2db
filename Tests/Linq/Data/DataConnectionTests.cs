@@ -433,5 +433,54 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestCloneOnEntityCreated([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var size = db.GetTable<Person>().ToList().Count;
+
+				var counter = 0;
+
+				db.GetTable<Person>().ToList();
+				Assert.AreEqual(0, counter);
+
+				db.OnEntityCreated = OnCreated;
+
+				db.GetTable<Person>().ToList();
+				Assert.AreEqual(size, counter);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					// tests different clone execution branches for MARS-enabled and disabled connections
+					counter = 0;
+					cdb.GetTable<Person>().ToList();
+					Assert.AreEqual(size, counter);
+
+					db.OnEntityCreated = null;
+
+					counter = 0;
+					db.GetTable<Person>().ToList();
+					Assert.AreEqual(0, counter);
+
+					// because we:
+					// - don't track cloned connections
+					// - clonned connections are used internally, so this scenario is not possible for linq2db itself
+					cdb.GetTable<Person>().ToList();
+					Assert.AreEqual(size, counter);
+				}
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					counter = 0;
+					cdb.GetTable<Person>().ToList();
+
+					Assert.AreEqual(0, counter);
+				}
+
+				void OnCreated(EntityCreatedEventArgs args) => counter++;
+			}
+		}
+
 	}
 }

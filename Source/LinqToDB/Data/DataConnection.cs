@@ -1516,7 +1516,10 @@ namespace LinqToDB.Data
 			// will not work for providers that remove security information from connection string
 			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
 
-			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema);
+			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
+			{
+				OnEntityCreated = OnEntityCreated
+			};
 		}
 
 		#endregion

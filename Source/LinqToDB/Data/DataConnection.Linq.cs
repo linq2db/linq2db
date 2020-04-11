@@ -72,6 +72,8 @@ namespace LinqToDB.Data
 					TransactionAsync = TransactionAsync,
 					IsMarsEnabled    = IsMarsEnabled,
 					ConnectionString = ConnectionString,
+					OnEntityCreated  = OnEntityCreated
+
 				};
 
 			return (DataConnection)Clone();
