@@ -19,6 +19,7 @@ namespace Tests.Data
 #if !NETSTANDARD1_6
 	using System.Configuration;
 	using System.Transactions;
+	using LinqToDB.Data.RetryPolicy;
 #endif
 	using LinqToDB.Mapping;
 
@@ -483,6 +484,52 @@ namespace Tests.Data
 				void OnCreated(EntityCreatedEventArgs args) => counter++;
 			}
 		}
+
+#if !NETSTANDARD1_6
+		class TestRetryPolicy : IRetryPolicy
+		{
+			TResult IRetryPolicy.Execute<TResult>(Func<TResult> operation) => operation();
+			void IRetryPolicy.Execute(Action operation) => operation();
+			Task<TResult> IRetryPolicy.ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken) => operation(cancellationToken);
+			Task IRetryPolicy.ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) => operation(cancellationToken);
+		}
+
+		[Test]
+		public void TestCloneRetryPolicy([DataSources(false)] string context)
+		{
+			var policy = new TestRetryPolicy();
+
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+
+				Assert.IsNull(db.RetryPolicy);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.IsNull(cdb.RetryPolicy);
+				}
+
+				db.RetryPolicy = policy;
+
+				Assert.AreEqual(policy, db.RetryPolicy);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(policy, cdb.RetryPolicy);
+				}
+
+				db.RetryPolicy = null;
+				Assert.IsNull(db.RetryPolicy);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.IsNull(cdb.RetryPolicy);
+				}
+			}
+		}
+#endif
 
 		// strange provider errors, review in v3 with more recent providers
 		[ActiveIssue(Configurations = new[] { ProviderName.MySqlConnector, ProviderName.SapHana })]

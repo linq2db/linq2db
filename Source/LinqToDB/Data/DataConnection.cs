@@ -1518,7 +1518,8 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				OnEntityCreated = OnEntityCreated
+				OnEntityCreated = OnEntityCreated,
+				RetryPolicy     = RetryPolicy
 			};
 		}
 

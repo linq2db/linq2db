@@ -72,7 +72,8 @@ namespace LinqToDB.Data
 					TransactionAsync = TransactionAsync,
 					IsMarsEnabled    = IsMarsEnabled,
 					ConnectionString = ConnectionString,
-					OnEntityCreated  = OnEntityCreated
+					OnEntityCreated  = OnEntityCreated,
+					RetryPolicy      = RetryPolicy
 
 				};
 
