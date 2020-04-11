@@ -902,12 +902,16 @@ namespace LinqToDB.Linq.Builder
 							{
 								var sequence = GetSequence(expression, level);
 
-								if (ReferenceEquals(levelExpression, expression))
+								if (sequence != null)
 								{
-									return sequence.GetContext(null, 0, buildInfo);
+									if (ReferenceEquals(levelExpression, expression))
+									{
+										return sequence.GetContext(null, 0, buildInfo);
+									}
+
+									if (level == 0)
+										return sequence.GetContext(expression, 1, buildInfo);
 								}
-								if (level == 0)
-									return sequence.GetContext(expression, 1, buildInfo);
 							}
 
 							break;

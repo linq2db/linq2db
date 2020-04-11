@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
-using JetBrains.Annotations;
 using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
 	class ContextRefExpression : Expression
 	{
-		public ContextRefExpression(Type elementType, [NotNull] IBuildContext buildContext)
+		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
 			ElementType = elementType;
 			BuildContext = buildContext ?? throw new ArgumentNullException(nameof(buildContext));

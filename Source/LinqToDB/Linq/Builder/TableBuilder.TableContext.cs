@@ -201,7 +201,8 @@ namespace LinqToDB.Linq.Builder
 						if (member.NextLoadWith.Count > 0)
 						{
 							var table = FindTable(ma, 1, false, true)!;
-							table.Table.LoadWith = member.NextLoadWith;
+							if (table.Table is TableContext tableContext)
+								tableContext.LoadWith = member.NextLoadWith;
 						}
 
 						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedType, member.MemberInfo);
@@ -474,7 +475,8 @@ namespace LinqToDB.Linq.Builder
 								if (loadWithItem.NextLoadWith.Count > 0)
 								{
 									var table = FindTable(ma, 1, false, true);
-									table!.Table.LoadWith = loadWithItem.NextLoadWith;
+									if (table!.Table is TableContext tableContext)
+										tableContext.LoadWith = loadWithItem.NextLoadWith;
 								}
 								yield return BuildExpression(ma, 1, false);
 							}
@@ -776,20 +778,30 @@ namespace LinqToDB.Linq.Builder
 					{
 						// workaround for not mapped properties
 
-						var orginalType = table.Table.OriginalType;
-						if (table.Table is AssociatedTableContext association)
+						if (table.Table is TableContext tableContext)
 						{
-							if (association.IsList)
-								orginalType = typeof(IEnumerable<>).MakeGenericType(orginalType);
+							var orginalType = tableContext.OriginalType;
+							if (table.Table is AssociatedTableContext association)
+							{
+								if (association.IsList)
+									orginalType = typeof(IEnumerable<>).MakeGenericType(orginalType);
+							}
+
+							if (!orginalType.IsSameOrParentOf(memberExpression.Type))
+								expr = new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
+
+							if (expr == null)
+								expr = tableContext.BuildQuery(tableContext.OriginalType, tableContext, parentObject);
 						}
-						
-						if (!orginalType.IsSameOrParentOf(memberExpression.Type))
-							expr = new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
 					}
 					
 					if (expr == null)
-						expr = table.Table.BuildQuery(table.Table.OriginalType, table.Table, parentObject);
-
+					{
+						if (table.Table is TableContext tableContext)
+							expr = tableContext.BuildQuery(tableContext.OriginalType, tableContext, parentObject);
+						else
+							expr = table.Table.BuildExpression(expression, level, false);
+					}
 					return expr;
 				}
 
@@ -815,23 +827,26 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 							{
-								SqlInfo[] result;
+								SqlInfo[]? result = null;
 
 								if (!IsScalarType(OriginalType))
 								{
 									// Handling case with Associations. Needs refactoring
-									if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
+									if (table.Table != this && table.Table is AssociatedTableContext association)
 									{
-										return association._innerContext.ConvertToSql(null, level, flags);
+										return association.InnerContext.ConvertToSql(null, level, flags);
 									}
 								
-									result = table.Table.SqlTable.Fields.Values
-										.Where(f => !f.IsDynamic)
-										.Select(f =>
-											f.ColumnDescriptor != null
-												? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
-												: new SqlInfo { Sql = f })
-										.ToArray();
+									if (table.Table is TableContext tableContext)
+									{
+										result = tableContext.SqlTable.Fields.Values
+											.Where(f => !f.IsDynamic)
+											.Select(f =>
+												f.ColumnDescriptor != null
+													? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
+													: new SqlInfo { Sql = f })
+											.ToArray();
+									}
 
 								}
 								else
@@ -849,7 +864,8 @@ namespace LinqToDB.Linq.Builder
 									};
 								}
 
-								return result;
+								if (result != null)
+									return result;
 							}
 							break;
 						}
@@ -861,25 +877,28 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field == null)
 							{
 								// Handling case with Associations. Needs refactoring
-								if (table.Table != this && table.Table is AssociatedTableContext association && association._innerContext != null)
+								if (table.Table != this && table.Table is AssociatedTableContext association)
 								{
-									return association._innerContext.ConvertToSql(null, level, flags);
+									return association.InnerContext.ConvertToSql(null, level, flags);
 								}
 
-								var q =
-									from f in table.Table.SqlTable.Fields.Values
-									where f.IsPrimaryKey
-									orderby f.PrimaryKeyOrder
-									select new SqlInfo(f.ColumnDescriptor.MemberInfo)
-									{
-										Sql = _associationsToSubQueries
-											? table.Table.SelectQuery.Select.Field(f).SelectQuery
-											: (ISqlExpression)f
-									};
+								if (table.Table is TableContext tableContext)
+								{
+									var q =
+										from f in tableContext.SqlTable.Fields.Values
+										where f.IsPrimaryKey
+										orderby f.PrimaryKeyOrder
+										select new SqlInfo(f.ColumnDescriptor.MemberInfo)
+										{
+											Sql = _associationsToSubQueries
+												? table.Table.SelectQuery.Select.Field(f).SelectQuery
+												: (ISqlExpression)f
+										};
 
-								var key = q.ToArray();
+									var key = q.ToArray();
 
-								return key.Length != 0 ? key : ConvertToSql(expression, level, ConvertFlags.All);
+									return key.Length != 0 ? key : ConvertToSql(expression, level, ConvertFlags.All);
+								}
 							}
 
 							break;
@@ -897,11 +916,20 @@ namespace LinqToDB.Linq.Builder
 								};
 
 							if (expression == null)
-								return new[]
+							{
+								if (table.Table is TableContext tableContext)
 								{
-									new SqlInfo { Sql = IsScalarType(OriginalType) ? (ISqlExpression)SqlTable : table.Table.SqlTable.All }
-								};
-
+									return new[]
+									{
+										new SqlInfo
+										{
+											Sql = IsScalarType(OriginalType)
+												? (ISqlExpression)SqlTable
+												: tableContext.SqlTable.All
+										}
+									};
+								}
+							}
 							break;
 						}
 				}
@@ -1035,7 +1063,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
 				{	
-					IQueryable<T> expression = association.Builder.DataContext.GetTable<T>();
+					ITable<T>     tableExpression = association.Builder.DataContext.GetTable<T>();
+					IQueryable<T> expression      = tableExpression;
 
 					var loadWith = association.GetLoadWith();
 
@@ -1088,87 +1117,31 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					Expression? expr  = null;
-					var         param = Expression.Parameter(typeof(T), "c");
+					var queryMethod = AssociationHelper.CreateAssociationQueryLambda(association.Builder, association.Association, parent.Type, typeof(T), false, false, out _);
 
-					var queryMethod = association.GetSelectManyQueryMethod(parent.Type, typeof(T), true, false, out var isLeft);
+					var expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
 
-					if (queryMethod != null)
+					if (tableExpression != expression)
 					{
-						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
-						return expr;
-					}
-
-					var conditions = association.ParentAssociationJoin?.Condition ?? association.SelectQuery.Where.SearchCondition;
-					foreach (var cond in conditions.Conditions.Take(association.RegularConditionCount))
-					{
-						SqlPredicate.ExprExpr p;
-
-						if (cond.Predicate is SqlSearchCondition condition)
+						// Applying LoadWith for generated expression
+						expr = expr.Transform(e =>
 						{
-							p = condition.Conditions
-								.Select(c => c.Predicate)
-								.OfType<SqlPredicate.ExprExpr>()
-								.First();
-						}
-						else
-						{
-							p = (SqlPredicate.ExprExpr)cond.Predicate;
-						}
-
-						if (parent is UnaryExpression parentUnaryExpression)
-						{
-							if (parentUnaryExpression.NodeType == ExpressionType.Convert &&
-							    parentUnaryExpression.Type.IsAssignableFrom(parentUnaryExpression.Operand.Type))
+							if (e.NodeType == ExpressionType.Call)
 							{
-								// When parentUnaryExpression.Type is an interface and
-								// parentUnaryExpression.Operand.Type is generic type that implements the interface type
-								// var e1 = Expression.MakeMemberAccess (see below) fails,
-								// because ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo is declared in parentUnaryExpression.Operand.Type
-								// and of course is missing in parentUnaryExpression.Type
-								parent = parentUnaryExpression.Operand;
+								var mc = (MethodCallExpression)e;
+								if (mc.IsQueryable("GetTable") && mc.Type == typeof(ITable<T>))
+								{
+									e = expression.Expression.Transform(
+										ee => ee == tableExpression.Expression ? mc : ee);
+								}
 							}
-						} 
-						
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
-						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
-//						while (e1.Type != e2.Type)
-//						{
-//							if (e1.Type.IsNullable())
-//							{
-//								e1 = Expression.PropertyOrField(e1, "Value");
-//								continue;
-//							}
-//
-//							if (e2.Type.IsNullable())
-//							{
-//								e2 = Expression.PropertyOrField(e2, "Value");
-//								continue;
-//							}
-//
-//							e2 = Expression.Convert(e2, e1.Type);
-//						}
-
-						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
-
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+							return e;
+						});
 					}
 
-					if (association.ExpressionPredicate != null)
-					{
-						var l  = association.ExpressionPredicate;
-						var ex = l.GetBody(parent, param);
-
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
-					}
-
-					if (expr == null)
-						throw new LinqToDBException("Invalid association for LoadWith");
-
-					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
-
-					return expression.Where(predicate).Expression;
+					return expr;
+					
 				}
 			}
 
@@ -1214,8 +1187,6 @@ namespace LinqToDB.Linq.Builder
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
 								var expr   = helper.GetExpression(ma, association);
 
-								buildInfo.IsAssociationBuilt = true;
-
 								if (tableLevel.IsNew || buildInfo.CopyTable)
 									association.MarkIsWeak();
 
@@ -1224,14 +1195,20 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var association = GetAssociation(levelExpression, level)!;
-							((AssociatedTableContext)association.Table).ParentAssociationJoin!.IsWeak = false;
+							var association = GetAssociation(levelExpression, level);
 
-//							var paj         = ((AssociatedTableContext)association.Table).ParentAssociationJoin;
-//
-//							paj.IsWeak = paj.IsWeak && buildInfo.CopyTable;
-
-							return association.Table.GetContext(expression, level + 1, buildInfo);
+							if (association == null && level == 0)
+							{
+								association = GetAssociation(expression, level + 1);
+								if (association != null)
+									return association.Table;
+							}
+							else
+							{
+								var result = association?.Table?.GetContext(expression, level + 1, buildInfo);
+								if (result != null)
+									return result;
+							}
 						}
 					}
 				}
@@ -1250,9 +1227,6 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
 			{
-				if (!ReferenceEquals(context.SelectQuery, SelectQuery))
-					index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
-
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
@@ -1262,7 +1236,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void SetAlias(string alias)
 			{
-				if (alias == null)
+				if (alias == null || SqlTable == null)
 					return;
 
 				if (!alias.Contains('<'))
@@ -1487,7 +1461,7 @@ namespace LinqToDB.Linq.Builder
 
 			class TableLevel
 			{
-				public TableContext    Table = null!;
+				public IBuildContext   Table = null!;
 				public ISqlExpression? Field;
 				public int             Level;
 				public bool            IsNew;
@@ -1525,26 +1499,6 @@ namespace LinqToDB.Linq.Builder
 									result = FindTable(expression, level + 1, throwException, throwExceptionForNull);
 								else if (refExpression.BuildContext is TableContext tableContext)
 								 	return new TableLevel { Table = tableContext };
-
-								break;
-
-								// if (expression != levelExpression)
-								// 	return FindTable(expression, level + 1, throwException, throwExceptionForNull);
-
-								// if (refExpression.BuildContext is TableContext tableContext)
-								// 	return new TableLevel { Table = tableContext };
-								//
-								// goto case ExpressionType.Call;
-
-
-								// var field = expression != levelExpression ?
-								// 	GetField(expression, level + 1, throwException) : 
-								// 	GetField(expression, level, throwException);
-								
-								// if (field != null || (level == 0 && levelExpression == expression))
-								// 	return new TableLevel { Table = this, Field = field, Level = level };
-								
-								goto case ExpressionType.Call;
 							}
 							break;
 						}

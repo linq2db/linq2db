@@ -13,12 +13,12 @@ namespace Tests.Playground
 		[Table]
 		class MasterClass
 		{
-			[Column] public int    Id        { get; set; }
-			[Column] public string Value     { get; set; }
-			[Column] public bool   IsDeleted { get; set; }
+			[Column] public int     Id        { get; set; }
+			[Column] public string? Value     { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(DetailClass.MasterId))]
-			public DetailClass[] Details { get; set; }
+			public DetailClass[]? Details { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(InfoClass.MasterId))]
 			public InfoClass? Info { get; set; }
@@ -27,9 +27,9 @@ namespace Tests.Playground
 		[Table]
 		class InfoClass
 		{
-			[Column] public int    Id    { get; set; }
-			[Column] public string Value { get; set; }
-			[Column] public bool   IsDeleted { get; set; }
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
 			
 			[Column] public int? MasterId { get; set; }
 		}
@@ -38,9 +38,9 @@ namespace Tests.Playground
 		[Table]
 		class DetailClass
 		{
-			[Column] public int    Id    { get; set; }
-			[Column] public string Value { get; set; }
-			[Column] public bool   IsDeleted { get; set; }
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
 			
 			[Column] public int? MasterId { get; set; }
 		}

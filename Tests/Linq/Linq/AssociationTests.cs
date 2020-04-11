@@ -713,16 +713,17 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				AreEqual(
-					from t in Parent
+				var exptected = (from t in Parent
 					from g in t.GrandChildren.Where(m => m.ChildID > 22)
 					orderby g.ParentID
-					select t
-					,
-					from t in db.Parent
+					select t).ToArray();
+
+				var actual = (from t in db.Parent
 					from g in t.GrandChildrenX
 					orderby g.ParentID
-					select t);
+					select t).ToArray();
+
+				AreEqual(exptected, actual);
 			}
 		}
 

@@ -19,13 +19,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var parentContext = context.Parent;
 				if (parentContext != null)
-					context = parentContext.GetContext(buildInfo.Expression, 0, buildInfo);
+					context = parentContext.GetContext(buildInfo.Expression, 0, buildInfo)!;
 			};
 
 			return context;
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
