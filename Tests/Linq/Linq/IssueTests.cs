@@ -426,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue535Test3([DataSources] string context)
+		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<CustomerBase>())
@@ -435,10 +435,10 @@ namespace Tests.Linq
 							 where cb.ClientType == ClientType.Client
 							 select new
 							 {
-								 Id = cb.Id,
-								 Name = cb.Name,
+								 Id              = cb.Id,
+								 Name            = cb.Name,
 								 CompositeEmails = cb.ContactEmail,
-								 IsEnabled = cb.Enabled ?? false
+								 IsEnabled       = cb.Enabled ?? false
 							 };
 
 				query.ToList();

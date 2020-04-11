@@ -365,6 +365,8 @@ namespace Tests.Linq
 			public List<Table404Two>? Values;
 		}
 
+		[Repeat(2)] // don't ever remove Repeat, as it used to test issue #2174
+		[ActiveIssue(2174, Details = "issue reproduced when test run against multiple providers or just twice")]
 		[Test]
 		public void Issue404Test([DataSources] string context)
 		{

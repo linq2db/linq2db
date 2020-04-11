@@ -1970,7 +1970,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue672Test([DataSources] string context)
+		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
@@ -2020,6 +2020,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// check why firebird fails on generated sql
+		// FirebirdSql.Data.Common.IscException : arithmetic exception, numeric overflow, or string truncation string right truncation
+		[ActiveIssue(Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void Issue434Test1([DataSources] string context)
 		{

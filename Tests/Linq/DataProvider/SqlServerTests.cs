@@ -1533,6 +1533,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[ActiveIssue(449)]
 		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
 		{
 			using (var db = new TestDataConnection(context))

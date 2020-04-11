@@ -504,6 +504,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1592)]
 		[Test]
 		public void Issue1592CallbackWithContextProperty([DataSources] string context)
 		{
