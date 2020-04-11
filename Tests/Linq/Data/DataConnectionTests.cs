@@ -18,7 +18,9 @@ namespace Tests.Data
 {
 #if !NETSTANDARD1_6
 	using System.Configuration;
+	using System.Transactions;
 #endif
+	using LinqToDB.Mapping;
 
 	using Model;
 
@@ -33,7 +35,7 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);
 			}
 		}
@@ -43,7 +45,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 			}
 		}
@@ -60,7 +62,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
 
 				if (context.EndsWith(".2005"))
@@ -111,89 +113,89 @@ namespace Tests.Data
 			switch (context)
 			{
 				case ProviderName.DB2:
-				{
-					dataProvider = DataConnection.GetDataProvider("DB2", connectionString);
+					{
+						dataProvider = DataConnection.GetDataProvider("DB2", connectionString);
 
-					Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
 
-					var sqlServerDataProvider = (DB2DataProvider)dataProvider;
+						var sqlServerDataProvider = (DB2DataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(DB2Version.LUW));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(DB2Version.LUW));
 
-					break;
-				}
+						break;
+					}
 
 				case ProviderName.SqlServer2005:
-				{
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString);
+					{
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString);
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
-					break;
-				}
+						break;
+					}
 
 				case ProviderName.SqlServer2008:
-				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString);
+					{
+						dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString);
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
-					break;
-				}
+						break;
+					}
 
 				case ProviderName.SqlServer2012:
-				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString);
+					{
+						dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString);
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					break;
-				}
+						break;
+					}
 
 				case ProviderName.SqlServer2014:
-				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString);
+					{
+						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString);
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-					break;
-				}
+						break;
+					}
 
 				case ProviderName.SqlServer2017:
 					{
@@ -376,7 +378,7 @@ namespace Tests.Data
 						if (cn.State == ConnectionState.Closed)
 							open = true;
 					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
@@ -481,6 +483,203 @@ namespace Tests.Data
 				void OnCreated(EntityCreatedEventArgs args) => counter++;
 			}
 		}
+
+		// strange provider errors, review in v3 with more recent providers
+		[ActiveIssue(Configurations = new[] { ProviderName.MySqlConnector, ProviderName.SapHana })]
+		[Test]
+		public void TestDisposeFlagCloning([DataSources(false)] string context, [Values] bool dispose)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var cn = db.Connection;
+				using (var testDb = new DataConnection(db.DataProvider, cn, dispose))
+				{
+					Assert.AreEqual(ConnectionState.Open, cn.State);
+
+					IDbConnection clonedConnection = null;
+					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
+					{
+						clonedConnection = clonedDb.Connection;
+
+						// fails in v2 for MARS-enabled connections, already fixed in v3
+						Assert.AreEqual(db.IsMarsEnabled, testDb.IsMarsEnabled);
+
+						if (testDb.IsMarsEnabled)
+						{
+							// connection reused
+							Assert.AreEqual(cn, clonedConnection);
+							Assert.AreEqual(ConnectionState.Open, cn.State);
+						}
+						else
+						{
+							Assert.AreNotEqual(cn, clonedConnection);
+							Assert.AreEqual(ConnectionState.Open, cn.State);
+							Assert.AreEqual(ConnectionState.Open, clonedConnection.State);
+						}
+					}
+
+					if (testDb.IsMarsEnabled)
+					{
+						// cloned DC doesn't dispose parent connection
+						Assert.AreEqual(ConnectionState.Open, cn.State);
+					}
+					else
+					{
+						// cloned DC dispose own connection
+						Assert.AreEqual(ConnectionState.Open, cn.State);
+						try
+						{
+							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
+						}
+						catch (ObjectDisposedException)
+						{
+							// API consistency FTW!
+						}
+					}
+				}
+			}
+		}
+
+		#region issue 962
+#if !NETSTANDARD1_6
+		[Table("Categories")]
+		public class Category
+		{
+			[PrimaryKey, Identity] public int    CategoryID;
+			[Column, NotNull]      public string CategoryName;
+			[Column]               public string Description;
+
+			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")]
+			public List<Product> Products;
+
+			public static readonly Category[] Data = new[]
+			{
+				new Category() { CategoryID = 1, CategoryName = "Name 1", Description = "Desc 1" },
+				new Category() { CategoryID = 2, CategoryName = "Name 2", Description = "Desc 2" },
+			};
+		}
+
+		[Table(Name = "Products")]
+		public class Product
+		{
+			[PrimaryKey, Identity]                                         public int      ProductID;
+			[Column, NotNull]                                              public string   ProductName;
+			[Column]                                                       public int?     CategoryID;
+			[Column]                                                       public string   QuantityPerUnit;
+			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")] public Category Category;
+
+			public static readonly Product[] Data = new[]
+			{
+				new Product() { ProductID = 1, ProductName = "Prod 1", CategoryID = 1, QuantityPerUnit = "q 1" },
+				new Product() { ProductID = 2, ProductName = "Prod 2", CategoryID = 1, QuantityPerUnit = "q 2" },
+				new Product() { ProductID = 3, ProductName = "Prod 3", CategoryID = 3, QuantityPerUnit = "q 3" },
+				new Product() { ProductID = 4, ProductName = "Prod 4", CategoryID = 3, QuantityPerUnit = "q 4" },
+				new Product() { ProductID = 5, ProductName = "Prod 5", CategoryID = 1, QuantityPerUnit = "q 5" },
+				new Product() { ProductID = 6, ProductName = "Prod 6", CategoryID = 1, QuantityPerUnit = "q 6" },
+			};
+		}
+
+		[Test]
+		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
+		{
+			if (withScope && (
+				// The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
+				context == ProviderName.Access ||
+				// SQL0902 An unexpected exception has occurred. AllocateandLinkStatementHandle. There are no context policies.
+				context == ProviderName.DB2 ||
+				// Table unknown CATEGORIES
+				context.Contains("Firebird") ||
+				// MySql.Data: NotSupportedException : Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
+				// MySqlConnector: MySqlException : XAER_RMFAIL: The command cannot be executed when global transaction is in the  ACTIVE state
+				context.Contains("MySql") ||
+				context.Contains("MariaDB") ||
+				// OracleException : ORA-02089: COMMIT is not allowed in a subordinate session
+				context == ProviderName.OracleManaged ||
+				// SQLiteException : database is locked
+				context == ProviderName.SQLiteClassic ||
+				// HanaException : The rollback was caused by an unspecified reason: XA Transaction is rolled back.
+				context == ProviderName.SapHana ||
+				// InvalidOperationException : The connection object can not be enlisted in transaction scope.
+				context == ProviderName.SqlCe ||
+				// Something about CREATE TABLE in multi-statement transaction
+				context == ProviderName.Sybase ||
+				// surprisingly SqlServer provider has issues with DDL in TransactionScope
+				// MARS=OFF: InvalidOperationException : The transaction associated with the current connection has completed but has not been disposed.  The transaction must be disposed before the connection can be used to execute SQL statements.
+				// MARS=ON: SqlException : Cannot drop the table 'Categories', because it does not exist or you do not have permission.
+				context.Contains("SqlServer") ||
+				context.Contains("SqlAzure")
+				))
+			{
+				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
+			}
+
+			TransactionScope scope = withScope ? new TransactionScope() : null;
+			try
+			{
+				using (new AllowMultipleQuery())
+				using (var db = new DataConnection(context))
+				using (db.CreateLocalTable(Category.Data))
+				using (db.CreateLocalTable(Product.Data))
+				{
+					var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
+
+					scope?.Dispose();
+					scope = null;
+				}
+			}
+			finally
+			{
+				scope?.Dispose();
+			}
+		}
+
+		[Test]
+		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
+		{
+			// errors are different for some providers compared to TestDisposeFlagCloning962Test1
+			// because we don't use DDL (CREATE TABLE)
+			if (withScope && (
+				// The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
+				context == ProviderName.Access ||
+				// SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
+				context == ProviderName.DB2 ||
+				// MySql.Data: NotSupportedException : Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
+				(context.Contains("MySql") && context != ProviderName.MySqlConnector) ||
+				context.Contains("MariaDB") ||
+				// SQLiteException : database is locked
+				context == ProviderName.SQLiteClassic ||
+				// InvalidOperationException : The connection object can not be enlisted in transaction scope.
+				context == ProviderName.SqlCe ||
+				// AseException : Only One Local connection allowed in the TransactionScope
+				context == ProviderName.Sybase
+				))
+			{
+				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
+			}
+
+			TransactionScope scope = withScope ? new TransactionScope() : null;
+			try
+			{
+				using (new AllowMultipleQuery())
+				using (var db = new DataConnection(context))
+				{
+					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
+					db.Select(() => "test1");
+					using (var cdb = ((IDataContext)db).Clone(true))
+					{
+						cdb.Select(() => "test2");
+
+						scope?.Complete();
+					}
+				}
+			}
+			finally
+			{
+				scope?.Dispose();
+			}
+		}
+#endif
+		#endregion
 
 	}
 }
