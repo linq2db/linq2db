@@ -1281,5 +1281,80 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		#region issue 2166
+		class Issue2166Table
+		{
+			public sbyte   SByte  { get; set; }
+			public byte    Byte   { get; set; }
+			public short   Int16  { get; set; }
+			public ushort  UInt16 { get; set; }
+			public int     Int32  { get; set; }
+			public uint    UInt32 { get; set; }
+			public long    Int64  { get; set; }
+			public ulong   UInt64 { get; set; }
+
+			public sbyte?  SByteN  { get; set; }
+			public byte?   ByteN   { get; set; }
+			public short?  Int16N  { get; set; }
+			public ushort? UInt16N { get; set; }
+			public int?    Int32N  { get; set; }
+			public uint?   UInt32N { get; set; }
+			public long?   Int64N  { get; set; }
+			public ulong?  UInt64N { get; set; }
+		}
+
+		enum RawDataStatus
+		{
+			NotParsed = 4
+		}
+
+		[Test]
+		public void Issue2166Test1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )RawDataStatus.NotParsed
+							 || x.SByte   == (sbyte )RawDataStatus.NotParsed
+							 || x.Int16   == (short )RawDataStatus.NotParsed
+							 || x.UInt16  == (ushort)RawDataStatus.NotParsed
+							 || x.Int32   == (int   )RawDataStatus.NotParsed
+							 || x.UInt32  == (uint  )RawDataStatus.NotParsed
+							 || x.Int64   == (long  )RawDataStatus.NotParsed
+							 || x.UInt64  == (ulong )RawDataStatus.NotParsed
+							 || x.ByteN   == (byte  )RawDataStatus.NotParsed
+							 || x.SByteN  == (sbyte )RawDataStatus.NotParsed
+							 || x.Int16N  == (short )RawDataStatus.NotParsed
+							 || x.UInt16N == (ushort)RawDataStatus.NotParsed
+							 || x.Int32N  == (int   )RawDataStatus.NotParsed
+							 || x.UInt32N == (uint  )RawDataStatus.NotParsed
+							 || x.Int64N  == (long  )RawDataStatus.NotParsed
+							 || x.UInt64N == (ulong )RawDataStatus.NotParsed
+
+							 || (byte  )RawDataStatus.NotParsed == x.Byte
+							 || (sbyte )RawDataStatus.NotParsed == x.SByte
+							 || (short )RawDataStatus.NotParsed == x.Int16
+							 || (ushort)RawDataStatus.NotParsed == x.UInt16
+							 || (int   )RawDataStatus.NotParsed == x.Int32
+							 || (uint  )RawDataStatus.NotParsed == x.UInt32
+							 || (long  )RawDataStatus.NotParsed == x.Int64
+							 || (ulong )RawDataStatus.NotParsed == x.UInt64
+							 || (byte  )RawDataStatus.NotParsed == x.ByteN
+							 || (sbyte )RawDataStatus.NotParsed == x.SByteN
+							 || (short )RawDataStatus.NotParsed == x.Int16N
+							 || (ushort)RawDataStatus.NotParsed == x.UInt16N
+							 || (int   )RawDataStatus.NotParsed == x.Int32N
+							 || (uint  )RawDataStatus.NotParsed == x.UInt32N
+							 || (long  )RawDataStatus.NotParsed == x.Int64N
+							 || (ulong )RawDataStatus.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		#endregion
 	}
 }
