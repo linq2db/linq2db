@@ -1304,51 +1304,377 @@ namespace Tests.Linq
 			public ulong?  UInt64N { get; set; }
 		}
 
-		enum RawDataStatus
-		{
-			NotParsed = 4
-		}
+		enum EnumByte   : byte   { NotParsed = 4 }
+		enum EnumSByte  : sbyte  { NotParsed = 4 }
+		enum EnumInt16  : short  { NotParsed = 4 }
+		enum EnumUInt16 : ushort { NotParsed = 4 }
+		enum EnumInt32           { NotParsed = 4 }
+		enum EnumUInt32 : uint   { NotParsed = 4 }
+		enum EnumInt64  : long   { NotParsed = 4 }
+		enum EnumUInt64 : ulong  { NotParsed = 4 }
 
 		[Test]
-		public void Issue2166Test1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void Issue2166TestByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = new TestDataConnection(context))
 			using (var table = db.CreateLocalTable<Issue2166Table>())
 			{
 				table
-					.Where(x => x.Byte    == (byte  )RawDataStatus.NotParsed
-							 || x.SByte   == (sbyte )RawDataStatus.NotParsed
-							 || x.Int16   == (short )RawDataStatus.NotParsed
-							 || x.UInt16  == (ushort)RawDataStatus.NotParsed
-							 || x.Int32   == (int   )RawDataStatus.NotParsed
-							 || x.UInt32  == (uint  )RawDataStatus.NotParsed
-							 || x.Int64   == (long  )RawDataStatus.NotParsed
-							 || x.UInt64  == (ulong )RawDataStatus.NotParsed
-							 || x.ByteN   == (byte  )RawDataStatus.NotParsed
-							 || x.SByteN  == (sbyte )RawDataStatus.NotParsed
-							 || x.Int16N  == (short )RawDataStatus.NotParsed
-							 || x.UInt16N == (ushort)RawDataStatus.NotParsed
-							 || x.Int32N  == (int   )RawDataStatus.NotParsed
-							 || x.UInt32N == (uint  )RawDataStatus.NotParsed
-							 || x.Int64N  == (long  )RawDataStatus.NotParsed
-							 || x.UInt64N == (ulong )RawDataStatus.NotParsed
+					.Where(x => x.Byte    == (byte  )EnumByte.NotParsed
+							 || x.SByte   == (sbyte )EnumByte.NotParsed
+							 || x.Int16   == (short )EnumByte.NotParsed
+							 || x.UInt16  == (ushort)EnumByte.NotParsed
+							 || x.Int32   == (int   )EnumByte.NotParsed
+							 || x.UInt32  == (uint  )EnumByte.NotParsed
+							 || x.Int64   == (long  )EnumByte.NotParsed
+							 || x.UInt64  == (ulong )EnumByte.NotParsed
+							 || x.ByteN   == (byte  )EnumByte.NotParsed
+							 || x.SByteN  == (sbyte )EnumByte.NotParsed
+							 || x.Int16N  == (short )EnumByte.NotParsed
+							 || x.UInt16N == (ushort)EnumByte.NotParsed
+							 || x.Int32N  == (int   )EnumByte.NotParsed
+							 || x.UInt32N == (uint  )EnumByte.NotParsed
+							 || x.Int64N  == (long  )EnumByte.NotParsed
+							 || x.UInt64N == (ulong )EnumByte.NotParsed
 
-							 || (byte  )RawDataStatus.NotParsed == x.Byte
-							 || (sbyte )RawDataStatus.NotParsed == x.SByte
-							 || (short )RawDataStatus.NotParsed == x.Int16
-							 || (ushort)RawDataStatus.NotParsed == x.UInt16
-							 || (int   )RawDataStatus.NotParsed == x.Int32
-							 || (uint  )RawDataStatus.NotParsed == x.UInt32
-							 || (long  )RawDataStatus.NotParsed == x.Int64
-							 || (ulong )RawDataStatus.NotParsed == x.UInt64
-							 || (byte  )RawDataStatus.NotParsed == x.ByteN
-							 || (sbyte )RawDataStatus.NotParsed == x.SByteN
-							 || (short )RawDataStatus.NotParsed == x.Int16N
-							 || (ushort)RawDataStatus.NotParsed == x.UInt16N
-							 || (int   )RawDataStatus.NotParsed == x.Int32N
-							 || (uint  )RawDataStatus.NotParsed == x.UInt32N
-							 || (long  )RawDataStatus.NotParsed == x.Int64N
-							 || (ulong )RawDataStatus.NotParsed == x.UInt64N)
+							 || (byte  )EnumByte.NotParsed == x.Byte
+							 || (sbyte )EnumByte.NotParsed == x.SByte
+							 || (short )EnumByte.NotParsed == x.Int16
+							 || (ushort)EnumByte.NotParsed == x.UInt16
+							 || (int   )EnumByte.NotParsed == x.Int32
+							 || (uint  )EnumByte.NotParsed == x.UInt32
+							 || (long  )EnumByte.NotParsed == x.Int64
+							 || (ulong )EnumByte.NotParsed == x.UInt64
+							 || (byte  )EnumByte.NotParsed == x.ByteN
+							 || (sbyte )EnumByte.NotParsed == x.SByteN
+							 || (short )EnumByte.NotParsed == x.Int16N
+							 || (ushort)EnumByte.NotParsed == x.UInt16N
+							 || (int   )EnumByte.NotParsed == x.Int32N
+							 || (uint  )EnumByte.NotParsed == x.UInt32N
+							 || (long  )EnumByte.NotParsed == x.Int64N
+							 || (ulong )EnumByte.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumSByte.NotParsed
+							 || x.SByte   == (sbyte )EnumSByte.NotParsed
+							 || x.Int16   == (short )EnumSByte.NotParsed
+							 || x.UInt16  == (ushort)EnumSByte.NotParsed
+							 || x.Int32   == (int   )EnumSByte.NotParsed
+							 || x.UInt32  == (uint  )EnumSByte.NotParsed
+							 || x.Int64   == (long  )EnumSByte.NotParsed
+							 || x.UInt64  == (ulong )EnumSByte.NotParsed
+							 || x.ByteN   == (byte  )EnumSByte.NotParsed
+							 || x.SByteN  == (sbyte )EnumSByte.NotParsed
+							 || x.Int16N  == (short )EnumSByte.NotParsed
+							 || x.UInt16N == (ushort)EnumSByte.NotParsed
+							 || x.Int32N  == (int   )EnumSByte.NotParsed
+							 || x.UInt32N == (uint  )EnumSByte.NotParsed
+							 || x.Int64N  == (long  )EnumSByte.NotParsed
+							 || x.UInt64N == (ulong )EnumSByte.NotParsed
+
+							 || (byte  )EnumSByte.NotParsed == x.Byte
+							 || (sbyte )EnumSByte.NotParsed == x.SByte
+							 || (short )EnumSByte.NotParsed == x.Int16
+							 || (ushort)EnumSByte.NotParsed == x.UInt16
+							 || (int   )EnumSByte.NotParsed == x.Int32
+							 || (uint  )EnumSByte.NotParsed == x.UInt32
+							 || (long  )EnumSByte.NotParsed == x.Int64
+							 || (ulong )EnumSByte.NotParsed == x.UInt64
+							 || (byte  )EnumSByte.NotParsed == x.ByteN
+							 || (sbyte )EnumSByte.NotParsed == x.SByteN
+							 || (short )EnumSByte.NotParsed == x.Int16N
+							 || (ushort)EnumSByte.NotParsed == x.UInt16N
+							 || (int   )EnumSByte.NotParsed == x.Int32N
+							 || (uint  )EnumSByte.NotParsed == x.UInt32N
+							 || (long  )EnumSByte.NotParsed == x.Int64N
+							 || (ulong )EnumSByte.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumInt16.NotParsed
+							 || x.SByte   == (sbyte )EnumInt16.NotParsed
+							 || x.Int16   == (short )EnumInt16.NotParsed
+							 || x.UInt16  == (ushort)EnumInt16.NotParsed
+							 || x.Int32   == (int   )EnumInt16.NotParsed
+							 || x.UInt32  == (uint  )EnumInt16.NotParsed
+							 || x.Int64   == (long  )EnumInt16.NotParsed
+							 || x.UInt64  == (ulong )EnumInt16.NotParsed
+							 || x.ByteN   == (byte  )EnumInt16.NotParsed
+							 || x.SByteN  == (sbyte )EnumInt16.NotParsed
+							 || x.Int16N  == (short )EnumInt16.NotParsed
+							 || x.UInt16N == (ushort)EnumInt16.NotParsed
+							 || x.Int32N  == (int   )EnumInt16.NotParsed
+							 || x.UInt32N == (uint  )EnumInt16.NotParsed
+							 || x.Int64N  == (long  )EnumInt16.NotParsed
+							 || x.UInt64N == (ulong )EnumInt16.NotParsed
+
+							 || (byte  )EnumInt16.NotParsed == x.Byte
+							 || (sbyte )EnumInt16.NotParsed == x.SByte
+							 || (short )EnumInt16.NotParsed == x.Int16
+							 || (ushort)EnumInt16.NotParsed == x.UInt16
+							 || (int   )EnumInt16.NotParsed == x.Int32
+							 || (uint  )EnumInt16.NotParsed == x.UInt32
+							 || (long  )EnumInt16.NotParsed == x.Int64
+							 || (ulong )EnumInt16.NotParsed == x.UInt64
+							 || (byte  )EnumInt16.NotParsed == x.ByteN
+							 || (sbyte )EnumInt16.NotParsed == x.SByteN
+							 || (short )EnumInt16.NotParsed == x.Int16N
+							 || (ushort)EnumInt16.NotParsed == x.UInt16N
+							 || (int   )EnumInt16.NotParsed == x.Int32N
+							 || (uint  )EnumInt16.NotParsed == x.UInt32N
+							 || (long  )EnumInt16.NotParsed == x.Int64N
+							 || (ulong )EnumInt16.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumUInt16.NotParsed
+							 || x.SByte   == (sbyte )EnumUInt16.NotParsed
+							 || x.Int16   == (short )EnumUInt16.NotParsed
+							 || x.UInt16  == (ushort)EnumUInt16.NotParsed
+							 || x.Int32   == (int   )EnumUInt16.NotParsed
+							 || x.UInt32  == (uint  )EnumUInt16.NotParsed
+							 || x.Int64   == (long  )EnumUInt16.NotParsed
+							 || x.UInt64  == (ulong )EnumUInt16.NotParsed
+							 || x.ByteN   == (byte  )EnumUInt16.NotParsed
+							 || x.SByteN  == (sbyte )EnumUInt16.NotParsed
+							 || x.Int16N  == (short )EnumUInt16.NotParsed
+							 || x.UInt16N == (ushort)EnumUInt16.NotParsed
+							 || x.Int32N  == (int   )EnumUInt16.NotParsed
+							 || x.UInt32N == (uint  )EnumUInt16.NotParsed
+							 || x.Int64N  == (long  )EnumUInt16.NotParsed
+							 || x.UInt64N == (ulong )EnumUInt16.NotParsed
+
+							 || (byte  )EnumUInt16.NotParsed == x.Byte
+							 || (sbyte )EnumUInt16.NotParsed == x.SByte
+							 || (short )EnumUInt16.NotParsed == x.Int16
+							 || (ushort)EnumUInt16.NotParsed == x.UInt16
+							 || (int   )EnumUInt16.NotParsed == x.Int32
+							 || (uint  )EnumUInt16.NotParsed == x.UInt32
+							 || (long  )EnumUInt16.NotParsed == x.Int64
+							 || (ulong )EnumUInt16.NotParsed == x.UInt64
+							 || (byte  )EnumUInt16.NotParsed == x.ByteN
+							 || (sbyte )EnumUInt16.NotParsed == x.SByteN
+							 || (short )EnumUInt16.NotParsed == x.Int16N
+							 || (ushort)EnumUInt16.NotParsed == x.UInt16N
+							 || (int   )EnumUInt16.NotParsed == x.Int32N
+							 || (uint  )EnumUInt16.NotParsed == x.UInt32N
+							 || (long  )EnumUInt16.NotParsed == x.Int64N
+							 || (ulong )EnumUInt16.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumInt32.NotParsed
+							 || x.SByte   == (sbyte )EnumInt32.NotParsed
+							 || x.Int16   == (short )EnumInt32.NotParsed
+							 || x.UInt16  == (ushort)EnumInt32.NotParsed
+							 || x.Int32   == (int   )EnumInt32.NotParsed
+							 || x.UInt32  == (uint  )EnumInt32.NotParsed
+							 || x.Int64   == (long  )EnumInt32.NotParsed
+							 || x.UInt64  == (ulong )EnumInt32.NotParsed
+							 || x.ByteN   == (byte  )EnumInt32.NotParsed
+							 || x.SByteN  == (sbyte )EnumInt32.NotParsed
+							 || x.Int16N  == (short )EnumInt32.NotParsed
+							 || x.UInt16N == (ushort)EnumInt32.NotParsed
+							 || x.Int32N  == (int   )EnumInt32.NotParsed
+							 || x.UInt32N == (uint  )EnumInt32.NotParsed
+							 || x.Int64N  == (long  )EnumInt32.NotParsed
+							 || x.UInt64N == (ulong )EnumInt32.NotParsed
+
+							 || (byte  )EnumInt32.NotParsed == x.Byte
+							 || (sbyte )EnumInt32.NotParsed == x.SByte
+							 || (short )EnumInt32.NotParsed == x.Int16
+							 || (ushort)EnumInt32.NotParsed == x.UInt16
+							 || (int   )EnumInt32.NotParsed == x.Int32
+							 || (uint  )EnumInt32.NotParsed == x.UInt32
+							 || (long  )EnumInt32.NotParsed == x.Int64
+							 || (ulong )EnumInt32.NotParsed == x.UInt64
+							 || (byte  )EnumInt32.NotParsed == x.ByteN
+							 || (sbyte )EnumInt32.NotParsed == x.SByteN
+							 || (short )EnumInt32.NotParsed == x.Int16N
+							 || (ushort)EnumInt32.NotParsed == x.UInt16N
+							 || (int   )EnumInt32.NotParsed == x.Int32N
+							 || (uint  )EnumInt32.NotParsed == x.UInt32N
+							 || (long  )EnumInt32.NotParsed == x.Int64N
+							 || (ulong )EnumInt32.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumUInt32.NotParsed
+							 || x.SByte   == (sbyte )EnumUInt32.NotParsed
+							 || x.Int16   == (short )EnumUInt32.NotParsed
+							 || x.UInt16  == (ushort)EnumUInt32.NotParsed
+							 || x.Int32   == (int   )EnumUInt32.NotParsed
+							 || x.UInt32  == (uint  )EnumUInt32.NotParsed
+							 || x.Int64   == (long  )EnumUInt32.NotParsed
+							 || x.UInt64  == (ulong )EnumUInt32.NotParsed
+							 || x.ByteN   == (byte  )EnumUInt32.NotParsed
+							 || x.SByteN  == (sbyte )EnumUInt32.NotParsed
+							 || x.Int16N  == (short )EnumUInt32.NotParsed
+							 || x.UInt16N == (ushort)EnumUInt32.NotParsed
+							 || x.Int32N  == (int   )EnumUInt32.NotParsed
+							 || x.UInt32N == (uint  )EnumUInt32.NotParsed
+							 || x.Int64N  == (long  )EnumUInt32.NotParsed
+							 || x.UInt64N == (ulong )EnumUInt32.NotParsed
+
+							 || (byte  )EnumUInt32.NotParsed == x.Byte
+							 || (sbyte )EnumUInt32.NotParsed == x.SByte
+							 || (short )EnumUInt32.NotParsed == x.Int16
+							 || (ushort)EnumUInt32.NotParsed == x.UInt16
+							 || (int   )EnumUInt32.NotParsed == x.Int32
+							 || (uint  )EnumUInt32.NotParsed == x.UInt32
+							 || (long  )EnumUInt32.NotParsed == x.Int64
+							 || (ulong )EnumUInt32.NotParsed == x.UInt64
+							 || (byte  )EnumUInt32.NotParsed == x.ByteN
+							 || (sbyte )EnumUInt32.NotParsed == x.SByteN
+							 || (short )EnumUInt32.NotParsed == x.Int16N
+							 || (ushort)EnumUInt32.NotParsed == x.UInt16N
+							 || (int   )EnumUInt32.NotParsed == x.Int32N
+							 || (uint  )EnumUInt32.NotParsed == x.UInt32N
+							 || (long  )EnumUInt32.NotParsed == x.Int64N
+							 || (ulong )EnumUInt32.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumInt64.NotParsed
+							 || x.SByte   == (sbyte )EnumInt64.NotParsed
+							 || x.Int16   == (short )EnumInt64.NotParsed
+							 || x.UInt16  == (ushort)EnumInt64.NotParsed
+							 || x.Int32   == (int   )EnumInt64.NotParsed
+							 || x.UInt32  == (uint  )EnumInt64.NotParsed
+							 || x.Int64   == (long  )EnumInt64.NotParsed
+							 || x.UInt64  == (ulong )EnumInt64.NotParsed
+							 || x.ByteN   == (byte  )EnumInt64.NotParsed
+							 || x.SByteN  == (sbyte )EnumInt64.NotParsed
+							 || x.Int16N  == (short )EnumInt64.NotParsed
+							 || x.UInt16N == (ushort)EnumInt64.NotParsed
+							 || x.Int32N  == (int   )EnumInt64.NotParsed
+							 || x.UInt32N == (uint  )EnumInt64.NotParsed
+							 || x.Int64N  == (long  )EnumInt64.NotParsed
+							 || x.UInt64N == (ulong )EnumInt64.NotParsed
+
+							 || (byte  )EnumInt64.NotParsed == x.Byte
+							 || (sbyte )EnumInt64.NotParsed == x.SByte
+							 || (short )EnumInt64.NotParsed == x.Int16
+							 || (ushort)EnumInt64.NotParsed == x.UInt16
+							 || (int   )EnumInt64.NotParsed == x.Int32
+							 || (uint  )EnumInt64.NotParsed == x.UInt32
+							 || (long  )EnumInt64.NotParsed == x.Int64
+							 || (ulong )EnumInt64.NotParsed == x.UInt64
+							 || (byte  )EnumInt64.NotParsed == x.ByteN
+							 || (sbyte )EnumInt64.NotParsed == x.SByteN
+							 || (short )EnumInt64.NotParsed == x.Int16N
+							 || (ushort)EnumInt64.NotParsed == x.UInt16N
+							 || (int   )EnumInt64.NotParsed == x.Int32N
+							 || (uint  )EnumInt64.NotParsed == x.UInt32N
+							 || (long  )EnumInt64.NotParsed == x.Int64N
+							 || (ulong )EnumInt64.NotParsed == x.UInt64N)
+					.ToList();
+
+				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+			}
+		}
+
+		[Test]
+		public void Issue2166TestUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue2166Table>())
+			{
+				table
+					.Where(x => x.Byte    == (byte  )EnumUInt64.NotParsed
+							 || x.SByte   == (sbyte )EnumUInt64.NotParsed
+							 || x.Int16   == (short )EnumUInt64.NotParsed
+							 || x.UInt16  == (ushort)EnumUInt64.NotParsed
+							 || x.Int32   == (int   )EnumUInt64.NotParsed
+							 || x.UInt32  == (uint  )EnumUInt64.NotParsed
+							 || x.Int64   == (long  )EnumUInt64.NotParsed
+							 || x.UInt64  == (ulong )EnumUInt64.NotParsed
+							 || x.ByteN   == (byte  )EnumUInt64.NotParsed
+							 || x.SByteN  == (sbyte )EnumUInt64.NotParsed
+							 || x.Int16N  == (short )EnumUInt64.NotParsed
+							 || x.UInt16N == (ushort)EnumUInt64.NotParsed
+							 || x.Int32N  == (int   )EnumUInt64.NotParsed
+							 || x.UInt32N == (uint  )EnumUInt64.NotParsed
+							 || x.Int64N  == (long  )EnumUInt64.NotParsed
+							 || x.UInt64N == (ulong )EnumUInt64.NotParsed
+
+							 || (byte  )EnumUInt64.NotParsed == x.Byte
+							 || (sbyte )EnumUInt64.NotParsed == x.SByte
+							 || (short )EnumUInt64.NotParsed == x.Int16
+							 || (ushort)EnumUInt64.NotParsed == x.UInt16
+							 || (int   )EnumUInt64.NotParsed == x.Int32
+							 || (uint  )EnumUInt64.NotParsed == x.UInt32
+							 || (long  )EnumUInt64.NotParsed == x.Int64
+							 || (ulong )EnumUInt64.NotParsed == x.UInt64
+							 || (byte  )EnumUInt64.NotParsed == x.ByteN
+							 || (sbyte )EnumUInt64.NotParsed == x.SByteN
+							 || (short )EnumUInt64.NotParsed == x.Int16N
+							 || (ushort)EnumUInt64.NotParsed == x.UInt16N
+							 || (int   )EnumUInt64.NotParsed == x.Int32N
+							 || (uint  )EnumUInt64.NotParsed == x.UInt32N
+							 || (long  )EnumUInt64.NotParsed == x.Int64N
+							 || (ulong )EnumUInt64.NotParsed == x.UInt64N)
 					.ToList();
 
 				Assert.False(db.LastQuery.ToLower().Contains("convert"));
