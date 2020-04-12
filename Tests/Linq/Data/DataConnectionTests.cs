@@ -495,39 +495,459 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestCloneRetryPolicy([DataSources(false)] string context)
+		public void TestCloneCommandTimeout([DataSources(false)] string context)
 		{
-			var policy = new TestRetryPolicy();
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+
+				Assert.AreEqual(-1, db.CommandTimeout);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(-1, cdb.CommandTimeout);
+				}
+
+				db.CommandTimeout = 0;
+
+				Assert.AreEqual(0, db.CommandTimeout);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, cdb.CommandTimeout);
+				}
+
+				db.CommandTimeout = 10;
+
+				Assert.AreEqual(10, db.CommandTimeout);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(10, cdb.CommandTimeout);
+				}
+
+				db.CommandTimeout = -5;
+				Assert.AreEqual(-1, db.CommandTimeout);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(-1, cdb.CommandTimeout);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCloneInlineParameters([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+
+				Assert.False(db.InlineParameters);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.False(cdb.InlineParameters);
+				}
+
+				db.InlineParameters = true;
+
+				Assert.True(db.InlineParameters);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.True(cdb.InlineParameters);
+				}
+
+				db.InlineParameters = false;
+				Assert.False(db.InlineParameters);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.False(cdb.InlineParameters);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCloneQueryHints([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+
+				Assert.AreEqual(0, db.QueryHints.Count);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, cdb.QueryHints.Count);
+				}
+
+				db.QueryHints.Add("test");
+
+				Assert.AreEqual(1, db.QueryHints.Count);
+				Assert.AreEqual("test", db.QueryHints[0]);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(1, cdb.QueryHints.Count);
+					Assert.AreEqual("test", cdb.QueryHints[0]);
+
+					db.QueryHints.Clear();
+
+					Assert.AreEqual(1, cdb.QueryHints.Count);
+					Assert.AreEqual("test", cdb.QueryHints[0]);
+				}
+
+				Assert.AreEqual(0, db.QueryHints.Count);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, cdb.QueryHints.Count);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCloneThrowOnDisposed([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+
+				Assert.IsNull(db.ThrowOnDisposed);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.IsNull(cdb.ThrowOnDisposed);
+				}
+
+				db.ThrowOnDisposed = false;
+
+				Assert.False(db.ThrowOnDisposed);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.False(cdb.ThrowOnDisposed);
+				}
+
+				db.ThrowOnDisposed = true;
+
+				Assert.True(db.ThrowOnDisposed);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.True(cdb.ThrowOnDisposed);
+				}
+
+				db.ThrowOnDisposed = null;
+				Assert.IsNull(db.ThrowOnDisposed);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.IsNull(cdb.ThrowOnDisposed);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCloneOnTraceConnection([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				// to enable MARS-enabled cloning branch
+				var _ = db.Connection;
+				Action<TraceInfo> onTrace = OnTrace;
+
+				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
+				}
+
+				db.OnTraceConnection = onTrace;
+
+				Assert.AreEqual(onTrace, db.OnTraceConnection);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
+				}
+
+				db.OnTraceConnection = null;
+
+				Assert.IsNull(db.OnTraceConnection);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.IsNull(cdb.OnTraceConnection);
+				}
+
+				db.OnTraceConnection = DataConnection.OnTrace;
+
+				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
+				}
+			}
+
+			void OnTrace(TraceInfo ti) { };
+		}
+
+		[Test]
+		public void TestCloneOnClosingOnClosed([DataSources(false)] string context)
+		{
+			var closing = 0;
+			var closed  = 0;
 
 			using (var db = new DataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.IsNull(db.RetryPolicy);
+				Assert.AreEqual(0, closing);
+				Assert.AreEqual(0, closed);
+				db.Close();
+				Assert.AreEqual(0, closing);
+				Assert.AreEqual(0, closed);
+				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.IsNull(cdb.RetryPolicy);
+					_ = cdb.Connection;
+					Assert.AreEqual(0, closing);
+					Assert.AreEqual(0, closed);
+					cdb.Close();
+					Assert.AreEqual(0, closing);
+					Assert.AreEqual(0, closed);
 				}
 
-				db.RetryPolicy = policy;
-
-				Assert.AreEqual(policy, db.RetryPolicy);
+				_ = db.Connection;
+				db.OnClosing += OnClosing;
+				db.OnClosed += OnClosed;
+				Assert.AreEqual(0, closing);
+				Assert.AreEqual(0, closed);
+				db.Close();
+				Assert.AreEqual(1, closing);
+				Assert.AreEqual(1, closed);
+				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(policy, cdb.RetryPolicy);
+					closing = 0;
+					closed  = 0;
+					_ = cdb.Connection;
+					Assert.AreEqual(0, closing);
+					Assert.AreEqual(0, closed);
+					cdb.Close();
+					Assert.AreEqual(1, closing);
+					Assert.AreEqual(1, closed);
+
+					closing = 0;
+					closed  = 0;
+					db.OnClosing -= OnClosing;
+					db.OnClosed  -= OnClosed;
+					_ = cdb.Connection;
+					cdb.Close();
+					Assert.AreEqual(1, closing);
+					Assert.AreEqual(1, closed);
 				}
 
-				db.RetryPolicy = null;
-				Assert.IsNull(db.RetryPolicy);
+				closing = 0;
+				closed  = 0;
+				_ = db.Connection;
+				Assert.AreEqual(0, closing);
+				Assert.AreEqual(0, closed);
+				db.Close();
+				Assert.AreEqual(0, closing);
+				Assert.AreEqual(0, closed);
+				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.IsNull(cdb.RetryPolicy);
+					_ = cdb.Connection;
+					Assert.AreEqual(0, closing);
+					Assert.AreEqual(0, closed);
+					cdb.Close();
+					Assert.AreEqual(0, closing);
+					Assert.AreEqual(0, closed);
 				}
 			}
+
+			void OnClosing(object sender, EventArgs e) => closing++;
+			void OnClosed(object sender, EventArgs e) => closed++;
+		}
+
+		[Test]
+		public void TestCloneOnBeforeConnectionOpenOnConnectionOpened([DataSources(false)] string context)
+		{
+			var open   = 0;
+			var opened = 0;
+
+			using (var db = new DataConnection(context))
+			{
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				var _ = db.Connection;
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					_ = cdb.Connection;
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+				}
+
+				db.Close();
+				db.OnBeforeConnectionOpen += OnBeforeConnectionOpen;
+				db.OnConnectionOpened     += OnConnectionOpened;
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				_ = db.Connection;
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					open   = 0;
+					opened = 0;
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					cdb.Connection.Close();
+					open   = 0;
+					opened = 0;
+					_ = cdb.Connection;
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
+
+					open   = 0;
+					opened = 0;
+					cdb.Close();
+					db.OnBeforeConnectionOpen -= OnBeforeConnectionOpen;
+					db.OnConnectionOpened     -= OnConnectionOpened;
+					_ = cdb.Connection;
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
+				}
+
+				open   = 0;
+				opened = 0;
+				db.Close();
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				_ = db.Connection;
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					_ = cdb.Connection;
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+				}
+			}
+
+			void OnBeforeConnectionOpen(DataConnection dc, IDbConnection cn) => open++;
+			void OnConnectionOpened    (DataConnection dc, IDbConnection cn) => opened++;
+		}
+
+		[Test]
+		public async Task TestCloneOnBeforeConnectionOpenAsyncOnConnectionOpenedAsync([DataSources(false)] string context)
+		{
+			var open   = 0;
+			var opened = 0;
+
+			using (var db = new DataConnection(context))
+			{
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				await db.EnsureConnectionAsync();
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					await db.EnsureConnectionAsync();
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+				}
+
+				db.Close();
+				db.OnBeforeConnectionOpenAsync += OnBeforeConnectionOpenAsync;
+				db.OnConnectionOpenedAsync     += OnConnectionOpenedAsync;
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				await db.EnsureConnectionAsync();
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					open   = 0;
+					opened = 0;
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					cdb.Connection.Close();
+					open   = 0;
+					opened = 0;
+					await cdb.EnsureConnectionAsync();
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
+
+					open   = 0;
+					opened = 0;
+					cdb.Close();
+					db.OnBeforeConnectionOpenAsync -= OnBeforeConnectionOpenAsync;
+					db.OnConnectionOpenedAsync     -= OnConnectionOpenedAsync;
+					await cdb.EnsureConnectionAsync();
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
+				}
+
+				open   = 0;
+				opened = 0;
+				db.Close();
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+				await db.EnsureConnectionAsync();
+				Assert.AreEqual(0, open);
+				Assert.AreEqual(0, opened);
+
+				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
+				{
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+					await cdb.EnsureConnectionAsync();
+					Assert.AreEqual(0, open);
+					Assert.AreEqual(0, opened);
+				}
+			}
+
+			Task OnBeforeConnectionOpenAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			{
+				open++;
+				return Task.CompletedTask;
+			}
+
+			Task OnConnectionOpenedAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			{
+				opened++;
+				return Task.CompletedTask;
+		}
 		}
 #endif
 

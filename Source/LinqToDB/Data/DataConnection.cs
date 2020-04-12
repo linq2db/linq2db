@@ -1518,8 +1518,19 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				OnEntityCreated = OnEntityCreated,
-				RetryPolicy     = RetryPolicy
+				OnEntityCreated             = OnEntityCreated,
+				RetryPolicy                 = RetryPolicy,
+				CommandTimeout              = CommandTimeout,
+				InlineParameters            = InlineParameters,
+				ThrowOnDisposed             = ThrowOnDisposed,
+				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+				OnTraceConnection           = OnTraceConnection,
+				OnClosed                    = OnClosed,
+				OnClosing                   = OnClosing,
+				OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
+				OnConnectionOpened          = OnConnectionOpened,
+				OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
+				OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
 			};
 		}
 
