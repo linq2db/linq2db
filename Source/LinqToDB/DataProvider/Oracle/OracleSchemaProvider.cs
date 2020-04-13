@@ -252,24 +252,29 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
+			// uses ALL_ARGUMENTS view
+			// https://docs.oracle.com/cd/B28359_01/server.111/b28320/statviews_1014.htm#REFRN20015
+			// SELECT * FROM ALL_ARGUMENTS WHERE DATA_LEVEL = 0 AND (OWNER = :OWNER  OR :OWNER is null) AND (OBJECT_NAME = :OBJECTNAME  OR :OBJECTNAME is null)
 			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 
+			// SEQUENCE filter filters-out non-argument records without DATA_TYPE
+			// check https://llblgen.com/tinyforum/Messages.aspx?ThreadID=22795
 			return
 			(
-				from pp in pps.AsEnumerable()
-				let schema    = pp.Field<string>("OWNER")
-				let name      = pp.Field<string>("OBJECT_NAME")
-				let direction = pp.Field<string>("IN_OUT")
+				from pp in pps.AsEnumerable().Where(_ => Converter.ChangeTypeTo<int>(_["SEQUENCE"]) > 0)
+				let schema    = pp.Field<string>("OWNER") // not null
+				let name      = pp.Field<string>("OBJECT_NAME") // nullable (???)
+				let direction = pp.Field<string>("IN_OUT") // nullable: IN, OUT, IN/OUT
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureParameterInfo
 				{
 					ProcedureID   = schema + "." + name,
-					ParameterName = pp.Field<string>("ARGUMENT_NAME"),
-					DataType      = pp.Field<string>("DATA_TYPE"),
-					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]),
-					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]),
-					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]),
-					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]),
+					ParameterName = pp.Field<string>("ARGUMENT_NAME"), // nullable
+					DataType      = pp.Field<string>("DATA_TYPE"), // nullable, but only for sequence = 0
+					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]), // not null, 0 - return value
+					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]), // nullable
+					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]), // nullable
+					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]), // nullable
 					IsIn          = direction.StartsWith("IN"),
 					IsOut         = direction.EndsWith("OUT"),
 					IsNullable    = true

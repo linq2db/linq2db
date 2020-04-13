@@ -593,8 +593,8 @@ INSERT INTO DataTypeTest
 	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
 VALUES
 	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
 /
 
 INSERT INTO DataTypeTest
@@ -985,5 +985,24 @@ CREATE OR REPLACE
 PROCEDURE AddIssue792Record() IS
 BEGIN
 	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
+/
+
+CREATE OR REPLACE PACKAGE ISSUE2132 AS
+procedure test;
+END;
+/
+
+CREATE OR REPLACE PACKAGE BODY ISSUE2132 AS 
+procedure test is
+	begin
+		return 4;
+	end test;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE TEST2132
+BEGIN
+	return 6;
 END;
 /
