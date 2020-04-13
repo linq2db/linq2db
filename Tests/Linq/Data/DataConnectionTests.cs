@@ -952,7 +952,16 @@ namespace Tests.Data
 #endif
 
 		// strange provider errors, review in v3 with more recent providers
-		[ActiveIssue(Configurations = new[] { ProviderName.MySqlConnector, ProviderName.SapHana })]
+		// also some providers remove credentials from connection string in non-design mode
+		[ActiveIssue(Configurations = new[] 
+		{ 
+			ProviderName.MySqlConnector,
+			ProviderName.SapHana,
+			// Providers remove credentials in non-design mode:
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSqlServer,
+			TestProvName.AllMySqlData
+		})]
 		[Test]
 		public void TestDisposeFlagCloning([DataSources(false)] string context, [Values] bool dispose)
 		{
@@ -1101,7 +1110,11 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false
+#if NETSTANDARD2_0
+			, TestProvName.AllSqlServer, TestProvName.AllOracle
+#endif
+			)] string context, [Values] bool withScope)
 		{
 			// errors are different for some providers compared to TestDisposeFlagCloning962Test1
 			// because we don't use DDL (CREATE TABLE)
@@ -1146,7 +1159,7 @@ namespace Tests.Data
 			}
 		}
 #endif
-		#endregion
+#endregion
 
 	}
 }
