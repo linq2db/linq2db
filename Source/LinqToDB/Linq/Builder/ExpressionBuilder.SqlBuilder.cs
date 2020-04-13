@@ -1867,6 +1867,20 @@ namespace LinqToDB.Linq.Builder
 					op2 = op2conv1.Operand;
 					return true;
 				}
+
+				// https://github.com/linq2db/linq2db/issues/2166
+				// generates expression:
+				// Convert(member, int) == const(value, int)
+				// we must replace it with:
+				// member == const(value, member_type)
+				if (op2 is ConstantExpression const2
+					&& const2.Type == typeof(int)
+					&& ConvertUtils.TryConvert(const2.Value, op1conv.Operand.Type, out var convertedValue))
+				{
+					op1 = op1conv.Operand;
+					op2 = Expression.Constant(convertedValue, op1conv.Operand.Type);
+					return true;
+				}
 			}
 
 			return false;
