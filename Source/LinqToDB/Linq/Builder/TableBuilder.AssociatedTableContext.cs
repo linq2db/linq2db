@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 			public readonly TableContext             ParentAssociation;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
-			public readonly bool                     IsSubQuery;
+			public          bool                     IsSubQuery;
 			public          int                      RegularConditionCount;
 			public          LambdaExpression?        ExpressionPredicate;
 			public          bool                     IsLeft;
@@ -132,23 +132,25 @@ namespace LinqToDB.Linq.Builder
 				Init(false);
 			}
 
+			public LambdaExpression CreateAssociationQueryLambda(bool inline)
+			{
+				var parentObjectType = GetParentObjectType();
+				var loadWith         = ParentAssociation.LoadWith;
+
+				return AssociationHelper.CreateAssociationQueryLambda(Builder, Association, ParentAssociation.OriginalType,
+					parentObjectType, ObjectType, inline, false, loadWith, out _);
+			}
+
 			public IBuildContext InnerContext => _innerContext ??= InitializeContext();
 
 			private IBuildContext InitializeContext()
 			{
 				if (IsSubQuery)
-				{
-					throw new NotImplementedException();
-					// BuildSubQuery(Builder, ParentAssociation, Association, IsLeft);
-					// Init(false);
-					// //return;
+				{ 
+					return BuildSubQuery2(Builder, ParentAssociation, Association);
 				}
 
-				//TODO: Find better way to understand for which class association is building
-				var parentObjectType = Association.MemberInfo.DeclaringType;
-				if (Association.MemberInfo.IsMethodEx())
-					parentObjectType = ParentAssociation.ObjectType;
-
+				var parentObjectType = GetParentObjectType();
 
 				// var parentContext = parent.Parent;
 				var parentContext = ParentAssociation;
@@ -163,10 +165,10 @@ namespace LinqToDB.Linq.Builder
 				var parentRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(parentObjectType), parentContext);
 
 				var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
-					Builder, Association, parentObjectType, ObjectType,
-					!IsList, IsLeft, out IsLeft);
+					Builder, Association, ParentAssociation.OriginalType, parentObjectType, ObjectType,
+					!IsList, IsLeft, ParentAssociation.LoadWith, out IsLeft);
 
-				var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(Builder.DataContext),
+				var selectManyMethod = GetAssociationQueryExpression(
 					queryMethod.Parameters[0], parentObjectType, parentRef, queryMethod);
 
 				// var parentContext = parent.Parent;
@@ -178,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 
 				// var parentQuery = parentContext == null ? parent.SelectQuery : parentContext.SelectQuery;
 
-				var buildInfo = new BuildInfo(this, selectManyMethod, SelectQuery)
+				var buildInfo = new BuildInfo(ParentAssociation, selectManyMethod, SelectQuery)
 					{ IsAssociationBuilt = true };
 
 				// var saveParent = parent.Parent;
@@ -193,6 +195,20 @@ namespace LinqToDB.Linq.Builder
 				SetTableAlias(Association, innerContext.SelectQuery);
 
 				return innerContext;
+			}
+
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			{
+				return InnerContext.GetContext(expression, level, buildInfo);
+			}
+
+			private Type GetParentObjectType()
+			{
+				//TODO: Find better way to understand for which class association is building
+				var parentObjectType = Association.MemberInfo.DeclaringType;
+				if (Association.MemberInfo.IsMethodEx())
+					parentObjectType = ParentAssociation.ObjectType;
+				return parentObjectType;
 			}
 
 			private static void SetTableAlias(AssociationDescriptor association, SqlTableSource table)
@@ -380,6 +396,18 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Lambda(body, parentParameter);
 			}
 
+			private IBuildContext BuildSubQuery2(ExpressionBuilder builder, TableContext parent,
+				AssociationDescriptor association)
+			{
+				var queryLambda  = CreateAssociationQueryLambda(false);
+				var parentRef    = new ContextRefExpression(ParentAssociation.ObjectType, ParentAssociation);
+				var expr         = queryLambda.GetBody(parentRef);
+				var buildInfo    = new BuildInfo((IBuildContext?)null, expr, SelectQuery );
+				// var buildInfo    = new BuildInfo((IBuildContext?)null, expr, new SelectQuery { ParentSelect = SelectQuery.ParentSelect } );
+				var innerContext = builder.BuildSequence(buildInfo);
+				return innerContext;
+			}
+
 			private void BuildSubQuery(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association, bool left)
 			{
 				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
@@ -415,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 				SetTableAlias(association, SelectQuery.From.Tables[0]);
 			}
 
-			public Expression GetAssociationQueryExpression(Expression dataContextExpr, Expression parentObjExpression, Type parentType, Expression parentTableExpression,
+			public Expression GetAssociationQueryExpression(Expression parentObjExpression, Type parentType, Expression parentTableExpression,
 				LambdaExpression queryMethod)
 			{
 				var resultParam = Expression.Parameter(ObjectType);
@@ -426,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 					parentTableExpression = Expression.Call(Methods.Queryable.OfType.MakeGenericMethod(parentType), parentTableExpression);
 				}
 
-				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr).Unwrap();
+				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0]).Unwrap();
 				body        = EagerLoading.EnsureEnumerable(body, Builder.MappingSchema);
 				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
 
@@ -439,40 +467,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				if (InnerContext != null)
-					InnerContext.BuildQuery(query, queryParameter);
-				else
-					base.BuildQuery(query, queryParameter);
+				InnerContext.BuildQuery(query, queryParameter);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (InnerContext != null)
-					return InnerContext.ConvertToSql(expression, level, flags);
-
-				return base.ConvertToSql(expression, level, flags);
+				return InnerContext.ConvertToSql(expression, level, flags);
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (InnerContext != null)
-				{
-					return InnerContext.ConvertToIndex(expression, level, flags);
-				}
-
-				return base.ConvertToIndex(expression, level, flags);
-			}
-
-			ISqlExpression CorrectExpression(ISqlExpression expression)
-			{
-				return expression;
-				// return new QueryVisitor().Convert(expression, e =>
-				// {
-				// 	if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
-				// 		return newField;
-				// 	return e;
-				//
-				// }); 
+				return InnerContext.ConvertToIndex(expression, level, flags);
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext? context)
@@ -486,10 +491,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (InnerContext != null)
-					return InnerContext.BuildExpression(expression, level, enforceServerSide);
-
-				return base.BuildExpression(expression, level, enforceServerSide);
+				return InnerContext.BuildExpression(expression, level, enforceServerSide);
 			}
 
 			protected override Expression ProcessExpression(Expression expression)
@@ -536,7 +538,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (loadWith != null)
 					{
-						foreach (var item in GetLoadWith(loadWith))
+						foreach (var item in AssociationHelper.GetLoadWith(loadWith))
 						{
 							if (Association.MemberInfo.EqualsTo(item.MemberInfo))
 							{
@@ -684,6 +686,12 @@ namespace LinqToDB.Linq.Builder
 						foreach (var item in queryReader(db, parentObject))
 							yield return item;
 				}
+			}
+
+
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
+			{
+				return InnerContext.IsExpression(expression, level, requestFor);
 			}
 
 			protected override ISqlExpression? GetField(Expression expression, int level, bool throwException)

@@ -413,6 +413,22 @@ namespace LinqToDB.Linq.Builder
 
 									break;
 
+								case ExpressionType.Extension:
+									{
+										if (levelExpression is ContextRefExpression)
+										{
+											if (levelExpression != expression)
+												return GetSequence(expression, level)!.ConvertToSql(expression,
+													level + 1,
+													flags);
+
+											if (level == 0)
+												return GetSequence(expression, level)!.ConvertToSql(null, 0, flags);
+										}
+
+										goto default;
+									}
+
 								default:
 									if (level == 0)
 										return Builder.ConvertExpressions(this, expression, flags);
@@ -567,7 +583,9 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.Field :
 						{
-							if (level == 0)
+							var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+
+							if (level == 0 && levelExpression == expression)
 							{
 								var idx = Builder.ConvertExpressions(this, expression!, flags);
 
@@ -576,8 +594,6 @@ namespace LinqToDB.Linq.Builder
 
 								return idx;
 							}
-
-							var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -613,6 +629,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 								case ExpressionType.Parameter:
+								case ExpressionType.Extension:
 
 									if (levelExpression != expression)
 										return GetSequence(expression!, level)!.ConvertToIndex(expression, level + 1, flags);
@@ -816,7 +833,11 @@ namespace LinqToDB.Linq.Builder
 								default:
 									{
 										if (levelExpression is ContextRefExpression refExpression)
-											return refExpression.BuildContext.IsExpression(null, 0, requestFlag);
+										{
+											if (levelExpression == expression)
+												return refExpression.BuildContext.IsExpression(null, 0, requestFlag);
+											return refExpression.BuildContext.IsExpression(expression, level + 1, requestFlag);
+										}
 										return new IsExpressionResult(requestFlag == RequestFor.Expression);
 									}
 							}
@@ -1168,8 +1189,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					case ExpressionType.Extension:
 						{
-							if (expression is ContextRefExpression refExpression)
-								return refExpression.BuildContext;
+							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
 							break;
 						}
 				}

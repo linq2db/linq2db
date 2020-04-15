@@ -51,6 +51,8 @@ namespace LinqToDB.Linq.Builder
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
+			var parent = buildInfo.Parent;
+
 			if (methodCall.Arguments[0].NodeType == ExpressionType.Call)
 			{
 				var call = (MethodCallExpression)methodCall.Arguments[0];
@@ -61,6 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
+						parent = sequence;
 						sequence = new SubQueryContext(sequence);
 					}
 				}
@@ -541,6 +544,8 @@ namespace LinqToDB.Linq.Builder
 					return keys;
 				}
 
+				if (level == 0 && expression.NodeType == ExpressionType.MemberAccess)
+					level = level + 1;
 				if (level > 0)
 				{
 					switch (expression.NodeType)

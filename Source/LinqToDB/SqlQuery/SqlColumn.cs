@@ -27,7 +27,23 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public   ISqlExpression Expression { get; set; }
+		public ISqlExpression Expression
+		{
+			get => _expression;
+			set
+			{
+				// if (value != null)
+				// {
+				// 	if (null != new QueryVisitor().Find(value, e => e == this || e is SqlColumn clmn && clmn.Parent == this.Parent))
+				// 	{
+				// 		throw new LinqToDBException("Recursive expression.");
+				// 	}
+				// }
+				//
+				_expression = value;
+			}
+		}
+
 		public   SelectQuery?   Parent     { get; set; }
 		internal string?        RawAlias   { get; set; }
 
@@ -58,6 +74,8 @@ namespace LinqToDB.SqlQuery
 		private bool   _underlyingColumnSet;
 
 		private SqlColumn? _underlyingColumn;
+		private ISqlExpression _expression;
+
 		public  SqlColumn?  UnderlyingColumn
 		{
 			get
@@ -99,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			var hashCode = Parent!.GetHashCode();
+			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
 			if (UnderlyingColumn != null)
@@ -261,12 +279,15 @@ namespace LinqToDB.SqlQuery
 			sb.Append('[').Append(_columnNumber).Append(']');
 #endif
 
-			if (Expression is SelectQuery)
+			if (Expression is SelectQuery selectQuery)
 			{
-				sb.Append("(\n\t\t");
-				var len = sb.Length;
-				Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
-				sb.Append("\n\t)");
+				sb.Append("(SELECT ");
+				sb.Append(selectQuery.SourceID);
+				sb.Append(")");
+				// sb.Append("(\n\t\t");
+				// var len = sb.Length;
+				// Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
+				// sb.Append("\n\t)");
 			}
 			else
 			{

@@ -9,6 +9,10 @@ namespace LinqToDB.Linq.Builder
 
 	class SubQueryContext : PassThroughContext
 	{
+#if DEBUG
+		string? _sqlQueryText => SelectQuery.SqlText;
+#endif
+
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
 			: base(subQuery)
 		{
@@ -36,10 +40,15 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			return SubQuery
+			var indexes = SubQuery
 				.ConvertToIndex(expression, level, flags)
+				.ToArray();
+
+			var result = indexes
 				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
+
+			return result;
 		}
 
 		// JoinContext has similar logic. Consider to review it.

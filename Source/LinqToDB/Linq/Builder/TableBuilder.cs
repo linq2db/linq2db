@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 
 					// Looking for association.
 					//
-					if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
+					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0*/)
 					{
 						parentContext = builder.GetContext(buildInfo.Parent, expression);
 						if (parentContext != null)

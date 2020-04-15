@@ -25,6 +25,29 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Build Where
 
+		public IBuildContext BuildWhereNew(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
+		{
+			var expr          = ConvertExpression(condition.Body.Unwrap());
+			var refExpr       = new ContextRefExpression(condition.Parameters[0].Type, sequence);
+			var conditionExpr = expr.Transform(e => e == condition.Parameters[0] ? refExpr : e);
+			var makeHaving    = false;
+
+			if (checkForSubQuery && CheckSubQueryForWhere(sequence, conditionExpr, out makeHaving))
+			{
+				sequence      = new SubQueryContext(sequence);
+				refExpr       = new ContextRefExpression(condition.Parameters[0].Type, sequence);
+				conditionExpr = expr.Transform(e => e == condition.Parameters[0] ? refExpr : e);
+			}
+
+			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
+				sequence.SelectQuery.Having.SearchCondition.Conditions :
+				sequence.SelectQuery.Where. SearchCondition.Conditions;
+
+			BuildSearchCondition(sequence, conditionExpr, conditions, false);
+
+			return sequence;
+		}
+
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
 			var prevParent = sequence.Parent;
@@ -35,6 +58,7 @@ namespace LinqToDB.Linq.Builder
 			if (checkForSubQuery && CheckSubQueryForWhere(ctx, expr, out makeHaving))
 			{
 				ReplaceParent(ctx, prevParent);
+				sequence.Parent = prevParent;
 
 				sequence = new SubQueryContext(sequence);
 				prevParent = sequence.Parent;
@@ -52,6 +76,7 @@ namespace LinqToDB.Linq.Builder
 
 			return sequence;
 		}
+
 
 		bool CheckSubQueryForWhere(IBuildContext context, Expression expression, out bool makeHaving)
 		{
@@ -976,6 +1001,25 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
+				case ExpressionType.Extension   :
+					{
+						var ctx = GetContext(context, expression);
+
+						if (ctx != null)
+						{
+							var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
+
+							switch (sql.Length)
+							{
+								case 0  : break;
+								case 1  : return sql[0].Sql;
+								default : throw new InvalidOperationException();
+							}
+						}
+
+						break;
+					}
+
 				case ExpressionType.Call        :
 					{
 						var e = (MethodCallExpression)expression;
@@ -1111,12 +1155,6 @@ namespace LinqToDB.Linq.Builder
 				case ChangeTypeExpression.ChangeTypeType :
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
 
-				case ExpressionType.Extension :
-					{
-						if (expression.CanReduce)
-							return ConvertToSql(context, expression.Reduce());
-						break;
-					}
 				case ExpressionType.Constant:
 					{
 						var cnt = (ConstantExpression)expression;

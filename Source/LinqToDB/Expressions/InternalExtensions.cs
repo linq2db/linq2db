@@ -1223,6 +1223,7 @@ namespace LinqToDB.Expressions
 		{
 			var optimized = expression?.Transform(e =>
 				{
+					var newExpr = e;
 					if (e is BinaryExpression binary)
 					{
 						var left  = OptimizeExpression(binary.Left)!;
@@ -1234,30 +1235,37 @@ namespace LinqToDB.Expressions
 						if (right.Type != binary.Right.Type)
 							right = Expression.Convert(right, binary.Right.Type);
 
-						e = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
+						newExpr = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
 					}
 					else if (e is UnaryExpression unaryExpression)
 					{
-						e = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
+						newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
 					}
 					else if (e is MemberExpression memberExpression)
 					{
-						e = memberExpression.Update(OptimizeExpression(memberExpression.Expression));
+						newExpr = memberExpression.Update(OptimizeExpression(memberExpression.Expression));
 					}
 
-					switch (e)
+					switch (newExpr)
 					{
+						case NewArrayExpression _:
+							{
+								return new TransformInfo(e, true);
+							}
 						case UnaryExpression unary when unary.Operand.NodeType == ExpressionType.Constant:
 							{
-								return Expression.Constant(EvaluateExpression(unary));
+								newExpr = Expression.Constant(EvaluateExpression(unary));
+								break;
 							}
 						case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
 							{
-								return Expression.Constant(EvaluateExpression(me));
+								newExpr = Expression.Constant(EvaluateExpression(me));
+								break;
 							}
 						case BinaryExpression be when be.Left.NodeType == ExpressionType.Constant && be.Right.NodeType == ExpressionType.Constant:
 							{
-								return Expression.Constant(EvaluateExpression(be));
+								newExpr = Expression.Constant(EvaluateExpression(be));
+								break;
 							}
 						case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
 							{
@@ -1265,18 +1273,18 @@ namespace LinqToDB.Expressions
 								{
 									var leftBool = EvaluateExpression(be.Left) as bool?;
 									if (leftBool == true)
-										return be.Right;
-									if (leftBool == false)
-										return Expression.Constant(false);
+										e = be.Right;
+									else if (leftBool == false)
+										newExpr = Expression.Constant(false);
 								}
 								else
 								if (be.Right.NodeType == ExpressionType.Constant)
 								{
 									var rightBool = EvaluateExpression(be.Right) as bool?;
 									if (rightBool == true)
-										return be.Left;
-									if (rightBool == false)
-										return Expression.Constant(false);
+										newExpr = be.Left;
+									else if (rightBool == false)
+										newExpr = Expression.Constant(false);
 								}
 								break;
 							}
@@ -1286,24 +1294,27 @@ namespace LinqToDB.Expressions
 								{
 									var leftBool = EvaluateExpression(be.Left) as bool?;
 									if (leftBool == false)
-										return be.Right;
-									if (leftBool == true)
-										return Expression.Constant(true);
+										newExpr = be.Right;
+									else if (leftBool == true)
+										newExpr = Expression.Constant(true);
 								}
 								else
 								if (be.Right.NodeType == ExpressionType.Constant)
 								{
 									var rightBool = EvaluateExpression(be.Right) as bool?;
 									if (rightBool == false)
-										return be.Left;
-									if (rightBool == true)
-										return Expression.Constant(true);
+										newExpr = be.Left;
+									else if (rightBool == true)
+										newExpr = Expression.Constant(true);
 								}
 								break;
 							}
 					}
 
-					return e;
+					if (newExpr.Type != e.Type)
+						newExpr = Expression.Convert(newExpr, e.Type);
+
+					return new TransformInfo(newExpr);
 				}
 			);
 			return optimized;

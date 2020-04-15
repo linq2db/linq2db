@@ -1156,7 +1156,7 @@ namespace Tests.Linq
 					select g.Key
 					,
 					from p in db.Parent
-					group p by p.Children.Average(c => c.ParentID) > 3 into g
+					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
 					select g.Key);
 		}
 
@@ -1867,7 +1867,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy2([DataSources(ProviderName.Access)] string context)
+		public void JoinGroupBy2([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

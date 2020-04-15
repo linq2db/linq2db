@@ -125,6 +125,15 @@ namespace Tests.ComplexTests2
 				AnimalType2   = AnimalType2.Big
 			};
 
+			var wildAnimal = new WildAnimal
+			{
+				Id = 2,
+				Discriminator = "WildAnimal",
+				Name          = "WildAnimal",
+				AnimalType    = AnimalType.Big,
+				AnimalType2   = AnimalType2.Big
+			};
+
 			var test = new Test
 			{
 				Id           = 1,
@@ -145,6 +154,7 @@ namespace Tests.ComplexTests2
 
 				db.Insert(eye);
 				db.Insert(dog);
+				db.Insert(wildAnimal);
 				db.Insert(test);
 				db.Insert(test2);
 			}
