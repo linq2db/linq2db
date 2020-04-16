@@ -4,10 +4,8 @@ dist: xenial
 
 branches:
   only:
-    - master
-    - /version.*/
-    - /release.*/
-    - /dev.*/
+    - version2
+    - release2
 
 services:
     - mysql
