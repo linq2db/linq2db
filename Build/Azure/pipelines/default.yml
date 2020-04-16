@@ -11,11 +11,10 @@ variables:
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
 
-# build on commits to important branches: 'release', 'master' + 'release.3.0' wip branch
+# build on commits to important branches: 'release', 'master'
 trigger:
   - master
   - release
-  - release.3.0
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
@@ -196,7 +195,7 @@ stages:
         nuGetFeedType: 'internal'
         publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
       displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'release.3.0')))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
 # apikey exires around 31/07/2020
     - task: NuGetCommand@2

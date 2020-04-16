@@ -129,6 +129,44 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query1 = first.GroupBy(f => f.Key1)
+					.AsSubQuery()
+					.Select(x => new { Count = Sql.Ext.Count().ToValue() });
+
+				var result1 = query1.ToArray();
+			}
+		}
+
+		[Test]
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query2 = first.GroupBy(f => new { f.Key1, f.Key2 })
+					.AsSubQuery()
+					.Select(x => new
+					{
+						Count2 = Sql.Ext.Count(x.Key2).ToValue(),
+						Count1 = Sql.Ext.Count(x.Key1).ToValue()
+					});
+
+				var result2 = query2.ToArray();
+			}
+		}
+
 
 		[Test]
 		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)

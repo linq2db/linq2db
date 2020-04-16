@@ -592,8 +592,8 @@ INSERT INTO DataTypeTest
 	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
 VALUES
 	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
 /
 
 INSERT INTO DataTypeTest
@@ -987,6 +987,7 @@ BEGIN
 END;
 /
 
+<<<<<<< HEAD
 
 CREATE OR REPLACE
 PROCEDURE AllOutputParameters
@@ -1100,9 +1101,7 @@ BEGIN
 
 	FROM ALLTYPES at
 	WHERE at.ID = 2;
-END;
-/
-
+=======
 CREATE OR REPLACE PACKAGE ISSUE2132 AS
 procedure test;
 END;
@@ -1119,5 +1118,6 @@ END;
 CREATE OR REPLACE PROCEDURE TEST2132
 BEGIN
 	return 6;
+>>>>>>> master
 END;
 /

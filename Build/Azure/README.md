@@ -10,7 +10,7 @@ All existing pipelines we have listed below. If you need more flexible test runs
 
 Automatically runs for:
 - PR to `release` branch: runs all tests for PR commit
-- commit to `master` or `release.3.0`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+- commit to `master`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
 - commit to `release`: publish nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
 
 #### `build` pipeline

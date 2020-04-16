@@ -1102,22 +1102,3 @@ BEGIN
 	WHERE at.ID = 2;
 END;
 /
-
-CREATE OR REPLACE PACKAGE ISSUE2132 AS
-procedure test;
-END;
-/
-
-CREATE OR REPLACE PACKAGE BODY ISSUE2132 AS 
-procedure test is
-	begin
-		return 4;
-	end test;
-END;
-/
-
-CREATE OR REPLACE PROCEDURE TEST2132
-BEGIN
-	return 6;
-END;
-/
