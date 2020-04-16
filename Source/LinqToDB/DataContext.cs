@@ -12,6 +12,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
+	using LinqToDB.Async;
 	using Mapping;
 	using SqlProvider;
 
@@ -222,6 +223,17 @@ namespace LinqToDB
 		DataConnection _dataConnection;
 
 		/// <summary>
+		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
+		/// </summary>
+		/// <returns>New <see cref="DataConnection"/> instance.</returns>
+		protected virtual DataConnection CreateDataConnection()
+		{
+			return ConnectionString != null
+				? new DataConnection(DataProvider, ConnectionString)
+				: new DataConnection(ConfigurationString);
+		}
+
+		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
 		/// doesn't exists.
 		/// </summary>
@@ -230,9 +242,7 @@ namespace LinqToDB
 		{
 			if (_dataConnection == null)
 			{
-				_dataConnection = ConnectionString != null
-					? new DataConnection(DataProvider, ConnectionString)
-					: new DataConnection(ConfigurationString);
+				_dataConnection = CreateDataConnection();
 
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
@@ -302,6 +312,31 @@ namespace LinqToDB
 		/// <param name="n">Unused.</param>
 		DataContext(int n) {}
 
+		/// <summary>
+		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction.
+		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/> 
+		/// is <c>true</c> and there is an active connection associated with current context.
+		/// <paramref name="dbConnection"/> and <paramref name="dbTransaction"/> parameters are mutually exclusive.
+		/// One and only one parameter will have value - if there is active transaction, <paramref name="dbTransaction"/>
+		/// parameter value provided, otherwise <paramref name="dbConnection"/> parameter has value.
+		/// </summary>
+		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
+		/// <param name="dbTransaction">Transaction, associated with <paramref name="currentConnection"/>.</param>
+		/// <param name="dbConnection">Connection, associated with <paramref name="dbConnection"/>.</param>
+		/// <returns>New <see cref="DataConnection"/> instance.</returns>
+		protected virtual DataConnection CloneDataConnection(
+			DataConnection      currentConnection, // not used by implementation, but could be useful in override
+			IAsyncDbTransaction dbTransaction,
+			IAsyncDbConnection  dbConnection)
+		{
+			// we pass both dataconnection and db connection/transaction, because connection/transaction accessors
+			// are internal and it is not possible to access them in derived class. And we definitely don't want them
+			// to be public.
+			return dbTransaction != null
+				? new DataConnection(DataProvider, dbTransaction)
+				: new DataConnection(DataProvider, dbConnection);
+		}
+
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
 			var dc = new DataContext(0)
@@ -316,9 +351,11 @@ namespace LinqToDB
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-				dc._dataConnection = _dataConnection.TransactionAsync != null ?
-					new DataConnection(DataProvider, _dataConnection.TransactionAsync) :
-					new DataConnection(DataProvider, _dataConnection.EnsureConnection());
+				dc._dataConnection = CloneDataConnection(
+					_dataConnection,
+					_dataConnection.TransactionAsync,
+					_dataConnection.TransactionAsync == null ? _dataConnection.EnsureConnection() : null);
+
 
 			dc.QueryHints.    AddRange(QueryHints);
 			dc.NextQueryHints.AddRange(NextQueryHints);

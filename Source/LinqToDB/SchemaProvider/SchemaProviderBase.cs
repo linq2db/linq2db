@@ -394,7 +394,7 @@ namespace LinqToDB.SchemaProvider
 
 				procedure.IsLoaded = true;
 
-				if (st != null)
+				if (st != null && st.Columns.Count > 0)
 				{
 					procedure.ResultTable = new TableSchema
 					{

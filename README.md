@@ -13,6 +13,10 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
+
+<img alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" >
+
 ## Standout Features
 
  - Rich Querying API:
