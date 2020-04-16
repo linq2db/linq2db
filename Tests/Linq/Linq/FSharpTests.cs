@@ -1,5 +1,4 @@
-﻿#if !TRAVIS
-using System;
+﻿using System;
 
 using NUnit.Framework;
 
@@ -67,7 +66,7 @@ namespace Tests.Linq
 				FSharp.SelectTest.SelectField(db);
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
+		[Test]
 		public void SelectFieldDeeplyComplexPerson([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -81,14 +80,14 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert1(db);
 		}
 
-		[Test, ActiveIssue("It breaks following tests.")]
+		[Test, Explicit("It breaks following tests.")]
 		public void Insert2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert2(db);
 		}
 
-		[ActiveIssue(416)]
+		[ActiveIssue(417)]
 		[Test]
 		public void SelectLeftJoin([DataSources] string context)
 		{
@@ -97,4 +96,3 @@ namespace Tests.Linq
 		}
 	}
 }
-#endif

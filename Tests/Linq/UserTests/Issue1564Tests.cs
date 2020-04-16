@@ -11,28 +11,28 @@ namespace Tests.UserTests
 		[Table]
 		class Issue1564Category
 		{
-			[PrimaryKey] public int    Id           { get; set; }
-			[Column]     public bool   IsVisible    { get; set; }
-			[Column]     public int    DisplayOrder { get; set; }
-			[Column]     public int    ParentId     { get; set; }
-			[Column]     public string Name         { get; set; }
+			[PrimaryKey] public int     Id           { get; set; }
+			[Column]     public bool    IsVisible    { get; set; }
+			[Column]     public int     DisplayOrder { get; set; }
+			[Column]     public int     ParentId     { get; set; }
+			[Column]     public string? Name         { get; set; }
 		}
 
 		class AdminCategoryPreview
 		{
-			public int    Id;
-			public bool   IsVisible;
-			public int    DisplayOrder;
-			public string FullPath;
+			public int     Id;
+			public bool    IsVisible;
+			public int     DisplayOrder;
+			public string? FullPath;
 		}
 
 		class AdminCategoryPathItemCte
 		{
-			public int    CategoryId;
-			public int    ParentCategoryId;
-			public string Name;
-			public int    RootCategoryId;
-			public int    Level;
+			public int     CategoryId;
+			public int     ParentCategoryId;
+			public string? Name;
+			public int     RootCategoryId;
+			public int     Level;
 		}
 
 		[Test]

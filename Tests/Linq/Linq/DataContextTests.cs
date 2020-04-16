@@ -15,7 +15,7 @@ namespace Tests.Linq
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -43,7 +43,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -67,12 +67,13 @@ namespace Tests.Linq
 			}
 		}
 
+		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, ProviderName.Access, ProviderName.SapHanaOdbc)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString));
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString!));
 			}
 
 		}
@@ -91,7 +92,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))
+			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
 				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
 				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);
@@ -227,7 +228,7 @@ namespace Tests.Linq
 				return base.CreateDataConnection();
 			}
 
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, IAsyncDbTransaction dbTransaction, IAsyncDbConnection dbConnection)
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, IAsyncDbTransaction? dbTransaction, IAsyncDbConnection? dbConnection)
 			{
 				CloneCalled++;
 				return base.CloneDataConnection(currentConnection, dbTransaction, dbConnection);

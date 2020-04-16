@@ -5,9 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -16,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServerRetryPolicy : RetryPolicyBase
 	{
-		readonly ICollection<int> _additionalErrorNumbers;
+		readonly ICollection<int>? _additionalErrorNumbers;
 
 		/// <summary>
 		///   Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -45,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerRetryPolicy(
 			int maxRetryCount,
 			TimeSpan maxRetryDelay,
-			[CanBeNull] ICollection<int> errorNumbersToAdd)
+			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay)
 		{
 			_additionalErrorNumbers = errorNumbersToAdd;
@@ -55,11 +52,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (_additionalErrorNumbers != null)
 			{
-				var sqlException = exception as SqlException;
-
-				if (sqlException != null)
-					foreach (SqlError err in sqlException.Errors)
-						if (_additionalErrorNumbers.Contains(err.Number))
+				if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+					foreach (var errNumber in errorNumbers)
+						if (_additionalErrorNumbers.Contains(errNumber))
 							return true;
 			}
 
@@ -81,11 +76,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static bool IsMemoryOptimizedError(Exception exception)
 		{
-			var sqlException = exception as SqlException;
-
-			if (sqlException != null)
-				foreach (SqlError err in sqlException.Errors)
-					switch (err.Number)
+			if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+				foreach (var errNumber in errorNumbers)
+					switch (errNumber)
 					{
 						case 41301:
 						case 41302:

@@ -16,16 +16,18 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TraceInfo"/> class.
 		/// </summary>
+		/// <param name="dataConnection"><see cref="DataConnection"/> instance, generated this trace.</param>
 		/// <param name="traceInfoStep">Trace execution step.</param>
-		public TraceInfo(TraceInfoStep traceInfoStep)
+		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep)
 		{
-			TraceInfoStep = traceInfoStep;
+			DataConnection = dataConnection;
+			TraceInfoStep  = traceInfoStep;
 		}
 
 		/// <summary>
 		/// Gets the tracing execution step, <see cref="TraceInfoStep"/>.
 		/// </summary>
-		public TraceInfoStep TraceInfoStep { get; private set; }
+		public TraceInfoStep TraceInfoStep { get; }
 
 		/// <summary>
 		/// Gets or sets the tracing detail level, <see cref="TraceLevel"/>.
@@ -35,12 +37,12 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the <see cref="DataConnection"/> that produced the tracing event.
 		/// </summary>
-		public DataConnection DataConnection { get; set; }
+		public DataConnection DataConnection { get; }
 
 		/// <summary>
 		/// Gets or sets the <see cref="IDbCommand"/> associated with the tracing event.
 		/// </summary>
-		public IDbCommand Command { get; set; }
+		public IDbCommand? Command { get; set; }
 
 		/// <summary>
 		/// Gets or sets the starting <see cref="DateTime"/> of the operation (UTC).
@@ -62,30 +64,24 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the <see cref="Exception"/> for <see cref="TraceInfoStep.Error"/> step.
 		/// </summary>
-		public Exception Exception { get; set; }
+		public Exception? Exception { get; set; }
 
 		/// <summary>
 		/// Gets or sets the text of the command.
 		/// </summary>
-		public string CommandText { get; set; }
+		public string? CommandText { get; set; }
 
 		/// <summary>
 		/// Gets or sets the expression used by the results mapper.
 		/// </summary>
-		public Expression MapperExpression { get; set; }
+		public Expression? MapperExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets a flag indicating whether the command was executed asynchronously.
 		/// </summary>
 		public bool IsAsync { get; set; }
 
-		/// <summary>
-		/// Gets a flag indicating whether this step was executed before the operation.
-		/// </summary>
-		[Obsolete("Use TraceInfoStep instead.")]
-		public bool BeforeExecute { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
-
-		private string _sqlText;
+		private string? _sqlText;
 
 		/// <summary>
 		/// Gets the formatted SQL text of the command.

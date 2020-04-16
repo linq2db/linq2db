@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Data;
 using System.Linq.Expressions;
 
@@ -11,9 +12,6 @@ using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
 	[TestFixture]
 	public class ExpressionTests : TestBase
 	{
@@ -35,7 +33,7 @@ namespace Tests.DataProvider
 					var dp   = conn.DataProvider;
 					var p    = Expression.Parameter(typeof(IDataReader));
 					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
+					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd, 0, dr, typeof(int));
 					var func = ex.Compile();
 
 					do

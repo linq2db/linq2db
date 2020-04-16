@@ -11,7 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionsTests : TestBase
 	{
-		static string AggregateStrings(string separator, IEnumerable<string> arguments)
+		static string? AggregateStrings(string separator, IEnumerable<string?> arguments)
 		{
 			var result = arguments.Aggregate((v1, v2) =>
 			{
@@ -30,11 +30,11 @@ namespace Tests.Linq
 		class SampleClass
 		{
 			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string Value4 { get; set; }
+			                                        public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
@@ -43,7 +43,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
@@ -57,7 +57,7 @@ namespace Tests.Linq
 			public StringTestOrderSourcesAttribute(bool includeLinqService = true) : base(includeLinqService,
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllPostgreSQL,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2)
@@ -248,9 +248,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.Select(t => t.Value1).StringAggregate(" -> ").ToValue();
-				var expected = AggregateStrings(" -> ", data.Select(t => t.Value1));
-				Assert.AreEqual(expected, actual);
+				var actual    = table.Select(t => t.Value1).StringAggregate(" -> ").ToValue();
+				var expected1 = AggregateStrings(" -> ", data.Select(t => t.Value1));
+				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value1).Reverse());
+
+				// as we don't order aggregation, we should expect unstable results
+				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -288,9 +291,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue();
-				var expected = AggregateStrings(" -> ", data.Select(t => t.Value1));
-				Assert.AreEqual(expected, actual);
+				var actual    = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue();
+				var expected1 = AggregateStrings(" -> ", data.Select(t => t.Value1));
+				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value1).Reverse());
+
+				// as we don't order aggregation, we should expect unstable results
+				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -346,12 +352,15 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
-				var expected = AggregateStrings(" -> ", data.Select(t => t.Value4));
-				Assert.AreEqual(expected, actual);
+				var actual    = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
+				var expected1 = AggregateStrings(" -> ", data.Select(t => t.Value4));
+				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value4).Reverse());
+
+				// as we don't order aggregation, we should expect unstable results
+				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -363,9 +372,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual = table.AsQueryable().StringAggregate(" -> ", t => t.Value4).ToValue();
-				var expected = AggregateStrings(" -> ", data.Select(t => t.Value4));
-				Assert.AreEqual(expected, actual);
+				var actual    = table.AsQueryable().StringAggregate(" -> ", t => t.Value4).ToValue();
+				var expected1 = AggregateStrings(" -> ", data.Select(t => t.Value4));
+				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value4).Reverse());
+
+				// as we don't order aggregation, we should expect unstable results
+				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 

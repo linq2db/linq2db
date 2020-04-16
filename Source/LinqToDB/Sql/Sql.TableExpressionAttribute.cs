@@ -37,15 +37,12 @@ namespace LinqToDB
 			{
 			}
 
-			protected new string Name
-			{
-				get { return base.Name; }
-			}
+			protected new string? Name => base.Name;
 
-			public string Expression
+			public string? Expression
 			{
-				get { return base.Name;  }
-				set { base.Name = value; }
+				get => base.Name;
+				set => base.Name = value;
 			}
 
 			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
@@ -56,6 +53,7 @@ namespace LinqToDB
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
+				if (Server   != null) table.Server   = Server;
 			}
 		}
 	}

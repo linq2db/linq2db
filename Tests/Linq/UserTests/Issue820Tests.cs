@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		public static short Nope2(short? value)
 		{
-			return value.Value;
+			return value!.Value;
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
@@ -42,7 +42,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(1685, Configuration = ProviderName.SapHana)]
 		[Test]
 		public void TestAndWithCastAndFunction([DataSources] string context)
 		{

@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -45,7 +43,7 @@ namespace Tests.Model
 
 	public class InheritanceParent2 : InheritanceParentBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
 
 	[Table("InheritanceChild")]
@@ -59,7 +57,7 @@ namespace Tests.Model
 		[Column]                         public int  InheritanceParentId { get; set; }
 
 		[Association(ThisKey = "InheritanceParentId", OtherKey = "InheritanceParentId")]
-		public InheritanceParentBase Parent { get; set; } 
+		public InheritanceParentBase Parent { get; set; } = null!;
 
 		public override bool Equals(object obj)
 		{
@@ -87,6 +85,6 @@ namespace Tests.Model
 
 	public class InheritanceChild2 : InheritanceChildBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
 }

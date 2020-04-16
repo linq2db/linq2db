@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Common;
@@ -230,7 +228,7 @@ namespace LinqToDB.Data.RetryPolicy
 		///     Returns the delay indicating how long to wait for before the next execution attempt if the operation should be retried;
 		///     <c>null</c> otherwise
 		/// </returns>
-		protected virtual TimeSpan? GetNextDelay([NotNull] Exception lastException)
+		protected virtual TimeSpan? GetNextDelay(Exception lastException)
 		{
 			var currentRetryCount = ExceptionsEncountered.Count - 1;
 
@@ -257,6 +255,6 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <returns>
 		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
 		/// </returns>
-		protected abstract bool ShouldRetryOn([NotNull] Exception exception);
+		protected abstract bool ShouldRetryOn(Exception exception);
 	}
 }

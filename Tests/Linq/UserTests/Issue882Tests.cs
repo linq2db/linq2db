@@ -73,8 +73,8 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Millisecond([DataSources(
-				ProviderName.Informix, ProviderName.Access,
-				ProviderName.SapHana, TestProvName.AllMySql)]
+				TestProvName.AllInformix, ProviderName.Access,
+				TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

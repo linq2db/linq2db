@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			sequence.SelectQuery.DoNotRemove = true;
 
-			var elementType = methodCall.Arguments[0].Type.GetGenericArgumentsEx()[0];
+			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
 			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))
 			{
 				// It is special case when we are trying to make subquery from GroupBy
@@ -35,8 +35,8 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+			ParameterExpression? param)
 		{
 			return null;
 		}

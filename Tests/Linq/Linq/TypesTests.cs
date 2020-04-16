@@ -30,6 +30,9 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value && true && !false select p);
 		}
 
+		// only for netcore linq test we generate unused parameter for sybase
+		// There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@value_1' was not used in the preceding DECLARE CURSOR or SQL command.
+		[ActiveIssue(SkipForNonLinqService = true, Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void Bool2([DataSources] string context)
 		{
@@ -198,12 +201,12 @@ namespace Tests.Linq
 		public void NewGuid(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -244,12 +247,12 @@ namespace Tests.Linq
 					.Update();
 
 				Assert.That(
-					(from t in db.Types where t.ID == 1 select t.BinaryValue.Length).First(),
+					(from t in db.Types where t.ID == 1 select t.BinaryValue!.Length).First(),
 					Is.EqualTo(5));
 
 				db.Types
 					.Where(t => t.ID == 1)
-					.Set(t => t.BinaryValue, (Binary)null)
+					.Set(t => t.BinaryValue, (Binary?)null)
 					.Update();
 			}
 		}
@@ -258,14 +261,14 @@ namespace Tests.Linq
 		public void InsertBinary1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Binary data = null;
+				Binary? data = null;
 
 				db.Types.Delete(_ => _.ID > 1000);
 				db.Types.Insert(() => new LinqDataTypes
@@ -315,7 +318,7 @@ namespace Tests.Linq
 				var g = from t in db.Types where new[] { 1, 2 }.Contains(t.ID) select t;
 
 				foreach (var binary in g)
-					Assert.AreEqual(binaries[binary.ID - 1], binary.BinaryValue.ToArray());
+					Assert.AreEqual(binaries[binary.ID - 1], binary.BinaryValue!.ToArray());
 			}
 		}
 
@@ -326,8 +329,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					AdjustExpectedData(db,	from t in    Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t),
-											from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
+					AdjustExpectedData(db,	from t in    Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t),
+											from t in db.Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t);
 		}
 
 		[Test]
@@ -344,7 +347,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue = pdt });
 
-				Assert.AreNotEqual(dt.Ticks, dt2.Value.Ticks);
+				Assert.AreNotEqual(dt.Ticks, dt2!.Value.Ticks);
 			}
 		}
 
@@ -355,13 +358,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -386,13 +389,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -420,13 +423,13 @@ namespace Tests.Linq
 				ProviderName.Access,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -505,7 +508,7 @@ namespace Tests.Linq
 				select new
 					{
 						t.DateTimeValue,
-						dateTime.Value
+						dateTime!.Value
 					};
 
 			return q.First().Value;
@@ -520,9 +523,9 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void Unicode([DataSources(
-			ProviderName.Informix, TestProvName.AllFirebird, TestProvName.AllSybase)]
+			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -550,9 +553,8 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
-		public void TestCultureInfo([DataSources(ProviderName.Informix)] string context)
+		public void TestCultureInfo([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var current = Thread.CurrentThread.CurrentCulture;
 
@@ -565,7 +567,6 @@ namespace Tests.Linq
 
 			Thread.CurrentThread.CurrentCulture = current;
 		}
-#endif
 
 		[Test]
 		public void SmallInt([DataSources] string context)
@@ -584,11 +585,11 @@ namespace Tests.Linq
 		[Table("Person", IsColumnAttributeRequired=false)]
 		public class PersonCharTest
 		{
-			public int    PersonID;
-			public string FirstName;
-			public string LastName;
-			public string MiddleName;
-			public char   Gender;
+			public int     PersonID;
+			public string  FirstName = null!;
+			public string  LastName  = null!;
+			public string? MiddleName;
+			public char    Gender;
 		}
 
 		[Test]
@@ -639,7 +640,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					AdjustExpectedData(db,	from t in    Types2 where (t.BoolValue ?? false) select t),
-											from t in db.Types2 where t.BoolValue.Value      select t);
+											from t in db.Types2 where t.BoolValue!.Value      select t);
 		}
 
 		[Test]

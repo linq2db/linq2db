@@ -1,31 +1,35 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlServer2005SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		public SqlServer2005SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2005SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlServer2005SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime");       break;
-				default                      : base.BuildDataType(type, createDbType); break;
+				case DataType.Date           : StringBuilder.Append("DateTime");                     break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -35,9 +39,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildFunction(func);
 		}
 
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2005; }
-		}
+		public override string  Name => ProviderName.SqlServer2005;
 	}
 }

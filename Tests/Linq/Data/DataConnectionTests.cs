@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -16,13 +15,10 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
+	using System.Collections.Generic;
 	using System.Transactions;
 	using LinqToDB.Data.RetryPolicy;
-#endif
 	using LinqToDB.Mapping;
-
 	using Model;
 
 	[TestFixture]
@@ -36,7 +32,7 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);
 			}
 		}
@@ -46,7 +42,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 			}
 		}
@@ -63,7 +59,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
 
 				if (context.EndsWith(".2005"))
@@ -114,93 +110,93 @@ namespace Tests.Data
 			switch (context)
 			{
 				case ProviderName.DB2:
-					{
-						dataProvider = DataConnection.GetDataProvider("DB2", connectionString);
+				{
+					dataProvider = DataConnection.GetDataProvider("DB2", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
 
-						var sqlServerDataProvider = (DB2DataProvider)dataProvider;
+					var sqlServerDataProvider = (DB2DataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(DB2Version.LUW));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(DB2Version.LUW));
 
-						break;
-					}
+					break;
+				}
 
 				case ProviderName.SqlServer2005:
-					{
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString);
+				{
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
-						break;
-					}
+					break;
+				}
 
 				case ProviderName.SqlServer2008:
-					{
-						dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString);
+				{
+					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
-						break;
-					}
+					break;
+				}
 
 				case ProviderName.SqlServer2012:
-					{
-						dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString);
+				{
+					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-						break;
-					}
+					break;
+				}
 
 				case ProviderName.SqlServer2014:
-					{
-						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString);
+				{
+					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
-						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
-						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
-						break;
-					}
+					break;
+				}
 
 				case ProviderName.SqlServer2017:
 					{
-						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString);
+						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString)!;
 
 						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
@@ -208,7 +204,7 @@ namespace Tests.Data
 
 						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
 
-						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
@@ -273,7 +269,7 @@ namespace Tests.Data
 		// informix connection limits interfere with test
 		[Test]
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
-		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
+		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var exceptions = new ConcurrentBag<Exception>();
 
@@ -379,7 +375,7 @@ namespace Tests.Data
 						if (cn.State == ConnectionState.Closed)
 							open = true;
 					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
@@ -393,7 +389,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[Category("SkipCI")]
+		[SkipCI]
 		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -485,7 +481,6 @@ namespace Tests.Data
 			}
 		}
 
-#if !NETSTANDARD1_6
 		class TestRetryPolicy : IRetryPolicy
 		{
 			TResult IRetryPolicy.Execute<TResult>(Func<TResult> operation) => operation();
@@ -949,7 +944,6 @@ namespace Tests.Data
 				return Task.CompletedTask;
 		}
 		}
-#endif
 
 		// strange provider errors, review in v3 with more recent providers
 		// also some providers remove credentials from connection string in non-design mode
@@ -972,7 +966,7 @@ namespace Tests.Data
 				{
 					Assert.AreEqual(ConnectionState.Open, cn.State);
 
-					IDbConnection clonedConnection = null;
+					IDbConnection? clonedConnection = null;
 					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
 					{
 						clonedConnection = clonedDb.Connection;
@@ -1017,16 +1011,15 @@ namespace Tests.Data
 		}
 
 		#region issue 962
-#if !NETSTANDARD1_6
 		[Table("Categories")]
 		public class Category
 		{
-			[PrimaryKey, Identity] public int    CategoryID;
-			[Column, NotNull]      public string CategoryName;
-			[Column]               public string Description;
+			[PrimaryKey, Identity] public int     CategoryID;
+			[Column, NotNull]      public string  CategoryName = null!;
+			[Column]               public string? Description;
 
 			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")]
-			public List<Product> Products;
+			public List<Product> Products = null!;
 
 			public static readonly Category[] Data = new[]
 			{
@@ -1038,11 +1031,11 @@ namespace Tests.Data
 		[Table(Name = "Products")]
 		public class Product
 		{
-			[PrimaryKey, Identity]                                         public int      ProductID;
-			[Column, NotNull]                                              public string   ProductName;
-			[Column]                                                       public int?     CategoryID;
-			[Column]                                                       public string   QuantityPerUnit;
-			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")] public Category Category;
+			[PrimaryKey, Identity]                                         public int       ProductID;
+			[Column, NotNull]                                              public string    ProductName = null!;
+			[Column]                                                       public int?      CategoryID;
+			[Column]                                                       public string?   QuantityPerUnit;
+			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")] public Category? Category;
 
 			public static readonly Product[] Data = new[]
 			{
@@ -1089,7 +1082,7 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope scope = withScope ? new TransactionScope() : null;
+			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
 				using (new AllowMultipleQuery())
@@ -1111,7 +1104,7 @@ namespace Tests.Data
 
 		[Test]
 		public void TestDisposeFlagCloning962Test2([DataSources(false
-#if NETSTANDARD2_0
+#if NETCOREAPP2_1
 			, TestProvName.AllSqlServer, TestProvName.AllOracle
 #endif
 			)] string context, [Values] bool withScope)
@@ -1137,7 +1130,7 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope scope = withScope ? new TransactionScope() : null;
+			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
 				using (new AllowMultipleQuery())
@@ -1158,7 +1151,6 @@ namespace Tests.Data
 				scope?.Dispose();
 			}
 		}
-#endif
 #endregion
 
 	}

@@ -5,11 +5,24 @@ using System.Linq;
 
 namespace Tests.Linq
 {
+	using System.Runtime.InteropServices;
 	using LinqToDB.Mapping;
 
 	[TestFixture]
 	public class DateTimeOffsetTests : TestBase
 	{
+		private static string GetNepalTzId()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				// windows TZ ID
+				return "Nepal Standard Time";
+			}
+
+			// IANA TZ ID
+			return "Asia/Kathmandu";
+		}
+
 		[Table("Transactions")]
 		private class Transaction
 		{
@@ -36,7 +49,7 @@ namespace Tests.Linq
 				new Transaction() { TransactionId = 16, TransactionDate = DateTimeOffset.Now.AddMilliseconds(-1)                                                                   },
 				new Transaction() { TransactionId = 17, TransactionDate = DateTimeOffset.Now.AddTicks(1)                                                                           },
 				new Transaction() { TransactionId = 18, TransactionDate = DateTimeOffset.Now.AddTicks(-1)                                                                          },
-				new Transaction() { TransactionId = 19, TransactionDate = TimeZoneInfo.ConvertTime(DateTimeOffset.Now, TimeZoneInfo.FindSystemTimeZoneById("Nepal Standard Time")) },
+				new Transaction() { TransactionId = 19, TransactionDate = TimeZoneInfo.ConvertTime(DateTimeOffset.Now, TimeZoneInfo.FindSystemTimeZoneById(GetNepalTzId()))        },
 				new Transaction() { TransactionId = 20, TransactionDate = new DateTimeOffset(2000, 1, 1, 1, 1, 1, TimeSpan.Zero)                                                   },
 				new Transaction() { TransactionId = 21, TransactionDate = new DateTimeOffset(2000, 1, 1, 1, 1, 1, TimeSpan.FromHours(10))                                          },
 				new Transaction() { TransactionId = 22, TransactionDate = new DateTimeOffset(2000, 1, 1, 1, 1, 1, TimeSpan.FromHours(-10))                                         },
@@ -48,7 +61,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -71,7 +83,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -116,7 +127,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -139,7 +149,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -162,7 +171,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -185,7 +193,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -252,7 +259,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -275,7 +281,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -320,7 +325,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Should be fixed in v3")]
 		[Test]
 		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{

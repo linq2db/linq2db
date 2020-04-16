@@ -17,7 +17,6 @@ namespace Tests.SchemaProvider
 		// only tests that GetSchema call doesn't fail to detect incorrect calls to default implementation
 		// or other failures
 		// doesn't test that actual data returned
-		[ActiveIssue(Configuration = ProviderName.SQLiteMS, Details = "NotSupportedException")]
 		[Test]
 		public void TestApiImplemented([DataSources(false)] string context)
 		{
@@ -36,18 +35,19 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var sp         = conn.DataProvider.GetSchemaProvider();
+				var schemaName = TestUtils.GetSchemaName(conn);
+				var dbSchema   = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
+				}));
 
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
@@ -70,7 +70,7 @@ namespace Tests.SchemaProvider
 					}
 				}
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName.ToLower() == "parent");
+				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent");
 
 				Assert.That(table,                                           Is.Not.Null);
 				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
@@ -78,7 +78,7 @@ namespace Tests.SchemaProvider
 				AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
-				Assert.That(dbSchema.Tables.Single(t => t.TableName.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+				Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
 
 				switch (context)
 				{
@@ -97,6 +97,7 @@ namespace Tests.SchemaProvider
 						break;
 
 					case ProviderName.Informix      :
+					case ProviderName.InformixDB2   :
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
@@ -129,7 +130,7 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
 			Assert.IsNotNull(schemaTable, e.TableName);
 
 			Assert.That(schemaTable.Columns.Count >= e.Columns.Count);
@@ -160,43 +161,39 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETSTANDARD2_0
-
 		[Test]
-		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		public void MySqlTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
-				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
+				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
 
 				Assert.That(table.Columns.Single(c => c.ColumnName.Equals("intUnsignedDataType", StringComparison.OrdinalIgnoreCase)).MemberType, Is.EqualTo("uint?"));
 
-				var view = dbSchema.Tables.Single(t => t.TableName.Equals("personview", StringComparison.OrdinalIgnoreCase));
+				var view = dbSchema.Tables.Single(t => t.TableName!.Equals("personview", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(view.Columns.Count, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySqlData)]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
-				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("person", StringComparison.OrdinalIgnoreCase));
+				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("person", StringComparison.OrdinalIgnoreCase));
 				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 				Assert.That(pk, Is.Not.Null);
 			}
 		}
-
-#endif
 
 		class PKTest
 		{
@@ -247,11 +244,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -268,18 +261,15 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[SkipCI("It is insanely slow for oracle. Wether we should fix it or implement configurations support for SkipCI")]
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string[] { null }}))
+					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }}))
 					.Tables.Select(_ => _.SchemaName)
 					.Distinct()
 					.ToList();
@@ -295,7 +285,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))
@@ -334,27 +324,28 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schemaName = TestUtils.GetSchemaName(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				{
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				}));
 
-				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
-				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+				var fkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
 				Assert.AreEqual(1, fkCountDoctor);
 				Assert.AreEqual(1, pkCountDoctor);
 
-				var fkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
-				var pkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+				var fkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
 				Assert.AreEqual(2, fkCountPerson);
 				Assert.AreEqual(1, pkCountPerson);

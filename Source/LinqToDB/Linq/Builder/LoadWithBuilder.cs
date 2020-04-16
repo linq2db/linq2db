@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -14,27 +16,90 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith");
+			return methodCall.IsSameGenericMethod(Methods.LinqToDB.LoadWith, Methods.LinqToDB.ThenLoadSingle,
+				Methods.LinqToDB.ThenLoadMultiple, 
+				Methods.LinqToDB.LoadWithQueryMany,
+				Methods.LinqToDB.LoadWithQuerySingle,
+				Methods.LinqToDB.ThenLoadMultipleFunc);
+		}
+
+		TableBuilder.TableContext? GetTableContext(IBuildContext ctx, BuildInfo buildInfo)
+		{
+			var table = ctx as TableBuilder.TableContext;
+			if (table == null)
+			{
+				if (ctx is SelectContext selectContext)
+				{
+					var body = selectContext.Body.Unwrap();
+					if (body != null)
+					{
+						ctx = selectContext.GetContext(body, 0, buildInfo)!;
+
+						if (ctx != null)
+							table = GetTableContext(ctx, buildInfo);
+					}
+				}
+			}
+
+			return table;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var table    = (TableBuilder.TableContext)sequence;
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			if (table.LoadWith == null)
-				table.LoadWith = new List<MemberInfo[]>();
+			var associations = GetAssociations(builder, selector.Body.Unwrap())
+				.Reverse()
+				.Select(m => Tuple.Create(m, (Expression?)null))
+				.ToArray();
 
-			table.LoadWith.Add(GetAssociations(builder, selector.Body.Unwrap()).Reverse().ToArray());
+			if (associations.Length == 0)
+				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector.Body}'");
 
+			var memberInfo = associations[0].Item1;
+			var table = GetTableContext(sequence, buildInfo);
+			if (table == null)
+				throw new LinqToDBException(
+					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType.Name}>() method.");
+
+			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.ThenLoadSingle, Methods.LinqToDB.ThenLoadMultiple, Methods.LinqToDB.ThenLoadMultipleFunc))
+			{
+				if (!(table.LoadWith?.Count > 0))
+					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{selector.Body}'.");
+
+				var lastPath = table.LoadWith[table.LoadWith.Count - 1];
+				associations = Array<Tuple<MemberInfo, Expression?>>.Append(lastPath, associations);
+
+				if (methodCall.Arguments.Count == 3)
+				{
+					var lastElement = associations[associations.Length - 1];
+					associations[associations.Length - 1] = Tuple.Create(lastElement.Item1, (Expression?)methodCall.Arguments[2]);
+				}
+
+				// append to the last member chain
+				table.LoadWith[table.LoadWith.Count - 1] = associations;
+			}
+			else
+			{
+				if (table.LoadWith == null)
+					table.LoadWith = new List<Tuple<MemberInfo, Expression?>[]>();
+
+				if (methodCall.Arguments.Count == 3)
+				{
+					var lastElement = associations[associations.Length - 1];
+					associations[associations.Length - 1] = Tuple.Create(lastElement.Item1, (Expression?)methodCall.Arguments[2]);
+				}
+
+				table.LoadWith.Add(associations);
+			}
 			return sequence;
 		}
 
 		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression)
 		{
-			MemberInfo lastMember = null;
+			MemberInfo? lastMember = null;
 
 			for (;;)
 			{
@@ -77,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 							var member = ((MemberExpression)expr).Member;
 							var mtype  = member.GetMemberType();
 
-							if (lastMember.ReflectedTypeEx() != mtype.GetItemType())
+							if (lastMember.ReflectedType != mtype.GetItemType())
 								goto default;
 
 							expression = expr;
@@ -89,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mexpr  = (MemberExpression)expression;
 							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedTypeEx(), member);
+							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType, member);
 
 							if (attr == null)
 								throw new LinqToDBException(
@@ -134,8 +199,8 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}

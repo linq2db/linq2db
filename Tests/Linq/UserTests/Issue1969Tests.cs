@@ -13,8 +13,8 @@ namespace Tests.UserTests
 		[Table("CONFIG")]
 		public partial class Config
 		{
-			[Column("ID"),      PrimaryKey,  NotNull] public int    Id   { get; set; } 
-			[Column("NAME"),    Nullable            ] public string Name { get; set; } 
+			[Column("ID"),      PrimaryKey,  NotNull] public int     Id   { get; set; } 
+			[Column("NAME"),    Nullable            ] public string? Name { get; set; } 
 	  
 			[ExpressionMethod(nameof(GetFromExpr), IsColumn = true)]
 			public int CountOf{ get; set; }

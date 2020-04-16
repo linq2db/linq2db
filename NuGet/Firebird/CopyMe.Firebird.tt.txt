@@ -43,9 +43,13 @@
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadFirebirdMetadata("MyServer", @"C:\Data\MyDatabase.fdb");
 //	LoadFirebirdMetadata(string server, string database, string uid, string password);
 //	LoadFirebirdMetadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

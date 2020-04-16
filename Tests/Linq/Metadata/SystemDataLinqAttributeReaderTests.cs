@@ -1,10 +1,9 @@
-﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+﻿#if NET45 || NET46
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
 using System;
 using System.ComponentModel;
-using System.Data.Linq.Mapping;
 using System.Linq;
 
 namespace Tests.Metadata
@@ -13,17 +12,17 @@ namespace Tests.Metadata
 	public class SystemDataLinqAttributeReaderTests : TestBase
 	{
 		// this is the reduced part of Northwind DB Linq2sql mapping
-		[global::System.Data.Linq.Mapping.TableAttribute(Name = "dbo.Shippers")]
+		[System.Data.Linq.Mapping.Table(Name = "dbo.Shippers")]
 		public partial class Shipper : INotifyPropertyChanging, INotifyPropertyChanged
 		{
 
-			private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+			private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(string.Empty);
 
 			private int _ShipperID;
 
-			private string _CompanyName;
+			private string? _CompanyName;
 
-			private string _Phone;
+			private string? _Phone;
 
 			#region Extensibility Method Definitions
 			partial void OnLoaded();
@@ -31,9 +30,9 @@ namespace Tests.Metadata
 			partial void OnCreated();
 			partial void OnShipperIDChanging(int value);
 			partial void OnShipperIDChanged();
-			partial void OnCompanyNameChanging(string value);
+			partial void OnCompanyNameChanging(string? value);
 			partial void OnCompanyNameChanged();
-			partial void OnPhoneChanging(string value);
+			partial void OnPhoneChanging(string? value);
 			partial void OnPhoneChanged();
 			#endregion
 
@@ -42,70 +41,66 @@ namespace Tests.Metadata
 				OnCreated();
 			}
 
-			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_ShipperID", AutoSync = AutoSync.OnInsert, DbType = "Int NOT NULL IDENTITY", IsPrimaryKey = true, IsDbGenerated = true)]
+			[System.Data.Linq.Mapping.Column(Storage = "_ShipperID", AutoSync = System.Data.Linq.Mapping.AutoSync.OnInsert, DbType = "Int NOT NULL IDENTITY", IsPrimaryKey = true, IsDbGenerated = true)]
 			public int ShipperID {
 				get {
-					return this._ShipperID;
+					return _ShipperID;
 				}
 				set {
-					if ((this._ShipperID != value)) {
-						this.OnShipperIDChanging(value);
-						this.SendPropertyChanging();
-						this._ShipperID = value;
-						this.SendPropertyChanged("ShipperID");
-						this.OnShipperIDChanged();
+					if (_ShipperID != value) {
+						OnShipperIDChanging(value);
+						SendPropertyChanging();
+						_ShipperID = value;
+						SendPropertyChanged("ShipperID");
+						OnShipperIDChanged();
 					}
 				}
 			}
 
-			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CompanyName", DbType = "NVarChar(40) NOT NULL", CanBeNull = false)]
-			public string CompanyName {
+			[System.Data.Linq.Mapping.Column(Storage = "_CompanyName", DbType = "NVarChar(40) NOT NULL", CanBeNull = false)]
+			public string? CompanyName {
 				get {
-					return this._CompanyName;
+					return _CompanyName;
 				}
 				set {
-					if ((this._CompanyName != value)) {
-						this.OnCompanyNameChanging(value);
-						this.SendPropertyChanging();
-						this._CompanyName = value;
-						this.SendPropertyChanged("CompanyName");
-						this.OnCompanyNameChanged();
+					if (_CompanyName != value) {
+						OnCompanyNameChanging(value);
+						SendPropertyChanging();
+						_CompanyName = value;
+						SendPropertyChanged("CompanyName");
+						OnCompanyNameChanged();
 					}
 				}
 			}
 
-			[global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Phone", DbType = "NVarChar(24)")]
-			public string Phone {
+			[global::System.Data.Linq.Mapping.Column(Storage = "_Phone", DbType = "NVarChar(24)")]
+			public string? Phone {
 				get {
-					return this._Phone;
+					return _Phone;
 				}
 				set {
-					if ((this._Phone != value)) {
-						this.OnPhoneChanging(value);
-						this.SendPropertyChanging();
-						this._Phone = value;
-						this.SendPropertyChanged("Phone");
-						this.OnPhoneChanged();
+					if (_Phone != value) {
+						OnPhoneChanging(value);
+						SendPropertyChanging();
+						_Phone = value;
+						SendPropertyChanged("Phone");
+						OnPhoneChanged();
 					}
 				}
 			}
 
-			public event PropertyChangingEventHandler PropertyChanging;
+			public event PropertyChangingEventHandler? PropertyChanging;
 
-			public event PropertyChangedEventHandler PropertyChanged;
+			public event PropertyChangedEventHandler?  PropertyChanged;
 
 			protected virtual void SendPropertyChanging()
 			{
-				if ((this.PropertyChanging != null)) {
-					this.PropertyChanging(this, emptyChangingEventArgs);
-				}
+				PropertyChanging?.Invoke(this, emptyChangingEventArgs);
 			}
 
-			protected virtual void SendPropertyChanged(String propertyName)
+			protected virtual void SendPropertyChanged(string propertyName)
 			{
-				if ((this.PropertyChanged != null)) {
-					this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-				}
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 			}
 		}
 

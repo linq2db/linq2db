@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 
@@ -21,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 			return builder.GetBuilder(buildInfo);
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var expr = (ChangeTypeExpression)buildInfo.Expression;
 			var info = new BuildInfo(buildInfo, expr.Expression);
@@ -29,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			return GetBuilder(builder, info).BuildSequence(builder, info);
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}

@@ -86,12 +86,12 @@ namespace LinqToDB.Common
 			},
 		};
 
-		public static bool TryConvert(object value, Type toType, out object convertedValue)
+		public static bool TryConvert(object? value, Type toType, out object? convertedValue)
 		{
 			convertedValue = null;
 
 			if (value == null)
-				return  toType.IsClassEx() || toType.IsNullable();
+				return  toType.IsClass || toType.IsNullable();
 
 			var from = value.GetType().ToNullableUnderlying();
 			var to   = toType         .ToNullableUnderlying();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
@@ -11,9 +10,9 @@ namespace LinqToDB.Expressions
 		private readonly List<Expression> _expressions = new List<Expression>();
 		private readonly TypeMapper _mapper;
 
-		public ExpressionGenerator([NotNull] TypeMapper mapper)
+		public ExpressionGenerator(TypeMapper mapper)
 		{
-			_mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			_mapper = mapper;
 		}
 
 		public ExpressionGenerator() : this(new TypeMapper())
@@ -22,7 +21,7 @@ namespace LinqToDB.Expressions
 
 		public Expression ResultExpression => Build();
 
-		public ParameterExpression DeclareVariable([NotNull] Type type, string name = default)
+		public ParameterExpression DeclareVariable(Type type, string? name = default)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -31,7 +30,15 @@ namespace LinqToDB.Expressions
 			return variable;
 		}
 
-		public Expression AddExpression([NotNull] Expression expression)
+		public ParameterExpression AddVariable(ParameterExpression variable)
+		{
+			if (variable == null) throw new ArgumentNullException(nameof(variable));
+
+			_variables.Add(variable);
+			return variable;
+		}
+
+		public Expression AddExpression(Expression expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -48,7 +55,7 @@ namespace LinqToDB.Expressions
 			return block;
 		}
 
-		public static Expression Build([NotNull] Action<ExpressionGenerator> buildFunc, TypeMapper typeMapper = default)
+		public static Expression Build(Action<ExpressionGenerator> buildFunc, TypeMapper? typeMapper = default)
 		{
 			if (buildFunc == null) throw new ArgumentNullException(nameof(buildFunc));
 
@@ -57,7 +64,7 @@ namespace LinqToDB.Expressions
 			return generator.Build();
 		}
 
-		public Expression Assign([NotNull] Expression left, [NotNull] Expression right)
+		public Expression Assign(Expression left, Expression right)
 		{
 			if (left  == null) throw new ArgumentNullException(nameof(left));
 			if (right == null) throw new ArgumentNullException(nameof(right));
@@ -68,7 +75,7 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.Assign(left, right));
 		}
 
-		public ParameterExpression AssignToVariable([NotNull] Expression expression, string name = default)
+		public ParameterExpression AssignToVariable(Expression expression, string? name = default)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -77,14 +84,14 @@ namespace LinqToDB.Expressions
 			return variable;
 		}
 
-		public Expression Throw([NotNull] Expression expression)
+		public Expression Throw(Expression expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			return AddExpression(Expression.Throw(expression));
 		}
 
-		public Expression IfThen([NotNull] Expression test, [NotNull] Expression ifTrue)
+		public Expression IfThen(Expression test, Expression ifTrue)
 		{
 			if (test   == null) throw new ArgumentNullException(nameof(test));
 			if (ifTrue == null) throw new ArgumentNullException(nameof(ifTrue));
@@ -92,7 +99,7 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.IfThen(test, ifTrue));
 		}
 
-		public Expression IfThenElse([NotNull] Expression test, [NotNull] Expression ifTrue, [NotNull] Expression ifFalse)
+		public Expression IfThenElse(Expression test, Expression ifTrue, Expression ifFalse)
 		{
 			if (test    == null) throw new ArgumentNullException(nameof(test));
 			if (ifTrue  == null) throw new ArgumentNullException(nameof(ifTrue));
@@ -101,7 +108,16 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.IfThenElse(test, ifTrue, ifFalse));
 		}
 
-		public Expression TryCatch([NotNull] Expression body, [NotNull] CatchBlock[] catchBlocks)
+		public Expression Condition(Expression test, Expression ifTrue, Expression ifFalse)
+		{
+			if (test    == null) throw new ArgumentNullException(nameof(test));
+			if (ifTrue  == null) throw new ArgumentNullException(nameof(ifTrue));
+			if (ifFalse == null) throw new ArgumentNullException(nameof(ifFalse));
+
+			return AddExpression(Expression.Condition(test, ifTrue, ifFalse));
+		}
+
+		public Expression TryCatch(Expression body, params CatchBlock[] catchBlocks)
 		{
 			if (body        == null) throw new ArgumentNullException(nameof(body));
 			if (catchBlocks == null) throw new ArgumentNullException(nameof(catchBlocks));
@@ -109,8 +125,8 @@ namespace LinqToDB.Expressions
 			return AddExpression(Expression.TryCatch(body, catchBlocks));
 		}
 
-		public MemberExpression MemberAccess<T>([NotNull] Expression<Func<T, object>> memberExpression,
-			[NotNull] Expression obj)
+		public MemberExpression MemberAccess<T>(Expression<Func<T, object>> memberExpression,
+			Expression obj)
 		{
 			if (memberExpression == null) throw new ArgumentNullException(nameof(memberExpression));
 			if (obj              == null) throw new ArgumentNullException(nameof(obj));
@@ -141,6 +157,25 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+		#region MapAction
+		public Expression MapAction(Expression<Action> action)
+			=> _mapper.MapAction(action);
+
+		public Expression MapAction<T>(Expression<Action<T>> action, Expression p)
+			=> _mapper.MapAction(action, p);
+
+		public Expression MapAction<T1, T2>(Expression<Action<T1, T2>> action, Expression p1, Expression p2)
+			=> _mapper.MapAction(action, p1, p2);
+
+		public Expression MapAction<T1, T2, T3>(Expression<Action<T1, T2, T3>> action, Expression p1, Expression p2, Expression p3)
+			=> _mapper.MapAction(action, p1, p2, p3);
+
+		public Expression MapAction<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action, Expression p1, Expression p2, Expression p3, Expression p4)
+			=> _mapper.MapAction(action, p1, p2, p3, p4);
+
+		public Expression MapAction<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
+			=> _mapper.MapAction(action, p1, p2, p3, p4, p5);
+		#endregion
 
 	}
 }

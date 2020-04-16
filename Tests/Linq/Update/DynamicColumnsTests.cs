@@ -46,7 +46,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void UpdateViaSqlProperty([DataSources(ProviderName.Informix)] string context)
+		public void UpdateViaSqlProperty([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -73,7 +73,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void UpdateViaSqlPropertyValue([DataSources(ProviderName.Informix)] string context)
+		public void UpdateViaSqlPropertyValue([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -128,7 +128,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void UpdateDynamicColumn([DataSources(ProviderName.Informix)] string context)
+		public void UpdateDynamicColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
 			{
@@ -177,7 +177,7 @@ namespace Tests.Update
 			public int ID { get; set; }
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 	}
 }

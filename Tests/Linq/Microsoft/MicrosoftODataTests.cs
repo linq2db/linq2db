@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET46
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
 using NUnit.Framework;
 
-namespace Tests.Microsoft
+namespace Tests.OData.Microsoft
 {
 	[TestFixture]
 	public class MicrosoftODataTests : TestBase
@@ -26,11 +27,11 @@ namespace Tests.Microsoft
 		public class PersonClass
 		{
 			[Column("Name", Length = 50, CanBeNull = false), PrimaryKey]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 			[Column("YearsExperience"), NotNull]
 			public int YearsExperience { get; set; }
 			[Column("Title"), NotNull]
-			public string Title { get; set; }
+			public string Title { get; set; } = null!;
 		}
 
 		private static MethodInfo _toArray = MemberHelper.MethodOf<IQueryable<int>>(q => q.ToArray()).GetGenericMethodDefinition();
@@ -119,15 +120,15 @@ namespace Tests.Microsoft
 
 		class NamedProperty
 		{
-			public string Name { get; set; }
-			public object Value { get; set; }
+			public string  Name  { get; set; } = null!;
+			public object? Value { get; set; }
 
 		}
 
 		class GroupByWrapper
 		{
-			public virtual AggregationPropertyContainer GroupByContainer { get; set; }
-			public virtual AggregationPropertyContainer Container { get; set; }
+			public virtual AggregationPropertyContainer GroupByContainer { get; set; } = null!;
+			public virtual AggregationPropertyContainer Container { get; set; } = null!;
 		}
 
 		class AggregationWrapper : GroupByWrapper
@@ -143,7 +144,7 @@ namespace Tests.Microsoft
 
 		class FlatteningWrapper<T>: GroupByWrapper
 		{
-			public T Source { get; set; }
+			public T Source { get; set; } = default!;
 		}
 
 		[Test]
@@ -180,7 +181,7 @@ namespace Tests.Microsoft
 							Container = new AggregationPropertyContainer
 							{
 								Name = "TotalExperience",
-								Value =  ((IEnumerable<FlatteningWrapper<PersonClass>>)it).Sum(it2 => (int)it2.GroupByContainer.Value)
+								Value =  ((IEnumerable<FlatteningWrapper<PersonClass>>)it).Sum(it2 => (int)it2.GroupByContainer.Value!)
 							}
 						});
 
@@ -227,7 +228,7 @@ namespace Tests.Microsoft
 								Name = "Test",
 								// Value = ((IEnumerable<FlatteningWrapper<MicrosoftODataTests.PersonClass>>)it)
 								Value = it
-									.Select(it2 => (int)it2.GroupByContainer.Value)
+									.Select(it2 => (int)it2.GroupByContainer.Value!)
 									.Distinct()
 									.LongCount()
 							}
@@ -261,3 +262,4 @@ namespace Tests.Microsoft
 
 	}
 }
+#endif

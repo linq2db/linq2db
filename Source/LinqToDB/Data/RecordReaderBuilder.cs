@@ -8,7 +8,6 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using Expressions;
-	using Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
@@ -29,10 +28,10 @@ namespace LinqToDB.Data
 		public IDataReader            Reader        { get; }
 		public Dictionary<string,int> ReaderIndexes { get; }
 
-		int                 _varIndex;
-		ParameterExpression _variable;
+		int                  _varIndex;
+		ParameterExpression? _variable;
 
-		public RecordReaderBuilder(IDataContext dataContext, Type objectType, IDataReader reader)
+		public RecordReaderBuilder(IDataContext dataContext, Type objectType, IDataReader reader, LambdaExpression? converterExpr)
 		{
 			DataContext   = dataContext;
 			MappingSchema = dataContext.MappingSchema;
@@ -41,14 +40,8 @@ namespace LinqToDB.Data
 			Reader        = reader;
 			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i, MappingSchema.ColumnNameComparer);
 
-			if (Common.Configuration.AvoidSpecificDataProviderAPI)
-			{
-				DataReaderLocal = DataReaderParam;
-			}
-			else
-			{
-				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
-			}
+			var typedDataReader = Expression.Convert(DataReaderParam, reader.GetType());
+			DataReaderLocal     = BuildVariable(converterExpr?.GetBody(typedDataReader) ?? typedDataReader, "ldr");
 		}
 
 		static object DefaultInheritanceMappingException(object value, Type type)
@@ -83,7 +76,7 @@ namespace LinqToDB.Data
 			return _variable = BuildVariable(expr);
 		}
 
-		public ParameterExpression BuildVariable(Expression expr, string name = null)
+		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
 			if (name == null)
 				name = expr.Type.Name + ++_varIndex;
@@ -100,13 +93,12 @@ namespace LinqToDB.Data
 
 		int GetReaderIndex(string columnName)
 		{
-			int value;
-			if (!ReaderIndexes.TryGetValue(columnName, out value))
+			if (!ReaderIndexes.TryGetValue(columnName, out var value))
 				return -1;
 			return value;
 		}
 
-		int GetReaderIndex(EntityDescriptor entityDescriptor, Type objectType, string name)
+		int GetReaderIndex(EntityDescriptor entityDescriptor, Type? objectType, string name)
 		{
 			if (!ReaderIndexes.TryGetValue(name, out var value))
 			{
@@ -128,7 +120,7 @@ namespace LinqToDB.Data
 				where c.MemberAccessor.TypeAccessor.Type == entityDescriptor.ObjectType
 				let   index = GetReaderIndex(c.ColumnName)
 				where index >= 0
-				select new ReadColumnInfo {ReaderIndex = index, Column = c};
+				select new ReadColumnInfo() { ReaderIndex = index, Column = c };
 			return result;
 		}
 
@@ -139,7 +131,7 @@ namespace LinqToDB.Data
 				from info in GetReadIndexes(entityDescriptor)
 				where info.Column.Storage != null ||
 				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo) ||
-				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethodEx(true) != null
+				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 				select new
 				{
 					Column = info.Column,
@@ -166,7 +158,7 @@ namespace LinqToDB.Data
 
 				exprs.AddRange(
 					members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-						m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+						m.Column.MemberAccessor.SetterExpression!.GetBody(obj, m.Expr)));
 
 				exprs.Add(obj);
 
@@ -179,11 +171,11 @@ namespace LinqToDB.Data
 		class ColumnInfo
 		{
 			public bool       IsComplex;
-			public string     Name;
-			public Expression Expression;
+			public string     Name       = null!;
+			public Expression Expression = null!;
 		}
 
-		IEnumerable<Expression> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
+		IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
 		{
 			var members = isRecordType ?
 				typeAccessor.Members.Where(m =>
@@ -224,7 +216,7 @@ namespace LinqToDB.Data
 
 						if (isRecord)
 						{
-							var ctor      = member.Type.GetConstructorsEx().Single();
+							var ctor      = member.Type.GetConstructors().Single();
 							var ctorParms = ctor.GetParameters();
 
 							var parms =
@@ -257,7 +249,7 @@ namespace LinqToDB.Data
 
 		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var ctor  = objectType.GetConstructorsEx().Single();
+			var ctor  = objectType.GetConstructors().Single();
 
 			var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
 				(
@@ -292,7 +284,7 @@ namespace LinqToDB.Data
 		class ReadColumnInfo
 		{
 			public int              ReaderIndex;
-			public ColumnDescriptor Column;
+			public ColumnDescriptor Column = null!;
 		}
 
 
@@ -305,7 +297,7 @@ namespace LinqToDB.Data
 			return lambda.Compile();
 		}
 
-		public Expression BuildReaderExpression()
+		private Expression BuildReaderExpression()
 		{
 			if (MappingSchema.IsScalarType(ObjectType))
 			{
@@ -320,7 +312,7 @@ namespace LinqToDB.Data
 				return BuildReadExpression(true, ObjectType);
 			}
 
-			Expression expr = null;
+			Expression? expr = null;
 
 			var defaultMapping = inheritanceMapping.SingleOrDefault(m => m.IsDefault);
 
@@ -332,7 +324,7 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
+				var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null!, null!));
 				var dindex          = GetReaderIndex(entityDescriptor, null, inheritanceMapping[0].DiscriminatorName);
 
 				if (dindex >= 0)
@@ -360,7 +352,6 @@ namespace LinqToDB.Data
 
 				if (dindex >= 0)
 				{
-
 					Expression testExpr;
 
 					var isNullExpr = Expression.Call(
@@ -401,7 +392,7 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		public Expression BuildBlock(Expression expression)
+		private Expression BuildBlock(Expression expression)
 		{
 			if (BlockExpressions.Count == 0)
 				return expression;

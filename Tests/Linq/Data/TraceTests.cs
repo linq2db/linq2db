@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,10 +11,6 @@ using LinqToDB.Data;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
-
 	using Model;
 
 	[TestFixture]
@@ -64,9 +61,9 @@ namespace Tests.Data
 				var _ = db.GetTable<Northwind.Category>().ToList();
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once
@@ -101,9 +98,9 @@ namespace Tests.Data
 				}
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once
@@ -138,9 +135,9 @@ namespace Tests.Data
 				}
 
 				// the same command is reported on each step
-				var command = events[TraceInfoStep.BeforeExecute].Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
 				Assert.NotNull(command);
 
 				// steps called once

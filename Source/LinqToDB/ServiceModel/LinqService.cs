@@ -1,30 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
-	using Common;
 	using Data;
 	using Linq;
-	using Extensions;
 	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using System.Threading.Tasks;
+	using System.Data;
+	using System.Linq.Expressions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
 	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 	public class LinqService : ILinqService
 	{
+		public LinqService()
+		{
+		}
+
+		public LinqService(MappingSchema? mappingSchema)
+		{
+			_mappingSchema = mappingSchema;
+		}
+
 		public bool AllowUpdates { get; set; }
 
-		public static Func<string,Type> TypeResolver = _ => null;
-
-		public virtual DataConnection CreateDataContext(string configuration)
+		private MappingSchema? _mappingSchema;
+		public MappingSchema? MappingSchema
 		{
-			return new DataConnection(configuration);
+			get => _mappingSchema;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private MappingSchema? _serializationMappingSchema;
+		internal  MappingSchema SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema));
+		}
+
+		public static Func<string,Type?> TypeResolver = _ => null;
+
+		public virtual DataConnection CreateDataContext(string? configuration)
+		{
+			return MappingSchema != null ? new DataConnection(configuration, MappingSchema) : new DataConnection(configuration);
 		}
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
@@ -40,27 +68,26 @@ namespace LinqToDB.ServiceModel
 		#region ILinqService Members
 
 		[WebMethod]
-		public virtual LinqServiceInfo GetInfo(string configuration)
+		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{
 			using (var ctx = CreateDataContext(configuration))
 			{
-				return new LinqServiceInfo
+				return new LinqServiceInfo()
 				{
 					MappingSchemaType = ctx.DataProvider.MappingSchema.     GetType().AssemblyQualifiedName,
 					SqlBuilderType    = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName,
 					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer(). GetType().AssemblyQualifiedName,
-					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
-					ConfigurationList = ctx.MappingSchema.ConfigurationList,
+					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags
 				};
 			}
 		}
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement   Statement   { get; set; }
-			public object         Context     { get; set; }
-			public SqlParameter[] Parameters  { get; set; }
-			public List<string>   QueryHints  { get; set; }
+			public SqlStatement   Statement   { get; set; } = null!;
+			public object?        Context     { get; set; }
+			public SqlParameter[] Parameters  { get; set; } = null!;
+			public List<string>?  QueryHints  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -69,16 +96,16 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteNonQuery(string configuration, string queryData)
+		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
@@ -96,16 +123,16 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public object ExecuteScalar(string configuration, string queryData)
+		public object? ExecuteScalar(string? configuration, string queryData)
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
@@ -123,16 +150,16 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public string ExecuteReader(string configuration, string queryData)
+		public string ExecuteReader(string? configuration, string queryData)
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
@@ -141,6 +168,15 @@ namespace LinqToDB.ServiceModel
 						QueryHints  = query.QueryHints
 					}))
 					{
+						var reader = rd;
+						var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);
+						if (converterExpr != null)
+						{
+							var param     = Expression.Parameter(typeof(IDataReader));
+							converterExpr = Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, rd.GetType())), param);
+							reader        = ((Func<IDataReader, IDataReader>)converterExpr.Compile())(rd);
+						}
+
 						var ret = new LinqServiceResult
 						{
 							QueryID    = Guid.NewGuid(),
@@ -151,6 +187,19 @@ namespace LinqToDB.ServiceModel
 						};
 
 						var names = new HashSet<string>();
+
+						SelectQuery select;
+						switch (query.Statement.QueryType)
+						{
+							case QueryType.Select:
+								select = query.Statement.SelectQuery!;
+								break;
+							case QueryType.Insert:
+								select = ((SqlInsertStatement)query.Statement).Output!.OutputQuery!;
+								break;
+							default:
+								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
+						}
 
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
@@ -167,18 +216,23 @@ namespace LinqToDB.ServiceModel
 							names.Add(name);
 
 							ret.FieldNames[i] = name;
-							ret.FieldTypes[i] = rd.GetFieldType(i);
+							// ugh...
+							// still if it fails here due to empty columns - it is a bug in columns generation
+							ret.FieldTypes[i] = select.Select.Columns[i].SystemType!;
+
+							// async compiled query support
+							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
+								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArguments()[0];
 						}
 
-						var varyingTypes = new List<Type>();
+						var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
+
+						for (var i = 0; i < ret.FieldCount; i++)
+							columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema, ret.FieldTypes[i], i);
 
 						while (rd.Read())
 						{
 							var data  = new string  [rd.FieldCount];
-							var codes = new TypeCode[rd.FieldCount];
-
-							for (var i = 0; i < ret.FieldCount; i++)
-								codes[i] = Type.GetTypeCode(ret.FieldTypes[i].ToNullableUnderlying());
 
 							ret.RowCount++;
 
@@ -186,61 +240,17 @@ namespace LinqToDB.ServiceModel
 							{
 								if (!rd.IsDBNull(i))
 								{
-									var code = codes[i];
-									var type = rd.GetFieldType(i);
-									var idx  = -1;
+									var value = columnReaders[i].GetValue(reader);
 
-									if (type != ret.FieldTypes[i])
-									{
-										code = Type.GetTypeCode(type);
-										idx  = varyingTypes.IndexOf(type);
-
-										if (idx < 0)
-										{
-											varyingTypes.Add(type);
-											idx = varyingTypes.Count - 1;
-										}
-									}
-
-									switch (code)
-									{
-										case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToBinary().ToString(CultureInfo.InvariantCulture); break;
-										default                :
-											{
-												if (type == typeof(DateTimeOffset))
-												{
-													var dt = rd.GetValue(i);
-
-													if (dt is DateTime)
-														data[i] = ((DateTime)dt).ToBinary().ToString(CultureInfo.InvariantCulture);
-													else if (dt is DateTimeOffset)
-														data[i] = ((DateTimeOffset)dt).UtcTicks.ToString(CultureInfo.InvariantCulture);
-													else
-														data[i] = rd.GetValue(i).ToString();
-												}
-												else if (type == typeof(byte[]))
-													data[i] = ConvertTo<string>.From((byte[])rd.GetValue(i));
-												else
-													data[i] = (rd.GetValue(i) ?? "").ToString();
-
-												break;
-											}
-									}
-
-									if (idx >= 0)
-										data[i] = "\0" + (char)idx + data[i];
+									if (value != null)
+										data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
 								}
 							}
 
 							ret.Data.Add(data);
 						}
 
-						ret.VaryingTypes = varyingTypes.ToArray();
-
-						return LinqServiceSerializer.Serialize(ret);
+						return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 					}
 				}
 			}
@@ -252,18 +262,18 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteBatch(string configuration, string queryData)
+		public int ExecuteBatch(string? configuration, string queryData)
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(queryData);
-				var queries = data.Select(LinqServiceSerializer.Deserialize).ToArray();
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
-				using (db.DataProvider.ExecuteScope())
+				using (db.DataProvider.ExecuteScope(db))
 				{
 					db.BeginTransaction();
 

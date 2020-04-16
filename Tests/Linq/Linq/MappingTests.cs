@@ -11,6 +11,9 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+#if !NETCOREAPP2_1
+	using System.ServiceModel;
+#endif
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -160,9 +163,9 @@ namespace Tests.Linq
 		public class Person9
 		{
 			public int     PersonID;
-			public string  FirstName;
-			public string  LastName;
-			public string  MiddleName;
+			public string  FirstName = null!;
+			public string  LastName = null!;
+			public string? MiddleName;
 			public Gender9 Gender;
 		}
 
@@ -214,7 +217,7 @@ namespace Tests.Linq
 			[Column] public int ChildID;
 
 			[Association(ThisKey="ParentID", OtherKey="ParentID")]
-			public ParentObject Parent;
+			public ParentObject? Parent;
 		}
 
 		[Test]
@@ -222,7 +225,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var e = db.GetTable<ChildObject>().First(c => c.Parent.Value.Value1 == 1);
+				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
 				Assert.AreEqual(1, e.ParentID);
 			}
 		}
@@ -243,8 +246,8 @@ namespace Tests.Linq
 		{
 			public MyMappingSchema()
 			{
-				SetConvertExpression<Int64,MyInt>        (n => new MyInt { MyValue = (int)n });
-				SetConvertExpression<Int32,MyInt>        (n => new MyInt { MyValue =      n });
+				SetConvertExpression<long,MyInt>         (n => new MyInt { MyValue = (int)n });
+				SetConvertExpression<int,MyInt>          (n => new MyInt { MyValue =      n });
 				SetConvertExpression<MyInt,DataParameter>(n => new DataParameter { Value = n.MyValue });
 			}
 		}
@@ -274,7 +277,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType3()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -290,7 +293,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -307,7 +310,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -439,23 +442,105 @@ namespace Tests.Linq
 		[Test]
 		public void ColumnMappingException1([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+#if !NETCOREAPP2_1
+				if (isLinqService)
+				{
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+				}
+				else
+#endif
+				{
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					// field name casing depends on database
+					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
 
-				// field name casing depends on database
-				Assert.AreEqual("firstname", ex.ColumnName.ToLower());
+				}
+
 			}
 		}
 
 		[Test]
 		public void ColumnMappingException2([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+#if !NETCOREAPP2_1
+				if (isLinqService)
+				{
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+					Assert.True(fe.Message.Contains("Cannot convert value 'Pupkin' to type 'Tests.Linq.MappingTests+BadEnum'"));
+				}
+				else
+#endif
+				{
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+					Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
+				}
+			}
+		}
 
-				Assert.AreEqual("lastname", ex.ColumnName.ToLower());
+		[Test, ActiveIssue(1592)]
+		public void Issue1592CallbackWithDefaultMappingSchema([DataSources] string context)
+		{
+			bool result = false;
+
+			MappingSchema.Default.EntityDescriptorCreatedCallback = (ms, ed) =>
+			{
+				result = true;
+			};
+
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
+			}
+		}
+
+		[ActiveIssue(1592)]
+		[Test]
+		public void Issue1592CallbackWithContextProperty([DataSources] string context)
+		{
+			bool result = false;
+
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.EntityDescriptorCreatedCallback = (ms, ed) =>
+				{
+					result = true;
+				};
+
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
+			}
+		}
+
+		[Test, ActiveIssue(1592)]
+		public void Issue1592CallbackWithContextConstructor([DataSources] string context)
+		{
+			bool result = false;
+
+			var mappingSchema = new MappingSchema
+			{
+				EntityDescriptorCreatedCallback = (ms, ed) =>
+				{
+					result = true;
+				}
+			};
+
+			using (var db = GetDataContext(context, mappingSchema))
+			{
+				db.GetTable<Person>().FirstOrDefault();
+
+				Assert.IsTrue(result);
 			}
 		}
 	}

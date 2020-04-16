@@ -12,24 +12,24 @@ namespace Tests.Tools
 {
 	public class TestConnection
 	{
-		public string ConnectionString;
-		public string Provider;
+		public string  ConnectionString = null!;
+		public string? Provider;
 	}
 
 	public class TestSettings
 	{
-		public string   BasedOn;
-		public string[] Providers;
-		public string[] Skip;
-		public string   TraceLevel;
-		public string   DefaultConfiguration;
-		public string   NoLinqService;
+		public string?   BasedOn;
+		public string[]? Providers;
+		public string[]? Skip;
+		public string?   TraceLevel;
+		public string?   DefaultConfiguration;
+		public string?   NoLinqService;
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
 	public static class SettingsReader
 	{
-		public static TestSettings Deserialize(string configName, string defaultJson, string userJson)
+		public static TestSettings Deserialize(string configName, string defaultJson, string? userJson)
 		{
 			void Merge(TestSettings settings1, TestSettings settings2)
 			{
@@ -133,7 +133,7 @@ namespace Tests.Tools
 						}
 					},
 					{
-						"CORE2",
+						"CORE21",
 						new TestSettings
 						{
 							Connections = new Dictionary<string,TestConnection>
@@ -186,7 +186,7 @@ namespace Tests.Tools
 		}
 	},
 
-	CORE2:
+	CORE21:
 	{
 		BasedOn     : 'Default',
 		Connections :
@@ -208,7 +208,7 @@ namespace Tests.Tools
 		}
 	},
 
-	'CORE2':
+	'CORE21':
 	{
 		BasedOn     : 'Default',
 		Connections :
@@ -240,7 +240,7 @@ namespace Tests.Tools
 						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("Core 2", "CORE2", _defaultData, null)
+				yield return new TestCaseData("Core 2.1", "CORE21", _defaultData, null)
 					.SetName("Tests.Tools.Core2")
 					.Returns(new[]
 					{
@@ -268,7 +268,7 @@ namespace Tests.Tools
 						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("User Core 2", "CORE2", _defaultData, _userData)
+				yield return new TestCaseData("User Core 2.1", "CORE21", _defaultData, _userData)
 					.SetName("Tests.Tools.UserCore2")
 					.Returns(new[]
 					{

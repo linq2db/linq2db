@@ -216,7 +216,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -252,7 +252,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest3([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -268,7 +268,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest4([DataSources(ProviderName.Informix, ProviderName.SapHana)] string context)
+		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -276,7 +276,7 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -287,7 +287,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -299,7 +299,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -307,7 +307,38 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0),
+						First2 = ch2.FirstOrDefault()
+					}
+					,
+					from p in db.Parent
+					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0),
+						First2 = ch2.FirstOrDefault()
+					});
+			}
+		}
+
+		[Test]
+		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -318,7 +349,7 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 					select new
 					{
 						Any    = ch2.Any(),
@@ -330,44 +361,96 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest6([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					(
-						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
-						select new
-						{
-							p.ParentID,
-							Any    = ch2.Any(),
-							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
-							First2 = ch2.FirstOrDefault()
-						}
-					).Where(t => t.ParentID > 0)
-					,
-					(
-						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
-						select new
-						{
-							p.ParentID,
-							Any    = ch2.Any(),
-							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
-							First2 = ch2.FirstOrDefault()
-						}
-					).Where(t => t.ParentID > 0));
+			{
+				var expected = (from p in Parent
+					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					})
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				var actual = (
+					from p in db.Parent
+					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					}
+				)
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				// Access has different order in result set
+				if (!context.StartsWith(ProviderName.Access))
+					AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
-		public void LetTest7([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
+		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		{
+			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected = (from p in Parent
+					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					})
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				var actual = (
+					from p in db.Parent
+					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					select new
+					{
+						p.ParentID,
+						Any    = ch2.Any(),
+						Count  = ch2.Count(),
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First2 = ch2.FirstOrDefault()
+					}
+				)
+					.Where(t => t.ParentID > 0)
+					.ToArray();
+
+				// Access has different order in result set
+				if (!context.StartsWith(ProviderName.Access))
+					AreEqual(expected, actual);
+			}
+		}
+
+		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort")]
+		[Test]
+		public void LetTest7([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -375,7 +458,7 @@ namespace Tests.Linq
 					(
 						from p in Parent
 						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -402,6 +485,41 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(
+						from p in Parent
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+						select new
+						{
+							p.ParentID,
+							Any    = ch2.Any(),
+							Count  = ch2.Count(),
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First2 = ch2.FirstOrDefault()
+						}
+					).Where(t => t.ParentID > 0).Take(5000)
+					,
+					(
+						from p in db.Parent
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
+						let ch2 = ch1.Where(c => c.ChildID > -100)
+						select new
+						{
+							p.ParentID,
+							Any    = ch2.Any(),
+							Count  = ch2.Count(),
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First2 = ch2.FirstOrDefault()
+						}
+					).Where(t => t.ParentID > 0).Take(5000));
+		}
+
+		[Test]
 		public void LetTest8([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -409,8 +527,8 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
-					let ch3	= ch2.FirstOrDefault(c => c.ParentID > 0)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
 						First1 = ch3 == null ? 0 : ch3.ParentID,
@@ -421,8 +539,8 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-					let ch2 = ch1.Where(c => c.ChildID > -100)
-					let ch3	= ch2.FirstOrDefault(c => c.ParentID > 0)
+					let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
+					let ch3	= ch2.OrderBy(c => c.ChildID).FirstOrDefault(c => c.ParentID > 0)
 					select new
 					{
 						First1 = ch3 == null ? 0 : ch3.ParentID,
@@ -433,14 +551,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest9([DataSources] string context)
+		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
 						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = Child.OrderBy(c => c.ChildID).Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
@@ -449,7 +567,7 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch1 = db.Child.OrderBy(c => c.ChildID).Where(c => c.ParentID == p.ParentID)
 						select new
 						{
 							First = ch1.FirstOrDefault()
@@ -482,6 +600,21 @@ namespace Tests.Linq
 					).Any());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
@@ -580,7 +713,7 @@ namespace Tests.Linq
 							 || (ulong )EnumByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -626,7 +759,7 @@ namespace Tests.Linq
 							 || (ulong )EnumSByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -672,7 +805,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -718,7 +851,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -764,7 +897,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -810,7 +943,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -856,7 +989,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 
@@ -902,7 +1035,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
 			}
 		}
 

@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static class MySqlExtensions
 	{
-		public static IMySqlExtensions MySql(this Sql.ISqlExtension ext) => null;
+		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
 		class ModifierBuilder : Sql.IExtensionCallBuilder
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", IsPredicate = true, ServerSideOnly = true)]
-		public static bool Match(this IMySqlExtensions ext, [ExprParameter] string search, [ExprParameter] params object[] columns)
+		public static bool Match(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
 			throw new LinqException($"'{nameof(Match)}' is server-side method.");
 		}
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns full-text search relevance value for current record.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", ServerSideOnly = true)]
-		public static double MatchRelevance(this IMySqlExtensions ext, [ExprParameter] string search, [ExprParameter] params object[] columns)
+		public static double MatchRelevance(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
 			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
 		}
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", IsPredicate = true, ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
-		public static bool Match(this IMySqlExtensions ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object[] columns)
+		public static bool Match(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
 			throw new LinqException($"'{nameof(Match)}' is server-side method.");
 		}
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="columns">Full-text columns that should be queried.</param>
 		/// <returns>Returns full-text search relevance value for current record.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
-		public static double MatchRelevance(this IMySqlExtensions ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object[] columns)
+		public static double MatchRelevance(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
 			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
 		}

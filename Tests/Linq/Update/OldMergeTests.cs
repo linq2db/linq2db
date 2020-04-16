@@ -22,14 +22,14 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
@@ -67,8 +67,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -91,8 +91,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -115,8 +115,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -139,8 +139,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -163,8 +163,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -188,8 +188,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -197,9 +197,9 @@ namespace Tests.xUpdate
 			using (var db = new TestDataConnection(context))
 			{
 				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 				patient++;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 			}
 		}
 
@@ -215,15 +215,15 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
+				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 			}
 		}
 
@@ -231,8 +231,8 @@ namespace Tests.xUpdate
 		class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
-			[Column(DataType = DataType.Char,  Length = 1)]  public char   charDataType;
-			[Column(DataType = DataType.NChar, Length = 20)] public string ncharDataType;
+			[Column(DataType = DataType.Char,  Length = 1)]  public char    charDataType;
+			[Column(DataType = DataType.NChar, Length = 20)] public string? ncharDataType;
 		}
 
 		[Test]
@@ -241,13 +241,13 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -282,8 +282,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)

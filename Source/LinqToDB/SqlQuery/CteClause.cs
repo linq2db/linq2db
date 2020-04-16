@@ -11,11 +11,11 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
-		SqlField[] _fields = new SqlField[0];
+		SqlField[]? _fields = new SqlField[0];
 
 		public static int CteIDCounter;
 
-		public SqlField[] Fields
+		public SqlField[]? Fields
 		{
 			get => _fields;
 			private set => _fields = value;
@@ -23,16 +23,16 @@ namespace LinqToDB.SqlQuery
 
 		public int                          CteID  { get; } = Interlocked.Increment(ref CteIDCounter);
 
-		public string      Name        { get; set; }
-		public SelectQuery Body        { get; set; }
-		public Type        ObjectType  { get; set; }
-		public bool        IsRecursive { get; set; }
+		public string?      Name        { get; set; }
+		public SelectQuery? Body        { get; set; }
+		public Type         ObjectType  { get; set; }
+		public bool         IsRecursive { get; set; }
 
 		public CteClause(
-			[JetBrains.Annotations.CanBeNull] SelectQuery body,
-			[JetBrains.Annotations.NotNull]   Type        objectType,
-			                                  bool        isRecursive,
-			                                  string      name)
+			SelectQuery? body,
+			Type         objectType,
+			bool         isRecursive,
+			string?      name)
 		{
 			ObjectType  = objectType ?? throw new ArgumentNullException(nameof(objectType));
 			Body        = body;
@@ -41,11 +41,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal CteClause(
-			[JetBrains.Annotations.CanBeNull] SelectQuery           body,
-			[JetBrains.Annotations.NotNull]   ICollection<SqlField> fields,
-			[JetBrains.Annotations.CanBeNull] Type                  objectType,
-			bool isRecursive,
-			string name)
+			SelectQuery?          body,
+			ICollection<SqlField> fields,
+			Type                  objectType,
+			bool                  isRecursive,
+			string?               name)
 		{
 			Body        = body;
 			Name        = name;
@@ -56,9 +56,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal CteClause(
-			[JetBrains.Annotations.CanBeNull] Type objectType,
-			bool isRecursive,
-			string name)
+			Type    objectType,
+			bool    isRecursive,
+			string? name)
 		{
 			Name        = name;
 			ObjectType  = objectType;
@@ -66,8 +66,8 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			[JetBrains.Annotations.CanBeNull] SelectQuery body,
-			[JetBrains.Annotations.NotNull]   ICollection<SqlField> fields)
+			SelectQuery?          body,
+			ICollection<SqlField> fields)
 		{
 			Body       = body;
 			Fields     = fields.ToArray();
@@ -82,12 +82,12 @@ namespace LinqToDB.SqlQuery
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			var newClause = new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
+			var newClause = new CteClause((SelectQuery) Body!.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
 			newClause.Fields = Fields?.Select(f => (SqlField)f.Clone(objectTree, doClone)).ToArray();
 			return newClause;
 		}
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Body = Body?.Walk(options, func) as SelectQuery;
 
@@ -96,7 +96,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlField RegisterFieldMapping(int index, Func<SqlField> fieldFactory)
 		{
-			if (Fields.Length > index && Fields[index] != null)
+			if (Fields!.Length > index && Fields[index] != null)
 				return Fields[index];
 
 			var newField = fieldFactory();

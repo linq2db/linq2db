@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -7,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	abstract class SequenceContextBase : IBuildContext
 	{
-		protected SequenceContextBase(IBuildContext parent, IBuildContext[] sequences, LambdaExpression lambda)
+		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
 		{
 			Parent      = parent;
 			Sequences   = sequences;
@@ -20,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 			Builder.Contexts.Add(this);
 		}
 
-		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
+		protected SequenceContextBase(IBuildContext? parent, IBuildContext sequence, LambdaExpression? lambda)
 			: this(parent, new[] { sequence }, lambda)
 		{
 		}
@@ -30,15 +29,15 @@ namespace LinqToDB.Linq.Builder
 		public string Path => this.GetPath();
 #endif
 
-		public IBuildContext     Parent      { get; set; }
+		public IBuildContext?    Parent      { get; set; }
 		public IBuildContext[]   Sequences   { get; set; }
 		public ExpressionBuilder Builder     { get; set; }
-		public LambdaExpression  Lambda      { get; set; }
+		public LambdaExpression? Lambda      { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
-		public SqlStatement      Statement   { get; set; }
+		public SqlStatement?     Statement   { get; set; }
 		public IBuildContext     Sequence => Sequences[0];
 
-		Expression IBuildContext.Expression => Lambda;
+		Expression? IBuildContext.Expression => Lambda;
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
@@ -48,11 +47,11 @@ namespace LinqToDB.Linq.Builder
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public abstract Expression         BuildExpression(Expression expression, int level, bool enforceServerSide);
-		public abstract SqlInfo[]          ConvertToSql   (Expression expression, int level, ConvertFlags flags);
-		public abstract SqlInfo[]          ConvertToIndex (Expression expression, int level, ConvertFlags flags);
-		public abstract IsExpressionResult IsExpression   (Expression expression, int level, RequestFor requestFlag);
-		public abstract IBuildContext      GetContext     (Expression expression, int level, BuildInfo buildInfo);
+		public abstract Expression         BuildExpression(Expression? expression, int level, bool enforceServerSide);
+		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
+		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
+		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);
+		public abstract IBuildContext?     GetContext     (Expression? expression, int level, BuildInfo buildInfo);
 
 		public virtual SqlStatement GetResultStatement()
 		{
@@ -72,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public virtual ISqlExpression GetSubQuery(IBuildContext context)
+		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
 		{
 			return null;
 		}

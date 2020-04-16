@@ -122,7 +122,7 @@ namespace LinqToDB.Common.Internal.Cache
         public static MemoryCacheEntryOptions RegisterPostEvictionCallback(
             this MemoryCacheEntryOptions options,
             PostEvictionDelegate callback,
-            object state)
+            object? state)
         {
             if (callback == null)
             {

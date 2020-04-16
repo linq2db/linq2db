@@ -13,14 +13,14 @@ namespace Tests.UserTests
 	{
 		public class Entity
 		{
-			[Column(DataType = DataType.Char)]     public string CharValue;
-			[Column(DataType = DataType.VarChar)]  public string VarCharValue;
-			[Column(DataType = DataType.NChar)]    public string NCharValue;
-			[Column(DataType = DataType.NVarChar)] public string NVarCharValue;
+			[Column(DataType = DataType.Char)]     public string? CharValue;
+			[Column(DataType = DataType.VarChar)]  public string? VarCharValue;
+			[Column(DataType = DataType.NChar)]    public string? NCharValue;
+			[Column(DataType = DataType.NVarChar)] public string? NVarCharValue;
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

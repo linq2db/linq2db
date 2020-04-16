@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (table != null && table.InheritanceMapping.Count > 0)
 			{
-				var objectType = methodCall.Type.GetGenericArgumentsEx()[0];
+				var objectType = methodCall.Type.GetGenericArguments()[0];
 
 				if (table.ObjectType.IsSameOrParentOf(objectType))
 				{
@@ -34,13 +34,13 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var toType   = methodCall.Type.GetGenericArgumentsEx()[0];
+				var toType   = methodCall.Type.GetGenericArguments()[0];
 				var gargs    = methodCall.Arguments[0].Type.GetGenericArguments(typeof(IQueryable<>));
 				var fromType = gargs == null ? typeof(object) : gargs[0];
 
-				if (toType.IsSubclassOfEx(fromType))
+				if (toType.IsSubclassOf(fromType))
 				{
-					for (var type = toType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
+					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 					{
 						var mapping = builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
@@ -77,8 +77,8 @@ namespace LinqToDB.Linq.Builder
 				});
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var expr = base.BuildExpression(expression, level, enforceServerSide);
 				var type = _methodCall.Method.GetGenericArguments()[0];

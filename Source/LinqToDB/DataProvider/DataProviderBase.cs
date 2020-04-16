@@ -4,10 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using System.IO;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using System.Xml;
 using System.Xml.Linq;
@@ -50,6 +47,7 @@ namespace LinqToDB.DataProvider
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
+				IsUpdateFromSupported                = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -65,30 +63,18 @@ namespace LinqToDB.DataProvider
 			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
 			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
 			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
-
-			MaxRetryCount = DefaultMaxRetryCount;
 		}
 
 		#endregion
 
 		#region Public Members
-		/// <summary>
-		///   The default number of retry attempts.
-		/// </summary>
-		protected static readonly int DefaultMaxRetryCount = 5;
-
-		/// <summary>
-		///     The maximum number of retry attempts.
-		/// </summary>
-		protected virtual int MaxRetryCount { get; }
-
 		public          string           Name                { get; }
 		public abstract string           ConnectionNamespace { get; }
 		public abstract Type             DataReaderType      { get; }
 		public virtual  MappingSchema    MappingSchema       { get; }
 		public          SqlProviderFlags SqlProviderFlags    { get; }
 
-		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
+		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
 
 		public IDbConnection CreateConnection(string connectionString)
 		{
@@ -104,7 +90,7 @@ namespace LinqToDB.DataProvider
 		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			dataConnection.Command.CommandType = commandType;
 
@@ -119,7 +105,7 @@ namespace LinqToDB.DataProvider
 			dataConnection.Command.Dispose();
 		}
 
-		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
+		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
 		}
@@ -129,7 +115,7 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable ExecuteScope()
+		public virtual IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
 			return null;
 		}
@@ -175,7 +161,7 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
-		protected virtual string NormalizeTypeName(string typeName)
+		protected virtual string? NormalizeTypeName(string? typeName)
 		{
 			return typeName;
 		}
@@ -184,11 +170,11 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
+			string? typeName = ((DbDataReader)reader).GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
@@ -220,7 +206,22 @@ namespace LinqToDB.DataProvider
 			}
 #endif
 
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
+			var dataReaderType = readerExpression.Type;
+
+			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType                                                                                   }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType                          }, out expr))
+				return expr;
+
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
@@ -263,19 +264,15 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-#if !NETSTANDARD1_6
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
-#else
-			return true;
-#endif
 		}
 
 		#endregion
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -323,7 +320,7 @@ namespace LinqToDB.DataProvider
 			}
 
 			parameter.ParameterName = name;
-			SetParameterType(parameter, dataType);
+			SetParameterType(dataConnection, parameter, dataType);
 			parameter.Value = value ?? DBNull.Value;
 		}
 
@@ -357,12 +354,9 @@ namespace LinqToDB.DataProvider
 			return type;
 		}
 
-		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD1_6
 		public abstract ISchemaProvider GetSchemaProvider     ();
-#endif
 
-		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected virtual void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
@@ -402,51 +396,6 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		#region Create/Drop Database
-
-		internal static void CreateFileDatabase(
-			string databaseName,
-			bool   deleteIfExists,
-			string extension,
-			Action<string> createDatabase)
-		{
-			databaseName = databaseName.Trim();
-
-			if (!databaseName.ToLower().EndsWith(extension))
-				databaseName += extension;
-
-			if (File.Exists(databaseName))
-			{
-				if (!deleteIfExists)
-					return;
-				File.Delete(databaseName);
-			}
-
-			createDatabase(databaseName);
-		}
-
-		internal static void DropFileDatabase(string databaseName, string extension)
-		{
-			databaseName = databaseName.Trim();
-
-			if (File.Exists(databaseName))
-			{
-				File.Delete(databaseName);
-			}
-			else
-			{
-				if (!databaseName.ToLower().EndsWith(extension))
-				{
-					databaseName += extension;
-
-					if (File.Exists(databaseName))
-						File.Delete(databaseName);
-				}
-			}
-		}
-
-		#endregion
-
 		#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
@@ -455,78 +404,5 @@ namespace LinqToDB.DataProvider
 		}
 
 		#endregion
-
-		#region Merge
-
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-			where T : class
-		{
-			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-			where T : class
-		{
-			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return dataConnection.Execute(cmd, builder.Parameters);
-		}
-
-		public async Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-		}
-
-		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
-		#endregion
-
-		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
-		//{
-		//	return
-		//		retryCount <= MaxRetryCount && exception is TimeoutException
-		//			? baseDelay
-		//			: (TimeSpan?)null;
-		//}
 	}
 }

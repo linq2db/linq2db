@@ -81,13 +81,13 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledTest5([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
-				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
+			var query = CompiledQuery.Compile((ITestDataContext db, object?[] ps) =>
+				db.Parent.Where(p => p.ParentID == (int)ps[0]! && p.Value1 == (int?)ps[1]));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, new object[] { 1, 1    }).ToList().Count());
-				Assert.AreEqual(1, query(db, new object[] { 2, null }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count());
 			}
 		}
 
@@ -113,9 +113,6 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		// NS16 disabled due to intermittent crashes
-		// System.InvalidCastException: Unable to cast object of type 'System.Int64' to type 'System.Int32'.
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, Order(100)]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -182,7 +179,6 @@ namespace Tests.Linq
 			for (var i = 0; i < 100; i++)
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
-#endif
 
 		[Test]
 		public void ParamTest1([DataSources] string context)

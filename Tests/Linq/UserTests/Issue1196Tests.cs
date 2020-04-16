@@ -18,10 +18,10 @@ namespace Tests.UserTests
 			[Column] public int FirmId { get; set; }
 
 			[Association(ThisKey ="FirmId", OtherKey ="Id")]
-			public FirmInfo FirmInfo { get; set; }
+			public FirmInfo? FirmInfo { get; set; }
 
 			[Association(ExpressionPredicate = nameof(DocPrepareAssignmentExp))]
-			public Assignment DocPrepareAssignment { get; set; }
+			public Assignment? DocPrepareAssignment { get; set; }
 
 			private static Expression<Func<Request, Assignment, bool>> DocPrepareAssignmentExp()
 				=> (r, a) => a.TargetId == r.Id;
@@ -32,8 +32,8 @@ namespace Tests.UserTests
 		{
 			[Column]public int Id { get; set; }
 
-			[Association(ThisKey =nameof(Id), OtherKey ="FirmId")]
-			public IEnumerable<Request> Requests { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FirmId")]
+			public IEnumerable<Request> Requests { get; set; } = null!;
 		}
 
 		[Table(Name ="Assignments")]
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 					var query =
 						db.GetTable<Request>()
 						.Where(r => r.Id == 1002)
-						.Select(r => r.FirmInfo)
+						.Select(r => r.FirmInfo!)
 						.SelectMany(r => r.Requests)
 						.Select(r => new
 						{
@@ -73,8 +73,8 @@ namespace Tests.UserTests
 
 					var query2 =
 						db.GetTable<Request>()
-						.Where(r => (r.Id == 1002))
-						.Select(r => r.FirmInfo)
+						.Where(r => r.Id == 1002)
+						.Select(r => r.FirmInfo!)
 						.SelectMany(r => r.Requests)
 						.Select(r => r.DocPrepareAssignment);
 

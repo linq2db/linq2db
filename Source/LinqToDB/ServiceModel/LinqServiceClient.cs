@@ -18,52 +18,52 @@ namespace LinqToDB.ServiceModel
 
 		#region ILinqService Members
 
-		public LinqServiceInfo GetInfo(string configuration)
+		public LinqServiceInfo GetInfo(string? configuration)
 		{
 			return Channel.GetInfo(configuration);
 		}
 
-		public int ExecuteNonQuery(string configuration, string queryData)
+		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			return Channel.ExecuteNonQuery(configuration, queryData);
 		}
 
-		public object ExecuteScalar(string configuration, string queryData)
+		public object? ExecuteScalar(string? configuration, string queryData)
 		{
 			return Channel.ExecuteScalar(configuration, queryData);
 		}
 
-		public string ExecuteReader(string configuration, string queryData)
+		public string ExecuteReader(string? configuration, string queryData)
 		{
 			return Channel.ExecuteReader(configuration, queryData);
 		}
 
-		public int ExecuteBatch(string configuration, string queryData)
+		public int ExecuteBatch(string? configuration, string queryData)
 		{
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
 
-		public Task<LinqServiceInfo> GetInfoAsync(string configuration)
+		public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
 		{
 			return Channel.GetInfoAsync(configuration);
 		}
 
-		public Task<int> ExecuteNonQueryAsync(string configuration, string queryData)
+		public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{
 			return Channel.ExecuteNonQueryAsync(configuration, queryData);
 		}
 
-		public Task<object> ExecuteScalarAsync(string configuration, string queryData)
+		public Task<object?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
 			return Channel.ExecuteScalarAsync(configuration, queryData);
 		}
 
-		public Task<string> ExecuteReaderAsync(string configuration, string queryData)
+		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
 			return Channel.ExecuteReaderAsync(configuration, queryData);
 		}
 
-		public Task<int> ExecuteBatchAsync(string configuration, string queryData)
+		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)
 		{
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}

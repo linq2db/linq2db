@@ -52,8 +52,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (Int64)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (long)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (long)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -79,8 +79,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int32)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int32)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (int)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (int)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -106,8 +106,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int16)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Int16)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (short)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (short)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -173,8 +173,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (UInt64)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (ulong)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (ulong)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -191,8 +191,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in Types select (UInt32)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
+					from p in from t in Types select (uint)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (uint)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -210,8 +210,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt16)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (UInt16)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (ushort)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (ushort)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -322,8 +322,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (int)(Double)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (int)(Double)t.MoneyValue where p > 0 select p);
+					from p in from t in    Types select (int)(double)t.MoneyValue where p > 0 select p,
+					from p in from t in db.Types select (int)(double)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
@@ -402,8 +402,6 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Date, t.DateTimeValue.Year + "-01-01"));
 		}
 
-		// needs debugging, but suspect it fails due to issue 730
-		[ActiveIssue(730, Configuration = TestProvName.AllSybase, SkipForNonLinqService = true)]
 		[Test]
 		public void ToSqlTime([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
@@ -531,7 +529,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'));
 		}
 
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void ByteToString([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -608,6 +606,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
@@ -635,9 +634,7 @@ namespace Tests.Linq
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-#if !APPVEYOR
 			Console.WriteLine($"Expected {expected} result {r}");
-#endif
 
 			Assert.GreaterOrEqual(0.01m,
 				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
@@ -750,7 +747,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -767,7 +764,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -784,7 +781,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -801,7 +798,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -818,7 +815,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -835,7 +832,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -852,7 +849,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -869,7 +866,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -886,7 +883,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -903,7 +900,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -920,7 +917,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -937,7 +934,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -954,7 +951,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -971,7 +968,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -988,7 +985,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1005,7 +1002,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1022,7 +1019,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1039,7 +1036,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1056,7 +1053,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1073,7 +1070,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1090,7 +1087,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1107,7 +1104,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1124,7 +1121,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1141,7 +1138,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1158,7 +1155,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1175,7 +1172,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1192,7 +1189,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1209,7 +1206,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1226,7 +1223,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1243,7 +1240,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1260,7 +1257,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 
@@ -1277,7 +1274,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
 		#endregion

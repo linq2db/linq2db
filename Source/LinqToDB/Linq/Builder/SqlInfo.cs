@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -10,9 +9,9 @@ namespace LinqToDB.Linq.Builder
 
 	public class SqlInfo
 	{
-		public ISqlExpression   Sql;
-		public SelectQuery      Query;
-		public int              Index = -1;
+		public ISqlExpression            Sql = null!;
+		public SelectQuery?              Query;
+		public int                       Index = -1;
 		public readonly List<MemberInfo> MemberChain = new List<MemberInfo>();
 
 		public SqlInfo()

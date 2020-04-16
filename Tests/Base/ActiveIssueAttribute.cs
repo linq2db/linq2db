@@ -16,8 +16,8 @@ namespace Tests
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 	public class ActiveIssueAttribute : CombiningStrategyAttribute, ITestBuilder, IApplyToTest
 	{
-		readonly string _issue;
-		string[] _configurations;
+		readonly string? _issue;
+		string[]? _configurations;
 
 		/// <summary>
 		/// Marks test or fixture to run explicit due to active issue.
@@ -51,13 +51,13 @@ namespace Tests
 		/// <summary>
 		/// Gets or sets additional details for an issue.
 		/// </summary>
-		public string Details { get; set; }
+		public string? Details { get; set; }
 
 		/// <summary>
 		/// Gets or sets configuration names, to which this attribute should be applied.
 		/// Applied only to tests marked with attributes, based on <see cref="DataSourcesBaseAttribute"/>.
 		/// </summary>
-		public string[] Configurations
+		public string[]? Configurations
 		{
 			get => _configurations;
 			set
@@ -91,7 +91,7 @@ namespace Tests
 		/// </summary>
 		public bool SkipForNonLinqService { get; set; }
 
-		HashSet<string> _configurationsToSkip;
+		HashSet<string>? _configurationsToSkip;
 
 		HashSet<string> GetConfigurations()
 		{

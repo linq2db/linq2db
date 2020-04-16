@@ -5,8 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Metadata
 {
 	using Common;
@@ -15,23 +13,20 @@ namespace LinqToDB.Metadata
 	{
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-#if !NETSTANDARD1_6
 		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
 		{
 		}
-#endif
 
-		public XmlAttributeReader([NotNull] string xmlFile, [NotNull] Assembly assembly)
+		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
 			if (xmlFile  == null) throw new ArgumentNullException("xmlFile");
 			if (assembly == null) throw new ArgumentNullException("assembly");
 
-			StreamReader streamReader = null;
+			StreamReader? streamReader = null;
 
 			try
 			{
-#if !NETSTANDARD1_6
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);
@@ -43,10 +38,9 @@ namespace LinqToDB.Metadata
 					if (File.Exists(combinePath))
 						streamReader = File.OpenText(combinePath);
 				}
-#endif
 
-				var embedded = streamReader == null;
-				var stream   = embedded ? assembly.GetManifestResourceStream(xmlFile) : streamReader.BaseStream;
+				var embedded   = streamReader == null;
+				Stream? stream = embedded ? assembly.GetManifestResourceStream(xmlFile) : streamReader!.BaseStream;
 
 				if (embedded && stream == null)
 				{
@@ -68,14 +62,14 @@ namespace LinqToDB.Metadata
 			}
 		}
 
-		public XmlAttributeReader([NotNull] Stream xmlDocStream)
+		public XmlAttributeReader(Stream xmlDocStream)
 		{
 			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
 			_types = LoadStream(xmlDocStream, "");
 		}
 
-		static AttributeInfo[] GetAttrs(string fileName, XElement el, string exclude, string typeName, string memberName)
+		static AttributeInfo[] GetAttrs(string fileName, XElement el, string? exclude, string typeName, string? memberName)
 		{
 			var attrs = el.Elements().Where(e => e.Name.LocalName != exclude).Select(a =>
 			{
@@ -143,9 +137,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			MetaTypeInfo t;
-
-			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
+			if (_types.TryGetValue(type.FullName, out var t) || _types.TryGetValue(type.Name, out t))
 				return t.GetAttribute(typeof(T)).Select(a => (T) a.MakeAttribute(typeof(T))).ToArray();
 
 			return Array<T>.Empty;
@@ -154,13 +146,9 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			MetaTypeInfo t;
-
-			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
+			if (_types.TryGetValue(type.FullName, out var t) || _types.TryGetValue(type.Name, out t))
 			{
-				MetaMemberInfo m;
-
-				if (t.Members.TryGetValue(memberInfo.Name, out m))
+				if (t.Members.TryGetValue(memberInfo.Name, out var m))
 				{
 					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute(typeof(T))).ToArray();
 				}

@@ -20,16 +20,15 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			List<Attribute> attrs;
-			if (_types.TryGetValue(type, out attrs))
+			if (_types.TryGetValue(type, out var attrs))
 				return attrs.OfType<T>().ToArray();
 
 			if (!inherit)
 				return Array<T>.Empty;
 
-			var parents = new [] { type.BaseTypeEx() }
+			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfacesEx());
+				.Concat(type.GetInterfaces());
 
 			foreach(var p in parents)
 			{
@@ -60,15 +59,15 @@ namespace LinqToDB.Metadata
 			if (inherit == false)
 				return Array<T>.Empty;
 
-			var parents = new [] { type.BaseTypeEx() }
+			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfacesEx())
+				.Concat(type.GetInterfaces())
 				.Select(_ => new { Type = _, Member = _.GetMemberEx(memberInfo) })
 				.Where(_ => _.Member != null);
 
 			foreach(var p in parents)
 			{
-				var pattrs = GetAttributes<T>(p.Type, p.Member, inherit);
+				var pattrs = GetAttributes<T>(p.Type, p.Member!, inherit);
 				if (pattrs.Length > 0)
 					return pattrs;
 			}

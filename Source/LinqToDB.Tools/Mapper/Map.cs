@@ -31,9 +31,9 @@ namespace LinqToDB.Tools.Mapper
 		/// <typeparam name="TTo">Type to map to.</typeparam>
 		/// <param name="setter">MapperBuilder parameter setter.</param>
 		/// <returns>Mapping expression.</returns>
-		[Pure, NotNull]
+		[Pure]
 		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>(
-			[NotNull] Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
+			Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
 		{
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			return new Mapper<TFrom,TTo>(setter(new MapperBuilder<TFrom,TTo>()));
@@ -41,7 +41,6 @@ namespace LinqToDB.Tools.Mapper
 
 		static class MapHolder<T>
 		{
-			[NotNull]
 			public static readonly Mapper<T,T> Mapper =
 				GetMapper<T,T>(m => m
 					 .SetProcessCrossReferences(true)

@@ -22,6 +22,8 @@ namespace LinqToDB
 	[PublicAPI]
 	public class DataContext : IDataContext, IEntityServices
 	{
+		private bool _disposed;
+
 		/// <summary>
 		/// Creates data context using default database configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
@@ -37,10 +39,10 @@ namespace LinqToDB
 		/// In case of <c>null</c> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
-		public DataContext([CanBeNull] string configurationString)
+		public DataContext(string? configurationString)
 		{
 			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
-			DataProvider        = DataConnection.GetDataProvider(ConfigurationString);
+			DataProvider        = DataConnection.GetDataProvider(ConfigurationString!);
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -50,7 +52,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
-		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext(IDataProvider dataProvider, string connectionString)
 		{
 			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
 			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
@@ -63,7 +65,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
-		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataContext( string providerName, string connectionString)
 		{
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -77,11 +79,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
-		public string        ConfigurationString { get; private set; }
+		public string?       ConfigurationString { get; private set; }
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
-		public string        ConnectionString    { get; private set; }
+		public string?       ConnectionString    { get; private set; }
 		/// <summary>
 		/// Gets database provider implementation.
 		/// </summary>
@@ -102,13 +104,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
-		public string        LastQuery           { get; set; }
+		public string?       LastQuery           { get; set; }
 
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		[CanBeNull]
-		public Action<TraceInfo> OnTraceConnection { get; set; } 
+		public Action<TraceInfo>? OnTraceConnection { get; set; } 
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -148,7 +149,7 @@ namespace LinqToDB
 			set => _isMarsEnabled = value;
 		}
 
-		private List<string> _queryHints;
+		private List<string>? _queryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current context.
 		/// </summary>
@@ -163,7 +164,7 @@ namespace LinqToDB
 			}
 		}
 
-		private List<string> _nextQueryHints;
+		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current context.
 		/// </summary>
@@ -220,7 +221,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Underlying active database connection.
 		/// </summary>
-		DataConnection _dataConnection;
+		DataConnection? _dataConnection;
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
@@ -240,6 +241,8 @@ namespace LinqToDB
 		/// <returns>Data connection.</returns>
 		internal DataConnection GetDataConnection()
 		{
+			AssertDisposed();
+
 			if (_dataConnection == null)
 			{
 				_dataConnection = CreateDataConnection();
@@ -269,6 +272,12 @@ namespace LinqToDB
 			return _dataConnection;
 		}
 
+		private void AssertDisposed()
+		{
+			if (_disposed)
+				throw new ObjectDisposedException(GetType().FullName);
+		}
+
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
@@ -296,9 +305,9 @@ namespace LinqToDB
 		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
 		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
 
-		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
 		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
@@ -310,7 +319,9 @@ namespace LinqToDB
 		/// Noop constructor for context cloning.
 		/// </summary>
 		/// <param name="n">Unused.</param>
+#nullable disable
 		DataContext(int n) {}
+#nullable enable
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction.
@@ -325,20 +336,22 @@ namespace LinqToDB
 		/// <param name="dbConnection">Connection, associated with <paramref name="dbConnection"/>.</param>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
 		protected virtual DataConnection CloneDataConnection(
-			DataConnection      currentConnection, // not used by implementation, but could be useful in override
-			IAsyncDbTransaction dbTransaction,
-			IAsyncDbConnection  dbConnection)
+			DataConnection       currentConnection, // not used by implementation, but could be useful in override
+			IAsyncDbTransaction? dbTransaction,
+			IAsyncDbConnection?  dbConnection)
 		{
 			// we pass both dataconnection and db connection/transaction, because connection/transaction accessors
 			// are internal and it is not possible to access them in derived class. And we definitely don't want them
 			// to be public.
 			return dbTransaction != null
 				? new DataConnection(DataProvider, dbTransaction)
-				: new DataConnection(DataProvider, dbConnection);
+				: new DataConnection(DataProvider, dbConnection!);
 		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
+			AssertDisposed();
+
 			var dc = new DataContext(0)
 			{
 				ConfigurationString = ConfigurationString,
@@ -367,13 +380,14 @@ namespace LinqToDB
 		/// Event, triggered before underlying connection closed on context disposal or closing.
 		/// Not fired, if context doesn't have active connection (bug?).
 		/// </summary>
-		public event EventHandler OnClosing;
+		public event EventHandler? OnClosing;
 
 		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		void IDisposable.Dispose()
 		{
+			_disposed = true;
 			Close();
 		}
 
@@ -461,9 +475,9 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
-			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
 		}
 
 		class QueryRunner : IQueryRunner
@@ -474,56 +488,59 @@ namespace LinqToDB
 				_queryRunner = (DataConnection.QueryRunner)queryRunner;
 			}
 
-			readonly DataContext _dataContext;
-			readonly DataConnection.QueryRunner _queryRunner;
+			DataContext? _dataContext;
+			DataConnection.QueryRunner? _queryRunner;
 
 			public void Dispose()
 			{
-				_queryRunner.Dispose();
-				_dataContext.ReleaseQuery();
+				_queryRunner!.Dispose();
+				_dataContext!.ReleaseQuery();
+				_queryRunner = null;
+				_dataContext = null;
 			}
 
 			public int ExecuteNonQuery()
 			{
-				return _queryRunner.ExecuteNonQuery();
+				return _queryRunner!.ExecuteNonQuery();
 			}
 
-			public object ExecuteScalar()
+			public object? ExecuteScalar()
 			{
-				return _queryRunner.ExecuteScalar();
+				return _queryRunner!.ExecuteScalar();
 			}
 
 			public IDataReader ExecuteReader()
 			{
-				return _queryRunner.ExecuteReader();
+				return _queryRunner!.ExecuteReader();
 			}
 
-			public Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+			public Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
-				return _queryRunner.ExecuteScalarAsync(cancellationToken);
+				return _queryRunner!.ExecuteScalarAsync(cancellationToken);
 			}
 
 			public Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
-				return _queryRunner.ExecuteReaderAsync(cancellationToken);
+				return _queryRunner!.ExecuteReaderAsync(cancellationToken);
 			}
 
 			public Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
-				return _queryRunner.ExecuteNonQueryAsync(cancellationToken);
+				return _queryRunner!.ExecuteNonQueryAsync(cancellationToken);
 			}
 
 			public string GetSqlText()
 			{
-				return _queryRunner.GetSqlText();
+				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner.DataContext;      set => _queryRunner.DataContext      = value; }
-			public Expression   Expression       { get => _queryRunner.Expression;       set => _queryRunner.Expression       = value; }
-			public object[]     Parameters       { get => _queryRunner.Parameters;       set => _queryRunner.Parameters       = value; }
-			public Expression   MapperExpression { get => _queryRunner.MapperExpression; set => _queryRunner.MapperExpression = value; }
-			public int          RowsCount        { get => _queryRunner.RowsCount;        set => _queryRunner.RowsCount        = value; }
-			public int          QueryNumber      { get => _queryRunner.QueryNumber;      set => _queryRunner.QueryNumber      = value; }
+			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
+			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
+			public object?[]?   Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
+			public object?[]?   Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }
+			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
+			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
+			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
 	}
 }

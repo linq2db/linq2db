@@ -1,40 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-
-using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
 
 namespace Tests.Data
 {
+	using LinqToDB.DataProvider.SqlServer;
 	using Model;
-	using System.Data.SqlClient;
 
 	[TestFixture]
 	public class ProcedureTests : TestBase
 	{
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int? @id)
 		{
-			var databaseName = TestUtils.GetDatabaseName(dataConnection);
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
-#else
-			var escapedTableName = "[" + databaseName + "]";
-#endif
+			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
+			var escapedTableName = ((SqlServerDataProvider)dataConnection.DataProvider).Adapter.QuoteIdentifier(databaseName);
+
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKey]",
 				new DataParameter("@id", @id));
 		}
 
 		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, int? @id)
 		{
-			var databaseName = TestUtils.GetDatabaseName(dataConnection);
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
-#else
-			var escapedTableName = "[" + databaseName + "]";
-#endif
+			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
+			var escapedTableName = ((SqlServerDataProvider)dataConnection.DataProvider).Adapter.QuoteIdentifier(databaseName);
+
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKeyLowercase]",
 				new DataParameter("@id", @id));
 		}
@@ -67,8 +58,8 @@ namespace Tests.Data
 
 		class VariableResult
 		{
-			public int Code      { get; set; }
-			public string Value1 { get; set; }
+			public int     Code   { get; set; }
+			public string? Value1 { get; set; }
 
 			protected bool Equals(VariableResult other)
 			{
@@ -79,7 +70,7 @@ namespace Tests.Data
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((VariableResult)obj);
 			}
 
@@ -94,7 +85,7 @@ namespace Tests.Data
 				}
 			}
 
-			public string Value2 { get; set; }
+			public string? Value2 { get; set; }
 		}
 
 		[Test]

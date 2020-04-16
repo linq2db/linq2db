@@ -14,10 +14,10 @@ namespace Tests.UserTests
 		[Table(Schema="dbo", Name="b_table2")]
 		public class BTable2
 		{
-			[Column("id"),   PrimaryKey, Identity] public int    Id   { get; set; } // int
-			[Column("col1"), Nullable            ] public string Col1 { get; set; } // varchar(50)
-			[Column("col2"), Nullable            ] public string Col2 { get; set; } // varchar(50)
-			[Column("col3"), Nullable            ] public string Col3 { get; set; } // varchar(50)
+			[Column("id"),   PrimaryKey, Identity] public int     Id   { get; set; } // int
+			[Column("col1"), Nullable            ] public string? Col1 { get; set; } // varchar(50)
+			[Column("col2"), Nullable            ] public string? Col2 { get; set; } // varchar(50)
+			[Column("col3"), Nullable            ] public string? Col3 { get; set; } // varchar(50)
 		}
 
 		[Table(Schema="dbo", Name="commonTable")]
@@ -29,9 +29,9 @@ namespace Tests.UserTests
 		[Table(Schema="dbo", Name="c_table2")]
 		public class CTable2
 		{
-			[Column("id"),          PrimaryKey, Identity] public int    Id        { get; set; } // int
-			[Column("col1"),        Nullable            ] public string Col1      { get; set; } // varchar(50)
-			[Column("c_table3_id"), Nullable            ] public int?   CTable3Id { get; set; } // int
+			[Column("id"),          PrimaryKey, Identity] public int     Id        { get; set; } // int
+			[Column("col1"),        Nullable            ] public string? Col1      { get; set; } // varchar(50)
+			[Column("c_table3_id"), Nullable            ] public int?    CTable3Id { get; set; } // int
 		}
 
 		[Table(Schema="dbo", Name="table1")]
@@ -47,9 +47,9 @@ namespace Tests.UserTests
 		[Table(Schema="dbo", Name="table2")]
 		public class Table2
 		{
-			[Column("id"),      PrimaryKey, Identity] public int    Id      { get; set; } // int
-			[Column("textCol"), Nullable            ] public string TextCol { get; set; } // varchar(50)
-			[Column("col3"),    Nullable            ] public int?   Col3    { get; set; } // int
+			[Column("id"),      PrimaryKey, Identity] public int     Id      { get; set; } // int
+			[Column("textCol"), Nullable            ] public string? TextCol { get; set; } // varchar(50)
+			[Column("col3"),    Nullable            ] public int?    Col3    { get; set; } // int
 		}
 
 		[Table(Schema="dbo", Name="table3")]
@@ -60,7 +60,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OriginalTestSimplified([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void OriginalTestSimplified([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table1>())

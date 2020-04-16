@@ -33,7 +33,7 @@ namespace Tests.UserTests
 				var maxVersion = UserVersion.SecondRelease;
 
 				var query = from u in table
-					where u.Version.Value < maxVersion
+					where u.Version!.Value < maxVersion
 					select u.Id;
 
 				var ids1 = query.ToArray();

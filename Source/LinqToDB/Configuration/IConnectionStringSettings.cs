@@ -1,5 +1,3 @@
-using System;
-
 namespace LinqToDB.Configuration
 {
 	/// <summary>
@@ -18,7 +16,7 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets data provider configuration name.
 		/// </summary>
-		string ProviderName     { get; }
+		string? ProviderName    { get; }
 		/// <summary>
 		/// Is this connection configuration defined on global level (machine.config) or on application level.
 		/// </summary>

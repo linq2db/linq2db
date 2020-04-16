@@ -55,8 +55,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
@@ -78,42 +78,14 @@ namespace LinqToDB.DataProvider.SqlCe
 				;
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
+		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			string startPrefix;
-
-			switch (sqlDataType.DataType)
-			{
-				case DataType.Char    :
-				case DataType.VarChar :
-				case DataType.Text    :
-					startPrefix = null;
-					break;
-				default               :
-					startPrefix = "N";
-					break;
-			}
-
-			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
 		}
 
-		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
+		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			string start;
-
-			switch (sqlDataType.DataType)
-			{
-				case DataType.Char    :
-				case DataType.VarChar :
-				case DataType.Text    :
-					start = "'";
-					break;
-				default               :
-					start = "N'";
-					break;
-			}
-
-			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
 	}
 }

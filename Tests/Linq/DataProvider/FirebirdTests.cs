@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = sqlValue == null ?
 					"SELECT NULL FROM Dual" :
@@ -253,7 +253,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -372,7 +372,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -430,7 +430,7 @@ namespace Tests.DataProvider
 		class MyLinqDataType
 		{
 			[Column]
-			public byte[] BinaryValue { get; set; }
+			public byte[]? BinaryValue { get; set; }
 		}
 
 		[Test]
@@ -474,11 +474,11 @@ namespace Tests.DataProvider
 		[Table]
 		public class Issue76Entity
 		{
-			[Column] public long   Id         { get; set; }
-			[Column] public string Caption    { get; set; }
-			[Column] public long?  ParentId   { get; set; }
+			[Column] public long    Id          { get; set; }
+			[Column] public string? Caption     { get; set; }
+			[Column] public long?   ParentId    { get; set; }
 
-			         public bool   HasChildren { get; set; }
+			         public bool    HasChildren { get; set; }
 		}
 
 		[Test]

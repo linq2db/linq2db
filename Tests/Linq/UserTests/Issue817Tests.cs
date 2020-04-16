@@ -12,6 +12,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue817Tests : TestBase
 	{
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTake([DataSources] string context)
 		{
@@ -23,6 +24,23 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedSkip([DataSources] string context)
 		{
@@ -36,6 +54,23 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTakeSkip([DataSources] string context)
 		{
@@ -47,6 +82,24 @@ namespace Tests.UserTests
 			}
 		}
 
+
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTakeSkipZero([DataSources] string context)
 		{

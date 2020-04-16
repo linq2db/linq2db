@@ -6,9 +6,9 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCreateTableStatement : SqlStatement
 	{
-		public SqlTable        Table           { get; set; }
-		public string          StatementHeader { get; set; }
-		public string          StatementFooter { get; set; }
+		public SqlTable?       Table           { get; set; }
+		public string?         StatementHeader { get; set; }
+		public string?         StatementFooter { get; set; }
 		public DefaultNullable DefaultNullable { get; set; }
 
 		public override QueryType        QueryType   => QueryType.CreateTable;
@@ -20,22 +20,22 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 
-		public override SelectQuery SelectQuery { get => null; set {}}
+		public override SelectQuery? SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("CREATE TABLE ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(options, func);
+			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;;
 
 			return null;
 		}
@@ -55,7 +55,7 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			return null;
 		}

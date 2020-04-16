@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NETCOREAPP2_1
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -12,7 +15,7 @@ namespace Tests.Linq
 	using LinqToDB.Common;
 	using Model;
 
-	[TestFixture, Category("MapValue")]
+	[TestFixture]
 	public class EnumMappingTests : TestBase
 	{
 		enum TestEnum1
@@ -1111,8 +1114,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, result.Length);
 				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target.Value.TargetID);
-				Assert.AreEqual(TestEnum1.Value2, result[0].Target.Value.TargetType);
+				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
+				Assert.AreEqual(TestEnum1.Value2, result[0].Target!.Value.TargetType);
 			}
 		}
 
@@ -1160,8 +1163,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, result.Length);
 				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target.Value.TargetID);
-				Assert.AreEqual(TestEnum2.Value2, result[0].Target.Value.TargetType);
+				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
+				Assert.AreEqual(TestEnum2.Value2, result[0].Target!.Value.TargetType);
 			}
 		}
 
@@ -1369,9 +1372,9 @@ namespace Tests.Linq
 		[Table("LinqDataTypes")]
 		class RawTable2
 		{
-			[PrimaryKey, Column("ID")] public int    Id;
-			[Column("IntValue")]       public int?   Int32;
-			[Column("StringValue")]    public string String;
+			[PrimaryKey, Column("ID")] public int     Id;
+			[Column("IntValue")]       public int?    Int32;
+			[Column("StringValue")]    public string? String;
 		}
 
 		[Test]
@@ -1719,6 +1722,8 @@ namespace Tests.Linq
 		[Test]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1729,6 +1734,17 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
+#if !NETCOREAPP2_1
+					if (isLinqService)
+					{
+						Assert.Throws<FaultException<ExceptionDetail>>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
+					}
+					else
+#endif
 					Assert.Throws<LinqToDBConvertException>(() =>
 						db.GetTable<UndefinedValueTest>()
 							.Select(r => new { r.Id, r.TestField })
@@ -1744,7 +1760,7 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
-			public string SomeText { get; set; }
+			public string? SomeText { get; set; }
 		}
 
 		public enum Issue1622Enum
@@ -1753,15 +1769,15 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
+		public static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Fails due to default mapping schema on remote server. Fixed in 3.0")]
 		[Test]
 		public void Issue1622Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			var ms = new MappingSchema();
+			using (var db = GetDataContext(context, ms))
 			{
-				db.MappingSchema.SetValueToSqlConverter(typeof(Issue1622Enum),
+				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
 					{
 						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");

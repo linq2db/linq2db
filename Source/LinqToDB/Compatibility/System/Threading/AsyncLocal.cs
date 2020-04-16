@@ -24,26 +24,28 @@ namespace System.Threading
 {
 	using System.Security;
 	using System.Runtime.Remoting.Messaging;
+	using System.Diagnostics.CodeAnalysis;
 
 	internal sealed class AsyncLocal<T>
 	{
-		private readonly string key = Guid.NewGuid().ToString("N").Substring(0, 12);
+		private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
 
+		[MaybeNull]
 		public T Value
 		{
 			[SecuritySafeCritical]
 			get
 			{
-				var wrapper = (AsyncScopeWrapper)CallContext.LogicalGetData(this.key);
+				var wrapper = (AsyncScopeWrapper?)CallContext.LogicalGetData(_key);
 
-				return wrapper != null ? wrapper.Value : default(T);
+				return wrapper != null ? wrapper.Value : default;
 			}
 			[SecuritySafeCritical]
 			set
 			{
 				var wrapper = value == null ? null : new AsyncScopeWrapper(value);
 
-				CallContext.LogicalSetData(this.key, wrapper);
+				CallContext.LogicalSetData(_key, wrapper);
 
 			}
 		}
@@ -56,7 +58,7 @@ namespace System.Threading
 
 			internal AsyncScopeWrapper(T value)
 			{
-				this.Value = value;
+				Value = value;
 			}
 		}
 	}

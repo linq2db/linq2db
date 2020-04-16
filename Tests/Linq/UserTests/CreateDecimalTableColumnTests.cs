@@ -16,12 +16,12 @@ namespace Tests.UserTests
 		public void Test()
 		{
 			var schema = new MappingSchema();
-			schema.SetDataType(typeof (decimal), new SqlDataType(DataType.Decimal, 19, 4));
+			schema.SetDataType(typeof (decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 19, 4));
 
 			var table = new SqlTable<Foo>(schema);
 
-			Assert.That(table.Fields.Single().Value.Precision, Is.EqualTo(19));
-			Assert.That(table.Fields.Single().Value.Scale, Is.EqualTo(4));
+			Assert.That(table.Fields.Single().Value.Type!.Value.Precision, Is.EqualTo(19));
+			Assert.That(table.Fields.Single().Value.Type!.Value.Scale, Is.EqualTo(4));
 		}
 
 		class Foo

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -31,16 +32,17 @@ namespace LinqToDB.Common
 			_lambda = rexpr.Compile();
 		}
 
-		private static Expression<Func<TFrom,TTo>> _expression;
+		private static Expression<Func<TFrom,TTo>>? _expression;
 		/// <summary>
 		/// Gets or sets an expression that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
 		/// Assigning <c>null</c> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
+		[AllowNull]
 		public  static Expression<Func<TFrom,TTo>>  Expression
 		{
-			get => _expression;
+			get => _expression!;
 			set
 			{
 				var setDefault = _expression != null;
@@ -59,20 +61,21 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
+						new ConvertInfo.LambdaInfo(_expression!, null, _lambda!, false));
 			}
 		}
 
-		private static Func<TFrom,TTo> _lambda;
+		private static Func<TFrom,TTo>? _lambda;
 		/// <summary>
 		/// Gets or sets a function that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
 		/// Assigning <c>null</c> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
+		[AllowNull]
 		public static  Func<TFrom,TTo>  Lambda
 		{
-			get => _lambda;
+			get => _lambda!;
 			set
 			{
 				var setDefault = _expression != null;
@@ -98,13 +101,13 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
+						new ConvertInfo.LambdaInfo(_expression!, null, _lambda!, false));
 			}
 		}
 
 		/// <summary>
 		/// Gets conversion function delegate.
 		/// </summary>
-		public static Func<TFrom,TTo> From => _lambda;
+		public static Func<TFrom,TTo> From => _lambda!;
 	}
 }

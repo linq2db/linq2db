@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			FromSqlMethod
 		}
 
-		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext parentContext)
+		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext? parentContext)
 		{
 			parentContext = null;
 
@@ -125,17 +125,17 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var type = FindBuildContext(builder, buildInfo, out var parentContext);
 
 			switch (type)
 			{
 				case BuildContextType.None                   : return null;
-				case BuildContextType.TableConstant          : return new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()).ElementType);
+				case BuildContextType.TableConstant          : return new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType);
 				case BuildContextType.GetTableMethod         :
-				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
-				case BuildContextType.Association            : return parentContext.GetContext(buildInfo.Expression, 0, buildInfo);
+				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
@@ -145,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException();
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}

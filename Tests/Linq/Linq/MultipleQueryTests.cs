@@ -30,9 +30,11 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.ToList());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Test3([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select    Child,
@@ -52,18 +54,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in    Child
 					orderby ch.ChildID
-					select    Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p)
+					select    Parent.Where(p => p.ParentID == ch.Parent!.ParentID).Select(p => p)
 					,
 					from ch in db.Child
 					orderby ch.ChildID
-					select db.Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p));
+					select db.Parent.Where(p => p.ParentID == ch.Parent!.ParentID).Select(p => p));
 		}
 	}
 }

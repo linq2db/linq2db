@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			    foreach (var sqlInfo in sql)
 			    {
 					// possible we have to extend this list
-				    isComplex = null != QueryVisitor.Find(sqlInfo.Sql, 
+				    isComplex = null != new QueryVisitor().Find(sqlInfo.Sql, 
 					                e => e.ElementType == QueryElementType.SqlQuery);
 				    if (isComplex)
 					    break;
@@ -87,15 +87,15 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var expr in sql)
 			{
-				var e = builder.ConvertSearchCondition(sequence, expr.Sql);
+				var e = builder.ConvertSearchCondition(expr.Sql);
 				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}

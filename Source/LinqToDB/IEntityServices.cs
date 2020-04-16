@@ -7,6 +7,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Occurs when a new entity is created.
 		/// </summary>
-		Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 	}
 }

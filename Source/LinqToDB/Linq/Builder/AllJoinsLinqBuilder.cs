@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 3;
 
-					var joinValue = (SqlJoinType) methodCall.Arguments[2].EvaluateExpression();
+					var joinValue = (SqlJoinType) methodCall.Arguments[2].EvaluateExpression()!;
 
 					switch (joinValue)
 					{
@@ -101,24 +101,24 @@ namespace LinqToDB.Linq.Builder
 			return joinContext;
 		}
 
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+			ParameterExpression? param)
 		{
 			return null;
 		}
 
 		class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
 			{
 			}
 
 			public IBuildContext OuterContext => Sequence[0];
 			public IBuildContext InnerContext => Sequence[1];
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				SqlInfo[] result = null;
+				SqlInfo[]? result = null;
 
 				if (expression != null)
 				{

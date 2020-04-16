@@ -27,12 +27,11 @@ namespace Tests.UserTests
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
 			ProviderName.Access,
-			ProviderName.SqlCe,
-			TestProvName.AllMySql,
 			ProviderName.DB2,
-			TestProvName.AllSybase,
 			TestProvName.AllFirebird,
-			ProviderName.Informix
+			TestProvName.AllInformix,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase,
 		})]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]

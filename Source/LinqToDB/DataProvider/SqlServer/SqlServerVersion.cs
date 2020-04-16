@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	public enum SqlServerVersion
 	{

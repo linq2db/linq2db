@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Common
 {
 	public static class Utils
 	{
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, string defaultName = "t", StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>       items,
+			IEnumerable<string>? staticNames,
+			Func<T, string?>     nameFunc,
+			Action<T, string>    nameSetter,
+			string               defaultName = "t",
+			StringComparer?      comparer    = null)
 		{
 			if (items      == null) throw new ArgumentNullException(nameof(items));
 			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
@@ -18,12 +21,17 @@ namespace LinqToDB.Common
 			MakeUniqueNames(items, staticNames, nameFunc, nameSetter, t =>
 			{
 				var name = nameFunc(t);
-				return string.IsNullOrEmpty(name) ? defaultName : name;
-			});
+				return string.IsNullOrEmpty(name) ? defaultName : name!;
+			}, comparer);
 		}
 
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>       items,
+			IEnumerable<string>? staticNames,
+			Func<T, string?>     nameFunc,
+			Action<T, string>    nameSetter,
+			Func<T, string?>     defaultName,
+			StringComparer?      comparer = null)
 		{
 			if (staticNames != null)
 			{
@@ -36,8 +44,13 @@ namespace LinqToDB.Common
 			}
 		}
 
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, [NotNull] Func<string, bool> validatorFunc, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>     items,
+			Func<string, bool> validatorFunc,
+			Func<T, string?>   nameFunc,
+			Action<T, string>  nameSetter,
+			Func<T, string?>   defaultName,
+			StringComparer?    comparer = null)
 		{
 			if (items         == null) throw new ArgumentNullException(nameof(items));
 			if (validatorFunc == null) throw new ArgumentNullException(nameof(validatorFunc));
@@ -66,7 +79,7 @@ namespace LinqToDB.Common
 
 				foreach (var groupItem in groupItems)
 				{
-					var name = defaultName(groupItem);
+					string? name = defaultName(groupItem);
 
 					if (name.IsNullOrEmpty())
 						name = nameFunc(groupItem);

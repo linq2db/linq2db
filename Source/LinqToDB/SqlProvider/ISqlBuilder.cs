@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
@@ -13,10 +12,10 @@ namespace LinqToDB.SqlProvider
 		int              CommandCount         (SqlStatement statement);
 		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0);
 
-		StringBuilder    ConvertTableName     (StringBuilder sb, string database, string schema, string table);
-		StringBuilder    BuildTableName       (StringBuilder sb, string database, string schema, string table);
-		object           Convert              (object value, ConvertType convertType);
-		ISqlExpression   GetIdentityExpression(SqlTable table);
+		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table);
+		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table);
+		string           Convert              (string value, ConvertType convertType);
+		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IDbDataParameter[] parameters);
 		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
@@ -25,5 +24,7 @@ namespace LinqToDB.SqlProvider
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 
 		string           Name { get; }
+
+		List<SqlParameter> ActualParameters { get; }
 	}
 }

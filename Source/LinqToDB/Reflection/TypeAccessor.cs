@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Reflection
 {
 	[DebuggerDisplay("Type = {" + nameof(Type) + "}")]
@@ -40,7 +38,7 @@ namespace LinqToDB.Reflection
 
 		#region Public Members
 
-		public IObjectFactory          ObjectFactory { get; set; }
+		public IObjectFactory?         ObjectFactory { get; set; }
 		public abstract Type           Type          { get; }
 
 		#endregion
@@ -72,7 +70,7 @@ namespace LinqToDB.Reflection
 
 		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new ConcurrentDictionary<Type,TypeAccessor>();
 
-		public static TypeAccessor GetAccessor([NotNull] Type type)
+		public static TypeAccessor GetAccessor(Type type)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
