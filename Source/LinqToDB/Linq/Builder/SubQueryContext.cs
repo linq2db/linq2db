@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -40,6 +41,19 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
+			if (expression != null)
+			{
+				var root = expression.GetRootObject(Builder.MappingSchema);
+				if (root is ContextRefExpression refExpression)
+				{
+					if (refExpression.BuildContext == this)
+					{
+						expression = expression.Replace(root, new ContextRefExpression(root.Type, SubQuery));
+					};
+				}
+			}
+
+
 			var indexes = SubQuery
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();

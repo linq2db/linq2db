@@ -927,6 +927,11 @@ namespace LinqToDB.Expressions
 
 		#region Transform
 
+		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy)
+		{
+			return Transform(expression, e => e == toReplace ? replacedBy : e);
+		}
+
 		/// <summary>
 		/// Returns the body of <paramref name="lambda"/> but replaces the first parameter of that
 		/// lambda expression with the <paramref name="exprToReplaceParameter"/> expression.

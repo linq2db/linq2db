@@ -2941,6 +2941,9 @@ namespace LinqToDB.Linq.Builder
 			//	}
 			//}
 
+			if (null != new QueryVisitor().Find(predicate, e => e.ElementType == QueryElementType.SelectClause))
+				return null;
+
 			if (predicate.CanBeNull && predicate is SqlPredicate.ExprExpr || inList != null)
 			{
 				var exprExpr = predicate as SqlPredicate.ExprExpr;

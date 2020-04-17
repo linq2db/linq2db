@@ -89,8 +89,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 								//
-								var body      = expression.Body;
-								var level = body.GetLevel();
+								var body  = expression.Body;
+								var level = body.GetLevel(builder.MappingSchema);
 
 
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);

@@ -643,6 +643,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
+				if (context != null && context.SelectQuery != SelectQuery)
+				{
+					index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
+				}
+
 				var expr = SelectQuery.Select.Columns[index].Expression;
 
 				if (!SelectQuery.GroupBy.Items.Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn && ReferenceEquals(_, ((SqlColumn)expr).Expression))))

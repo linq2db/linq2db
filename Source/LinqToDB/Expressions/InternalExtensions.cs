@@ -1095,10 +1095,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Call :
 					{
 						var call = (MethodCallExpression)expression;
-						var expr = call.Object;
-
-						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsExtensionMethod(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
-							expr = call.Arguments[0];
+						var expr = ExtractMethodCallTunnelExpression(call, mapping);
 
 						if (expr != null)
 						{
@@ -1159,16 +1156,45 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		public static int GetLevel(this Expression expression)
+		static Expression? ExtractMethodCallTunnelExpression(MethodCallExpression call, MappingSchema mapping)
+		{
+			var expr = call.Object;
+
+			if (expr == null && call.Arguments.Count > 0 &&
+			    (call.IsQueryable() 
+			     || call.IsAggregate(mapping) 
+			     || call.IsExtensionMethod(mapping) 
+			     || call.IsAssociation(mapping) 
+			     || call.Method.IsSqlPropertyMethodEx()))
+			{
+				expr = call.Arguments[0];
+			}
+
+			return expr;
+		}
+
+		public static int GetLevel(this Expression expression, MappingSchema mapping)
 		{
 			switch (expression.NodeType)
 			{
+				case ExpressionType.Call :
+					{
+						var call = (MethodCallExpression)expression;
+						var expr = ExtractMethodCallTunnelExpression(call, mapping);
+						if (expr != null)
+						{
+							return GetLevel(expr.UnwrapWithAs(), mapping) + 1;
+						}
+
+						break;
+					}
+
 				case ExpressionType.MemberAccess:
 					{
 						var e = ((MemberExpression)expression);
 
 						if (e.Expression != null)
-							return GetLevel(e.Expression.Unwrap()) + 1;
+							return GetLevel(e.Expression.UnwrapWithAs(), mapping) + 1;
 
 						break;
 					}

@@ -595,7 +595,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var value = db.GetTable<Parent170>()
+				var actual = db.GetTable<Parent170>()
 					.SelectMany(x => x.Children)
 #pragma warning disable CS0472 // comparison of int with null
 					.Where(x => x.Parent!.Value1 == null)
@@ -603,7 +603,7 @@ namespace Tests.Linq
 					.Select(x => (int?)x.Parent!.Value1)
 					.First();
 
-				Assert.That(value, Is.Null);
+				Assert.That(actual, Is.Null);
 			}
 		}
 

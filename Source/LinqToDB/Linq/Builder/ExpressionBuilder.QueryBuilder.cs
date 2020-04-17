@@ -80,6 +80,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					resultExpr = readerExpression.MakeNullable();
 				}
+				else if (memberInfo?.GetMemberType().IsNullable() == false &&
+					readerExpression.Type.IsNullable())
+				{
+					resultExpr = readerExpression.MakeNotNullable();
+				}
 			}
 
 			return resultExpr;
@@ -131,12 +136,18 @@ namespace LinqToDB.Linq.Builder
 
 						_convertedExpressions.Add(cex.Operand, cex);
 
-						var nex = BuildExpression(context, cex.Operand, enforceServerSide);
+						var newOperand = BuildExpression(context, cex.Operand, enforceServerSide);
 
-						if (nex.Type != cex.Type)
-							nex = cex.Update(nex);
+						if (newOperand.Type != cex.Type)
+						{
+							if (cex.Type.IsNullable() && newOperand is ConvertFromDataReaderExpression readerExpression)
+							{
+								newOperand = readerExpression.MakeNullable();
+							}
 
-						var ret = new TransformInfo(nex, true);
+							newOperand = cex.Update(newOperand);
+						}
+						var ret = new TransformInfo(newOperand, true);
 
 						RemoveConvertedExpression(cex.Operand);
 
@@ -172,15 +183,15 @@ namespace LinqToDB.Linq.Builder
 							{
 								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
 
-								if (res.Result)
-								{
-									var table = (TableBuilder.AssociatedTableContext)res.Context!;
-									if (table.IsList)
-									{
-										var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>(), out _);
-										return new TransformInfo(BuildExpression(context, mexpr, enforceServerSide));
-									}
-								}
+								// if (res.Result)
+								// {
+								// 	var table = (TableBuilder.AssociatedTableContext)res.Context!;
+								// 	if (table.IsList)
+								// 	{
+								// 		var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>(), out _);
+								// 		return new TransformInfo(BuildExpression(context, mexpr, enforceServerSide));
+								// 	}
+								// }
 							}
 
 							var prevCount  = ctx.SelectQuery.Select.Columns.Count;

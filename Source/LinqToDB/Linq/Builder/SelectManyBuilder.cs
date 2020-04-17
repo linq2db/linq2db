@@ -37,9 +37,11 @@ namespace LinqToDB.Linq.Builder
 			else if (!buildInfo.IsAssociationBuilt && (sequence.SelectQuery.HasSetOperators ||
 			                                           !sequence.SelectQuery.IsSimple ||
 			                                           sequence.GetType() == typeof(SelectContext)))
+			{
 				// TODO: we should create subquery unconditionally and let optimizer remove it later if it is not needed,
 				// but right now it breaks at least association builder so it is not a small change
 				sequence = new SubQueryContext(sequence);
+			}
 
 			SelectManyContext? selectManyContext = null;
 			BuildInfo collectionInfo;
@@ -52,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 				selectManyContext = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 				selectManyContext.SetAlias(collectionSelectorParameter.Name);
 
-				collectionInfo = new BuildInfo(selectManyContext, expr, new SelectQuery());
+				collectionInfo = new BuildInfo(sequence, expr, new SelectQuery());
 				collection     = builder.BuildSequence(collectionInfo);
 
 				context = selectManyContext;
@@ -234,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
 					MoveSearchConditionsToJoin(join);
-				}
+				} 
 
 				// Association.
 				//

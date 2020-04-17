@@ -52,6 +52,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
+				expression = CorrectExpression(expression, this, Sequence);
+
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
 				if (!Disabled && expression == null)
@@ -108,23 +110,44 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
+			static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)
+			{
+				if (expression != null)
+				{
+					var root = expression.GetRootObject(current.Builder.MappingSchema);
+					if (root is ContextRefExpression refExpression)
+					{
+						if (refExpression.BuildContext == current)
+						{
+							expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying));
+						};
+					}
+				}
+
+				return expression;
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToSql(expression, level, flags);
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToIndex(expression, level, flags);
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				expression = CorrectExpression(expression, this, Sequence);
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
+				expression = CorrectExpression(expression, this, Sequence);
 				return Sequence.GetContext(expression, level, buildInfo);
 			}
 		}
