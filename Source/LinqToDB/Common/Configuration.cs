@@ -28,14 +28,6 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible.
-		/// This option could be useful if you need to intercept
-		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static bool AvoidSpecificDataProviderAPI;
-
-		/// <summary>
 		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
 		/// Default value: <c>true</c>.
 		/// </summary>
@@ -72,7 +64,7 @@ namespace LinqToDB.Common
 			/// Controls behavior of linq2db when multiple queries required to load requested data:
 			/// - if <c>true</c> - multiple queries allowed;
 			/// - if <c>false</c> - <see cref="LinqToDB.Linq.LinqException"/> will be thrown.
-			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
+			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool AllowMultipleQuery;
@@ -156,16 +148,14 @@ namespace LinqToDB.Common
 			/// <remarks>
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 			/// </remarks>
-			public static bool GuardGrouping;
+			public static bool GuardGrouping = true;
 
-#pragma warning disable 1574
 			/// <summary>
 			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseBinaryAggregateExpression;
-#pragma warning restore 1574
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
@@ -210,7 +200,7 @@ namespace LinqToDB.Common
 		public static class LinqService
 		{
 			/// <summary>
-			/// Controls format of type name, sent over WCF:
+			/// Controls format of type name, sent over remote context:
 			/// - if <c>true</c> - name from <see cref="Type.AssemblyQualifiedName"/> used;
 			/// - if <c>false</c> - name from <see cref="Type.FullName"/> used.
 			/// Default value: <c>false</c>.
@@ -237,7 +227,7 @@ namespace LinqToDB.Common
 			/// If factory method is not set, retry policy is not used.
 			/// Not set by default.
 			/// </summary>
-			public static Func<DataConnection,IRetryPolicy> Factory;
+			public static Func<DataConnection,IRetryPolicy?>? Factory;
 
 			/// <summary>
 			/// Status of use of default retry policy.
@@ -247,7 +237,7 @@ namespace LinqToDB.Common
 			public static bool UseDefaultPolicy
 			{
 				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
-				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy?>?)null;
 			}
 
 			/// <summary>
@@ -316,7 +306,7 @@ namespace LinqToDB.Common
 			/// Set this value to <c>null</c> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
-			public static string AssociationAlias { get; set; } = "a_{0}";
+			public static string? AssociationAlias { get; set; } = "a_{0}";
 
 			/// <summary>
 			/// Indicates whether SQL Builder should generate aliases for final projection.

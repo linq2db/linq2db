@@ -268,8 +268,8 @@ namespace Tests.Linq
 			{
 				var expected = Person.GroupBy(p => p.Patient?.Diagnosis).Select(p => new {p.Key, Count = p.Count()}).ToList();
 				var result   = db.GetTable<PersonWithDynamicStore>()
-					.GroupBy(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
-					.Select(p => new {p.Key, Count = p.Count()})
+					.GroupBy(x => Sql.Property<string?>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
+					.Select(p => new { p.Key, Count = p.Count() })
 					.ToList();
 
 				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
@@ -367,38 +367,26 @@ namespace Tests.Linq
 			}
 		}
 
-		public void CreateTestTable<T>(IDataContext db, string tableName = null)
-		{
-			db.DropTable<T>(tableName, throwExceptionIfNotExists: false);
-			db.CreateTable<T>(tableName);
-		}
-
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
 			{
-				CreateTestTable<DynamicTablePrototype>(db);
-				try
-				{
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77 });
+				new DynamicTablePrototype { NotIdentifier = 77 }
+			}))
+			{
+				var query =
+					from d in db.GetTable<DynamicTable>()
+					select new
+					{
+						NI = Sql.Property<int>(d, "Not Identifier")
+					};
 
-					var query =
-						from d in db.GetTable<DynamicTable>()
-						select new
-						{
-							NI = Sql.Property<int>(d, "Not Identifier")
-						};
+				var result = query.ToArray();
 
-					var result = query.ToArray();
-
-					Assert.AreEqual(77, result[0].NI);
-				}
-				finally
-				{
-					db.DropTable<DynamicTablePrototype>();
-				}
+				Assert.AreEqual(77, result[0].NI);
 			}
 		}
 
@@ -407,34 +395,28 @@ namespace Tests.Linq
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
 			{
-				CreateTestTable<DynamicTablePrototype>(db);
-				try
-				{
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
+				new DynamicTablePrototype { NotIdentifier = 77, Value = 5 },
+				new DynamicTablePrototype { NotIdentifier = 77, Value = 5 }
+			}))
+			{
+				var query =
+					from d in db.GetTable<DynamicTable>()
+					group d by new { NI = Sql.Property<int>(d, "Not Identifier") }
+					into g
+					select new
+					{
+						g.Key.NI,
+						Count = g.Count(),
+						Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
+					};
 
-					var query =
-						from d in db.GetTable<DynamicTable>()
-						group d by new { NI = Sql.Property<int>(d, "Not Identifier") }
-						into g
-						select new
-						{
-							g.Key.NI,
-							Count = g.Count(),
-							Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
-						};
+				var result = query.ToArray();
 
-					var result = query.ToArray();
-
-					Assert.AreEqual(77, result[0].NI);
-					Assert.AreEqual(2,  result[0].Count);
-					Assert.AreEqual(10, result[0].Sum);
-				}
-				finally
-				{
-					db.DropTable<DynamicTablePrototype>();
-				}
+				Assert.AreEqual(77, result[0].NI);
+				Assert.AreEqual(2,  result[0].Count);
+				Assert.AreEqual(10, result[0].Sum);
 			}
 		}
 
@@ -459,7 +441,7 @@ namespace Tests.Linq
 			public int ID { get; set; }
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		[Table("Person")]
@@ -491,11 +473,11 @@ namespace Tests.Linq
 
 		public class SomeClassWithDynamic
 		{
-			public string Description { get; set; }
+			public string? Description { get; set; }
 
 			private sealed class SomeClassEqualityComparer : IEqualityComparer<SomeClassWithDynamic>
 			{
-				public bool Equals(SomeClassWithDynamic x, SomeClassWithDynamic y)
+				public bool Equals(SomeClassWithDynamic? x, SomeClassWithDynamic? y)
 				{
 					if (ReferenceEquals(x, y))      return true;
 					if (ReferenceEquals(x, null))   return false;
@@ -537,11 +519,11 @@ namespace Tests.Linq
 			public static IEqualityComparer<SomeClassWithDynamic> SomeClassComparer { get; } = new SomeClassEqualityComparer();
 
 			[DynamicColumnsStore]
-			public IDictionary<string, object> ExtendedProperties { get; set; }
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 			var builder = mappingSchema.GetFluentMappingBuilder()
@@ -575,6 +557,75 @@ namespace Tests.Linq
 							.ToList();
 
 					AreEqual(expected, result, SomeClassWithDynamic.SomeClassComparer);
+				}
+			}
+		}
+
+
+		class BananaTable
+		{
+			public int Id { get; set; }
+			public string? Property { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue(Details = "https://stackoverflow.com/questions/61081571")]
+		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		{
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BananaTable>())
+			{
+				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
+				
+				var res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("test1", res[0].Property);
+
+				Test(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
+
+				res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("banana", res[0].Property);
+
+				void Test(string entity, string filterProperty, string changedProperty, object filter, object value)
+				{
+					db.GetTable<object>()
+						.TableName(entity)
+						.Where(t => Sql.Property<object>(t, filterProperty).Equals(filter))
+						.Set(t => Sql.Property<object>(t, changedProperty), value)
+						.Update();
+				}
+			}
+		}
+
+		[Test]
+		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		{
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BananaTable>())
+			{
+				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
+
+				var res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("test1", res[0].Property);
+
+				Test<BananaTable>(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
+
+				res = db.GetTable<BananaTable>().ToList();
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("banana", res[0].Property);
+
+				void Test<TEntity>(string entity, string filterProperty, string changedProperty, object filter, object value)
+					where TEntity : class
+				{
+					db.GetTable<TEntity>()
+						.TableName(entity)
+						.Where(t => Sql.Property<TEntity>(t, filterProperty)!.Equals(filter))
+						.Set(t => Sql.Property<TEntity>(t, changedProperty)!, value)
+						.Update();
 				}
 			}
 		}

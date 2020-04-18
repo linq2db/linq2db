@@ -496,16 +496,17 @@ namespace Tests.UserTests
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
 			using (var table = db.CreateLocalTable<PersonCacheFluent>())
 			{
-				object claimedKeyType = KeyTypes.EC;
+				object  claimedKeyType     = KeyTypes.EC;
+				object? claimedKeyTypeNull = null;
 
 				table.Value(p => p.Id, 0)
 					.Value(p => p.ClaimedKeyType , claimedKeyType)
-					.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+					.Value(p => p.ClaimedKeyTypeN, claimedKeyTypeNull)
 					.Insert();
 
 				var record = table.Single();
 				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.IsNull(record.ClaimedKeyTypeN);
 			}
 		}
 

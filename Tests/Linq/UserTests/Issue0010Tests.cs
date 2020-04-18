@@ -1,6 +1,4 @@
-﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -12,7 +10,7 @@ namespace Tests.UserTests
 {
 	// https://github.com/linq2db/linq2db.LINQPad/issues/10
 	[TestFixture]
-	[Category("SkipCI")]
+	[SkipCI]
 	public class Issue0010Tests : TestBase
 	{
 		[Test, SkipCategory("Access.12")]
@@ -35,4 +33,3 @@ namespace Tests.UserTests
 		}
 	}
 }
-#endif

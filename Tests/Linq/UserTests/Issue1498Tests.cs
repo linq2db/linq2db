@@ -17,22 +17,22 @@ namespace Tests.UserTests
 		{
 			public int Id { get; set; }
 
-			public string Title { get; set; }
+			public string? Title { get; set; }
 
-			public string Text { get; set; }
+			public string? Text { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "TopicId")]
-			public virtual ICollection<Message> MessagesA1 { get; set; }
+			public virtual ICollection<Message> MessagesA1 { get; set; } = null!;
 
 			[Association(ExpressionPredicate = nameof(Predicate))]
-			public virtual ICollection<Message> MessagesA2 { get; set; }
+			public virtual ICollection<Message> MessagesA2 { get; set; } = null!;
 
 			[Association(QueryExpressionMethod = nameof(Query))]
-			public virtual ICollection<Message> MessagesA3 { get; set; }
+			public virtual ICollection<Message> MessagesA3 { get; set; } = null!;
 
-			public virtual ICollection<Message> MessagesF1 { get; set; }
-			public virtual ICollection<Message> MessagesF2 { get; set; }
-			public virtual ICollection<Message> MessagesF3 { get; set; }
+			public virtual ICollection<Message> MessagesF1 { get; set; } = null!;
+			public virtual ICollection<Message> MessagesF2 { get; set; } = null!;
+			public virtual ICollection<Message> MessagesF3 { get; set; } = null!;
 
 			static Expression<Func<Topic, Message, bool>> Predicate => (t, m) => t.Id == m.TopicId;
 
@@ -46,9 +46,9 @@ namespace Tests.UserTests
 			public int TopicId { get; set; }
 
 			[Association(ThisKey = "TopicId", OtherKey = "Id")]
-			public virtual Topic Topic { get; set; }
+			public virtual Topic? Topic { get; set; }
 
-			public string Text { get; set; }
+			public string? Text { get; set; }
 		}
 
 		[Test]

@@ -20,8 +20,8 @@ namespace Tests
 			ProviderName = providerName;
 		}
 
-		public string Category     { get; }
-		public string ProviderName { get; }
+		public string  Category     { get; }
+		public string? ProviderName { get; }
 
 		public void ApplyToTest(Test test)
 		{

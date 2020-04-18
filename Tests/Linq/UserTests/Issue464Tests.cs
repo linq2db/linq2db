@@ -19,15 +19,13 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{
-			var firebirdQuote = FirebirdSqlBuilder.IdentifierQuoteMode;
-
 			var schema = new MappingSchema();
 
 			schema.SetDataType(typeof(MyInt), DataType.Int32);
 
 			schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
-			schema.SetConvertExpression<Int64,   MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
+			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
 
@@ -38,11 +36,10 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value);
 
 			using (var db = new  DataConnection(context).AddMappingSchema(schema))
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			{
 				try
 				{
-					FirebirdSqlBuilder.IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto;
-
 					var temptable = db.CreateTable<Entity>();
 
 					var data = new[]
@@ -59,8 +56,6 @@ namespace Tests.UserTests
 				finally
 				{
 					db.DropTable<Entity>();
-
-					FirebirdSqlBuilder.IdentifierQuoteMode = firebirdQuote;
 				}
 
 			}
@@ -68,13 +63,13 @@ namespace Tests.UserTests
 
 		public class Entity
 		{
-			public int   Id    { get; set; }
-			public MyInt Value { get; set; }
+			public int    Id    { get; set; }
+			public MyInt? Value { get; set; }
 
 			public override bool Equals(object obj)
 			{
 				var e = (Entity) obj;
-				return Id == e.Id && Value.Value == Id;
+				return Id == e.Id && Value!.Value == Id;
 			}
 
 			public override int GetHashCode()

@@ -7,7 +7,6 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using Extensions;
-	using Mapping;
 
 	public class TypeAccessor<T> : TypeAccessor
 	{
@@ -17,19 +16,19 @@ namespace LinqToDB.Reflection
 			//
 			var type = typeof(T);
 
-			if (type.IsValueTypeEx())
+			if (type.IsValueType)
 			{
-				_createInstance = () => default;
+				_createInstance = () => default!;
 			}
 			else
 			{
-				var ctor = type.IsAbstractEx() ? null : type.GetDefaultConstructorEx();
+				var ctor = type.IsAbstract ? null : type.GetDefaultConstructorEx();
 
 				if (ctor == null)
 				{
 					Expression<Func<T>> mi;
 
-					if (type.IsAbstractEx()) mi = () => ThrowAbstractException();
+					if (type.IsAbstract) mi = () => ThrowAbstractException();
 					else                     mi = () => ThrowException();
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
@@ -47,9 +46,9 @@ namespace LinqToDB.Reflection
 			// Add explicit interface implementation properties support
 			// Or maybe we should support all private fields/properties?
 			//
-			if (!type.IsInterfaceEx() && !type.IsArray)
+			if (!type.IsInterface && !type.IsArray)
 			{
-				var interfaceMethods = type.GetInterfacesEx().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
+				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods)
 					.ToList();
 
 				if (interfaceMethods.Count > 0)
@@ -58,8 +57,8 @@ namespace LinqToDB.Reflection
 					{
 						if (pi.GetIndexParameters().Length == 0)
 						{
-							var getMethod = pi.GetGetMethodEx(true);
-							var setMethod = pi.GetSetMethodEx(true);
+							var getMethod = pi.GetGetMethod(true);
+							var setMethod = pi.GetSetMethod(true);
 
 							if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
 								(setMethod == null || interfaceMethods.Contains(setMethod)))
@@ -90,13 +89,14 @@ namespace LinqToDB.Reflection
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
-		static readonly IObjectFactory   _objectFactory;
+		static readonly IObjectFactory?  _objectFactory;
 
 		internal TypeAccessor()
 		{
 			// init members
 			foreach (var member in _members)
-				AddMember(new MemberAccessor(this, member, null));
+				if (!member.GetMemberType().IsByRef)
+					AddMember(new MemberAccessor(this, member, null));
 
 			ObjectFactory = _objectFactory;
 		}
@@ -104,7 +104,7 @@ namespace LinqToDB.Reflection
 		static readonly Func<T> _createInstance;
 		public override object   CreateInstance()
 		{
-			return _createInstance();
+			return _createInstance()!;
 		}
 
 		public T Create()

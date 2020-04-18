@@ -989,7 +989,8 @@ namespace LinqToDB.Data
 		bool                 _disposeConnection = true;
 		bool                 _closeTransaction;
 		IAsyncDbConnection?  _connection;
-		Func<IDbConnection>? _connectionFactory;
+
+		readonly Func<IDbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
@@ -1553,7 +1554,22 @@ namespace LinqToDB.Data
 			// will not work for providers that remove security information from connection string
 			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
 
-			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema);
+			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
+			{
+				OnEntityCreated             = OnEntityCreated,
+				RetryPolicy                 = RetryPolicy,
+				CommandTimeout              = CommandTimeout,
+				InlineParameters            = InlineParameters,
+				ThrowOnDisposed             = ThrowOnDisposed,
+				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+				OnTraceConnection           = OnTraceConnection,
+				OnClosed                    = OnClosed,
+				OnClosing                   = OnClosing,
+				OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
+				OnConnectionOpened          = OnConnectionOpened,
+				OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
+				OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+			};
 		}
 
 		#endregion

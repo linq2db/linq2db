@@ -98,6 +98,22 @@ GO
 GRANT EXEC ON Person_SelectByKey TO PUBLIC
 GO
 
+-- Person_SelectByKeyLowercase
+
+DROP Procedure Person_SelectByKeyLowercase
+GO
+
+CREATE Procedure Person_SelectByKeyLowercase
+	@id int
+AS
+
+SELECT personid, firstname FROM Person WHERE PersonID = @id
+
+GO
+
+GRANT EXEC ON Person_SelectByKeyLowercase TO PUBLIC
+GO
+
 -- Person_SelectAll
 
 DROP Procedure Person_SelectAll
@@ -677,4 +693,14 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
 
+GO
+
+DROP Procedure Issue1897
+GO
+
+CREATE PROCEDURE Issue1897
+AS
+BEGIN
+	RETURN 4
+END
 GO

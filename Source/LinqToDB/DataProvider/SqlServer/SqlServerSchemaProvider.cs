@@ -7,16 +7,26 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SchemaProvider;
 	using System.Data;
+	using System.Data.SqlTypes;
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		bool _isAzure;
+		int _compatibilityLevel;
+
+		protected readonly SqlServerDataProvider Provider;
+
+		public SqlServerSchemaProvider(SqlServerDataProvider provider)
+		{
+			Provider = provider;
+		}
 
 		protected override void InitProvider(DataConnection dataConnection)
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			_isAzure = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			_isAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			_compatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -116,7 +126,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ColumnInfo>(
 				_isAzure ? @"
@@ -168,9 +178,9 @@ namespace LinqToDB.DataProvider.SqlServer
 						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
-					DataTypeInfo dti;
+					var dti = GetDataType(c.DataType, options);
 
-					if (DataTypesDic.TryGetValue(c.DataType, out dti))
+					if (dti != null)
 					{
 						switch (dti.CreateParameters)
 						{
@@ -229,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
@@ -325,7 +335,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -369,72 +379,71 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return "System.Data.SqlTypes";
-		}
+		// TODO: we should support multiple namespaces, as e.g. sql server also could have
+		// spatial types (which is handled by T4 template for now)
+		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
 				case "varbinary"        :
 				case "timestamp"        :
 				case "rowversion"       :
-				case "image"            : return "SqlBinary";
-				case "binary"           : return "SqlBinary";
-				case "tinyint"          : return "SqlByte";
+				case "image"            :
+				case "binary"           : return nameof(SqlBinary);
+				case "tinyint"          : return nameof(SqlByte);
 				case "date"             :
 				case "smalldatetime"    :
 				case "datetime"         :
-				case "datetime2"        : return "SqlDateTime";
-				case "bit"              : return "SqlBoolean";
-				case "smallint"         : return "SqlInt16";
+				case "datetime2"        : return nameof(SqlDateTime);
+				case "bit"              : return nameof(SqlBoolean);
+				case "smallint"         : return nameof(SqlInt16);
 				case "numeric"          :
-				case "decimal"          : return "SqlDecimal";
-				case "int"              : return "SqlInt32";
-				case "real"             : return "SqlSingle";
-				case "float"            : return "SqlDouble";
+				case "decimal"          : return nameof(SqlDecimal);
+				case "int"              : return nameof(SqlInt32);
+				case "real"             : return nameof(SqlSingle);
+				case "float"            : return nameof(SqlDouble);
 				case "smallmoney"       :
-				case "money"            : return "SqlMoney";
-				case "bigint"           : return "SqlInt64";
+				case "money"            : return nameof(SqlMoney);
+				case "bigint"           : return nameof(SqlInt64);
 				case "text"             :
 				case "nvarchar"         :
 				case "char"             :
 				case "nchar"            :
 				case "varchar"          :
-				case "ntext"            : return "SqlString";
-				case "uniqueidentifier" : return "SqlGuid";
-				case "xml"              : return "SqlXml";
-				case "hierarchyid"      : return "Microsoft.SqlServer.Types.SqlHierarchyId";
-				case "geography"        : return "Microsoft.SqlServer.Types.SqlGeography";
-				case "geometry"         : return "Microsoft.SqlServer.Types.SqlGeometry";
+				case "ntext"            : return nameof(SqlString);
+				case "uniqueidentifier" : return nameof(SqlGuid);
+				case "xml"              : return nameof(SqlXml);
+				case "hierarchyid"      : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}";
+				case "geography"        : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}";
+				case "geometry"         : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}";
 			}
 
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
+				case "geometry"    : return Provider.GetUdtTypeByName(dataType);
 				case "table type"  : return typeof(DataTable);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)
-				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
+				return (udtSchema != null ? Provider.Adapter.QuoteIdentifier(udtSchema) + '.' : null) + Provider.Adapter.QuoteIdentifier(udtName);
 
-			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
@@ -454,6 +463,18 @@ namespace LinqToDB.DataProvider.SqlServer
 				};
 
 			return base.BuildProcedureParameter(p);
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			var sql = base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
+
+			// TODO: refactor method to use query as parameter instead of manual escaping...
+			// https://github.com/linq2db/linq2db/issues/1921
+			if (_compatibilityLevel >= 140)
+				sql = $"EXEC('{sql.Replace("'", "''")}')";
+
+			return sql;
 		}
 	}
 }

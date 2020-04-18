@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Database procedure or function description.
@@ -11,19 +9,19 @@ namespace LinqToDB.SchemaProvider
 		/// Gets or sets unique procedure identifier.
 		/// NOTE: this is not fully-qualified procedure name (even if it used right now for some providers as procedure identifier).
 		/// </summary>
-		public string ProcedureID;
+		public string ProcedureID = null!;
 		/// <summary>
 		/// Gets or sets database name for procedure.
 		/// </summary>
-		public string CatalogName;
+		public string? CatalogName;
 		/// <summary>
 		/// Gets or sets schema/owner name for procedure.
 		/// </summary>
-		public string SchemaName;
+		public string? SchemaName;
 		/// <summary>
 		/// Gets or sets procedure name.
 		/// </summary>
-		public string ProcedureName;
+		public string ProcedureName = null!;
 		/// <summary>
 		/// Gets or sets flag to distinguish function from procedure.
 		/// </summary>
@@ -47,7 +45,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets or sets procedure source code.
 		/// </summary>
-		public string ProcedureDefinition;
+		public string? ProcedureDefinition;
 		/// <summary>
 		/// Get or sets flag, indicating that procedure returns dynamic (generic) result.
 		/// </summary>

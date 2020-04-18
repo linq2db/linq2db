@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
-using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
@@ -16,27 +15,26 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using System.Threading;
+using Tests.Model;
 
-#if !NETSTANDARD1_6
 using Microsoft.SqlServer.Types;
-using SqlServerTypes;
-#endif
 
 using NUnit.Framework;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-#if !NETSTANDARD1_6 && !MONO
 		[OneTimeSetUp]
 		protected void InitializeFixture()
 		{
 			// load spatial types support
 			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
 		}
-#endif
 
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
@@ -111,11 +109,12 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>      (conn, "datetime2DataType",      DataType.DateTime2,      "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>      (conn, "timeDataType",           DataType.Time,           "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
 
-#if !NETSTANDARD1_6
-				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
-				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
-				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
-#endif
+				if (!IsMsProvider(context))
+				{
+					Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
+					Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
+					Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+				}
 			}
 		}
 
@@ -141,7 +140,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
@@ -453,7 +452,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -530,7 +529,7 @@ namespace Tests.DataProvider
 
 				if (context != ProviderName.SqlServer2000)
 				{
-					var conv = conn.MappingSchema.GetConverter<string,SqlXml>();
+					var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
 
 					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
@@ -587,10 +586,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void TestHierarchyID([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
@@ -607,6 +608,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeometry([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
@@ -626,6 +630,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
@@ -641,7 +648,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
 			}
 		}
-#endif
 
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer)] string context)
@@ -699,7 +705,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -711,7 +717,7 @@ namespace Tests.DataProvider
 			[Column] public DateTime DateTimeValue;
 			[Column] public bool     BoolValue;
 			[Column] public Guid     GuidValue;
-			[Column] public Binary   BinaryValue;
+			[Column] public Binary?  BinaryValue;
 			[Column] public short    SmallIntValue;
 		}
 
@@ -770,10 +776,10 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class AllTypes
+		internal class AllTypes
 		{
 			[Identity]
-			[Column(DataType=DataType.Int32),                          NotNull]  public int             ID                       { get; set; }
+			[Column(DataType=DataType.Int32),          LinqToDB.Mapping.NotNull] public int             ID                       { get; set; }
 			[Column(DataType=DataType.Int64),                          Nullable] public long?           bigintDataType           { get; set; }
 			[Column(DataType=DataType.Decimal),                        Nullable] public decimal?        numericDataType          { get; set; }
 			[Column(DataType=DataType.Boolean),                        Nullable] public bool?           bitDataType              { get; set; }
@@ -788,21 +794,21 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.DateTime),                       Nullable] public DateTime?       datetimeDataType         { get; set; }
 			[Column(DataType=DataType.SmallDateTime),                  Nullable] public DateTime?       smalldatetimeDataType    { get; set; }
 			[Column(DataType=DataType.Char,      Length=1),            Nullable] public char?           charDataType             { get; set; }
-			[Column(DataType=DataType.VarChar,   Length=20),           Nullable] public string          varcharDataType          { get; set; }
-			[Column(DataType=DataType.Text),                           Nullable] public string          textDataType             { get; set; }
-			[Column(DataType=DataType.NChar,     Length=20),           Nullable] public string          ncharDataType            { get; set; }
-			[Column(DataType=DataType.NVarChar,  Length=20),           Nullable] public string          nvarcharDataType         { get; set; }
-			[Column(DataType=DataType.NText),                          Nullable] public string          ntextDataType            { get; set; }
-			[Column(DataType=DataType.Binary),                         Nullable] public byte[]          binaryDataType           { get; set; }
-			[Column(DataType=DataType.VarBinary),                      Nullable] public byte[]          varbinaryDataType        { get; set; }
-			[Column(DataType=DataType.Image),                          Nullable] public byte[]          imageDataType            { get; set; }
-			[Column(DataType=DataType.Timestamp,SkipOnInsert=true),    Nullable] public byte[]          timestampDataType        { get; set; }
+			[Column(DataType=DataType.VarChar,   Length=20),           Nullable] public string?         varcharDataType          { get; set; }
+			[Column(DataType=DataType.Text),                           Nullable] public string?         textDataType             { get; set; }
+			[Column(DataType=DataType.NChar,     Length=20),           Nullable] public string?         ncharDataType            { get; set; }
+			[Column(DataType=DataType.NVarChar,  Length=20),           Nullable] public string?         nvarcharDataType         { get; set; }
+			[Column(DataType=DataType.NText),                          Nullable] public string?         ntextDataType            { get; set; }
+			[Column(DataType=DataType.Binary),                         Nullable] public byte[]?         binaryDataType           { get; set; }
+			[Column(DataType=DataType.VarBinary),                      Nullable] public byte[]?         varbinaryDataType        { get; set; }
+			[Column(DataType=DataType.Image),                          Nullable] public byte[]?         imageDataType            { get; set; }
+			[Column(DataType=DataType.Timestamp,SkipOnInsert=true),    Nullable] public byte[]?         timestampDataType        { get; set; }
 			[Column(DataType=DataType.Guid),                           Nullable] public Guid?           uniqueidentifierDataType { get; set; }
-			[Column(DataType=DataType.Variant),                        Nullable] public object          sql_variantDataType      { get; set; }
-			[Column(DataType=DataType.NVarChar,  Length=int.MaxValue), Nullable] public string          nvarchar_max_DataType    { get; set; }
-			[Column(DataType=DataType.VarChar,   Length=int.MaxValue), Nullable] public string          varchar_max_DataType     { get; set; }
-			[Column(DataType=DataType.VarBinary, Length=int.MaxValue), Nullable] public byte[]          varbinary_max_DataType   { get; set; }
-			[Column(DataType=DataType.Xml),                            Nullable] public string          xmlDataType              { get; set; }
+			[Column(DataType=DataType.Variant),                        Nullable] public object?         sql_variantDataType      { get; set; }
+			[Column(DataType=DataType.NVarChar,  Length=int.MaxValue), Nullable] public string?         nvarchar_max_DataType    { get; set; }
+			[Column(DataType=DataType.VarChar,   Length=int.MaxValue), Nullable] public string?         varchar_max_DataType     { get; set; }
+			[Column(DataType=DataType.VarBinary, Length=int.MaxValue), Nullable] public byte[]?         varbinary_max_DataType   { get; set; }
+			[Column(DataType=DataType.Xml),                            Nullable] public string?         xmlDataType              { get; set; }
 			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTime2),                      Nullable] public DateTime?       datetime2DataType        { get; set; }
@@ -937,7 +943,7 @@ namespace Tests.DataProvider
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 
@@ -950,7 +956,6 @@ namespace Tests.DataProvider
 				if (column.MemberName == "timestampDataType")
 					continue;
 
-#if !NETSTANDARD1_6
 				if (actualValue is SqlGeometry)
 				{
 					Assert.That(actualValue == null  || ((SqlGeometry) actualValue).IsNull ? null : actualValue.ToString(),
@@ -964,7 +969,6 @@ namespace Tests.DataProvider
 						"Column  : {0}", column.MemberName);
 				}
 				else
-#endif
 					Assert.That(actualValue, Is.EqualTo(testValue),
 						actualValue is DateTimeOffset
 							? "Column  : {0} {1:yyyy-MM-dd HH:mm:ss.fffffff zzz} {2:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
@@ -983,11 +987,9 @@ namespace Tests.DataProvider
 			[Column(DbType="datetimeoffset(7)"), Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(7)
 			[Column(DbType="datetime2(7)"),      Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
 			[Column(DbType="time(7)"),           Nullable] public TimeSpan?       timeDataType           { get; set; } // time(7)
-#if !NETSTANDARD1_6
 			[Column(DbType="hierarchyid"),       Nullable] public SqlHierarchyId  hierarchyidDataType    { get; set; } // hierarchyid
-			[Column(DbType="geography"),         Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
-			[Column(DbType="geometry"),          Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
-#endif
+			[Column(DbType="geography"),         Nullable] public SqlGeography?   geographyDataType      { get; set; } // geography
+			[Column(DbType="geometry"),          Nullable] public SqlGeometry?    geometryDataType       { get; set; } // geometry
 		}
 
 		IEnumerable<AllTypes2> GenerateAllTypes2(int startId, int count)
@@ -1001,17 +1003,18 @@ namespace Tests.DataProvider
 					datetimeoffsetDataType = DateTime.Now.AddMinutes(i),
 					datetime2DataType      = DateTime.Today.AddDays(i),
 					timeDataType           = TimeSpan.FromSeconds(i),
-#if !NETSTANDARD1_6
 					hierarchyidDataType    = SqlHierarchyId.Parse("/1/3/"),
 					geographyDataType      = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),
 					geometryDataType       = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),
-#endif
 				};
 			}
 		}
 
 		void BulkCopyAllTypes2(string context, BulkCopyType bulkCopyType)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			using (var db = new DataConnection(context))
 			{
 				db.CommandTimeout = 60;
@@ -1037,10 +1040,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void BulkCopyAllTypes2MultipleRows([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			if (IsMsProvider(context))
+				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
+
 			BulkCopyAllTypes2(context, BulkCopyType.MultipleRows);
 		}
 
@@ -1049,7 +1054,6 @@ namespace Tests.DataProvider
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.ProviderSpecific);
 		}
-#endif
 
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
@@ -1080,7 +1084,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void CreateAllTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1108,7 +1111,6 @@ namespace Tests.DataProvider
 				db.DropTable<AllTypes2>();
 			}
 		}
-#endif
 
 		[Table("#TempTable")]
 		class TempTable
@@ -1171,7 +1173,7 @@ namespace Tests.DataProvider
 		{
 			try
 			{
-				var value = ((SqlDataReader)rd).GetSqlDecimal(idx);
+				SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
 
 				if (value.Precision > ClrPrecision)
 				{
@@ -1235,6 +1237,94 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(Person.Count(), db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update());
 				Assert.AreEqual(Person.Count(), db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public async Task ExecProcedureTestAnonymParamAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void ExecProcedureTestAnonymParamGeneric([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+				
+				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+				
+				Assert.That(ret, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public async Task ExecProcedureAsyncTestAnonymParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var dbName = TestUtils.GetDatabaseName(db);
+
+				var par = new
+				{
+					FirstName = Guid.NewGuid().ToString(),
+					LastName = "Person",
+					MiddleName = "X",
+					Gender = "M"
+				};
+
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
+				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
+			
+				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
 
@@ -1312,7 +1402,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1325,7 +1414,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, table.Columns.Count);
 			}
 		}
-#endif
+
 		[Table("Issue1613")]
 		private class Issue1613Table
 		{
@@ -1369,8 +1458,8 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable(GenerateData()))
 			{ 
 
-				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.Date).Select(g => g.Key).ToList();
-				var query2 = table.Select(r => r.DateTimeOffset.Value.Date).ToList();
+				var query1 = table.GroupBy(x => x.DateTimeOffset!.Value.Date).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset!.Value.Date).ToList();
 
 				Assert.AreEqual(5, query1.Count);
 				Assert.AreEqual(5, query2.Count);
@@ -1384,10 +1473,147 @@ namespace Tests.DataProvider
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
 			{
-				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.TimeOfDay).Select(g => g.Key).ToList();
-				var query2 = table.Select(r => r.DateTimeOffset.Value.TimeOfDay).Distinct().ToList();
+				var query1 = table.GroupBy(x => x.DateTimeOffset!.Value.TimeOfDay).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset!.Value.TimeOfDay).Distinct().ToList();
 
 				Assert.AreEqual(query1, query2);
+			}
+		}
+
+		public static int Issue1897(DataConnection dataConnection, out int @return)
+		{
+			var ret = dataConnection.ExecuteProc("[Issue1897]",
+				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+
+			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+
+			return ret;
+		}
+
+		[Test]
+		public void Issue1897Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var rows = Issue1897(db, out var result);
+				Assert.AreEqual(-1, rows);
+				Assert.AreEqual(4, result);
+			}
+		}
+
+		private bool IsMsProvider(string context)
+		{
+			return ((SqlServerDataProvider)DataConnection.GetDataProvider(GetProviderName(context, out var _))).Provider == SqlServerProvider.MicrosoftDataSqlClient;
+		}
+
+		[Test]
+		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue1921");
+				Assert.NotNull(proc);
+				Assert.AreEqual("Issue1921", proc.ProcedureName);
+				Assert.AreEqual(true       , proc.IsTableFunction);
+				Assert.NotNull(proc.ResultTable);
+				Assert.AreEqual(2          , proc.ResultTable!.Columns.Count);
+				Assert.AreEqual("name"     , proc.ResultTable.Columns[0].ColumnName);
+				Assert.AreEqual("string"   , proc.ResultTable.Columns[0].MemberType);
+				Assert.AreEqual("objid"    , proc.ResultTable.Columns[1].ColumnName);
+				Assert.AreEqual("int?"     , proc.ResultTable.Columns[1].MemberType);
+
+			}
+		}
+
+		[Test]
+		[ActiveIssue(449)]
+		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue449')
+	BEGIN DROP FUNCTION Issue449
+END
+");
+
+				db.Execute(@"
+CREATE FUNCTION dbo.Issue449( @s varchar(20) = '*')
+RETURNS TABLE
+AS
+	RETURN ( SELECT * FROM dbo.Categories WHERE CONTAINS( *, @s ) )
+");
+				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue449");
+				Assert.NotNull(proc);
+				Assert.True(proc.IsFunction);
+				Assert.True(proc.IsTableFunction);
+				Assert.IsNull(proc.ResultException);
+			}
+		}
+
+		public class Issue1294Table
+		{
+			public int Id { get; set; }
+		}
+
+		[Sql.TableFunction(Name = "Issue1294")]
+		public LinqToDB.ITable<Issue1294Table> GetPermissions(int p1, int p2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Test]
+		[ActiveIssue(1294)]
+		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) });
+
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<Issue1294Table>())
+			{
+				db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
+	BEGIN DROP FUNCTION Issue1294
+END
+");
+
+				db.Execute(@"
+CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
+RETURNS TABLE
+AS
+	RETURN SELECT @p1 + @p2 as Id
+");
+
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
+				var permissions = CallFunc(p1, p2)
+					.Select(x => x.Id)
+					.Union(CallFunc(p11, p2).Select(x => x.Id));
+				var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.True(db.LastQuery!.Contains("@"));
+
+				LinqToDB.ITable<Issue1294Table> CallFunc(int p1, int p2)
+				{
+					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
+				}
 			}
 		}
 	}

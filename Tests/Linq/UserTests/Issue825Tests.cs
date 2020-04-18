@@ -24,7 +24,7 @@ namespace Tests.UserTests
 			public int ParentId { get; set; }
 
 			[Association(ThisKey = "ParentId", OtherKey = "Id", CanBeNull = false)]
-			public Parent825 Parent { get; set; }
+			public Parent825 Parent { get; set; } = null!;
 		}
 
 		[Table(Name = "Parent")]
@@ -34,10 +34,10 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
-			public IList<ParentPermission> ParentPermissions { get; set; }
+			public IList<ParentPermission> ParentPermissions { get; set; } = null!;
 
 			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
-			public IList<Child825> Childs { get; set; }
+			public IList<Child825> Childs { get; set; } = null!;
 		}
 
 		[Table(Name = "GrandChild")]

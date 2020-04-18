@@ -6,6 +6,10 @@ GO
 
 DROP FUNCTION IF EXISTS "TestTableFunctionSchema"()
 GO
+-- SKIP PostgreSQL.9.2 BEGIN
+DROP MATERIALIZED VIEW IF EXISTS "Issue2023"
+-- SKIP PostgreSQL.9.2 END
+GO
 DROP TABLE IF EXISTS "Person"
 GO
 
@@ -256,6 +260,7 @@ CREATE TABLE "AllTypes"
 	"timeDataType"        time                     NULL,
 	"timeTZDataType"      time with time zone      NULL,
 	"intervalDataType"    interval                 NULL,
+	"intervalDataType2"   interval                 NULL,
 
 	"charDataType"        char(1)                  NULL,
 	"char20DataType"      char(20)                 NULL,
@@ -617,3 +622,14 @@ BEGIN
 	RETURN 44;
 END; $$
 LANGUAGE plpgsql;
+
+GO
+-- SKIP PostgreSQL.9.2 BEGIN
+CREATE MATERIALIZED VIEW "Issue2023" AS select * from "Person"
+-- SKIP PostgreSQL.9.2 END
+GO
+-- SKIP PostgreSQL.9.2 BEGIN
+COMMENT ON MATERIALIZED VIEW  "Issue2023" IS 'This is the Issue2023 matview';
+COMMENT ON COLUMN             "Issue2023"."PersonID" IS 'This is the Issue2023.PersonID column';
+-- SKIP PostgreSQL.9.2 END
+GO

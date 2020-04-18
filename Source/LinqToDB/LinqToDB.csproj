@@ -1,99 +1,91 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
 	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
-		<PackageId>linq2db</PackageId>
-
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 		<!--https://github.com/dotnet/project-system/issues/1358-->
 		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- T4 support -->
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
-		<Compile Remove="Compatibility\**\*.cs" />
-
-		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
-
-		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
-
+		<None Update="AsyncExtensions.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
 
-		<None Update="AsyncExtensions.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		<None Update="Common\Internal\MutableTuple.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
+
+		<Compile Remove="Compatibility\**\*.cs" />
+		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 	</ItemGroup>
 
 
-	<!-- .NET Framework -->
-
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
-		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.ServiceModel" />
+		<Reference Include="System.Web.Services" />
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+
+		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-
-	<!-- .NET Core -->
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs" />
+		<Compile Remove="Configuration\DataProviderElementCollection.cs" />
+		<Compile Remove="Configuration\ElementBase.cs" />
+		<Compile Remove="Configuration\ElementCollectionBase.cs" />
+		<Compile Remove="Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider*.cs" />
+
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\ICloneable.cs" />
-		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
+		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
+
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
-		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0"/>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<Compile Remove="DataProvider\SapHana\SapHanaDataProvider.cs" />
+		<Compile Remove="DataProvider\SapHana\SapHanaBulkCopy.cs" />
 	</ItemGroup>
 </Project>

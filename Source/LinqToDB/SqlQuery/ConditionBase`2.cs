@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	#region ConditionBase
 
@@ -70,10 +68,10 @@ namespace LinqToDB.SqlQuery
 
 			#region Predicate.Like
 
-			public T2 Like(ISqlExpression expression, SqlValue escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape)); }
-			public T2 Like(ISqlExpression expression)                  { return Like(expression, null); }
-			public T2 Like(string expression,         SqlValue escape) { return Like(new SqlValue(expression), escape); }
-			public T2 Like(string expression)                          { return Like(new SqlValue(expression), null);   }
+			public T2 Like(ISqlExpression expression, SqlValue? escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape, true)); }
+			public T2 Like(ISqlExpression expression)                   { return Like(expression, null); }
+			public T2 Like(string expression,         SqlValue escape)  { return Like(new SqlValue(expression), escape); }
+			public T2 Like(string expression)                           { return Like(new SqlValue(expression), null);   }
 
 			#endregion
 

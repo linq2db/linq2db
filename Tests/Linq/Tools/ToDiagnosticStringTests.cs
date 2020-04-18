@@ -28,7 +28,7 @@ namespace Tests.Tools
 
 		class TestDiagnostic
 		{
-			public string   StringValue;
+			public string?  StringValue;
 			public DateTime DateTimeValue { get; set; }
 			public decimal  DecimalValue  { get; set; }
 		}

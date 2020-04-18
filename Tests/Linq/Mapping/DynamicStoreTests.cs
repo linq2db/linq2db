@@ -18,7 +18,7 @@ namespace Tests.Mapping
 			public int Id { get; set; }
 
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		[Table("DynamicColumnsTestTable")]

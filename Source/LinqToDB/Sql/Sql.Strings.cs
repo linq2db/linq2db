@@ -18,8 +18,8 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderBy<T, TKey>(
-							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
-			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
+							this Sql.IStringAggregateNotOrdered<T> aggregate, 
+			[ExprParameter]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 			if (expr      == null) throw new ArgumentNullException(nameof(expr));
@@ -38,7 +38,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{aggregate}",                      TokenName = "order_item")]
 		public static Sql.IStringAggregate<string> OrderBy(
-			[NotNull] [ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
+			[ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
@@ -55,8 +55,8 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderByDescending<T, TKey>(
-							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
-			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
+							this Sql.IStringAggregateNotOrdered<T> aggregate, 
+			[ExprParameter]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 			if (expr      == null) throw new ArgumentNullException(nameof(expr));
@@ -75,7 +75,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{aggregate} DESC",                 TokenName = "order_item")]
 		public static Sql.IStringAggregate<string> OrderByDescending(
-			[NotNull] [ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
+			[ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
@@ -91,8 +91,8 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenBy<T, TKey>(
-							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
-			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
+							this Sql.IStringAggregateOrdered<T> aggregate, 
+			[ExprParameter]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 			if (expr      == null) throw new ArgumentNullException(nameof(expr));
@@ -109,8 +109,8 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenByDescending<T, TKey>(
-							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
-			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
+							this Sql.IStringAggregateOrdered<T> aggregate, 
+			[ExprParameter]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 			if (expr      == null) throw new ArgumentNullException(nameof(expr));
@@ -126,10 +126,10 @@ namespace LinqToDB
 		}
 
 		// For Oracle we always define at least one ordering by rownum. If ordering defined explicitly, this definition will be replaced.
-		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0)]
-		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0)]
-		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0)]
-		public static string ToValue<T>([NotNull] this Sql.IStringAggregate<T> aggregate)
+		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
+		public static string ToValue<T>(this Sql.IStringAggregate<T> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
@@ -160,7 +160,7 @@ namespace LinqToDB
 
 		internal class StringAggregateNotOrderedImpl<T> : IStringAggregateNotOrdered<T>, IStringAggregateOrdered<T>
 		{
-			public StringAggregateNotOrderedImpl([NotNull] IQueryable<string> query)
+			public StringAggregateNotOrderedImpl(IQueryable<string> query)
 			{
 				Query = query ?? throw new ArgumentNullException(nameof(query));
 			}
@@ -179,14 +179,14 @@ namespace LinqToDB
 					data = builder.GetExpression("selector");
 
 				// https://github.com/linq2db/linq2db/issues/1765
-				if (data is SqlField field && field.DataType != DataType.Undefined)
+				if (data is SqlField field && field.Type!.Value.DataType != DataType.Undefined)
 				{
 					var separator = builder.GetExpression("separator");
 
 					if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
-						value.ValueType = value.ValueType.WithDataType(field.DataType);
-					else if (separator is SqlParameter parameter && parameter.DataType == DataType.Undefined)
-						parameter.DataType = field.DataType;
+						value.ValueType = value.ValueType.WithDataType(field.Type!.Value.DataType);
+					else if (separator is SqlParameter parameter && parameter.Type.DataType == DataType.Undefined)
+						parameter.Type  = parameter.Type.WithDataType(field.Type!.Value.DataType);
 				}
 			}
 		}
@@ -215,8 +215,8 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] [NotNull] this IQueryable<string> source,
-			[ExprParameter] [NotNull] string separator)
+			[ExprParameter] this IQueryable<string?> source,
+			[ExprParameter] string separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -243,9 +243,9 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-							[NotNull] this IEnumerable<T> source,
-			[ExprParameter] [NotNull] string separator,
-			[ExprParameter] [NotNull] Func<T, string> selector)
+							this IEnumerable<T> source,
+			[ExprParameter] string separator,
+			[ExprParameter] Func<T, string?> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
@@ -262,9 +262,9 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-							[NotNull] this IQueryable<T> source,
-			[ExprParameter] [NotNull] string separator,
-			[ExprParameter] [NotNull] Expression<Func<T, string>> selector)
+							this IQueryable<T> source,
+			[ExprParameter] string separator,
+			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -292,8 +292,8 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] [NotNull] this IEnumerable<string> source,
-			[ExprParameter] [NotNull] string separator)
+			[ExprParameter] this IEnumerable<string?> source,
+			[ExprParameter] string separator)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
@@ -377,7 +377,9 @@ namespace LinqToDB
 
 			protected override SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator)
 			{
-				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN({1}) + 2, 8000)",
+				// you can read more about this gore code here:
+				// https://stackoverflow.com/questions/2025585
+				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(MAX), {1}) + N'!'), 8000)",
 					Precedence.Primary, value, separator);
 			}
 		}
@@ -413,8 +415,8 @@ namespace LinqToDB
 		[Sql.Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder))]
 		[Sql.Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatStrings(
-			[ExprParameter] [NotNull] string separator,
-							[NotNull] params string[] arguments)
+			[ExprParameter] string separator,
+							params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}

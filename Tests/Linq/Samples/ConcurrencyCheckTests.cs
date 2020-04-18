@@ -14,7 +14,6 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
-#if !MONO
 		class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
@@ -50,12 +49,12 @@ namespace Tests.Samples
 
 				if (statement.QueryType == QueryType.Update || statement.QueryType == QueryType.InsertOrUpdate)
 				{
-					var query = statement.SelectQuery;
+					var query = statement.SelectQuery!;
 					var source = query.From.Tables[0].Source as SqlTable;
 					if (source == null)
 						return statement;
 
-					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
+					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType!);
 					if (descriptor == null)
 						return statement;
 
@@ -64,7 +63,7 @@ namespace Tests.Samples
 						return statement;
 
 					var newStatment = Clone(statement);
-					source        = newStatment.SelectQuery.From.Tables[0].Source as SqlTable;
+					source        = (SqlTable)newStatment.SelectQuery!.From.Tables[0].Source;
 					var field     = source.Fields[rowVersion.ColumnName];
 
 					// get real value of RowVersion
@@ -87,8 +86,8 @@ namespace Tests.Samples
 
 				else if (statement.QueryType == QueryType.Insert || statement.QueryType == QueryType.InsertOrUpdate)
 				{
-					var source          = statement.RequireInsertClause().Into;
-					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType);
+					var source          = statement.RequireInsertClause().Into!;
+					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType!);
 					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
@@ -97,7 +96,7 @@ namespace Tests.Samples
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
-					var field              = insertClause.Into[rowVersion.ColumnName];
+					var field              = insertClause.Into![rowVersion.ColumnName];
 
 					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField
@@ -127,7 +126,7 @@ namespace Tests.Samples
 			public int ID { get; set; }
 
 			[Column(Name = "Description")]
-			public string Description { get; set; }
+			public string? Description { get; set; }
 
 			private int _rowVer;
 
@@ -136,12 +135,12 @@ namespace Tests.Samples
 			public int RowVer { get { return _rowVer; } }
 		}
 
-		private InterceptDataConnection _connection;
+		private InterceptDataConnection _connection = null!;
 
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETCOREAPP2_1
 			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
 #else
 			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");
@@ -269,6 +268,5 @@ namespace Tests.Samples
 			Assert.AreEqual(1, result);
 			Assert.AreEqual(3, table.Count());
 		}
-#endif
-		}
+	}
 }

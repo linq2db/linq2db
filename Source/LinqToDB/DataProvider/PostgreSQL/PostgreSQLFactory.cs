@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -12,7 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new PostgreSQLDataProvider();
+			return PostgreSQLTools.GetDataProvider();
 		}
 	}
 }

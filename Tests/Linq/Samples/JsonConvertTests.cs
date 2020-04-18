@@ -28,7 +28,7 @@ namespace Tests.Playground
 
 		static MappingHelper()
 		{
-			_deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null, typeof(int)));
+			_deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
 			_serializeMethod = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
 			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) });
 		}
@@ -101,12 +101,12 @@ namespace Tests.Playground
 		[Column] public int Id    { get; set; }
 
 		[Column(DataType = DataType.VarChar, Length = 4000), JSonContent]
-		public DataClass Data { get; set; }
+		public DataClass? Data { get; set; }
 	}
 
 	public class DataClass
 	{
-		public string Property1 { get; set; }
+		public string? Property1 { get; set; }
 	}
 
 	public static class Json
@@ -152,7 +152,7 @@ namespace Tests.Playground
 
 
 		[Sql.Extension("JSON_VALUE({field}, {propPath})", Precedence = Precedence.Primary, BuilderType = typeof(JsonValueBuilder), ServerSideOnly = true, CanBeNull = false)]
-		public static string Value(object path)
+		public static string Value(object? path)
 		{
 			throw new NotImplementedException();
 		}
@@ -170,13 +170,13 @@ namespace Tests.Playground
 			{
 				db.Insert(new SampleClass { Id = 1, Data = new DataClass { Property1 = "Pr1" } });
 
-				var objects = table.Where(t => Json.Value(t.Data.Property1) == "Pr1")
+				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
 
-				Assert.That(!db.LastQuery.Contains("IS NULL"));
+				Assert.That(!db.LastQuery!.Contains("IS NULL"));
 
 				Assert.AreEqual(1, objects.Length);
-				Assert.AreEqual("Pr1", objects[0].Data.Property1);
+				Assert.AreEqual("Pr1", objects[0].Data!.Property1);
 			}
 		}
 	}

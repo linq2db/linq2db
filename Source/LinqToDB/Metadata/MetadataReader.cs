@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Metadata
 {
 	/// <summary>
@@ -14,15 +12,13 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if NETSTANDARD1_6 || NETSTANDARD2_0
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#else
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 			, new SystemDataLinqAttributeReader()
-			, new SystemDataSqlServerAttributeReader()
 #endif
 		);
 
-		public MetadataReader([NotNull] params IMetadataReader[] readers)
+		public MetadataReader(params IMetadataReader[] readers)
 		{
 			if (readers == null)
 				throw new ArgumentNullException(nameof(readers));

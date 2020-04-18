@@ -85,7 +85,7 @@ namespace Tests.Linq
 			{
 				_checkEntityIdentity = checkEntityIdentity;
 
-				var list = db.Child.Where(c => c.Parent.ParentID == 3).Select(c => c.Parent).ToList();
+				var list = db.Child.Where(c => c.Parent!.ParentID == 3).Select(c => c.Parent).ToList();
 
 				Assert.That(_entitiesCreated, Is.EqualTo(checkEntityIdentity ? 1 : 3));
 			}

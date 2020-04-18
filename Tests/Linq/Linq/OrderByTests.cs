@@ -154,38 +154,30 @@ namespace Tests.Linq
 
 				q.ToList();
 
-				Assert.IsFalse(db.LastQuery.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
+				Assert.IsFalse(db.LastQuery!.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
 			}
 		}
 
 		[Test]
 		public void OrderBy7([DataSources] string context)
 		{
-			try
+			using (new DoNotClearOrderBys(true))
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = true;
 
-				using (var db = GetDataContext(context))
-				{
+				var expected =
+					from ch in Child
+					orderby ch.ChildID % 2, ch.ChildID
+					select ch;
 
-					var expected =
-						from ch in Child
-						orderby ch.ChildID%2, ch.ChildID
-						select ch;
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID % 2
+					select new { ch };
 
-					var qry =
-						from ch in db.Child
-						orderby ch.ChildID%2
-						select new {ch};
+				var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
 
-					var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
-
-					AreEqual(expected, result);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = false;
+				AreEqual(expected, result);
 			}
 		}
 
@@ -349,7 +341,7 @@ namespace Tests.Linq
 				var expected =
 					from p in Parent1.OrderBy(p => p.ParentID)
 					from c in Child.  OrderBy(c => c.ChildID)
-					where p.ParentID == c.Parent1.ParentID
+					where p.ParentID == c.Parent1!.ParentID
 					select new { p.ParentID, c.ChildID };
 
 				var result =
@@ -431,7 +423,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Min3([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
+		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(

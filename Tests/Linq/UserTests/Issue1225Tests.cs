@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Association(ExpressionPredicate = nameof(ActualStageExp))]
-			public TaskStage ActualStage { get; set; }
+			public TaskStage? ActualStage { get; set; }
 
 			private static Expression<Func<Task, TaskStage, bool>> ActualStageExp()
 				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 			{
 			}
 
-			public LastInChain GroupByContainer { get; set; }
+			public LastInChain GroupByContainer { get; set; } = null!;
 		}
 
 		private class LastInChain
@@ -54,8 +54,8 @@ namespace Tests.UserTests
 			{
 			}
 
-			public string Name { get; set; }
-			public object Value { get; set; }
+			public string  Name  { get; set; } = null!;
+			public object? Value { get; set; }
 		}
 
 		private class AggregationWrapper
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 			{
 			}
 
-			public LastInChain GroupByContainer { get; set; }
-			public LastInChain Container { get; set; }
+			public LastInChain GroupByContainer { get; set; } = null!;
+			public LastInChain Container        { get; set; } = null!;
 		}
 
 		[Test]

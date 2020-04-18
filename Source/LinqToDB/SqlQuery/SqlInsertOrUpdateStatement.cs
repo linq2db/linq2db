@@ -10,21 +10,21 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.InsertOrUpdate;
 		public override QueryElementType ElementType => QueryElementType.InsertOrUpdateStatement;
 
-		private SqlInsertClause _insert;
-		public  SqlInsertClause  Insert
+		private SqlInsertClause? _insert;
+		public  SqlInsertClause   Insert
 		{
 			get => _insert ?? (_insert = new SqlInsertClause());
 			set => _insert = value;
 		}
 
-		private SqlUpdateClause _update;
-		public  SqlUpdateClause  Update
+		private SqlUpdateClause? _update;
+		public  SqlUpdateClause   Update
 		{
 			get => _update ?? (_update = new SqlUpdateClause());
 			set => _update = value;
 		}
 
-		public SqlInsertOrUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlInsertOrUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -35,11 +35,11 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			With?.Walk(options, func);
-			((ISqlExpressionWalkable)_insert)?.Walk(options, func);
-			((ISqlExpressionWalkable)_update)?.Walk(options, func);
+			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
+			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
@@ -74,14 +74,14 @@ namespace LinqToDB.SqlQuery
 				yield return _update;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (_update?.Table == table)
 				return table;
 			if (_insert?.Into == table)
 				return table;
 
-			return SelectQuery.GetTableSource(table);
+			return SelectQuery!.GetTableSource(table);
 		}
 	}
 }

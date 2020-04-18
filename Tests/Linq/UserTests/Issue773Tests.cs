@@ -38,10 +38,10 @@ namespace Tests.UserTests
 		[Table("dataFTS")]
 		public partial class DtaFts
 		{
-			[Column] public long   Id        { get; set; }
-			[Column] public string FirstName { get; set; }
-			[Column] public string LastName  { get; set; }
-			[Column] public string MidName   { get; set; }
+			[Column] public long    Id        { get; set; }
+			[Column] public string? FirstName { get; set; }
+			[Column] public string? LastName  { get; set; }
+			[Column] public string? MidName   { get; set; }
 		}
 
 		[Test]

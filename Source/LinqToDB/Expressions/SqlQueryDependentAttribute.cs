@@ -18,10 +18,14 @@ namespace LinqToDB.Expressions
 		/// <param name="obj1"></param>
 		/// <param name="obj2"></param>
 		/// <returns>Result of comparison</returns>
-		public virtual bool ObjectsEqual(object obj1, object obj2)
+		public virtual bool ObjectsEqual(object? obj1, object? obj2)
 		{
 			if (ReferenceEquals(obj1, obj2))
 				return true;
+
+			// if both null, ReferenceEquals will return true
+			if (obj1 == null || obj2 == null)
+				return false;
 
 			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{
@@ -58,6 +62,16 @@ namespace LinqToDB.Expressions
 			Func<Expression, Expression, bool> comparer)
 		{
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
+		}
+
+		/// <summary>
+		/// Used for preparation method argument to cached expression value.
+		/// </summary>
+		/// <param name="expression">Expression for caching.</param>
+		/// <returns>Ready to cache expression.</returns>
+		public virtual Expression PrepareForCache(Expression expression)
+		{
+			return Expression.Constant(expression.EvaluateExpression());
 		}
 	}
 }

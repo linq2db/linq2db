@@ -18,13 +18,14 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			ProviderName.Firebird,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
-			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
-			//ProviderName.Informix,
+			TestProvName.AllSQLite,
+			TestProvName.AllOracle 
+			// TODO: v14
+			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
@@ -137,11 +138,11 @@ namespace Tests.Linq
 			{
 				var cteQuery =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select new
 					{
 						p.ProductName,
-						p.Category.CategoryName,
+						p.Category!.CategoryName,
 						p.UnitPrice
 					};
 
@@ -169,11 +170,11 @@ namespace Tests.Linq
 			{
 				var cteQuery =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select new
 					{
 						p.ProductName,
-						p.Category.CategoryName,
+						p.Category!.CategoryName,
 						p.UnitPrice
 					};
 
@@ -220,7 +221,7 @@ namespace Tests.Linq
 
 				var productsOverTenDollars =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select p;
 
 				var result =
@@ -273,7 +274,7 @@ namespace Tests.Linq
 
 				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCte("EmployeeSubordinatesReport");
 
-				var result =
+				var actualQuery =
 					from employee in employeeSubordinatesReportCte
 					from manager in employeeSubordinatesReportCte.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -286,7 +287,7 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expected =
+				var expectedQuery =
 					from employee in employeeSubordinatesReport
 					from manager in employeeSubordinatesReport.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -299,18 +300,18 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var actual   = actualQuery.ToArray();
+				var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result);
+				AreEqual(expected, actual);
 			}
 		}
 
 		class EmployeeHierarchyCTE
 		{
 			public int EmployeeID;
-			public string LastName;
-			public string FirstName;
+			public string LastName  = null!;
+			public string FirstName = null!;
 			public int? ReportsTo;
 			public int HierarchyLevel;
 		}
@@ -420,6 +421,42 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestCustomCount([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct()
+					.AsCte();
+
+				var query = from c in cte1
+					select new
+					{
+						Count = Sql.Ext.Count().ToValue()
+					};
+
+
+				var expected = Child
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct().Count();
+
+
+				var actual = query.AsEnumerable().Select(c => c.Count).First();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
 		private class CteDMLTests
 		{
 			protected bool Equals(CteDMLTests other)
@@ -431,7 +468,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((CteDMLTests)obj);
 			}
 
@@ -538,9 +575,10 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -794,7 +832,7 @@ namespace Tests.Linq
 
 		private class TestWrapper
 		{
-			public Child Child { get; set; }
+			public Child? Child { get; set; }
 
 			protected bool Equals(TestWrapper other)
 			{
@@ -805,7 +843,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				var result = Equals((TestWrapper)obj);
 				return result;
 			}
@@ -818,8 +856,8 @@ namespace Tests.Linq
 
 		private class TestWrapper2
 		{
-			public Child Child   { get; set; }
-			public Parent Parent { get; set; }
+			public Child?  Child   { get; set; }
+			public Parent? Parent { get; set; }
 
 			protected bool Equals(TestWrapper2 other)
 			{
@@ -830,7 +868,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((TestWrapper2)obj);
 			}
 
@@ -857,14 +895,14 @@ namespace Tests.Linq
 				var cte1 = cteQuery.AsCte();
 
 				var query = from p in db.Parent
-					join c in cte1 on p.ParentID equals c.Child.ParentID
+					join c in cte1 on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
 				var result = query.ToArray();
 
 				var expected =
 					from p in db.Parent
-					join c in cteQuery on p.ParentID equals c.Child.ParentID
+					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
 				Assert.AreEqual(expected, result);
@@ -929,9 +967,51 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var children = db.Child.Where(c => c.ChildID > 1).AsCte().HasUniqueKey(ct => ct.ChildID);
+
+				var query =
+					from c in db.Child
+					from ct in children.LeftJoin(ct => c.ChildID == ct.ChildID)
+					select c;
+
+				var sql = query.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Is.Not.Contains("WITH"));
+			}
+		}
+
+		[ActiveIssue("Scalar recursive CTE are not working")]
+		[Test]
+		public void TestRecursiveScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cteRecursive = db.GetCte<int>(cte =>
+						(
+							from c in db.Child.Take(1)
+							select c.ChildID
+						)
+						.Concat
+						(
+							from c in db.Child
+							from ct in cte.InnerJoin(ct => ct == c.ChildID + 1)
+							select c.ChildID + 1
+						)
+					, "MY_CTE");
+
+				var result = cteRecursive.ToArray();
+			}
+		}
+
 		class OrgGroupDepthWrapper
 		{
-			public OrgGroup OrgGroup { get; set; }
+			public OrgGroup? OrgGroup { get; set; }
 			public int Depth { get; set; }
 		}
 
@@ -940,7 +1020,7 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int ParentId { get; set; }
-			public string GroupName { get; set; }
+			public string? GroupName { get; set; }
 		}
 
 		[ActiveIssue(1644)]
@@ -961,7 +1041,7 @@ namespace Tests.Linq
 				            };
 
 				        var childQuery = from child in queryable
-				            from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
+				            from parent in previous.InnerJoin(parent => parent.OrgGroup!.Id == child.ParentId)
 				            orderby parent.Depth + 1, child.GroupName
 				            select new OrgGroupDepthWrapper
 				            {
@@ -975,6 +1055,53 @@ namespace Tests.Linq
 
 				var result = cte.ToList();
 
+			}
+		}
+
+
+		class NestingA
+		{
+			public string? Property1 { get; set; }
+		}
+
+		class NestingB : NestingA
+		{
+			public string? Property2 { get; set; }
+		}
+
+		class NestingC : NestingB
+		{
+			public string? Property3 { get; set; }
+		}
+
+		[Test]
+		public void TestNesting([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<NestingA>())
+			using (db.CreateLocalTable<NestingB>())
+			using (db.CreateLocalTable<NestingC>())
+			{
+				var cte1 = db.GetTable<NestingC>().Select(a => new NestingB { Property1 = a.Property2 }).AsCte();
+				var cte2 =
+					from c1 in cte1
+					from t in db.GetTable<NestingC>()
+					select new NestingB
+					{
+						Property1 = c1.Property1,
+						Property2 = t.Property2
+					};
+				var cte3 =
+					from c2 in cte2
+					from t in db.GetTable<NestingC>()
+					select new NestingC
+					{
+						Property1 = c2.Property1,
+						Property2 = t.Property2,
+						Property3 = t.Property3
+					};
+
+				var sql = cte3.ToArray();
 			}
 		}
 

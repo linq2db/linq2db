@@ -71,6 +71,8 @@ namespace Tests.Linq
 		{
 			using (var conn = new TestDataConnection(context))
 			{
+				conn.InlineParameters = true;
+
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
 
 				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
@@ -84,6 +86,8 @@ namespace Tests.Linq
 		{
 			using (var conn = new TestDataConnection(context))
 			{
+				conn.InlineParameters = true;
+				
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
@@ -102,6 +106,8 @@ namespace Tests.Linq
 		{
 			using (var conn = new TestDataConnection(context))
 			{
+				conn.InlineParameters = true;
+				
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
 
 				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
@@ -152,6 +158,10 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[]
+		{ 
+			ProviderName.DB2
+		})]
 		[Test]
 		public async Task TakeSkipTest([DataSources] string context)
 		{

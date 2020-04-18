@@ -2,26 +2,28 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
 {
     public static class CacheExtensions
     {
-        public static object Get(this IMemoryCache cache, object key)
+        public static object? Get(this IMemoryCache cache, object key)
         {
-            cache.TryGetValue(key, out object value);
+            cache.TryGetValue(key, out object? value);
             return value;
         }
 
+        [return: MaybeNull]
         public static TItem Get<TItem>(this IMemoryCache cache, object key)
         {
             return (TItem)(cache.Get(key) ?? default(TItem));
         }
 
-        public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, out TItem value)
+        public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, [MaybeNullWhen(false)] out TItem value)
         {
-            if (cache.TryGetValue(key, out object result))
+            if (cache.TryGetValue(key, out object? result))
             {
                 if (result is TItem item)
                 {
@@ -90,7 +92,7 @@ namespace LinqToDB.Common.Internal.Cache
 
         public static TItem GetOrCreate<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, TItem> factory)
         {
-            if (!cache.TryGetValue(key, out object result))
+            if (!cache.TryGetValue(key, out object? result))
             {
                 var entry = cache.CreateEntry(key);
                 result = factory(entry);
@@ -101,12 +103,12 @@ namespace LinqToDB.Common.Internal.Cache
                 entry.Dispose();
             }
 
-            return (TItem)result;
+            return (TItem)result!;
         }
 
         public static async Task<TItem> GetOrCreateAsync<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, Task<TItem>> factory)
         {
-            if (!cache.TryGetValue(key, out object result))
+            if (!cache.TryGetValue(key, out object? result))
             {
                 var entry = cache.CreateEntry(key);
                 result = await factory(entry).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -117,7 +119,7 @@ namespace LinqToDB.Common.Internal.Cache
                 entry.Dispose();
             }
 
-            return (TItem)result;
+            return (TItem)result!;
         }
     }
 }

@@ -10,6 +10,13 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixSchemaProvider : SchemaProviderBase
 	{
+		private readonly InformixDataProvider _provider;
+
+		public InformixSchemaProvider(InformixDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new[]
@@ -44,7 +51,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -83,16 +90,16 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "IBM.Data.Informix";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
-				case "DATETIME" : return "IfxDateTime";
-				case "INTERVAL" : return "IfxTimeSpan";
-				case "DECIMAL"  : return "IfxDecimal";
+				case "DATETIME" : return _provider.Adapter.DateTimeType?.Name;
+				case "INTERVAL" : return _provider.Adapter.TimeSpanType?.Name;
+				case "DECIMAL"  : return _provider.Adapter.DecimalType? .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);
@@ -114,16 +121,14 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		List<PrimaryKeyInfo> _pks;
-
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			return _pks =
+			return
 			(
 				from pk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16];
+						var arr = new string?[16];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
@@ -253,7 +258,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query<ColumnInfo>(@"
@@ -286,9 +291,9 @@ namespace LinqToDB.DataProvider.Informix
 						case    4 : c.DataType = "SMALLFLOAT";       break;
 						case    5 :
 							c.DataType  = "DECIMAL";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -297,14 +302,14 @@ namespace LinqToDB.DataProvider.Informix
 						case    7 : c.DataType = "DATE";             break;
 						case    8 :
 							c.DataType  = "MONEY";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
 							c.DataType = "DATETIME";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   11 : c.DataType = "BYTE";             break;
 						case   12 : c.DataType = "TEXT";             break;
@@ -314,7 +319,7 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   15 :
 							c.DataType = "NCHAR";
@@ -355,7 +360,7 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var names = new HashSet<string>();
 
@@ -364,7 +369,7 @@ namespace LinqToDB.DataProvider.Informix
 				from fk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16][];
+						var arr = new string?[16][];
 
 						for (var i = 0; i < arr.Length; i++)
 						{

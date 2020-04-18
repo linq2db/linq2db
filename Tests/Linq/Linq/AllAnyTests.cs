@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Linq

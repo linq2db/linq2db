@@ -4,7 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -14,11 +13,11 @@ namespace Tests.Linq
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType, 
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner,
+			SqlJoinType                   joinType, 
+			Func<TOuter, TInner, bool>    predicate,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -50,12 +49,12 @@ namespace Tests.Linq
 		}
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
-			                                SqlJoinType                   joinType,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
-			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner, 
+			SqlJoinType                   joinType,
+			Func<TOuter, TKey>            outerKeySelector,
+			Func<TInner, TKey>            innerKeySelector,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer            == null) throw new ArgumentNullException(nameof(outer));
 			if (inner            == null) throw new ArgumentNullException(nameof(inner));
@@ -86,7 +85,7 @@ namespace Tests.Linq
 							res.AddRange(pair1.Join(keys2[pair1.Key], outerKeySelector, innerKeySelector, resultSelector));
 							continue;
 						}
-						res.AddRange(pair1.Select(r => resultSelector(r, default)));
+						res.AddRange(pair1.Select(r => resultSelector(r, default!)));
 					}
 
 					foreach (var pair2 in keys2)
@@ -95,7 +94,7 @@ namespace Tests.Linq
 						{
 							continue;
 						}
-						res.AddRange(pair2.Select(r => resultSelector(default, r)));
+						res.AddRange(pair2.Select(r => resultSelector(default!, r)));
 					}
 
 					return res;
@@ -223,11 +222,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from g in GrandChild
-					join p in Parent4 on g.Child.ParentID equals p.ParentID
+					join p in Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g,
 					from g in db.GrandChild
-					join p in db.Parent4 on g.Child.ParentID equals p.ParentID
+					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g);
 		}
@@ -265,6 +264,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin2([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -289,6 +289,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin3([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 = Parent
@@ -324,6 +325,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin4([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -357,16 +359,24 @@ namespace Tests.Linq
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First()
-					,
-					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First());
+			{
+				var expectedQuery = from p in Parent
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var actualQuery = from p in db.Parent
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var expected = expectedQuery.ToArray(); 
+				var actual   = actualQuery.ToArray(); 
+
+				AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
@@ -415,6 +425,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin53([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -450,6 +461,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -485,6 +497,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -523,15 +536,17 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					join c in Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() }
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() }
 					,
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() });
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() });
 		}
 
+		// Access has strange order strategy
+		// Informix move constant column value from left-joined subquery to top level even for null records
 		[Test]
-		public void GroupJoin9([DataSources] string context)
+		public void GroupJoin9([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +651,8 @@ namespace Tests.Linq
 						.SelectMany(
 							a => a.y.DefaultIfEmpty(),
 							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						));
+						)
+					);
 		}
 
 		[Test]
@@ -825,7 +841,6 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[ActiveIssue(577)]
 		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
@@ -1013,7 +1028,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from ch in db.Child
-					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
+					from p in new Model.Functions(db).GetParentByID(ch.Parent!.ParentID)
 					select p;
 
 				var _ = q.ToList();
@@ -2099,7 +2114,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2127,7 +2142,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<Tag> TagFactIdIds { get; set; }
+			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
 			{
@@ -2141,8 +2156,8 @@ namespace Tests.Linq
 		public partial class Tag
 		{
 			[PrimaryKey]      public int    Id     { get; set; }
-			[Column]          public int   FactId { get; set; }
-			[Column, NotNull] public string Name   { get; set; }
+			[Column]          public int    FactId { get; set; }
+			[Column, NotNull] public string Name   { get; set; } = null!;
 
 			public static readonly Tag[] Data = new[]
 			{
@@ -2517,5 +2532,371 @@ namespace Tests.Linq
 				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
 			}
 		}
+
+		[Table]
+		public class StLink
+		{
+			[PrimaryKey] public int     InId          { get; set; }
+			[Column]     public double? InMaxQuantity { get; set; }
+			[Column]     public double? InMinQuantity { get; set; }
+
+			public static StLink[] Data = new[]
+			{
+				new StLink { InId = 1, InMinQuantity = 1,    InMaxQuantity = 2    },
+				new StLink { InId = 2, InMinQuantity = null, InMaxQuantity = null }
+			};
+		}
+
+		[Table]
+		public class EdtLink
+		{
+			[PrimaryKey] public int     InId          { get; set; }
+			[Column]     public double? InMaxQuantity { get; set; }
+			[Column]     public double? InMinQuantity { get; set; }
+
+			public static EdtLink[] Data = new[]
+			{
+				new EdtLink { InId = 2, InMinQuantity = 3, InMaxQuantity = 4 }
+			};
+		}
+
+		[Test]
+		public void Issue1815([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks  = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = e == null ? l.InMinQuantity : e.InMinQuantity,
+								 MaxQuantity = e == null ? l.InMaxQuantity : e.InMaxQuantity
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 q.MinQuantity,
+								 q.MaxQuantity
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
+
+		[Test]
+		public void Issue1815WithServerEvaluation1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = Sql.AsSql(e == null ? l.InMinQuantity : e.InMinQuantity),
+								 MaxQuantity = Sql.AsSql(e == null ? l.InMaxQuantity : e.InMaxQuantity)
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 q.MinQuantity,
+								 q.MaxQuantity
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
+
+		[Test]
+		public void Issue1815WithServerEvaluation2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = e == null ? l.InMinQuantity : e.InMinQuantity,
+								 MaxQuantity = e == null ? l.InMaxQuantity : e.InMaxQuantity
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 MinQuantity = Sql.AsSql(q.MinQuantity),
+								 MaxQuantity = Sql.AsSql(q.MaxQuantity)
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
+
+		[Table("stVersions")]
+		public class StVersion
+		{
+			[Column("inId"), PrimaryKey] public int InId { get; set; }
+			[Column("inIdMain")]         public int InIdMain { get; set; }
+
+			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			public StMain Main { get; set; } = null!;
+
+			public static StVersion[] Data = new StVersion[]
+			{
+			};
+		}
+
+		[Table("rlStatesTypesAndUserGroups")]
+		public class RlStatesTypesAndUserGroup
+		{
+			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
+			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
+
+			public static RlStatesTypesAndUserGroup[] Data = new RlStatesTypesAndUserGroup[]
+			{
+			};
+		}
+
+		[Table("stMain")]
+		public class StMain
+		{
+			[Column("inId"), PrimaryKey]  public int InId { get; set; }
+			[Column("inIdType")]          public int InIdType { get; set; }
+
+			public static StMain[] Data = new StMain[]
+			{
+			};
+		}
+
+		[Test]
+		public void Issue1816v1([DataSources] string context)
+		{
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			{
+				var q = from v in stVersion
+						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
+						select new
+						{
+							v.InId,
+							t.InIdState
+						};
+
+				q.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue1816v2([DataSources] string context)
+		{
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			{
+				var q = from v in stVersion
+						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
+						select new
+						{
+							v.InId,
+							t.InIdState,
+							v.Main.InIdType
+						};
+
+				q.ToList();
+			}
+		}
+
+		#region issue 1455
+		public class Alert
+		{
+			public string?   AlertKey     { get; set; }
+			public string?   AlertCode    { get; set; }
+			public DateTime? CreationDate { get { return DateTime.Today; } }
+		}
+		public class AuditAlert : Alert
+		{
+			public DateTime? TransactionDate { get; set; }
+		}
+		public class Trade
+		{
+			public int     DealId       { get; set; }
+			public int     ParcelId     { get; set; }
+			public string? CounterParty { get; set; }
+		}
+		public class Nomin
+		{
+			public int     CargoId              { get; set; }
+			public int     DeliveryId           { get; set; }
+			public string? DeliveryCounterParty { get; set; }
+		}
+		public class Flat
+		{
+			public string?   AlertKey             { get; set; }
+			public string?   AlertCode            { get; set; }
+			public int?      CargoId              { get; set; }
+			public int?      DeliveryId           { get; set; }
+			public string?   DeliveryCounterParty { get; set; }
+			public int?      DealId               { get; set; }
+			public int?      ParcelId             { get; set; }
+			public string?   CounterParty         { get; set; }
+			public DateTime? TransactionDate      { get; set; }
+		}
+
+		[ActiveIssue(1455)]
+		[Test]
+		public void Issue1455Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 u.nomin.DeliveryCounterParty!.Contains(cpty)
+						 ||
+						 u.trade.CounterParty!.Contains(cpty)
+						 ||
+						 u.al.alert.AlertCode!.Contains(cpty)
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+
+		[Test]
+		public void Issue1455Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 Sql.Like(u.nomin.DeliveryCounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.trade.CounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.al.alert.AlertCode, $"%{cpty}%")
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+		#endregion
 	}
 }

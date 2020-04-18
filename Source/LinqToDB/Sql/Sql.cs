@@ -30,7 +30,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns></returns>
 		[Sql.Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
-		public static object[] AllColumns()
+		public static object?[] AllColumns()
 		{
 			throw new LinqException("'AllColumns' is only server-side method.");
 		}
@@ -90,15 +90,6 @@ namespace LinqToDB
 			return value;
 		}
 
-		[Obsolete("Use ToNotNullable instead.")]
-		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static T ConvertNullable<T>(T? value)
-			where T : struct
-		{
-			return value ?? default;
-		}
-
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNull<T>(T? value)
@@ -151,7 +142,7 @@ namespace LinqToDB
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
 		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
-		public static T Property<T>(object entity, [SqlQueryDependent] string propertyName)
+		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 		{
 			throw new LinqException("'Property' is only server-side method.");
 		}
@@ -280,16 +271,16 @@ namespace LinqToDB
 		[Sql.Property(PN.MySql,         "Boolean",        ServerSideOnly=true)]
 		[Sql.Property(PN.SQLite,        "Boolean",        ServerSideOnly=true)]
 		[Sql.Property(PN.SapHana,       "TinyInt",        ServerSideOnly=true)]
-		[Sql.Property(                  "Bit",            ServerSideOnly=true)] public static Boolean        Bit                               { get { return false; } }
+		[Sql.Property(                  "Bit",            ServerSideOnly=true)] public static bool           Bit                               { get { return false; } }
 
 		[Sql.Property(PN.Oracle,        "Number(19)",     ServerSideOnly=true)]
-		[Sql.Property(                  "BigInt",         ServerSideOnly=true)] public static Int64          BigInt                            { get { return 0; } }
+		[Sql.Property(                  "BigInt",         ServerSideOnly=true)] public static long           BigInt                            { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Signed",         ServerSideOnly=true)]
-		[Sql.Property(                  "Int",            ServerSideOnly=true)] public static Int32          Int                               { get { return 0; } }
+		[Sql.Property(                  "Int",            ServerSideOnly=true)] public static int            Int                               { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Signed",         ServerSideOnly=true)]
-		[Sql.Property(                  "SmallInt",       ServerSideOnly=true)] public static Int16          SmallInt                          { get { return 0; } }
+		[Sql.Property(                  "SmallInt",       ServerSideOnly=true)] public static short          SmallInt                          { get { return 0; } }
 
 		[Sql.Property(PN.DB2,           "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.Informix,      "SmallInt",       ServerSideOnly=true)]
@@ -298,19 +289,19 @@ namespace LinqToDB
 		[Sql.Property(PN.Firebird,      "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Unsigned",       ServerSideOnly=true)]
-		[Sql.Property(                  "TinyInt",        ServerSideOnly=true)] public static Byte           TinyInt                           { get { return 0; } }
+		[Sql.Property(                  "TinyInt",        ServerSideOnly=true)] public static byte           TinyInt                           { get { return 0; } }
 
-		[Sql.Property(                  "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }
+		[Sql.Property(                  "Decimal",        ServerSideOnly=true)] public static decimal DefaultDecimal                           { get { return 0; } }
 		[Sql.Expression(PN.SapHana,     "Decimal({0},4)", ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision)            {       return 0;   }
-		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision, int scale) {       return 0;   }
+		[Sql.Function(                                    ServerSideOnly=true)] public static decimal        Decimal(int precision)            {       return 0;   }
+		[Sql.Function(                                    ServerSideOnly=true)] public static decimal        Decimal(int precision, int scale) {       return 0;   }
 
 		[Sql.Property(PN.Oracle,        "Number(19,4)",   ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "Decimal(18,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "Decimal(19,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Decimal(19,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.SapHana,       "Decimal(19,4)",  ServerSideOnly=true)]
-		[Sql.Property(                  "Money",          ServerSideOnly=true)] public static Decimal        Money                             { get { return 0; } }
+		[Sql.Property(                  "Money",          ServerSideOnly=true)] public static decimal        Money                             { get { return 0; } }
 
 		[Sql.Property(PN.Informix,      "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.Oracle,        "Number(10,4)",   ServerSideOnly=true)]
@@ -319,14 +310,14 @@ namespace LinqToDB
 		[Sql.Property(PN.MySql,         "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.SapHana,       "Decimal(10,4)",  ServerSideOnly=true)]
-		[Sql.Property(                  "SmallMoney",     ServerSideOnly=true)] public static Decimal        SmallMoney                        { get { return 0; } }
+		[Sql.Property(                  "SmallMoney",     ServerSideOnly=true)] public static decimal        SmallMoney                        { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
 		[Sql.Property(PN.SapHana,       "Double",         ServerSideOnly=true)]
-		[Sql.Property(                  "Float",          ServerSideOnly=true)] public static Double         Float                             { get { return 0; } }
+		[Sql.Property(                  "Float",          ServerSideOnly=true)] public static double         Float                             { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
-		[Sql.Property(                  "Real",           ServerSideOnly=true)] public static Single         Real                              { get { return 0; } }
+		[Sql.Property(                  "Real",           ServerSideOnly=true)] public static float         Real                              { get { return 0; } }
 
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
@@ -366,38 +357,38 @@ namespace LinqToDB
 		[Sql.Property(                  "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
 
 		[Sql.Function(PN.SqlCe,         "NChar",          ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static String         Char(int length)                  {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static string         Char(int length)                  {       return ""; }
 
 		[Sql.Property(PN.SqlCe,         "NChar",          ServerSideOnly=true)]
-		[Sql.Property(                  "Char",           ServerSideOnly=true)] public static String  DefaultChar                              { get { return ""; } }
+		[Sql.Property(                  "Char",           ServerSideOnly=true)] public static string  DefaultChar                              { get { return ""; } }
 
 		[Sql.Function(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Sql.Function(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static String         VarChar(int length)               {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static string         VarChar(int length)               {       return ""; }
 
 		[Sql.Property(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
-		[Sql.Property(                  "VarChar",        ServerSideOnly=true)] public static String  DefaultVarChar                           { get { return ""; } }
+		[Sql.Property(                  "VarChar",        ServerSideOnly=true)] public static string  DefaultVarChar                           { get { return ""; } }
 
 		[Sql.Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static string         NChar(int length)                 {       return ""; }
 
 		[Sql.Property(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Property(                  "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
+		[Sql.Property(                  "NChar",          ServerSideOnly=true)] public static string  DefaultNChar                             { get { return ""; } }
 
 		[Sql.Function(PN.DB2,           "Char",           ServerSideOnly=true)]
 		[Sql.Function(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
 		[Sql.Function(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
 		[Sql.Function(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
 		[Sql.Function(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static String         NVarChar(int length)              {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static string         NVarChar(int length)              {       return ""; }
 
 		[Sql.Property(PN.DB2,           "Char",           ServerSideOnly=true)]
 		[Sql.Property(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Sql.Property(                  "NVarChar",       ServerSideOnly=true)] public static String  DefaultNVarChar                          { get { return ""; } }
+		[Sql.Property(                  "NVarChar",       ServerSideOnly=true)] public static string  DefaultNVarChar                          { get { return ""; } }
 
 		#endregion
 
@@ -424,15 +415,15 @@ namespace LinqToDB
 		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
 		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
-		public static string Substring(string str, int? startIndex, int? length)
+		public static string? Substring(string? str, int? startIndex, int? length)
 		{
 			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value - 1, length.Value);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
-		public static bool Like(string matchExpression, string pattern)
+		public static bool Like(string? matchExpression, string? pattern)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_1
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -441,9 +432,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
-		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
+		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_1
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
@@ -457,7 +448,7 @@ namespace LinqToDB
 		[Sql.Function(PN.MySql,    "Locate")]
 		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
-		public static int? CharIndex(string value, string str)
+		public static int? CharIndex(string? value, string? str)
 		{
 			if (str == null || value == null)
 				return null;
@@ -470,7 +461,7 @@ namespace LinqToDB
 		[Sql.Function  (PN.MySql,    "Locate")]
 		[Sql.Function  (PN.Firebird, "Position")]
 		[Sql.Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}")]
-		public static int? CharIndex(string value, string str, int? startLocation)
+		public static int? CharIndex(string? value, string? str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
 				return null;
@@ -482,7 +473,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string str)
+		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null)
 				return null;
@@ -494,7 +485,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string str, int? startLocation)
+		public static int? CharIndex(char? value, string? str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
 				return null;
@@ -503,26 +494,26 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Reverse(string str)
+		public static string? Reverse(string? str)
 		{
 			if (string.IsNullOrEmpty(str))
 				return str;
 
-			var chars = str.ToCharArray();
+			var chars = str!.ToCharArray();
 			Array.Reverse(chars);
 			return new string(chars);
 		}
 
 		[Sql.Function(                      PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
-		public static string Left(string str, int? length)
+		public static string? Left(string? str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
-		public static string Right(string str, int? length)
+		public static string? Right(string? str, int? length)
 		{
 			return length == null || str == null || str.Length < length?
 				null :
@@ -530,7 +521,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Stuff(string str, int? startLocation, int? length, string value)
+		public static string? Stuff(string? str, int? startLocation, int? length, string? value)
 		{
 			return str == null || value == null || startLocation == null || length == null ?
 				null :
@@ -545,13 +536,13 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
-		public static string Space(int? length)
+		public static string? Space(int? length)
 		{
 			return length == null ? null : "".PadRight(length.Value);
 		}
 
 		[Sql.Function(Name = "LPad")]
-		public static string PadLeft(string str, int? totalWidth, char? paddingChar)
+		public static string? PadLeft(string? str, int? totalWidth, char? paddingChar)
 		{
 			return str == null || totalWidth == null || paddingChar == null ?
 				null :
@@ -559,7 +550,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function(Name = "RPad")]
-		public static string PadRight(string str, int? totalWidth, char? paddingChar)
+		public static string? PadRight(string? str, int? totalWidth, char? paddingChar)
 		{
 			return str == null || totalWidth == null || paddingChar == null ?
 				null :
@@ -568,7 +559,7 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
-		public static string Replace(string str, string oldValue, string newValue)
+		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
 				null :
@@ -577,7 +568,7 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
-		public static string Replace(string str, char? oldValue, char? newValue)
+		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
 				null :
@@ -585,54 +576,54 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Trim(string str)
+		public static string? Trim(string? str)
 		{
 			return str?.Trim();
 		}
 
 		[Sql.Function("LTrim")]
-		public static string TrimLeft(string str)
+		public static string? TrimLeft(string? str)
 		{
 			return str?.TrimStart();
 		}
 
 		[Sql.Function("RTrim")]
-		public static string TrimRight(string str)
+		public static string? TrimRight(string? str)
 		{
 			return str?.TrimEnd();
 		}
 
 		[Sql.Function]
 		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
-		public static string Trim(string str, char? ch)
+		public static string? Trim(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
 		[Sql.Function  (        "LTrim")]
-		public static string TrimLeft(string str, char? ch)
+		public static string? TrimLeft(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
 		[Sql.Function  (        "RTrim")]
-		public static string TrimRight(string str, char? ch)
+		public static string? TrimRight(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
 		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
-		public static string Lower(string str)
+		public static string? Lower(string? str)
 		{
 			return str?.ToLower();
 		}
 
 		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
-		public static string Upper(string str)
+		public static string? Upper(string? str)
 		{
 			return str?.ToUpper();
 		}
@@ -659,7 +650,7 @@ namespace LinqToDB
 					{
 						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
 							100 :
-							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).DataType);
+							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).Type.DataType);
 
 						arr[i] = new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), arg);
 					}
@@ -677,13 +668,13 @@ namespace LinqToDB
 			}
 		}
 
-		[ConcatAttribute]
+		[Concat]
 		public static string Concat(params object[] args)
 		{
 			return string.Concat(args);
 		}
 
-		[ConcatAttribute]
+		[Concat]
 		public static string Concat(params string[] args)
 		{
 			return string.Concat(args);
@@ -699,7 +690,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SqlServer, "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.Sybase,    "DataLength",   PreferServerSide = true)]
-		public static int? Length(Binary value)
+		public static int? Length(Binary? value)
 		{
 			return value == null ? null : (int?)value.Length;
 		}
@@ -788,83 +779,83 @@ namespace LinqToDB
 
 		#region Math Functions
 
-		[Sql.Function] public static Decimal? Abs    (Decimal? value) { return value == null ? null : (Decimal?)Math.Abs    (value.Value); }
-		[Sql.Function] public static Double?  Abs    (Double?  value) { return value == null ? null : (Double?) Math.Abs    (value.Value); }
-		[Sql.Function] public static Int16?   Abs    (Int16?   value) { return value == null ? null : (Int16?)  Math.Abs    (value.Value); }
-		[Sql.Function] public static Int32?   Abs    (Int32?   value) { return value == null ? null : (Int32?)  Math.Abs    (value.Value); }
-		[Sql.Function] public static Int64?   Abs    (Int64?   value) { return value == null ? null : (Int64?)  Math.Abs    (value.Value); }
+		[Sql.Function] public static decimal? Abs    (decimal? value) { return value == null ? null : (decimal?)Math.Abs    (value.Value); }
+		[Sql.Function] public static double?  Abs    (double?  value) { return value == null ? null : (double?) Math.Abs    (value.Value); }
+		[Sql.Function] public static short?   Abs    (short?   value) { return value == null ? null : (short?)  Math.Abs    (value.Value); }
+		[Sql.Function] public static int?     Abs    (int?     value) { return value == null ? null : (int?)    Math.Abs    (value.Value); }
+		[Sql.Function] public static long?    Abs    (long?    value) { return value == null ? null : (long?)   Math.Abs    (value.Value); }
 		[CLSCompliant(false)]
-		[Sql.Function] public static SByte?   Abs    (SByte?   value) { return value == null ? null : (SByte?)  Math.Abs    (value.Value); }
-		[Sql.Function] public static Single?  Abs    (Single?  value) { return value == null ? null : (Single?) Math.Abs    (value.Value); }
+		[Sql.Function] public static sbyte?   Abs    (sbyte?   value) { return value == null ? null : (sbyte?)  Math.Abs    (value.Value); }
+		[Sql.Function] public static float?   Abs    (float?   value) { return value == null ? null : (float?)  Math.Abs    (value.Value); }
 
-		[Sql.Function] public static Double?  Acos   (Double?  value) { return value == null ? null : (Double?) Math.Acos   (value.Value); }
-		[Sql.Function] public static Double?  Asin   (Double?  value) { return value == null ? null : (Double?) Math.Asin   (value.Value); }
+		[Sql.Function] public static double?  Acos   (Double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
+		[Sql.Function] public static double?  Asin   (Double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
 
 		[Sql.Function(PN.Access, "Atn")]
-		[Sql.Function] public static Double?  Atan   (Double?  value) { return value == null ? null : (Double?) Math.Atan   (value.Value); }
+		[Sql.Function] public static double?  Atan   (Double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
 
 		[CLSCompliant(false)]
 		[Sql.Function(PN.SqlServer, "Atn2")]
 		[Sql.Function(PN.DB2,       "Atan2", 1, 0)]
 		[Sql.Function(PN.SqlCe,     "Atn2")]
 		[Sql.Function(PN.Sybase,    "Atn2")]
-		[Sql.Function] public static Double?  Atan2  (Double? x, Double? y) { return x == null || y == null? null : (Double?)Math.Atan2(x.Value, y.Value); }
+		[Sql.Function] public static double?  Atan2  (double? x, double? y) { return x == null || y == null? null : (double?)Math.Atan2(x.Value, y.Value); }
 
 		[Sql.Function(PN.Informix, "Ceil")]
 		[Sql.Function(PN.Oracle,   "Ceil")]
 		[Sql.Function(PN.SapHana,  "Ceil")]
-		[Sql.Function] public static Decimal? Ceiling(Decimal? value) { return value == null ? null : (Decimal?)decimal.Ceiling(value.Value); }
+		[Sql.Function] public static decimal? Ceiling(decimal? value) { return value == null ? null : (decimal?)decimal.Ceiling(value.Value); }
 
 		[Sql.Function(PN.Informix, "Ceil")]
 		[Sql.Function(PN.Oracle,   "Ceil")]
 		[Sql.Function(PN.SapHana,  "Ceil")]
-		[Sql.Function] public static Double?  Ceiling(Double?  value) { return value == null ? null : (Double?)Math.Ceiling(value.Value); }
+		[Sql.Function] public static double?  Ceiling(double?  value) { return value == null ? null : (double?)Math.Ceiling(value.Value); }
 
-		[Sql.Function] public static Double?  Cos    (Double?  value) { return value == null ? null : (Double?)Math.Cos    (value.Value); }
+		[Sql.Function] public static double?  Cos    (double?  value) { return value == null ? null : (double?)Math.Cos    (value.Value); }
 
-		[Sql.Function] public static Double?  Cosh   (Double?  value) { return value == null ? null : (Double?)Math.Cosh   (value.Value); }
+		[Sql.Function] public static double?  Cosh   (double?  value) { return value == null ? null : (double?)Math.Cosh   (value.Value); }
 
-		[Sql.Function] public static Double?  Cot    (Double?  value) { return value == null ? null : (Double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
+		[Sql.Function] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
-		[Sql.Function] public static Decimal? Degrees(Decimal? value) { return value == null ? null : (Decimal?)(value.Value * 180m / (Decimal)Math.PI); }
-		[Sql.Function] public static Double?  Degrees(Double?  value) { return value == null ? null : (Double?) (value.Value * 180 / Math.PI); }
-		[Sql.Function] public static Int16?   Degrees(Int16?   value) { return value == null ? null : (Int16?)  (value.Value * 180 / Math.PI); }
-		[Sql.Function] public static Int32?   Degrees(Int32?   value) { return value == null ? null : (Int32?)  (value.Value * 180 / Math.PI); }
-		[Sql.Function] public static Int64?   Degrees(Int64?   value) { return value == null ? null : (Int64?)  (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static decimal? Degrees(decimal? value) { return value == null ? null : (decimal?)(value.Value * 180m / (decimal)Math.PI); }
+		[Sql.Function] public static double?  Degrees(double?  value) { return value == null ? null : (double?) (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static short?   Degrees(short?   value) { return value == null ? null : (short?)  (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static int?     Degrees(int?     value) { return value == null ? null : (int?)    (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static long?    Degrees(long?    value) { return value == null ? null : (long?)   (value.Value * 180 / Math.PI); }
 		[CLSCompliant(false)]
-		[Sql.Function] public static SByte?   Degrees(SByte?   value) { return value == null ? null : (SByte?)  (value.Value * 180 / Math.PI); }
-		[Sql.Function] public static Single?  Degrees(Single?  value) { return value == null ? null : (Single?) (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static sbyte?   Degrees(sbyte?   value) { return value == null ? null : (sbyte?)  (value.Value * 180 / Math.PI); }
+		[Sql.Function] public static float?   Degrees(float?   value) { return value == null ? null : (float?)  (value.Value * 180 / Math.PI); }
 
-		[Sql.Function] public static Double?  Exp    (Double?  value) { return value == null ? null : (Double?)Math.Exp    (value.Value); }
-
-		[Sql.Function(PN.Access, "Int")]
-		[Sql.Function] public static Decimal? Floor  (Decimal? value) { return value == null ? null : (Decimal?)decimal.Floor(value.Value); }
+		[Sql.Function] public static double?  Exp    (double?  value) { return value == null ? null : (double?)Math.Exp    (value.Value); }
 
 		[Sql.Function(PN.Access, "Int")]
-		[Sql.Function] public static Double?  Floor  (Double?  value) { return value == null ? null : (Double?) Math.   Floor(value.Value); }
+		[Sql.Function] public static decimal? Floor  (decimal? value) { return value == null ? null : (decimal?)decimal.Floor(value.Value); }
+
+		[Sql.Function(PN.Access, "Int")]
+		[Sql.Function] public static double?  Floor  (double?  value) { return value == null ? null : (double?) Math.   Floor(value.Value); }
 
 		[Sql.Function(PN.Informix,   "LogN")]
 		[Sql.Function(PN.Oracle,     "Ln")]
 		[Sql.Function(PN.Firebird,   "Ln")]
 		[Sql.Function(PN.PostgreSQL, "Ln")]
 		[Sql.Function(PN.SapHana,    "Ln")]
-		[Sql.Function] public static Decimal? Log    (Decimal? value) { return value == null ? null : (Decimal?)Math.Log     ((Double)value.Value); }
+		[Sql.Function] public static decimal? Log    (decimal? value) { return value == null ? null : (decimal?)Math.Log     ((double)value.Value); }
 
 		[Sql.Function(PN.Informix,   "LogN")]
 		[Sql.Function(PN.Oracle,     "Ln")]
 		[Sql.Function(PN.Firebird,   "Ln")]
 		[Sql.Function(PN.PostgreSQL, "Ln")]
 		[Sql.Function(PN.SapHana,    "Ln")]
-		[Sql.Function] public static Double?  Log    (Double?  value) { return value == null ? null : (Double?) Math.Log     (value.Value); }
+		[Sql.Function] public static double?  Log    (double?  value) { return value == null ? null : (double?) Math.Log     (value.Value); }
 
 		[Sql.Function(PN.PostgreSQL, "Log")]
 		[Sql.Expression(PN.SapHana,  "Log(10,{0})")]
-		[Sql.Function] public static Double?  Log10  (Double?  value) { return value == null ? null : (Double?) Math.Log10   (value.Value); }
+		[Sql.Function] public static double?  Log10  (double?  value) { return value == null ? null : (double?) Math.Log10   (value.Value); }
 
 		[Sql.Function]
 		public static double?  Log(double? newBase, double? value)
 		{
-			return value == null || newBase == null ? null : (Double?)Math.Log(value.Value, newBase.Value);
+			return value == null || newBase == null ? null : (double?)Math.Log(value.Value, newBase.Value);
 		}
 
 		[Sql.Function]
@@ -875,65 +866,65 @@ namespace LinqToDB
 
 		[Sql.Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative)]
 		[Sql.Function]
-		public static Double?  Power(Double? x, Double? y)
+		public static double?  Power(double? x, double? y)
 		{
-			return x == null || y == null ? null : (Double?)Math.Pow(x.Value, y.Value);
+			return x == null || y == null ? null : (double?)Math.Pow(x.Value, y.Value);
 		}
 
 		[Sql.Function]
-		public static Decimal? RoundToEven(Decimal? value)
+		public static decimal? RoundToEven(decimal? value)
 		{
-			return value == null ? null : (Decimal?)Math.Round(value.Value, MidpointRounding.ToEven);
+			return value == null ? null : (decimal?)Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
 		[Sql.Function]
-		public static Double? RoundToEven(Double? value)
+		public static double? RoundToEven(double? value)
 		{
-			return value == null ? null : (Double?) Math.Round(value.Value, MidpointRounding.ToEven);
+			return value == null ? null : (double?) Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
-		[Sql.Function] public static Decimal? Round(Decimal? value) { return Round(value, 0); }
-		[Sql.Function] public static Double?  Round(Double?  value) { return Round(value, 0); }
+		[Sql.Function] public static decimal? Round(decimal? value) { return Round(value, 0); }
+		[Sql.Function] public static double?  Round(double?  value) { return Round(value, 0); }
 
 		[Sql.Function]
-		public static Decimal? Round(Decimal? value, int? precision)
+		public static decimal? Round(decimal? value, int? precision)
 		{
-			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
-		}
-
-		[Sql.Function]
-		public static Double? Round(Double? value, int? precision)
-		{
-			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
+			return value == null || precision == null? null : (decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
 		[Sql.Function]
-		public static Decimal? RoundToEven(Decimal? value, int? precision)
+		public static double? Round(double? value, int? precision)
 		{
-			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
+			return value == null || precision == null? null : (double?) Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
 		[Sql.Function]
-		public static Double? RoundToEven(Double?  value, int? precision)
+		public static decimal? RoundToEven(decimal? value, int? precision)
 		{
-			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
+			return value == null || precision == null? null : (decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
 		}
 
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Double?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Int16?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Int32?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Int64?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function]
+		public static double? RoundToEven(double?  value, int? precision)
+		{
+			return value == null || precision == null? null : (double?) Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
+		}
+
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(double?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(short?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(int?     value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(long?    value) { return value == null ? null : (int?)Math.Sign(value.Value); }
 		[CLSCompliant(false)]
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(SByte?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Single?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(sbyte?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(float?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
 
-		[Sql.Function] public static Double?  Sin     (Double?  value) { return value == null ? null : (Double?)Math.Sin (value.Value); }
-		[Sql.Function] public static Double?  Sinh    (Double?  value) { return value == null ? null : (Double?)Math.Sinh(value.Value); }
+		[Sql.Function] public static double?  Sin     (double?  value) { return value == null ? null : (double?)Math.Sin (value.Value); }
+		[Sql.Function] public static double?  Sinh    (double?  value) { return value == null ? null : (double?)Math.Sinh(value.Value); }
 		[Sql.Function(PN.Access, "Sqr")]
-		[Sql.Function] public static Double?  Sqrt    (Double?  value) { return value == null ? null : (Double?)Math.Sqrt(value.Value); }
-		[Sql.Function] public static Double?  Tan     (Double?  value) { return value == null ? null : (Double?)Math.Tan (value.Value); }
-		[Sql.Function] public static Double?  Tanh    (Double?  value) { return value == null ? null : (Double?)Math.Tanh(value.Value); }
+		[Sql.Function] public static double?  Sqrt    (double?  value) { return value == null ? null : (double?)Math.Sqrt(value.Value); }
+		[Sql.Function] public static double?  Tan     (double?  value) { return value == null ? null : (double?)Math.Tan (value.Value); }
+		[Sql.Function] public static double?  Tanh    (double?  value) { return value == null ? null : (double?)Math.Tanh(value.Value); }
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
 		[Sql.Expression(PN.DB2,        "Truncate({0}, 0)")]
@@ -945,9 +936,9 @@ namespace LinqToDB
 		[Sql.Expression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[Sql.Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)")]
 		[Sql.Function]
-		public static Decimal? Truncate(Decimal? value)
+		public static decimal? Truncate(decimal? value)
 		{
-			return value == null ? null : (Decimal?)decimal.Truncate(value.Value);
+			return value == null ? null : (decimal?)decimal.Truncate(value.Value);
 		}
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
@@ -960,20 +951,9 @@ namespace LinqToDB
 		[Sql.Expression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[Sql.Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)")]
 		[Sql.Function]
-		public static Double? Truncate(Double? value)
+		public static double? Truncate(double? value)
 		{
-			return value == null ? null : (Double?) Math.Truncate(value.Value);
-		}
-
-		#endregion
-
-		#region Text Functions
-
-		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
-		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
-		public static bool FreeText(object table, string text)
-		{
-			throw new LinqException("'FreeText' is only server-side method.");
+			return value == null ? null : (double?) Math.Truncate(value.Value);
 		}
 
 		#endregion

@@ -9,10 +9,14 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.DB2;
 using LinqToDB.Mapping;
 
+#if NET46
 using IBM.Data.DB2;
+#else
+using IBM.Data.DB2.Core;
+#endif
+
 using IBM.Data.DB2Types;
 
 using NUnit.Framework;
@@ -20,7 +24,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
-
+	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
@@ -111,7 +115,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM SYSIBM.SYSDUMMY1", sqlValue ?? "NULL", sqlType);
 
@@ -120,6 +124,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
+			// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
 //			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 //			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 //			Debug.WriteLine("{0} -> auto", typeof(T));
@@ -247,6 +252,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo('1'));
 
+				// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
+				//Assert.That(conn.Execute<char> ("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				//Assert.That(conn.Execute<char?>("SELECT @p FROM SYSIBM.SYSDUMMY1",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1)) FROM SYSIBM.SYSDUMMY1", DataParameter.Char("p", '1')), Is.EqualTo('1'));
@@ -290,7 +298,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nchar(3))    FROM SYSIBM.SYSDUMMY1", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char(3))     FROM SYSIBM.SYSDUMMY1", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -378,7 +386,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -536,47 +544,40 @@ namespace Tests.DataProvider
 			//p.
 			//new IBM.Data.DB2Types.DB2RowId();
 
-			dynamic int64Value = null;
-			dynamic int32Value = null;
-			dynamic int16Value = null;
-
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = DB2Types.DB2Int64.CreateInstance(1);
-				int32Value = DB2Types.DB2Int32.CreateInstance(2);
-				int16Value = DB2Types.DB2Int16.CreateInstance(3);
-			});
+			var int64Value = new DB2Int64(1);
+			var int32Value = new DB2Int32(2);
+			var int16Value = new DB2Int16(3);
 
 			using (var conn = new DataConnection(context))
 			{
 				conn.Select(() => 1);
 
-				Assert.That(DB2Types.DB2Clob.CreateInstance(conn).IsNull, Is.True);
-				Assert.That(DB2Types.DB2Blob.CreateInstance(conn).IsNull, Is.True);
+				Assert.That(new DB2Clob((DB2Connection)conn.Connection).IsNull, Is.True);
+				Assert.That(new DB2Blob((DB2Connection)conn.Connection).IsNull, Is.True);
 			}
 
 			Assert.That(int64Value.Value, Is.TypeOf<long>    ().And.EqualTo(1));
 			Assert.That(int32Value.Value, Is.TypeOf<int>     ().And.EqualTo(2));
 			Assert.That(int16Value.Value, Is.TypeOf<short>   ().And.EqualTo(3));
 
-			var decimalValue          = DB2Types.DB2Decimal.     CreateInstance(4);
-			var decimalValueAsDecimal = DB2Types.DB2DecimalFloat.CreateInstance(5m);
-			var decimalValueAsDouble  = DB2Types.DB2DecimalFloat.CreateInstance(6.0);
-			var decimalValueAsLong    = DB2Types.DB2DecimalFloat.CreateInstance(7);
-			var realValue             = DB2Types.DB2Real.        CreateInstance(8);
-			var real370Value          = DB2Types.DB2Real370.     CreateInstance(9);
-			var stringValue           = DB2Types.DB2String.      CreateInstance("1");
-			var clobValue             = DB2Types.DB2Clob.        CreateInstance("2");
-			var binaryValue           = DB2Types.DB2Binary.      CreateInstance(new byte[] { 1 });
-			var blobValue             = DB2Types.DB2Blob.        CreateInstance(new byte[] { 2 });
-			var dateValue             = DB2Types.DB2Date.        CreateInstance(new DateTime(2000, 1, 1));
-			var timeValue             = DB2Types.DB2Time.        CreateInstance(new TimeSpan(1, 1, 1));
+			var decimalValue          = new DB2Decimal     (4m);
+			var decimalValueAsDecimal = new DB2DecimalFloat(5m);
+			var decimalValueAsDouble  = new DB2DecimalFloat(6.0);
+			var decimalValueAsLong    = new DB2DecimalFloat(7);
+			var realValue             = new DB2Real        (8);
+			var real370Value          = new DB2Real370     (9);
+			var stringValue           = new DB2String      ("1");
+			var clobValue             = new DB2Clob        ("2");
+			var binaryValue           = new DB2Binary      (new byte[] { 1 });
+			var blobValue             = new DB2Blob        (new byte[] { 2 });
+			var dateValue             = new DB2Date        (new DateTime(2000, 1, 1));
+			var timeValue             = new DB2Time        (new TimeSpan(1, 1, 1));
 
-			if (DB2Types.DB2DateTime.Type != null)
+			//if (DB2Types.DB2DateTime.Type != null)
 			{
-				var dateTimeValue1 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 2));
-				var dateTimeValue2 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 3).Ticks);
-				var timeStampValue = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 4));
+				var dateTimeValue1 = new DB2DateTime(new DateTime(2000, 1, 2));
+				var dateTimeValue2 = new DB2DateTime(new DateTime(2000, 1, 3).Ticks);
+				var timeStampValue = new DB2DateTime(new DateTime(2000, 1, 4));
 
 				Assert.That(dateTimeValue1.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 2)));
 				Assert.That(dateTimeValue2.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 3)));
@@ -596,31 +597,207 @@ namespace Tests.DataProvider
 			Assert.That(dateValue.            Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 1)));
 			Assert.That(timeValue.            Value, Is.TypeOf<TimeSpan>().And.EqualTo(new TimeSpan(1, 1, 1)));
 
-			DB2Tools.AfterInitialized(() =>
-			{
-				int64Value = DB2Types.DB2Int64.CreateInstance();
-				int32Value = DB2Types.DB2Int32.CreateInstance();
-				int16Value = DB2Types.DB2Int16.CreateInstance();
-			});
+			int64Value = new DB2Int64();
+			int32Value = new DB2Int32();
+			int16Value = new DB2Int16();
 
 			Assert.That(int64Value.IsNull, Is.True);
 			Assert.That(int32Value.IsNull, Is.True);
 			Assert.That(int16Value.IsNull, Is.True);
 
-			Assert.That(DB2Types.DB2Decimal.     CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2DecimalFloat.CreateInstance().IsNull, Is.False);
-			Assert.That(DB2Types.DB2Real.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Real370.     CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2String.      CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Binary.      CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Date.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2Time.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2TimeStamp.   CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2RowId.       CreateInstance().IsNull, Is.True);
+			Assert.That(new DB2Decimal     ().IsNull, Is.True);
+			Assert.That(new DB2DecimalFloat().IsNull, Is.False);
+			Assert.That(new DB2Real        ().IsNull, Is.True);
+			Assert.That(new DB2Real370     ().IsNull, Is.True);
+			Assert.That(new DB2String      ().IsNull, Is.True);
+			Assert.That(new DB2Binary      ().IsNull, Is.True);
+			Assert.That(new DB2Date        ().IsNull, Is.True);
+			Assert.That(new DB2Time        ().IsNull, Is.True);
+			Assert.That(new DB2TimeStamp   ().IsNull, Is.True);
+			Assert.That(new DB2RowId       ().IsNull, Is.True);
+			Assert.That(new DB2DateTime    ().IsNull, Is.True);
+		}
 
-			if (DB2Types.DB2DateTime.Type != null)
+		[Table]
+		class TestTimeTypes
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime Date1 { get; set; }
+
+			[Column(DbType = "Date")]
+			public DateTime Date2 { get; set; }
+
+			[Column]
+			public TimeSpan Time { get; set; }
+
+			[Column(Precision = 0)]
+			public DateTime TimeStamp0 { get; set; }
+
+			[Column(DbType = "timestamp(1)")]
+			public DateTime TimeStamp1 { get; set; }
+
+			[Column(Precision = 2)]
+			public DateTime TimeStamp2 { get; set; }
+
+			//[Column(DbType = "timestamp(3)")]
+			[Column(Precision = 3)]
+			public DateTime TimeStamp3 { get; set; }
+
+			[Column(Precision = 4)]
+			public DateTime TimeStamp4 { get; set; }
+
+			//[Column(DbType = "TimeStamp(5)")]
+			[Column(Precision = 5)]
+			public DateTime TimeStamp5 { get; set; }
+
+			[Column(Precision = 6)]
+			public DateTime TimeStamp6 { get; set; }
+
+			//[Column(DbType = "timestamp(7)")]
+			[Column(Precision = 7)]
+			public DateTime TimeStamp7 { get; set; }
+
+			[Column(Precision = 8)]
+			public DB2TimeStamp TimeStamp8 { get; set; }
+
+			//[Column(DbType = "timestamp(9)")]
+			[Column(Precision = 9)]
+			public DB2TimeStamp TimeStamp9 { get; set; }
+
+			[Column(Precision = 10)]
+			public DB2TimeStamp TimeStamp10 { get; set; }
+
+			//[Column(DbType = "timestamp(11)")]
+			[Column(Precision = 11)]
+			public DB2TimeStamp TimeStamp11 { get; set; }
+
+			[Column(Precision = 12)]
+			public DB2TimeStamp TimeStamp12 { get; set; }
+
+			static TestTimeTypes()
 			{
-				Assert.That(DB2Types.DB2DateTime.CreateInstance().IsNull, Is.True);
+				Data = new[]
+				{
+					new TestTimeTypes() { Id = 1, Date1 = new DateTime(1234, 5, 6), Date2 = new DateTime(1234, 5, 7), Time = new TimeSpan(21, 2, 3) },
+					new TestTimeTypes() { Id = 2, Date1 = new DateTime(6543, 2, 1), Date2 = new DateTime(1234, 5, 8), Time = new TimeSpan(23, 2, 1) }
+				};
+
+				for (var i = 1; i <= Data.Length; i++)
+				{
+					var idx = i - 1;
+					Data[idx].TimeStamp0  = new     DateTime(1000, 1, 10, 2, 20, 30 + i, 0);
+					Data[idx].TimeStamp1  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 100);
+					Data[idx].TimeStamp2  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 10);
+					Data[idx].TimeStamp3  = new     DateTime(1000, 1, 10, 2, 20, 30, i);
+					Data[idx].TimeStamp4  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1000 * i);
+					Data[idx].TimeStamp5  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(100 * i);
+					Data[idx].TimeStamp6  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(10 * i);
+					Data[idx].TimeStamp7  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1 * i);
+					Data[idx].TimeStamp8  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10000 * i, 8);
+					Data[idx].TimeStamp9  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 1000 * i, 9);
+					Data[idx].TimeStamp10 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 100 * i, 10);
+					Data[idx].TimeStamp11 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10 * i, 11);
+					Data[idx].TimeStamp12 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, i, 12);
+				}
+			}
+
+			public static TestTimeTypes[] Data;
+
+			public static Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
+		[Test]
+		public void TestTimespanAndTimeValues([IncludeDataSources(true, ProviderName.DB2)] string context, [Values] bool useParameters)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(TestTimeTypes.Data))
+			{
+				db.InlineParameters = !useParameters;
+
+				var record = table.Where(_ => _.Id == 1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Date1 == TestTimeTypes.Data[0].Date1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Date2 == TestTimeTypes.Data[0].Date2).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.Time == TestTimeTypes.Data[0].Time).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp0 == TestTimeTypes.Data[0].TimeStamp0).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp1 == TestTimeTypes.Data[0].TimeStamp1).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp2 == TestTimeTypes.Data[0].TimeStamp2).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp3 == TestTimeTypes.Data[0].TimeStamp3).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp4 == TestTimeTypes.Data[0].TimeStamp4).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp5 == TestTimeTypes.Data[0].TimeStamp5).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp6 == TestTimeTypes.Data[0].TimeStamp6).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => _.TimeStamp7 == TestTimeTypes.Data[0].TimeStamp7).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp8, TestTimeTypes.Data[0].TimeStamp8)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp9, TestTimeTypes.Data[0].TimeStamp9)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp10, TestTimeTypes.Data[0].TimeStamp10)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp11, TestTimeTypes.Data[0].TimeStamp11)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+
+				record = table.Where(_ => Compare(_.TimeStamp12, TestTimeTypes.Data[0].TimeStamp12)).Single();
+				Assert.True(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]));
+			}
+		}
+
+		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, PreferServerSide = true)]
+		public static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Table]
+		class TestParametersTable
+		{
+			[ Column] public int     Id   { get; set; }
+			[ Column] public string? Text { get; set; }
+		}
+		// https://github.com/linq2db/linq2db/issues/2091
+		[Test]
+		public void TestParametersUsed([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db    = new DataConnection(context))
+			using (var table = db.CreateLocalTable<TestParametersTable>())
+			{
+				var newText = new TestParametersTable() { Id = 12, Text = "Hallo Welt!" };
+				db.Insert(newText);
+
+				var text   = "bla";
+				var query  = from f in table where f.Text == text select f;
+				var result = query.ToArray();
+
+				Assert.True(db.LastQuery!.Contains("@"));
 			}
 		}
 	}

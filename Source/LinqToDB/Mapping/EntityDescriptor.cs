@@ -42,7 +42,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets name of table or view in database.
 		/// </summary>
-		public string TableName { get; private set; }
+		public string TableName { get; private set; } = null!;
 
 		string IEntityChangeDescriptor.TableName
 		{
@@ -53,9 +53,9 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		public string SchemaName { get; private set; }
+		public string? SchemaName { get; private set; }
 
-		string IEntityChangeDescriptor.SchemaName
+		string? IEntityChangeDescriptor.SchemaName
 		{
 			get => SchemaName;
 			set => SchemaName = value;
@@ -64,15 +64,25 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		public string DatabaseName { get; private set; }
+		public string? DatabaseName { get; private set; }
 
-		string IEntityChangeDescriptor.DatabaseName
+		string? IEntityChangeDescriptor.DatabaseName
 		{
 			get => DatabaseName;
 			set => DatabaseName = value;
 		}
 
-		// TODO: V2: remove?
+		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		public string? ServerName { get; private set; }
+
+		string? IEntityChangeDescriptor.ServerName
+		{
+			get => ServerName;
+			set => ServerName = value;
+		}
+
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
@@ -107,12 +117,12 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets mapping dictionary to map column aliases to target columns or aliases.
 		/// </summary>
-		public Dictionary<string, string> Aliases { get; private set; }
+		public Dictionary<string, string?>? Aliases { get; private set; }
 
 		/// <summary>
 		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
 		/// </summary>
-		public List<MemberAccessor> CalculatedMembers { get; private set; }
+		public List<MemberAccessor>? CalculatedMembers { get; private set; }
 
 		/// <summary>
 		/// Returns <c>true</c>, if entity has calculated columns.
@@ -120,7 +130,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
-		private List<InheritanceMapping> _inheritanceMappings;
+		private List<InheritanceMapping> _inheritanceMappings = null!;
 		/// <summary>
 		/// Gets list of inheritace mapping descriptors for current entity.
 		/// </summary>
@@ -142,9 +152,10 @@ namespace LinqToDB.Mapping
 
 			if (ta != null)
 			{
-				TableName = ta.Name;
-				SchemaName = ta.Schema;
-				DatabaseName = ta.Database;
+				TableName                 = ta.Name!;
+				SchemaName                = ta.Schema;
+				DatabaseName              = ta.Database;
+				ServerName                = ta.Server;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
@@ -152,7 +163,7 @@ namespace LinqToDB.Mapping
 			{
 				TableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterfaceEx() && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 
@@ -198,7 +209,7 @@ namespace LinqToDB.Mapping
 					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
 					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(MappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(MappingSchema, null, member);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}
@@ -208,7 +219,7 @@ namespace LinqToDB.Mapping
 				if (caa != null)
 				{
 					if (Aliases == null)
-						Aliases = new Dictionary<string, string>();
+						Aliases = new Dictionary<string, string?>();
 
 					Aliases.Add(member.Name, caa.MemberName);
 				}
@@ -275,7 +286,7 @@ namespace LinqToDB.Mapping
 			{
 				if (!_columnNames.TryGetValue(memberName, out var cd))
 					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && memberName != alias)
-						return this[alias];
+						return this[alias!];
 
 				return cd;
 			}
@@ -292,9 +303,9 @@ namespace LinqToDB.Mapping
 				{
 					var mapping = new InheritanceMapping
 					{
-						Code = m.Code,
+						Code      = m.Code,
 						IsDefault = m.IsDefault,
-						Type = m.Type,
+						Type      = m.Type,
 					};
 
 					var ed = mapping.Type.Equals(ObjectType)
@@ -346,7 +357,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets the dynamic columns store descriptor.
 		/// </summary>
-		public ColumnDescriptor   DynamicColumnsStore { get; private set; }
+		public ColumnDescriptor?   DynamicColumnsStore { get; private set; }
 
 		/// <summary>
 		/// Gets or sets optional dynamic column value getter expression with following signature:
@@ -354,7 +365,7 @@ namespace LinqToDB.Mapping
 		/// object Getter(TEntity entity, string propertyName, object defaultValue);
 		/// </code>
 		/// </summary>
-		internal LambdaExpression DynamicColumnGetter { get; private set; }
+		internal LambdaExpression? DynamicColumnGetter { get; private set; }
 
 		/// <summary>
 		/// Gets or sets optional dynamic column value setter expression with following signature:
@@ -362,7 +373,7 @@ namespace LinqToDB.Mapping
 		/// void Setter(TEntity entity, string propertyName, object value);
 		/// </code>
 		/// </summary>
-		internal LambdaExpression DynamicColumnSetter { get; private set; }
+		internal LambdaExpression? DynamicColumnSetter { get; private set; }
 
 		private void InitializeDynamicColumnsAccessors()
 		{

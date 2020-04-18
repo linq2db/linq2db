@@ -4,95 +4,72 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Data;
 	using Common;
-	using Extensions;
+	using Data;
 	using Mapping;
-	using Reflection;
 	using SqlProvider;
 	using Tools;
 
-	public class MySqlDataProvider : DynamicDataProviderBase
+	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		public MySqlDataProvider()
-			: this(ProviderName.MySql, new MySqlMappingSchema())
-		{
-		}
-
 		public MySqlDataProvider(string name)
 			: this(name, null)
 		{
 		}
 
-		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
+			: base(
+				  name,
+				  mappingSchema != null
+					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
+					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
+				  MySqlProviderAdapter.GetInstance(name))
 		{
+
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
-		}
 
-		public    override string ConnectionNamespace => "MySql.Data.MySqlClient";
-		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
-			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
-			: $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
-
-		protected override string DataReaderTypeName  => Name == ProviderName.MySqlConnector
-			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
-			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
-
-		Type _mySqlDecimalType;
-		Type _mySqlDateTimeType;
-
-		Func<object,object> _mySqlDecimalValueGetter;
-		Func<object,object> _mySqlDateTimeValueGetter;
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
-
-			if (Name != ProviderName.MySqlConnector)
+			// configure provider-specific data readers
+			if (Adapter.GetMySqlDecimalMethodName != null)
 			{
-				_mySqlDecimalType         = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal", true);
-
-				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
-				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
-
-				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
-				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
-
-				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
+				// SetProviderField is not needed for this type
+				SetToTypeField(Adapter.MySqlDecimalType!, Adapter.GetMySqlDecimalMethodName, Adapter.DataReaderType);
 			}
 
-			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
-			SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
+			if (Adapter.GetDateTimeOffsetMethodName != null)
+			{
+				SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+				SetToTypeField  (typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+			}
 
-			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
+			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
+			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new MySqlSchemaProvider();
+			return new MySqlSchemaProvider(this);
 		}
-#endif
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		static class MappingSchemaInstance
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			public static readonly MySqlMappingSchema.MySqlOfficialMappingSchema MySqlOfficialMappingSchema   = new MySqlMappingSchema.MySqlOfficialMappingSchema();
-			public static readonly MySqlMappingSchema.MySqlConnectorMappingSchema MySqlConnectorMappingSchema = new MySqlMappingSchema.MySqlConnectorMappingSchema();
+			switch (name)
+			{
+				case ProviderName.MySqlConnector: return new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
+				default                         :
+				case ProviderName.MySqlOfficial : return new MySqlMappingSchema.MySqlOfficialMappingSchema (providerSchema);
+			}
 		}
-
-		public override MappingSchema MappingSchema => Name == ProviderName.MySqlConnector
-			? MappingSchemaInstance.MySqlConnectorMappingSchema
-			: MappingSchemaInstance.MySqlOfficialMappingSchema as MappingSchema;
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -101,67 +78,48 @@ namespace LinqToDB.DataProvider.MySql
 			return _sqlOptimizer;
 		}
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_1
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
 				case DataType.Decimal    :
 				case DataType.VarNumeric :
-					if (value != null && value.GetType() == _mySqlDecimalType)
-						value = _mySqlDecimalValueGetter(value);
-					break;
-				case DataType.Date       :
-				case DataType.DateTime   :
-				case DataType.DateTime2  :
-					if (value != null && _mySqlDateTimeValueGetter != null && value.GetType() == _mySqlDateTimeType)
-						value = _mySqlDateTimeValueGetter(value);
-					break;
-				case DataType.Char       :
-				case DataType.VarChar    :
-				case DataType.NVarChar   :
-				case DataType.NChar      :
-					if (value is char)
-						value = value.ToString();
+					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
+						value = Adapter.MySqlDecimalGetter(value);
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
-			if (Name == ProviderName.MySqlConnector)
+			// VarNumeric - mysql.data trims fractional part
+			// Date/DateTime2 - mysql.data trims time part
+			switch (dataType.DataType)
 			{
-				base.SetParameterType(parameter, dataType);
+				case DataType.VarNumeric: parameter.DbType = DbType.Decimal;  return;
+				case DataType.Date:
+				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
 			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException("Source is null!", nameof(source));
-
-#pragma warning disable 618
-			if (options.RetrieveSequence)
-			{
-				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
-
-				if (!ReferenceEquals(list, source))
-					options = new BulkCopyOptions(options) { KeepIdentity = true };
-
-				source = list;
-			}
-#pragma warning restore 618
+				throw new ArgumentException(nameof(source));
 
 			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,

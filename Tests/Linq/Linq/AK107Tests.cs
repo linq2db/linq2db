@@ -20,7 +20,7 @@ namespace Tests.Linq
 			public long Id { get; set; }
 
 			[Column("name", SkipOnUpdate=true), NotNull]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 		}
 
 		[Table(Name = "t_test_user_contract")]
@@ -34,13 +34,13 @@ namespace Tests.Linq
 			public long UserId { get; set; }
 
 			[Association(ThisKey = "UserId", OtherKey = "Id", CanBeNull = false)]
-			public User User { get; set; }
+			public User User { get; set; } = null!;
 
 			[Column("contract_no", SkipOnUpdate = true, CanBeNull = false)]
 			public long ContractNo { get; set; }
 
 			[Column("name"), NotNull]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 		}
 
 		[Test]

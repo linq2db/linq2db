@@ -19,6 +19,7 @@ namespace Tests.UserTests
 	/// Tests executed against all providers, because they could also uncover memory leaks in providers.
 	/// </summary>
 	[TestFixture]
+	[Category(TestCategory.Explicit)]
 	public class Issue256Tests : TestBase
 	{
 		static readonly DateTime _date = DateTime.Now;
@@ -31,7 +32,7 @@ namespace Tests.UserTests
 			[Column(DataType=DataType.DateTime)] public DateTime DateTimeValue;
 			[Column]                             public bool     BoolValue;
 			[Column]                             public Guid     GuidValue;
-			[Column]                             public Binary   BinaryValue;
+			[Column]                             public Binary?  BinaryValue;
 			[Column]                             public short    SmallIntValue;
 		}
 
@@ -62,10 +63,7 @@ namespace Tests.UserTests
 			NonLinqDelete,
 		};
 
-#if !MONO && !NETSTANDARD1_6
-
 		[Test, Explicit("Demonstrates memory leak when fails")]
-		[Category("Explicit")]
 		public void SimpleTest(
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
@@ -74,15 +72,12 @@ namespace Tests.UserTests
 		}
 
 		[Test, Explicit("Demonstrates memory leak when fails")]
-		[Category("Explicit")]
 		public void RetryTest(
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
 		{
 			Test(context, action, 3);
 		}
-
-#endif
 
 		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
@@ -230,7 +225,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -254,7 +249,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -272,7 +267,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}
@@ -302,7 +297,7 @@ namespace Tests.UserTests
 
 			Assert.AreEqual(1, result.Count);
 			Assert.AreEqual(10256, result[0].ID);
-			Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+			Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 		}
 
 		private static void NonLinqUpdate(ITestDataContext db, byte[] value, int calls)
@@ -323,7 +318,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
+				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
 
 				calls--;
 			}

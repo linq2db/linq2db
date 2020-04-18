@@ -10,6 +10,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Tools;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -24,11 +25,12 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -62,11 +64,12 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -367,6 +370,38 @@ namespace Tests.xUpdate
 			}
 		}
 
+		class InsertTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public DateTime? CreatedOn { get; set; }
+			[Column]
+			public DateTime? ModifiedOn { get; set; }
+		}
+
+		[Test]
+		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []
+			{
+				new InsertTable{Id = 1, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+				new InsertTable{Id = 2, CreatedOn = DateTime.Now, ModifiedOn = DateTime.Now}, 
+			}))
+			{
+				var affected = table
+					.Where(c => c.Id > 0)
+					.Into(table)
+					.Value(p => p.Id, c => c.Id + 10)
+					.Value(p => p.CreatedOn,  c => Sql.CurrentTimestamp)
+					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
+					.Insert();
+
+				Assert.That(affected, Is.EqualTo(2));
+			}
+		}
+
 		[Test]
 		public void Insert7([DataSources] string context)
 		{
@@ -459,7 +494,7 @@ namespace Tests.xUpdate
 			[Column] public DateTime? DateTimeValue;
 			[Column] public bool      BoolValue;
 			[Column] public Guid      GuidValue;
-			[Column] public byte[]    BinaryValue;
+			[Column] public byte[]?   BinaryValue;
 			[Column] public short     SmallIntValue;
 		}
 
@@ -495,7 +530,7 @@ namespace Tests.xUpdate
 				{
 					types.Delete(t => t.ID > 1000);
 
-					byte[] arr = null;
+					byte[]? arr = null;
 
 					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
@@ -1022,7 +1057,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1279,6 +1314,47 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertOrUpdate4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					}));
+
+					for (var i = 0; i < 3; i++)
+					{
+						var diagnosis = "abc";
+						db.Patient.InsertOrUpdate(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = (Sql.AsSql(diagnosis).Length + i).ToString(),
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							});
+					}
+
+					Assert.AreEqual("3", db.Patient.Single(p => p.PersonID == id).Diagnosis);
+				}
+				finally
+				{
+					db.Patient.Delete(p => p.PersonID == id);
+					db.Person.Delete(p => p.ID == id);
+				}
+			}
+		}
+
+		[Test]
 		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
@@ -1461,8 +1537,37 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Insert16([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+
+				try
+				{
+					var name = "Insert16";
+					var idx = 4;
+
+					db.Person.Insert(() => new Person()
+					{
+						FirstName = "Insert16",
+						LastName  = (Sql.AsSql(name).Length + idx).ToString(),
+						Gender    = Gender.Male,
+					});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+				}
+			}
+		}
+
+		[Test]
 		public void InsertSingleIdentity([DataSources(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1564,7 +1669,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		internal static string GetTableName(string context, [CallerMemberName] string methodName = null)
+		internal static string GetTableName(string context, [CallerMemberName] string? methodName = null)
 		{
 			var tableName  = "xxPerson";
 
@@ -1592,7 +1697,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "35");
 
 			using (var db = GetDataContext(context))
@@ -1638,7 +1743,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "31");
 
 			using (var db = GetDataContext(context))
@@ -1681,7 +1786,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
@@ -1727,7 +1832,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
@@ -1768,5 +1873,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
 	}
 }

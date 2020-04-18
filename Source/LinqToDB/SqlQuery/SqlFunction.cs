@@ -21,6 +21,7 @@ namespace LinqToDB.SqlQuery
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
+			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var p in parameters)
@@ -64,7 +65,7 @@ namespace LinqToDB.SqlQuery
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, action);
+				Parameters[i] = Parameters[i].Walk(options, action)!;
 
 			return action(this);
 		}
@@ -109,6 +110,17 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return clone;
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = SystemType.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			return hashCode;
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

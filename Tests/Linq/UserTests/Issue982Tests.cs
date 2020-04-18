@@ -27,7 +27,7 @@ namespace Tests.UserTests
 				return statement;
 			}
 
-			private object GetMaxValue(DataType type)
+			private object? GetMaxValue(DataType type)
 			{
 				switch (type)
 				{
@@ -68,7 +68,7 @@ namespace Tests.UserTests
 
 				foreach (var key in keys.OfType<SqlField>())
 				{
-					var maxValue = GetMaxValue(key.DataType);
+					var maxValue = GetMaxValue(key.Type!.Value.DataType);
 					if (maxValue == null)
 						continue;
 
