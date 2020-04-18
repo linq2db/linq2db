@@ -1049,37 +1049,36 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test1(
+			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				// The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
-				context == ProviderName.Access ||
-				// SQL0902 An unexpected exception has occurred. AllocateandLinkStatementHandle. There are no context policies.
-				context == ProviderName.DB2 ||
-				// Table unknown CATEGORIES
-				context.Contains("Firebird") ||
-				// MySql.Data: NotSupportedException : Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
-				// MySqlConnector: MySqlException : XAER_RMFAIL: The command cannot be executed when global transaction is in the  ACTIVE state
-				context.Contains("MySql") ||
-				context.Contains("MariaDB") ||
-				// OracleException : ORA-02089: COMMIT is not allowed in a subordinate session
-				context == ProviderName.OracleManaged ||
-				// SQLiteException : database is locked
-				context == ProviderName.SQLiteClassic ||
-				// HanaException : The rollback was caused by an unspecified reason: XA Transaction is rolled back.
-				context == ProviderName.SapHana ||
-				// InvalidOperationException : The connection object can not be enlisted in transaction scope.
-				context == ProviderName.SqlCe ||
-				// Something about CREATE TABLE in multi-statement transaction
-				context == ProviderName.Sybase ||
-				// surprisingly SqlServer provider has issues with DDL in TransactionScope
-				// MARS=OFF: InvalidOperationException : The transaction associated with the current connection has completed but has not been disposed.  The transaction must be disposed before the connection can be used to execute SQL statements.
-				// MARS=ON: SqlException : Cannot drop the table 'Categories', because it does not exist or you do not have permission.
-				context.Contains("SqlServer") ||
-				context.Contains("SqlAzure")
+				context == ProviderName.DB2            ||
+				context == ProviderName.InformixDB2    ||
+				context == ProviderName.MySqlConnector ||
+				context == ProviderName.SapHanaNative  ||
+				context == ProviderName.SqlCe          ||
+				context == ProviderName.Sybase         ||
+				context.Contains("Firebird")           ||
+				context.Contains("Oracle")             ||
+				context.Contains("PostgreSQL")         ||
+				context.Contains("SqlServer")          ||
+				context.Contains("SqlAzure")           ||
+				context.Contains(ProviderName.SQLiteClassic)
 				))
 			{
-				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
+				// DB2: ERROR [58005] [IBM][DB2.NET] SQL0902 An unexpected exception has occurred in  Process: 22188 Thread 16 AppDomain: Name:domain-1b9769ae-linq2db.Tests.dll
+				// Firebird: SQL error code = -204 Table unknown CATEGORIES
+				// Informix DB2: ERROR [2E000] [IBM] SQL1001N  "<DBNAME>" is not a valid database name.  SQLSTATE=2E000
+				// MySqlConnector: XAER_RMFAIL: The command cannot be executed when global transaction is in the  ACTIVE state
+				// Oracle: Connection is already part of a local or a distributed transaction
+				// PostgreSQL: Nested/Concurrent transactions aren't supported.
+				// SQLite.Classic: No transaction is active on this connection
+				// SAP HANA native: The rollback was caused by an unspecified reason: XA Transaction is rolled back.
+				// SQL Server: Cannot drop the table 'Categories', because it does not exist or you do not have permission.
+				// SQLCE: SqlCeConnection does not support nested transactions.
+				// Sybase native: just crashes without details (as usual for this "provider")
+				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
@@ -1103,30 +1102,30 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2([DataSources(false
-#if NETCOREAPP2_1
-			, TestProvName.AllSqlServer, TestProvName.AllOracle
-#endif
-			)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2(
+			[DataSources(false)] string context, [Values] bool withScope)
 		{
-			// errors are different for some providers compared to TestDisposeFlagCloning962Test1
-			// because we don't use DDL (CREATE TABLE)
 			if (withScope && (
-				// The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
-				context == ProviderName.Access ||
-				// SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
-				context == ProviderName.DB2 ||
-				// MySql.Data: NotSupportedException : Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
-				(context.Contains("MySql") && context != ProviderName.MySqlConnector) ||
-				context.Contains("MariaDB") ||
-				// SQLiteException : database is locked
-				context == ProviderName.SQLiteClassic ||
-				// InvalidOperationException : The connection object can not be enlisted in transaction scope.
-				context == ProviderName.SqlCe ||
-				// AseException : Only One Local connection allowed in the TransactionScope
-				context == ProviderName.Sybase
+				context == ProviderName.Access              ||
+				context == ProviderName.DB2                 ||
+				context == ProviderName.InformixDB2         ||
+				context == ProviderName.SapHanaOdbc         ||
+				context == ProviderName.SqlCe               ||
+				context == ProviderName.Sybase              ||
+				TestProvName.AllMySqlData.Contains(context) ||
+				context.Contains("PostgreSQL")              ||
+				context.Contains(ProviderName.SQLiteClassic)
 				))
 			{
+				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
+				// DB2: ERROR [58005] [IBM][DB2/NT64] SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
+				// Informix DB2: ERROR [2E000] [IBM] SQL1001N  "<DBNAME>" is not a valid database name.  SQLSTATE=2E000
+				// MySql.Data: Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
+				// PostgreSQL: 55000: prepared transactions are disabled
+				// SQLite.Classic: The operation is not valid for the state of the transaction.
+				// SAP HANA ODBC: ERROR [HYC00] [SAP AG][LIBODBCHDB32 DLL] Optional feature not implemented
+				// SQLCE: The connection object can not be enlisted in transaction scope.
+				// Sybase native: Only One Local connection allowed in the TransactionScope
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
