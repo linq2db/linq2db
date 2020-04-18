@@ -16,6 +16,7 @@ using LinqToDB.DataProvider.SqlServer;
 namespace Tests.Data
 {
 	using System.Collections.Generic;
+	using System.Runtime.InteropServices;
 	using System.Transactions;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
