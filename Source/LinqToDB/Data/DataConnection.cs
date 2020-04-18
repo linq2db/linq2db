@@ -449,6 +449,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  static Action<TraceInfo>  OnTrace
 		{
+			//todo remove this eventually or mark obsolete
+			internal get => _onTrace;
 			set => _onTrace = value ?? DefaultTrace;
 		}
 
