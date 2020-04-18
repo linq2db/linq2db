@@ -767,6 +767,8 @@ namespace LinqToDB.Linq.Builder
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
 				if (descriptor?.IsList == true)
 				{
+					return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
+
 					return Builder.BuildMultipleQuery(this, expression, false);
 				}
  
@@ -1129,7 +1131,8 @@ namespace LinqToDB.Linq.Builder
 					var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
 					if (descriptor != null)
 					{
-						var isOuter = buildInfo.IsOuterAssociations;
+						var isOuter = false;
+						// var isOuter = buildInfo.IsOuterAssociations;
 						
 						{
 							IBuildContext associatedContext;
@@ -1143,7 +1146,8 @@ namespace LinqToDB.Linq.Builder
 									// associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression) , 
 									// 	this, descriptor, ref isOuter);
 
-									associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(this.Parent, levelExpression, new SelectQuery()), this, descriptor, ref  isOuter);
+									associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(this, levelExpression, SelectQuery), this, descriptor, false, ref isOuter);
+									associatedContext.Parent = this;
 
 									_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
 									_associationContexts.Add(memberInto, associatedContext);
@@ -1173,8 +1177,8 @@ namespace LinqToDB.Linq.Builder
 									// associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(()null, buildInfo.Expression, this.SelectQuery) , 
 									// 	this, descriptor, ref isOuter);
 
-									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression) , 
-										this, descriptor, ref isOuter);
+									associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(buildInfo.Parent, buildInfo.Expression, SelectQuery) , 
+										this, descriptor, false, ref isOuter);
 								}
 
 								isOuter = false;
@@ -1511,8 +1515,11 @@ namespace LinqToDB.Linq.Builder
 										}
 
 										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(this.Parent, expression, SelectQuery), this, descriptor,
+											new BuildInfo(this, expression, SelectQuery), this, descriptor,
+											true,
 											ref isOuter);
+
+										associatedContext.Parent = this;
 
 										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
 										_associationContexts.Add(memberInto, associatedContext);
@@ -1582,7 +1589,7 @@ namespace LinqToDB.Linq.Builder
 									    !_associationContexts.TryGetValue(memberInto, out associatedContext))
 									{
 										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(this.Parent, levelExpression, SelectQuery), this, descriptor,
+											new BuildInfo(this.Parent, levelExpression, SelectQuery), this, descriptor, false,
 											ref isOuter);
 
 										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();

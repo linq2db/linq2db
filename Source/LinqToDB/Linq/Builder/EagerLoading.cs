@@ -618,7 +618,7 @@ namespace LinqToDB.Linq.Builder
 			return detailExpression;
 		}
 
-		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, AssociationDescriptor association)
+		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
 			var mappingSchema    = builder.MappingSchema;
@@ -629,24 +629,17 @@ namespace LinqToDB.Linq.Builder
 			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
 			var alias = "lw_" + (association.MemberInfo.DeclaringType?.Name ?? "master");
 			
-			var masterParm            = Expression.Parameter(mainQueryElementType, alias);
+			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
 
 			var associationPath = new List<MemberInfo>();
 			associationPath.Insert(0, association.MemberInfo);
 
-			var parentContext  = context as TableBuilder.AssociatedTableContext;
 			var extractContext = context;
-			while (parentContext != null)
-			{
-				associationPath.Insert(0, parentContext.Association.MemberInfo);
-				extractContext = parentContext.ParentAssociation ?? extractContext;
-				parentContext  = parentContext.ParentAssociation as TableBuilder.AssociatedTableContext;
-			}
 
 			var associationParentType = associationPath[0].DeclaringType;
 
-			Expression resultExpression;
-			Expression finalExpression;
+			Expression           resultExpression;
+			Expression           finalExpression;
 			ParameterExpression? replaceParam;
 
 			// recursive processing
@@ -664,7 +657,7 @@ namespace LinqToDB.Linq.Builder
 				var prevKeys       = ExtractKeys(context, keyExpression).ToArray();
 				var subMasterKeys  = ExtractKeys(context, detailExpression).ToArray();
 
-				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParm, nameof(KeyDetailEnvelope<object, object>.Key))).ToArray();
+				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Key))).ToArray();
 
 				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
 				foreach (var key in prevKeys)
@@ -673,7 +666,7 @@ namespace LinqToDB.Linq.Builder
 						key.ForSelect = correctLookup[key.ForSelect].First();
 				}
 
-				var detailProp = ExpressionHelper.Property(masterParm, nameof(KeyDetailEnvelope<object, object>.Detail));
+				var detailProp   = ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
 				var subMasterObj = detailExpression;
 				foreach (var key in subMasterKeys)
 				{
@@ -685,8 +678,8 @@ namespace LinqToDB.Linq.Builder
 
 				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
 
-				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParm, masterParm, detailQuery, initialMainQuery, builder);
+				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}
 			else
 			{
@@ -699,7 +692,7 @@ namespace LinqToDB.Linq.Builder
 						throw new NotImplementedException();
 					}
 
-					var detailExpression1 = Expression.MakeMemberAccess(parentExpr, association.MemberInfo);
+					var detailExpression1 = parentExpr;
 
 					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailExpression1,
 						new HashSet<ParameterExpression>());
@@ -707,14 +700,14 @@ namespace LinqToDB.Linq.Builder
 					return result;
 				}
 
-				var masterKeys = ExtractKeys(extractContext, masterParm).ToArray();
+				var masterKeys = ExtractKeys(extractContext, masterParam).ToArray();
 
-				detailQuery = ConstructMemberPath(associationPath, masterParm, true)!;
+				detailQuery = ConstructMemberPath(associationPath, masterParam, true)!;
 				detailQuery = CorrectLoadWithExpression(detailQuery, extractContext, associationPath, mappingSchema);
 
 				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
 
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParm, masterParm, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}
 
 			if (replaceParam != null)

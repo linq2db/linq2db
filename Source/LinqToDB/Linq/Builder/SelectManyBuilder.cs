@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 			var sql            = collection.SelectQuery;
 
 			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
+			var newQuery       = buildInfo.IsAssociationBuilt || null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
 			var crossApply     = null != new QueryVisitor().Find(sql, e =>
 				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table!) ||
@@ -103,11 +103,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (!newQuery)
 			{
+				var foundJoin = context.SelectQuery.FindJoin(j => j.Table.Source == collection.SelectQuery); 
+
 				if (collection.SelectQuery.Select.HasModifier)
 				{
 					if (crossApply)
 					{
-						var foundJoin = context.SelectQuery.FindJoin(j => j.Table.Source == collection.SelectQuery);
 						if (foundJoin != null)
 						{
 							foundJoin.JoinType = leftJoin ? JoinType.OuterApply : JoinType.CrossApply;
@@ -125,7 +126,23 @@ namespace LinqToDB.Linq.Builder
 							});
 
 							foundJoin.Condition.Conditions.Clear();
+							foundJoin = null;
 						}
+					}
+				}
+
+				if (foundJoin != null)
+				{
+					if (leftJoin)
+					{
+						if (foundJoin.JoinType == JoinType.Inner)
+							foundJoin.JoinType = JoinType.Left;
+						else if (foundJoin.JoinType == JoinType.CrossApply)
+							foundJoin.JoinType = JoinType.OuterApply;
+					}
+					else
+					{
+
 					}
 				}
 

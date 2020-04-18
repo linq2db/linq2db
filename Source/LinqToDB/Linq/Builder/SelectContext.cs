@@ -488,10 +488,13 @@ namespace LinqToDB.Linq.Builder
 						if (i.Query == SelectQuery)
 							return i;
 
+						var index = SelectQuery.Select.Add(i.Query!.Select.Columns[i.Index]);
+
 						return new SqlInfo(i.MemberChain)
 						{
 							Query = SelectQuery,
-							Index = SelectQuery.Select.Add(i.Query!.Select.Columns[i.Index])
+							Index = index,
+							Sql   = SelectQuery.Select.Columns[index]
 						};
 					})
 					.ToArray();
@@ -884,7 +887,7 @@ namespace LinqToDB.Linq.Builder
 									levelExpression.Type,
 									expression);
 
-								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery));
+								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery) { CreateSubQuery = buildInfo.CreateSubQuery });
 							}
 
 							var context = ProcessMemberAccess(

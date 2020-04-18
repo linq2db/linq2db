@@ -720,7 +720,7 @@ namespace LinqToDB.Linq.Builder
 				if (Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
-				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, Association)!;
+				var detailExpression = EagerLoading.GenerateAssociationExpression(Builder, ParentAssociation, null, Association)!;
 
 				return detailExpression;
 			}
