@@ -1112,7 +1112,12 @@ namespace Tests.Data
 				context == ProviderName.SapHanaOdbc         ||
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
+#if NETCOREAPP2_1
+				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context == ProviderName.OracleManaged) ||
+#endif
 				TestProvName.AllMySqlData.Contains(context) ||
+				context.Contains("SqlServer")               ||
+				context.Contains("SqlAzure")                ||
 				context.Contains("PostgreSQL")              ||
 				context.Contains(ProviderName.SQLiteClassic)
 				))
@@ -1126,6 +1131,8 @@ namespace Tests.Data
 				// SAP HANA ODBC: ERROR [HYC00] [SAP AG][LIBODBCHDB32 DLL] Optional feature not implemented
 				// SQLCE: The connection object can not be enlisted in transaction scope.
 				// Sybase native: Only One Local connection allowed in the TransactionScope
+				// Oracle managed: Operation is not supported on this platform.
+				// SqlServer: The operation is not valid for the state of the transaction.
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
