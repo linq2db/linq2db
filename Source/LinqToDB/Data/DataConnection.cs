@@ -322,6 +322,24 @@ namespace LinqToDB.Data
 				AddMappingSchema(options.MappingSchema);
 			}
 
+			if (options.OnTrace != null)
+			{
+				OnTraceConnection = options.OnTrace;
+			}
+
+			if (options.TraceLevel != null)
+			{
+				TraceSwitchConnection = new TraceSwitch("DataConnection", "DataConnection trace switch")
+				{
+					Level = options.TraceLevel.Value
+				};
+			}
+
+			if (options.WriteTrace != null)
+			{
+				WriteTraceLineConnection = options.WriteTrace;
+			}
+
 			if (localConnection != null)
 			{
 				_connection = localConnection is IAsyncDbConnection asyncDbConection
@@ -424,38 +442,49 @@ namespace LinqToDB.Data
 			set => _defaultDataProvider = value;
 		}
 
-		private static Action<TraceInfo> _onTrace = OnTraceInternal;
+		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
-		/// Gets or sets trace handler, used for all new connections.
+		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDbConnectionOptions"/>
+		/// defaults to calling <see cref="OnTraceInternal"/>
 		/// </summary>
 		public  static Action<TraceInfo>  OnTrace
 		{
-			get => _onTrace;
-			set => _onTrace = value ?? OnTraceInternal;
+			set => _onTrace = value ?? DefaultTrace;
+		}
+
+		static void DefaultTrace(TraceInfo info)
+		{
+			info.DataConnection.OnTraceInternal(info);
 		}
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
+		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(System.Action{LinqToDB.Data.TraceInfo})"/>.
+		/// defaults to <see cref="OnTrace"/>
 		/// </summary>
-		public  Action<TraceInfo>? OnTraceConnection { get; set; } = OnTrace;
+		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
 
-		static void OnTraceInternal(TraceInfo info)
+
+		/// <summary>
+		/// writes the trace out using <see cref="WriteTraceLineConnection"/>
+		/// </summary>
+		void OnTraceInternal(TraceInfo info)
 		{
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:
-					WriteTraceLine(
+					WriteTraceLineConnection(
 						$"{info.TraceInfoStep}{Environment.NewLine}{info.SqlText}",
-						TraceSwitch.DisplayName,
+						TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
 				case TraceInfoStep.AfterExecute:
-					WriteTraceLine(
+					WriteTraceLineConnection(
 						info.RecordsAffected != null
 							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
 							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
-						TraceSwitch.DisplayName,
+						TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
@@ -489,7 +518,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -503,7 +532,7 @@ namespace LinqToDB.Data
 					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
 						sb.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -519,49 +548,77 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
 			}
 		}
 
-		private static TraceSwitch? _traceSwitch;
-		/// <summary>
-		/// Gets or sets global data connection trace options.
-		/// </summary>
-		public  static TraceSwitch  TraceSwitch
-		{
-			get
-			{
-				return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch",
+		private static TraceSwitch? _traceSwitch = new TraceSwitch("DataConnection",
+			"DataConnection trace switch",
 #if DEBUG
-				"Warning"
+			"Warning"
 #else
 				"Off"
 #endif
-				));
-			}
-			set { _traceSwitch = value; }
+		);
+
+		/// <summary>
+		/// Gets or sets global data connection trace options. Used for all new connections
+		/// unless <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/> is called on builder.
+		/// defaults to off unless library was built in debug mode.
+		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
+		/// </summary>
+		public  static TraceSwitch  TraceSwitch
+		{
+			//todo remove this eventually or mark obsolete
+			internal get => _traceSwitch;
+			set => _traceSwitch = value;
 		}
 
 		/// <summary>
 		/// Sets tracing level for data connections.
 		/// </summary>
 		/// <param name="traceLevel">Connection tracing level.</param>
+		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/></remarks>
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
 		}
 
+
+		private TraceSwitch? _traceSwitchConnection;
+
+		/// <summary>
+		/// gets or sets the trace switch,
+		/// this is used by some methods to determine if <see cref="OnTraceConnection"/> should be called.
+		/// defaults to <see cref="TraceSwitch"/>
+		/// used for current connection instance.
+		/// </summary>
+		public TraceSwitch TraceSwitchConnection
+		{
+			get => _traceSwitchConnection ?? _traceSwitch;
+			set => _traceSwitchConnection = value;
+		}
+
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
+		/// will be ignored if <see cref="LinqToDbConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
 		/// <para>First parameter contains trace message.</para>
 		/// <para>Second parameter contains context (<see cref="Switch.DisplayName"/>)</para>
 		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>)</para>
 		/// <seealso cref="TraceSwitch"/>
+		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/></remarks>
 		/// </summary>
 		public static Action<string, string, TraceLevel> WriteTraceLine = (message, displayName, level) => Debug.WriteLine(message, displayName);
+
+		/// <summary>
+		/// gets the delegate to write logging messages for this connection
+		/// defaults to <see cref="WriteTraceLine"/>
+		/// used for the current instance.
+		/// </summary>
+		public Action<string, string, TraceLevel> WriteTraceLineConnection { get; } = WriteTraceLine;
 
 		#endregion
 
@@ -1182,14 +1239,14 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQuery()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteNonQuery(Command);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -1205,7 +1262,7 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope(this))
 					ret = ExecuteNonQuery(Command);
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -1221,7 +1278,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
@@ -1248,14 +1305,14 @@ namespace LinqToDB.Data
 
 		object? ExecuteScalar()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteScalar(Command);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -1271,7 +1328,7 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope(this))
 					ret = ExecuteScalar(Command);
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -1286,7 +1343,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
@@ -1318,14 +1375,14 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -1342,7 +1399,7 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope(this))
 					ret = ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -1357,7 +1414,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{

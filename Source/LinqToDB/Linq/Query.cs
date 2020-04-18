@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common.Logging;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -314,10 +315,10 @@ namespace LinqToDB.Linq
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 
-				if (DataConnection.TraceSwitch.TraceInfo)
-					DataConnection.WriteTraceLine(
+				if (dataContext.GetTraceSwitch().TraceInfo)
+					dataContext.WriteTraceLine(
 						$"Expression test code generated: \'{testFile}\'.",
-						DataConnection.TraceSwitch.DisplayName,
+						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Info);
 			}
 
@@ -331,9 +332,9 @@ namespace LinqToDB.Linq
 			{
 				if (!Configuration.Linq.GenerateExpressionTest)
 				{
-					DataConnection.WriteTraceLine(
+					dataContext.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-						DataConnection.TraceSwitch.DisplayName,
+						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);
 				}
 

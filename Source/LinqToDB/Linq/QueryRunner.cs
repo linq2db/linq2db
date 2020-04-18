@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common.Logging;
 
 namespace LinqToDB.Linq
 {
@@ -104,10 +105,10 @@ namespace LinqToDB.Linq
 					if (mapperInfo.IsFaulted)
 						throw;
 
-					if (DataConnection.TraceSwitch.TraceInfo)
-						DataConnection.WriteTraceLine(
+					if (context.GetTraceSwitch().TraceInfo)
+						context.WriteTraceLine(
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName,
+							context.GetTraceSwitch().DisplayName,
 							TraceLevel.Error);
 
 					var qr = QueryRunner;

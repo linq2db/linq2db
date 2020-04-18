@@ -1,7 +1,9 @@
 using System;
 using System.Data;
+using System.Diagnostics;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Configuration
@@ -18,15 +20,18 @@ namespace LinqToDB.Configuration
 	
 	public class LinqToDbConnectionOptionsBuilder
 	{
-		public MappingSchema       MappingSchema       { get; private set; }
-		public IDataProvider       DataProvider        { get; private set; }
-		public IDbConnection       DbConnection        { get; private set; }
-		public bool                DisposeConnection   { get; private set; }
-		public string              ConfigurationString { get; private set; }
-		public string              ProviderName        { get; private set; }
-		public string              ConnectionString    { get; private set; }
-		public Func<IDbConnection> ConnectionFactory   { get; private set; }
-		public IDbTransaction      DbTransaction       { get; private set; }
+		public MappingSchema                      MappingSchema       { get; private set; }
+		public IDataProvider                      DataProvider        { get; private set; }
+		public IDbConnection                      DbConnection        { get; private set; }
+		public bool                               DisposeConnection   { get; private set; }
+		public string                             ConfigurationString { get; private set; }
+		public string                             ProviderName        { get; private set; }
+		public string                             ConnectionString    { get; private set; }
+		public Func<IDbConnection>                ConnectionFactory   { get; private set; }
+		public IDbTransaction                     DbTransaction       { get; private set; }
+		public Action<TraceInfo>?                 OnTrace             { get; private set; }
+		public TraceLevel?                        TraceLevel          { get; private set; }
+		public Action<string, string, TraceLevel> WriteTrace          { get; private set; }
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
@@ -137,7 +142,7 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
-			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+			DataProvider  = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 			DbTransaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 
 			return this;
@@ -152,6 +157,31 @@ namespace LinqToDB.Configuration
 		public LinqToDbConnectionOptionsBuilder UseDataProvider(IDataProvider dataProvider)
 		{
 			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+			return this;
+		}
+
+		public LinqToDbConnectionOptionsBuilder WithTraceLevel(TraceLevel traceLevel)
+		{
+			TraceLevel = traceLevel;
+			return this;
+		}
+
+		public LinqToDbConnectionOptionsBuilder WithTracing(Action<TraceInfo> onTrace)
+		{
+			OnTrace = onTrace;
+			return this;
+		}
+
+		public LinqToDbConnectionOptionsBuilder WithTracing(TraceLevel traceLevel, Action<TraceInfo> onTrace)
+		{
+			TraceLevel = traceLevel;
+			OnTrace    = onTrace;
+			return this;
+		}
+
+		public LinqToDbConnectionOptionsBuilder WriteTraceWith(Action<string, string, TraceLevel> write)
+		{
+			WriteTrace = write;
 			return this;
 		}
 

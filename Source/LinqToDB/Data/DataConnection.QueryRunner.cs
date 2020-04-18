@@ -48,7 +48,7 @@ namespace LinqToDB.Data
 					_mapperExpression = value;
 
 					if (value != null && Common.Configuration.Linq.TraceMapperExpression &&
-						TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
+					    _dataConnection.TraceSwitchConnection.TraceInfo && _dataConnection.OnTraceConnection != null)
 					{
 						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated)
 						{
@@ -119,7 +119,7 @@ namespace LinqToDB.Data
 				if (_executionScope != null)
 					_executionScope.Dispose();
 
-				if (TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
+				if (_dataConnection.TraceSwitchConnection.TraceInfo && _dataConnection.OnTraceConnection != null)
 				{
 					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed)
 					{

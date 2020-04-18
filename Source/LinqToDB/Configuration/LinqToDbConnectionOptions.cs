@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Diagnostics;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -47,17 +48,31 @@ namespace LinqToDB.Configuration
 
 			MappingSchema = builder.MappingSchema;
 			DataProvider = builder.DataProvider;
+			OnTrace = builder.OnTrace;
+			TraceLevel = builder.TraceLevel;
+			WriteTrace = builder.WriteTrace;
 		}
 
-		public MappingSchema       MappingSchema       { get; }
-		public IDataProvider       DataProvider        { get; }
-		public IDbConnection       DbConnection        { get; }
-		public bool                DisposeConnection   { get; }
-		public string              ConfigurationString { get; }
-		public string              ProviderName        { get; }
-		public string              ConnectionString    { get; }
-		public Func<IDbConnection> ConnectionFactory   { get; }
-		public IDbTransaction      DbTransaction       { get; }
+		/// <summary>
+		/// constructor for unit tests
+		/// </summary>
+		internal LinqToDbConnectionOptions()
+		{
+			SetupType = ConnectionSetupType.DefaultConfiguration;
+		}
+
+		public MappingSchema                      MappingSchema       { get; }
+		public IDataProvider                      DataProvider        { get; }
+		public IDbConnection                      DbConnection        { get; }
+		public bool                               DisposeConnection   { get; }
+		public string                             ConfigurationString { get; }
+		public string                             ProviderName        { get; }
+		public string                             ConnectionString    { get; }
+		public Func<IDbConnection>                ConnectionFactory   { get; }
+		public IDbTransaction                     DbTransaction       { get; }
+		public Action<TraceInfo>?                 OnTrace             { get; }
+		public TraceLevel?                        TraceLevel          { get; }
+		public Action<string, string, TraceLevel> WriteTrace          { get; }
 
 		internal ConnectionSetupType SetupType { get; }
 
