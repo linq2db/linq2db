@@ -1140,7 +1140,35 @@ namespace LinqToDB.Linq.Builder
 						
 						{
 							IBuildContext associatedContext;
-							if (!descriptor.IsList)
+							if (levelExpression != expression)
+							{
+								//var newBuildInfo = new BuildInfo(buildInfo, buildInfo.Expression);
+								var newBuildInfo = new BuildInfo(buildInfo, buildInfo.Expression, new SelectQuery());
+								if (!descriptor.IsList)
+								{
+									if (_associationContexts == null ||
+									    !_associationContexts.TryGetValue(memberInto, out associatedContext))
+									{
+										associatedContext = AssociationHelper.BuildAssociationSubqueryInline(Builder,
+											newBuildInfo, this,
+											descriptor, ref isOuter);
+
+										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
+										_associationContexts.Add(memberInto, associatedContext);
+									}
+								}
+								else
+								{
+									associatedContext = AssociationHelper.BuildAssociationSubqueryInline(Builder, newBuildInfo, this, descriptor, ref isOuter);
+								}
+							}
+							else
+							{
+								associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, buildInfo, this, descriptor, ref isOuter);
+							}
+
+							/*
+							if (!descriptor.IsList && levelExpression != expression)
 							{
 								if (_associationContexts == null || !_associationContexts.TryGetValue(memberInto, out associatedContext))
 								{
@@ -1151,10 +1179,10 @@ namespace LinqToDB.Linq.Builder
 									// 	this, descriptor, ref isOuter);
 
 									////associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(buildInfo, levelExpression, SelectQuery), this, descriptor, false, ref isOuter);
-									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, buildInfo, this, descriptor, ref isOuter);
+									associatedContext = AssociationHelper.BuildAssociationInline(Builder, buildInfo, this, descriptor, true, ref isOuter);
 									
-									// _associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-									// _associationContexts.Add(memberInto, associatedContext);
+									_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
+									_associationContexts.Add(memberInto, associatedContext);
 								}
 							}
 							else
@@ -1201,6 +1229,8 @@ namespace LinqToDB.Linq.Builder
 								isOuter = false;
 							}
 
+	*/
+
 							
 							if (levelExpression != expression)
 							{
@@ -1211,6 +1241,11 @@ namespace LinqToDB.Linq.Builder
 									{
 										IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery
 									});
+
+								if (subContext.SelectQuery.From.Tables.Count == 0)
+								{
+									subContext.SelectQuery.From.Table(associatedContext.SelectQuery);
+								}
 								// var subContext = associatedContext.GetContext(newExpr, 0,
 								// 	new BuildInfo(buildInfo.Parent, newExpr, SelectQuery) { IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery });
 								return subContext;

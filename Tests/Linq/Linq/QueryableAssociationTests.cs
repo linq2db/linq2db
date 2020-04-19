@@ -395,7 +395,11 @@ AS RETURN
 			using (db.CreateLocalTable(others))
 			{
 				CreateFunction(db, "SomeOtherEntity");
-				var query = db.GetTable<SomeEntity>().With("NOLOCK").LoadWith(e => e.Other).LoadWith(e => e.Others).LoadWith(e => e.OthersFromSql).Take(2);
+				var query = db.GetTable<SomeEntity>().With("NOLOCK")
+					.LoadWith(e => e.Other)
+					.LoadWith(e => e.Others)
+					.LoadWith(e => e.OthersFromSql)
+					.Take(2);
 
 				var expectedQuery = entities.Take(2);
 

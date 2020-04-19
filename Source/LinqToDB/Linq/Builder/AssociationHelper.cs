@@ -214,6 +214,40 @@ namespace LinqToDB.Linq.Builder
 			return new AssociationContext(builder, tableContext, context);
 		}
 
+		public static IBuildContext BuildAssociationSubqueryInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
+		{
+			if (buildInfo.Parent == null)
+				throw new InvalidOperationException();
+
+			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var parentExactType = descriptor.GetParentElementType();
+			
+			var queryMethod = CreateAssociationQueryLambda(
+				builder, descriptor, tableContext.OriginalType, parentExactType, elementType,
+				false, isOuter, tableContext.LoadWith, out isOuter);
+
+			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, buildInfo.Parent);
+			var body = queryMethod.GetBody(parentRef);
+
+			var context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
+
+			if (buildInfo.SelectQuery.From.Tables.Count == 0)
+			{
+				buildInfo.SelectQuery.From.Table(context.SelectQuery);
+			}
+			else
+			{
+				var tableSource = buildInfo.SelectQuery.From.Tables.Last();
+				var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply,
+					context.SelectQuery,
+					null, false, null);
+
+				tableSource.Joins.Add(join.JoinedTable);
+			}			
+
+			return buildInfo.Parent;
+		}
+
 		public static IBuildContext BuildAssociationSelectMany1(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
 		{
 			var elementType = descriptor.GetElementType(builder.MappingSchema);
@@ -249,17 +283,17 @@ namespace LinqToDB.Linq.Builder
 
 			IBuildContext context;
 
-			if (buildInfo.SelectQuery.From.Tables.Count > 0 && buildInfo.Parent != null)
-			{
-				context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
-
-				var tableSource = buildInfo.SelectQuery.From.Tables.Last();
-				var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-					null, false, null);
-				tableSource.Joins.Add(join.JoinedTable);
-				context = new AssociationContext(builder, buildInfo.Parent, context);
-			}
-			else
+			// if (buildInfo.SelectQuery.From.Tables.Count > 0 && buildInfo.Parent != null)
+			// {
+			// 	context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
+			//
+			// 	var tableSource = buildInfo.SelectQuery.From.Tables.Last();
+			// 	var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
+			// 		null, false, null);
+			// 	tableSource.Joins.Add(join.JoinedTable);
+			// 	context = new AssociationContext(builder, buildInfo.Parent, context);
+			// }
+			// else
 			{
 				context = builder.BuildSequence(new BuildInfo(buildInfo, body));
 			}
