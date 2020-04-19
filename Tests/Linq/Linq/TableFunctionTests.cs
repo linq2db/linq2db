@@ -8,13 +8,14 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.DataProvider.SqlServer;
 	using Model;
 
 	[TestFixture]
 	public class TableFunctionTests : TestBase
 	{
 		[Test]
-		public void Func1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void Func1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -27,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Func2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void Func2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -58,7 +59,7 @@ namespace Tests.Linq
 			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -71,7 +72,7 @@ namespace Tests.Linq
 			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -158,14 +159,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeTextTable1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>("[Description]", "sweetest candy bread and dry meat")
+					join t in db.FreeTextTable<Northwind.Category,int>(db.Category, c => c.Description, "sweetest candy bread and dry meat")
 					on c.CategoryID equals t.Key
 					select c;
 
@@ -173,28 +174,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeTextTable2([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
-					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>(c1 => c1.Description, "sweetest candy bread and dry meat")
-					on c.CategoryID equals t.Key
-					select c;
-
-				q.ToList();
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void FreeTextTable3([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from t in db.FreeTextTable<Northwind.Category,int>(c => c.Description, "sweetest candy bread and dry meat")
+					from t in db.FreeTextTable<Northwind.Category,int>(db.Category, c => c.Description, "sweetest candy bread and dry meat")
 					join c in db.Category
 					on t.Key equals c.CategoryID
 					select c;
@@ -203,15 +189,14 @@ namespace Tests.Linq
 			}
 		}
 
-#pragma warning disable CS0618
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(t.Description, "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", t.Description)
 					select t;
 
 				var list = q.ToList();
@@ -220,14 +205,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText2([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(Sql.AllColumns(), "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", Sql.AllColumns())
 					select t;
 
 				var list = q.ToList();
@@ -236,14 +221,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText3([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
-					where Sql.FreeText(t, "sweet")
+					where Sql.Ext.SqlServer().FreeText("sweet", t)
 					select t;
 
 				var list = q.ToList();
@@ -252,14 +237,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void FreeText4([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
-					where !Sql.FreeText(t, "sweet")
+					where !Sql.Ext.SqlServer().FreeText("sweet", t)
 					select t;
 
 				var list = q.ToList();
@@ -267,7 +252,6 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
-#pragma warning restore CS0618
 
 		[Test]
 		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)
@@ -282,14 +266,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Product
-					join c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
+					join c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
@@ -297,14 +281,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test, Category(TestCategory.FTS)]
 		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q = 
 					from t in db.Product
-					from c in db.FreeTextTable<Northwind.Category, int>("Description", "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
@@ -312,15 +296,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
-		[ActiveIssue(386)]
+		[Test, Category(TestCategory.FTS)]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q 
 					= from t in db.Product
-					from c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();

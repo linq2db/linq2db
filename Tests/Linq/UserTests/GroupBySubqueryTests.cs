@@ -21,19 +21,19 @@ namespace Tests.UserTests
 			public int? Field3 { get; set; }
 
 			[Association(ThisKey = "Field1", OtherKey = "Field1", CanBeNull = false)]
-			public Table3 Ref1 { get; set; }
+			public Table3 Ref1 { get; set; } = null!;
 
 			[Association(ThisKey = "Field3", OtherKey = "Field3", CanBeNull = true)]
-			public Table5 Ref2 { get; set; }
+			public Table5? Ref2 { get; set; }
 
 			[Association(ThisKey = "Field2", OtherKey = "Field2", CanBeNull = true)]
-			public Table2 Ref3 { get; set; }
+			public Table2? Ref3 { get; set; }
 		}
 
 		class Table2
 		{
-			public int    Field2 { get; set; }
-			public string Field4 { get; set; }
+			public int     Field2 { get; set; }
+			public string? Field4 { get; set; }
 		}
 
 		class Table3
@@ -41,8 +41,8 @@ namespace Tests.UserTests
 			public int  Field5 { get; set; }
 			public long Field1 { get; set; }
 
-			[AssociationAttribute(ThisKey = "Field5", OtherKey = "Field5", CanBeNull = false)]
-			public Table4 Ref4 { get; set; }
+			[Association(ThisKey = "Field5", OtherKey = "Field5", CanBeNull = false)]
+			public Table4 Ref4 { get; set; } = null!;
 		}
 
 		class Table4
@@ -58,13 +58,13 @@ namespace Tests.UserTests
 			public int  Field7 { get; set; }
 
 			[Association(ThisKey = "Field7", OtherKey = "Field7", CanBeNull = true)]
-			public Table6 Ref5 { get; set; }
+			public Table6? Ref5 { get; set; }
 		}
 
 		public class Table6
 		{
-			public int    Field7 { get; set; }
-			public string Field8 { get; set; }
+			public int     Field7 { get; set; }
+			public string? Field8 { get; set; }
 		}
 
 		[Test]
@@ -78,8 +78,8 @@ namespace Tests.UserTests
 					select new
 					{
 						t1.Ref1.Ref4.Field6, 
-						t1.Ref3.Field4,
-						Field1 = t1.Ref2.Ref5.Field8 ?? string.Empty
+						t1.Ref3!.Field4,
+						Field1 = t1.Ref2!.Ref5!.Field8 ?? string.Empty
 					}
 				).Distinct();
 

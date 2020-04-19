@@ -80,7 +80,7 @@ namespace Tests.Linq
 		[Test]
 		public void CoalesceNew([DataSources] string context)
 		{
-			Child ch = null;
+			Child? ch = null;
 
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -152,17 +152,17 @@ namespace Tests.Linq
 					where
 						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
 							false :
-							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo"))!.Value
 					select p,
 					from p in db.Person
 					where
 						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
 							false :
-							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo"))!.Value
 					select p);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +172,7 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -186,15 +186,16 @@ namespace Tests.Linq
 		{
 			class Entity
 			{
-				public Test TestField = null;
+				public Test? TestField = null;
 			}
 
-			public Test TestClosure(ITestDataContext db)
+			public Test? TestClosure(ITestDataContext db)
 			{
 				return db.Person.Select(_ => new Entity { TestField = this }).First().TestField;
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * generated for query, which doesn't use any column data")]
 		[Test]
 		public void ClosureTest([DataSources] string context)
 		{
@@ -524,12 +525,12 @@ namespace Tests.Linq
 		public class PersonTest
 		{
 			[Column("FirstName"), PrimaryKey]
-			public string ID;
+			public string ID = null!;
 		}
 
 		int _i;
 
-		string GetCustKey()
+		string? GetCustKey()
 		{
 			return ++_i % 2 == 0 ? "John" : null;
 		}
@@ -560,8 +561,8 @@ namespace Tests.Linq
 
 		class User
 		{
-			public string FirstName;
-			public int?   Status;
+			public string? FirstName;
+			public int?    Status;
 		}
 
 		// https://github.com/linq2db/linq2db/issues/191
@@ -570,13 +571,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				string firstName = null;
-				int?   status    = null;
+				string? firstName = null;
+				int?    status    = null;
 
 				var str = db.GetTable<User>()
 					.Where(user =>
 						user.Status == status &&
-						(string.IsNullOrEmpty(firstName) || user.FirstName.Contains(firstName)))
+						(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
 					.ToString();
 
 				Debug.WriteLine(str);
@@ -591,7 +592,7 @@ namespace Tests.Linq
 			return db.GetTable<Person>();
 		}
 
-		public static bool IsNullOrEmpty(this string value)
+		public static bool IsNullOrEmpty(this string? value)
 		{
 			return string.IsNullOrEmpty(value);
 		}

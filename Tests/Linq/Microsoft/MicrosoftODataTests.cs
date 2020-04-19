@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET46
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
 using NUnit.Framework;
 
-namespace Tests.Microsoft
+namespace Tests.OData.Microsoft
 {
 	[TestFixture]
 	public class MicrosoftODataTests : TestBase
@@ -25,12 +26,12 @@ namespace Tests.Microsoft
 		[Table(Name = "odata_person")]
 		public class PersonClass
 		{
-			[Column("Name"), PrimaryKey]
-			public string Name { get; set; }
+			[Column("Name", Length = 50, CanBeNull = false), PrimaryKey]
+			public string Name { get; set; } = null!;
 			[Column("YearsExperience"), NotNull]
 			public int YearsExperience { get; set; }
 			[Column("Title"), NotNull]
-			public string Title { get; set; }
+			public string Title { get; set; } = null!;
 		}
 
 		private static MethodInfo _toArray = MemberHelper.MethodOf<IQueryable<int>>(q => q.ToArray()).GetGenericMethodDefinition();
@@ -43,7 +44,26 @@ namespace Tests.Microsoft
 		}
 
 		[Test]
-		public void SelectViaOData([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void SelectViaOData(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[Values(
+			 "/odata/PersonClass?$apply=groupby((Title),aggregate(YearsExperience%20with%20sum%20as%20TotalExperience))",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as TotalExperience))&$orderby=TotalExperience",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))&$orderby=Test",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))&$orderby=Test",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))&$orderby=Test",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))&$orderby=Test",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as Test))",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))",
+			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))",
+			"/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$orderby=NumPeople",
+			"/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$count=true",
+			"/odata/People?$apply=filter(Title eq 'Engineer' or Title eq 'QA')/groupby((Title),aggregate($count as NumPeople))&$count=true"
+			//"/odata/People?$apply=groupby((Office/Name),aggregate($count as NumPeople))&$count=true",
+			//"/odata/People?$apply=filter(Title eq 'QA')/groupby((Office/Id,Office/Name),aggregate($count as NumPeople))&$count=true&$orderby=NumPeople desc"
+			)] string oDataQuery)
 		{
 			var modelBuilder = new ODataModelBuilder();
 			var person = modelBuilder.EntityType<PersonClass>();
@@ -64,8 +84,7 @@ namespace Tests.Microsoft
 				{
 					Method = HttpMethod.Get,
 					RequestUri =
-						new Uri(
-							"http://localhost:15580/odata/PersonClass?$apply=groupby((Title),aggregate(YearsExperience%20with%20sum%20as%20TotalExperience))")
+						new Uri("http://localhost:15580" + oDataQuery)
 				};
 
 				var config = new HttpConfiguration();
@@ -86,13 +105,13 @@ namespace Tests.Microsoft
 			return new []{
 				new PersonClass
 				{
-					Title = "Common Title",
+					Title = "Engineer",
 					Name = "N1",
 					YearsExperience = 3,
 				},
 				new PersonClass
 				{
-					Title = "Common Title",
+					Title = "Engineer",
 					Name = "N2",
 					YearsExperience = 4,
 				}
@@ -101,15 +120,15 @@ namespace Tests.Microsoft
 
 		class NamedProperty
 		{
-			public string Name { get; set; }
-			public object Value { get; set; }
+			public string  Name  { get; set; } = null!;
+			public object? Value { get; set; }
 
 		}
 
 		class GroupByWrapper
 		{
-			public virtual AggregationPropertyContainer GroupByContainer { get; set; }
-			public virtual AggregationPropertyContainer Container { get; set; }
+			public virtual AggregationPropertyContainer GroupByContainer { get; set; } = null!;
+			public virtual AggregationPropertyContainer Container { get; set; } = null!;
 		}
 
 		class AggregationWrapper : GroupByWrapper
@@ -125,7 +144,7 @@ namespace Tests.Microsoft
 
 		class FlatteningWrapper<T>: GroupByWrapper
 		{
-			public T Source { get; set; }
+			public T Source { get; set; } = default!;
 		}
 
 		[Test]
@@ -162,7 +181,7 @@ namespace Tests.Microsoft
 							Container = new AggregationPropertyContainer
 							{
 								Name = "TotalExperience",
-								Value =  ((IEnumerable<FlatteningWrapper<PersonClass>>)it).Sum(it2 => (int)it2.GroupByContainer.Value)
+								Value =  ((IEnumerable<FlatteningWrapper<PersonClass>>)it).Sum(it2 => (int)it2.GroupByContainer.Value!)
 							}
 						});
 
@@ -172,5 +191,75 @@ namespace Tests.Microsoft
 			}
 		}
 
+		[Test]
+		public void SelectPure2([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var testData = GenerateTestData();
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData))
+			{
+
+				var query = table
+					.Select(
+						it => new FlatteningWrapper<PersonClass>
+						{
+							Source = it,
+							GroupByContainer = new AggregationPropertyContainer.LastInChain
+							{
+								Name = "Property0",
+								Value = it.YearsExperience
+							}
+						})
+					.GroupBy(
+						it => new GroupByWrapper
+						{
+							GroupByContainer = new AggregationPropertyContainer.LastInChain
+							{
+								Name = "Title",
+								Value = (it.Source == null) ? null : it.Source.Title
+							}
+						})
+					.Select(
+						it => new AggregationWrapper
+						{
+							GroupByContainer = it.Key.GroupByContainer,
+							Container = new AggregationPropertyContainer.LastInChain
+							{
+								Name = "Test",
+								// Value = ((IEnumerable<FlatteningWrapper<MicrosoftODataTests.PersonClass>>)it)
+								Value = it
+									.Select(it2 => (int)it2.GroupByContainer.Value!)
+									.Distinct()
+									.LongCount()
+							}
+						});
+
+				var materialized = query.ToArray();
+
+				Assert.That(materialized.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void SelectPure2Simplified([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var testData = GenerateTestData();
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from it in table
+					group it by new { Name = "Title", it.Title }
+					into g
+					select new
+					{
+						Title = g.Key.Title,
+						Test = g.Select(_ => _.Title).Distinct().LongCount()
+					};
+
+				var materialized = query.ToArray();
+			}
+		}
+
 	}
 }
+#endif

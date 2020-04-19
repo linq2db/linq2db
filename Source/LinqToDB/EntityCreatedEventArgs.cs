@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// Provides data for the <see cref="IEntityServices.OnEntityCreated"/> event.
@@ -10,11 +8,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Get or sets the entity that created.
 		/// </summary>
-		public object       Entity      { get; set; }
+		public object       Entity      { get; set; } = null!;
 
 		/// <summary>
 		/// DataContext that created a new entity.
 		/// </summary>
-		public IDataContext DataContext { get; set; }
+		public IDataContext DataContext { get; set; } = null!;
 	}
 }

@@ -10,7 +10,7 @@ namespace LinqToDB.Common.Internal.Cache
         private long? _sizeLimit;
         private double _compactionPercentage = 0.05;
 
-        public ISystemClock Clock { get; set; }
+        public ISystemClock? Clock { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum length of time between successive scans for expired items.

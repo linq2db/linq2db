@@ -1,0 +1,13 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<LinqToDBT4DB2TemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4DB2TemplatesDirectory>
+		<LinqToDBT4DB2ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4DB2ToolsDirectory>
+		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="IBM.Data.DB2.Core" Version="1.3.0.100"  Condition=" '$(OS)' == 'Windows_NT' " />
+		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="1.3.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="1.3.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+	</ItemGroup>
+</Project>

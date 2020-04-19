@@ -295,8 +295,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					dd.Customer.Where(c => !c.Address.Equals(null)),
-					db.Customer.Where(c => !c.Address.Equals(null)));
+					dd.Customer.Where(c => !c.Address!.Equals(null)),
+					db.Customer.Where(c => !c.Address!.Equals(null)));
 			}
 		}
 
@@ -304,7 +304,7 @@ namespace Tests.Linq
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -320,7 +320,7 @@ namespace Tests.Linq
 		public void NewGuid2(
 			[DataSources(
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.Access)]
@@ -491,13 +491,9 @@ namespace Tests.Linq
 				if (!(builder.GetExpression("src") is SqlField field))
 					throw new InvalidOperationException("Can not get table");
 
-				var sqlTable = (SqlTable)field.Table;
+				var sqlTable = (SqlTable)field.Table!;
 
-				var newField = new SqlField
-				{
-					Name  = sqlTable.PhysicalName,
-					Table = sqlTable
-				};
+				var newField = new SqlField(sqlTable, sqlTable.PhysicalName!);
 
 				builder.AddParameter("table_field", newField);
 			}

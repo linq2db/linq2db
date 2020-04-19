@@ -13,12 +13,12 @@ namespace LinqToDB.Linq
 	{
 		public class Expressor<T>
 		{
-			public static FieldInfo FieldOf(Expression<Func<T,object>> func)
+			public static FieldInfo FieldOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.FieldOf(func);
 			}
 
-			public static MethodInfo MethodOf(Expression<Func<T,object>> func)
+			public static MethodInfo MethodOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.MethodOf(func);
 			}
@@ -115,7 +115,7 @@ namespace LinqToDB.Linq
 				return ((MethodCallExpression)((UnaryExpression)func.Body).Operand).Method;
 			}
 
-			public static MethodInfo Item = IndexerExpressor(c => c[0]);
+			public static MethodInfo Item = IndexerExpressor(c => c[0]!);
 		}
 
 		public class MemberAssignmentBind : Expressor<MemberAssignment>
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq
 		{
 			public class String : Expressor<string>
 			{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 				public static MethodInfo Like11 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", ""));
 				public static MethodInfo Like12 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", "", ' '));
 #endif

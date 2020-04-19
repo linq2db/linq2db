@@ -15,18 +15,22 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertOrReplace<T>
 		{
-			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(
+				IDataContext dataContext, EntityDescriptor descriptor, T obj,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
+				Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor param = null;
+				ParameterAccessor? param = null;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
 				insertOrUpdateStatement.Insert.Into  = sqlTable;
@@ -45,7 +49,7 @@ namespace LinqToDB.Linq
 				//
 				foreach (var field in sqlTable.Fields.Select(f => f.Value))
 				{
-					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
+					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
 						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
@@ -67,7 +71,7 @@ namespace LinqToDB.Linq
 				// Update.
 				//
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update))
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update))
 				                     .Except(keys).ToList();
 
 				if (keys.Count == 0)
@@ -116,50 +120,55 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schema)
+			public static int Query(
+				IDataContext dataContext, T obj,
+				string? tableName, string? serverName, string? databaseName, string? schema)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type },
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, type },
 					o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type);
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type);
 					});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
+				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName, string databaseName, string schema, CancellationToken token)
+			public static async Task<int> QueryAsync(
+				IDataContext dataContext, T obj,
+				string? tableName, string? serverName, string? databaseName, string? schema,
+				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type },
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, type },
 					o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type);
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schema, type);
 					});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (int)result;
+				return (int)result!;
 			}
 		}
 
@@ -181,10 +190,8 @@ namespace LinqToDB.Linq
 						(
 							p.Expression,
 							p.Accessor,
-							p.DataTypeAccessor,
-							p.DbTypeAccessor,
-							p.SizeAccessor,
-							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
+							p.DbDataTypeAccessor,
+							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
 						))
 					.Where(p => p.SqlParameter != null)
 					.ToList(),
@@ -193,7 +200,7 @@ namespace LinqToDB.Linq
 			var keys = firstStatement.Update.Keys;
 
 			foreach (var key in keys)
-				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
+				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
 
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

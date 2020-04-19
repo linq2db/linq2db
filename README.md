@@ -1,9 +1,12 @@
-# LINQ to DB
+## LINQ to DB
 
-[![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
-[![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
+<img align="right" alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" >
 
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
+[![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
+
+[![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/3/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
+
+[![StackOverflow questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -13,13 +16,18 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
+
+Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
+
+
 ## Standout Features
 
  - Rich Querying API:
    - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
    - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
    - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
-   - [Windowing/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+   - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
    - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
  - Extensibility:
    - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
@@ -28,33 +36,35 @@ Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](htt
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
 
-T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md).
+[Release Notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
 
-[Releases and Roadmap](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap).
+### Related linq2db and 3rd-party projects
+- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
+- [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
+- [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
+- [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
+- [ASP.NET CORE 3 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-3)
+- [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
+
+
+Notable open-source users:
+- [nopCommerce](https://github.com/nopSolutions/nopCommerce) (starting from v4.30) - popular open-source e-commerce solution
+- [OdataToEntity](https://github.com/voronov-maxim/OdataToEntity) - library to create OData service from database context
+- [SunEngine](https://github.com/sunengine/SunEngine) - site, blog and forum engine
+
+Unmantained projects:
+- [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using linq2db
+- [IdentityServer4.LinqToDB](https://github.com/linq2db/IdentityServer4.LinqToDB) - IdentityServer4 persistence layer using linq2db
+
 
 ## How to help the project
 
 No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
 
-## Project Build Status
-
---------------------
-| |Appveyor|Travis
------|-------|--------
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
-|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
-
-## Feeds
-
-* NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
-* MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
-  * V2 `https://www.myget.org/F/linq2db/api/v2`
-  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
-
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db` - .NET & .NET Core
+* `Install-Package linq2db`
 
 ## Configuring connection strings
 
@@ -520,40 +530,43 @@ using (var transaction = new TransactionScope())
 
 ## MiniProfiler
 
-If you would like to use MiniProfiler from StackExchange you'd need to wrap ProfiledDbConnection around our regular DataConnection.
+If you would like to use [MiniProfiler](https://github.com/MiniProfiler/dotnet) or other profiling tool that wraps ADO.NET provider classes, you need to configure our regular DataConnection to use wrapped connection.
 
 ```c#
+// example of SQL Server-backed data connection with MiniProfiler enabled for debug builds
 public class DbDataContext : DataConnection
 {
+// let's use profiler only for debug builds
 #if !DEBUG
-  public DbDataContext() : base("Northwind") { }
+  public DbDataContext() : base("Northwind")
+  {
+    // this is important part:
+    // here we tell linq2db how to access underlying ADO.NET classes of used provider
+    // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
+    // which could lead to loss or unavailability of some functionality when profiled connection enabled
+    MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
+    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
+    MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
+    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+  }
 #else
   public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
 
   private static IDataProvider GetDataProvider()
   {
-    // you can move this line to other place, but it should be
-    // always set before LINQ to DB provider instance creation
-    LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
-
-    return new SqlServerDataProvider("", SqlServerVersion.v2012);
+     // create provider instance (SQL Server 2012 provider in our case)
+     return new SqlServerDataProvider("", SqlServerVersion.v2012);
   }
 
   private static IDbConnection GetConnection()
   {
-    var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
-    return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+     // create provider-specific connection instance. SqlConnection in our case
+     var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+
+     // wrap it by profiler's connection implementation
+     return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
   }
 #endif
-}
-```
-
-This assumes that you only want to use MiniProfiler while in DEBUG mode and that you are using SQL Server for your database. If you're using a different database you would need to change GetDataProvider() to return the appropriate IDataProvider. For example for MySql you would use:
-
-```c#
-private static IDataProvider GetDataProvider()
-{
-  return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
 ```
 

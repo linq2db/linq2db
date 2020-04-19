@@ -9,6 +9,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
+	[Category(TestCategory.FTS)]
 	public partial class FullTextTests : TestBase
 	{
 		// TODO: FTS5 tests not executed against database due to missing support in used providers
@@ -16,9 +17,9 @@ namespace Tests.Linq
 		#region Mappings
 		public class FtsTable
 		{
-			public string text1 { get; set; }
+			public string? text1 { get; set; }
 
-			public string text2 { get; set; }
+			public string? text2 { get; set; }
 		}
 
 		public enum SQLiteFTS
@@ -43,7 +44,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region MATCH
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchByTable([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -65,7 +66,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchByTableSubQueryOptimizationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -80,7 +81,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchByColumnSubQueryOptimizationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -95,7 +96,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchByColumn([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -117,7 +118,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void MatchFromTable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -129,7 +130,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void RowId([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -151,7 +152,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Rank([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -164,7 +165,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Offsets([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -183,7 +184,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3MatchInfo([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -202,7 +203,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3MatchInfoWithFormat([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -221,7 +222,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -235,7 +236,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -249,7 +250,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet3([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -263,7 +264,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet4([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -277,7 +278,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet5([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -291,7 +292,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3Snippet6([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
@@ -305,7 +306,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5bm25([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -317,7 +318,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5bm25WithWeights([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -329,7 +330,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5Highlight([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -341,7 +342,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5Snippet([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
@@ -353,7 +354,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3CommandOptimize([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = new TestDataConnection(context))
@@ -368,7 +369,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = new TestDataConnection(context))
@@ -383,7 +384,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3CommandIntegrityCheck([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = new TestDataConnection(context))
@@ -398,7 +399,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = new TestDataConnection(context))
@@ -413,7 +414,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts3CommandAutoMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = new TestDataConnection(context))
@@ -428,7 +429,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandAutoMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -450,7 +451,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandCrisisMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -472,7 +473,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandDelete([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -496,6 +497,7 @@ namespace Tests.Linq
 				finally
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)", db.LastQuery);
+					
 					Assert.AreEqual(2, db.Command.Parameters.Count);
 					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]).Value);
 					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]).Value);
@@ -503,7 +505,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandDeleteAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -525,7 +527,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandIntegrityCheck([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -547,7 +549,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -569,7 +571,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandOptimize([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -591,7 +593,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandPgsz([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -613,7 +615,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandRank([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -631,13 +633,14 @@ namespace Tests.Linq
 				finally
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('rank', @rank)", db.LastQuery);
+
 					Assert.AreEqual(1, db.Command.Parameters.Count);
 					Assert.AreEqual("strange('function\")", ((DbParameter)db.Command.Parameters[0]).Value);
 				}
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -659,7 +662,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText")]
+		[Test]
 		public void Fts5CommandUserMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))

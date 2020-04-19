@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Common
 {
@@ -12,9 +12,10 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets value, stored in option.
 		/// </summary>
+		[AllowNull]
 		public readonly T Value;
 
-		Option(T value)
+		Option([AllowNull] T value)
 		{
 			Value = value;
 		}
@@ -48,6 +49,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets <see cref="None"/> value for option.
 		/// </summary>
-		public static readonly Option<T> None = new Option<T>(default(T));
+		public static readonly Option<T> None = new Option<T>(default);
 	}
 }

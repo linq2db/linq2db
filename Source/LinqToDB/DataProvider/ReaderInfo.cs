@@ -6,33 +6,41 @@ namespace LinqToDB.DataProvider
 	{
 		int _hashCode;
 
-		private Type _toType;
-		public  Type  ToType
+		private Type? _toType;
+		public  Type?  ToType
 		{
 			get { return _toType; }
 			set { _toType = value; CalcHashCode(); }
 		}
 
-		private Type _fieldType;
-		public  Type  FieldType
+		private Type? _fieldType;
+		public  Type?  FieldType
 		{
 			get { return _fieldType; }
 			set { _fieldType = value; CalcHashCode(); }
 		}
 
-		private Type _providerFieldType;
-		public  Type  ProviderFieldType
+		private Type? _providerFieldType;
+		public  Type?  ProviderFieldType
 		{
 			get { return _providerFieldType; }
 			set { _providerFieldType = value; CalcHashCode(); }
 		}
 
-		private string _dataTypeName;
-		public  string  DataTypeName
+		private string? _dataTypeName;
+		public  string?  DataTypeName
 		{
 			get { return _dataTypeName; }
 			set { _dataTypeName = value; CalcHashCode(); }
 		}
+
+		private Type? _dataReaderType;
+		public Type? DataReaderType
+		{
+			get { return _dataReaderType; }
+			set { _dataReaderType = value; CalcHashCode(); }
+		}
+
 
 		void CalcHashCode()
 		{
@@ -43,6 +51,7 @@ namespace LinqToDB.DataProvider
 				_hashCode = _hashCode * -1521134295 + (FieldType         == null ? 0 : FieldType.        GetHashCode());
 				_hashCode = _hashCode * -1521134295 + (ProviderFieldType == null ? 0 : ProviderFieldType.GetHashCode());
 				_hashCode = _hashCode * -1521134295 + (DataTypeName      == null ? 0 : DataTypeName.     GetHashCode());
+				_hashCode = _hashCode * -1521134295 + (DataReaderType    == null ? 0 : DataReaderType.   GetHashCode());
 			}
 		}
 
@@ -62,7 +71,8 @@ namespace LinqToDB.DataProvider
 				ToType            == other.ToType &&
 				FieldType         == other.FieldType &&
 				ProviderFieldType == other.ProviderFieldType &&
-				DataTypeName      == other.DataTypeName
+				DataTypeName      == other.DataTypeName &&
+				DataReaderType    == other.DataReaderType
 				;
 		}
 	}

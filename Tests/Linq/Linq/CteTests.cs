@@ -24,7 +24,8 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle 
-			//ProviderName.Informix,
+			// TODO: v14
+			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
@@ -137,11 +138,11 @@ namespace Tests.Linq
 			{
 				var cteQuery =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select new
 					{
 						p.ProductName,
-						p.Category.CategoryName,
+						p.Category!.CategoryName,
 						p.UnitPrice
 					};
 
@@ -169,11 +170,11 @@ namespace Tests.Linq
 			{
 				var cteQuery =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select new
 					{
 						p.ProductName,
-						p.Category.CategoryName,
+						p.Category!.CategoryName,
 						p.UnitPrice
 					};
 
@@ -220,7 +221,7 @@ namespace Tests.Linq
 
 				var productsOverTenDollars =
 					from p in db.Product
-					where p.UnitPrice.Value > 10
+					where p.UnitPrice!.Value > 10
 					select p;
 
 				var result =
@@ -309,8 +310,8 @@ namespace Tests.Linq
 		class EmployeeHierarchyCTE
 		{
 			public int EmployeeID;
-			public string LastName;
-			public string FirstName;
+			public string LastName  = null!;
+			public string FirstName = null!;
 			public int? ReportsTo;
 			public int HierarchyLevel;
 		}
@@ -467,7 +468,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((CteDMLTests)obj);
 			}
 
@@ -577,7 +578,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -831,7 +832,7 @@ namespace Tests.Linq
 
 		private class TestWrapper
 		{
-			public Child Child { get; set; }
+			public Child? Child { get; set; }
 
 			protected bool Equals(TestWrapper other)
 			{
@@ -842,7 +843,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				var result = Equals((TestWrapper)obj);
 				return result;
 			}
@@ -855,8 +856,8 @@ namespace Tests.Linq
 
 		private class TestWrapper2
 		{
-			public Child Child   { get; set; }
-			public Parent Parent { get; set; }
+			public Child?  Child   { get; set; }
+			public Parent? Parent { get; set; }
 
 			protected bool Equals(TestWrapper2 other)
 			{
@@ -867,7 +868,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((TestWrapper2)obj);
 			}
 
@@ -894,14 +895,14 @@ namespace Tests.Linq
 				var cte1 = cteQuery.AsCte();
 
 				var query = from p in db.Parent
-					join c in cte1 on p.ParentID equals c.Child.ParentID
+					join c in cte1 on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
 				var result = query.ToArray();
 
 				var expected =
 					from p in db.Parent
-					join c in cteQuery on p.ParentID equals c.Child.ParentID
+					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
 				Assert.AreEqual(expected, result);
@@ -1010,7 +1011,7 @@ namespace Tests.Linq
 
 		class OrgGroupDepthWrapper
 		{
-			public OrgGroup OrgGroup { get; set; }
+			public OrgGroup? OrgGroup { get; set; }
 			public int Depth { get; set; }
 		}
 
@@ -1019,7 +1020,7 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int ParentId { get; set; }
-			public string GroupName { get; set; }
+			public string? GroupName { get; set; }
 		}
 
 		[ActiveIssue(1644)]
@@ -1040,7 +1041,7 @@ namespace Tests.Linq
 				            };
 
 				        var childQuery = from child in queryable
-				            from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
+				            from parent in previous.InnerJoin(parent => parent.OrgGroup!.Id == child.ParentId)
 				            orderby parent.Depth + 1, child.GroupName
 				            select new OrgGroupDepthWrapper
 				            {
@@ -1060,17 +1061,17 @@ namespace Tests.Linq
 
 		class NestingA
 		{
-			public string Property1 { get; set; }
+			public string? Property1 { get; set; }
 		}
 
 		class NestingB : NestingA
 		{
-			public string Property2 { get; set; }
+			public string? Property2 { get; set; }
 		}
 
 		class NestingC : NestingB
 		{
-			public string Property3 { get; set; }
+			public string? Property3 { get; set; }
 		}
 
 		[Test]

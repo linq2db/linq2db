@@ -8,29 +8,30 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	using Linq;
+	using LinqToDB.Common.Internal;
 	using SqlProvider;
 
 	public abstract partial class RemoteDataContextBase
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters);
+			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
 		class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters)
-				: base(query, queryNumber, dataContext, expression, parameters)
+			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataContext, expression, parameters, preambles)
 			{
 				_dataContext = dataContext;
 			}
 
 			readonly RemoteDataContextBase _dataContext;
 
-			ILinqClient _client;
+			ILinqClient? _client;
 
-			public override Expression MapperExpression { get; set; }
+			public override Expression? MapperExpression { get; set; }
 
 			protected override void SetQuery()
 			{
@@ -40,80 +41,82 @@ namespace LinqToDB.ServiceModel
 
 			public override string GetSqlText()
 			{
-				SetCommand(false);
-
-				var query      = Query.Queries[QueryNumber];
-				var sqlBuilder = DataContext.CreateSqlProvider();
-				var sb         = new StringBuilder();
-
-				sb
-					.Append("-- ")
-					.Append("ServiceModel")
-					.Append(' ')
-					.Append(DataContext.ContextID)
-					.Append(' ')
-					.Append(sqlBuilder.Name)
-					.AppendLine();
-
-				if (query.Statement.Parameters != null && query.Statement.Parameters.Count > 0)
+				lock (Query)
 				{
-					foreach (var p in query.Statement.Parameters)
-					{
-						var value = p.Value;
+					SetCommand(false);
 
-						sb
-							.Append("-- DECLARE ")
-							.Append(p.Name)
-							.Append(' ')
-							.Append(value == null ? p.SystemType.ToString() : value.GetType().Name)
-							.AppendLine();
+					var query = Query.Queries[QueryNumber];
+					var sqlBuilder = DataContext.CreateSqlProvider();
+					var sb = new StringBuilder();
+
+					sb
+						.Append("-- ")
+						.Append("ServiceModel")
+						.Append(' ')
+						.Append(DataContext.ContextID)
+						.Append(' ')
+						.Append(sqlBuilder.Name)
+						.AppendLine();
+
+					if (query.Statement.Parameters != null && query.Statement.Parameters.Count > 0)
+					{
+						foreach (var p in query.Statement.Parameters)
+						{
+							var value = p.Value;
+
+							sb
+								.Append("-- DECLARE ")
+								.Append(p.Name)
+								.Append(' ')
+								.Append(value == null ? p.Type.SystemType.ToString() : value.GetType().Name)
+								.AppendLine();
+						}
+
+						sb.AppendLine();
+
+						foreach (var p in query.Statement.Parameters)
+						{
+							var value = p.Value;
+
+							if (value is string || value is char)
+								value = "'" + value.ToString().Replace("'", "''") + "'";
+
+							sb
+								.Append("-- SET ")
+								.Append(p.Name)
+								.Append(" = ")
+								.Append(value)
+								.AppendLine();
+						}
+
+						sb.AppendLine();
 					}
 
-					sb.AppendLine();
+					var cc = sqlBuilder.CommandCount(query.Statement);
 
-					foreach (var p in query.Statement.Parameters)
+					for (var i = 0; i < cc; i++)
 					{
-						var value = p.Value;
+						sqlBuilder.BuildSql(i, query.Statement, sb);
 
-						if (value is string || value is char)
-							value = "'" + value.ToString().Replace("'", "''") + "'";
+						if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
+						{
+							var sql = sb.ToString();
 
-						sb
-							.Append("-- SET ")
-							.Append(p.Name)
-							.Append(" = ")
-							.Append(value)
-							.AppendLine();
+							sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
+
+							sb = new StringBuilder(sql);
+						}
 					}
 
-					sb.AppendLine();
+					return sb.ToString();
 				}
-
-				var cc = sqlBuilder.CommandCount(query.Statement);
-
-				for (var i = 0; i < cc; i++)
-				{
-					sqlBuilder.BuildSql(i, query.Statement, sb);
-
-					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
-					{
-						var sql = sb.ToString();
-
-						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
-
-						sb = new StringBuilder(sql);
-					}
-				}
-
-				return sb.ToString();
 			}
 
 			#endregion
 
 			public override void Dispose()
 			{
-				var disposable = _client as IDisposable;
-				if (disposable != null)
+				if (_client is IDisposable disposable)
 					disposable.Dispose();
 
 				base.Dispose();
@@ -121,20 +124,27 @@ namespace LinqToDB.ServiceModel
 
 			public override int ExecuteNonQuery()
 			{
-				SetCommand(true);
+				string data;
 
-				var queryContext = Query.Queries[QueryNumber];
+				// locks are bad, m'kay?
+				lock (Query)
+				{
+					SetCommand(true);
 
-				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
+					var queryContext = Query.Queries[QueryNumber];
 
-				var data = LinqServiceSerializer.Serialize(
-					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-					QueryHints);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						QueryHints);
+				}
 
 				if (_dataContext._batchCounter > 0)
 				{
-					_dataContext._queryBatch.Add(data);
+					_dataContext._queryBatch!.Add(data);
 					return -1;
 				}
 
@@ -143,50 +153,63 @@ namespace LinqToDB.ServiceModel
 				return _client.ExecuteNonQuery(_dataContext.Configuration, data);
 			}
 
-			public override object ExecuteScalar()
+			public override object? ExecuteScalar()
 			{
-				SetCommand(true);
-
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				var queryContext = Query.Queries[QueryNumber];
+				string data;
+
+				lock (Query)
+				{
+					SetCommand(true);
+
+					var queryContext = Query.Queries[QueryNumber];
+
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints);
+				}
 
 				_client = _dataContext.GetClient();
 
-				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
-
-				return _client.ExecuteScalar(
-					_dataContext.Configuration,
-					LinqServiceSerializer.Serialize(
-						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
+				return _client.ExecuteScalar(_dataContext.Configuration, data);
 			}
 
 			public override IDataReader ExecuteReader()
 			{
 				_dataContext.ThrowOnDisposed();
 
-				SetCommand(true);
-
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				var queryContext = Query.Queries[QueryNumber];
+				string data;
+
+				lock (Query)
+				{
+					SetCommand(true);
+
+					var queryContext = Query.Queries[QueryNumber];
+
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						QueryHints);
+				}
 
 				_client = _dataContext.GetClient();
 
-				var q   = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
-				var ret = _client.ExecuteReader(
-					_dataContext.Configuration,
-					LinqServiceSerializer.Serialize(
-						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-						QueryHints));
+				var ret = _client.ExecuteReader(_dataContext.Configuration, data);
 
-				var result = LinqServiceSerializer.DeserializeResult(ret);
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 
-				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
+				return new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
 			}
 
 			class DataReaderAsync : IDataReaderAsync
@@ -197,12 +220,6 @@ namespace LinqToDB.ServiceModel
 				}
 
 				public IDataReader DataReader { get; }
-
-				static Task<bool> _trueTask;
-				static Task<bool> _falseTask;
-
-				static Task<bool> TrueTask  => _trueTask  ?? (_trueTask  = Task.FromResult(true));
-				static Task<bool> FalseTask => _falseTask ?? (_falseTask = Task.FromResult(false));
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
@@ -215,7 +232,7 @@ namespace LinqToDB.ServiceModel
 
 					try
 					{
-						return DataReader.Read() ? TrueTask : FalseTask;
+						return DataReader.Read() ? TaskCache.True : TaskCache.False;
 					}
 					catch (Exception ex)
 					{
@@ -236,67 +253,86 @@ namespace LinqToDB.ServiceModel
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				SetCommand(true);
+				string data;
 
-				var queryContext = Query.Queries[QueryNumber];
+				lock (Query)
+				{
+					SetCommand(true);
 
-				_client = _dataContext.GetClient();
+					var queryContext = Query.Queries[QueryNumber];
 
-				var q   = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
-				var ret = await _client.ExecuteReaderAsync(
-					_dataContext.Configuration,
-					LinqServiceSerializer.Serialize(
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-						QueryHints)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				var result = LinqServiceSerializer.DeserializeResult(ret);
-				var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result);
-
-				return new DataReaderAsync(reader);
-			}
-
-			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
-			{
-				SetCommand(true);
-
-				if (_dataContext._batchCounter > 0)
-					throw new LinqException("Incompatible batch operation.");
-
-				var queryContext = Query.Queries[QueryNumber];
-
-				_client = _dataContext.GetClient();
-
-				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
-
-				return await _client.ExecuteScalarAsync(
-					_dataContext.Configuration,
-					LinqServiceSerializer.Serialize(
-						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
-			{
-				SetCommand(true);
-
-				var queryContext = Query.Queries[QueryNumber];
-
-				var q    = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
-				var data = LinqServiceSerializer.Serialize(
-					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-					QueryHints);
-
-				if (_dataContext._batchCounter > 0)
-				{
-					_dataContext._queryBatch.Add(data);
-					return -1;
+						QueryHints);
 				}
 
 				_client = _dataContext.GetClient();
 
-				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+				var reader = new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
+
+				return new DataReaderAsync(reader);
+			}
+
+			public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+			{
+				if (_dataContext._batchCounter > 0)
+					throw new LinqException("Incompatible batch operation.");
+
+				string data;
+
+				lock (Query)
+				{
+					SetCommand(true);
+
+					var queryContext = Query.Queries[QueryNumber];
+
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints);
+				}
+
+				_client = _dataContext.GetClient();
+
+				return _client.ExecuteScalarAsync(_dataContext.Configuration, data);
+			}
+
+			public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+			{
+				string data;
+
+				lock (Query)
+				{
+					SetCommand(true);
+
+					var queryContext = Query.Queries[QueryNumber];
+
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						QueryHints);
+				}
+
+				if (_dataContext._batchCounter > 0)
+				{
+					_dataContext._queryBatch!.Add(data);
+					return TaskCache.MinusOne;
+				}
+
+				_client = _dataContext.GetClient();
+
+				return _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
 			}
 		}
 	}

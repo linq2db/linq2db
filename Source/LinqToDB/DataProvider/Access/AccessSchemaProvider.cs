@@ -8,14 +8,19 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Configuration;
 	using Common;
 	using Data;
 	using SchemaProvider;
-	using System.Data.OleDb;
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
+		private readonly AccessDataProvider _provider;
+
+		public AccessSchemaProvider(AccessDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
@@ -27,12 +32,12 @@ namespace LinqToDB.DataProvider.Access
 					return action(newConnection);
 		}
 
-		protected override string GetDatabaseName(DbConnection dbConnection)
+		protected override string GetDatabaseName(DataConnection connection)
 		{
-			var name = base.GetDatabaseName(dbConnection);
+			var name = base.GetDatabaseName(connection);
 
 			if (name.IsNullOrEmpty())
-				name = Path.GetFileNameWithoutExtension(GetDataSourceName(dbConnection));
+				name = Path.GetFileNameWithoutExtension(GetDataSourceName(connection));
 
 			return name;
 		}
@@ -110,23 +115,21 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
 
 			return
 			(
 				from c in cs.AsEnumerable()
-				join dt in DataTypes on c.Field<int>("DATA_TYPE") equals dt.ProviderDbType
-				//into gdt
-				//from dt in gdt.DefaultIfEmpty()
+				let dt = GetDataTypeByProviderDbType(c.Field<int>("DATA_TYPE"), options)
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME"),
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType   = dt != null ? dt.TypeName : null,
+					DataType   = dt?.TypeName,
 					Length     = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
 					Precision  = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
 					Scale      = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
@@ -135,12 +138,16 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			// this line (GetOleDbSchemaTable) could crash application hard with AV:
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			if (connection == null)
+				return Array<ForeignKeyInfo>.Empty;
+
+			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23
-			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
-				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, null);
+			// we cannot do anything about it as it is not exception you can handle without hacks (and it doesn't make sense anyways)
+			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo
@@ -156,12 +163,9 @@ namespace LinqToDB.DataProvider.Access
 			return q.ToList();
 		}
 
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return null;
-		}
+		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		List<ProcedureInfo> _procedures;
+		List<ProcedureInfo>? _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
@@ -185,13 +189,13 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		static Regex _paramsExp;
+		static Regex? _paramsExp;
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
 			var list = new List<ProcedureParameterInfo>();
 
-			foreach (var procedure in _procedures)
+			foreach (var procedure in _procedures!)
 			{
 				if (_paramsExp == null)
 					_paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
@@ -240,9 +244,9 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataTypeInfo == null)
+			if (dataTypeInfo == null && dataType != null)
 			{
 				switch (dataType.ToLower())
 				{
@@ -254,9 +258,9 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "short"      : return DataType.Int16;
 				case "long"       : return DataType.Int32;

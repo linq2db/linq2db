@@ -19,6 +19,6 @@ namespace LinqToDB.SqlQuery
 
 	public interface ISqlExpressionWalkable
 	{
-		ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
+		ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
 	}
 }

@@ -18,11 +18,12 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Diagnostics;
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object[],object> GetElement;
-		public Func<IDataContext,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
@@ -30,7 +31,7 @@ namespace LinqToDB.Linq
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
-		protected Query(IDataContext dataContext, Expression expression)
+		protected Query(IDataContext dataContext, Expression? expression)
 		{
 			ContextID        = dataContext.ContextID;
 			ContextType      = dataContext.GetType();
@@ -48,7 +49,7 @@ namespace LinqToDB.Linq
 
 		internal readonly string           ContextID;
 		internal readonly Type             ContextType;
-		internal readonly Expression       Expression;
+		internal readonly Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
 		internal readonly string           ConfigurationID;
 		internal readonly bool             InlineParameters;
@@ -64,7 +65,7 @@ namespace LinqToDB.Linq
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
 				ContextType            == dataContext.GetType()        &&
-				Expression.EqualsTo(expr, _queryableAccessorDic, _queryDependedObjects);
+				Expression!.EqualsTo(expr, _queryableAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
@@ -103,7 +104,7 @@ namespace LinqToDB.Linq
 
 		#region Helpers
 
-		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
+		ConcurrentDictionary<Type,Func<object,object>>? _enumConverters;
 
 		internal object GetConvertedEnum(Type valueType, object value)
 		{
@@ -112,8 +113,8 @@ namespace LinqToDB.Linq
 
 			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{
-				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
+				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType)!;
+				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType)!;
 				var convParam = Expression.Parameter(typeof(object));
 
 				var lex = Expression.Lambda<Func<object, object>>(
@@ -141,11 +142,51 @@ namespace LinqToDB.Linq
 		{
 			InternalExtensions.ClearCaches();
 
-			// ConcurrentBag has thread safe enumerator
 			foreach (var cleaner in CacheCleaners)
 			{
 				cleaner();
 			}
+		}
+
+		#endregion
+
+		#region Eager Loading
+
+		Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>[]? _preambles;
+
+		public void SetPreambles(
+			IEnumerable<Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>>? preambles)
+		{
+			_preambles = preambles?.ToArray();
+		}
+
+		public bool IsAnyPreambles()
+		{
+			return _preambles?.Length > 0;
+		}
+
+		public int PreamblesCount()
+		{
+			return _preambles?.Length ?? 0;
+		}
+
+		public object?[]? InitPreambles(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			return _preambles.Select(p => p.Item1(dc)).ToArray();
+		}
+
+		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			var result = new List<object?>();
+			foreach (var p in _preambles)
+			{
+				result.Add(await p.Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			}
+			return result.ToArray();
 		}
 
 		#endregion
@@ -155,7 +196,7 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		public Query(IDataContext dataContext, Expression expression)
+		public Query(IDataContext dataContext, Expression? expression)
 			: base(dataContext, expression)
 		{
 			DoNotCache = NoLinqCache.IsNoCache;
@@ -176,9 +217,9 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object[],IEnumerable<T>>      GetIEnumerable;
-		public Func<IDataContext,Expression,object[],IAsyncEnumerable<T>> GetIAsyncEnumerable;
-		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
 
 		#endregion
 
@@ -251,8 +292,8 @@ namespace LinqToDB.Linq
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
-				lock (_sync)
-				{
+					lock (_sync)
+					{
 						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
 						{
 							if (_orderedCache.Count == CacheSize)
@@ -276,7 +317,8 @@ namespace LinqToDB.Linq
 				if (DataConnection.TraceSwitch.TraceInfo)
 					DataConnection.WriteTraceLine(
 						$"Expression test code generated: \'{testFile}\'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Info);
 			}
 
 			var query = new Query<T>(dataContext, expr);
@@ -291,7 +333,8 @@ namespace LinqToDB.Linq
 				{
 					DataConnection.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Error);
 				}
 
 				throw;
@@ -300,7 +343,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		static Query<T> FindQuery(IDataContext dataContext, Expression expr)
+		static Query<T>? FindQuery(IDataContext dataContext, Expression expr)
 		{
 			Query<T>[] queries;
 
@@ -347,9 +390,9 @@ namespace LinqToDB.Linq
 
 	class QueryInfo : IQueryContext
 	{
-		public SqlStatement Statement   { get; set; }
-		public object       Context     { get; set; }
-		public List<string> QueryHints  { get; set; }
+		public SqlStatement  Statement   { get; set; } = null!;
+		public object?       Context     { get; set; }
+		public List<string>? QueryHints  { get; set; }
 
 		public SqlParameter[] GetParameters()
 		{
@@ -367,26 +410,20 @@ namespace LinqToDB.Linq
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                         expression,
-			Func<Expression,object[],object>   accessor,
-			Func<Expression,object[],DataType> dataTypeAccessor,
-			Func<Expression,object[],string>   dbTypeAccessor,
-			Func<Expression,object[],int?>     sizeAccessor,
-			SqlParameter                       sqlParameter)
+			Expression                             expression,
+			Func<Expression,object?[]?,object?>    accessor,
+			Func<Expression,object?[]?,DbDataType> dbDataTypeAccessor,
+			SqlParameter                           sqlParameter)
 		{
-			Expression       = expression;
-			Accessor         = accessor;
-			DataTypeAccessor = dataTypeAccessor;
-			DbTypeAccessor   = dbTypeAccessor;
-			SizeAccessor     = sizeAccessor;
-			SqlParameter     = sqlParameter;
+			Expression         = expression;
+			Accessor           = accessor;
+			DbDataTypeAccessor = dbDataTypeAccessor;
+			SqlParameter       = sqlParameter;
 		}
 
-		public          Expression                         Expression;
-		public readonly Func<Expression,object[],object>   Accessor;
-		public readonly Func<Expression,object[],DataType> DataTypeAccessor;
-		public readonly Func<Expression,object[],string>   DbTypeAccessor;
-		public readonly Func<Expression,object[],int?>     SizeAccessor;
-		public readonly SqlParameter                       SqlParameter;
+		public          Expression                             Expression;
+		public readonly Func<Expression,object?[]?,object?>    Accessor;
+		public readonly Func<Expression,object?[]?,DbDataType> DbDataTypeAccessor;
+		public readonly SqlParameter                           SqlParameter;
 	}
 }

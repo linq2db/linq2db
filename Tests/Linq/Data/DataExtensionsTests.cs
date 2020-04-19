@@ -124,12 +124,51 @@ namespace Tests.Data
 		{
 			using (var conn = new TestDataConnection(context))
 			{
+				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
 				var res = conn.Execute<string>(sql);
 
 				Assert.That(res, Is.EqualTo("John"));
 			}
 		}
+
+		[Test]
+		public void TestObjectProjection([DataSources(false)] string context)
+		{
+			using (var conn = new TestDataConnection(context))
+			{
+				var result = conn.Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
+					.Take(1)
+					.ToArray();
+
+				var expected = Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
+					.Take(1)
+					.ToArray();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var result = 
+					from p in conn.Person
+					from pp in conn.Person.LeftJoin(pp => pp.ID + 1 == p.ID)
+					select new { p.ID, pp.Name };
+
+				var expected =
+					from p in Person
+					join pp in Person on p.ID equals pp.ID + 1 into j
+					from pp in j.DefaultIfEmpty()
+					select new { p.ID, pp?.Name };
+
+				AreEqual(expected, result);
+			}
+		}
+
 
 		[Test]
 		public void TestObject6()
@@ -187,14 +226,14 @@ namespace Tests.Data
 			public int Value2;
 		}
 
-#pragma warning disable 675
-
 		[Test]
 		public void TestDataParameterMapping1()
 		{
 			var ms = new MappingSchema();
 
+#pragma warning disable CS0675 // strange math here: Bitwise-or operator used on a sign-extended operand; consider casting to a smaller unsigned type first
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
+#pragma warning restore CS0675
 
 			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{
@@ -209,11 +248,13 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
+#pragma warning disable CS0675 // strange math here: Bitwise-or operator used on a sign-extended operand; consider casting to a smaller unsigned type first
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
+#pragma warning restore CS0675
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
 				Assert.AreEqual(null, n);
 			}
@@ -227,14 +268,16 @@ namespace Tests.Data
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv =>
 				new DataParameter
 				{
-					Value    = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
+#pragma warning disable CS0675 // strange math here: Bitwise-or operator used on a sign-extended operand; consider casting to a smaller unsigned type first
+					Value = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
+#pragma warning restore CS0675
 					DataType = DataType.Int64
 				},
 				false);
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
 				Assert.AreEqual(null, n);
 			}

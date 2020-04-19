@@ -217,7 +217,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -314,7 +314,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Query<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }).First(), Is.EqualTo("B"));
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }).First(), Is.EqualTo("A"));
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
-				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
+				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }).First(), Is.EqualTo("A"));
 			}
 		}
 
@@ -369,9 +369,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		[Explicit("Long running test. Run explicitly.")]
-//#if !NETSTANDARD1_6
 //		[Timeout(60000)]
-//#endif
 		public void DataConnectionTest([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
@@ -384,5 +382,65 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		#region Issue 1906
+		public class CtqResultModel
+		{
+			[Column, PrimaryKey, Identity]
+			public int ResultId { get; set; }
+
+			[Column, NotNull]
+			public int DefinitionId { get; set; }
+
+			[Association(ThisKey = nameof(DefinitionId), OtherKey = nameof(CtqDefinitionModel.DefinitionId), CanBeNull = false)]
+			public CtqDefinitionModel Definition { get; set; } = null!;
+		}
+
+		public class CtqDefinitionModel
+		{
+			[Column, PrimaryKey, Identity]
+			public int DefinitionId { get; set; }
+
+			[Column, NotNull]
+			public int SetId { get; set; }
+
+			[Association(ThisKey = nameof(SetId), OtherKey = nameof(CtqSetModel.SetId), CanBeNull = true)]
+			public CtqSetModel? Set { get; set; }
+		}
+
+		public class CtqSetModel
+		{
+			[Column, PrimaryKey, Identity]
+			public int SetId { get; set; }
+
+			[Column, NotNull]
+			public int SectorId { get; set; }
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(FtqSectorModel.Id), CanBeNull = false)]
+			public FtqSectorModel Sector { get; set; } = null!;
+		}
+
+		public class FtqSectorModel
+		{
+			[Column, PrimaryKey, Identity]
+			public int Id { get; set; }
+		}
+
+		[ActiveIssue(1906)]
+		[Test]
+		public void Issue1906Test([IncludeDataSources(ProviderName.Access)] string context)
+		{
+			using (var db = new DataConnection(context))
+			using (db.CreateLocalTable<CtqResultModel>())
+			using (db.CreateLocalTable<CtqDefinitionModel>())
+			using (db.CreateLocalTable<CtqSetModel>())
+			using (db.CreateLocalTable<FtqSectorModel>())
+			{
+				db.GetTable<CtqResultModel>()
+					.LoadWith(f => f.Definition.Set!.Sector)
+					.ToList();
+			}
+		}
+		#endregion
 	}
 }

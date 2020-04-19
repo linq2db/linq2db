@@ -352,7 +352,7 @@ namespace Tests.Linq
 
 			foreach (var g in r1)
 			{
-				Assert.AreEqual(d.First().Value, g.ParentID);
+				Assert.AreEqual(d.First()!.Value, g.ParentID);
 			}
 		}
 

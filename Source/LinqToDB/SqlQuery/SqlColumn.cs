@@ -6,11 +6,11 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
 	{
-		public SqlColumn(SelectQuery parent, ISqlExpression expression, string alias)
+		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
 			Parent     = parent;
 			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
-			RawAlias     = alias;
+			RawAlias   = alias;
 
 #if DEBUG
 			_columnNumber = ++_columnCounter;
@@ -28,10 +28,10 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		public   ISqlExpression Expression { get; set; }
-		public   SelectQuery    Parent     { get; set; }
-		internal string         RawAlias   { get; set; }
+		public   SelectQuery?   Parent     { get; set; }
+		internal string?        RawAlias   { get; set; }
 
-		public string Alias
+		public string? Alias
 		{
 			get
 			{
@@ -57,8 +57,8 @@ namespace LinqToDB.SqlQuery
 
 		private bool   _underlyingColumnSet;
 
-		private SqlColumn _underlyingColumn;
-		public  SqlColumn  UnderlyingColumn
+		private SqlColumn? _underlyingColumn;
+		public  SqlColumn?  UnderlyingColumn
 		{
 			get
 			{
@@ -97,7 +97,18 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool Equals(SqlColumn other)
+		public override int GetHashCode()
+		{
+			var hashCode = Parent!.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
+			if (UnderlyingColumn != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
+
+			return hashCode;
+		}
+
+		public bool Equals(SqlColumn? other)
 		{
 			if (other == null)
 				return false;
@@ -162,7 +173,7 @@ namespace LinqToDB.SqlQuery
 			if (Parent != otherColumn.Parent)
 				return false;
 
-			if (Parent.HasSetOperators)
+			if (Parent!.HasSetOperators)
 				return false;
 
 			return
@@ -182,15 +193,15 @@ namespace LinqToDB.SqlQuery
 				comparer(this, other);
 		}
 
-		public int  Precedence => SqlQuery.Precedence.Primary;
-		public Type SystemType => Expression.SystemType;
+		public int   Precedence => SqlQuery.Precedence.Primary;
+		public Type? SystemType => Expression.SystemType;
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
-			var parent = (SelectQuery)Parent.Clone(objectTree, doClone);
+			var parent = (SelectQuery?)Parent?.Clone(objectTree, doClone);
 
 			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlColumn(
@@ -220,10 +231,10 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func);
+				Expression = Expression.Walk(options, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent);
+				Parent = (SelectQuery)func(Parent!);
 
 			return func(this);
 		}
@@ -243,7 +254,7 @@ namespace LinqToDB.SqlQuery
 
 			sb
 				.Append('t')
-				.Append(Parent.SourceID)
+				.Append(Parent!.SourceID)
 				.Append(".");
 
 #if DEBUG

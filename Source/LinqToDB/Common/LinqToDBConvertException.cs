@@ -63,8 +63,6 @@ namespace LinqToDB.Common
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class
 		/// with serialized data.
@@ -79,11 +77,9 @@ namespace LinqToDB.Common
 		{
 		}
 
-#endif
-
 		/// <summary>
 		/// Gets name of misconfigured column, which caused exception.
 		/// </summary>
-		public string ColumnName { get; internal set; }
+		public string? ColumnName { get; internal set; }
 	}
 }

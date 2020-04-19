@@ -47,11 +47,12 @@ namespace LinqToDB
 				ArgIndices    = argIndices;
 			}
 
-			public string Configuration { get; set; }
-			public string Name          { get; set; }
-			public string Schema        { get; set; }
-			public string Database      { get; set; }
-			public int[]  ArgIndices    { get; set; }
+			public string? Configuration { get; set; }
+			public string? Name          { get; set; }
+			public string? Schema        { get; set; }
+			public string? Database      { get; set; }
+			public string? Server        { get; set; }
+			public int[]?  ArgIndices    { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
 			{
@@ -59,8 +60,8 @@ namespace LinqToDB
 				{
 					var method = (MethodInfo)member;
 
-					if (method.DeclaringType.IsGenericTypeEx())
-						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+					if (method.DeclaringType.IsGenericType)
+						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
 						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
@@ -88,6 +89,7 @@ namespace LinqToDB
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
+				if (Server   != null) table.Server   = Server;
 			}
 		}
 	}

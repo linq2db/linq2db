@@ -12,19 +12,22 @@ using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
 
+using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
+using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
+
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
 	{
-		private const string TYPE_NAME = "[dbo].[TestTableType]";
+		internal const string TYPE_NAME = "[dbo].[TestTableType]";
 		public class TVPRecord
 		{
-			public int?   Id   { get; set; }
+			public int?    Id   { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
-		private static TVPRecord[] TestData = new[]
+		internal static TVPRecord[] TestData = new[]
 		{
 			new TVPRecord(),
 			new TVPRecord() { Id = 1, Name = "Value1" },
@@ -61,14 +64,32 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public static IEnumerable<SqlDataRecordMS> GetSqlDataRecordsMS()
+		{
+			var sqlRecord = new SqlDataRecordMS(
+				new SqlMetaDataMS("Id", SqlDbType.Int),
+				new SqlMetaDataMS("Name", SqlDbType.NVarChar, 10));
+
+			foreach (var record in TestData)
+			{
+				sqlRecord.SetValue(0, record.Id);
+				sqlRecord.SetValue(1, record.Name);
+
+				yield return sqlRecord;
+			}
+		}
+
 		public static IEnumerable<Func<DataConnection, object>> ParameterFactories
 		{
 			get
 			{
 				// as DataTable
 				yield return _ => GetDataTable();
+
 				// as IEnumerable<SqlDataRecord>
-				yield return _ => GetSqlDataRecords();
+				yield return _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection
+				? (object)GetSqlDataRecordsMS()
+				: GetSqlDataRecords();
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
@@ -119,7 +140,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null));
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
 
 		public static ITable<TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
@@ -162,7 +183,7 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		[Test]
@@ -180,7 +201,7 @@ namespace Tests.DataProvider
 					.On((t, s) => t.Id == s.Id)
 					.InsertWhenNotMatched(s => new TestMergeTVPTable()
 					{
-						Id = s.Id.Value,
+						Id   = s.Id!.Value,
 						Name = s.Name
 					})
 					.Merge();

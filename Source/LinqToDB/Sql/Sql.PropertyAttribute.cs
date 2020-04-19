@@ -29,7 +29,7 @@ namespace LinqToDB
 			{
 			}
 
-			public string Name
+			public string? Name
 			{
 				get => Expression;
 				set => Expression = value;

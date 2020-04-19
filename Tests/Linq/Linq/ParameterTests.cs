@@ -1,16 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NUnit.Framework;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
-using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -63,9 +60,9 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -83,9 +80,9 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -102,10 +99,10 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -133,7 +130,7 @@ namespace Tests.Linq
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				ProviderName.DB2)]
 			string context)
 		{
@@ -146,50 +143,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void SqlStringParameter([DataSources(false)] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "John";
-				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				p = "Tester";
-				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
-			}
-		}
-
-		// Excluded providers inline such parameter
-		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)]
-			string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
-			}
-		}
-
 		class AllTypes
 		{
 			public decimal DecimalDataType;
-			public byte[]  BinaryDataType;
-			public byte[]  VarBinaryDataType;
+			public byte[]? BinaryDataType;
+			public byte[]? VarBinaryDataType;
 			[Column(DataType = DataType.VarChar)]
-			public string  VarcharDataType;
+			public string? VarcharDataType;
 		}
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -243,6 +208,46 @@ namespace Tests.Linq
 				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
+			}
+		}
+
+
+		static class AdditionalSql
+		{
+			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
+			public static int Operation(int item1, int item2, int item3)
+			{
+				return (item3 * (item2 - item1) / item3) * item1;
+			}
+
+		}
+
+		[Test]
+		public void TestPositionedParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var x3  = 3;
+				var y10 = 10;
+				var z2  = 2;
+
+				var query = from child in db.Child
+					select new
+					{
+						Value1 = Sql.AsSql(AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3)))
+					};
+
+				var expected = from child in Child
+					select new
+					{
+						Value1 = AdditionalSql.Operation(child.ChildID,
+							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
+							AdditionalSql.Operation(z2, y10, x3))
+					};
+
+				AreEqual(expected, query);
 			}
 		}
 
@@ -314,6 +319,122 @@ namespace Tests.Linq
 		{
 			var list = db.Child.ToList();
 			return db.Child.Where(c => list.Where(filter).Select(r => r.ChildID).Contains(c.ChildID));
+		}
+
+		enum Issue404
+		{
+			Value1,
+			Value2,
+		}
+
+		[Table]
+		class Table404One
+		{
+			[Column] public int Id { get; set; }
+
+			public static readonly Table404One[] Data = new[]
+			{
+				new Table404One() { Id = 1 },
+				new Table404One() { Id = 2 }
+			};
+		}
+
+		[Table]
+		class Table404Two
+		{
+			[Column] public int Id { get; set; }
+
+			[Column] public Issue404 Usage { get; set; }
+
+			[Column] public int FirstTableId { get; set; }
+
+			public static readonly Table404Two[] Data = new[]
+			{
+				new Table404Two() { Id = 1, Usage = Issue404.Value1, FirstTableId = 1 },
+				new Table404Two() { Id = 2, Usage = Issue404.Value1, FirstTableId = 1 },
+				new Table404Two() { Id = 3, Usage = Issue404.Value2, FirstTableId = 1 },
+				new Table404Two() { Id = 4, Usage = Issue404.Value1, FirstTableId = 2 },
+				new Table404Two() { Id = 5, Usage = Issue404.Value2, FirstTableId = 2 },
+				new Table404Two() { Id = 6, Usage = Issue404.Value2, FirstTableId = 2 },
+			};
+		}
+
+		class FirstTable
+		{
+			public int Id;
+			public List<Table404Two>? Values;
+		}
+
+		[Repeat(2)] // don't ever remove Repeat, as it used to test issue #2174
+		[ActiveIssue(2174, Details = "issue reproduced when test run against multiple providers or just twice")]
+		[Test]
+		public void Issue404Test([DataSources] string context)
+		{
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			using (var t1 = db.CreateLocalTable(Table404One.Data))
+			using (var t2 = db.CreateLocalTable(Table404Two.Data))
+			{
+				Issue404? usage = null;
+				var allUsages = !usage.HasValue;
+				var res1 = Test();
+				Assert.AreEqual(1, res1.Id);
+				Assert.AreEqual(3, res1.Values.Count());
+				Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+
+				usage = Issue404.Value1;
+				allUsages = false;
+				var res2 = Test();
+				Assert.AreEqual(1, res2.Id);
+				Assert.AreEqual(2, res2.Values.Count());
+				Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
+				Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+
+				usage = Issue404.Value2;
+				allUsages = false;
+				var res3 = Test();
+				Assert.AreEqual(1, res2.Id);
+				Assert.AreEqual(1, res3.Values.Count());
+				Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
+				Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+
+				FirstTable Test()
+				{
+					return t1
+					  .GroupJoin(t2.Where(v =>
+						allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
+						 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
+					  .FirstOrDefault();
+				}
+			}
+		}
+
+		[Table(IsColumnAttributeRequired = true)]
+		public partial class Issue1189Customer
+		{
+
+			[Column("ID"), PrimaryKey, NotNull] public int Id { get; set; } // integer
+
+			[Column("NAME"), NotNull] public string Name { get; set; } = null!; // varchar(20)
+
+			[ExpressionMethod(nameof(DefaultDateTime), IsColumn = true)]
+			public DateTime? ToDelete { get; set; }
+
+			static Expression<Func<Issue1189Customer, DateTime>> DefaultDateTime()
+			{
+				return p => Sql.AsSql(DateTime.Now);
+			}
+		}
+
+		[ActiveIssue(1189)]
+		[Test]
+		public void Issue1189Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1189Customer>())
+			{
+				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
+			}
 		}
 	}
 }

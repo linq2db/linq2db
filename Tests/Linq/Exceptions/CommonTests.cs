@@ -22,10 +22,10 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
-				if (statement.IsInsert() && statement.RequireInsertClause().Into.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
 					var expr =
-						QueryVisitor.Find(statement.RequireInsertClause(), e =>
+						new QueryVisitor().Find(statement.RequireInsertClause(), e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
@@ -38,7 +38,7 @@ namespace Tests.Exceptions
 
 					if (expr != null)
 					{
-						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression).Value);
+						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression!).Value);
 
 						if (value == 555)
 						{
@@ -63,7 +63,7 @@ namespace Tests.Exceptions
 								}
 
 								IQueryElement ex;
-								return dic.TryGetValue(e, out ex) ? ex : null;
+								return dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}
 					}
@@ -85,8 +85,8 @@ namespace Tests.Exceptions
 
 				var n = 555;
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				var ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -94,9 +94,10 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -104,6 +105,7 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
 				db.Parent.Delete(p => p.ParentID == n);
 			}

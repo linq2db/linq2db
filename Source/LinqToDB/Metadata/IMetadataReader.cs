@@ -14,8 +14,6 @@ namespace LinqToDB.Metadata
 		/// </summary>
 		/// <param name="type">The type.</param>
 		/// <returns>All dynamic columns defined on given type.</returns>
-		[NotNull]
-		[ItemNotNull]
 		MemberInfo[] GetDynamicColumns(Type type);
 	}
 }

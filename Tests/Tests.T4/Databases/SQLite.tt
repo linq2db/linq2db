@@ -1,0 +1,20 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                         #>
+<#@ output extension=".generated.cs"                                                #>
+<#@ include file="..\Shared.ttinclude"                                              #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude"     #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\System.Data.SQLite.dll" #>
+<#
+	NamespaceName = "SQLiteDataContext";
+
+	GenerateAssociationExtensions = true;
+
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
+
+	foreach (var t in Tables.Values)
+		foreach (var fk in t.ForeignKeys.Values)
+			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
+				fk.MemberName = "FK_" + fk.MemberName;
+
+	GenerateModel();
+#>

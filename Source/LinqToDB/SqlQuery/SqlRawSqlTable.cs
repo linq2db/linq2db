@@ -8,18 +8,17 @@ namespace LinqToDB.SqlQuery
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
-		[JetBrains.Annotations.NotNull]
 		public string SQL { get; }
 
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] Type objectType,
-			[JetBrains.Annotations.NotNull] string sql,
-			[JetBrains.Annotations.NotNull] params ISqlExpression[] parameters) : base(mappingSchema, objectType)
+			MappingSchema mappingSchema,
+			Type objectType,
+			string sql,
+			params ISqlExpression[] parameters) : base(mappingSchema, objectType)
 		{
-			SQL = sql ?? throw new ArgumentNullException(nameof(sql));
+			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
@@ -30,7 +29,7 @@ namespace LinqToDB.SqlQuery
 			int id, string alias, Type objectType,
 			SqlField[]       fields,
 			string           sql,
-			ISqlExpression[] parameters)  : base(id, string.Empty, alias, string.Empty, string.Empty, string.Empty, objectType, null, fields, SqlTableType.RawSql, null)
+			ISqlExpression[] parameters)  : base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null)
 		{
 			SQL        = sql;
 			Parameters = parameters;
@@ -39,6 +38,7 @@ namespace LinqToDB.SqlQuery
 		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
 		{
 			Alias              = table.Alias;
+			Server             = table.Server;
 			Database           = table.Database;
 			Schema             = table.Schema;
 
@@ -83,7 +83,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (Parameters != null)
 				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(options, func);
+					Parameters[i] = Parameters[i].Walk(options, func)!;
 
 			return func(this);
 		}

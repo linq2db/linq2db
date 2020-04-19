@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
 	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
-		<NoWarn>$(NoWarn);FS0988</NoWarn>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,6 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Update="FSharp.Core" Version="4.6.1" />
+		<PackageReference Update="FSharp.Core" Version="4.7.1" />
+		<PackageReference Update="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 </Project>

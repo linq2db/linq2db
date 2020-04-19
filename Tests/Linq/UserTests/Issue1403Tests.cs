@@ -19,7 +19,7 @@ namespace Tests.UserTests
 			public int EventId { get; set; }
 
 			[Column("event_description", Order = 2), NotNull]
-			public string EventDescription { get; set; }
+			public string EventDescription { get; set; } = null!;
 		}
 
 		[Table("Issue1403Tests_2")]
@@ -29,7 +29,7 @@ namespace Tests.UserTests
 			public int EventId { get; set; }
 
 			[Column("event_description", Order = 2), NotNull]
-			public string EventDescription { get; set; }
+			public string EventDescription { get; set; } = null!;
 		}
 
 		[Table("Issue1403Tests_3")]
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 			public int EventId { get; set; }
 
 			[Column("event_description"), NotNull]
-			public string EventDescription { get; set; }
+			public string EventDescription { get; set; } = null!;
 		}
 
 		[Test]

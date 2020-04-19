@@ -16,10 +16,10 @@ namespace Tests.Data
 
 		class MultipleResultExample
 		{
-			[ResultSetIndex(0)] public IEnumerable<Person> AllPersons { get; set; }
-			[ResultSetIndex(1)] public IList<Doctor> AllDoctors { get; set; }
-			[ResultSetIndex(2)] public IEnumerable<Patient> AllPatients { get; set; }
-			[ResultSetIndex(3)] public Patient FirstPatient { get; set; }
+			[ResultSetIndex(0)] public IEnumerable<Person>  AllPersons   { get; set; } = null!;
+			[ResultSetIndex(1)] public IList<Doctor>        AllDoctors   { get; set; } = null!;
+			[ResultSetIndex(2)] public IEnumerable<Patient> AllPatients  { get; set; } = null!;
+			[ResultSetIndex(3)] public Patient              FirstPatient { get; set; } = null!;
 		}
 
 		[Test]
@@ -37,7 +37,7 @@ namespace Tests.Data
 				Assert.IsTrue(res.AllPatients.Any());
 				Assert.IsTrue(res.AllPersons.Any());
 				Assert.IsTrue(res.FirstPatient != null);
-				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient!.Diagnosis);
 				Assert.AreEqual(2, res.FirstPatient.PersonID);
 			}
 		}
@@ -57,17 +57,17 @@ namespace Tests.Data
 				Assert.IsTrue(res.AllPatients.Any());
 				Assert.IsTrue(res.AllPersons.Any());
 				Assert.IsTrue(res.FirstPatient != null);
-				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient!.Diagnosis);
 				Assert.AreEqual(2, res.FirstPatient.PersonID);
 			}
 		}
 
 		class MultipleResultExampleWithoutAttributes
 		{
-			public IEnumerable<Person> AllPersons { get; set; }
-			public IList<Doctor> AllDoctors { get; set; }
-			public IEnumerable<Patient> AllPatients { get; set; }
-			public Patient FirstPatient { get; set; }
+			public IEnumerable<Person>  AllPersons   { get; set; } = null!;
+			public IList<Doctor>        AllDoctors   { get; set; } = null!;
+			public IEnumerable<Patient> AllPatients  { get; set; } = null!;
+			public Patient              FirstPatient { get; set; } = null!;
 		}
 
 		[Test]
@@ -85,7 +85,7 @@ namespace Tests.Data
 				Assert.IsTrue(res.AllPatients.Any());
 				Assert.IsTrue(res.AllPersons.Any());
 				Assert.IsTrue(res.FirstPatient != null);
-				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient!.Diagnosis);
 				Assert.AreEqual(2, res.FirstPatient.PersonID);
 			}
 		}
@@ -105,7 +105,7 @@ namespace Tests.Data
 				Assert.IsTrue(res.AllPatients.Any());
 				Assert.IsTrue(res.AllPersons.Any());
 				Assert.IsTrue(res.FirstPatient != null);
-				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient!.Diagnosis);
 				Assert.AreEqual(2, res.FirstPatient.PersonID);
 			}
 		}
@@ -114,13 +114,13 @@ namespace Tests.Data
 		[Table]
 		class ProcedureMultipleResultExample
 		{
-			[ResultSetIndex(0)] public IList<int> MatchingPersonIds { get; set; }
-			[ResultSetIndex(1)] public IEnumerable<Person> MatchingPersons { get; set; }
-			[ResultSetIndex(2)] public IEnumerable<Patient> MatchingPatients { get; set; }
-			[ResultSetIndex(3)] public bool DoctorFound { get; set; }
-			[ResultSetIndex(4)] public Person[] MatchingPersons2 { get; set; }
-			[ResultSetIndex(5)] public int MatchCount { get; set; }
-			[ResultSetIndex(6)] public Person MatchingPerson { get; set; }
+			[ResultSetIndex(0)] public IList<int>           MatchingPersonIds { get; set; } = null!;
+			[ResultSetIndex(1)] public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;
+			[ResultSetIndex(2)] public IEnumerable<Patient> MatchingPatients  { get; set; } = null!;
+			[ResultSetIndex(3)] public bool                 DoctorFound       { get; set; }
+			[ResultSetIndex(4)] public Person[]             MatchingPersons2  { get; set; } = null!;
+			[ResultSetIndex(5)] public int                  MatchCount        { get; set; }
+			[ResultSetIndex(6)] public Person               MatchingPerson    { get; set; } = null!;
 		}
 
 		[Test]
@@ -266,13 +266,13 @@ namespace Tests.Data
 		[Table]
 		class ProcedureMultipleResultExampleWithoutAttributes
 		{
-			public IList<int> MatchingPersonIds { get; set; }
-			public IEnumerable<Person> MatchingPersons { get; set; }
-			public IEnumerable<Patient> MatchingPatients { get; set; }
-			public bool DoctorFound { get; set; }
-			public Person[] MatchingPersons2 { get; set; }
-			public int MatchCount { get; set; }
-			public Person MatchingPerson { get; set; }
+			public IList<int>           MatchingPersonIds { get; set; } = null!;
+			public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;
+			public IEnumerable<Patient> MatchingPatients  { get; set; } = null!;
+			public bool                 DoctorFound       { get; set; }
+			public Person[]             MatchingPersons2  { get; set; } = null!;
+			public int                  MatchCount        { get; set; }
+			public Person               MatchingPerson    { get; set; } = null!;
 		}
 
 		[Test]

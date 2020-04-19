@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Humanizer;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -34,7 +33,7 @@ namespace Tests.Linq
 			public int DataKey33 { get; set; }
 
 			[Column(Length = 50)]
-			public string ValueStr { get; set; }
+			public string? ValueStr { get; set; }
 		}
 
 		static IEnumerable<T[]> GetPermutations<T>(IEnumerable<T> items, int count)
@@ -127,6 +126,44 @@ namespace Tests.Linq
 
 				Console.WriteLine(queryOptimized.ToString());
 				Assert.AreEqual(1, queryOptimized.EnumQueries().Count());
+			}
+		}
+
+		[Test]
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query1 = first.GroupBy(f => f.Key1)
+					.AsSubQuery()
+					.Select(x => new { Count = Sql.Ext.Count().ToValue() });
+
+				var result1 = query1.ToArray();
+			}
+		}
+
+		[Test]
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query2 = first.GroupBy(f => new { f.Key1, f.Key2 })
+					.AsSubQuery()
+					.Select(x => new
+					{
+						Count2 = Sql.Ext.Count(x.Key2).ToValue(),
+						Count1 = Sql.Ext.Count(x.Key1).ToValue()
+					});
+
+				var result2 = query2.ToArray();
 			}
 		}
 
@@ -354,7 +391,7 @@ namespace Tests.Linq
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
@@ -392,7 +429,7 @@ namespace Tests.Linq
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);

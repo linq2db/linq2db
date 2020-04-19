@@ -80,7 +80,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
+		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 
 				table.Drop();
 
-				var sql = db.LastQuery;
+				var sql = db.LastQuery!;
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());

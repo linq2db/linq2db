@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlSetExpression> Items { get; }
 		public List<SqlSetExpression> Keys  { get; }
-		public SqlTable               Table { get; set; }
+		public SqlTable?              Table { get; set; }
 
 		#region Overrides
 
@@ -56,7 +56,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (Table != null)
 				((ISqlExpressionWalkable)Table).Walk(options, func);
@@ -80,7 +80,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb.Append("SET ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 

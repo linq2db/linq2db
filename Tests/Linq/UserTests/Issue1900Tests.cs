@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			[Column("AGE")]
 			public int Age {get; set;}
 			[Column("NAME")]
-			public string Name {get; set;}
+			public string? Name {get; set;}
 
 			[ExpressionMethod(nameof(GetTypeExpr), IsColumn = true)]
 			public int Type {get; set;}
@@ -33,7 +33,7 @@ namespace Tests.UserTests
 			[Column("AGE")]
 			public int Age {get; set;}
 			[Column("NAME")]
-			public string Name {get; set;}
+			public string? Name {get; set;}
 
 			[Column("OPTIONS")]
 			public int Options { get; set; }

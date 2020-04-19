@@ -8,8 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
@@ -31,11 +29,11 @@ namespace Tests.xUpdate
 			public bool? FieldBoolean;
 
 			[Column("FieldString")]
-			public string FieldString;
+			public string? FieldString;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column("FieldNString")]
-			public string FieldNString;
+			public string? FieldNString;
 
 			[Column("FieldChar")]
 			public char? FieldChar;
@@ -67,16 +65,15 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
+			[Column(Configuration = ProviderName.Oracle, Precision = 7)]
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)] // for some reason it breaks merge
 			[Column("FieldBinary")]
-			public byte[] FieldBinary;
+			public byte[]? FieldBinary;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column("FieldGuid")]
@@ -89,8 +86,6 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column("FieldDate"     , Configuration = ProviderName.Informix, DataType = DataType.Date)]
 			[Column("FieldDate"     , Configuration = ProviderName.Sybase  , DataType = DataType.Date)]
@@ -100,11 +95,8 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
+			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
-			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column("FieldTime"     , Configuration = ProviderName.Sybase, DataType = DataType.Time)]
@@ -131,8 +123,6 @@ namespace Tests.xUpdate
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
-			[MapValue("_", Configuration = ProviderName.OracleManaged)]
-			[MapValue("_", Configuration = ProviderName.OracleNative)]
 			[MapValue("_", Configuration = ProviderName.Sybase)]
 			[MapValue("")]
 			Value3,
@@ -352,11 +342,14 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
+		// Sybase: need to configure sybase docker image to use utf8 character set
+		[ActiveIssue("ORA-22053: overflow error", Configurations = new [] { TestProvName.AllSybase })]
 		[Test]
-		public void TestMergeTypes([DataSources(false, ProviderName.SQLiteMS)] string context)
+		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			var isIDS = IsIDSProvider(context);
+
+			using (var db = GetDataContext(context))
 			{
 				PrepareTypesData(db);
 
@@ -366,66 +359,65 @@ namespace Tests.xUpdate
 				Assert.AreEqual(InitialTypes1Data.Length, result1.Count);
 				Assert.AreEqual(InitialTypes2Data.Length, result2.Count);
 
+				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], context);
+					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
 				}
 
 				for (var i = 0; i < InitialTypes2Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], context);
+					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 				}
 			}
 		}
 
-		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string context)
+		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string provider, bool isIDS)
 		{
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
 
-			if (context != ProviderName.Access)
+			if (provider != ProviderName.Access)
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
 
-			if (context != ProviderName.Sybase && context != ProviderName.SybaseManaged)
-				if (context != ProviderName.Access)
+			if (provider != ProviderName.Sybase && provider != ProviderName.SybaseManaged)
+				if (provider != ProviderName.Access)
 					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
 				else
 					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
 
-			AssertString(expected.FieldString, actual.FieldString, context);
-			AssertNString(expected.FieldNString, actual.FieldNString, context);
+			AssertString(expected.FieldString, actual.FieldString, provider, isIDS);
+			AssertNString(expected.FieldNString, actual.FieldNString, provider);
 
-			AssertChar(expected.FieldChar, actual.FieldChar, context);
+			AssertChar(expected.FieldChar, actual.FieldChar, provider);
 
-			AssertNChar(expected.FieldChar, actual.FieldChar, context);
+			AssertNChar(expected.FieldChar, actual.FieldChar, provider);
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 
-			if (context != ProviderName.Firebird
-				&& context != TestProvName.Firebird3)
+			if (   provider != ProviderName.Firebird
+				&& provider != TestProvName.Firebird3)
 				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
-			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, context);
+			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, provider);
 
-			AssertDateTimeOffset(expected.FieldDateTime2, actual.FieldDateTime2, context);
+			AssertDateTimeOffset(expected.FieldDateTime2, actual.FieldDateTime2, provider);
 
-			AssertBinary(expected.FieldBinary, actual.FieldBinary, context);
+			AssertBinary(expected.FieldBinary, actual.FieldBinary, provider);
 
-			if (context != ProviderName.Informix)
+			if (!provider.Contains(ProviderName.Informix))
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			if (context != ProviderName.SQLiteClassic && context != ProviderName.SQLiteMS)
+			if (!provider.Contains("SQLite"))
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
-			if (context != ProviderName.SqlServer2000
-				&& context != ProviderName.SqlServer2005
-				&& context != ProviderName.SqlCe
-				&& context != ProviderName.Oracle
-				&& context != ProviderName.OracleManaged
-				&& context != ProviderName.OracleNative)
+			if (   provider != ProviderName.SqlServer2000
+				&& provider != ProviderName.SqlServer2005
+				&& provider != ProviderName.SqlCe
+				&& !provider.Contains("Oracle"))
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
 
-			AssertTime(expected.FieldTime, actual.FieldTime, context);
+			AssertTime(expected.FieldTime, actual.FieldTime, provider);
 
 			if (expected.FieldEnumString == StringEnum.Value4)
 				Assert.IsNull(actual.FieldEnumString);
@@ -438,31 +430,31 @@ namespace Tests.xUpdate
 				Assert.AreEqual(expected.FieldEnumNumber, actual.FieldEnumNumber);
 		}
 
-		private static void AssertNString(string expected, string actual, string context)
+		private static void AssertNString(string? expected, string? actual, string provider)
 		{
 			if (expected != null)
 			{
-				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
+				if (   provider == ProviderName.Sybase
+					|| provider == ProviderName.SybaseManaged
+					|| provider == ProviderName.SqlCe)
 					expected = expected.TrimEnd(' ');
 			}
 
-			if (context != ProviderName.Informix)
+			if (!provider.Contains(ProviderName.Informix))
 				Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertBinary(byte[] expected, byte[] actual, string context)
+		private static void AssertBinary(byte[]? expected, byte[]? actual, string provider)
 		{
-			if (context == ProviderName.Informix
-				|| context == ProviderName.Oracle
-				|| context == ProviderName.OracleManaged
-				|| context == ProviderName.OracleNative
-				|| context == ProviderName.Firebird
-				|| context == TestProvName.Firebird3)
+			if (provider.Contains(ProviderName.Informix)
+				|| provider.Contains("Oracle")
+				|| provider == ProviderName.Firebird
+				|| provider == TestProvName.Firebird3)
 				return;
 
 			if (expected != null)
 			{
-				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
+				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				{
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
@@ -475,83 +467,78 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertDateTimeOffset(DateTimeOffset? expected, DateTimeOffset? actual, string context)
+		private static void AssertDateTimeOffset(DateTimeOffset? expected, DateTimeOffset? actual, string provider)
 		{
 			if (expected != null)
 			{
-				if (context == ProviderName.Oracle
-					|| context == ProviderName.OracleManaged
-					|| context == ProviderName.OracleNative)
-				{
-					var trimmable = expected.Value.Ticks % 10;
-					if (trimmable >= 5)
-						trimmable -= 10;
-
-					expected = expected.Value.AddTicks(-trimmable);
-				}
-
-				if (context.Contains(ProviderName.PostgreSQL))
+				if (provider.Contains(ProviderName.PostgreSQL))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
-			if (   context != ProviderName.SqlServer2000
-				&& context != ProviderName.SqlServer2005
-				&& context != ProviderName.SqlCe
-				&& context != ProviderName.Informix
-				&& context != ProviderName.Firebird
-				&& context != TestProvName.Firebird3
-				&& context != ProviderName.MySql
-				&& context != ProviderName.MySqlConnector
-				&& context != TestProvName.MySql57
-				&& context != TestProvName.MariaDB
-				&& context != ProviderName.Access
-				&& context != ProviderName.SQLiteClassic
-				&& context != ProviderName.SQLiteMS
-				&& context != ProviderName.Sybase
-				&& context != ProviderName.SybaseManaged
-				&& context != ProviderName.DB2
-				&& context != ProviderName.SapHana)
+			if (   provider != ProviderName.SqlServer2000
+				&& provider != ProviderName.SqlServer2005
+				&& provider != ProviderName.SqlCe
+				&& !provider.Contains(ProviderName.Informix)
+				&& provider != ProviderName.Firebird
+				&& provider != TestProvName.Firebird3
+				&& provider != ProviderName.MySql
+				&& provider != ProviderName.MySqlConnector
+				&& provider != TestProvName.MySql55
+				&& provider != TestProvName.MariaDB
+				&& provider != ProviderName.Access
+				&& provider != ProviderName.SQLiteClassic
+				&& provider != TestProvName.SQLiteClassicMiniProfilerMapped
+				&& provider != TestProvName.SQLiteClassicMiniProfilerUnmapped
+				&& provider != ProviderName.SQLiteMS
+				&& provider != ProviderName.Sybase
+				&& provider != ProviderName.SybaseManaged
+				&& provider != ProviderName.DB2
+				&& !provider.StartsWith(ProviderName.SapHana))
 				Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertChar(char? expected, char? actual, string context)
+		private static void AssertChar(char? expected, char? actual, string provider)
 		{
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (   context == ProviderName.MySql
-					    || context == ProviderName.MySqlConnector
-						|| context == TestProvName.MariaDB
-						|| context == TestProvName.MySql57))
+					&& (   provider == ProviderName.MySql
+						|| provider == ProviderName.MySqlConnector
+						|| provider == TestProvName.MariaDB
+						|| provider == TestProvName.MySql55
+						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
+						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
 			}
 
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertNChar(char? expected, char? actual, string context)
+		private static void AssertNChar(char? expected, char? actual, string provider)
 		{
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (context == ProviderName.MySql
-					    || context == ProviderName.MySqlConnector
-						|| context == TestProvName.MariaDB
-						|| context == TestProvName.MySql57))
+					&& (provider == ProviderName.MySql
+						|| provider == ProviderName.MySqlConnector
+						|| provider == TestProvName.MariaDB
+						|| provider == TestProvName.MySql55
+						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
+						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
 			}
 
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertDateTime(DateTime? expected, DateTime? actual, string context)
+		private static void AssertDateTime(DateTime? expected, DateTime? actual, string provider)
 		{
 			if (expected != null)
 			{
-				if ((context == TestProvName.MySql57 || context == ProviderName.MySqlConnector)
-				    && expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
+				if ((provider == ProviderName.MySql || provider == ProviderName.MySqlConnector)
+					&& expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
-				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
+				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				{
 					switch (expected.Value.Millisecond % 10)
 					{
@@ -571,31 +558,30 @@ namespace Tests.xUpdate
 					}
 				}
 
-				if (   context == ProviderName.MySql
-				    || context == ProviderName.MySqlConnector
-					|| context == TestProvName.MariaDB
-					|| context == TestProvName.MySql57
-					|| context == ProviderName.Oracle
-					|| context == ProviderName.OracleManaged
-					|| context == ProviderName.OracleNative)
+				if (   provider == ProviderName.MySql
+					|| provider == ProviderName.MySqlConnector
+					|| provider == TestProvName.MariaDB
+					|| provider == TestProvName.MySql55
+					|| provider.Contains("Oracle"))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertString(string expected, string actual, string context)
+		private static void AssertString(string? expected, string? actual, string provider, bool isIDS)
 		{
 			if (expected != null)
 			{
-				switch (context)
+				switch (provider)
 				{
 					case ProviderName.Sybase:
 					case ProviderName.SybaseManaged:
+					case ProviderName.SqlCe:
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
-						expected = expected.TrimEnd('\t', ' ');
+						expected = isIDS ? expected : expected.TrimEnd('\t', ' ');
 						break;
 				}
 			}
@@ -603,31 +589,27 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string context)
+		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string provider)
 		{
-			if (   context == ProviderName.SqlServer2000
-				|| context == ProviderName.SqlServer2005
-				|| context == ProviderName.Oracle
-				|| context == ProviderName.OracleManaged
-				|| context == ProviderName.OracleNative
-				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SQLiteClassic
-				|| context == ProviderName.SQLiteMS
-				|| context == ProviderName.MySql
-				|| context == ProviderName.MySqlConnector
-				// MySql57 and MariaDB work, but column is disabled...
-				|| context == TestProvName.MySql57
-				|| context == TestProvName.MariaDB
-				|| context == ProviderName.Firebird
-				|| context == TestProvName.Firebird3)
+			if (   provider == ProviderName.SqlServer2000
+				|| provider == ProviderName.SqlServer2005
+				|| provider.Contains("Oracle")
+				|| provider == ProviderName.SqlCe
+				|| provider == ProviderName.SQLiteClassic
+				|| provider == TestProvName.SQLiteClassicMiniProfilerMapped
+				|| provider == TestProvName.SQLiteClassicMiniProfilerUnmapped
+				|| provider == ProviderName.SQLiteMS
+				|| provider == TestProvName.MySql55
+				|| provider == ProviderName.Firebird
+				|| provider == TestProvName.Firebird3)
 				return;
 
 			if (expected != null)
 			{
-				switch (context)
+				switch (provider)
 				{
-					case ProviderName.Sybase:
-					case ProviderName.SybaseManaged:
+					case ProviderName.Sybase        :
+					case ProviderName.SybaseManaged :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000) * 10000);
 						switch (expected.Value.Milliseconds % 10)
 						{
@@ -650,26 +632,39 @@ namespace Tests.xUpdate
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
 
 						break;
-					case ProviderName.Firebird:
-					case TestProvName.Firebird3:
+					case ProviderName.Firebird      :
+					case TestProvName.Firebird3     :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
-					case ProviderName.Informix:
+					case ProviderName.InformixDB2   :
+					case ProviderName.Informix      :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case ProviderName.PostgreSQL:
-					case ProviderName.PostgreSQL92:
-					case ProviderName.PostgreSQL93:
-					case ProviderName.PostgreSQL95:
-					case TestProvName.PostgreSQL10:
-					case TestProvName.PostgreSQL11:
-					case TestProvName.PostgreSQLLatest:
+					case ProviderName.PostgreSQL    :
+					case ProviderName.PostgreSQL92  :
+					case ProviderName.PostgreSQL93  :
+					case ProviderName.PostgreSQL95  :
+					case TestProvName.PostgreSQL10  :
+					case TestProvName.PostgreSQL11  :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
-					case ProviderName.DB2:
-					case ProviderName.Access:
-					case ProviderName.SapHana:
+					case ProviderName.DB2           :
+					case ProviderName.Access        :
+					case ProviderName.SapHanaNative :
+					case ProviderName.SapHanaOdbc   :
+					case TestProvName.MariaDB       :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+						break;
+					case ProviderName.MySqlConnector:
+					case ProviderName.MySql         :
+						var msecs = expected.Value.Milliseconds;
+						if (msecs > 500)
+						{
+							expected = expected.Value.Add(TimeSpan.FromSeconds(1));
+						}
+
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+
 						break;
 				}
 			}
@@ -679,10 +674,12 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			var isIDS = IsIDSProvider(context);
+
+			using (var db = GetDataContext(context))
 			{
 				using (new DisableLogging())
 				{
@@ -699,14 +696,15 @@ namespace Tests.xUpdate
 				Assert.AreEqual(InitialTypes1Data.Length, result1.Count);
 				Assert.AreEqual(InitialTypes2Data.Length, result2.Count);
 
+				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], context);
+					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
 				}
 
 				for (var i = 0; i < InitialTypes2Data.Length; i++)
 				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], context);
+					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 				}
 			}
 		}

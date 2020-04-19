@@ -53,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		class QueryData
 		{
-			public          SelectQuery          Query;
+			public          SelectQuery          Query   = null!;
 			public readonly List<ISqlExpression> Fields  = new List<ISqlExpression>();
 			public readonly List<QueryData>      Queries = new List<QueryData>();
 		}
@@ -65,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SqlStatement statement, SelectQuery selectQuery)
+		static QueryData GetQueryData(SqlStatement? statement, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
@@ -110,7 +110,7 @@ namespace LinqToDB.SqlQuery
 			return data;
 		}
 
-		static SqlTableSource FindField(SqlField field, SqlTableSource table)
+		static SqlTableSource? FindField(SqlField field, SqlTableSource table)
 		{
 			if (field.Table == table.Source)
 				return table;
@@ -126,7 +126,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		static ISqlExpression GetColumn(QueryData data, SqlField field)
+		static ISqlExpression? GetColumn(QueryData data, SqlField field)
 		{
 			foreach (var query in data.Queries)
 			{
@@ -142,7 +142,7 @@ namespace LinqToDB.SqlQuery
 						var idx = q.Select.Add(field);
 
 						if (n != q.Select.Columns.Count)
-							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => IsAggregationFunction(c.Expression)))
+							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
 								q.GroupBy.Items.Add(field);
 
 						return q.Select.Columns[idx];
@@ -290,7 +290,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.SetExpression :
 							{
 								var expr = (SqlSetExpression)e;
-								if (dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
+								if (dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
 								break;
 							}
 
@@ -323,10 +323,10 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = QueryVisitor.Find(_selectQuery,
+			var isAllUnion = new QueryVisitor().Find(_selectQuery,
 				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
-			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
+			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
 				ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
@@ -368,6 +368,7 @@ namespace LinqToDB.SqlQuery
 					scol.Expression = ucol.Expression;
 					scol.RawAlias   = ucol.RawAlias;
 
+					if (!exprs.ContainsKey(ucol))
 					exprs.Add(ucol, scol);
 				}
 
@@ -837,7 +838,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				QueryVisitor.Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
+				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationFunction(ex)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -873,7 +874,7 @@ namespace LinqToDB.SqlQuery
 				return childSource;
 
 			var isColumnsOK =
-				(allColumns && !query.Select.Columns.Any(c => IsAggregationFunction(c.Expression))) ||
+				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
 				!query.Select.Columns.Any(c => CheckColumn(c, c.Expression, query, optimizeValues, optimizeColumns));
 
 			if (!isColumnsOK)
@@ -888,7 +889,7 @@ namespace LinqToDB.SqlQuery
 					clmn.RawAlias = c.RawAlias;
 			}
 
-			List<ISqlExpression[]> uniqueKeys = null;
+			List<ISqlExpression[]>? uniqueKeys = null;
 			if (parentJoin == JoinType.Inner && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
@@ -937,17 +938,6 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		static bool IsAggregationFunction(IQueryElement expr)
-		{
-			if (expr is SqlFunction func)
-				return func.IsAggregate;
-
-			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
-
-			return false;
-		}
-
 		void OptimizeApply(HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
 		{
 			var joinSource = joinTable.Table;
@@ -961,7 +951,7 @@ namespace LinqToDB.SqlQuery
 
 			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
 			{
-				return null != QueryVisitor.Find(qe, e =>
+				return null != new QueryVisitor().Find(qe, e =>
 					e == table ||
 					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
 					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
@@ -970,7 +960,7 @@ namespace LinqToDB.SqlQuery
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
+				var isAgg = sql.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
 
 				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
 					return;
@@ -1025,7 +1015,7 @@ namespace LinqToDB.SqlQuery
 						foreach (var condition in searchCondition)
 						{
 							var visitor = new QueryVisitor();
-							var newPredicate = visitor.ConvertImmutable(condition.Predicate, e =>
+							var newPredicate = visitor.Convert(condition.Predicate, e =>
 							{
 								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
 								{
@@ -1122,7 +1112,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var sql = _selectQuery.From.Tables[i].Source as SelectQuery;
 
-					if (!_selectQuery.Select.Columns.All(c => IsAggregationFunction(c.Expression)))
+					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 						if (sql != null && sql.OrderBy.Items.Count > 0)
 							foreach (var item in sql.OrderBy.Items)
 								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
@@ -1130,6 +1120,30 @@ namespace LinqToDB.SqlQuery
 					_selectQuery.From.Tables[i] = table;
 				}
 			}
+
+			//TODO: Failed SelectQueryTests.JoinScalarTest
+			//Needs optimization refactor for 3.X
+			/*
+			if (_selectQuery.IsSimple 
+			    && _selectQuery.From.Tables.Count == 1 
+				&& _selectQuery.From.Tables[0].Joins.Count == 0
+			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
+				&& selectQuery.IsSimple
+			    && selectQuery.From.Tables.Count == 0)
+			{
+				// we can merge queries without tables
+				_selectQuery.Walk(new WalkOptions(), e =>
+				{
+					if (e is SqlColumn column && column.Parent == selectQuery)
+					{
+						return column.Expression;
+					}
+
+					return e;
+				});
+				_selectQuery.From.Tables.Clear();
+			}
+			*/
 		}
 
 		void OptimizeApplies(bool isApplySupported, bool optimizeColumns)

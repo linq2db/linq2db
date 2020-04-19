@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -13,7 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new InformixDataProvider();
+			return InformixTools.GetDataProvider();
 		}
 	}
 }

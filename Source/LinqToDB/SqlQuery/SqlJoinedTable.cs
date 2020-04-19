@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlJoinedTable(JoinType joinType, ISqlTableSource table, string alias, bool isWeak)
+		public SqlJoinedTable(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak)
 			: this(joinType, new SqlTableSource(table, alias), isWeak)
 		{
 		}
@@ -57,9 +57,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 		{
-			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, action);
+			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, action)!;
 
 			Table.Walk(options, action);
 

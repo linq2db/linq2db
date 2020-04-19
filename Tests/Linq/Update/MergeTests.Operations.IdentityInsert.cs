@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test, Parallelizable(ParallelScope.None)]
-		public void ImplicitIdentityInsert([IdentityInsertMergeDataContextSource] string context)
+		public void ImplicitIdentityInsert([IdentityInsertMergeDataContextSource(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -58,6 +58,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test, Parallelizable(ParallelScope.None)]
 		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
@@ -73,7 +74,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick")
+						s => s.Patient!.Diagnosis.Contains("sick")
 						, s => new Model.Person()
 						{
 							ID = nextId + 1,
@@ -107,6 +108,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test, Parallelizable(ParallelScope.None)]
 		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
@@ -122,7 +124,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick"),
+						s => s.Patient!.Diagnosis.Contains("sick"),
 						s => new Model.Person()
 						{
 							FirstName = "Inserted 1",
@@ -159,7 +161,7 @@ namespace Tests.xUpdate
 		public void ImplicitInsertIdentityWithSkipOnInsert(
 			[IdentityInsertMergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var table = db.GetTable<TestMappingWithIdentity>();
 				table.Delete();

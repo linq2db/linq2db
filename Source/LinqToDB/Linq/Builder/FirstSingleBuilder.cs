@@ -8,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
+	using System.Diagnostics.CodeAnalysis;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -41,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 					case "SingleAsync"          :
 					case "SingleOrDefaultAsync" :
 						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value >= 2)
+							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
 								take = 2;
 
 						break;
@@ -54,8 +55,8 @@ namespace LinqToDB.Linq.Builder
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var isAsync = methodCall.Method.Name.EndsWith("Async");
 
@@ -90,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 
 		public class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
@@ -113,14 +114,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
@@ -129,14 +130,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -144,14 +145,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).Single();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)
@@ -166,14 +167,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
-					var obj   = default(T);
+					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)
@@ -201,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 
 					var join = SelectQuery.OuterApply();
 
-					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
 			}
 
@@ -218,12 +219,12 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent.SelectQuery.GroupBy.IsEmpty &&
+						Parent!.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{
 						CreateJoin();
@@ -254,36 +255,39 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
-							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						{
+							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
+						}
 
-						var idx = Parent.SelectQuery.Select.Add(SelectQuery);
+						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
 						    idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx);
 					}
 
-					return null;
+					return null!; // ???
 				}
 
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				return Sequence.ConvertToSql(expression, level + 1, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				return Sequence.ConvertToIndex(expression, level, flags);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

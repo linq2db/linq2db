@@ -496,8 +496,8 @@ namespace Tests.UserTests
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
 			using (var table = db.CreateLocalTable<PersonCacheFluent>())
 			{
-				object claimedKeyType = KeyTypes.EC;
-				object claimedKeyTypeNull = null;
+				object  claimedKeyType     = KeyTypes.EC;
+				object? claimedKeyTypeNull = null;
 
 				table.Value(p => p.Id, 0)
 					.Value(p => p.ClaimedKeyType , claimedKeyType)
