@@ -62,7 +62,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource(true, TestProvName.AllSybase)] string context)
+		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource(true, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestTable>())

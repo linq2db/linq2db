@@ -1969,11 +1969,10 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
-		[ActiveIssue]
 		[Test]
-		public void Issue672Test([DataSources] string context, [Values] bool enableGroupByguard)
+		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new GuardGrouping(enableGroupByguard))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Stone>())
 			{
@@ -1991,6 +1990,175 @@ namespace Tests.Linq
 						 select sG.First();
 
 				var list = stones.ToList();
+			}
+		}
+
+		[Table]
+		class Issue680Table
+		{
+			[Column] public DateTime TimeStamp;
+		}
+
+		[ActiveIssue(680)]
+		[Test]
+		public void Issue680Test([DataSources(false)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue680Table>())
+			{
+				var result = (from record in table
+							  group record by record.TimeStamp into g
+							  select new
+							  {
+								  res = g.Count(r => r.TimeStamp > DateTime.Now),
+							  }).ToList();
+
+				var index = db.LastQuery!.IndexOf("SELECT");
+				Assert.AreNotEqual(-1, index);
+				index = db.LastQuery.IndexOf("SELECT", index + 1);
+				Assert.AreEqual(-1, index);
+			}
+		}
+
+		// check why firebird and access fails on generated sql
+		// FirebirdSql.Data.Common.IscException : arithmetic exception, numeric overflow, or string truncation string right truncation
+		//
+		// OleDbException : IErrorInfo.GetDescription failed with E_FAIL(0x80004005).
+		// Access issue could be related to reserved words but I don't see anything suspicious in failed query
+		// https://support.microsoft.com/en-us/office/learn-about-access-reserved-words-and-symbols-ae9d9ada-3255-4b12-91a9-f855bdd9c5a2?ocmsassetid=ha010030643&correlationid=13c0f607-b794-4387-b8d9-bdffce04d996&ui=en-us&rs=en-us&ad=us
+		[ActiveIssue(Configurations = new[] { TestProvName.AllFirebird, ProviderName.Access })]
+		[Test]
+		public void Issue434Test1([DataSources] string context)
+		{
+			var input = "test";
+
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
+				{
+					Name = re.FirstName,
+					Roles = ri.ToList().Select(p => p.Diagnosis)
+				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
+			}
+		}
+
+		[Test]
+		public void Issue434Test2([DataSources] string context)
+		{
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
+				{
+					Name = re.FirstName,
+					Roles = ri.ToList().Select(p => p.Diagnosis)
+				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
+			}
+		}
+
+		[Table(Name = "Issue913Test")]
+		public class Instrument
+		{
+			[Column, PrimaryKey, NotNull] public int InstrumentID { get; set; } // int
+			[Column(Length = 1), Nullable] public TradingStatus? TradingStatus { get; set; } // char(1)
+
+			public static readonly Instrument[] Data = new[]
+			{
+				new Instrument() { InstrumentID = 1 },
+				new Instrument() { InstrumentID = 2, TradingStatus = GroupByTests.TradingStatus.Active },
+				new Instrument() { InstrumentID = 3, TradingStatus = GroupByTests.TradingStatus.Delisted }
+			};
+		}
+
+		public enum TradingStatus
+		{
+			[MapValue("A")] Active,
+			[MapValue("D")] Delisted,
+		}
+
+		[ActiveIssue(913)]
+		[Test]
+		public void Issue913Test([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Instrument.Data))
+			{
+				var q = from i in table
+					group i by new
+					{
+						IsDelisted = i.TradingStatus == TradingStatus.Delisted
+					}
+					into g
+						select new
+						{
+							g.Key.IsDelisted,
+							Count = g.Count(),
+						};
+
+				var x = q.ToList().OrderBy(_ => _.Count).ToArray();
+
+				Assert.AreEqual(2, x.Length);
+				Assert.True(x[0].IsDelisted);
+				Assert.AreEqual(1, x[0].Count);
+				Assert.False(x[1].IsDelisted);
+				Assert.AreEqual(2, x[1].Count);
+			}
+		}
+
+		class Issue1078Table
+		{
+			[Identity]
+			public int UserID { get; set; }
+			[Column, NotNull]
+			public int SiteID { get; set; }
+			[Column, NotNull]
+			public string Username { get; set; } = null!;
+			[Column, NotNull]
+			public bool Active { get; set; }
+		}
+
+		[ActiveIssue(1078)]
+		[Test]
+		public void Issue1078Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1078Table>())
+			{
+				var query =
+					from u in table
+					group u.Active ? 1 : 0 by u.SiteID into grp
+					select new
+					{
+						SiteID   = grp.Key,
+						Total    = grp.Count(),
+						Inactive = grp.Count(_ => _ == 0)
+					};
+
+				query.ToList();
+			}
+		}
+
+		class Issue1192Table
+		{
+			public int IdId { get; internal set; }
+			public int MyOtherId { get; internal set; }
+			public int Status { get; internal set; }
+		}
+
+		[Test]
+		public void Issue1198Test([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1192Table>())
+			{
+				var stats = (from t in table
+							 where t.MyOtherId == 12
+							 group t by 1 into g
+							 select new
+							 {
+								 MyGroupedCount = g.Count(i => i.Status == 3),
+							 }).FirstOrDefault();
 			}
 		}
 	}

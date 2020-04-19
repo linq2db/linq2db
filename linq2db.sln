@@ -72,6 +72,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		Compile.cmd = Compile.cmd
 		CONTRIBUTING.md = CONTRIBUTING.md
 		MIT-LICENSE.txt = MIT-LICENSE.txt
+		nuget.config = nuget.config
 		README.md = README.md
 		Test.cmd = Test.cmd
 	EndProjectSection
@@ -369,6 +370,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{
 		Build\Azure\pipelines\build.yml = Build\Azure\pipelines\build.yml
 		Build\Azure\pipelines\default.yml = Build\Azure\pipelines\default.yml
 		Build\Azure\pipelines\experimental.yml = Build\Azure\pipelines\experimental.yml
+		Build\Azure\pipelines\nuget-vars.yml = Build\Azure\pipelines\nuget-vars.yml
 		Build\Azure\pipelines\test-all.yml = Build\Azure\pipelines\test-all.yml
 	EndProjectSection
 EndProject

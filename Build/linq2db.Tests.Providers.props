@@ -12,14 +12,14 @@
 
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.1" />
 		<PackageReference Include="MySql.Data" Version="8.0.19" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.63.1" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.63.2" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 

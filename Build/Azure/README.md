@@ -10,7 +10,7 @@ All existing pipelines we have listed below. If you need more flexible test runs
 
 Automatically runs for:
 - PR to `release` branch: runs all tests for PR commit
-- commit to `master` or `release.3.0`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+- commit to `master`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
 - commit to `release`: publish nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
 
 #### `build` pipeline
@@ -63,11 +63,11 @@ Legend:
 |MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1|:x:|:x:|:x:|:x:|
 |MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1|:x:|:x:|:x:|:x:|
-|MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 1.1.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 1.1.2<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1|:x:|:x:|:x:|:x:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.19|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.19|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.63.1|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.63.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.19|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.10 (netfx) / 4.1.3.1 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.10 (netfx) / 4.1.3.1 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -613,6 +612,154 @@ namespace Tests.Linq
 			}
 		}
 
+		#region issue 1862
+		[Table]
+		public partial class Blog
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public string? Title  { get; set; }
+			[Column] public string? Slogan { get; set; }
+			[Column] public string? UserId { get; set; }
 
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Post.BlogId))]
+			public virtual ICollection<Post> Posts { get; set; } = null!;
+
+			public static readonly Blog[] Data = new[]
+			{
+				new Blog() { Id = 1, Title = "Another .NET Core Guy", Slogan = "Doing .NET Core Stuff", UserId = Guid.NewGuid().ToString("N") }
+			};
+		}
+
+		[Table]
+		public partial class Post
+		{
+			[Column] public int     Id          { get; set; }
+			[Column] public int     BlogId      { get; set; }
+			[Column] public string? Title       { get; set; }
+			[Column] public string? PostContent { get; set; }
+			[Column] public bool    IsDeleted   { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PostTag.PostId), CanBeNull = true)]
+			public virtual ICollection<PostTag> PostTags { get; set; } = null!;
+
+			public static readonly Post[] Data = new[]
+			{
+				new Post() { Id = 1, BlogId = 1, Title = "Post 1", PostContent = "Content 1 is about EF Core and Razor page", IsDeleted = false },
+				new Post() { Id = 2, BlogId = 1, Title = "Post 2", PostContent = "Content 2 is about Dapper", IsDeleted = false },
+				new Post() { Id = 3, BlogId = 1, Title = "Post 3", PostContent = "Content 3", IsDeleted = true },
+				new Post() { Id = 4, BlogId = 1, Title = "Post 4", PostContent = "Content 4", IsDeleted = false },
+			};
+		}
+
+		[Table]
+		public partial class Tag
+		{
+			[Column] public int     Id        { get; set; }
+			[Column] public string? Name      { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PostTag.TagId), CanBeNull = true)]
+			public virtual ICollection<PostTag> PostTags { get; set; } = null!;
+
+			public static readonly Tag[] Data = new[]
+			{
+				new Tag() { Id = 1, Name = "Razor Page", IsDeleted = false },
+				new Tag() { Id = 2, Name = "EF Core", IsDeleted = false },
+				new Tag() { Id = 3, Name = "Dapper", IsDeleted = false },
+				new Tag() { Id = 4, Name = "Slapper Dapper", IsDeleted = false },
+				new Tag() { Id = 5, Name = "SqlKata", IsDeleted = true },
+			};
+		}
+
+		[Table]
+		public partial class PostTag
+		{
+			[Column] public int  Id        { get; set; }
+			[Column] public int  PostId    { get; set; }
+			[Column] public int  TagId     { get; set; }
+			[Column] public bool IsDeleted { get; set; }
+
+			[Association(ThisKey = nameof(PostId), OtherKey = nameof(EagerLoadingTests.Post.Id), CanBeNull = false)]
+			public virtual Post Post { get; set; } = null!;
+			[Association(ThisKey = nameof(TagId), OtherKey = nameof(EagerLoadingTests.Tag.Id), CanBeNull = false)]
+			public virtual Tag  Tag  { get; set; } = null!;
+
+			public static readonly PostTag[] Data = new[]
+			{
+				new PostTag() { Id = 1, PostId = 1, TagId = 1, IsDeleted = false },
+				new PostTag() { Id = 2, PostId = 1, TagId = 2, IsDeleted = false },
+				new PostTag() { Id = 3, PostId = 2, TagId = 3, IsDeleted = false },
+				new PostTag() { Id = 4, PostId = 4, TagId = 5, IsDeleted = false },
+			};
+		}
+
+		[Test]
+		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db      = GetDataContext(context))
+			using (var blog    = db.CreateLocalTable(Blog.Data))
+			using (var post    = db.CreateLocalTable(Post.Data))
+			using (var tage    = db.CreateLocalTable(Tag.Data))
+			using (var postTag = db.CreateLocalTable(PostTag.Data))
+			{
+				var blogId = 1;
+				var query = blog.Where(b => b.Id == blogId).Select(b => new
+				{
+					b.Id,
+					b.Title,
+					Posts = b.Posts.Select(p => new
+					{
+						p.Id,
+						p.Title,
+						p.PostContent,
+						Tags = p.PostTags.Where(p => !p.IsDeleted).Select(t => new
+						{
+							Id = t.TagId,
+							t.Tag.Name
+						}).OrderBy(t => t.Id).ToArray()
+					}).OrderBy(p => p.Id).ToArray()
+				});
+
+				var result = new
+				{
+					Blog = query.ToArray()
+				};
+
+				Assert.AreEqual(1, result.Blog.Length);
+				Assert.AreEqual(1, result.Blog[0].Id);
+				Assert.AreEqual("Another .NET Core Guy", result.Blog[0].Title);
+				Assert.AreEqual(4, result.Blog[0].Posts.Length);
+
+				Assert.AreEqual(1, result.Blog[0].Posts[0].Id);
+				Assert.AreEqual("Post 1", result.Blog[0].Posts[0].Title);
+				Assert.AreEqual("Content 1 is about EF Core and Razor page", result.Blog[0].Posts[0].PostContent);
+				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags.Length);
+				Assert.AreEqual(1, result.Blog[0].Posts[0].Tags[0].Id);
+				Assert.AreEqual("Razor Page", result.Blog[0].Posts[0].Tags[0].Name);
+				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags[1].Id);
+				Assert.AreEqual("EF Core", result.Blog[0].Posts[0].Tags[1].Name);
+
+				Assert.AreEqual(2, result.Blog[0].Posts[1].Id);
+				Assert.AreEqual("Post 2", result.Blog[0].Posts[1].Title);
+				Assert.AreEqual("Content 2 is about Dapper", result.Blog[0].Posts[1].PostContent);
+				Assert.AreEqual(1, result.Blog[0].Posts[1].Tags.Length);
+				Assert.AreEqual(3, result.Blog[0].Posts[1].Tags[0].Id);
+				Assert.AreEqual("Dapper", result.Blog[0].Posts[1].Tags[0].Name);
+
+				Assert.AreEqual(3, result.Blog[0].Posts[2].Id);
+				Assert.AreEqual("Post 3", result.Blog[0].Posts[2].Title);
+				Assert.AreEqual("Content 3", result.Blog[0].Posts[2].PostContent);
+				Assert.AreEqual(0, result.Blog[0].Posts[2].Tags.Length);
+
+				Assert.AreEqual(4, result.Blog[0].Posts[3].Id);
+				Assert.AreEqual("Post 4", result.Blog[0].Posts[3].Title);
+				Assert.AreEqual("Content 4", result.Blog[0].Posts[3].PostContent);
+				Assert.AreEqual(1, result.Blog[0].Posts[3].Tags.Length);
+				Assert.AreEqual(5, result.Blog[0].Posts[3].Tags[0].Id);
+				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
+			}
+		}
+		#endregion
 	}
 }

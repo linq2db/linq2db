@@ -2809,5 +2809,27 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		[ActiveIssue(399)]
+		[Test]
+		public void Issue399Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables     = false,
+					GetProcedures = true
+				});
+
+				Assert.AreEqual(11, schema.Procedures.Count);
+
+				// This filter used by T4 generator
+				Assert.AreEqual(11, schema.Procedures.Where(
+					proc => proc.IsLoaded
+					|| proc.IsFunction && !proc.IsTableFunction
+					|| proc.IsTableFunction && proc.ResultException != null).Count());
+			}
+		}
 	}
 }

@@ -996,6 +996,152 @@ namespace Tests.Linq
 				//No assert, just need to get past here without an exception
 			}
 		}
+
+		[Table]
+		class Employee
+		{
+			[Column] public int  Id           { get; set; }
+			[Column] public int? DepartmentId { get; set; }
+
+			[Association(ExpressionPredicate = nameof(DepartmentPredicate), CanBeNull = true)]
+			public Department? Department { get; set; }
+
+			public static Expression<Func<Employee, Department, bool>> DepartmentPredicate => (e, d) => e.DepartmentId == d.DepartmentId && !d.Deleted;
+		}
+
+		[Table]
+		class Department
+		{
+			[Column] public int     DepartmentId { get; set; }
+			[Column] public string? Name         { get; set; }
+			[Column] public bool    Deleted      { get; set; }
+		}
+
+		[ActiveIssue(845)]
+		[Test]
+		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<Employee>())
+			using (db.CreateLocalTable<Department>())
+			{
+				var result = db.GetTable<Employee>()
+					.Select(e => new { e.Id, e.Department!.Name})
+					.ToList();
+
+				Assert.False(db.LastQuery!.Contains(" NOT"));
+				//Assert.True(db.LastQuery!.Contains("AND 1 <> [a_Department].[Deleted]"));
+				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
+			}
+		}
+
+		class Entity1711
+		{ 
+			public long Id { get; set; }
+		}
+
+		class Relationship1711
+		{
+			public long EntityId { get; set; }
+
+			public bool Deleted { get; set; }
+		}
+
+		[Test]
+		public void Issue1711Test1([DataSources(ProviderName.Access)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<Entity1711>()
+				.HasTableName("Entity1711")
+				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId); ;
+
+			using (var db = GetDataContext(context, ms))
+			using (var entity = db.CreateLocalTable<Entity1711>())
+			using (db.CreateLocalTable<Relationship1711>())
+			{
+				var result1 = entity
+					.Where(t => Sql.Property<IQueryable<Relationship1711>>(t, "relationship").Any())
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(1711)]
+		[Test]
+		public void Issue1711Test2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<Entity1711>()
+				.HasTableName("Entity1711")
+				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), (e, db) => db.GetTable<Relationship1711>()
+						.Where(r => r.Deleted == false && r.EntityId == e.Id));
+
+			using (var db = GetDataContext(context, ms))
+			using (var entity = db.CreateLocalTable<Entity1711>())
+			using (db.CreateLocalTable<Relationship1711>())
+			{
+				var result1 = entity
+					.Where(t => Sql.Property<IQueryable<Relationship1711>>(t, "relationship").Any())
+					.ToList();
+			}
+		}
+
+		[Table]
+		class Issue1096Task
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string? TargetName { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ActualStageExp))]
+			public Issue1096TaskStage ActualStage { get; set; } = null!;
+
+			private static Expression<Func<Issue1096Task, Issue1096TaskStage, bool>> ActualStageExp()
+				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
+		}
+
+		[Table]
+		class Issue1096TaskStage
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public int TaskId { get; set; }
+
+			[Column]
+			public bool Actual { get; set; }
+		}
+
+		[Test]
+		public void Issue1096Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1096Task>())
+			using (db.CreateLocalTable<Issue1096TaskStage>())
+			{
+				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Issue1096TaskStage { Id = 1, TaskId = 1, Actual = true });
+
+				var query = db.GetTable<Issue1096Task>()
+					.Distinct()
+					.Select(t => new { t, t.ActualStage });
+				var res = query.ToArray();
+
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(1, res[0].t.Id);
+				Assert.AreEqual("bda.Requests", res[0].t.TargetName);
+				Assert.AreEqual(1, res[0].ActualStage.Id);
+				Assert.AreEqual(1, res[0].ActualStage.TaskId);
+				Assert.AreEqual(true, res[0].ActualStage.Actual);
+			}
+		}
 	}
 
 	public static class AssociationExtension
