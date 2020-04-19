@@ -1,72 +1,153 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	public class AssociationContext : IBuildContext
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}, T: {BuildContextDebuggingHelper.GetContextInfo(TableContext)}")]
+	class AssociationContext : IBuildContext
 	{
-		public string? _sqlQueryText { get; }
-		public string Path { get; }
+#if DEBUG
+		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
+		public string Path => this.GetPath();
+#endif
 		public ExpressionBuilder Builder { get; }
 		public Expression? Expression { get; }
-		public SelectQuery SelectQuery { get; set { throw new NotImplementedException();} }
-		public SqlStatement? Statement { get; set; }
+
+		public SelectQuery SelectQuery
+		{
+			// get => TableContext.SelectQuery;
+			get => SubqueryContext.SelectQuery;
+			set => throw new NotImplementedException();
+		}
+
+		public SqlStatement? Statement 
+		{ 
+			get => SubqueryContext.Statement;
+			set => SubqueryContext.Statement = value;
+		}
+
 		public IBuildContext? Parent { get; set; }
 
-		public AssociationContext(TableBuilder.TableContext tableContext, IBuildContext subqueryContext)
+		public IBuildContext TableContext { get; }
+		public IBuildContext SubqueryContext { get; }
+
+		public AssociationContext(ExpressionBuilder builder, IBuildContext tableContext, IBuildContext subqueryContext)
 		{
-			
+			Builder = builder;
+			TableContext = tableContext;
+			SubqueryContext = subqueryContext;
+			SubqueryContext.Parent = this;
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			throw new System.NotImplementedException();
+			SubqueryContext.BuildQuery(query, queryParameter);
+		}
+
+		static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)
+		{
+			if (expression != null)
+			{
+				var root = expression.GetRootObject(current.Builder.MappingSchema);
+				if (root is ContextRefExpression refExpression)
+				{
+					if (refExpression.BuildContext == current)
+					{
+						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying));
+					};
+				}
+			}
+
+			return expression;
 		}
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			throw new System.NotImplementedException();
+			expression = CorrectExpression(expression, this, SubqueryContext);
+			return SubqueryContext.BuildExpression(expression, level, enforceServerSide);
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			throw new System.NotImplementedException();
+			expression = CorrectExpression(expression, this, SubqueryContext);
+			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
+			foreach (var sqlInfo in indexes)
+			{
+				sqlInfo.Query = SelectQuery;
+			}
+
+			return indexes;
 		}
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			throw new System.NotImplementedException();
+			expression = CorrectExpression(expression, this, SubqueryContext);
+
+			var indexes = SubqueryContext
+				.ConvertToIndex(expression, level, flags)
+				.ToArray();
+
+			foreach (var sqlInfo in indexes)
+			{
+				sqlInfo.Index = SelectQuery.Select.Add(sqlInfo.Sql);
+				sqlInfo.Sql   = SelectQuery.Select.Columns[sqlInfo.Index];
+				sqlInfo.Query = SelectQuery;
+
+			}
+
+			return indexes;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			throw new System.NotImplementedException();
+			expression = CorrectExpression(expression, this, SubqueryContext);
+			return SubqueryContext.IsExpression(expression, level, requestFlag);
 		}
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			throw new System.NotImplementedException();
+			//???
+			expression = CorrectExpression(expression, this, SubqueryContext);
+			return SubqueryContext.GetContext(expression, level, buildInfo);
 		}
+
+		readonly Dictionary<ISqlExpression,int> _columnIndexes = new Dictionary<ISqlExpression,int>();
+
+		int GetIndex(SqlColumn column)
+		{
+			if (!_columnIndexes.TryGetValue(column, out var idx))
+			{
+				idx = SelectQuery.Select.Add(column);
+				_columnIndexes.Add(column, idx);
+			}
+
+			return idx;
+		}
+
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			throw new System.NotImplementedException();
+			return TableContext.ConvertToParentIndex(index, context);
 		}
 
 		public void SetAlias(string alias)
 		{
-			throw new System.NotImplementedException();
+			//TODO
 		}
 
 		public ISqlExpression? GetSubQuery(IBuildContext context)
 		{
-			throw new System.NotImplementedException();
+			return null;
 		}
 
 		public SqlStatement GetResultStatement()
 		{
-			throw new System.NotImplementedException();
+			return TableContext.GetResultStatement();
 		}
 	}
 }

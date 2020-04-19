@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -213,6 +214,7 @@ namespace LinqToDB.Linq.Builder
 				if (_checkNullIndex < 0)
 				{
 					_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
+					SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
 

@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 			return definedQueryMethod;
 		}
 
-		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
+		public static AssociationContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
@@ -211,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 
 			tableSource.Joins.Add(join.JoinedTable);
 			
-			return context;
+			return new AssociationContext(builder, tableContext, context);
 		}
 
 		public static IBuildContext BuildAssociationSelectMany1(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
@@ -247,9 +247,22 @@ namespace LinqToDB.Linq.Builder
 			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
-			queryMethod = Expression.Lambda(body, queryMethod.Parameters);
+			IBuildContext context;
 
-			var context = builder.BuildSequence(new BuildInfo(buildInfo, body, buildInfo.SelectQuery));
+			if (buildInfo.SelectQuery.From.Tables.Count > 0 && buildInfo.Parent != null)
+			{
+				context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
+
+				var tableSource = buildInfo.SelectQuery.From.Tables.Last();
+				var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
+					null, false, null);
+				tableSource.Joins.Add(join.JoinedTable);
+				context = new AssociationContext(builder, buildInfo.Parent, context);
+			}
+			else
+			{
+				context = builder.BuildSequence(new BuildInfo(buildInfo, body));
+			}
 
 			return context;
 		}
@@ -261,6 +274,24 @@ namespace LinqToDB.Linq.Builder
 			var queryLambda = CreateAssociationQueryLambda(
 				builder, descriptor, tableContext.OriginalType, tableContext.ObjectType, elementType,
 				true, false, tableContext.LoadWith, out _);
+
+
+			var parentRef    = new ContextRefExpression(tableContext.ObjectType, tableContext);
+			var expr         = queryLambda.GetBody(parentRef);
+
+			var info = new BuildInfo(buildInfo, expr, buildInfo.SelectQuery);
+
+			var context = builder.BuildSequence(info);
+			return context;
+		}
+
+		public static IBuildContext BuildAssociationSubquery2(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
+		{
+			var elementType = descriptor.GetElementType(builder.MappingSchema);
+
+			var queryLambda = CreateAssociationQueryLambda(
+				builder, descriptor, tableContext.OriginalType, tableContext.ObjectType, elementType,
+				false, isOuter, tableContext.LoadWith, out isOuter);
 
 
 			var parentRef    = new ContextRefExpression(tableContext.ObjectType, tableContext);

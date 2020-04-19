@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Tests.Playground
@@ -427,6 +429,9 @@ AS RETURN
 
 				var result = query.ToArray();
 
+				DataConnection.WriteTraceLine("--------------------------------------------------", "--", TraceLevel.Info);
+				DataConnection.WriteTraceLine("--------------------------------------------------", "--", TraceLevel.Info);
+
 				var expected = entities.Take(2).Select(e => new
 				{
 					e.Id,
@@ -434,7 +439,13 @@ AS RETURN
 					Other         = e.Other,
 					OthersFromSql = e.OthersFromSql.ToArray(),
 					OtherFromSql  = e.OtherFromSql
-				});
+				}).ToArray();
+
+				var serializerSettings = new JsonSerializerSettings
+					{ NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+				
+				var expectedStr = JsonConvert.SerializeObject(expected, serializerSettings);
+				var resultStr   = JsonConvert.SerializeObject(result,  serializerSettings);
 
 				AreEqualWithComparer(expected, result);
 				DropFunction(db);

@@ -954,8 +954,13 @@ namespace LinqToDB.Linq.Builder
 										}
 									};
 							}
-							
-							var resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression, contextInfo.CurrentLevel + 1, flags);
+
+							SqlInfo[] resultSql;
+							var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
+							if (maxLevel == 0)
+								resultSql = contextInfo.Context.ConvertToSql(null, 0, flags);
+							else
+								resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression, contextInfo.CurrentLevel + 1, flags);
 							return resultSql;
 						}
 				}
@@ -1041,7 +1046,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, currentLevel);
 
-								var descriptor = GetAssociationDescriptor(levelExpression, out _);
+								var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
 								if (descriptor == null)
 									return IsExpressionResult.False;
 
@@ -1131,8 +1136,7 @@ namespace LinqToDB.Linq.Builder
 					var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
 					if (descriptor != null)
 					{
-						var isOuter = false;
-						// var isOuter = buildInfo.IsOuterAssociations;
+						var isOuter = descriptor.CanBeNull;
 						
 						{
 							IBuildContext associatedContext;
@@ -1146,11 +1150,11 @@ namespace LinqToDB.Linq.Builder
 									// associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression) , 
 									// 	this, descriptor, ref isOuter);
 
-									associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(this, levelExpression, SelectQuery), this, descriptor, false, ref isOuter);
-									associatedContext.Parent = this;
-
-									_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-									_associationContexts.Add(memberInto, associatedContext);
+									////associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(buildInfo, levelExpression, SelectQuery), this, descriptor, false, ref isOuter);
+									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, buildInfo, this, descriptor, ref isOuter);
+									
+									// _associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
+									// _associationContexts.Add(memberInto, associatedContext);
 								}
 							}
 							else
@@ -1159,10 +1163,25 @@ namespace LinqToDB.Linq.Builder
 								if (buildInfo.CreateSubQuery)
 								{ 
 									var subQuery = new SelectQuery();
-									associatedContext = AssociationHelper.BuildAssociationSubquery(Builder, new BuildInfo(this, levelExpression, subQuery) {CreateSubQuery = true}, this, descriptor);
+									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
+										new BuildInfo(buildInfo, levelExpression, subQuery), this, descriptor,
+										ref isOuter);
 								}
 								else
 								{
+									if (buildInfo.IsSubQuery && levelExpression == expression)
+									{
+										//var subQuery = new SelectQuery();
+										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
+											new BuildInfo(buildInfo, levelExpression), this, descriptor, ref isOuter);
+									}
+									else
+									{
+										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
+											buildInfo,
+											this, descriptor, ref isOuter);
+									}
+
 									// if (buildInfo.IsSubQuery)
 									// {
 									// 	associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression, new SelectQuery()) , 
@@ -1177,13 +1196,12 @@ namespace LinqToDB.Linq.Builder
 									// associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(()null, buildInfo.Expression, this.SelectQuery) , 
 									// 	this, descriptor, ref isOuter);
 
-									associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(buildInfo.Parent, buildInfo.Expression, SelectQuery) , 
-										this, descriptor, false, ref isOuter);
 								}
 
 								isOuter = false;
 							}
 
+							
 							if (levelExpression != expression)
 							{
 								var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
@@ -1197,13 +1215,14 @@ namespace LinqToDB.Linq.Builder
 								// 	new BuildInfo(buildInfo.Parent, newExpr, SelectQuery) { IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery });
 								return subContext;
 							}
+							
 
 							return associatedContext;
 						}
 					}
 				}
 
-				return null;
+				throw new InvalidOperationException();
 			}
 
 			public virtual SqlStatement GetResultStatement()
@@ -1519,8 +1538,6 @@ namespace LinqToDB.Linq.Builder
 											true,
 											ref isOuter);
 
-										associatedContext.Parent = this;
-
 										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
 										_associationContexts.Add(memberInto, associatedContext);
 									}
@@ -1645,7 +1662,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out MemberInfo memberInfo)
+			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out MemberInfo memberInfo, bool onlyCurrent = true)
 			{
 				memberInfo = null;
 				if (expression.NodeType == ExpressionType.MemberAccess)
@@ -1656,13 +1673,16 @@ namespace LinqToDB.Linq.Builder
 				if (memberInfo == null)
 					return null;
 
-				return GetAssociationDescriptor(memberInfo);
+				var descriptor = GetAssociationDescriptor(memberInfo, EntityDescriptor);
+				if (descriptor == null && !onlyCurrent && memberInfo.DeclaringType != ObjectType)
+					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.DeclaringType));
+
+				return descriptor;
 			}
 
-			AssociationDescriptor? GetAssociationDescriptor(MemberInfo memberInfo)
+			AssociationDescriptor? GetAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
 			{
 				AssociationDescriptor? descriptor = null;
-				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(memberInfo.DeclaringType);
 				
 				if (memberInfo.MemberType == MemberTypes.Method)
 				{

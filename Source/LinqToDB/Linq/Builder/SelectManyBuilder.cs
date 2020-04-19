@@ -140,10 +140,6 @@ namespace LinqToDB.Linq.Builder
 						else if (foundJoin.JoinType == JoinType.CrossApply)
 							foundJoin.JoinType = JoinType.OuterApply;
 					}
-					else
-					{
-
-					}
 				}
 
 				if (selectManyContext != null)
