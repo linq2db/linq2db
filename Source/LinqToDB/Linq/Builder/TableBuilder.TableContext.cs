@@ -1140,27 +1140,59 @@ namespace LinqToDB.Linq.Builder
 						
 						{
 							IBuildContext associatedContext;
-							if (levelExpression != expression)
+							if (true /*levelExpression != expression)*/)
 							{
-								//var newBuildInfo = new BuildInfo(buildInfo, buildInfo.Expression);
-								var newBuildInfo = new BuildInfo(buildInfo, buildInfo.Expression, new SelectQuery());
-								if (!descriptor.IsList)
-								{
-									if (_associationContexts == null ||
-									    !_associationContexts.TryGetValue(memberInto, out associatedContext))
-									{
-										associatedContext = AssociationHelper.BuildAssociationSubqueryInline(Builder,
-											newBuildInfo, this,
-											descriptor, ref isOuter);
+								var currentDescriptor = descriptor;
+								Expression currentQuery = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(ObjectType), this);
+								var currentParentOriginal = ObjectType;
 
-										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-										_associationContexts.Add(memberInto, associatedContext);
-									}
-								}
-								else
+								do
 								{
-									associatedContext = AssociationHelper.BuildAssociationSubqueryInline(Builder, newBuildInfo, this, descriptor, ref isOuter);
-								}
+									var elementType     = currentDescriptor.GetElementType(Builder.MappingSchema);
+									var parentExactType = currentDescriptor.GetParentElementType();
+
+									isOuter = false;
+									var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
+										Builder, currentDescriptor, currentParentOriginal, parentExactType, elementType,
+										false, isOuter, LoadWith, out isOuter);
+
+									var selectManyMethod =
+										Methods.Queryable.SelectManyProjection.MakeGenericMethod(currentParentOriginal,
+											elementType,
+											elementType);
+
+									var childQueryLambda = Expression.Lambda(
+										EagerLoading.EnsureEnumerable(queryMethod.Body, Builder.MappingSchema),
+										queryMethod.Parameters);
+
+									var parentParam = Expression.Parameter(currentParentOriginal, "master");
+									var detailParam = Expression.Parameter(elementType, "detail");
+									//var resultBody = expression.Replace(levelExpression, detailParam);
+									var resultLmbda = Expression.Lambda(detailParam, parentParam, detailParam);
+
+									currentQuery = Expression.Call(selectManyMethod, currentQuery,
+										childQueryLambda, resultLmbda);
+
+									if (levelExpression == expression)
+										break;
+
+									++level;
+									levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+									currentDescriptor =
+										GetAssociationDescriptor(levelExpression, out memberInto, false);
+
+									if (currentDescriptor == null)
+										throw new LinqToDBException($"Can not find association for {levelExpression}");
+
+									currentParentOriginal = elementType;
+
+								} while (true);
+								
+								var subContext = Builder.BuildSequence(new BuildInfo(buildInfo, currentQuery));
+								
+								return subContext;
+
 							}
 							else
 							{
@@ -1236,16 +1268,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
 								var newExpr    = expression.Replace(levelExpression, contextRef);
-								var subContext = Builder.BuildSequence(
-									new BuildInfo(associatedContext, newExpr, associatedContext.SelectQuery)
-									{
-										IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery
-									});
+								var subContext = Builder.BuildSequence(new BuildInfo(buildInfo, newExpr));
 
-								if (subContext.SelectQuery.From.Tables.Count == 0)
-								{
-									subContext.SelectQuery.From.Table(associatedContext.SelectQuery);
-								}
+								
 								// var subContext = associatedContext.GetContext(newExpr, 0,
 								// 	new BuildInfo(buildInfo.Parent, newExpr, SelectQuery) { IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery });
 								return subContext;

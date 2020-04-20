@@ -17,9 +17,9 @@ namespace LinqToDB.Linq.Builder
 			var context = ((ContextRefExpression)buildInfo.Expression).BuildContext;
 			if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 			{
-				var parentContext = context.Parent;
-				if (parentContext != null)
-					context = parentContext.GetContext(buildInfo.Expression, 0, buildInfo)!;
+				// var parentContext = context.Parent;
+				// if (parentContext != null)
+				// 	context = parentContext.GetContext(buildInfo.Expression, 0, buildInfo)!;
 			};
 
 			return context;

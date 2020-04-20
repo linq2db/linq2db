@@ -205,7 +205,7 @@ namespace LinqToDB.Linq.Builder
 
 			var context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
 
-			var tableSource = buildInfo.SelectQuery.From.Tables.Last();
+			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
 				null, inline, null);
 
