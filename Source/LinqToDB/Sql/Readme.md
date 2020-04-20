@@ -26,7 +26,7 @@ At the same time, some people prefer having LINQ (or even lambda) expressions th
 
 There are times where you may wish to add a more custom expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, this would typically become a `CASE` statement, whereas some people may prefer being able to use the database server's built in `NullIf` function via a call like `SqlExpr.NullIf(table.SomeProperty,someValue)`. To do so, they merely would need to have a class such as this:
 
-```
+```cs
 using Linq2db;
 
 namespace MyProject
@@ -87,7 +87,7 @@ namespace MyProject
 
 `Sql.FunctionAttribute` is a more specific case of the `ExpressionAttribute`: consider it a convenience method when calling a server function with known parameters. For example, if you wanted to use IsNumeric in a more normal fashion:
 
-```
+```cs
 using Linq2db;
 
 namespace MyProject
