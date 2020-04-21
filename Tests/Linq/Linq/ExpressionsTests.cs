@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
+using Tests.Playground;
 
 namespace Tests.Linq
 {
@@ -28,6 +30,8 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
+			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
+				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
@@ -46,7 +50,53 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
-		
+
+		[Flags]
+		public enum FlagsEnum
+		{
+			None = 0,
+
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+
+			All = Flag1 | Flag2 | Flag3
+		}
+
+		[Table]
+		class MappingTestClass
+		{
+			[Column] public int       Id    { get; set; }
+			[Column] public int       Value { get; set; }
+			[Column] public FlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		{
+			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
+				{
+					Id = i,
+					Value = i * 10,
+					Flags = (FlagsEnum)(i & (int)FlagsEnum.All)
+				})
+				.ToArray();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query = from t in table
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				var expected = from t in data
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				AreEqualWithComparer(expected, query);
+			}
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
