@@ -55,7 +55,7 @@ namespace Tests.Data
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -1107,7 +1107,6 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.Access              ||
 				context == ProviderName.DB2                 ||
 				context == ProviderName.InformixDB2         ||
 				context == ProviderName.SapHanaOdbc         ||
@@ -1117,6 +1116,7 @@ namespace Tests.Data
 				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context == ProviderName.OracleManaged) ||
 #endif
 				TestProvName.AllMySqlData.Contains(context) ||
+				context.StartsWith("Access")                ||
 				context.Contains("SqlServer")               ||
 				context.Contains("SqlAzure")                ||
 				context.Contains("PostgreSQL")              ||
@@ -1124,6 +1124,7 @@ namespace Tests.Data
 				))
 			{
 				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
+				// Access>ODBC: ERROR [HY092] [Microsoft][ODBC Microsoft Access Driver]Invalid attribute/option identifier
 				// DB2: ERROR [58005] [IBM][DB2/NT64] SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
 				// Informix DB2: ERROR [2E000] [IBM] SQL1001N  "<DBNAME>" is not a valid database name.  SQLSTATE=2E000
 				// MySql.Data: Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.

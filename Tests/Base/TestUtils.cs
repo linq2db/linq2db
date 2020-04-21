@@ -222,6 +222,7 @@ namespace Tests
 				case ProviderName.SQLiteMS:
 					return "main";
 				case ProviderName.Access:
+				case ProviderName.AccessODBC:
 					return "Database\\TestData";
 				case ProviderName.MySql:
 				case ProviderName.MySqlConnector:
@@ -267,12 +268,17 @@ namespace Tests
 					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
 				}
 			}
+			else if (context.Replace(".LinqService", "") == ProviderName.AccessODBC)
+			{
+				// ODBC driver strips milliseconds from values on both save and load
+				return true;
+			}
 
 			return false;
 		}
 
 		// see ProviderNeedsTimeFix
-		public static DateTime FixTime(DateTime value, bool fix)
+		public static DateTime StripMilliseconds(DateTime value, bool fix)
 		{
 			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
 		}

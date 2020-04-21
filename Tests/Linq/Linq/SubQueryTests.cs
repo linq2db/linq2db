@@ -217,7 +217,7 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
 			ProviderName.DB2)]
@@ -239,7 +239,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			TestProvName.AllOracle,
 			ProviderName.DB2)]
 			string context)
@@ -294,12 +294,14 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub2([DataSources(
-			ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllAccess,
+			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

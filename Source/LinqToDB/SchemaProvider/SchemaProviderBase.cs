@@ -14,13 +14,13 @@ namespace LinqToDB.SchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
-		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection);
+		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
-		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
+		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
-		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection) => null;
+		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures) => null;
 
 		protected HashSet<string?>   IncludedSchemas  = null!;
 		protected HashSet<string?>   ExcludedSchemas  = null!;
@@ -106,7 +106,7 @@ namespace LinqToDB.SchemaProvider
 					}
 				).ToList();
 
-				var pks = GetPrimaryKeys(dataConnection);
+				var pks = GetPrimaryKeys(dataConnection, tables);
 
 				#region Columns
 
@@ -156,7 +156,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : Array<ForeignKeyInfo>.Empty;
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables) : Array<ForeignKeyInfo>.Empty;
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
@@ -217,7 +217,7 @@ namespace LinqToDB.SchemaProvider
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var procs       = GetProcedures(dataConnection);
-				var procPparams = GetProcedureParameters(dataConnection);
+				var procPparams = GetProcedureParameters(dataConnection, procs);
 				var n           = 0;
 
 				if (procs != null)

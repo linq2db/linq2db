@@ -165,7 +165,7 @@ namespace Tests.Linq
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -216,7 +216,7 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -269,10 +269,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTake6([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -284,10 +285,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTakeCount([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -403,7 +405,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(true, ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -418,7 +420,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

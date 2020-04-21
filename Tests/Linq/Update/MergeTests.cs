@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 		{
 			static string[] Unsupported =
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteClassic,
 				TestProvName.SQLiteClassicMiniProfilerMapped,

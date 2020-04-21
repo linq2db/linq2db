@@ -89,18 +89,18 @@ ALTER TABLE Patient
 	ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE;
 GO
 
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("John",   "Pupkin",    "M")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", "M")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ("Jürgen", "König", "Ko", "M")
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 
-INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")
+INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, 'Psychiatry')
 GO
-INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, "Hallucination with Paranoid Bugs' Delirium of Persecution")
+INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 GO
 
 
@@ -216,7 +216,7 @@ GO
 
 CREATE Procedure Scalar_DataReader
 AS
-	SELECT 12345 AS intField, "54321" AS stringField;
+	SELECT 12345 AS intField, '54321' AS stringField;
 GO
 
 
@@ -350,5 +350,5 @@ CREATE TABLE TestMerge2
 GO
 CREATE Procedure AddIssue792Record
 AS
-	INSERT INTO AllTypes(char20DataType) VALUES('issue792')
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 GO

@@ -1215,7 +1215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFlagEnum([DataSources(ProviderName.Access)] string context)
+		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

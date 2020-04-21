@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		// Test without sorting order dependency
 		// Generated SQL not supported by Access
 		[Test]
-		public void Test1([DataSources(TestProvName.AllPostgreSQL, ProviderName.Access)] string context)
+		public void Test1([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllSybase, ProviderName.Access)] string context)
+		public void Test2([DataSources(TestProvName.AllSybase, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,7 +75,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
+		public void Test3([DataSources(TestProvName.AllAccess, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

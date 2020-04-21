@@ -65,5 +65,23 @@ namespace LinqToDB.DataProvider.Access
 
 			stringBuilder.AppendFormat(format, value);
 		}
+
+		internal static readonly AccessMappingSchema Instance = new AccessMappingSchema();
+
+		public class OleDbMappingSchema : MappingSchema
+		{
+			public OleDbMappingSchema()
+				: base(ProviderName.Access, Instance)
+			{
+			}
+		}
+
+		public class ODBCMappingSchema : MappingSchema
+		{
+			public ODBCMappingSchema()
+				: base(ProviderName.AccessODBC, Instance)
+			{
+			}
+		}
 	}
 }

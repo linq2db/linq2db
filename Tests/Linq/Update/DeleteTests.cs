@@ -159,7 +159,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteMany1(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -198,7 +198,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteMany2(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -246,7 +246,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteMany3(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -293,7 +293,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteTop(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,

@@ -14,9 +14,18 @@ namespace LinqToDB.DataProvider.Access
 	/// </summary>
 	public static class AccessTools
 	{
-		private static readonly Lazy<IDataProvider> _accessDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _accessOleDbDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new AccessDataProvider();
+			var provider = new AccessOleDbDataProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			return provider;
+		}, true);
+
+		private static readonly Lazy<IDataProvider> _accessODBCDataProvider = new Lazy<IDataProvider>(() =>
+		{
+			var provider = new AccessODBCDataProvider();
 
 			DataConnection.AddDataProvider(provider);
 
@@ -25,24 +34,40 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.ProviderName == ProviderName.Access
-				|| css.Name.Contains("Access")
-				|| connectionString.Contains("Microsoft.ACE.OLEDB")
+			if (connectionString.Contains("Microsoft.ACE.OLEDB")
 				|| connectionString.Contains("Microsoft.Jet.OLEDB"))
 			{
-				return _accessDataProvider.Value;
+				return _accessOleDbDataProvider.Value;
+			}
+
+			if (css.ProviderName == ProviderName.AccessODBC
+				|| css.Name.Contains("Access.ODBC"))
+			{
+				return _accessODBCDataProvider.Value;
+			}
+
+			if (css.ProviderName == ProviderName.Access || css.Name.Contains("Access"))
+			{
+				if (connectionString.Contains("*.mdb")
+					|| connectionString.Contains("*.accdb"))
+					return _accessODBCDataProvider.Value;
+
+				return _accessOleDbDataProvider.Value;
 			}
 
 			return null;
 		}
 
 		/// <summary>
-		/// Returns default instance of Access database provider.
+		/// Returns instance of Access database provider.
 		/// </summary>
-		/// <returns><see cref="AccessDataProvider"/> instance.</returns>
-		public static IDataProvider GetDataProvider()
+		/// <returns><see cref="AccessOleDbDataProvider"/> or <see cref="AccessODBCDataProvider"/> instance.</returns>
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			return _accessDataProvider.Value;
+			if (providerName == ProviderName.AccessODBC)
+				return _accessODBCDataProvider.Value;
+
+			return _accessOleDbDataProvider.Value;
 		}
 
 		#region CreateDataConnection
@@ -50,30 +75,33 @@ namespace LinqToDB.DataProvider.Access
 		/// Creates <see cref="DataConnection"/> object using provided Access connection string.
 		/// </summary>
 		/// <param name="connectionString">Connection string.</param>
+		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider.Value, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
 		/// <summary>
 		/// Creates <see cref="DataConnection"/> object using provided connection object.
 		/// </summary>
 		/// <param name="connection">Connection instance.</param>
+		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider.Value, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
 		/// <summary>
 		/// Creates <see cref="DataConnection"/> object using provided transaction object.
 		/// </summary>
 		/// <param name="transaction">Transaction instance.</param>
+		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider.Value, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 		#endregion
 

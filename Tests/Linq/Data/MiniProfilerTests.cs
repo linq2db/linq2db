@@ -87,13 +87,13 @@ namespace Tests.Data
 		// tests must check all code, that use provider-specific functionality for specific provider
 		// also test must create new instance of provider, to not benefit from existing instance
 		[Test]
-		public void TestAccess([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		public void TestAccessOleDb([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NET46
-			using (var db = CreateDataConnection(new AccessDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
-			using (var db = CreateDataConnection(new AccessDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
 #endif
 			{
 				var trace = string.Empty;
@@ -122,6 +122,30 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
 #endif
+			}
+		}
+
+		[Test]
+		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessODBC)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+#if NET46
+			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+#else
+			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+#endif
+			{
+				var trace = string.Empty;
+				db.OnTraceConnection += (TraceInfo ti) =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				// assert provider-specific parameter type name
+				// Variant => Binary
+				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE oleObjectDataType = ?", DataParameter.Variant("@p", new byte[] { 5, 6, 7, 8 })));
+				Assert.True(trace.Contains("DECLARE @p Binary("));
 			}
 		}
 

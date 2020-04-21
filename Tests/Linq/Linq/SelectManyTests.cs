@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic5([DataSources(ProviderName.Access)] string context)
+		public void Basic5([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic62([DataSources(ProviderName.Access)] string context)
+		public void Basic62([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -121,7 +121,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic10([DataSources(ProviderName.Access)] string context)
+		public void Basic10([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -130,7 +130,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic11([DataSources(ProviderName.Access)] string context)
+		public void Basic11([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -314,7 +314,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OneParam3([DataSources(ProviderName.Access)] string context)
+		public void OneParam3([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -360,7 +360,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectManyLeftJoin3([DataSources(ProviderName.Access)] string context)
+		public void SelectManyLeftJoin3([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -463,7 +463,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources(ProviderName.Access)] string context)
+		public void Test5([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources(ProviderName.Access)] string context)
+		public void Test6([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

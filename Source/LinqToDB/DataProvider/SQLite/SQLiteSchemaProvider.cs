@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.SQLite
 				).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var dbConnection = (DbConnection)dataConnection.Connection;
 			var pks          = dbConnection.GetSchema("IndexColumns");
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.SQLite
 			// Handle case where Foreign Key reference does not include a column name (Issue #784)
 			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 			{
-				var pks = GetPrimaryKeys(dataConnection).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
+				var pks = GetPrimaryKeys(dataConnection, tables).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
 					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);

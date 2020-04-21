@@ -450,7 +450,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = ProviderName.PostgreSQL92, Details = "Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort")]
 		[Test]
-		public void LetTest7([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -603,7 +603,7 @@ namespace Tests.Linq
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,

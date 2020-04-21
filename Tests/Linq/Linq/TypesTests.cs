@@ -205,7 +205,7 @@ namespace Tests.Linq
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -237,7 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryLength([DataSources(ProviderName.Access)] string context)
+		public void BinaryLength([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -355,7 +355,7 @@ namespace Tests.Linq
 		public void DateTime22(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -386,7 +386,7 @@ namespace Tests.Linq
 		public void DateTime23(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -420,7 +420,7 @@ namespace Tests.Linq
 		public void DateTime24(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,

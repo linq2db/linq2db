@@ -278,6 +278,7 @@ namespace Tests
 #endif
 			ProviderName.SqlCe,
 			ProviderName.Access,
+			ProviderName.AccessODBC,
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
 			ProviderName.SQLiteClassic,
