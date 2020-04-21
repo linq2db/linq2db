@@ -20,9 +20,11 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
 	</ItemGroup>
 </Project>
