@@ -16,7 +16,7 @@
 		<Compile Remove="Metadata\AttributeReaderTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
 
 	</ItemGroup>
 
