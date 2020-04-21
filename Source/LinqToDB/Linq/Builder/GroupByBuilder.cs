@@ -51,8 +51,6 @@ namespace LinqToDB.Linq.Builder
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			var parent = buildInfo.Parent;
-
 			if (methodCall.Arguments[0].NodeType == ExpressionType.Call)
 			{
 				var call = (MethodCallExpression)methodCall.Arguments[0];
@@ -63,7 +61,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
-						parent = sequence;
 						sequence = new SubQueryContext(sequence);
 					}
 				}
@@ -643,11 +640,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				if (context != null && context.SelectQuery != SelectQuery)
-				{
-					index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
-				}
-
 				var expr = SelectQuery.Select.Columns[index].Expression;
 
 				if (!SelectQuery.GroupBy.Items.Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn && ReferenceEquals(_, ((SqlColumn)expr).Expression))))

@@ -39,5 +39,6 @@ namespace LinqToDB.Linq.Builder
 
 		public bool                 IsAssociationBuilt       { get; set; }
 		public bool                 IsOuterAssociations      { get; set; }
+		public Expression           ParentQueryExpression    { get; set; }
 	}
 }

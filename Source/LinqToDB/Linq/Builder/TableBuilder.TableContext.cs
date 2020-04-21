@@ -893,6 +893,10 @@ namespace LinqToDB.Linq.Builder
 								if (contextInfo.Context != this)
 								{
 									var maxLevel = contextInfo.CurrentExpression!.GetLevel(Builder.MappingSchema);
+									if (maxLevel == 0)
+									{
+										return contextInfo.Context.ConvertToSql(null, 0, flags);
+									}
 									return contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
 										contextInfo.CurrentLevel >= maxLevel
 											? contextInfo.CurrentLevel
@@ -1132,153 +1136,71 @@ namespace LinqToDB.Linq.Builder
 					if (root == expression)
 						return this;
 
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+					var getContex = Builder.GetContext(this, root);
+					var levelRoot = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
+					
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 					var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
 					if (descriptor != null)
 					{
-						var isOuter = descriptor.CanBeNull;
-						
+						var currentDescriptor     = descriptor;
+						Expression currentQuery   = root;
+						var currentParentOriginal = ObjectType;
+
+						do
 						{
-							IBuildContext associatedContext;
-							if (true /*levelExpression != expression)*/)
+							var elementType     = currentDescriptor.GetElementType(Builder.MappingSchema);
+							var parentExactType = currentDescriptor.GetParentElementType();
+
+							var isOuter = false;
+							var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
+								Builder, currentDescriptor, currentParentOriginal, parentExactType, elementType,
+								false, isOuter, LoadWith, out isOuter);
+
+							if (currentQuery == levelRoot)
 							{
-								var currentDescriptor = descriptor;
-								Expression currentQuery = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(ObjectType), this);
-								var currentParentOriginal = ObjectType;
-
-								do
-								{
-									var elementType     = currentDescriptor.GetElementType(Builder.MappingSchema);
-									var parentExactType = currentDescriptor.GetParentElementType();
-
-									isOuter = false;
-									var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
-										Builder, currentDescriptor, currentParentOriginal, parentExactType, elementType,
-										false, isOuter, LoadWith, out isOuter);
-
-									var selectManyMethod =
-										Methods.Queryable.SelectManyProjection.MakeGenericMethod(currentParentOriginal,
-											elementType,
-											elementType);
-
-									var childQueryLambda = Expression.Lambda(
-										EagerLoading.EnsureEnumerable(queryMethod.Body, Builder.MappingSchema),
-										queryMethod.Parameters);
-
-									var parentParam = Expression.Parameter(currentParentOriginal, "master");
-									var detailParam = Expression.Parameter(elementType, "detail");
-									//var resultBody = expression.Replace(levelExpression, detailParam);
-									var resultLmbda = Expression.Lambda(detailParam, parentParam, detailParam);
-
-									currentQuery = Expression.Call(selectManyMethod, currentQuery,
-										childQueryLambda, resultLmbda);
-
-									if (levelExpression == expression)
-										break;
-
-									++level;
-									levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-									currentDescriptor =
-										GetAssociationDescriptor(levelExpression, out memberInto, false);
-
-									if (currentDescriptor == null)
-										throw new LinqToDBException($"Can not find association for {levelExpression}");
-
-									currentParentOriginal = elementType;
-
-								} while (true);
-								
-								var subContext = Builder.BuildSequence(new BuildInfo(buildInfo, currentQuery));
-								
-								return subContext;
-
+								currentQuery = queryMethod.GetBody(root);
 							}
 							else
 							{
-								associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, buildInfo, this, descriptor, ref isOuter);
+								var selectManyMethod =
+									Methods.Queryable.SelectManyProjection.MakeGenericMethod(
+										currentParentOriginal,
+										elementType,
+										elementType);
+
+								var childQueryLambda = Expression.Lambda(
+									EagerLoading.EnsureEnumerable(queryMethod.Body, Builder.MappingSchema),
+									queryMethod.Parameters);
+
+								var parentParam  = Expression.Parameter(currentParentOriginal, "master");
+								var detailParam  = Expression.Parameter(elementType, "detail");
+								var resultLambda = Expression.Lambda(detailParam, parentParam, detailParam);
+
+								currentQuery = Expression.Call(selectManyMethod, currentQuery,
+									childQueryLambda, resultLambda);
 							}
 
-							/*
-							if (!descriptor.IsList && levelExpression != expression)
-							{
-								if (_associationContexts == null || !_associationContexts.TryGetValue(memberInto, out associatedContext))
-								{
-									// associatedContext = AssociationHelper.BuildAssociationSelectMany1(Builder, new BuildInfo(buildInfo, buildInfo.Expression) , 
-									// 	this, descriptor, ref isOuter);
+							if (levelExpression == expression)
+								break;
 
-									// associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression) , 
-									// 	this, descriptor, ref isOuter);
+							++level;
+							levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
-									////associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(buildInfo, levelExpression, SelectQuery), this, descriptor, false, ref isOuter);
-									associatedContext = AssociationHelper.BuildAssociationInline(Builder, buildInfo, this, descriptor, true, ref isOuter);
-									
-									_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-									_associationContexts.Add(memberInto, associatedContext);
-								}
-							}
-							else
-							{
-								isOuter = false;
-								if (buildInfo.CreateSubQuery)
-								{ 
-									var subQuery = new SelectQuery();
-									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-										new BuildInfo(buildInfo, levelExpression, subQuery), this, descriptor,
-										ref isOuter);
-								}
-								else
-								{
-									if (buildInfo.IsSubQuery && levelExpression == expression)
-									{
-										//var subQuery = new SelectQuery();
-										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-											new BuildInfo(buildInfo, levelExpression), this, descriptor, ref isOuter);
-									}
-									else
-									{
-										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-											buildInfo,
-											this, descriptor, ref isOuter);
-									}
+							currentDescriptor = GetAssociationDescriptor(levelExpression, out memberInto, false);
 
-									// if (buildInfo.IsSubQuery)
-									// {
-									// 	associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder, new BuildInfo(buildInfo, buildInfo.Expression, new SelectQuery()) , 
-									// 		this, descriptor, ref isOuter);
-									// }
-									// else
-									// {
-									// 	associatedContext = AssociationHelper.BuildAssociationInline(Builder, buildInfo,
-									// 		this, descriptor, ref isOuter);
-									// }
+							if (currentDescriptor == null)
+								throw new LinqToDBException($"Can not find association for {levelExpression}");
 
-									// associatedContext = AssociationHelper.BuildAssociationInline(Builder, new BuildInfo(()null, buildInfo.Expression, this.SelectQuery) , 
-									// 	this, descriptor, ref isOuter);
+							currentParentOriginal = elementType;
 
-								}
+						} while (true);
 
-								isOuter = false;
-							}
+						var subContext = Builder.BuildSequence(new BuildInfo(buildInfo, currentQuery) {});
 
-	*/
+						buildInfo.IsAssociationBuilt = true;
 
-							
-							if (levelExpression != expression)
-							{
-								var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-								var newExpr    = expression.Replace(levelExpression, contextRef);
-								var subContext = Builder.BuildSequence(new BuildInfo(buildInfo, newExpr));
-
-								
-								// var subContext = associatedContext.GetContext(newExpr, 0,
-								// 	new BuildInfo(buildInfo.Parent, newExpr, SelectQuery) { IsOuterAssociations = isOuter, CreateSubQuery = buildInfo.CreateSubQuery });
-								return subContext;
-							}
-							
-
-							return associatedContext;
-						}
+						return subContext;
 					}
 				}
 
@@ -1594,7 +1516,7 @@ namespace LinqToDB.Linq.Builder
 										}
 
 										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(this, expression, SelectQuery), this, descriptor,
+											new BuildInfo(Parent, expression, SelectQuery), this, descriptor,
 											true,
 											ref isOuter);
 

@@ -467,15 +467,22 @@ namespace Tests.Linq
 		public void LetTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var exptected = from p in Parent
+					select new { p } into pp
+					let chs = pp.p.Children
+					select new { pp.p.ParentID, Count = chs.Count() };
+
+				var actual = db.Parent.Select(p => new { Peojection = p })
+					.Select(pp => new { pp, chs = pp.Peojection.Children })
+					.Select(@t => new { @t.pp.Peojection.ParentID, Count = @t.chs.Count() });
+
+				var actualResult = actual.ToArray();
+
 				AreEqual(
-					from p in Parent
-					select new { p } into p
-					let chs = p.p.Children
-					select new { p.p.ParentID, Count = chs.Count() },
-					from p in db.Parent
-					select new { p } into p
-					let chs = p.p.Children
-					select new { p.p.ParentID, Count = chs.Count() });
+					exptected,
+					actual);
+			}
 		}
 
 		[Test]
