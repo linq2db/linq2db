@@ -8,7 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Logging;
 
 namespace LinqToDB.Linq
 {
@@ -19,6 +18,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
+	using Common.Logging;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;

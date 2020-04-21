@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Logging;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -15,6 +14,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Data;
 	using Common;
+	using Common.Logging;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;

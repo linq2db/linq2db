@@ -249,12 +249,12 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("Configuration string is not provided.");
 					var ci = GetConfigurationInfo(ConfigurationString);
 
-					DataProvider = ci.DataProvider;
+					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
-					MappingSchema = DataProvider.MappingSchema;
-					RetryPolicy = Configuration.RetryPolicy.Factory != null
-						? Configuration.RetryPolicy.Factory(this)
-						: null;
+					MappingSchema    = DataProvider.MappingSchema;
+					RetryPolicy      = Configuration.RetryPolicy.Factory != null
+										? Configuration.RetryPolicy.Factory(this)
+										: null;
 					break;
 
 				case ConnectionSetupType.ConnectionString:
@@ -270,9 +270,9 @@ namespace LinqToDB.Data
 					}
 					else dataProvider = options.DataProvider;
 
-					DataProvider = dataProvider;
+					DataProvider     = dataProvider;
 					ConnectionString = options.ConnectionString;
-					MappingSchema = DataProvider.MappingSchema;
+					MappingSchema    = DataProvider.MappingSchema;
 					break;
 				
 				case ConnectionSetupType.ConnectionFactory:

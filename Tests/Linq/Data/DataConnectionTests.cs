@@ -17,12 +17,11 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
-#if NETCOREAPP2_0
 	using Microsoft.Extensions.DependencyInjection;
-#endif
 
 	using System.Collections.Generic;
 	using System.Transactions;
+	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
 	using Model;
@@ -272,7 +271,6 @@ namespace Tests.Data
 			}
 		}
 
-#if NETCOREAPP2_0
 		[Test]
 		public void TestServiceCollection([NorthwindDataContext] string context)
 		{
@@ -282,7 +280,6 @@ namespace Tests.Data
 			var con = provider.GetService<DataConnection>();
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
-#endif
 
 		public class DbConnection1 : DataConnection
 		{
@@ -298,7 +295,6 @@ namespace Tests.Data
 			}
 		}
 
-#if NETCOREAPP2_0
 		[Test]
 		public void TestSettingsPerDb([NorthwindDataContext] string context)
 		{
@@ -312,7 +308,6 @@ namespace Tests.Data
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 		}
-#endif
 
 		[Test]
 		public void TestConstructorThrowsWhenGivenInvalidSettings()
