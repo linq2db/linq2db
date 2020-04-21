@@ -17,7 +17,7 @@ namespace LinqToDB.Configuration
 		ConnectionFactory,
 		Transaction
 	}
-	
+
 	public class LinqToDbConnectionOptionsBuilder
 	{
 		public MappingSchema                      MappingSchema       { get; private set; }
@@ -47,6 +47,7 @@ namespace LinqToDB.Configuration
 		{
 			return new LinqToDbConnectionOptions<TContext>(this);
 		}
+
 		public LinqToDbConnectionOptions Build()
 		{
 			return new LinqToDbConnectionOptions(this);
@@ -56,18 +57,22 @@ namespace LinqToDB.Configuration
 		{
 			return UseConnectionString(LinqToDB.ProviderName.SqlServer, connectionString);
 		}
+
 		public LinqToDbConnectionOptionsBuilder UseOracle(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.Oracle, connectionString);
 		}
+
 		public LinqToDbConnectionOptionsBuilder UsePostgreSQL(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.PostgreSQL, connectionString);
 		}
+
 		public LinqToDbConnectionOptionsBuilder UseMySql(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.MySql, connectionString);
 		}
+
 		public LinqToDbConnectionOptionsBuilder UseSQLite(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.SQLite, connectionString);
@@ -143,7 +148,7 @@ namespace LinqToDB.Configuration
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
 			DataProvider  = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
-			DbTransaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+			DbTransaction = transaction  ?? throw new ArgumentNullException(nameof(transaction));
 
 			return this;
 		}
