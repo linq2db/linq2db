@@ -232,6 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
 		{
+			// if (!context.SelectQuery.GroupBy.IsEmpty)
+			// 	context = new SubQueryContext(context);
+			//
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery }) {CreateSubQuery = true};
 			var ctx  = BuildSequence(info);
 

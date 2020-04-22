@@ -162,15 +162,30 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
+				var parentQuery = Parent.SelectQuery.ToString();
+				var sqlText = Sql.ToString();
+
 				switch (flags)
 				{
 					case ConvertFlags.Field :
-						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent!.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql!), Sql = Sql!, }
-						});
+							var result = _index ??= new[]
+							{
+								new SqlInfo
+								{
+									Query = Parent!.SelectQuery, 
+									Index = Parent.SelectQuery.Select.Add(Sql!),
+									Sql = Sql!,
+								}
+							};
+
+							var newParentQuery = Parent.SelectQuery.ToString();
+
+							return result;
+						}
 				}
 
+				
 				throw new InvalidOperationException();
 			}
 

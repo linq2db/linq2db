@@ -767,12 +767,13 @@ namespace LinqToDB.Linq.Builder
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
 				if (descriptor?.IsList == true)
 				{
-					return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
+					if (expression.GetRootObject(Builder.MappingSchema) is ContextRefExpression)
+						return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
 
 					return Builder.BuildMultipleQuery(this, expression, false);
 				}
  
-				var contextInfo = FindContextExpression(expression, level, false);
+				var contextInfo = FindContextExpression(expression, level, false, false);
 
 				if (contextInfo == null)
 				{
@@ -841,7 +842,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ConvertFlags.All   :
 						{
-							var contextInfo = FindContextExpression(expression, level, true)!;
+							var contextInfo = FindContextExpression(expression, level, false, true)!;
 
 							if (contextInfo.Field == null)
 							{
@@ -886,7 +887,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Key   :
 						{
-							var contextInfo = FindContextExpression(expression, level, true)!;
+							var contextInfo = FindContextExpression(expression, level, false, true)!;
 
 							if (contextInfo.Field == null)
 							{
@@ -930,13 +931,13 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Field :
 						{
-							var contextInfo = FindContextExpression(expression, level, false);
+							var contextInfo = FindContextExpression(expression, level, false, false);
 							if (contextInfo == null)
 							{
 								if (expression == null)
 									throw new InvalidOperationException();
 
-								contextInfo = FindContextExpression(expression, level + 1, true);
+								contextInfo = FindContextExpression(expression, level + 1, false, true);
 							}
 
 							if (contextInfo.Field != null)
@@ -1035,7 +1036,7 @@ namespace LinqToDB.Linq.Builder
 							if (GetAssociationDescriptor(levelExpression, out _) != null)
 								return IsExpressionResult.False;
 
-							var contextInfo = FindContextExpression(expression, level, false);
+							var contextInfo = FindContextExpression(expression, level, false, false);
 							return new IsExpressionResult(contextInfo?.Field != null);
 						}
 
@@ -1111,7 +1112,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region GetContext
 
-			Dictionary<MemberInfo, IBuildContext>? _associationContexts;
+			Dictionary<MemberInfo, Tuple<IBuildContext, bool>>? _associationContexts;
 
 			public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
@@ -1130,21 +1131,107 @@ namespace LinqToDB.Linq.Builder
 					return this;
 				}
 
-				if (buildInfo != null && buildInfo.IsSubQuery)
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+				if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
+				    expression.NodeType == ExpressionType.Call)
+				{
+					var descriptor = GetAssociationDescriptor(levelExpression, out _) ?? throw new InvalidOperationException();
+
+					if (descriptor.IsList)
+					{
+						var ma     = expression.NodeType == ExpressionType.MemberAccess
+							? ((MemberExpression)buildInfo.Expression).Expression
+							: expression.NodeType == ExpressionType.Call
+								? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
+								: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+
+						// var ma = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
+
+						var elementType     = descriptor.GetElementType(Builder.MappingSchema);
+						var parentExactType = ma.Type;
+
+						var isOuter = false;
+						var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
+							Builder, descriptor, ObjectType, parentExactType, elementType,
+							false, isOuter, LoadWith, out isOuter);
+
+						var expr   = queryMethod.GetBody(ma);
+
+						buildInfo.IsAssociationBuilt = true;
+
+						// if (association.ParentAssociationJoin != null && (tableLevel.IsNew || buildInfo.CopyTable))
+						// 	association.ParentAssociationJoin.IsWeak = true;
+
+						var sequence = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+						return sequence;
+					}
+				}
+				else
+				{
+					var tableLevel = FindContextExpression(expression, level, true, true)!;
+
+//							var paj         = ((AssociatedTableContext)association.Table).ParentAssociationJoin;
+//
+//							paj.IsWeak = paj.IsWeak && buildInfo.CopyTable;
+
+					var expr = tableLevel.CurrentExpression;
+					var newBuildInfo = new BuildInfo(buildInfo, expr, !buildInfo.CreateSubQuery ? new SelectQuery() : buildInfo.SelectQuery);
+					var sequence = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, newBuildInfo);
+					if (newBuildInfo.IsAssociationBuilt && !buildInfo.CreateSubQuery)
+					{
+						var tableSource = tableLevel.Context.SelectQuery.From.Tables.First();
+						var join = new SqlFromClause.Join(JoinType.CrossApply, sequence.SelectQuery,
+							null, false, null);
+						
+						tableSource.Joins.Add(join.JoinedTable);
+						
+						return new AssociationContext(Builder, tableLevel.Context, sequence);
+
+					}
+
+					return sequence;
+				}
+
+				throw new InvalidOperationException();
+			}
+
+			public virtual IBuildContext? GetContextOld(Expression? expression, int level, BuildInfo buildInfo)
+			{
+				if (expression == null)
+				{
+					if (buildInfo != null && buildInfo.IsSubQuery)
+					{
+						var table = new TableContext(
+							Builder,
+							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression!, buildInfo.SelectQuery),
+							SqlTable.ObjectType!);
+
+						return table;
+					}
+
+					return this;
+				}
+
+				if (buildInfo != null && buildInfo.CreateSubQuery)
 				{
 					var root = expression.GetRootObject(Builder.MappingSchema);
 					if (root == expression)
 						return this;
 
-					var getContex = Builder.GetContext(this, root);
-					var levelRoot = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
-					
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					// var newRootContext = GetContext(null, 0, buildInfo);
+					var newRootContext = this;
+
+					var levelRoot     = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
+					var currentRoot   = new ContextRefExpression(levelRoot.Type, newRootContext);
+					var newExpression = expression.Replace(levelRoot, currentRoot);
+
+					var levelExpression = newExpression.GetLevelExpression(Builder.MappingSchema, level);
 					var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
 					if (descriptor != null)
 					{
 						var currentDescriptor     = descriptor;
-						Expression currentQuery   = root;
+						Expression currentQuery   = currentRoot;
 						var currentParentOriginal = ObjectType;
 
 						do
@@ -1157,9 +1244,9 @@ namespace LinqToDB.Linq.Builder
 								Builder, currentDescriptor, currentParentOriginal, parentExactType, elementType,
 								false, isOuter, LoadWith, out isOuter);
 
-							if (currentQuery == levelRoot)
+							if (currentQuery == currentRoot)
 							{
-								currentQuery = queryMethod.GetBody(root);
+								currentQuery = queryMethod.GetBody(currentRoot);
 							}
 							else
 							{
@@ -1181,11 +1268,11 @@ namespace LinqToDB.Linq.Builder
 									childQueryLambda, resultLambda);
 							}
 
-							if (levelExpression == expression)
+							if (levelExpression == newExpression)
 								break;
 
 							++level;
-							levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							levelExpression = newExpression.GetLevelExpression(Builder.MappingSchema, level);
 
 							currentDescriptor = GetAssociationDescriptor(levelExpression, out memberInto, false);
 
@@ -1202,6 +1289,24 @@ namespace LinqToDB.Linq.Builder
 
 						return subContext;
 					}
+				}
+
+				if (buildInfo != null && buildInfo.IsSubQuery)
+				{
+					var root = expression.GetRootObject(Builder.MappingSchema);
+					if (root == expression)
+						return this;
+
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					var context = FindContextExpression(expression, level, false, true)!;
+					if (expression != levelExpression)
+					{
+						var result = context.Context.GetContext(context.CurrentExpression, context.CurrentLevel + 1,
+							buildInfo);
+						return result;
+					}
+
+					return context.Context;
 				}
 
 				throw new InvalidOperationException();
@@ -1464,9 +1569,10 @@ namespace LinqToDB.Linq.Builder
 				public Expression? CurrentExpression;
 				public ISqlExpression? Field;
 				public int CurrentLevel;
+				public AssociationDescriptor? Descriptor;
 			}
 
-			ContextInfo? FindContextExpression(Expression? expression, int level, bool throwExceptionForNull)
+			ContextInfo? FindContextExpression(Expression? expression, int level, bool forceInner, bool throwExceptionForNull)
 			{
 				if (expression == null)
 				{
@@ -1500,10 +1606,14 @@ namespace LinqToDB.Linq.Builder
 								IBuildContext? associatedContext;
 								if (!descriptor.IsList)
 								{
+									Tuple<IBuildContext, bool>? foundInfo = null;
 									if (_associationContexts == null ||
-									    !_associationContexts.TryGetValue(memberInto, out associatedContext))
+									    !_associationContexts.TryGetValue(memberInto, out foundInfo))
 									{
-										if (!isOuter)
+										
+										if (forceInner)
+											isOuter = false;
+										else if (!isOuter)
 										{
 											var ctx = Parent;
 											while (ctx is SubQueryContext)
@@ -1515,21 +1625,37 @@ namespace LinqToDB.Linq.Builder
 												isOuter = true;
 										}
 
+										var newExpression = expression.Replace(levelExpression,
+											new ContextRefExpression(levelExpression.Type, this));
+
 										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(Parent, expression, SelectQuery), this, descriptor,
-											true,
+											new BuildInfo(Parent, newExpression, SelectQuery), this, descriptor,
+											!forceInner,
 											ref isOuter);
 
-										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-										_associationContexts.Add(memberInto, associatedContext);
+										_associationContexts ??= new Dictionary<MemberInfo, Tuple<IBuildContext, bool>>();
+										_associationContexts.Add(memberInto, Tuple.Create(associatedContext, isOuter));
+									}
+									else
+									{
+										associatedContext = foundInfo.Item1;
 									}
 
 									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0);
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) {Descriptor = descriptor};
 								}
 								else
 								{
-									throw new InvalidOperationException();
+									var newExpression = expression.Replace(levelExpression,
+										new ContextRefExpression(levelExpression.Type, this));
+
+									associatedContext = AssociationHelper.BuildAssociationInline(Builder,
+										new BuildInfo(Parent, newExpression, SelectQuery), this, descriptor,
+										false,
+										ref isOuter);
+
+									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) {Descriptor = descriptor};
 								}
 
 							}
@@ -1551,98 +1677,6 @@ namespace LinqToDB.Linq.Builder
 
 				return null;
 			}
-
-			TableLevel? FindTable(Expression? expression, int level, bool throwException, bool throwExceptionForNull)
-			{
-				if (expression == null)
-					return new TableLevel { Table = this };
-
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-				TableLevel? result = null;
-
-				switch (levelExpression.NodeType)
-				{
-					case ExpressionType.MemberAccess :
-					case ExpressionType.Parameter    :
-						{
-							var field = GetField(expression, level, throwException);
-
-							if (field != null || (level == 0 && levelExpression == expression))
-								return new TableLevel { Table = this, Field = field, Level = level };
-
-							goto case ExpressionType.Call;
-						}
-					case ExpressionType.Call         :
-						{
-							ISqlExpression? field = null;
-
-							var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
-							if (descriptor != null)
-							{
-								var isOuter = false;
-								IBuildContext associatedContext;
-								if (!descriptor.IsList)
-								{
-									if (_associationContexts == null ||
-									    !_associationContexts.TryGetValue(memberInto, out associatedContext))
-									{
-										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(this.Parent, levelExpression, SelectQuery), this, descriptor, false,
-											ref isOuter);
-
-										_associationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-										_associationContexts.Add(memberInto, associatedContext);
-									}
-								}
-								else
-								{
-									throw new NotImplementedException();
-									isOuter = false;
-									associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-										new BuildInfo(this, levelExpression, SelectQuery), this, descriptor,
-										ref isOuter);
-									isOuter = false;
-								}
-
-								if (levelExpression != expression)
-								{
-									// var contextRef = new ContextRefExpression(memberInto.GetMemberType(),
-									// 	associatedContext);
-									// var newExpr = expression.Replace(levelExpression, contextRef);
-									// field = Builder.ConvertToSql(this, newExpr);
-									// return new TableLevel { Table = associatedContext, Field = field };
-								}
-
-								// if (!descriptor.IsList)
-								// {
-								// 	field = associatedContext.ConvertToSql(expression, 1, ConvertFlags.Field)
-								// 		.FirstOrDefault()?.Sql;
-								// }
-								return new TableLevel { Table = associatedContext, Field = field };
-							}
-
-							break;
-						}
-					default:
-						{
-							if (levelExpression is ContextRefExpression refExpression)
-							{
-								if (expression != levelExpression && level == 0)
-									return FindTable(expression, level + 1, throwException, throwExceptionForNull);
-								
-								return new TableLevel { Table = refExpression.BuildContext, Level = level };
-							}
-							break;
-						}
-				}
-
-				if (throwExceptionForNull && result == null)
-					throw new LinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
-
-				return result;
-			}
-
 
 			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out MemberInfo memberInfo, bool onlyCurrent = true)
 			{

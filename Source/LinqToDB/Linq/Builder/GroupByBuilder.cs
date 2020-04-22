@@ -66,17 +66,17 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
-			var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
-
-			if (sequence.SelectQuery.Select.IsDistinct       ||
-			    sequence.SelectQuery.GroupBy.Items.Count > 0 ||
-			    groupSql.Any(_ => !(_.Sql is SqlField || _.Sql is SqlColumn)))
-			{
+			// var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
+			// var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
+			//
+			// if (sequence.SelectQuery.Select.IsDistinct       ||
+			//     sequence.SelectQuery.GroupBy.Items.Count > 0 ||
+			//     groupSql.Any(_ => !(_.Sql is SqlField || _.Sql is SqlColumn)))
+			// {
 				sequence = new SubQueryContext(sequence);
-				key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
-				groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
-			}
+				var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
+				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
+//			}
 
 			foreach (var sql in groupSql)
 				sequence.SelectQuery.GroupBy.Expr(sql.Sql);
