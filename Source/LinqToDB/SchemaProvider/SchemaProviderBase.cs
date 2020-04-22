@@ -217,11 +217,11 @@ namespace LinqToDB.SchemaProvider
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var procs       = GetProcedures(dataConnection);
-				var procPparams = GetProcedureParameters(dataConnection, procs);
 				var n           = 0;
 
 				if (procs != null)
 				{
+					var procPparams = GetProcedureParameters(dataConnection, procs);
 					procedures =
 					(
 						from sp in procs
@@ -324,8 +324,8 @@ namespace LinqToDB.SchemaProvider
 				DataSource                    = GetDataSourceName(dataConnection),
 				Database                      = GetDatabaseName  (dataConnection),
 				ServerVersion                 = dbConnection.ServerVersion,
-				Tables                        = tables,
-				Procedures                    = procedures,
+				Tables                        = tables.OrderBy(t => t.TableName).ToList(),
+				Procedures                    = procedures.OrderBy(t => t.ProcedureName).ToList(),
 				ProviderSpecificTypeNamespace = GetProviderSpecificTypeNamespace(),
 				DataTypesSchema               = DataTypesSchema,
 
@@ -399,25 +399,29 @@ namespace LinqToDB.SchemaProvider
 
 				if (st != null && st.Columns.Count > 0)
 				{
-					procedure.ResultTable = new TableSchema
+					var columns = GetProcedureResultColumns(st, options);
+					if (columns.Count > 0)
 					{
-						IsProcedureResult = true,
-						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
-						ForeignKeys       = new List<ForeignKeySchema>(),
-						Columns           = GetProcedureResultColumns(st, options)
-					};
+						procedure.ResultTable = new TableSchema
+						{
+							IsProcedureResult = true,
+							TypeName = ToValidName(procedure.ProcedureName + "Result"),
+							ForeignKeys = new List<ForeignKeySchema>(),
+							Columns = columns
+						};
 
-					foreach (var column in procedure.ResultTable.Columns)
-						column.Table = procedure.ResultTable;
+						foreach (var column in procedure.ResultTable.Columns)
+							column.Table = procedure.ResultTable;
 
-					procedure.SimilarTables =
-					(
-						from  t in tables
-						where t.Columns.Count == procedure.ResultTable.Columns.Count
-						let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-						where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
-						select t
-					).ToList();
+						procedure.SimilarTables =
+						(
+							from t in tables
+							where t.Columns.Count == procedure.ResultTable.Columns.Count
+							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
+							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							select t
+						).ToList();
+					}
 				}
 			}
 			catch (Exception ex)

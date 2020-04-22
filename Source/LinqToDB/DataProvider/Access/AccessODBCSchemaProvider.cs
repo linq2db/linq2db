@@ -108,7 +108,8 @@ namespace LinqToDB.DataProvider.Access
 			return
 			(
 				from c in cs.AsEnumerable()
-				let dt = GetDataTypeByProviderDbType(c.Field<short>("DATA_TYPE"), options)
+				let typeName = c.Field<string>("TYPE_NAME")
+				let dt       = GetDataType(typeName, options)
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CAT") + "." + c.Field<string>("TABLE_SCHEM") + "." + c.Field<string>("TABLE_NAME"),
@@ -119,7 +120,7 @@ namespace LinqToDB.DataProvider.Access
 					Length      = Converter.ChangeTypeTo<int?>(c["COLUMN_SIZE"]),
 					Precision   = Converter.ChangeTypeTo<int?> (c["NUM_PREC_RADIX"]),
 					Scale       = Converter.ChangeTypeTo<int?> (c["DECIMAL_DIGITS"]),
-					IsIdentity  = c.Field<string>("TYPE_NAME") == "COUNTER",
+					IsIdentity  = typeName == "COUNTER",
 					Description = c.Field<string>("REMARKS")
 				}
 			).ToList();

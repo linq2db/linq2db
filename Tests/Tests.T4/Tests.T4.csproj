@@ -16,6 +16,11 @@
 		<PackageReference Include="Humanizer.Core" Version="2.7.9" />
 		
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+		
+		<None Update="Databases\AccessODBC.tt">
+		  <LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Databases\Access.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -148,10 +153,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Databases\Access - Copy.generated.cs">
+		  <DependentUpon>Access.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Databases\Access.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Access.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\AccessODBC.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>Access.tt</DependentUpon>
+			<DependentUpon>AccessODBC.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\DB2.generated.cs">
 			<DesignTime>True</DesignTime>

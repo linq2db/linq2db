@@ -3,15 +3,15 @@
 <#@ include file="..\Shared.ttinclude"                                          #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" #>
 <#
-	NamespaceName = "AccessDataContext";
+	NamespaceName = "AccessODBCDataContext";
 
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
-
+	DataContextName   = "TestDataDB";
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	//LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.mdb");
-	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net46\Database\TestData.mdb";
-	LoadAccessMetadata($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={path};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True");
+	//LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.ODBC.mdb");
+	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net46\Database\TestData.ODBC.mdb";
+	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", "Access.ODBC");
 
 	GenerateModel();
 #>
