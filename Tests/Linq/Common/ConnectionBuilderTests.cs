@@ -11,11 +11,12 @@ using NUnit.Framework;
 namespace Tests.Common
 {
 	[TestFixture]
-	public class ConnectionBuilderTests: TestBase
+	public class ConnectionBuilderTests : TestBase
 	{
-		private class TestLoggerFactory: ILoggerFactory
+		private class TestLoggerFactory : ILoggerFactory
 		{
 			public List<TestLogger> Loggers = new List<TestLogger>();
+
 			public void Dispose()
 			{
 			}
@@ -35,7 +36,12 @@ namespace Tests.Common
 		private class TestLogger : ILogger
 		{
 			public List<string> Messages = new List<string>();
-			public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+
+			public void Log<TState>(LogLevel logLevel,
+				EventId eventId,
+				TState state,
+				Exception exception,
+				Func<TState, Exception, string> formatter)
 			{
 				var message = formatter(state, exception);
 				Messages.Add(message);

@@ -1,12 +1,13 @@
 using System;
 using System.Data;
 using System.Diagnostics;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Configuration
 {
+	using Data;
+	using DataProvider;
+	using Mapping;
+
 	public class LinqToDbConnectionOptions<T> : LinqToDbConnectionOptions
 	{
 		public override bool IsValidConfigForConnectionType(DataConnection connection)
@@ -29,13 +30,13 @@ namespace LinqToDB.Configuration
 				case ConnectionSetupType.DefaultConfiguration:
 				case ConnectionSetupType.ConnectionString:
 					ConnectionString = builder.ConnectionString;
-					ProviderName = builder.ProviderName;
+					ProviderName     = builder.ProviderName;
 					break;
 				case ConnectionSetupType.ConfigurationString:
 					ConfigurationString = builder.ConfigurationString;
 					break;
 				case ConnectionSetupType.Connection:
-					DbConnection = builder.DbConnection;
+					DbConnection      = builder.DbConnection;
 					DisposeConnection = builder.DisposeConnection;
 					break;
 				case ConnectionSetupType.ConnectionFactory:
@@ -47,10 +48,10 @@ namespace LinqToDB.Configuration
 			}
 
 			MappingSchema = builder.MappingSchema;
-			DataProvider = builder.DataProvider;
-			OnTrace = builder.OnTrace;
-			TraceLevel = builder.TraceLevel;
-			WriteTrace = builder.WriteTrace;
+			DataProvider  = builder.DataProvider;
+			OnTrace       = builder.OnTrace;
+			TraceLevel    = builder.TraceLevel;
+			WriteTrace    = builder.WriteTrace;
 		}
 
 		/// <summary>

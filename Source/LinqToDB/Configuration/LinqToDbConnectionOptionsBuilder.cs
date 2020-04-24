@@ -1,13 +1,13 @@
 using System;
 using System.Data;
 using System.Diagnostics;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Configuration
 {
+	using Data;
+	using DataProvider;
+	using Mapping;
+
 	internal enum ConnectionSetupType
 	{
 		DefaultConfiguration,

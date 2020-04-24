@@ -1,9 +1,10 @@
 using System;
 using System.Diagnostics;
-using LinqToDB.Data;
 
 namespace LinqToDB.Common.Logging
 {
+	using Data;
+
 	public static class LoggingExtensions
 	{
 		public static void WriteTraceLine(this IDataContext context,
@@ -16,9 +17,9 @@ namespace LinqToDB.Common.Logging
 				case DataConnection connection:
 					connection.WriteTraceLineConnection(message, displayName, level);
 					break;
-					default:
-						DataConnection.WriteTraceLine(message, displayName, level);
-						break;
+				default:
+					DataConnection.WriteTraceLine(message, displayName, level);
+					break;
 			}
 		}
 

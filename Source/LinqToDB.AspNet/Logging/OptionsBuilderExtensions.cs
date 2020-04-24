@@ -1,11 +1,12 @@
 using System;
 using System.Diagnostics;
-using LinqToDB.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.AspNet.Logging
 {
+	using Configuration;
+
 	public static class OptionsBuilderExtensions
 	{
 		public static LinqToDbConnectionOptionsBuilder UseDefaultLogging(this LinqToDbConnectionOptionsBuilder builder,
@@ -14,6 +15,7 @@ namespace LinqToDB.AspNet.Logging
 			var factory = provider.GetRequiredService<ILoggerFactory>();
 			return UseLoggerFactory(builder, factory);
 		}
+
 		public static LinqToDbConnectionOptionsBuilder UseLoggerFactory(this LinqToDbConnectionOptionsBuilder builder,
 			ILoggerFactory factory)
 		{
