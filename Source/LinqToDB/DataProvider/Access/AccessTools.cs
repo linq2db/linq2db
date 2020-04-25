@@ -40,8 +40,8 @@ namespace LinqToDB.DataProvider.Access
 				return _accessOleDbDataProvider.Value;
 			}
 
-			if (css.ProviderName == ProviderName.AccessODBC
-				|| css.Name.Contains("Access.ODBC"))
+			if (css.ProviderName == ProviderName.AccessOdbc
+				|| css.Name.Contains("Access.Odbc"))
 			{
 				return _accessODBCDataProvider.Value;
 			}
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <returns><see cref="AccessOleDbDataProvider"/> or <see cref="AccessODBCDataProvider"/> instance.</returns>
 		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			if (providerName == ProviderName.AccessODBC)
+			if (providerName == ProviderName.AccessOdbc)
 				return _accessODBCDataProvider.Value;
 
 			return _accessOleDbDataProvider.Value;

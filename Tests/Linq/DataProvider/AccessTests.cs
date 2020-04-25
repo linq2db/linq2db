@@ -25,31 +25,31 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
-			var param1 = context.Contains("ODBC") ? "?" : "@p1";
-			var param2 = context.Contains("ODBC") ? "?" : "@p2";
+			var param  = context.Contains("Odbc") ? "?" : "@p";
+			var param1 = context.Contains("Odbc") ? "?" : "@p1";
+			var param2 = context.Contains("Odbc") ? "?" : "@p2";
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>($"SELECT {param}", new { p = 1 }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>($"SELECT {param}", new { p = "1" }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>($"SELECT {param}", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
-				Assert.That(conn.Execute<string>($"SELECT {param1}", new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>($"SELECT {param}"         , new { p  = 1                                 }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>($"SELECT {param}"         , new { p  = "1"                               }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>($"SELECT {param}"            , new { p  = new DataParameter { Value = 1 }   }), Is.EqualTo(1));
+				Assert.That(conn.Execute<string>($"SELECT {param1}"        , new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
 				// doesn't really test ODBC parameters
-				Assert.That(conn.Execute<int>($"SELECT {param1} + {param2}", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
-				Assert.That(conn.Execute<int>($"SELECT {param2} + {param1}", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+				Assert.That(conn.Execute<int>($"SELECT {param1} + {param2}", new { p1 = 2, p2 = 3                         }), Is.EqualTo(5));
+				Assert.That(conn.Execute<int>($"SELECT {param2} + {param1}", new { p2 = 2, p1 = 3                         }), Is.EqualTo(5));
 			}
 		}
 
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
-			paramCount = dc.DataProvider.Name == ProviderName.AccessODBC ? 3 : 1;
-			return dc.DataProvider.Name == ProviderName.AccessODBC
+			paramCount = dc.DataProvider.Name == ProviderName.AccessOdbc ? 3 : 1;
+			return dc.DataProvider.Name == ProviderName.AccessOdbc
 				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ?"
 				: base.PassNullSql(dc, out paramCount);
 		}
 		protected override string PassValueSql(DataConnection dc) =>
-			dc.DataProvider.Name == ProviderName.AccessODBC
+			dc.DataProvider.Name == ProviderName.AccessOdbc
 				? "SELECT ID FROM {1} WHERE {0} = ?"
 				: base.PassValueSql(dc);
 
@@ -58,37 +58,37 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var isODBC = conn.DataProvider.Name == ProviderName.AccessODBC;
-				Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.EqualTo(true));
-				Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16, skipDefaultNull: isODBC), Is.EqualTo(25555));
-				Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal, skipDefaultNull: isODBC), Is.EqualTo(2222222m));
-				Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32, skipDefaultNull: isODBC), Is.EqualTo(7777777));
-				Assert.That(TestType<sbyte?>(conn, "tinyintDataType", DataType.SByte, skipDefaultNull: isODBC), Is.EqualTo(100));
-				Assert.That(TestType<decimal?>(conn, "moneyDataType", DataType.Money, skipDefaultNull: isODBC), Is.EqualTo(100000m));
-				Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double, skipDefaultNull: isODBC), Is.EqualTo(20.31d));
-				Assert.That(TestType<float?>(conn, "realDataType", DataType.Single, skipDefaultNull: isODBC), Is.EqualTo(16.2f));
+				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
+				Assert.That(TestType<bool     >(conn, "bitDataType"             , DataType.Boolean  , skipDefaultNull: isODBC                  ), Is.EqualTo(true));
+				Assert.That(TestType<short?   >(conn, "smallintDataType"        , DataType.Int16    , skipDefaultNull: isODBC                  ), Is.EqualTo(25555));
+				Assert.That(TestType<decimal? >(conn, "decimalDataType"         , DataType.Decimal  , skipDefaultNull: isODBC                  ), Is.EqualTo(2222222m));
+				Assert.That(TestType<int?     >(conn, "intDataType"             , DataType.Int32    , skipDefaultNull: isODBC                  ), Is.EqualTo(7777777));
+				Assert.That(TestType<sbyte?   >(conn, "tinyintDataType"         , DataType.SByte    , skipDefaultNull: isODBC                  ), Is.EqualTo(100));
+				Assert.That(TestType<decimal? >(conn, "moneyDataType"           , DataType.Money    , skipDefaultNull: isODBC                  ), Is.EqualTo(100000m));
+				Assert.That(TestType<double?  >(conn, "floatDataType"           , DataType.Double   , skipDefaultNull: isODBC                  ), Is.EqualTo(20.31d));
+				Assert.That(TestType<float?   >(conn, "realDataType"            , DataType.Single   , skipDefaultNull: isODBC                  ), Is.EqualTo(16.2f));
 
-				Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime, skipDefaultNull: isODBC), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DateTime?>(conn, "datetimeDataType"        , DataType.DateTime , skipDefaultNull: isODBC                  ), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 
-				Assert.That(TestType<char?>(conn, "charDataType", DataType.Char, skipDefaultNull: isODBC), Is.EqualTo('1'));
-				Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar, skipDefaultNull: isODBC), Is.EqualTo("234"));
-				Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipDefaultNull: isODBC), Is.EqualTo("567"));
-				Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar, skipDefaultNull: isODBC), Is.EqualTo("23233"));
-				Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar, skipDefaultNull: isODBC), Is.EqualTo("3323"));
-				Assert.That(TestType<string>(conn, "ntextDataType", DataType.NText, skipDefaultNull: isODBC), Is.EqualTo("111"));
+				Assert.That(TestType<char?    >(conn, "charDataType"            , DataType.Char     , skipDefaultNull: isODBC                   ), Is.EqualTo('1'));
+				Assert.That(TestType<string   >(conn, "varcharDataType"         , DataType.VarChar  , skipDefaultNull: isODBC                   ), Is.EqualTo("234"));
+				Assert.That(TestType<string   >(conn, "textDataType"            , DataType.Text     , skipDefaultNull: isODBC                   ), Is.EqualTo("567"));
+				Assert.That(TestType<string   >(conn, "ncharDataType"           , DataType.NChar    , skipDefaultNull: isODBC                   ), Is.EqualTo("23233"));
+				Assert.That(TestType<string   >(conn, "nvarcharDataType"        , DataType.NVarChar , skipDefaultNull: isODBC                   ), Is.EqualTo("3323"));
+				Assert.That(TestType<string   >(conn, "ntextDataType"           , DataType.NText    , skipDefaultNull: isODBC                   ), Is.EqualTo("111"));
 
-				Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.Binary, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0, 0, 0 }));
-				Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.VarBinary, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 1, 2, 3, 5 }));
-				Assert.That(TestType<byte[]>(conn, "imageDataType", DataType.Image, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 3, 4, 5, 6 }));
-				Assert.That(TestType<byte[]>(conn, "oleobjectDataType", DataType.Variant, skipDefined: true, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 5, 6, 7, 8 }));
+				Assert.That(TestType<byte[]   >(conn, "binaryDataType"          , DataType.Binary   , skipDefaultNull: isODBC                   ), Is.EqualTo(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0, 0, 0 }));
+				Assert.That(TestType<byte[]   >(conn, "varbinaryDataType"       , DataType.VarBinary, skipDefaultNull: isODBC                   ), Is.EqualTo(new byte[] { 1, 2, 3, 5 }));
+				Assert.That(TestType<byte[]   >(conn, "imageDataType"           , DataType.Image    , skipDefaultNull: isODBC                   ), Is.EqualTo(new byte[] { 3, 4, 5, 6 }));
+				Assert.That(TestType<byte[]   >(conn, "oleobjectDataType"       , DataType.Variant  , skipDefined: true, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 5, 6, 7, 8 }));
 
-				Assert.That(TestType<Guid?>(conn, "uniqueidentifierDataType", DataType.Guid, skipDefaultNull: isODBC), Is.EqualTo(new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}")));
+				Assert.That(TestType<Guid?    >(conn, "uniqueidentifierDataType", DataType.Guid     , skipDefaultNull: isODBC                   ), Is.EqualTo(new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}")));
 			}
 		}
 
 		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "cbool", bool isODBCNull = false)
 		{
-			var param = conn.DataProvider.Name.Contains("ODBC") ? "?" : "@p";
+			var param = conn.DataProvider.Name.Contains("Odbc") ? "?" : "@p";
 
 			var skipTypes = skip.Split(' ');
 
@@ -138,75 +138,76 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				// ODBC driver doesn't support null parameter in select
-				var isODBC = conn.DataProvider.Name == ProviderName.AccessODBC;
+				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
 
-				TestSimple<bool>(conn, true, DataType.Boolean, isODBC);
-				TestSimple<sbyte>(conn, 1, DataType.SByte, isODBC);
-				TestSimple<short>(conn, 1, DataType.Int16, isODBC);
-				TestSimple<int>(conn, 1, DataType.Int32, isODBC);
-				TestSimple<long>(conn, 1L, DataType.Int64, isODBC);
-				TestSimple<byte>(conn, 1, DataType.Byte, isODBC);
-				TestSimple<ushort>(conn, 1, DataType.UInt16, isODBC);
-				TestSimple<uint>(conn, 1u, DataType.UInt32, isODBC);
-				TestSimple<ulong>(conn, 1ul, DataType.UInt64, isODBC);
-				TestSimple<float>(conn, 1, DataType.Single, isODBC);
-				TestSimple<double>(conn, 1d, DataType.Double, isODBC);
-				TestSimple<decimal>(conn, 1m, DataType.Decimal, isODBC);
-				TestSimple<decimal>(conn, 1m, DataType.VarNumeric, isODBC);
-				TestSimple<decimal>(conn, 1m, DataType.Money, isODBC);
-				TestSimple<decimal>(conn, 1m, DataType.SmallMoney, isODBC);
+				TestSimple<bool   >(conn, true, DataType.Boolean   , isODBC);
+				TestSimple<sbyte  >(conn, 1   , DataType.SByte     , isODBC);
+				TestSimple<short  >(conn, 1   , DataType.Int16     , isODBC);
+				TestSimple<int    >(conn, 1   , DataType.Int32     , isODBC);
+				TestSimple<long   >(conn, 1L  , DataType.Int64     , isODBC);
+				TestSimple<byte   >(conn, 1   , DataType.Byte      , isODBC);
+				TestSimple<ushort >(conn, 1   , DataType.UInt16    , isODBC);
+				TestSimple<uint   >(conn, 1u  , DataType.UInt32    , isODBC);
+				TestSimple<ulong  >(conn, 1ul , DataType.UInt64    , isODBC);
+				TestSimple<float  >(conn, 1   , DataType.Single    , isODBC);
+				TestSimple<double >(conn, 1d  , DataType.Double    , isODBC);
+				TestSimple<decimal>(conn, 1m  , DataType.Decimal   , isODBC);
+				TestSimple<decimal>(conn, 1m  , DataType.VarNumeric, isODBC);
+				TestSimple<decimal>(conn, 1m  , DataType.Money     , isODBC);
+				TestSimple<decimal>(conn, 1m  , DataType.SmallMoney, isODBC);
 
-				TestNumeric(conn, sbyte.MinValue, DataType.SByte, "cbool cbyte");
-				TestNumeric(conn, sbyte.MaxValue, DataType.SByte);
-				TestNumeric(conn, short.MinValue, DataType.Int16, "cbool cbyte");
-				TestNumeric(conn, short.MaxValue, DataType.Int16, "cbool cbyte");
-				TestNumeric(conn, int.MinValue, DataType.Int32, "cbool cbyte cint");
-				TestNumeric(conn, int.MaxValue, DataType.Int32, "cbool cbyte cint csng");
+				TestNumeric(conn, sbyte.MinValue, DataType.SByte, "cbool cbyte"          );
+				TestNumeric(conn, sbyte.MaxValue, DataType.SByte                         );
+				TestNumeric(conn, short.MinValue, DataType.Int16, "cbool cbyte"          );
+				TestNumeric(conn, short.MaxValue, DataType.Int16, "cbool cbyte"          );
+				TestNumeric(conn, int.MinValue  , DataType.Int32, "cbool cbyte cint"     );
+				TestNumeric(conn, int.MaxValue  , DataType.Int32, "cbool cbyte cint csng");
 
 				if (!isODBC)
 				{
 					// TODO: it is not clear if ODBC driver doesn't support 64-numbers at all or we just need
 					// ACE 16 database
-					TestNumeric(conn, long.MinValue, DataType.Int64, "cbool cbyte cint clng ccur");
-					TestNumeric(conn, long.MaxValue, DataType.Int64, "cbool cbyte cint clng ccur cdbl csng");
+					TestNumeric(conn, long.MinValue , DataType.Int64 , "cbool cbyte cint clng ccur"          );
+					TestNumeric(conn, long.MaxValue , DataType.Int64 , "cbool cbyte cint clng ccur cdbl csng");
 					TestNumeric(conn, ulong.MaxValue, DataType.UInt64, "cbool cbyte cint clng csng ccur cdbl");
 				}
-				TestNumeric(conn, (long)int.MinValue, DataType.Int64, "cbool cbyte cint clng ccur");
-				TestNumeric(conn, (long)int.MaxValue, DataType.Int64, "cbool cbyte cint clng ccur cdbl csng");
-				TestNumeric(conn, (ulong)uint.MaxValue, DataType.UInt64, "cbool cbyte cint clng csng ccur cdbl");
 
-				TestNumeric(conn, byte.MaxValue, DataType.Byte);
-				TestNumeric(conn, ushort.MaxValue, DataType.UInt16, "cbool cbyte cint");
-				TestNumeric(conn, uint.MaxValue, DataType.UInt32, "cbool cbyte cint clng csng");
+				TestNumeric(conn, (long)int.MinValue  , DataType.Int64     , "cbool cbyte cint clng ccur"          );
+				TestNumeric(conn, (long)int.MaxValue  , DataType.Int64     , "cbool cbyte cint clng ccur cdbl csng");
+				TestNumeric(conn, (ulong)uint.MaxValue, DataType.UInt64    , "cbool cbyte cint clng csng ccur cdbl");
 
-				TestNumeric(conn, -3.40282306E+38f, DataType.Single, "cbool cbyte clng cint ccur");
-				TestNumeric(conn, 3.40282306E+38f, DataType.Single, "cbool cbyte clng cint ccur");
-				TestNumeric(conn, -1.79E+308d, DataType.Double, "cbool cbyte clng cint ccur csng");
-				TestNumeric(conn, 1.79E+308d, DataType.Double, "cbool cbyte clng cint ccur csng");
-				TestNumeric(conn, decimal.MinValue, DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumeric(conn, decimal.MaxValue, DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumeric(conn, 1.123456789m, DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumeric(conn, -1.123456789m, DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumeric(conn, -922337203685477m, DataType.Money, "cbool cbyte clng cint csng");
-				TestNumeric(conn, +922337203685477m, DataType.Money, "cbool cbyte clng cint csng");
-				TestNumeric(conn, -214748m, DataType.SmallMoney, "cbool cbyte cint");
-				TestNumeric(conn, +214748m, DataType.SmallMoney, "cbool cbyte cint");
+				TestNumeric(conn, byte.MaxValue       , DataType.Byte                                              );
+				TestNumeric(conn, ushort.MaxValue     , DataType.UInt16    , "cbool cbyte cint"                    );
+				TestNumeric(conn, uint.MaxValue       , DataType.UInt32    , "cbool cbyte cint clng csng"          );
+
+				TestNumeric(conn, -3.40282306E+38f    , DataType.Single    , "cbool cbyte clng cint ccur"          );
+				TestNumeric(conn, 3.40282306E+38f     , DataType.Single    , "cbool cbyte clng cint ccur"          );
+				TestNumeric(conn, -1.79E+308d         , DataType.Double    , "cbool cbyte clng cint ccur csng"     );
+				TestNumeric(conn, 1.79E+308d          , DataType.Double    , "cbool cbyte clng cint ccur csng"     );
+				TestNumeric(conn, decimal.MinValue    , DataType.Decimal   , "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, decimal.MaxValue    , DataType.Decimal   , "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, 1.123456789m        , DataType.Decimal   , "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, -1.123456789m       , DataType.Decimal   , "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, -922337203685477m   , DataType.Money     , "cbool cbyte clng cint csng"          );
+				TestNumeric(conn, +922337203685477m   , DataType.Money     , "cbool cbyte clng cint csng"          );
+				TestNumeric(conn, -214748m            , DataType.SmallMoney, "cbool cbyte cint"                    );
+				TestNumeric(conn, +214748m            , DataType.SmallMoney, "cbool cbyte cint"                    );
 			}
 		}
 
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
+			var param = context.Contains("Odbc") ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
-				Assert.That(conn.Execute<DateTime>("SELECT cdate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime >("SELECT cdate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>("SELECT CDate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
 
-				Assert.That(conn.Execute<DateTime>($"SELECT {param}", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime >($"SELECT {param}", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>($"SELECT {param}", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>($"SELECT {param}", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
 			}
@@ -215,27 +216,27 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
+			var param = context.Contains("Odbc") ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<char>("SELECT CStr('1')"), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >("SELECT CStr('1')"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT CStr('1')"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {param}", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", DataParameter.Char("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT CStr({param})", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT CStr({param})", DataParameter.Char("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {param}", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {param}", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {param}", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {param}", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", DataParameter.Create("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", DataParameter.Create("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {param}", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char >($"SELECT {param}", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>($"SELECT {param}", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 			}
 		}
@@ -244,7 +245,7 @@ namespace Tests.DataProvider
 		public void TestString([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			// ODBC driver doesn't support null parameter in select
-			var isODBC = context.Contains("ODBC");
+			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
@@ -272,7 +273,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestBinary([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var isODBC = context.Contains("ODBC");
+			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
 			var arr1 = new byte[] { 48, 57 };
@@ -298,7 +299,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
+			var param = context.Contains("Odbc") ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
@@ -312,14 +313,14 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlVariant([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var isODBC = context.Contains("ODBC");
+			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<object>("SELECT CVar(1)"), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>("SELECT CVar(1)"), Is.EqualTo(1));
-				Assert.That(conn.Execute<int?>("SELECT CVar(1)"), Is.EqualTo(1));
+				Assert.That(conn.Execute<int   >("SELECT CVar(1)"), Is.EqualTo(1));
+				Assert.That(conn.Execute<int?  >("SELECT CVar(1)"), Is.EqualTo(1));
 				Assert.That(conn.Execute<string>("SELECT CVar(1)"), Is.EqualTo("1"));
 
 				// ODBC doesn't have variant type and maps it to Binary
@@ -331,22 +332,22 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
+			var param = context.Contains("Odbc") ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT '<xml/>'"), Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<string     >("SELECT '<xml/>'"), Is.EqualTo("<xml/>"));
+				Assert.That(conn.Execute<XDocument  >("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>'").InnerXml, Is.EqualTo("<xml />"));
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml = Convert<string, XmlDocument>.Lambda("<xml/>");
 
-				Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {param}", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<string     >($"SELECT {param}", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
+				Assert.That(conn.Execute<XDocument  >($"SELECT {param}", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>($"SELECT {param}", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {param}", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {param}", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument  >($"SELECT {param}", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument  >($"SELECT {param}", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
 			}
 		}
 
@@ -361,9 +362,9 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Execute<TestEnum >("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum >("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 			}
 		}
@@ -371,7 +372,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var param = context.Contains("ODBC") ? "?" : "@p";
+			var param = context.Contains("Odbc") ? "?" : "@p";
 
 			using (var conn = new DataConnection(context))
 			{
@@ -418,11 +419,11 @@ namespace Tests.DataProvider
 						Enumerable.Range(0, 10).Select(n =>
 							new LinqDataTypes
 							{
-								ID = 4000 + n,
-								MoneyValue = 1000m + n,
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								BoolValue = true,
-								GuidValue = Guid.NewGuid(),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
 								SmallIntValue = (short)n
 							}
 						));

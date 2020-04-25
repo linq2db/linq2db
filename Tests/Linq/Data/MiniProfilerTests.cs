@@ -126,7 +126,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessODBC)] string context, [Values] ConnectionType type)
+		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NET46

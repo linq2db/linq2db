@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Access
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
 		public AccessODBCDataProvider()
-			: this(ProviderName.AccessODBC, MappingSchemaInstance)
+			: this(ProviderName.AccessOdbc, MappingSchemaInstance)
 		{
 		}
 

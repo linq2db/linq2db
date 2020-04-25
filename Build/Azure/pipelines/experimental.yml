@@ -336,17 +336,22 @@ stages:
         Access_ODBC_ACE:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
-#        Access_JET:
-#          title: 'Access Jet'
-#          config: 'access'
-#        Access_ACE:
-#          title: 'Access ACE'
-#          config: 'access.ace'
-#          script: 'access.ace.cmd'
-#        Access_ACE_x64:
-#          title: 'Access ACE (x64)'
-#         config: 'access.ace'
-#          script: 'access.ace.x64.cmd'
+          script: 'access.ace.cmd'
+        Access_ODBC_ACE_x64:
+          title: 'Access ODBC ACE (x64)'
+          config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
+       Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ACE_x64:
+          title: 'Access ACE (x64)'
+         config: 'access.ace'
+          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
@@ -374,6 +379,12 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['psscript']
       displayName: Setup tests
+
+    - powershell: Get-OdbcDriver | Select Name, Platform
+      displayName: List ODBC providers
+
+    - powershell: [System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }
+      displayName: List OLEDB providers
 
     - task: VSTest@2
       inputs:
@@ -406,17 +417,22 @@ stages:
         Access_ODBC_ACE:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
-#        Access_JET:
-#          title: 'Access Jet'
-#          config: 'access'
-#        Access_ACE:
-#          title: 'Access ACE'
-#          config: 'access.ace'
-#          script: 'access.ace.cmd'
-#        Access_ACE_x64:
-#          title: 'Access ACE (x64)'
-#          config: 'access.ace'
-#          script: 'access.ace.x64.cmd'
+          script: 'access.ace.cmd'
+        Access_ODBC_ACE_x64:
+          title: 'Access ODBC ACE (x64)'
+          config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
+       Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ACE_x64:
+          title: 'Access ACE (x64)'
+         config: 'access.ace'
+          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
@@ -445,6 +461,12 @@ stages:
       condition: variables['psscript']
       displayName: Setup tests
 
+    - powershell: Get-OdbcDriver | Select Name, Platform
+      displayName: List ODBC providers
+
+    - powershell: [System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }
+      displayName: List OLEDB providers
+
     - task: VSTest@2
       inputs:
         testAssemblyVer2: linq2db.Tests.dll
@@ -454,3 +476,67 @@ stages:
         testRunTitle: 'Windows / NETCOREAPP2.1 (x86) / $(title)'
       displayName: '$(title)'
 
+  - job: test_win_netfx46_job_2019
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Tests: Win / NETFX 4.6 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+        Access_ODBC_MDB:
+          title: 'Access ODBC MDB'
+          config: 'access.odbc.mdb'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+          script: 'access.ace.cmd'
+        Access_ODBC_ACE_x64:
+          title: 'Access ODBC ACE (x64)'
+          config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netfx46_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netfx46_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
+        testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'

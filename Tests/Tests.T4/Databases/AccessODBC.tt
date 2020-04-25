@@ -11,7 +11,7 @@
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 	//LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.ODBC.mdb");
 	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net46\Database\TestData.ODBC.mdb";
-	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", "Access.ODBC");
+	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", "Access.Odbc");
 
 	GenerateModel();
 #>

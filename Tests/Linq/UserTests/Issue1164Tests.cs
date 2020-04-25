@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestOdbc([IncludeDataSources(ProviderName.AccessODBC)] string context)
+		public void TestOdbc([IncludeDataSources(ProviderName.AccessOdbc)] string context)
 		{
 			using (var db = new DataConnection(new AccessODBCDataProvider(), "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\issue_1164.mdb;"))
 			{

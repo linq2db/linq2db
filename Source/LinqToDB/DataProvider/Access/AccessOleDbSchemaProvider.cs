@@ -121,11 +121,11 @@ namespace LinqToDB.DataProvider.Access
 					Name        = c.Field<string>("COLUMN_NAME"),
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType    = dt.TypeName,
-					Length      = dt.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
-					Scale       = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
-					IsIdentity  = dt.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
+					DataType    = dt?.TypeName,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
+					IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
 					Description = c.Field<string>("DESCRIPTION")
 				}
 			).ToList();

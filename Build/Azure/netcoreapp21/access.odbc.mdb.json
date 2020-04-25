@@ -1,13 +1,13 @@
 ﻿{
 	"CORE21.Azure": {
 		"Providers": [
-			"Access.ODBC"
+			"Access.Odbc"
 		],
 		"Connections": {
-			"Access.ODBC": {
+			"Access.Odbc": {
 				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
 			},
-			"Access.ODBC.Data": {
+			"Access.Odbc.Data": {
 				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
 			}
 		}

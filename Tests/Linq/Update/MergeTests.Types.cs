@@ -562,7 +562,7 @@ namespace Tests.xUpdate
 					|| provider == ProviderName.MySqlConnector
 					|| provider == TestProvName.MariaDB
 					|| provider == TestProvName.MySql55
-					|| provider == ProviderName.AccessODBC
+					|| provider == ProviderName.AccessOdbc
 					|| provider.Contains("Oracle"))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
@@ -651,7 +651,7 @@ namespace Tests.xUpdate
 						break;
 					case ProviderName.DB2           :
 					case ProviderName.Access        :
-					case ProviderName.AccessODBC    :
+					case ProviderName.AccessOdbc    :
 					case ProviderName.SapHanaNative :
 					case ProviderName.SapHanaOdbc   :
 					case TestProvName.MariaDB       :

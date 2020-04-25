@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Access
 		public class ODBCMappingSchema : MappingSchema
 		{
 			public ODBCMappingSchema()
-				: base(ProviderName.AccessODBC, Instance)
+				: base(ProviderName.AccessOdbc, Instance)
 			{
 			}
 		}

@@ -273,7 +273,7 @@ namespace Tests._Create
 				case ProviderName.SapHanaOdbc                      : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.Access                           : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
-				case ProviderName.AccessODBC                       : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
+				case ProviderName.AccessOdbc                       : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);     break;
 				case ProviderName.SqlCe                            : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
@@ -289,7 +289,7 @@ namespace Tests._Create
 		static void AccessODBCAction(IDbConnection connection)
 		{
 
-			using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessODBC))
+			using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes

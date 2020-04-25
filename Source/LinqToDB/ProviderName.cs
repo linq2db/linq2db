@@ -18,7 +18,7 @@ namespace LinqToDB
 		/// Microsoft Access ODBC provider.
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
-		public const string AccessODBC = "Access.ODBC";
+		public const string AccessOdbc = "Access.Odbc";
 
 		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).

@@ -197,7 +197,7 @@ namespace Tests.xUpdate
 			// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
 			if ((copyType       == BulkCopyType.RowByRow
 					|| context  == ProviderName.Access
-					|| context  == ProviderName.AccessODBC
+					|| context  == ProviderName.AccessOdbc
 					|| notSupported
 					|| (context.StartsWith(ProviderName.SapHana)
 						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))

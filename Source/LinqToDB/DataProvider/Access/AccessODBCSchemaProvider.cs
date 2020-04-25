@@ -84,10 +84,10 @@ namespace LinqToDB.DataProvider.Access
 					Name        = c.Field<string>("COLUMN_NAME"),
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType    = dt.TypeName,
-					Length      = dt.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
-					Precision   = dt.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
-					Scale       = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
+					DataType    = dt?.TypeName,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
 					IsIdentity  = typeName == "COUNTER",
 					Description = c.Field<string>("REMARKS")
 				}
@@ -183,6 +183,24 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return dbType;
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var dts = base.GetDataTypes(dataConnection);
+
+			// https://docs.microsoft.com/en-us/sql/odbc/microsoft/microsoft-access-data-types?view=sql-server-ver15
+			if (dts.All(dt => dt.TypeName != "BIGBINARY"))
+			{
+				dts.Add(new DataTypeInfo()
+				{
+					TypeName         = "BIGBINARY",
+					DataType         = typeof(byte[]).FullName,
+					ProviderDbType   = 9,
+				});
+			}
+
+			return dts;
 		}
 	}
 }

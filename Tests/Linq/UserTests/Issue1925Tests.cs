@@ -41,7 +41,7 @@ namespace Tests.Playground
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
 				}
-				else if (context == ProviderName.AccessODBC)
+				else if (context == ProviderName.AccessOdbc)
 				{
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
