@@ -383,7 +383,7 @@ stages:
     - powershell: Get-OdbcDriver | Select Name, Platform
       displayName: List ODBC providers
 
-    - powershell: [System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }
+    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
       displayName: List OLEDB providers
 
     - task: VSTest@2
@@ -464,7 +464,7 @@ stages:
     - powershell: Get-OdbcDriver | Select Name, Platform
       displayName: List ODBC providers
 
-    - powershell: [System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }
+    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
       displayName: List OLEDB providers
 
     - task: VSTest@2
