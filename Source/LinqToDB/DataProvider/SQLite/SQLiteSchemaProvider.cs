@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.SQLite
 				).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var dbConnection = (DbConnection)dataConnection.Connection;
 			var pks          = dbConnection.GetSchema("IndexColumns");

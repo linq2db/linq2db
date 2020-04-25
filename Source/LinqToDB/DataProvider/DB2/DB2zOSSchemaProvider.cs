@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		List<PrimaryKeyInfo>? _primaryKeys;
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return _primaryKeys = dataConnection.Query(
 				rd => new PrimaryKeyInfo
@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd =>

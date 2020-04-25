@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -21,20 +20,20 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
-			// there is no direct access to FK from ODBC GetSchema API
-			// and .net provider doesn't expose access to native ODBC API like SQLForeignKeys
-			// we can try to load non-unique indexes and link them to primary keys
-			// but taking into account that we cannot distinguish primary keys from unique indexes
-			// this will be profanation
+			// https://github.com/dotnet/runtime/issues/35442
 			return Array<ForeignKeyInfo>.Empty;
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
-			// views also include stored procedures...
-			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
-			var views  = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Views"));
+			// views also include SELECT procedures, including procedures with parameters(!)
+			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views");
+			var procs  = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			
+			var procIds = new HashSet<string>(
+				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"));
 
 			return
 			(
@@ -46,9 +45,11 @@ namespace LinqToDB.DataProvider.Access
 				// no separate ACCESS TABLE type, SYSTEM TABLE type used
 				// VIEW is in separate schema table
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
+				let id      = catalog + '.' + schema + '.' + name
+				where !procIds.Contains(id)
 				select new TableInfo
 				{
-					TableID            = catalog + '.' + schema + '.' + name,
+					TableID            = id,
 					CatalogName        = null,
 					SchemaName         = schema,
 					TableName          = name,
@@ -60,66 +61,33 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
-			// probably we just need to disable PK support
-			//return Array<ForeignKeyInfo>.Empty;
-
-			// restriction[2] (TABLE_NAME) required for ODBC which is super effective...
-			// actually, this is garbage. All records have TYPE=3 and only difference is that primary keys will
-			// have NON_UNIQUE = 0, but it also could be UNIQUE index
-			var pks = new List<PrimaryKeyInfo>();
-			foreach (var tableName in tables.Where(t => !t.IsView).Select(t => t.TableName!))
-			{
-				DataTable idxs;
-				try
-				{
-					idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes", new string?[] { null, null, tableName }));
-				}
-				catch (Exception)
-				{
-					// This actually doesn't make much sense - you show table in Tables schema, but don't allow
-					// to read details about it
-					// ERROR [42000] [Microsoft][ODBC Microsoft Access Driver] Could not read definitions; no read definitions permission for table or query 'MSysACEs'.
-					continue;
-				}
-
-				pks.AddRange
-				(
-					from idx in idxs.AsEnumerable()
-					where idx.Field<short>("NON_UNIQUE") == 0
-					select new PrimaryKeyInfo
-					{
-						TableID        = idx.Field<string>("TABLE_CAT") + "." + idx.Field<string>("TABLE_SCHEM") + "." + idx.Field<string>("TABLE_NAME"),
-						PrimaryKeyName = idx.Field<string>("INDEX_NAME"),
-						ColumnName     = idx.Field<string>("COLUMN_NAME"),
-						Ordinal        = ConvertTo<int>.From(idx["ORDINAL_POSITION"]),
-					}
-				);
-			}
-
-			return pks;
+			// https://github.com/dotnet/runtime/issues/35442
+			return Array<PrimaryKeyInfo>.Empty;
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
+			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
 				from c in cs.AsEnumerable()
 				let typeName = c.Field<string>("TYPE_NAME")
 				let dt       = GetDataType(typeName, options)
+				let size     = Converter.ChangeTypeTo<int?>(c["COLUMN_SIZE"])
+				let scale    = Converter.ChangeTypeTo<int?>(c["DECIMAL_DIGITS"])
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CAT") + "." + c.Field<string>("TABLE_SCHEM") + "." + c.Field<string>("TABLE_NAME"),
 					Name        = c.Field<string>("COLUMN_NAME"),
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType    = dt?.TypeName,
-					Length      = Converter.ChangeTypeTo<int?>(c["COLUMN_SIZE"]),
-					Precision   = Converter.ChangeTypeTo<int?> (c["NUM_PREC_RADIX"]),
-					Scale       = Converter.ChangeTypeTo<int?> (c["DECIMAL_DIGITS"]),
+					DataType    = dt.TypeName,
+					Length      = dt.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
+					Precision   = dt.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
+					Scale       = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
 					IsIdentity  = typeName == "COUNTER",
 					Description = c.Field<string>("REMARKS")
 				}
@@ -128,7 +96,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return
 			(
@@ -147,27 +115,30 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("ProcedureParameters"));
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 			return
 			(
 				from p in ps.AsEnumerable()
-				let catalog = p.Field<string>("PROCEDURE_CAT")
-				let schema  = p.Field<string>("PROCEDURE_SCHEM")
-				let name    = p.Field<string>("PROCEDURE_NAME")
+				let catalog  = p.Field<string>("PROCEDURE_CAT")
+				let schema   = p.Field<string>("PROCEDURE_SCHEM")
+				let name     = p.Field<string>("PROCEDURE_NAME")
+				let size     = p.Field<int?>("COLUMN_SIZE")
+				let typeName = p.Field<string>("TYPE_NAME")
+				let dt       = GetDataType(typeName, options)
 				select new ProcedureParameterInfo()
 				{
 					ProcedureID   = catalog + "." + schema + "." + name,
 					ParameterName = p.Field<string>("COLUMN_NAME").TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
-					Length        = p.Field<int?>("COLUMN_SIZE"),
-					Precision     = p.Field<short?>("NUM_PREC_RADIX"),
-					Scale         = p.Field<short?>("DECIMAL_DIGITS"),
+					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,
+					Precision     = dt.CreateParameters != null && dt.CreateParameters.Contains("precision") ? size : null,
+					Scale         = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")     ? p.Field<short?>("DECIMAL_DIGITS") : null,
 					Ordinal       = p.Field<int>("ORDINAL_POSITION"),
 					IsResult      = false,
-					DataType      = p.Field<string>("TYPE_NAME"),
+					DataType      = typeName,
 					IsNullable    = p.Field<short>("NULLABLE") == 1 // allways true
 				}
 			).ToList();
@@ -178,6 +149,40 @@ namespace LinqToDB.DataProvider.Access
 			commandText = $"CALL {commandText} ({string.Join(", ", Enumerable.Range(0, parameters.Length).Select(_ => "?"))})";
 			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
 				return rd.Reader!.GetSchemaTable();
+		}
+
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		{
+			var dbType = columnType;
+
+			if (dataType != null)
+			{
+				var parms = dataType.CreateParameters;
+
+				if (!parms.IsNullOrWhiteSpace())
+				{
+					var paramNames = parms.Split(',');
+					var paramValues = new object?[paramNames.Length];
+
+					for (var i = 0; i < paramNames.Length; i++)
+					{
+						switch (paramNames[i].Trim().ToLower())
+						{
+							case "length"   : paramValues[i] = length   ; break;
+							case "precision": paramValues[i] = precision; break;
+							case "scale"    : paramValues[i] = scale    ; break;
+						}
+					}
+
+					if (paramValues.All(v => v != null))
+					{
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
+						dbType     = string.Format(format, paramValues);
+					}
+				}
+			}
+
+			return dbType;
 		}
 	}
 }

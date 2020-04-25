@@ -13,6 +13,11 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
+		private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
+			| OleDbProviderAdapter.ColumnFlags.IsFixedLength
+			| OleDbProviderAdapter.ColumnFlags.WriteUnknown
+			| OleDbProviderAdapter.ColumnFlags.MayDefer;
+
 		private readonly AccessOleDbDataProvider _provider;
 
 		public AccessOleDbSchemaProvider(AccessOleDbDataProvider provider)
@@ -23,7 +28,7 @@ namespace LinqToDB.DataProvider.Access
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
-		protected override TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
+		private TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
 				return action(dataConnection);
@@ -82,7 +87,7 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
 
@@ -107,21 +112,46 @@ namespace LinqToDB.DataProvider.Access
 			return
 			(
 				from c in cs.AsEnumerable()
-				let dt = GetDataTypeByProviderDbType(c.Field<int>("DATA_TYPE"), options)
+				let flags          = Converter.ChangeTypeTo<OleDbProviderAdapter.ColumnFlags>(c["COLUMN_FLAGS"])
+				let providerDbType = CorrectDataTypeFromFlags(c.Field<int>("DATA_TYPE"), flags)
+				let dt             = GetDataTypeByProviderDbType(providerDbType, options)
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name        = c.Field<string>("COLUMN_NAME"),
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType    = dt?.TypeName,
-					Length      = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision   = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
-					Scale       = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
-					IsIdentity  = Converter.ChangeTypeTo<int>  (c["COLUMN_FLAGS"]) == 90 && (dt == null || dt.TypeName == null || (dt.TypeName.ToLower() != "boolean" && dt.TypeName.ToLower() != "bit")),
+					DataType    = dt.TypeName,
+					Length      = dt.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
+					Scale       = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
+					IsIdentity  = dt.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
 					Description = c.Field<string>("DESCRIPTION")
 				}
 			).ToList();
+		}
+
+		private int CorrectDataTypeFromFlags(int providerDbType, OleDbProviderAdapter.ColumnFlags flags)
+		{
+			switch (providerDbType)
+			{
+				case 130: // AdWChar
+					if (flags.HasFlag(OleDbProviderAdapter.ColumnFlags.IsLong))
+						return 203;
+					else if (!flags.HasFlag(OleDbProviderAdapter.ColumnFlags.IsFixedLength))
+						return 202;
+					break;
+
+				case 128: // AdBinary
+					if (flags.HasFlag(OleDbProviderAdapter.ColumnFlags.IsLong))
+						return 205;
+					else if (!flags.HasFlag(OleDbProviderAdapter.ColumnFlags.IsFixedLength))
+						return 204;
+
+					break;
+			}
+
+			return providerDbType;
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
@@ -147,7 +177,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		static readonly Regex _paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var list = new List<ProcedureParameterInfo>();
 
@@ -195,6 +225,78 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return list;
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var dts = ExecuteOnNewConnection(dataConnection, cn => base.GetDataTypes(cn));
+
+			if (dts.All(dt => dt.ProviderDbType != 128))
+			{
+				dts.Add(new DataTypeInfo()
+				{
+					TypeName         = "BINARY",
+					DataType         = typeof(byte[]).FullName,
+					CreateParameters = "max length",
+					ProviderDbType   = 128,
+				});
+			}
+
+			if (dts.All(dt => dt.ProviderDbType != 130))
+			{
+				dts.Add(new DataTypeInfo()
+				{
+					TypeName         = "CHAR",
+					DataType         = typeof(string).FullName,
+					CreateParameters = "max length",
+					ProviderDbType   = 130
+				});
+			}
+
+			dts = dts.AsEnumerable().Where(t => t.ProviderDbType != 204).ToList();
+			dts.Add(new DataTypeInfo()
+			{
+				TypeName         = "VARBINARY",
+				DataType         = typeof(byte[]).FullName,
+				CreateParameters = "max length",
+				ProviderDbType   = 204
+			});
+
+			return dts;
+		}
+
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		{
+			var dbType = columnType;
+
+			if (dataType != null)
+			{
+				var parms = dataType.CreateParameters;
+
+				if (!parms.IsNullOrWhiteSpace())
+				{
+					var paramNames = parms.Split(',');
+					var paramValues = new object?[paramNames.Length];
+
+					for (var i = 0; i < paramNames.Length; i++)
+					{
+						switch (paramNames[i].Trim().ToLower())
+						{
+							case "max length": paramValues[i] = length; break;
+							case "precision" : paramValues[i] = precision; break;
+							case "scale"     : paramValues[i] = scale; break;
+						}
+					}
+
+					if (paramValues.All(v => v != null))
+					{
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
+						dbType = string.Format(format, paramValues);
+					}
+				}
+			}
+
+			return dbType;
 		}
 	}
 }

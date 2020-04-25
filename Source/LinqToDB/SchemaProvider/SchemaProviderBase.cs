@@ -14,13 +14,13 @@ namespace LinqToDB.SchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
-		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
+		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
-		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures) => null;
+		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
 		protected HashSet<string?>   IncludedSchemas  = null!;
 		protected HashSet<string?>   ExcludedSchemas  = null!;
@@ -221,7 +221,7 @@ namespace LinqToDB.SchemaProvider
 
 				if (procs != null)
 				{
-					var procPparams = GetProcedureParameters(dataConnection, procs);
+					var procPparams = GetProcedureParameters(dataConnection, procs, options);
 					procedures =
 					(
 						from sp in procs
@@ -324,8 +324,8 @@ namespace LinqToDB.SchemaProvider
 				DataSource                    = GetDataSourceName(dataConnection),
 				Database                      = GetDatabaseName  (dataConnection),
 				ServerVersion                 = dbConnection.ServerVersion,
-				Tables                        = tables.OrderBy(t => t.TableName).ToList(),
-				Procedures                    = procedures.OrderBy(t => t.ProcedureName).ToList(),
+				Tables                        = tables,
+				Procedures                    = procedures,
 				ProviderSpecificTypeNamespace = GetProviderSpecificTypeNamespace(),
 				DataTypesSchema               = DataTypesSchema,
 
@@ -405,9 +405,9 @@ namespace LinqToDB.SchemaProvider
 						procedure.ResultTable = new TableSchema
 						{
 							IsProcedureResult = true,
-							TypeName = ToValidName(procedure.ProcedureName + "Result"),
-							ForeignKeys = new List<ForeignKeySchema>(),
-							Columns = columns
+							TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+							ForeignKeys       = new List<ForeignKeySchema>(),
+							Columns           = columns
 						};
 
 						foreach (var column in procedure.ResultTable.Columns)
@@ -489,7 +489,7 @@ namespace LinqToDB.SchemaProvider
 				let columnName = r.Field<string>("ColumnName")
 				let isNullable = r.Field<bool>  ("AllowDBNull")
 				let dt         = GetDataType(columnType, options)
-				let length     = r.Field<int> ("ColumnSize")
+				let length     = r.Field<int?>  ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
 				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)

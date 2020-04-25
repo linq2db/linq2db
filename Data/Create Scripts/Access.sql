@@ -1,5 +1,7 @@
 ﻿DROP Procedure AddIssue792Record
 GO
+DROP Procedure ThisProcedureNotVisibleFromODBC
+GO
 DROP Procedure Person_SelectByKey
 GO
 DROP Procedure Person_SelectAll
@@ -26,6 +28,8 @@ GO
 DROP TABLE Patient
 GO
 DROP TABLE Person
+GO
+DROP TABLE RelationsTable
 GO
 
 DROP TABLE InheritanceParent
@@ -348,7 +352,37 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber INT               NULL
 )
 GO
-CREATE Procedure AddIssue792Record
+CREATE Procedure AddIssue792Record(@id INT)
 AS
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 GO
+CREATE Procedure ThisProcedureNotVisibleFromODBC
+AS
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+GO
+
+CREATE TABLE RelationsTable
+(
+	ID1		INT NOT NULL,
+	ID2		INT NOT NULL,
+	Int1	INT NOT NULL,
+	Int2	INT NOT NULL,
+	IntN1	INT NULL,
+	IntN2	INT NULL,
+	FK		INT NOT NULL,
+	FKN		INT NULL
+)
+GO
+CREATE INDEX PK_RelationsTable ON RelationsTable(ID1, ID2) WITH PRIMARY;
+GO
+CREATE INDEX IX_Index ON RelationsTable(Int1, IntN1);
+GO
+CREATE UNIQUE INDEX UX_Index1 ON RelationsTable(Int1);
+GO
+CREATE UNIQUE INDEX UX_Index2 ON RelationsTable(IntN1);
+GO
+ALTER TABLE RelationsTable ADD CONSTRAINT FK_Nullable FOREIGN KEY (IntN1, IntN2) REFERENCES RelationsTable(ID1, ID2);
+GO
+ALTER TABLE RelationsTable ADD CONSTRAINT FK_NotNullable FOREIGN KEY (Int1, Int2) REFERENCES RelationsTable(ID1, ID2);
+GO
+
