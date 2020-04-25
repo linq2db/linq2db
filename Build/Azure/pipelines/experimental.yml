@@ -350,7 +350,7 @@ stages:
           script: 'access.ace.cmd'
         Access_ACE_x64:
           title: 'Access ACE (x64)'
-         config: 'access.ace'
+          config: 'access.ace'
           script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
@@ -425,13 +425,13 @@ stages:
         Access_JET:
           title: 'Access Jet'
           config: 'access'
-       Access_ACE:
+        Access_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
         Access_ACE_x64:
           title: 'Access ACE (x64)'
-         config: 'access.ace'
+          config: 'access.ace'
           script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
