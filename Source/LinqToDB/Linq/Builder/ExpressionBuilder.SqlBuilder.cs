@@ -58,7 +58,6 @@ namespace LinqToDB.Linq.Builder
 			if (checkForSubQuery && CheckSubQueryForWhere(ctx, expr, out makeHaving))
 			{
 				ReplaceParent(ctx, prevParent);
-				sequence.Parent = prevParent;
 
 				sequence = new SubQueryContext(sequence);
 				prevParent = sequence.Parent;
@@ -76,7 +75,6 @@ namespace LinqToDB.Linq.Builder
 
 			return sequence;
 		}
-
 
 		bool CheckSubQueryForWhere(IBuildContext context, Expression expression, out bool makeHaving)
 		{
@@ -232,10 +230,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
 		{
-			// if (!context.SelectQuery.GroupBy.IsEmpty)
-			// 	context = new SubQueryContext(context);
-			//
-			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery }) {CreateSubQuery = true};
+			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
 
 			if (ctx.SelectQuery.Select.Columns.Count == 0) 
@@ -710,17 +705,6 @@ namespace LinqToDB.Linq.Builder
 						}
 						break;
 					}
-
-				// case ExpressionType.MemberAccess:
-				// 	{
-				// 		var memberCtx = GetContext(context, expression);
-				// 		if (memberCtx != null)
-				// 		{
-				// 			var level = expression.GetLevel();
-				// 			return memberCtx.ConvertToSql(expression, level, queryConvertFlag);
-				// 		}
-				// 		break;
-				// 	}
 			}
 
 			var ctx = GetContext(context, expression);

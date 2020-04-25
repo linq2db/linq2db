@@ -524,6 +524,7 @@ WHERE
 			int Id { get; set; }
 			int? ParentId { get; set; }
 			IList<TreeItem> Children { get; set; }
+			TreeItem Parent { get; set; }
 		}
 
 		[Table("TreeItem")]
@@ -536,11 +537,16 @@ WHERE
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
 			public IList<TreeItem> Children { get; set; } = null!;
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
+			public TreeItem? Parent { get; set; }
+
 		}
 
 		[Test]
 		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<TreeItem>())
 			{
@@ -552,9 +558,17 @@ WHERE
 		
 		void DoGeneric<T>(ITable<T> treeItems) where T: ITreeItem
 		{
-			var q = treeItems.Where(x => x.Children.Any());
-				
-			Console.WriteLine(q.ToString());
+			var query1 = treeItems
+				.Where(x => x.Children.Any());
+
+			var result1 = query1.ToArray();
+
+			var query2 = from t in treeItems
+				where t.Parent!.Id > 0 
+				select t.Children;
+
+			var result2 = query2.ToArray();
+
 		}
 	}
 }

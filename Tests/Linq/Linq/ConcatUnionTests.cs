@@ -643,7 +643,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationUnion1([DataSources] string context)
 		{
@@ -657,7 +657,7 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationUnion2([DataSources] string context)
 		{
@@ -669,7 +669,7 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{

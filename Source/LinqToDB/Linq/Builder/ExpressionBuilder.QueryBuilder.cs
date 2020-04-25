@@ -951,6 +951,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression? AssociationRoot;
+		public Stack<Tuple<MemberInfo, IBuildContext>>? AssociationPath;
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 

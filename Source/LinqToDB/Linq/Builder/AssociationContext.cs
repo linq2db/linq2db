@@ -74,8 +74,8 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = CorrectExpression(expression, this, SubqueryContext);
-			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
+			expression  = CorrectExpression(expression, this, SubqueryContext);
+			var indexes = ConvertToIndex(expression, level, flags);
 			foreach (var sqlInfo in indexes)
 			{
 				sqlInfo.Query = SelectQuery;
@@ -132,7 +132,12 @@ namespace LinqToDB.Linq.Builder
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			return TableContext.ConvertToParentIndex(index, context);
+			if (context != null)
+			{
+				if (context.SelectQuery != SelectQuery)
+					index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
+			}
+			return TableContext.ConvertToParentIndex(index, this);
 		}
 
 		public void SetAlias(string alias)

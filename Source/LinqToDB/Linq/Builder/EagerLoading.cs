@@ -576,6 +576,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression CorrectLoadWithExpression(Expression detailExpression, IBuildContext context, IList<MemberInfo> associationPath, MappingSchema mappingSchema)
 		{
+			return detailExpression;
 			if (context is TableBuilder.TableContext table)
 			{
 				if (table.LoadWith?.Count > 0)
@@ -620,6 +621,9 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
+			if (!Common.Configuration.Linq.AllowMultipleQuery)
+				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
+
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
 			var mappingSchema    = builder.MappingSchema;
 
@@ -631,10 +635,14 @@ namespace LinqToDB.Linq.Builder
 			
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
 
-			var associationPath = new List<MemberInfo>();
-			associationPath.Insert(0, association.MemberInfo);
+			
+			var reversedAssociationPath = new List<Tuple<MemberInfo, IBuildContext>>(builder.AssociationPath ?? throw new InvalidOperationException());
+			reversedAssociationPath.Reverse();
 
-			var extractContext = context;
+			var associationPath = new List<MemberInfo>(reversedAssociationPath.Select(a => a.Item1));
+
+
+			var extractContext = reversedAssociationPath[0].Item2;
 
 			var associationParentType = associationPath[0].DeclaringType;
 
@@ -692,9 +700,9 @@ namespace LinqToDB.Linq.Builder
 						throw new NotImplementedException();
 					}
 
-					var detailExpression1 = parentExpr;
+					detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
 
-					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailExpression1,
+					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailQuery,
 						new HashSet<ParameterExpression>());
 
 					return result;

@@ -104,7 +104,17 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!leftJoin)
 				{
-					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, true);
+					if (collection.SelectQuery.IsSimple)
+					{
+						context.Collection = new SubQueryContext(collection, sequence.SelectQuery, true);
+					}
+					else
+					{
+						var join = sql.CrossApply();
+						sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
+					}
+
 					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 				}
 				else

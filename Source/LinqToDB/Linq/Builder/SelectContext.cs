@@ -586,9 +586,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.Field :
 						{
-							var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
-
-							if (level == 0 && levelExpression == expression)
+							if (level == 0)
 							{
 								var idx = Builder.ConvertExpressions(this, expression!, flags);
 
@@ -597,6 +595,8 @@ namespace LinqToDB.Linq.Builder
 
 								return idx;
 							}
+
+							var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -887,7 +887,7 @@ namespace LinqToDB.Linq.Builder
 									levelExpression.Type,
 									expression);
 
-								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery) { CreateSubQuery = buildInfo.CreateSubQuery });
+								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery));
 							}
 
 							var context = ProcessMemberAccess(

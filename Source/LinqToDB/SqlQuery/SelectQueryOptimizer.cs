@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment
-			sqlText = _selectQuery.SqlText;
+			var newSqlText = _selectQuery.SqlText;
 #endif
 		}
 
@@ -408,10 +408,12 @@ namespace LinqToDB.SqlQuery
 			});
 
 			ResolveWeakJoins(tables);
+			RemoveEmptyJoins();
 			OptimizeColumns();
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
+			//RemoveEmptyJoins();
 
 			OptimizeDistinctOrderBy();
 		}
@@ -1011,14 +1013,15 @@ namespace LinqToDB.SqlQuery
 					// correct conditions
 					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
 					{
-						var map = sql.Select.Columns.ToDictionary(c => c.Expression);
+						var map = sql.Select.Columns.ToLookup(c => c.Expression);
 						foreach (var condition in searchCondition)
 						{
 							var visitor = new QueryVisitor();
 							var newPredicate = visitor.Convert(condition.Predicate, e =>
 							{
-								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
+								if (e is ISqlExpression ex && map.Contains(ex))
 								{
+									var newExpr = map[ex].First();
 									if (visitor.ParentElement is SqlColumn column)
 									{
 										if (newExpr != column)
@@ -1104,6 +1107,7 @@ namespace LinqToDB.SqlQuery
 		{
 			CorrectCrossJoinQuery(_selectQuery);
 
+			var orderStartIndex = 0;
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
 				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
@@ -1114,12 +1118,49 @@ namespace LinqToDB.SqlQuery
 
 					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 						if (sql != null && sql.OrderBy.Items.Count > 0)
+						{
 							foreach (var item in sql.OrderBy.Items)
-								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+							{
+								_selectQuery.OrderBy.Items.Insert(orderStartIndex++, new SqlOrderByItem(item.Expression, item.IsDescending));
+							}
+						}
 
 					_selectQuery.From.Tables[i] = table;
 				}
 			}
+
+			// Move up simple subqueries
+			//
+			/* TODO: Cause Stackoverflow in ConcatUnionTests.UnionWithObjects
+			for (int tableIndex = 0; tableIndex < _selectQuery.From.Tables.Count; tableIndex++)
+			{
+				var table = _selectQuery.From.Tables[tableIndex];
+				if (table.Source is SelectQuery subQuery && subQuery.IsSimple)
+				{
+					_selectQuery.From.Tables.RemoveAt(tableIndex);
+					_selectQuery.From.Tables.InsertRange(tableIndex, subQuery.Select.From.Tables);
+					if (table.Joins.Count > 0)
+					{
+						subQuery.Select.From.Tables.Last().Joins.AddRange(table.Joins);
+					}
+
+					var root = _selectQuery.ParentSelect ?? _selectQuery;
+
+					root.Walk(new WalkOptions(), e =>
+					{
+						if (e is SqlColumn column && column.Parent == subQuery)
+						{
+							return column.Expression;
+						}
+					
+						return e;
+					});
+
+				}
+			}
+
+			*/
+
 
 			//TODO: Failed SelectQueryTests.JoinScalarTest
 			//Needs optimization refactor for 3.X
@@ -1165,6 +1206,27 @@ namespace LinqToDB.SqlQuery
 							tableSources.Add(ts);
 						return e;
 					});
+				}
+			}
+		}
+
+		void RemoveEmptyJoins()
+		{
+			if (_flags.IsCrossJoinSupported)
+				return;
+
+			for (var tableIndex = 0; tableIndex < _selectQuery.From.Tables.Count; tableIndex++)
+			{
+				var table = _selectQuery.From.Tables[tableIndex];
+				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
+				{
+					var join = table.Joins[joinIndex];
+					if (join.JoinType == JoinType.Inner && join.Condition.Conditions.Count == 0)
+					{
+						_selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
+						table.Joins.RemoveAt(joinIndex);
+						--joinIndex;
+					}
 				}
 			}
 		}

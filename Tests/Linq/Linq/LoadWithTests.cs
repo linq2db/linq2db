@@ -169,7 +169,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith8([DataSources(ProviderName.Access)] string context)
+		public void LoadWith8([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

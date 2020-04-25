@@ -30,8 +30,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (predicate.GetType() != typeof(SqlPredicate.Expr))
 						sequence.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
-
-					table.ObjectType = objectType;
 				}
 			}
 			else

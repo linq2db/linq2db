@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 			return definedQueryMethod;
 		}
 
-		public static AssociationContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
+		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
@@ -203,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
-			var context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
+			var context = builder.BuildSequence(new BuildInfo(tableContext, body, new SelectQuery()));
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
@@ -211,7 +211,8 @@ namespace LinqToDB.Linq.Builder
 
 			tableSource.Joins.Add(join.JoinedTable);
 			
-			return new AssociationContext(builder, tableContext, context);
+			return context;
+			// return new AssociationContext(builder, tableContext, context);
 		}
 
 		public static IBuildContext BuildAssociationSubqueryInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
