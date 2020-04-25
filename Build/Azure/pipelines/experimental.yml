@@ -135,8 +135,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: ne(variables['Build.SourceBranchName'], 'release')
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -219,8 +219,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -325,22 +325,28 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Access_JET:
-          title: 'Access Jet'
-          config: 'access'
-        Access_ACE:
-          title: 'Access ACE'
-          config: 'access.ace'
-          script: 'access.ace.cmd'
-        Access_ACE_x64:
-          title: 'Access ACE (x64)'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
+        Access_ODBC_MDB:
+          title: 'Access ODBC MDB'
+          config: 'access.odbc.mdb'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+#        Access_JET:
+#          title: 'Access Jet'
+#          config: 'access'
+#        Access_ACE:
+#          title: 'Access ACE'
+#          config: 'access.ace'
+#          script: 'access.ace.cmd'
+#        Access_ACE_x64:
+#          title: 'Access ACE (x64)'
+#         config: 'access.ace'
+#          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
@@ -389,22 +395,28 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 (x86) / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+@    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Access_JET:
-          title: 'Access Jet'
-          config: 'access'
-        Access_ACE:
-          title: 'Access ACE'
-          config: 'access.ace'
-          script: 'access.ace.cmd'
-        Access_ACE_x64:
-          title: 'Access ACE (x64)'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
+        Access_ODBC_MDB:
+          title: 'Access ODBC MDB'
+          config: 'access.odbc.mdb'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+#        Access_JET:
+#          title: 'Access Jet'
+#          config: 'access'
+#        Access_ACE:
+#          title: 'Access ACE'
+#          config: 'access.ace'
+#          script: 'access.ace.cmd'
+#        Access_ACE_x64:
+#          title: 'Access ACE (x64)'
+#          config: 'access.ace'
+#          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
