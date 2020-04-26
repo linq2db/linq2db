@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.Oracle
 				_currentUser = dataConnection.Execute<string>("select user from dual");
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// uses ALL_ARGUMENTS view
 			// https://docs.oracle.com/cd/B28359_01/server.111/b28320/statviews_1014.htm#REFRN20015

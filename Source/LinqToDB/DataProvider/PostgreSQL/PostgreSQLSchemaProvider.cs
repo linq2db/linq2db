@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
@@ -262,7 +262,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var data = dataConnection.Query(
 				rd => new
@@ -533,7 +533,7 @@ SELECT	r.ROUTINE_CATALOG,
 			}
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd =>

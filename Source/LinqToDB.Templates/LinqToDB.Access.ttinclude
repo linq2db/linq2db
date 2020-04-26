@@ -5,6 +5,11 @@ LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString);
 }
 
+LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionString, string providerName)
+{
+	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString, providerName);
+}
+
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 {
 	return GetAccessConnection(string.Format(
@@ -15,6 +20,12 @@ LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 void LoadAccessMetadata(string connectionString)
 {
 	using (var dataConnection = GetAccessConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+void LoadAccessMetadataByProvider(string connectionString, string providerName)
+{
+	using (var dataConnection = GetAccessConnectionForProvider(connectionString, providerName))
 		LoadMetadata(dataConnection);
 }
 

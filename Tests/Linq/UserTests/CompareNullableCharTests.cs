@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.Access)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = new Repository(context))
 			{

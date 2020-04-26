@@ -184,7 +184,7 @@ namespace Tests.Linq
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -213,7 +213,7 @@ namespace Tests.Linq
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -274,7 +274,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubQueryTest([DataSources(
-			ProviderName.Access, TestProvName.AllInformix, ProviderName.SqlCe,
+			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe,
 			TestProvName.AllSybase, TestProvName.AllSapHana)]
 			string context)
 		{

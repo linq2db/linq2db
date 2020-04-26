@@ -20,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Acos([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Asin([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -47,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Atan2([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

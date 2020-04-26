@@ -17,7 +17,7 @@ namespace Tests.Linq
 	public class ComplexTests : TestBase
 	{
 		[Test]
-		public void Contains1([DataSources(ProviderName.Access)] string context)
+		public void Contains1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -60,7 +60,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataSources(ProviderName.Access)] string context)
+		public void Contains2([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -202,7 +202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
+		public void Contains5([DataSources(TestProvName.AllAccess, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 
@@ -12,14 +10,30 @@ namespace Tests.UserTests
 	public class Issue1164Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.Access)] string context)
+		public void TestOleDb([IncludeDataSources(ProviderName.Access)] string context)
 		{
-			using (var db = new DataConnection(new AccessDataProvider(), "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\issue_1164.mdb;"))
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData", "issue_1164");
+
+			using (var db = new DataConnection(new AccessOleDbDataProvider(), cs))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				
+				Assert.IsNotNull(schema);
+			}
+		}
+
+		[Test]
+		public void TestOdbc([IncludeDataSources(ProviderName.AccessOdbc)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData.ODBC", "issue_1164");
+			using (var db = new DataConnection(new AccessODBCDataProvider(), cs))
+			{
+				var schemaProvider = db.DataProvider.GetSchemaProvider();
+
+				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
 				Assert.IsNotNull(schema);
 			}
 		}

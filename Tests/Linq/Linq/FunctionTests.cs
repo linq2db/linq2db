@@ -307,7 +307,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -323,7 +323,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

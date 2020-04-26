@@ -807,7 +807,7 @@ namespace Tests.xUpdate
 		public void UpdateAssociation5(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -895,7 +895,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateTop(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -982,7 +982,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateSkipTake(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
@@ -1031,7 +1031,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateTakeNotOrdered(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -1072,7 +1072,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateSetSelect([DataSources(
-			ProviderName.Access, TestProvName.AllInformix, ProviderName.SqlCe)]
+			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1099,7 +1099,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateIssue319Regression(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1349,7 +1349,7 @@ namespace Tests.xUpdate
 		// https://stackoverflow.com/questions/57115728/
 		[Test]
 		public void TestUpdateFromJoin([DataSources(
-			ProviderName.Access, // access doesn't have Replace mapping
+			TestProvName.AllAccess, // access doesn't have Replace mapping
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{

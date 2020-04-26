@@ -241,7 +241,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith2([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith2([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -250,7 +250,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith3([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith3([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			var str = "John123";
 
@@ -261,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith4([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith4([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -277,7 +277,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith5([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith5([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -377,7 +377,7 @@ namespace Tests.Linq
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
 			string context)
 		{
 			var s = "e";
@@ -394,7 +394,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix,
-			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -407,7 +407,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -421,7 +421,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -505,7 +505,7 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -668,7 +668,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Replace([DataSources(ProviderName.Access)] string context)
+		public void Replace([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

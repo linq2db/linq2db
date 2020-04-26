@@ -1,5 +1,7 @@
 ﻿DROP Procedure AddIssue792Record
 GO
+DROP Procedure ThisProcedureNotVisibleFromODBC
+GO
 DROP Procedure Person_SelectByKey
 GO
 DROP Procedure Person_SelectAll
@@ -26,6 +28,8 @@ GO
 DROP TABLE Patient
 GO
 DROP TABLE Person
+GO
+DROP TABLE RelationsTable
 GO
 
 DROP TABLE InheritanceParent
@@ -89,18 +93,18 @@ ALTER TABLE Patient
 	ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE;
 GO
 
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("John",   "Pupkin",    "M")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", "M")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ("Jürgen", "König", "Ko", "M")
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 
-INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")
+INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, 'Psychiatry')
 GO
-INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, "Hallucination with Paranoid Bugs' Delirium of Persecution")
+INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 GO
 
 
@@ -168,7 +172,6 @@ GO
 
 CREATE Procedure Person_Update(
 	[@id]         Long,
-	[@PersonID]   Long,
 	[@FirstName]  Text(50),
 	[@MiddleName] Text(50),
 	[@LastName]   Text(50),
@@ -216,7 +219,7 @@ GO
 
 CREATE Procedure Scalar_DataReader
 AS
-	SELECT 12345 AS intField, "54321" AS stringField;
+	SELECT 12345 AS intField, '54321' AS stringField;
 GO
 
 
@@ -348,7 +351,37 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber INT               NULL
 )
 GO
-CREATE Procedure AddIssue792Record
+CREATE Procedure AddIssue792Record(@id INT)
 AS
-	INSERT INTO AllTypes(char20DataType) VALUES('issue792')
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 GO
+CREATE Procedure ThisProcedureNotVisibleFromODBC
+AS
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+GO
+
+CREATE TABLE RelationsTable
+(
+	ID1		INT NOT NULL,
+	ID2		INT NOT NULL,
+	Int1	INT NOT NULL,
+	Int2	INT NOT NULL,
+	IntN1	INT NULL,
+	IntN2	INT NULL,
+	FK		INT NOT NULL,
+	FKN		INT NULL
+)
+GO
+CREATE INDEX PK_RelationsTable ON RelationsTable(ID1, ID2) WITH PRIMARY;
+GO
+CREATE INDEX IX_Index ON RelationsTable(Int1, IntN1);
+GO
+CREATE UNIQUE INDEX UX_Index1 ON RelationsTable(Int1);
+GO
+CREATE UNIQUE INDEX UX_Index2 ON RelationsTable(IntN1);
+GO
+ALTER TABLE RelationsTable ADD CONSTRAINT FK_Nullable FOREIGN KEY (IntN1, IntN2) REFERENCES RelationsTable(ID1, ID2);
+GO
+ALTER TABLE RelationsTable ADD CONSTRAINT FK_NotNullable FOREIGN KEY (Int1, Int2) REFERENCES RelationsTable(ID1, ID2);
+GO
+

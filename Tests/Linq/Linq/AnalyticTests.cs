@@ -1316,7 +1316,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1359,7 +1359,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1398,7 +1398,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1437,7 +1437,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1479,7 +1479,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1541,7 +1541,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1594,7 +1594,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -429,7 +429,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union52([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Union52([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -441,7 +441,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union521([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Union521([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -455,7 +455,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union522([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Union522([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -467,7 +467,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union523([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Union523([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union53([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Union53([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -1,6 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -11,10 +9,17 @@ namespace LinqToDB
 	public static class ProviderName
 	{
 		/// <summary>
-		/// Microsoft Access provider.
+		/// Microsoft Access OleDb provider (both JET or ACE).
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
 		public const string Access        = "Access";
+
+		/// <summary>
+		/// Microsoft Access ODBC provider.
+		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessOdbc = "Access.Odbc";
+
 		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).
 		/// Used as configuration name for both DB2 base mapping schema <see cref="DataProvider.DB2.DB2MappingSchema"/>.

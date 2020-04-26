@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -57,7 +57,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -86,7 +86,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,

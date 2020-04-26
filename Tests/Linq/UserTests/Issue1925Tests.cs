@@ -1,4 +1,5 @@
-﻿using System.Data.OleDb;
+﻿using System.Data.Odbc;
+using System.Data.OleDb;
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -18,7 +19,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void Issue1925Test([IncludeDataSources(ProviderName.Access, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
+		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -35,10 +36,15 @@ namespace Tests.Playground
 
 				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[0-9]")).ToList().Count());
 
-				if (context.Contains("Access"))
+				if (context == ProviderName.Access)
 				{
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+				}
+				else if (context == ProviderName.AccessOdbc)
+				{
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
 				}
 				else
 				{

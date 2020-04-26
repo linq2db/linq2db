@@ -119,7 +119,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateTest([DataSources(ProviderName.Access, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle)] string context)
+		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<billing_Devtype>())

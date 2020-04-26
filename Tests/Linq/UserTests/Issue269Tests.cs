@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public TestDataContextSourceAttribute() : base(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllMySql,
