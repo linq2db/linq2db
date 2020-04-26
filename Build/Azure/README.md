@@ -54,6 +54,8 @@ Legend:
 |SQLite [3.31.1](https://www.sqlite.org/releaselog/3_31_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.112.1<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.1.0 (core)<br>[MiniProfiler](https://www.nuget.org/packages/MiniProfiler/) 3.2.0.157 (netfx)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |Access<sup>[3](#notes)</sup><br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE 12 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Access<br>MDB ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Access<br>MDB+ACCDB ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1|:x:|:x:|:x:|:x:|
 |MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.1|:x:|:x:|:x:|:x:|
@@ -100,14 +102,15 @@ Legend:
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
 2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net46` test configuration and recent version for `netcoreapp2.1`
-3. for Access right now we don't support .net core
+3. needs update to OLE DB provider for .net core support
 4. for SQL CE right now we don't run .net core tests
 5. Northwind SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
 
 ###### Provider names in context of tests
 | Name | Target Database | Extra Notes |
 |:---|:---:|:---:|
-|`ProviderName.Access`|Tests against Access using OLE DB or ACE (depends on connection string)||
+|`ProviderName.Access`|Tests against Access using OLE DB JET or ACE (depends on connection string)||
+|`ProviderName.AccessOdbc`|Tests against Access using ODBC MDB or MDB+ACCDB (depends on connection string)||
 |`ProviderName.DB2`|tests against DB2 LUW||
 |`ProviderName.DB2LUW`|not used||
 |`ProviderName.DB2zOS`|not used||

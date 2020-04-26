@@ -156,6 +156,13 @@ stages:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
+        Access_ODBC_MDB:
+          title: 'Access ODBC MDB'
+          config: 'access.odbc.mdb'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+          script: 'access.ace.cmd'
         SqlCE:
           title: 'SQL CE'
           config: 'sqlce'
@@ -290,6 +297,10 @@ stages:
 
     strategy:
       matrix:
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
         SQLite:
           title: 'SQLite'
           config: 'sqlite'

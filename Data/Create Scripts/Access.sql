@@ -172,7 +172,6 @@ GO
 
 CREATE Procedure Person_Update(
 	[@id]         Long,
-	[@PersonID]   Long,
 	[@FirstName]  Text(50),
 	[@MiddleName] Text(50),
 	[@LastName]   Text(50),
