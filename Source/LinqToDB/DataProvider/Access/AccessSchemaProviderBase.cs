@@ -3,6 +3,7 @@ using System.IO;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data;
 	using Common;
 	using Data;
 	using SchemaProvider;

@@ -331,11 +331,21 @@ namespace AccessODBCDataContext
 
 		#region PatientSelectByName
 
-		public static int PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Patient_SelectByName]",
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.VarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.VarChar));
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int     PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
 		}
 
 		#endregion
@@ -365,43 +375,69 @@ namespace AccessODBCDataContext
 
 		#region PersonSelectByKey
 
-		public static int PersonSelectByKey(this TestDataDB dataConnection, int? @id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectByKey]",
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int     PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectByName
 
-		public static int PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectByName]",
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.VarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.VarChar));
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			public int     PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectListByName
 
-		public static int PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectListByName]",
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.VarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.VarChar));
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			public int     PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         DataType.Int32),
-				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  DataType.VarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.VarChar),
 				new DataParameter("@LastName",   @LastName,   DataType.VarChar),

@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.Access
 
 		private readonly AccessOleDbDataProvider _provider;
 
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		public AccessOleDbSchemaProvider(AccessOleDbDataProvider provider)
 		{
 			_provider = provider;
@@ -267,7 +269,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var dbType = columnType;
+			var dbType = columnType ?? dataType?.TypeName;
 
 			if (dataType != null)
 			{
@@ -275,7 +277,7 @@ namespace LinqToDB.DataProvider.Access
 
 				if (!parms.IsNullOrWhiteSpace())
 				{
-					var paramNames = parms.Split(',');
+					var paramNames  = parms.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
@@ -291,12 +293,50 @@ namespace LinqToDB.DataProvider.Access
 					if (paramValues.All(v => v != null))
 					{
 						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
-						dbType = string.Format(format, paramValues);
+						dbType     = string.Format(format, paramValues);
 					}
 				}
 			}
 
 			return dbType;
+		}
+
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			// KeyInfo used, as SchemaOnly doesn't return schema
+			// required GetProcedureSchemaExecutesProcedure = true
+			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.KeyInfo, parameters))
+				return rd.Reader!.GetSchemaTable();
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let columnName   = r.Field<string>("ColumnName")
+				let dt           = GetDataTypeByProviderDbType(r.Field<int>("ProviderType"), options)
+				let length       = r.Field<int?>("ColumnSize")
+				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let isNullable   = r.Field<bool>("AllowDBNull")
+				let systemType   = r.Field<Type>("DataType")
+				let columnType   = GetDbType(options, null, dt, length, precision, scale, null, null, null)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = columnType,
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale) ?? systemType ?? typeof(object),
+					DataType             = GetDataType(dt?.TypeName, columnType, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = r.Field<bool>("IsAutoIncrement"),
+				}
+			).ToList();
 		}
 	}
 }

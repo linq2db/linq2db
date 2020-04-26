@@ -14,6 +14,159 @@ namespace Tests.DataProvider
 	public class AccessProceduresTests : DataProviderTestBase
 	{
 		[Test]
+		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			var isODBC = context == ProviderName.AccessOdbc;
+			using (var db = new TestDataConnection(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var proc = schema.Procedures.Where(_ => _.ProcedureName == "Person_SelectByKey").Single();
+
+				Assert.IsNull(proc.CatalogName);
+				Assert.AreEqual(false, proc.IsAggregateFunction);
+				Assert.AreEqual(true, proc.IsDefaultSchema);
+				Assert.AreEqual(false, proc.IsFunction);
+				Assert.AreEqual(true, proc.IsLoaded);
+				Assert.AreEqual(false, proc.IsResultDynamic);
+				Assert.AreEqual(false, proc.IsTableFunction);
+				Assert.AreEqual("Person_SelectByKey", proc.MemberName);
+				Assert.AreEqual("Person_SelectByKey", proc.ProcedureName);
+				Assert.IsNull(proc.ResultException);
+				Assert.IsNull(proc.SchemaName);
+				Assert.IsNotNull(proc.SimilarTables);
+				Assert.AreEqual(isODBC ? 0 : 2, proc.SimilarTables!.Count);
+
+				Assert.AreEqual(1, proc.Parameters.Count);
+				Assert.AreEqual(DataType.Int32, proc.Parameters[0].DataType);
+				Assert.AreEqual(true, proc.Parameters[0].IsIn);
+				Assert.AreEqual(true, proc.Parameters[0].IsNullable);
+				Assert.AreEqual(false, proc.Parameters[0].IsOut);
+				Assert.AreEqual(false, proc.Parameters[0].IsResult);
+				Assert.AreEqual("@id", proc.Parameters[0].ParameterName);
+				Assert.AreEqual("int?", proc.Parameters[0].ParameterType);
+				Assert.IsNull(proc.Parameters[0].ProviderSpecificType);
+				Assert.AreEqual("@id", proc.Parameters[0].SchemaName);
+				Assert.AreEqual(context == ProviderName.Access ? "Long" : "INTEGER", proc.Parameters[0].SchemaType);
+				Assert.IsNull(proc.Parameters[0].Size);
+				Assert.AreEqual(typeof(int), proc.Parameters[0].SystemType);
+
+				Assert.IsNotNull(proc.ResultTable);
+				Assert.IsNull(proc.ResultTable!.CatalogName);
+				Assert.IsNull(proc.ResultTable.Description);
+				Assert.IsNotNull(proc.ResultTable.ForeignKeys);
+				Assert.AreEqual(0, proc.ResultTable.ForeignKeys.Count);
+				Assert.IsNull(proc.ResultTable.ID);
+				Assert.AreEqual(false, proc.ResultTable.IsDefaultSchema);
+				Assert.AreEqual(true, proc.ResultTable.IsProcedureResult);
+				Assert.AreEqual(false, proc.ResultTable.IsProviderSpecific);
+				Assert.AreEqual(false, proc.ResultTable.IsView);
+				Assert.IsNull(proc.ResultTable.SchemaName);
+				Assert.IsNull(proc.ResultTable.TableName);
+				Assert.AreEqual("Person_SelectByKeyResult", proc.ResultTable.TypeName);
+
+				Assert.IsNotNull(proc.ResultTable.Columns);
+
+				Assert.AreEqual(5, proc.ResultTable.Columns.Count);
+
+				Assert.AreEqual("PersonID", proc.ResultTable.Columns[0].ColumnName);
+				Assert.AreEqual(isODBC ? "COUNTER" : "Long", proc.ResultTable.Columns[0].ColumnType);
+				Assert.AreEqual(DataType.Int32, proc.ResultTable.Columns[0].DataType);
+				Assert.IsNull(proc.ResultTable.Columns[0].Description);
+				Assert.AreEqual(true, proc.ResultTable.Columns[0].IsIdentity);
+				Assert.AreEqual(false, proc.ResultTable.Columns[0].IsNullable);
+				Assert.AreEqual(false, proc.ResultTable.Columns[0].IsPrimaryKey);
+				Assert.IsNull(proc.ResultTable.Columns[0].Length);
+				Assert.AreEqual("PersonID", proc.ResultTable.Columns[0].MemberName);
+				Assert.AreEqual("int", proc.ResultTable.Columns[0].MemberType);
+				Assert.IsNull(proc.ResultTable.Columns[0].Precision);
+				Assert.AreEqual(0, proc.ResultTable.Columns[0].PrimaryKeyOrder);
+				Assert.IsNull(proc.ResultTable.Columns[0].ProviderSpecificType);
+				Assert.IsNull(proc.ResultTable.Columns[0].Scale);
+				Assert.AreEqual(false, proc.ResultTable.Columns[0].SkipOnInsert);
+				Assert.AreEqual(false, proc.ResultTable.Columns[0].SkipOnUpdate);
+				Assert.AreEqual(typeof(int), proc.ResultTable.Columns[0].SystemType);
+				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[0].Table);
+
+				Assert.AreEqual("FirstName", proc.ResultTable.Columns[1].ColumnName);
+				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[1].ColumnType);
+				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[1].DataType);
+				Assert.IsNull(proc.ResultTable.Columns[1].Description);
+				Assert.AreEqual(false, proc.ResultTable.Columns[1].IsIdentity);
+				Assert.AreEqual(true, proc.ResultTable.Columns[1].IsNullable);
+				Assert.AreEqual(false, proc.ResultTable.Columns[1].IsPrimaryKey);
+				Assert.IsNull(proc.ResultTable.Columns[1].Length);
+				Assert.AreEqual("FirstName", proc.ResultTable.Columns[1].MemberName);
+				Assert.AreEqual("string", proc.ResultTable.Columns[1].MemberType);
+				Assert.IsNull(proc.ResultTable.Columns[1].Precision);
+				Assert.AreEqual(0, proc.ResultTable.Columns[1].PrimaryKeyOrder);
+				Assert.IsNull(proc.ResultTable.Columns[1].ProviderSpecificType);
+				Assert.IsNull(proc.ResultTable.Columns[1].Scale);
+				Assert.AreEqual(false, proc.ResultTable.Columns[1].SkipOnInsert);
+				Assert.AreEqual(false, proc.ResultTable.Columns[1].SkipOnUpdate);
+				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[1].SystemType);
+				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[1].Table);
+
+				Assert.AreEqual("LastName", proc.ResultTable.Columns[2].ColumnName);
+				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[2].ColumnType);
+				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[2].DataType);
+				Assert.IsNull(proc.ResultTable.Columns[2].Description);
+				Assert.AreEqual(false, proc.ResultTable.Columns[2].IsIdentity);
+				Assert.AreEqual(true, proc.ResultTable.Columns[2].IsNullable);
+				Assert.AreEqual(false, proc.ResultTable.Columns[2].IsPrimaryKey);
+				Assert.IsNull(proc.ResultTable.Columns[2].Length);
+				Assert.AreEqual("LastName", proc.ResultTable.Columns[2].MemberName);
+				Assert.AreEqual("string", proc.ResultTable.Columns[2].MemberType);
+				Assert.IsNull(proc.ResultTable.Columns[2].Precision);
+				Assert.AreEqual(0, proc.ResultTable.Columns[2].PrimaryKeyOrder);
+				Assert.IsNull(proc.ResultTable.Columns[2].ProviderSpecificType);
+				Assert.IsNull(proc.ResultTable.Columns[2].Scale);
+				Assert.AreEqual(false, proc.ResultTable.Columns[2].SkipOnInsert);
+				Assert.AreEqual(false, proc.ResultTable.Columns[2].SkipOnUpdate);
+				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[2].SystemType);
+				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[2].Table);
+
+				Assert.AreEqual("MiddleName", proc.ResultTable.Columns[3].ColumnName);
+				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[3].ColumnType);
+				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[3].DataType);
+				Assert.IsNull(proc.ResultTable.Columns[3].Description);
+				Assert.AreEqual(false, proc.ResultTable.Columns[3].IsIdentity);
+				Assert.AreEqual(true, proc.ResultTable.Columns[3].IsNullable);
+				Assert.AreEqual(false, proc.ResultTable.Columns[3].IsPrimaryKey);
+				Assert.IsNull(proc.ResultTable.Columns[3].Length);
+				Assert.AreEqual("MiddleName", proc.ResultTable.Columns[3].MemberName);
+				Assert.AreEqual("string", proc.ResultTable.Columns[3].MemberType);
+				Assert.IsNull(proc.ResultTable.Columns[3].Precision);
+				Assert.AreEqual(0, proc.ResultTable.Columns[3].PrimaryKeyOrder);
+				Assert.IsNull(proc.ResultTable.Columns[3].ProviderSpecificType);
+				Assert.IsNull(proc.ResultTable.Columns[3].Scale);
+				Assert.AreEqual(false, proc.ResultTable.Columns[3].SkipOnInsert);
+				Assert.AreEqual(false, proc.ResultTable.Columns[3].SkipOnUpdate);
+				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[3].SystemType);
+				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[3].Table);
+
+				Assert.AreEqual("Gender", proc.ResultTable.Columns[4].ColumnName);
+				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(1)", proc.ResultTable.Columns[4].ColumnType);
+				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[4].DataType);
+				Assert.IsNull(proc.ResultTable.Columns[4].Description);
+				Assert.AreEqual(false, proc.ResultTable.Columns[4].IsIdentity);
+				Assert.AreEqual(true, proc.ResultTable.Columns[4].IsNullable);
+				Assert.AreEqual(false, proc.ResultTable.Columns[4].IsPrimaryKey);
+				Assert.IsNull(proc.ResultTable.Columns[4].Length);
+				Assert.AreEqual("Gender", proc.ResultTable.Columns[4].MemberName);
+				Assert.AreEqual("string", proc.ResultTable.Columns[4].MemberType);
+				Assert.IsNull(proc.ResultTable.Columns[4].Precision);
+				Assert.AreEqual(0, proc.ResultTable.Columns[4].PrimaryKeyOrder);
+				Assert.IsNull(proc.ResultTable.Columns[4].ProviderSpecificType);
+				Assert.IsNull(proc.ResultTable.Columns[4].Scale);
+				Assert.AreEqual(false, proc.ResultTable.Columns[4].SkipOnInsert);
+				Assert.AreEqual(false, proc.ResultTable.Columns[4].SkipOnUpdate);
+				Assert.AreEqual(isODBC ? typeof(string) : typeof(char), proc.ResultTable.Columns[4].SystemType);
+				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[4].Table);
+			}
+		}
+
+		[Test]
 		public void Test_Person_Delete([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -245,10 +398,10 @@ namespace Tests.DataProvider
 		#region Procedures
 		public static int Person_Delete(DataConnection dataConnection, int id, bool odbc)
 		{
-			var commandText = odbc ? "{ CALL Person_Delete(?) }" : "Person_Delete";
+			var commandText = odbc ? "{ CALL Person_Delete(?) }" : "[Person_Delete]";
 			return dataConnection.ExecuteProc(
 				commandText,
-				new DataParameter("id", id, DataType.Int32));
+				new DataParameter("@id", id, DataType.Int32));
 		}
 
 		public static int Person_Update(DataConnection dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)

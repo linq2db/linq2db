@@ -396,9 +396,9 @@ namespace AccessDataContext
 
 		#region PatientSelectByName
 
-		public static int PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<PatientSelectAll> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Patient_SelectByName]",
+			return dataConnection.QueryProc<PatientSelectAll>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
 				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
@@ -430,9 +430,9 @@ namespace AccessDataContext
 
 		#region PersonSelectByKey
 
-		public static int PersonSelectByKey(this TestDataDB dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectByKey]",
+			return dataConnection.QueryProc<Person>("[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32));
 		}
 
@@ -440,9 +440,9 @@ namespace AccessDataContext
 
 		#region PersonSelectByName
 
-		public static int PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<Person> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectByName]",
+			return dataConnection.QueryProc<Person>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
 				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
@@ -451,9 +451,9 @@ namespace AccessDataContext
 
 		#region PersonSelectListByName
 
-		public static int PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<Person> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.ExecuteProc("[Person_SelectListByName]",
+			return dataConnection.QueryProc<Person>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
 				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
@@ -462,11 +462,10 @@ namespace AccessDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         DataType.Int32),
-				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  DataType.NText),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NText),
 				new DataParameter("@LastName",   @LastName,   DataType.NText),

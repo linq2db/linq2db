@@ -146,9 +146,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
-			commandText = $"CALL {commandText} ({string.Join(", ", Enumerable.Range(0, parameters.Length).Select(_ => "?"))})";
-			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-				return rd.Reader!.GetSchemaTable();
+			return ((DbConnection)dataConnection.Connection).GetSchema("ProcedureColumns", new string?[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
 		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
@@ -201,6 +199,36 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return dts;
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let columnType = r.Field<string>("TYPE_NAME")
+				let columnName = r.Field<string>("COLUMN_NAME")
+				let isNullable = r.Field<short> ("NULLABLE") == 1
+				let dt         = GetDataType(columnType, options)
+				let length     = r.Field<int?>  ("COLUMN_SIZE")
+				let precision  = length
+				let scale      = Converter.ChangeTypeTo<int>(r["DECIMAL_DIGITS"])
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType ?? typeof(object),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = columnType == "COUNTER",
+				}
+			).ToList();
 		}
 	}
 }
