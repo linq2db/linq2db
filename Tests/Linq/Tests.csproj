@@ -8,6 +8,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="..\..\Data\Create Scripts\Oracle_BACKUP_1183.sql" />
+	  <None Remove="..\..\Data\Create Scripts\Oracle_BASE_1183.sql" />
+	  <None Remove="..\..\Data\Create Scripts\Oracle_LOCAL_1183.sql" />
+	  <None Remove="..\..\Data\Create Scripts\Oracle_REMOTE_1183.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>

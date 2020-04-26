@@ -12,7 +12,9 @@ namespace Tests.UserTests
 		[Test]
 		public void TestOleDb([IncludeDataSources(ProviderName.Access)] string context)
 		{
-			using (var db = new DataConnection(new AccessOleDbDataProvider(), "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\issue_1164.mdb;"))
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData", "issue_1164");
+
+			using (var db = new DataConnection(new AccessOleDbDataProvider(), cs))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
@@ -25,7 +27,8 @@ namespace Tests.UserTests
 		[Test]
 		public void TestOdbc([IncludeDataSources(ProviderName.AccessOdbc)] string context)
 		{
-			using (var db = new DataConnection(new AccessODBCDataProvider(), "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\issue_1164.mdb;"))
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData.ODBC", "issue_1164");
+			using (var db = new DataConnection(new AccessODBCDataProvider(), cs))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 

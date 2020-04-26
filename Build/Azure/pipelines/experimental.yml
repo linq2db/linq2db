@@ -330,28 +330,14 @@ stages:
 
     strategy:
       matrix:
-        Access_ODBC_MDB:
-          title: 'Access ODBC MDB'
-          config: 'access.odbc.mdb'
         Access_ODBC_ACE:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
-          script: 'access.ace.cmd'
-        Access_ODBC_ACE_x64:
-          title: 'Access ODBC ACE (x64)'
-          config: 'access.odbc.ace'
           script: 'access.ace.x64.cmd'
-        Access_JET:
-          title: 'Access Jet'
-          config: 'access'
-        Access_ACE:
-          title: 'Access ACE'
-          config: 'access.ace'
-          script: 'access.ace.cmd'
-        Access_ACE_x64:
-          title: 'Access ACE (x64)'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
+#        Access_ACE:
+#          title: 'Access ACE (x64)'
+#          config: 'access.ace'
+#          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
@@ -396,85 +382,10 @@ stages:
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
 
-###################################
-#  Tests: Windows (NETCOREAPP2_1) #
-#  Windows 2016                   #
-###################################
-  - job: test_win2016_netcoreapp21_job_x86
-    pool:
-#      vmImage: 'vs2017-win2016'
-      vmImage: 'windows-2019'
-    displayName: 'Tests: Win / NETCOREAPP2.1 (x86) / '
-    dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
-
-    strategy:
-      matrix:
-        Access_ODBC_MDB:
-          title: 'Access ODBC MDB'
-          config: 'access.odbc.mdb'
-        Access_ODBC_ACE:
-          title: 'Access ODBC ACE'
-          config: 'access.odbc.ace'
-          script: 'access.ace.cmd'
-        Access_ODBC_ACE_x64:
-          title: 'Access ODBC ACE (x64)'
-          config: 'access.odbc.ace'
-          script: 'access.ace.x64.cmd'
-        Access_JET:
-          title: 'Access Jet'
-          config: 'access'
-        Access_ACE:
-          title: 'Access ACE'
-          config: 'access.ace'
-          script: 'access.ace.cmd'
-        Access_ACE_x64:
-          title: 'Access ACE (x64)'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
-    steps:
-    - checkout: none
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(netcore21_tests)'
-        targetPath: '$(System.DefaultWorkingDirectory)'
-
-    - task: CmdLine@2
-      inputs:
-        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: Copy test config
-
-    - task: CmdLine@2
-      inputs:
-        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
-      displayName: Setup tests
-
-    - task: PowerShell@2
-      inputs:
-        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['psscript']
-      displayName: Setup tests
-
-    - powershell: Get-OdbcDriver | Select Name, Platform
-      displayName: List ODBC providers
-
-    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
-      displayName: List OLEDB providers
-
-    - task: VSTest@2
-      inputs:
-        testAssemblyVer2: linq2db.Tests.dll
-        configuration: '$(buildConfiguration)'
-        testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 /Platform:x86'
-        testRunTitle: 'Windows / NETCOREAPP2.1 (x86) / $(title)'
-      displayName: '$(title)'
+###########################
+#  Tests: Windows (NETFX) #
+#  Windows 2019           #
+###########################
 
   - job: test_win_netfx46_job_2019
     pool:
@@ -493,10 +404,6 @@ stages:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
           script: 'access.ace.cmd'
-        Access_ODBC_ACE_x64:
-          title: 'Access ODBC ACE (x64)'
-          config: 'access.odbc.ace'
-          script: 'access.ace.x64.cmd'
 
     steps:
     - checkout: none
