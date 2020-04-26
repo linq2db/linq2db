@@ -1113,7 +1113,7 @@ namespace Tests.Data
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
 #if NETCOREAPP2_1
-				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context == ProviderName.OracleManaged) ||
+				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context.Contains("Oracle") && context.Contains("Managed")) ||
 #endif
 				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
