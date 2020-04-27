@@ -260,10 +260,11 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
-					if (options.ProviderName != null
-					    && !_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
+					if (options.ProviderName != null)
 					{
-						dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
+						if (!_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
+							dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
+
 						if (dataProvider == null)
 							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
 					}
