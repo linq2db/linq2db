@@ -26,6 +26,7 @@
 		"DefaultConfiguration": "SQLite.Classic",
 		"Providers": [
 			"Access",
+			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
 			"SQLite.Classic.MiniProfiler.Unmapped",
@@ -63,6 +64,8 @@
 		"Connections": {
 			"Access": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"Access.Data": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Odbc": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;" },
+			"Access.Odbc.Data": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;" },
 			"SqlCe": { "ConnectionString": "Data Source=Database\\TestData.sdf" },
 			"SqlCe.Data": { "ConnectionString": "Data Source=Database\\Data\\TestData.sdf" },
 			"SQLite.Classic": {
@@ -234,6 +237,7 @@
 	"All.Providers": {
 		"Providers": [
 			"Access",
+			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
 			"SQLite.Classic.MiniProfiler.Unmapped",

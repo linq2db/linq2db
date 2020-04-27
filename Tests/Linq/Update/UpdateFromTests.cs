@@ -232,7 +232,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(ProviderName.Access, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
 			string context)
 		{
 			var data = GenerateData();
@@ -283,7 +283,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinTake(
-			[DataSources(ProviderName.Access, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();

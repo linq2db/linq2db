@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -11,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue1556Tests : TestBase
 	{
 		[Test]
-		public void Issue1556Test([DataSources(ProviderName.Access)] string context)
+		public void Issue1556Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

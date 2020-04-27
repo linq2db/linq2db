@@ -10,14 +10,14 @@
 		<PackageReference Include="System.Memory" Version="4.5.4" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.1" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.2" />
 		<PackageReference Include="MySql.Data" Version="8.0.19" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.63.2" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.64.1" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
 
@@ -56,10 +56,10 @@
 		</Reference>
 
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.6.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.7.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.0.10" />
-		<PackageReference Include="Microsoft.AspNet.OData" Version="7.3.0" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.4.0" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->

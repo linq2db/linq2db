@@ -78,7 +78,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
@@ -149,7 +149,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
 			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html
@@ -253,7 +253,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// don't use GetSchema("PROCEDURE PARAMETERS") as MySql provider's implementation does strange stuff
 			// instead of just quering of INFORMATION_SCHEMA view. It returns incorrect results and breaks provider

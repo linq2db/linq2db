@@ -587,7 +587,15 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
-						return n < 0 ? pi.Object : pi.Arguments[n];
+						var result = n < 0 ? pi.Object : pi.Arguments[n];
+						
+						if (result.Type != wpi.Type)
+						{
+							if (result.Type.IsEnum)
+								result = Expression.Convert(result, wpi.Type);
+						}						
+
+						return result;
 					}
 				}
 

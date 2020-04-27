@@ -22,11 +22,12 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = TestProvName.AllInformix;
 
-		public InformixTests()
+		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
-			PassNullSql  = null;
-			PassValueSql = "SELECT ID FROM {1} WHERE {0} = ?";
+			paramCount = 1;
+			return null;
 		}
+		protected override string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = ?";
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)

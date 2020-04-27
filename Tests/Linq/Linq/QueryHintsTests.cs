@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public class QueryHintsTests : TestBase
 	{
 		[Test]
-		public void Comment([DataSources(ProviderName.Access, TestProvName.AllMySql)] string context)
+		public void Comment([DataSources(TestProvName.AllAccess, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

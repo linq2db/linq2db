@@ -187,7 +187,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith9([DataSources(ProviderName.Access)] string context)
+		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -245,7 +245,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith12([DataSources(ProviderName.Access)] string context)
+		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 		public void Merge(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 		public void MergeWithEmptySource(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 		public void MergeWithDelete(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -84,7 +84,7 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate1(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -108,7 +108,7 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate2(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -132,7 +132,7 @@ namespace Tests.xUpdate
 		public async Task MergeWithDeletePredicate2Async(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -156,7 +156,7 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate3(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -181,7 +181,7 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate4(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -208,7 +208,7 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate5(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 		public void MergeChar1(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
@@ -276,7 +276,7 @@ namespace Tests.xUpdate
 		public void MergeChar2(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,

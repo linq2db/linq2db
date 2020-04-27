@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return result;
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var pks = ((DbConnection) dataConnection.Connection).GetSchema("IndexColumns");
 
@@ -246,7 +246,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return query.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.SapHana
 			.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection.Query(rd =>
 			{

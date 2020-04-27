@@ -15,6 +15,7 @@ namespace LinqToDB
 	using SqlQuery;
 	using Common;
 	using Expressions;
+	using LinqToDB.Mapping;
 
 	/// <summary>
 	/// Data context extension methods.
@@ -518,8 +519,33 @@ namespace LinqToDB
 			string? schemaName   = null,
 			string? serverName   = null)
 		{
+			return Update<T>(dataContext, obj, null, tableName, serverName, databaseName, schemaName);
+		}
+
+		/// <summary>
+		/// Updates record in table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Record to update identified by match on primary key value from <paramref name="obj"/> value.
+		/// </summary>
+		/// <typeparam name="T">Mapping class.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="obj">Object with data to update.</param>
+		/// <param name="columnFilter">Filter columns to update.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <returns>Number of affected records.</returns>
+		public static int Update<T>(
+			this IDataContext dataContext,
+			T obj,
+			Func<T, ColumnDescriptor, bool>? columnFilter,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
+		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
+			return QueryRunner.Update<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName);
 		}
 
 		/// <summary>
@@ -538,6 +564,33 @@ namespace LinqToDB
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null,
+			CancellationToken token = default)
+		{
+			return UpdateAsync<T>(dataContext, obj, null, tableName, serverName, databaseName, schemaName, token);
+		}
+
+		/// <summary>
+		/// Asynchronously updates record in table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Record to update identified by match on primary key value from <paramref name="obj"/> value.
+		/// </summary>
+		/// <typeparam name="T">Mapping class.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="obj">Object with data to update.</param>
+		/// <param name="columnFilter">Filter columns to update.</param>
+		/// <param name="tableName">Name of the table</param>
+		/// <param name="databaseName">Name of the database</param>
+		/// <param name="schemaName">Name of the schema</param>
+		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of affected records.</returns>
+		public static Task<int> UpdateAsync<T>(
+			this IDataContext dataContext,
+			T obj,
+			Func<T, ColumnDescriptor, bool>? columnFilter,
 			string?           tableName    = null,
 			string?           databaseName = null,
 			string?           schemaName   = null,
@@ -545,7 +598,7 @@ namespace LinqToDB
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, tableName, serverName, databaseName, schemaName, token);
+			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, token);
 		}
 
 		#endregion

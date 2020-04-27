@@ -43,7 +43,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SearchCondition1([DataSources(ProviderName.Access)] string context)
+		public void SearchCondition1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

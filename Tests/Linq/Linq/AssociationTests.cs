@@ -112,7 +112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany3([DataSources(ProviderName.Access)] string context)
+		public void SelectMany3([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,7 +127,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany4([DataSources(ProviderName.Access)] string context)
+		public void SelectMany4([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -364,7 +364,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void TestTernary1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -384,7 +384,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary2([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void TestTernary2([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -643,7 +643,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation1([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -663,7 +663,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(ProviderName.Access, TestProvName.AllSQLite)]
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)]
 			string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -989,7 +989,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1614Test([DataSources(ProviderName.Access)] string context)
+		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<User>())
@@ -1055,7 +1055,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test1([DataSources(ProviderName.Access)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()

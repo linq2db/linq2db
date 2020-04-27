@@ -107,7 +107,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			[IncludeDataSources(true, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -393,7 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -497,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Millisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void Millisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -637,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecond([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -701,7 +701,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMilliseconds([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
+		public void AddMilliseconds([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -758,7 +758,7 @@ namespace Tests.Linq
 			{
 				var needsFix = db.ProviderNeedsTimeFix(context);
 
-				AreEqual(Types.Select(t => TestUtils.FixTime(t.DateTimeValue.AddDays(t.SmallIntValue), needsFix)),
+				AreEqual(Types.Select(t => TestUtils.StripMilliseconds(t.DateTimeValue.AddDays(t.SmallIntValue), needsFix)),
 					db.Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)));
 			}
 		}
@@ -951,7 +951,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecondExpression([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var part1 = 200;
 			var part2 = 26;
@@ -1036,7 +1036,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMillisecondsExpression([DataSources(TestProvName.AllInformix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
+		public void AddMillisecondsExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			var part1 = 150;
@@ -1105,7 +1105,7 @@ namespace Tests.Linq
 			{
 				var needsFix = db.ProviderNeedsTimeFix(context);
 
-				AreEqual(Types.Select(t => TestUtils.FixTime(t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2), needsFix)),
+				AreEqual(Types.Select(t => TestUtils.StripMilliseconds(t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2), needsFix)),
 					db.Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)));
 			}
 		}
@@ -1190,7 +1190,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1205,7 +1205,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1220,7 +1220,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1235,7 +1235,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1250,7 +1250,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1265,7 +1265,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1280,7 +1280,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1295,7 +1295,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1319,7 +1319,7 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1348,7 +1348,7 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1497,7 +1497,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -129,7 +129,7 @@ namespace Tests.Linq
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -183,7 +183,7 @@ namespace Tests.Linq
 
 		//TODO: Access has nonstandard join, we have to improve it
 		[Test]
-		public void NestedFirstOrDefault5([DataSources(ProviderName.Access)] string context)
+		public void NestedFirstOrDefault5([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

@@ -1042,7 +1042,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1060,7 +1060,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix /* Can be fixed.*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed.*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1084,7 +1084,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix) /* Can be fixed. */]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix) /* Can be fixed. */]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1323,7 +1323,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1339,7 +1339,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -2036,7 +2036,7 @@ namespace Tests.Linq
 		// OleDbException : IErrorInfo.GetDescription failed with E_FAIL(0x80004005).
 		// Access issue could be related to reserved words but I don't see anything suspicious in failed query
 		// https://support.microsoft.com/en-us/office/learn-about-access-reserved-words-and-symbols-ae9d9ada-3255-4b12-91a9-f855bdd9c5a2?ocmsassetid=ha010030643&correlationid=13c0f607-b794-4387-b8d9-bdffce04d996&ui=en-us&rs=en-us&ad=us
-		[ActiveIssue(Configurations = new[] { TestProvName.AllFirebird, ProviderName.Access })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllFirebird, TestProvName.AllAccess })]
 		[Test]
 		public void Issue434Test1([DataSources] string context)
 		{
@@ -2157,7 +2157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1198Test([DataSources(ProviderName.Access)] string context)
+		public void Issue1198Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1192Table>())

@@ -73,7 +73,9 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
 
@@ -87,8 +89,10 @@ namespace Tests.Linq
 			using (var conn = new TestDataConnection(context))
 			{
 				conn.InlineParameters = true;
-				
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
@@ -107,8 +111,10 @@ namespace Tests.Linq
 			using (var conn = new TestDataConnection(context))
 			{
 				conn.InlineParameters = true;
-				
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{

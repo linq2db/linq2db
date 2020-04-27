@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		// TODO: sqlce, mysql - need to add default db type for create table for Guid
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,

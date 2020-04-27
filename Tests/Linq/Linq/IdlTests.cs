@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
@@ -21,7 +20,7 @@ namespace Tests.Linq
 		{
 			public IdlProvidersAttribute()
 				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus,
-					ProviderName.Access)
+					TestProvName.AllAccess)
 			{
 			}
 		}

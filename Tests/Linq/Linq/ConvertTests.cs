@@ -403,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
