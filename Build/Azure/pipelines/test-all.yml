@@ -2,8 +2,6 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  artifact_linq2db_binaries: 'linq2db_binaries'
-  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
@@ -117,18 +115,6 @@ stages:
         path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
         artifact: '$(netcore21_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.1
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-        artifact: '$(artifact_linq2db_binaries)'
-      displayName: Publish linq2db build results
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-        artifact: '$(artifact_linq2db_tools_binaries)'
-      displayName: Publish linq2db.Tools build results
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.6)                                                                #
