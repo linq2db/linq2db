@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -1004,7 +1005,13 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				if (!ContainsTable(tableSource.Source, sql))
+				var sources = new HashSet<ISqlTableSource> {tableSource.Source};
+				var found = new HashSet<ISqlExpression>();
+				var ignore = new HashSet<IQueryElement>() {sql.Where};
+				ignore.AddRange(QueryHelper.EnumerateJoins(sql).Select(j => j.Condition));
+				QueryHelper.CollectDependencies(sql, sources, found, ignore);
+
+				if (found.Count == 0)
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)

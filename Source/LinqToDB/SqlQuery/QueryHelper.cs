@@ -220,6 +220,27 @@ namespace LinqToDB.SqlQuery
 				.OfType<SqlTable>();
 		}
 
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.From.Tables.SelectMany(t => EnumerateJoins(t));
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SqlTableSource tableSource)
+		{
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				yield return tableSourceJoin;	
+			}
+
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				foreach (var subJoin in EnumerateJoins(tableSourceJoin.Table))
+				{
+					yield return subJoin;
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent

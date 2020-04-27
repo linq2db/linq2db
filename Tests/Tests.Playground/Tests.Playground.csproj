@@ -21,10 +21,16 @@
 		<Compile Include="..\Linq\Linq\ExpressionsTests.cs" Link="ExpressionsTests.cs" />
 		<Compile Include="..\Linq\Linq\FromSqlTests.cs" Link="FromSqlTests.cs" />
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
+		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
 		<Compile Include="..\Linq\Linq\InheritanceTests.cs" Link="InheritanceTests.cs" />
 		<Compile Include="..\Linq\Linq\LoadWithTests.cs" Link="LoadWithTests.cs" />
 		<Compile Include="..\Linq\Linq\OrderByTests.cs" Link="OrderByTests.cs" />
+		<Compile Include="..\Linq\Linq\ParserTests.cs" Link="ParserTests.cs" />
 		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
+		<Compile Include="..\Linq\Linq\SelectManyTests.cs" Link="SelectManyTests.cs" />
+		<Compile Include="..\Linq\Linq\StringFunctionsTests.cs" Link="StringFunctionsTests.cs" />
+		<Compile Include="..\Linq\Linq\SubQueryTests.cs" Link="SubQueryTests.cs" />
+		<Compile Include="..\Linq\Linq\TableFunctionTests.cs" Link="TableFunctionTests.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\ExpressionUtils.cs" Link="ExpressionUtils.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\GenericEqualityComparer.cs" Link="GenericEqualityComparer.cs" />
 		<Compile Include="..\Linq\OrmBattle\OrmBattleTests.cs" Link="OrmBattleTests.cs" />

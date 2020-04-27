@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -1062,12 +1063,30 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null || expression.GetLevel(Builder.MappingSchema) == 0)
 								return IsExpressionResult.False;
 
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
-							if (GetAssociationDescriptor(levelExpression, out _) != null)
-								return IsExpressionResult.False;
+							var currentLevel = 1;
+							while (true)
+							{
+								var levelExpression =
+									expression.GetLevelExpression(Builder.MappingSchema, currentLevel);
+								var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
 
-							var contextInfo = FindContextExpression(expression, level, false, false);
-							return new IsExpressionResult(contextInfo?.Field != null);
+								if (levelExpression == expression)
+								{
+									if (descriptor != null)
+										return IsExpressionResult.False;
+
+									// it is not precise decision, we trying to avoid associations initialization
+									if (levelExpression.NodeType == ExpressionType.MemberAccess)
+										return IsExpressionResult.True;
+
+									return IsExpressionResult.False;
+								}
+
+								if (descriptor == null)
+									return IsExpressionResult.False;
+
+								++currentLevel;
+							}
 						}
 
 					case RequestFor.Table       :
@@ -1137,10 +1156,19 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return IsExpressionResult.False;
 
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							while (true)
+							{
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+								if (levelExpression == expression)
+								{
+									var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
+									if (descriptor == null)
+										return IsExpressionResult.False;
+									return IsExpressionResult.True;
+								}
 
-							return new IsExpressionResult(
-								GetAssociationDescriptor(levelExpression, out _) != null);
+								++level;
+							}
 						}
 				}
 
