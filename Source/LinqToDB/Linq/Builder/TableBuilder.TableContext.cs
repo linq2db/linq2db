@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -49,6 +46,7 @@ namespace LinqToDB.Linq.Builder
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
 			private readonly bool   _associationsToSubQueries;
+
 			#endregion
 
 			#region Init
@@ -1063,30 +1061,19 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null || expression.GetLevel(Builder.MappingSchema) == 0)
 								return IsExpressionResult.False;
 
-							var currentLevel = 1;
-							while (true)
-							{
-								var levelExpression =
-									expression.GetLevelExpression(Builder.MappingSchema, currentLevel);
-								var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
+							var contextInfo = FindContextExpression(expression, level, false, false);
+							if (contextInfo == null)
+								return IsExpressionResult.False;
 
-								if (levelExpression == expression)
-								{
-									if (descriptor != null)
-										return IsExpressionResult.False;
+							if (contextInfo.Field != null)
+								return IsExpressionResult.True;
 
-									// it is not precise decision, we trying to avoid associations initialization
-									if (levelExpression.NodeType == ExpressionType.MemberAccess)
-										return IsExpressionResult.True;
+							if (contextInfo.CurrentExpression == null 
+							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+								return IsExpressionResult.False;
 
-									return IsExpressionResult.False;
-								}
-
-								if (descriptor == null)
-									return IsExpressionResult.False;
-
-								++currentLevel;
-							}
+							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
+								contextInfo.CurrentLevel + 1, requestFor);
 						}
 
 					case RequestFor.Table       :
@@ -1095,23 +1082,19 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return new IsExpressionResult(true, this);
 
-							var currentLevel = 1;
-							while (true)
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, currentLevel);
+							var contextInfo = FindContextExpression(expression, level, false, false);
+							if (contextInfo == null)
+								return IsExpressionResult.False;
 
-								var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
-								if (descriptor == null)
-									return IsExpressionResult.False;
+							if (contextInfo.Field != null)
+								return IsExpressionResult.False;
 
-								if (descriptor.IsList && levelExpression == expression)
-									return IsExpressionResult.True;
+							if (contextInfo.CurrentExpression == null 
+							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+								return new IsExpressionResult(true, contextInfo.Context);
 
-								if (levelExpression == expression)
-									return IsExpressionResult.True;
-
-								++currentLevel;
-							}
+							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
+								contextInfo.CurrentLevel + 1, requestFor);
 
 						}
 
@@ -1156,19 +1139,11 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return IsExpressionResult.False;
 
-							while (true)
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-								if (levelExpression == expression)
-								{
-									var descriptor = GetAssociationDescriptor(levelExpression, out _, false);
-									if (descriptor == null)
-										return IsExpressionResult.False;
-									return IsExpressionResult.True;
-								}
+							var result = IsExpression(expression, level, RequestFor.Table);
+							if (!result.Result || !(result.Context is AssociationContext))
+								return IsExpressionResult.False;
 
-								++level;
-							}
+							return result;
 						}
 				}
 
@@ -1695,25 +1670,6 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			readonly Dictionary<MemberInfo,AssociatedTableContext> _associations =
-				new Dictionary<MemberInfo,AssociatedTableContext>(new MemberInfoComparer());
-
-			class TableLevel
-			{
-				public IBuildContext   Table = null!;
-				public ISqlExpression? Field;
-				public int             Level;
-				public bool            IsNew;
-			}
-
-
-			bool IsTable(Expression? expression)
-			{
-				var ctx = Builder.GetContext(this, expression);
-				return ctx == this;
-			}
-
-
 			class ContextInfo
 			{
 				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel)
@@ -1770,9 +1726,8 @@ namespace LinqToDB.Linq.Builder
 								IBuildContext? associatedContext;
 								if (!descriptor.IsList)
 								{
-									Tuple<IBuildContext, bool>? foundInfo = null;
 									if (_associationContexts == null ||
-									    !_associationContexts.TryGetValue(memberInto, out foundInfo))
+									    !_associationContexts.TryGetValue(memberInto, out var foundInfo))
 									{
 										
 										if (forceInner)
@@ -1797,7 +1752,7 @@ namespace LinqToDB.Linq.Builder
 											!forceInner,
 											ref isOuter);
 
-										_associationContexts ??= new Dictionary<MemberInfo, Tuple<IBuildContext, bool>>();
+										_associationContexts ??= new Dictionary<MemberInfo, Tuple<IBuildContext, bool>>(new MemberInfoComparer());
 										_associationContexts.Add(memberInto, Tuple.Create(associatedContext, isOuter));
 									}
 									else
@@ -1900,135 +1855,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return descriptor;
-			}
-
-			TableLevel? GetAssociation(Expression expression, int level, bool isSubquery)
-			{
-				var objectMapper    = EntityDescriptor;
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-				var inheritance     =
-					(
-						from m in objectMapper.InheritanceMapping
-						let om = Builder.MappingSchema.GetEntityDescriptor(m.Type)
-						where om.Associations.Count > 0
-						select om
-					).ToList();
-
-				AssociatedTableContext? tableAssociation = null;
-				var isNew = false;
-
-				if (levelExpression.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression) levelExpression;
-					var aa = Builder.MappingSchema.GetAttribute<AssociationAttribute>(mc.Method.DeclaringType, mc.Method, a => a.Configuration);
-
-					if (aa != null)
-						tableAssociation = new AssociatedTableContext(
-							Builder,
-							this,
-							new AssociationDescriptor(
-								EntityDescriptor.ObjectType,
-								mc.Method,
-								aa.GetThisKeys(),
-								aa.GetOtherKeys(),
-								aa.ExpressionPredicate,
-								aa.Predicate,
-								aa.QueryExpressionMethod,
-								aa.QueryExpression,
-								aa.Storage,
-								aa.CanBeNull,
-								aa.AliasName),
-							ForceLeftJoinAssociations,
-							_associationsToSubQueries || isSubquery);
-
-					isNew = true;
-				}
-
-				if (tableAssociation == null && levelExpression.NodeType == ExpressionType.MemberAccess && objectMapper.Associations.Count > 0 || inheritance.Count > 0)
-				{
-
-					var memberExpression = (MemberExpression)levelExpression;
-
-					// subquery association shouldn't be cached, because different assciation navigation pathes
-					// should produce different subqueries
-					if (_associationsToSubQueries || isSubquery || !_associations.TryGetValue(memberExpression.Member, out tableAssociation))
-					{
-						var q =
-							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
-							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries || isSubquery);
-
-						tableAssociation = q.FirstOrDefault();
-
-						isNew = true;
-
-						if (!_associationsToSubQueries && !isSubquery && !tableAssociation.IsList)
-							_associations.Add(memberExpression.Member, tableAssociation);
-					}
-				}
-
-				if (tableAssociation != null)
-				{
-					if (_associationsToSubQueries || isSubquery)
-					{
-						ISqlExpression field = null;
-						if (levelExpression != expression)
-						{
-							tableAssociation.IsSubQuery = false;
-							var associationRef = new ContextRefExpression(levelExpression.Type, tableAssociation.InnerContext);
-							var expr = expression.Transform(e => e == levelExpression ? associationRef : e);
-							var info = new BuildInfo((IBuildContext?)this, expr, tableAssociation.SelectQuery);
-							var sequence = Builder.BuildSequence(info);
-							return new TableLevel{Table = sequence};
-						}
-						// {
-						// 	if (Builder.Is(buildInfo))
-						// 	{
-						// 		var associationRef = new ContextRefExpression(levelExpression.Type, tableAssociation);
-						// 		var expr = expression.Transform(e => e == levelExpression ? associationRef : e);
-						// 		var info = new BuildInfo((IBuildContext?)null, expr, tableAssociation.SelectQuery);
-						// 		field = Builder.BuildSequence(info).SelectQuery;
-						// 	}
-						// 	else
-						// {
-						// 	var associationRef = new ContextRefExpression(levelExpression.Type, tableAssociation);
-						// 	var expr = expression.Transform(e => e == levelExpression ? associationRef : e);
-						// 	var info = new BuildInfo((IBuildContext?)null, expr, tableAssociation.InnerContext.SelectQuery);
-						// 	var sequence = Builder.BuildSequence(info).SelectQuery;
-						// }
-						//}
-						
-						// tableAssociation.SelectQuery.Select.Columns.Clear();
-						//
-						// if (field != null)
-						// 	tableAssociation.SelectQuery.Select.Add(field);
-						field = tableAssociation.SelectQuery;
-					
-						return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
-					}
-
-					return new TableLevel { Table = tableAssociation, Level = level, IsNew = isNew };
-
-					//
-					// var al = tableAssociation.GetAssociation(expression, level + 1, buildInfo);
-					//
-					// if (al != null)
-					// 	return al;
-					//
-					// var field = tableAssociation.GetField(expression, level + 1, false);
-					//
-					// if (_associationsToSubQueries)
-					// {
-					// 	tableAssociation.SelectQuery.Select.Columns.Clear();
-					// 	if (field != null)
-					// 		tableAssociation.SelectQuery.Select.Add(field);
-					// 	field = tableAssociation.SelectQuery;
-					// }
-					//
-					// return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
-				}
-
-				return null;
 			}
 
 			#endregion

@@ -143,19 +143,20 @@ namespace LinqToDB.SqlQuery
 
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
+			if (tableSource.Source is SelectQuery q)
+			{
+				foreach (var ts in EnumerateAccessibleSources(q))
+					yield return ts;
+			}
+			else 
+				yield return tableSource.Source;
+
 			foreach (var join in tableSource.Joins)
 			{
-				yield return @join.Table;
-
-				if (@join.Table.Source is SelectQuery q)
-				{
-					foreach (var ts in EnumerateAccessibleSources(q))
-						yield return ts;
-				}
-
-				foreach (var source in EnumerateAccessibleSources(@join.Table))
+				foreach (var source in EnumerateAccessibleSources(join.Table))
 					yield return source;
 			}
+
 		}
 
 		/// <summary>
@@ -165,14 +166,10 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SelectQuery selectQuery)
 		{
+			yield return selectQuery;
+
 			foreach (var tableSource in selectQuery.Select.From.Tables)
 			{
-				yield return tableSource;
-
-				if (tableSource.Source is SelectQuery subQuery)
-					foreach (var s in EnumerateAccessibleSources(subQuery))
-						yield return s;
-
 				foreach (var source in EnumerateAccessibleSources(tableSource))
 					yield return source;
 			}

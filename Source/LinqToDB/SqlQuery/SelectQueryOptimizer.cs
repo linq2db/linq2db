@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.Common;
+using LinqToDB.Tools;
 
 namespace LinqToDB.SqlQuery
 {
@@ -615,38 +616,6 @@ namespace LinqToDB.SqlQuery
 
 		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
 		{
-			bool FindTable(SqlTableSource table)
-			{
-				if (tables.Contains(table.Source))
-					return true;
-
-				foreach (var join in table.Joins)
-				{
-					if (FindTable(join.Table))
-					{
-						join.IsWeak = false;
-						return true;
-					}
-				}
-
-				if (table.Source is SelectQuery query)
-					foreach (var t in query.From.Tables)
-						if (FindTable(t))
-							return true;
-
-				return false;
-			}
-
-			var areTablesCollected = false;
-
-			var visitor = new QueryVisitor();
-
-			void TableCollector(IQueryElement expr)
-			{
-				if (expr is SqlField field && field.Table != null && field.Table.All != field && !tables.Contains(field.Table))
-					tables.Add(field.Table);
-			}
-
 			_selectQuery.ForEachTable(table =>
 			{
 				for (var i = table.Joins.Count - 1; i >= 0; i--)
@@ -655,48 +624,20 @@ namespace LinqToDB.SqlQuery
 
 					if (join.IsWeak)
 					{
-						if (!areTablesCollected)
-						{
-							areTablesCollected = true;
+						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
+						var found   = new HashSet<ISqlExpression>();
+						var ignore  = new HashSet<IQueryElement> { join };
+						QueryHelper.CollectDependencies(_statement, sources, found, ignore);
 
-							visitor.VisitAll(_selectQuery.Select,  TableCollector);
-							visitor.VisitAll(_selectQuery.Where,   TableCollector);
-							visitor.VisitAll(_selectQuery.GroupBy, TableCollector);
-							visitor.VisitAll(_selectQuery.Having,  TableCollector);
-							visitor.VisitAll(_selectQuery.OrderBy, TableCollector);
-
-							if (_statement != null)
-							{
-								foreach (var clause in _statement.EnumClauses())
-								{
-									visitor.VisitAll(clause, TableCollector);
-								}
-							}
-
-							visitor.VisitAll(_selectQuery.From, expr =>
-							{
-								if (expr is SqlTable tbl && tbl.TableArguments != null)
-								{
-									var v = new QueryVisitor();
-
-									foreach (var arg in tbl.TableArguments)
-										v.VisitAll(arg, TableCollector);
-								}
-							});
-						}
-
-						if (FindTable(join.Table))
+						if (found.Count > 0)
 						{
 							join.IsWeak = false;
 						}
 						else
 						{
-							table.Joins.RemoveAt(i);
-							continue;
+							table.Joins.RemoveAt(i); ;
 						}
 					}
-
-					visitor.VisitAll(join, TableCollector);
 				}
 			}, new HashSet<SelectQuery>());
 		}
@@ -829,12 +770,18 @@ namespace LinqToDB.SqlQuery
 
 			if (expr is SqlBinaryExpression e1)
 			{
-				if (e1.Operation == "*" && e1.Expr1 is SqlValue)
+				if (e1.Operation.In("*", "+", "-"))
 				{
-					var value = (SqlValue)e1.Expr1;
+					var toCheck = e1.Expr1;
+					var isValue = e1.Expr2;
+					if (!(isValue is SqlValue))
+					{
+						isValue = e1.Expr2 as SqlValue;
+						toCheck = e1.Expr2;
+					}
 
-					if (value.Value is int i && i == -1)
-						return CheckColumn(column, e1.Expr2, query, optimizeValues, optimizeColumns);
+					if (isValue != null)
+						return CheckColumn(column, toCheck, query, optimizeValues, optimizeColumns);
 				}
 			}
 

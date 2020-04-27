@@ -179,7 +179,8 @@ namespace LinqToDB
 					data = builder.GetExpression("selector");
 
 				// https://github.com/linq2db/linq2db/issues/1765
-				if (data is SqlField field && field.Type!.Value.DataType != DataType.Undefined)
+				var field = QueryHelper.GetUnderlyingField(data);
+				if (field != null && field.Type!.Value.DataType != DataType.Undefined)
 				{
 					var separator = builder.GetExpression("separator");
 

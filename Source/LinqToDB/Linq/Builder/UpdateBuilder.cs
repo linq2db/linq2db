@@ -141,10 +141,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					ctx.Statement!.RequireUpdateClause().Table = atc.SqlTable;
+					var atc = res.Context!.IsExpression(null, 0, RequestFor.Table);
+					if (atc.Result && atc.Context is TableBuilder.TableContext tableContext)
+					{
+						ctx.Statement!.RequireUpdateClause().Table = tableContext.SqlTable;
+					}
 				}
 				else
 				{

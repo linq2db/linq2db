@@ -1493,7 +1493,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Take(2).Count();
+			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
 			if (sourcesCount > 1)
@@ -1510,8 +1510,8 @@ namespace LinqToDB.SqlProvider
 				if (tableToUpdate == null)
 				{
 					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
-						.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-						.FirstOrDefault(t => t != null);
+						.OfType<SqlTable>()
+						.FirstOrDefault();
 				}
 
 				if (tableToUpdate == null)
@@ -1533,7 +1533,7 @@ namespace LinqToDB.SqlProvider
 				} 
 
 				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
-					.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+					.Select(ts => ts as SqlTable)
 					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 
 				if (tableToCompare == null)

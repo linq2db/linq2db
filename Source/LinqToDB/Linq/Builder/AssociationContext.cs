@@ -35,13 +35,16 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext TableContext { get; }
 		public IBuildContext SubqueryContext { get; }
+		public SqlJoinedTable Join { get; }
 
-		public AssociationContext(ExpressionBuilder builder, IBuildContext tableContext, IBuildContext subqueryContext)
+		public AssociationContext(ExpressionBuilder builder, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
 		{
 			Builder = builder;
 			TableContext = tableContext;
 			SubqueryContext = subqueryContext;
+			Join = join;
 			SubqueryContext.Parent = this;
+			Parent = tableContext;
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -66,8 +69,14 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		public void MarkNotWeak()
+		{
+			// Join.IsWeak = false;
+		}
+
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
+			MarkNotWeak();
 			expression = CorrectExpression(expression, this, SubqueryContext);
 			return SubqueryContext.BuildExpression(expression, level, enforceServerSide);
 		}
@@ -86,19 +95,21 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
+			MarkNotWeak();
+
 			expression = CorrectExpression(expression, this, SubqueryContext);
 
 			var indexes = SubqueryContext
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();
 
-			foreach (var sqlInfo in indexes)
-			{
-				sqlInfo.Index = SelectQuery.Select.Add(sqlInfo.Sql);
-				sqlInfo.Sql   = SelectQuery.Select.Columns[sqlInfo.Index];
-				sqlInfo.Query = SelectQuery;
-
-			}
+			// foreach (var sqlInfo in indexes)
+			// {
+			// 	sqlInfo.Index = SelectQuery.Select.Add(sqlInfo.Sql);
+			// 	sqlInfo.Sql   = SelectQuery.Select.Columns[sqlInfo.Index];
+			// 	sqlInfo.Query = SelectQuery;
+			//
+			// }
 
 			return indexes;
 		}
@@ -132,6 +143,8 @@ namespace LinqToDB.Linq.Builder
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
+			MarkNotWeak();
+
 			if (context != null)
 			{
 				if (context.SelectQuery != SelectQuery)
@@ -152,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlStatement GetResultStatement()
 		{
-			return TableContext.GetResultStatement();
+			return SubqueryContext.GetResultStatement();
 		}
 	}
 }

@@ -207,12 +207,11 @@ namespace LinqToDB.Linq.Builder
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-				descriptor.GenerateAlias(), false, null);
+				descriptor.GenerateAlias(), true, null);
 
 			tableSource.Joins.Add(join.JoinedTable);
 			
-			return context;
-			// return new AssociationContext(builder, tableContext, context);
+			return new AssociationContext(builder, tableContext, context, join.JoinedTable);
 		}
 
 		public static IBuildContext BuildAssociationSubqueryInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, AssociationDescriptor descriptor, ref bool isOuter)
