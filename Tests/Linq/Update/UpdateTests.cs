@@ -504,6 +504,49 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void TestUpdateWithColumnFilter([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "UpdateColumnFilterUpdated";
+				var p = new Person()
+				{
+					FirstName = "UpdateColumnFilter",
+					LastName  = "whatever"
+				};
+
+				db.Insert(p);
+
+				try
+				{
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).Single();
+
+					p.FirstName = newName;
+					p.LastName  = newName;
+
+					var columsToUpdate = new HashSet<string> { nameof(p.FirstName) };
+
+					db.Update(p, (a, b) => columsToUpdate.Contains(b.ColumnName));
+
+					var updatedPerson = db.GetTable<Person>().Where(x => x.ID == p.ID).Single();
+					Assert.AreEqual("whatever", updatedPerson.LastName);
+					Assert.AreEqual(newName   , updatedPerson.FirstName);
+
+					// test for cached update query - must update both columns
+					db.Update(p);
+					updatedPerson = db.GetTable<Person>().Where(_ => _.ID == p.ID).Single();
+
+					Assert.AreEqual(newName, updatedPerson.LastName);
+					Assert.AreEqual(newName, updatedPerson.FirstName);
+				}
+				finally
+				{
+					db.Person.Where(x=> x.ID == p.ID).Delete();
+				}
+			}
+		}
+
+		[Test]
 		public void UpdateComplex1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
