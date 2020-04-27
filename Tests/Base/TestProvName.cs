@@ -71,5 +71,6 @@
 		public const string AllSQLiteNorthwind     = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = "Informix,Informix.DB2";
+		public const string AllAccess              = "Access,Access.Odbc";
 	}
 }

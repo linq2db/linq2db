@@ -217,21 +217,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryXor([DataSources(ProviderName.Access)] string context)
+		public void BinaryXor([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
 		[Test]
-		public void BinaryAnd([DataSources(ProviderName.Access)] string context)
+		public void BinaryAnd([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID & 3) == 1 select p);
 		}
 
 		[Test]
-		public void BinaryOr([DataSources(ProviderName.Access)] string context)
+		public void BinaryOr([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -72,7 +72,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1479,7 +1479,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void Insert14([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005, TestProvName.AllSybase)]
 			string context)
 		{

@@ -119,11 +119,11 @@ namespace Tests.UserTests
 	    {
 	        [Column]
 	        public int MonthNumber { get; set; }
-	    }				
+	    }
 
 
 		[Test]
-		public void TestLeftJoin([IncludeDataSources(ProviderName.Access)] string context)
+		public void TestLeftJoin([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Month>())

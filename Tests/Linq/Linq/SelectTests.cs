@@ -553,7 +553,7 @@ namespace Tests.Linq
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,

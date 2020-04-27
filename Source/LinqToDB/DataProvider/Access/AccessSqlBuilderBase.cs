@@ -1,35 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using SqlQuery;
-	using SqlProvider;
 	using LinqToDB.Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	class AccessSqlBuilder : BasicSqlBuilder
+	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		private readonly AccessDataProvider? _provider;
-
-		public AccessSqlBuilder(
-			AccessDataProvider? provider,
+		protected AccessSqlBuilderBase(
 			MappingSchema       mappingSchema,
 			ISqlOptimizer       sqlOptimizer,
 			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider = provider;
-		}
-
-		// remote context
-		public AccessSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -170,11 +156,6 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		#endregion
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new AccessSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
 		{
@@ -418,18 +399,6 @@ namespace LinqToDB.DataProvider.Access
 				sb.Append(database).Append(".");
 
 			return sb.Append(table);
-		}
-
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
-		{
-			if (_provider != null)
-		{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
-				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

@@ -76,7 +76,7 @@ namespace Tests.UserTests
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -126,7 +126,7 @@ namespace Tests.UserTests
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -178,7 +178,7 @@ namespace Tests.UserTests
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -228,7 +228,7 @@ namespace Tests.UserTests
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,

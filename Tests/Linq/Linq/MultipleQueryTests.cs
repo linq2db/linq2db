@@ -54,7 +54,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources(ProviderName.Access)] string context)
+		public void Test5([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

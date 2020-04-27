@@ -377,11 +377,11 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
 
-			if (provider != ProviderName.Access)
+			if (!provider.StartsWith("Access"))
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
 
 			if (provider != ProviderName.Sybase && provider != ProviderName.SybaseManaged)
-				if (provider != ProviderName.Access)
+				if (!provider.StartsWith("Access"))
 					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
 				else
 					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
@@ -485,7 +485,7 @@ namespace Tests.xUpdate
 				&& provider != ProviderName.MySqlConnector
 				&& provider != TestProvName.MySql55
 				&& provider != TestProvName.MariaDB
-				&& provider != ProviderName.Access
+				&& !provider.StartsWith("Access")
 				&& provider != ProviderName.SQLiteClassic
 				&& provider != TestProvName.SQLiteClassicMiniProfilerMapped
 				&& provider != TestProvName.SQLiteClassicMiniProfilerUnmapped
@@ -562,6 +562,7 @@ namespace Tests.xUpdate
 					|| provider == ProviderName.MySqlConnector
 					|| provider == TestProvName.MariaDB
 					|| provider == TestProvName.MySql55
+					|| provider == ProviderName.AccessOdbc
 					|| provider.Contains("Oracle"))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
@@ -650,6 +651,7 @@ namespace Tests.xUpdate
 						break;
 					case ProviderName.DB2           :
 					case ProviderName.Access        :
+					case ProviderName.AccessOdbc    :
 					case ProviderName.SapHanaNative :
 					case ProviderName.SapHanaOdbc   :
 					case TestProvName.MariaDB       :

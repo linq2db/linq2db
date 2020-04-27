@@ -14,13 +14,13 @@ namespace LinqToDB.SchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
-		protected abstract List<PrimaryKeyInfo>                GetPrimaryKeys(DataConnection dataConnection);
+		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
-		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
+		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
-		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection) => null;
+		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
 		protected HashSet<string?>   IncludedSchemas  = null!;
 		protected HashSet<string?>   ExcludedSchemas  = null!;
@@ -106,7 +106,7 @@ namespace LinqToDB.SchemaProvider
 					}
 				).ToList();
 
-				var pks = GetPrimaryKeys(dataConnection);
+				var pks = GetPrimaryKeys(dataConnection, tables);
 
 				#region Columns
 
@@ -156,7 +156,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : Array<ForeignKeyInfo>.Empty;
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables) : Array<ForeignKeyInfo>.Empty;
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
@@ -217,11 +217,11 @@ namespace LinqToDB.SchemaProvider
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var procs       = GetProcedures(dataConnection);
-				var procPparams = GetProcedureParameters(dataConnection);
 				var n           = 0;
 
 				if (procs != null)
 				{
+					var procPparams = GetProcedureParameters(dataConnection, procs, options);
 					procedures =
 					(
 						from sp in procs
@@ -399,25 +399,29 @@ namespace LinqToDB.SchemaProvider
 
 				if (st != null && st.Columns.Count > 0)
 				{
-					procedure.ResultTable = new TableSchema
+					var columns = GetProcedureResultColumns(st, options);
+					if (columns.Count > 0)
 					{
-						IsProcedureResult = true,
-						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
-						ForeignKeys       = new List<ForeignKeySchema>(),
-						Columns           = GetProcedureResultColumns(st, options)
-					};
+						procedure.ResultTable = new TableSchema
+						{
+							IsProcedureResult = true,
+							TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+							ForeignKeys       = new List<ForeignKeySchema>(),
+							Columns           = columns
+						};
 
-					foreach (var column in procedure.ResultTable.Columns)
-						column.Table = procedure.ResultTable;
+						foreach (var column in procedure.ResultTable.Columns)
+							column.Table = procedure.ResultTable;
 
-					procedure.SimilarTables =
-					(
-						from  t in tables
-						where t.Columns.Count == procedure.ResultTable.Columns.Count
-						let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-						where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
-						select t
-					).ToList();
+						procedure.SimilarTables =
+						(
+							from t in tables
+							where t.Columns.Count == procedure.ResultTable.Columns.Count
+							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
+							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							select t
+						).ToList();
+					}
 				}
 			}
 			catch (Exception ex)
@@ -485,7 +489,7 @@ namespace LinqToDB.SchemaProvider
 				let columnName = r.Field<string>("ColumnName")
 				let isNullable = r.Field<bool>  ("AllowDBNull")
 				let dt         = GetDataType(columnType, options)
-				let length     = r.Field<int> ("ColumnSize")
+				let length     = r.Field<int?>  ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
 				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)

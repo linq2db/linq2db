@@ -273,6 +273,8 @@ namespace Tests._Create
 				case ProviderName.SapHanaOdbc                      : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.Access                           : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
+				case ProviderName.AccessOdbc                       : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
+				                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);     break;
 				case ProviderName.SqlCe                            : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
 #if !NETCOREAPP2_1
@@ -284,10 +286,46 @@ namespace Tests._Create
 			}
 		}
 
+		static void AccessODBCAction(IDbConnection connection)
+		{
+
+			using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
+			{
+				conn.Execute(@"
+					INSERT INTO AllTypes
+					(
+						bitDataType, decimalDataType, smallintDataType, intDataType,tinyintDataType, moneyDataType, floatDataType, realDataType,
+						datetimeDataType,
+						charDataType, varcharDataType, textDataType, ncharDataType, nvarcharDataType, ntextDataType,
+						binaryDataType, varbinaryDataType, imageDataType, oleobjectDataType,
+						uniqueidentifierDataType
+					)
+					VALUES
+					(
+						1, 2222222, 25555, 7777777, 100, 100000, 20.31, 16.2,
+						?,
+						'1', '234', '567', '23233', '3323', '111',
+						?, ?, ?, ?,
+						?
+					)",
+					new
+					{
+						datetimeDataType         = new DateTime(2012, 12, 12, 12, 12, 12),
+
+						binaryDataType           = new byte[] { 1, 2, 3, 4 },
+						varbinaryDataType        = new byte[] { 1, 2, 3, 5 },
+						imageDataType            = new byte[] { 3, 4, 5, 6 },
+						oleobjectDataType        = new byte[] { 5, 6, 7, 8 },
+
+						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
+					});
+			}
+		}
+
 		static void AccessAction(IDbConnection connection)
 		{
 
-			using (var conn = AccessTools.CreateDataConnection(connection))
+			using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.Access))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes
@@ -308,12 +346,12 @@ namespace Tests._Create
 					)",
 					new
 					{
-						datetimeDataType         = new DateTime(2012, 12, 12, 12, 12, 12),
+						datetimeDataType = new DateTime(2012, 12, 12, 12, 12, 12),
 
-						binaryDataType           = new byte[] { 1, 2, 3, 4 },
-						varbinaryDataType        = new byte[] { 1, 2, 3, 5 },
-						imageDataType            = new byte[] { 3, 4, 5, 6 },
-						oleobjectDataType        = new byte[] { 5, 6, 7, 8 },
+						binaryDataType    = new byte[] { 1, 2, 3, 4 },
+						varbinaryDataType = new byte[] { 1, 2, 3, 5 },
+						imageDataType     = new byte[] { 3, 4, 5, 6 },
+						oleobjectDataType = new byte[] { 5, 6, 7, 8 },
 
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});

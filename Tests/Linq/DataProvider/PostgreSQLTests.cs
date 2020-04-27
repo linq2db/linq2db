@@ -37,13 +37,14 @@ namespace Tests.DataProvider
 	{
 		private static readonly string _nextValSearchPattern = "nextval";
 
-		public PostgreSQLTests()
+		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
-			PassNullSql  = "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
-			PassValueSql = "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p";
-			GetNullSql   = "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
-			GetValueSql  = "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+			paramCount = 1;
+			return "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
 		}
+		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
+		protected override string  PassValueSql(DataConnection dc) => "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p";
+		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
