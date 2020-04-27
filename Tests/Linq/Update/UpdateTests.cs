@@ -509,37 +509,39 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				var newName = "UpdateColumnFilterUpdated";
+				var p = new Person()
+				{
+					FirstName = "UpdateColumnFilter",
+					LastName  = "whatever"
+				};
+
+				db.Insert(p);
+
 				try
 				{
-					var p = new Person()
-					{
-						FirstName = "UpdateColumnFilter",
-						LastName = "whatever"
-					};
-
-					db.Insert(p);
-
-					p = db.GetTable<Person>().Where(x=> x.FirstName == p.FirstName).First();
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).Single();
 
 					p.FirstName = newName;
-					p.LastName = newName;
+					p.LastName  = newName;
 
-					var columsToUpdate = new List<string> { nameof(p.FirstName) };
+					var columsToUpdate = new HashSet<string> { nameof(p.FirstName) };
 
 					db.Update(p, (a, b) => columsToUpdate.Contains(b.ColumnName));
-					var updatedPerson = db.GetTable<Person>().Where(x=> x.ID == p.ID).First();
-					Assert.AreEqual(p.LastName, updatedPerson.LastName);
-					Assert.AreNotEqual(p.FirstName, updatedPerson.FirstName);
+
+					var updatedPerson = db.GetTable<Person>().Where(x => x.ID == p.ID).Single();
+					Assert.AreEqual("whatever", updatedPerson.LastName);
+					Assert.AreEqual(newName   , updatedPerson.FirstName);
 
 					// test for cached update query - must update both columns
 					db.Update(p);
-					updatedPerson = db.GetTable<Person>().First();
-					Assert.AreEqual(p.LastName, updatedPerson.LastName);
-					Assert.AreEqual(p.FirstName, updatedPerson.FirstName);
+					updatedPerson = db.GetTable<Person>().Where(_ => _.ID == p.ID).Single();
+
+					Assert.AreEqual(newName, updatedPerson.LastName);
+					Assert.AreEqual(newName, updatedPerson.FirstName);
 				}
 				finally
 				{
-					db.Person.Where(x=> x.FirstName == newName).Delete();
+					db.Person.Where(x=> x.ID == p.ID).Delete();
 				}
 			}
 		}

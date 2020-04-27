@@ -514,10 +514,10 @@ namespace LinqToDB
 		public static int Update<T>(
 			this IDataContext dataContext,
 			T obj,
-			string? tableName = null,
+			string? tableName    = null,
 			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			return Update<T>(dataContext, obj, null, tableName, serverName, databaseName, schemaName);
 		}
@@ -564,10 +564,10 @@ namespace LinqToDB
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			string? tableName = null,
+			string? tableName    = null,
 			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null,
+			string? schemaName   = null,
+			string? serverName   = null,
 			CancellationToken token = default)
 		{
 			return UpdateAsync<T>(dataContext, obj, null, tableName, serverName, databaseName, schemaName, token);
