@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-#if DEBUG
 	internal static class BuildContextDebuggingHelper
 	{
 		public static string GetContextInfo(IBuildContext context)
@@ -42,7 +41,6 @@ namespace LinqToDB.Linq.Builder
 			return str;
 		}
 	}
-#endif
 
 	interface IBuildContext
 	{
