@@ -111,7 +111,7 @@ namespace LinqToDB.Data
 				{
 					if (TraceSwitchConnection.TraceError)
 					{
-						OnTraceConnection?.Invoke(new TraceInfo(this, TraceInfoStep.Error)
+						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 						{
 							TraceLevel     = TraceLevel.Error,
 							StartTime      = DateTime.UtcNow,
@@ -221,7 +221,7 @@ namespace LinqToDB.Data
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteNonQueryAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -290,7 +290,7 @@ namespace LinqToDB.Data
 
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -363,7 +363,7 @@ namespace LinqToDB.Data
 			CommandBehavior commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteReaderAsync(Command, commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

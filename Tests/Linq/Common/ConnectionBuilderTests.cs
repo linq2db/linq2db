@@ -52,7 +52,7 @@ namespace Tests.Common
 				return false;
 			}
 
-			public IDisposable BeginScope<TState>(TState state)
+			public IDisposable? BeginScope<TState>(TState state)
 			{
 				return null;
 			}
@@ -68,7 +68,7 @@ namespace Tests.Common
 			Assert.NotNull(builder.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace(expectedMessage, "some category", TraceLevel.Info);
+			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
@@ -87,7 +87,7 @@ namespace Tests.Common
 			Assert.NotNull(builder.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace(expectedMessage, "some category", TraceLevel.Info);
+			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();

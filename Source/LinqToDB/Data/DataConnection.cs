@@ -181,11 +181,11 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
-		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing</param>
+		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
 			IDbConnection connection,
-											bool          disposeConnection)
+			bool          disposeConnection)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
 		{
 		}
@@ -216,16 +216,14 @@ namespace LinqToDB.Data
 		{
 		}
 
-		
 		private DataConnection(LinqToDbConnectionOptionsBuilder builder) : this(builder.Build())
 		{
-			
 		}
 
 		/// <summary>
 		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
 		/// </summary>
-		/// <param name="options">Options, setup ahead of time</param>
+		/// <param name="options">Options, setup ahead of time.</param>
 		public DataConnection(LinqToDbConnectionOptions options)
 		{
 			if (options == null)
@@ -261,14 +259,16 @@ namespace LinqToDB.Data
 					if (options.ProviderName == null && options.DataProvider == null) 
 						throw new LinqToDBException("DataProvider was not specified");
 
+					IDataProvider? dataProvider;
 					if (options.ProviderName != null
-					    && !_dataProviders.TryGetValue(options.ProviderName, out var dataProvider))
+					    && !_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
 					{
-						dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString)!;
+						dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
 						if (dataProvider == null)
 							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
 					}
-					else dataProvider = options.DataProvider;
+					else
+						dataProvider = options.DataProvider!;
 
 					DataProvider     = dataProvider;
 					ConnectionString = options.ConnectionString;
@@ -278,13 +278,16 @@ namespace LinqToDB.Data
 				case ConnectionSetupType.ConnectionFactory:
 					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 					//is this expected?
-					var originalConnectionFactory = options.ConnectionFactory;
+					var originalConnectionFactory = options.ConnectionFactory!;
 					_connectionFactory = () =>
 					{
 						var connection = originalConnectionFactory();
 						
 						return connection;
 					};
+
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
 					break;
 				
 				case ConnectionSetupType.Connection:
@@ -292,23 +295,27 @@ namespace LinqToDB.Data
 						localConnection    = options.DbConnection;
 						_disposeConnection = options.DisposeConnection;
 
+						DataProvider  = options.DataProvider!;
+						MappingSchema = DataProvider.MappingSchema;
 						break;
 					}
 
 				case ConnectionSetupType.Transaction:
 					{
-						localConnection        = options.DbTransaction.Connection;
+						localConnection        = options.DbTransaction!.Connection;
 						localTransaction       = options.DbTransaction;
 
 						_closeTransaction  = false;
 						_closeConnection   = false;
 						_disposeConnection = false;
 
+						DataProvider  = options.DataProvider!;
+						MappingSchema = DataProvider.MappingSchema;
 						break;
 					}
 
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
 
 			if (options.DataProvider != null)
@@ -445,11 +452,11 @@ namespace LinqToDB.Data
 		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
 		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDbConnectionOptions"/>
-		/// defaults to calling <see cref="OnTraceInternal"/>
+		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
 		public  static Action<TraceInfo>  OnTrace
 		{
-			//todo remove this eventually or mark obsolete
+			// used by tests
 			internal get => _onTrace;
 			set => _onTrace = value ?? DefaultTrace;
 		}
@@ -462,13 +469,12 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(System.Action{LinqToDB.Data.TraceInfo})"/>.
-		/// defaults to <see cref="OnTrace"/>
+		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
 
-
 		/// <summary>
-		/// writes the trace out using <see cref="WriteTraceLineConnection"/>
+		/// Writes the trace out using <see cref="WriteTraceLineConnection"/>.
 		/// </summary>
 		void OnTraceInternal(TraceInfo info)
 		{
@@ -557,7 +563,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private static TraceSwitch? _traceSwitch = new TraceSwitch("DataConnection",
+		private static TraceSwitch _traceSwitch = new TraceSwitch("DataConnection",
 			"DataConnection trace switch",
 #if DEBUG
 			"Warning"
@@ -574,7 +580,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  static TraceSwitch  TraceSwitch
 		{
-			//todo remove this eventually or mark obsolete
+			// used by LoggingExtensions
 			internal get => _traceSwitch;
 			set => _traceSwitch = value;
 		}
@@ -583,7 +589,7 @@ namespace LinqToDB.Data
 		/// Sets tracing level for data connections.
 		/// </summary>
 		/// <param name="traceLevel">Connection tracing level.</param>
-		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/></remarks>
+		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/>.</remarks>
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
@@ -608,19 +614,19 @@ namespace LinqToDB.Data
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
 		/// will be ignored if <see cref="LinqToDbConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
 		/// <para>First parameter contains trace message.</para>
-		/// <para>Second parameter contains context (<see cref="Switch.DisplayName"/>)</para>
-		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>)</para>
+		/// <para>Second parameter contains trace message category (<see cref="Switch.DisplayName"/>).</para>
+		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>).</para>
 		/// <seealso cref="TraceSwitch"/>
-		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/></remarks>
+		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/>.</remarks>
 		/// </summary>
-		public static Action<string, string, TraceLevel> WriteTraceLine = (message, displayName, level) => Debug.WriteLine(message, displayName);
+		public static Action<string?, string?, TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
 
 		/// <summary>
-		/// gets the delegate to write logging messages for this connection
-		/// defaults to <see cref="WriteTraceLine"/>
-		/// used for the current instance.
+		/// Gets the delegate to write logging messages for this connection.
+		/// Defaults to <see cref="WriteTraceLine"/>.
+		/// Used for the current instance.
 		/// </summary>
-		public Action<string, string, TraceLevel> WriteTraceLineConnection { get; } = WriteTraceLine;
+		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; } = WriteTraceLine;
 
 		#endregion
 
@@ -1241,7 +1247,7 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQuery()
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteNonQuery(Command);
 
@@ -1307,7 +1313,7 @@ namespace LinqToDB.Data
 
 		object? ExecuteScalar()
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteScalar(Command);
 
@@ -1377,7 +1383,7 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 

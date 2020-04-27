@@ -724,15 +724,6 @@ namespace Tests.Data
 					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
 				}
 
-				db.OnTraceConnection = null;
-
-				Assert.IsNull(db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.IsNull(cdb.OnTraceConnection);
-				}
-
 				db.OnTraceConnection = DataConnection.OnTrace;
 
 				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);

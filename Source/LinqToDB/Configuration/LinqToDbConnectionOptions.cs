@@ -62,18 +62,55 @@ namespace LinqToDB.Configuration
 			SetupType = ConnectionSetupType.DefaultConfiguration;
 		}
 
-		public MappingSchema                      MappingSchema       { get; }
-		public IDataProvider                      DataProvider        { get; }
-		public IDbConnection                      DbConnection        { get; }
-		public bool                               DisposeConnection   { get; }
-		public string                             ConfigurationString { get; }
-		public string                             ProviderName        { get; }
-		public string                             ConnectionString    { get; }
-		public Func<IDbConnection>                ConnectionFactory   { get; }
-		public IDbTransaction                     DbTransaction       { get; }
-		public Action<TraceInfo>?                 OnTrace             { get; }
-		public TraceLevel?                        TraceLevel          { get; }
-		public Action<string, string, TraceLevel> WriteTrace          { get; }
+		/// <summary>
+		/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public MappingSchema?                        MappingSchema       { get; }
+		/// <summary>
+		/// Gets <see cref="IDataProvider"/> instance to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public IDataProvider?                        DataProvider        { get; }
+		/// <summary>
+		/// Gets <see cref="IDbConnection"/> instance to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public IDbConnection?                        DbConnection        { get; }
+		/// <summary>
+		/// Gets <see cref="DbConnection"/> ownership status for <see cref="DataConnection"/> instance.
+		/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
+		/// </summary>
+		public bool                                  DisposeConnection   { get; }
+		/// <summary>
+		/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public string?                               ConfigurationString { get; }
+		/// <summary>
+		/// Gets provider name to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public string?                               ProviderName        { get; }
+		/// <summary>
+		/// Gets connection string to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public string?                               ConnectionString    { get; }
+		/// <summary>
+		/// Gets connection factory to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public Func<IDbConnection>?                  ConnectionFactory   { get; }
+		/// <summary>
+		/// Gets <see cref="IDbTransaction"/> instance to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public IDbTransaction?                       DbTransaction       { get; }
+		/// <summary>
+		/// Gets custom trace method to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public Action<TraceInfo>?                    OnTrace             { get; }
+		/// <summary>
+		/// Gets custom trace level to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public TraceLevel?                           TraceLevel          { get; }
+		/// <summary>
+		/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public Action<string?, string?, TraceLevel>? WriteTrace          { get; }
 
 		internal ConnectionSetupType SetupType { get; }
 

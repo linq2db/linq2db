@@ -6,7 +6,6 @@ namespace LinqToDB.AspNet
 {
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	public static class ServiceConfigurationExtensions
 	{

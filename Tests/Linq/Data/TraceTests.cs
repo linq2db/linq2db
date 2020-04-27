@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -16,9 +15,9 @@ namespace Tests.Data
 	[TestFixture]
 	public class TraceTests
 	{
-		private TraceLevel OriginalTraceLevel { get; set; }
-		private Action<TraceInfo> OriginalOnTrace { get; set; }
-		private Action<string, string, TraceLevel> OriginalWrite { get; set; }
+		private TraceLevel                           OriginalTraceLevel { get; set; }
+		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
+		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
 		[OneTimeSetUp]
@@ -29,8 +28,9 @@ namespace Tests.Data
 				//gets the default static on trace so it'll be reset after the tests are done
 				OriginalOnTrace = db.OnTraceConnection;
 			}
-			OriginalTraceLevel = DataConnection.TraceSwitch.Level;
-			OriginalWrite = DataConnection.WriteTraceLine;
+
+			OriginalTraceLevel               = DataConnection.TraceSwitch.Level;
+			OriginalWrite                    = DataConnection.WriteTraceLine;
 			DataConnection.TraceSwitch.Level = TraceLevel.Info;
 		}
 
@@ -38,8 +38,8 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
-			DataConnection.OnTrace = OriginalOnTrace;
-			DataConnection.WriteTraceLine = OriginalWrite;
+			DataConnection.OnTrace           = OriginalOnTrace;
+			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
 		private IDictionary<TEnum, TValue> GetEnumValues<TEnum, TValue>(Func<TEnum, TValue> factory)

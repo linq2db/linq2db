@@ -23,7 +23,7 @@ namespace LinqToDB.Data
 			{
 				Reader.Dispose();
 
-				if (CommandInfo?.DataConnection?.TraceSwitchConnection?.TraceInfo == true && CommandInfo?.DataConnection?.OnTraceConnection != null)
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
 					{

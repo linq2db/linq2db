@@ -20,18 +20,18 @@ namespace LinqToDB.Configuration
 
 	public class LinqToDbConnectionOptionsBuilder
 	{
-		public MappingSchema                      MappingSchema       { get; private set; }
-		public IDataProvider                      DataProvider        { get; private set; }
-		public IDbConnection                      DbConnection        { get; private set; }
-		public bool                               DisposeConnection   { get; private set; }
-		public string                             ConfigurationString { get; private set; }
-		public string                             ProviderName        { get; private set; }
-		public string                             ConnectionString    { get; private set; }
-		public Func<IDbConnection>                ConnectionFactory   { get; private set; }
-		public IDbTransaction                     DbTransaction       { get; private set; }
-		public Action<TraceInfo>?                 OnTrace             { get; private set; }
-		public TraceLevel?                        TraceLevel          { get; private set; }
-		public Action<string, string, TraceLevel> WriteTrace          { get; private set; }
+		public MappingSchema?                        MappingSchema       { get; private set; }
+		public IDataProvider?                        DataProvider        { get; private set; }
+		public IDbConnection?                        DbConnection        { get; private set; }
+		public bool                                  DisposeConnection   { get; private set; }
+		public string?                               ConfigurationString { get; private set; }
+		public string?                               ProviderName        { get; private set; }
+		public string?                               ConnectionString    { get; private set; }
+		public Func<IDbConnection>?                  ConnectionFactory   { get; private set; }
+		public IDbTransaction?                       DbTransaction       { get; private set; }
+		public Action<TraceInfo>?                    OnTrace             { get; private set; }
+		public TraceLevel?                           TraceLevel          { get; private set; }
+		public Action<string?, string?, TraceLevel>? WriteTrace          { get; private set; }
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
@@ -128,9 +128,10 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder UseConnection(IDataProvider dataProvider,
+		public LinqToDbConnectionOptionsBuilder UseConnection(
+			IDataProvider dataProvider,
 			IDbConnection connection,
-			bool disposeConnection = false)
+			bool          disposeConnection = false)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Connection);
 
@@ -184,7 +185,7 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder WriteTraceWith(Action<string, string, TraceLevel> write)
+		public LinqToDbConnectionOptionsBuilder WriteTraceWith(Action<string?, string?, TraceLevel> write)
 		{
 			WriteTrace = write;
 			return this;

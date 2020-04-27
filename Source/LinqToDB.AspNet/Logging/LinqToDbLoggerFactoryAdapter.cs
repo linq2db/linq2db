@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
@@ -17,18 +16,18 @@ namespace LinqToDB.AspNet.Logging
 			_logger        = _loggerFactory.CreateLogger<DataConnection>();
 		}
 
-		public void OnTrace(string message, string displayName, TraceLevel level)
+		public void OnTrace(string? message, string? category, TraceLevel level)
 		{
 			var logLevel = level switch
 			{
-				TraceLevel.Error => LogLevel.Error,
-				TraceLevel.Info => LogLevel.Information,
+				TraceLevel.Error   => LogLevel.Error,
+				TraceLevel.Info    => LogLevel.Information,
 				TraceLevel.Verbose => LogLevel.Trace,
 				TraceLevel.Warning => LogLevel.Warning,
-				_ => LogLevel.None,
+				_                  => LogLevel.None,
 			};
 
-			_logger.Log(logLevel, (EventId)0, message, null, (s, exception) => s);
+			_logger.Log(logLevel, 0, message, null, (s, exception) => s);
 		}
 	}
 }
