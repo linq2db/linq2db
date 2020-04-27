@@ -31,7 +31,7 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([NorthwindDataContext] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -273,10 +273,21 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestServiceCollection([NorthwindDataContext] string context)
+		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>();
+			Assert.True(con is DataConnection);
+			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<DataConnection>();
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
@@ -297,7 +308,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSettingsPerDb([NorthwindDataContext] string context)
+		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDbContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
