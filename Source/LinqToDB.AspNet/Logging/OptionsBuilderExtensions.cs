@@ -9,6 +9,12 @@ namespace LinqToDB.AspNet.Logging
 
 	public static class OptionsBuilderExtensions
 	{
+		/// <summary>
+		/// Configures the connection to use the <see cref="ILoggerFactory"/> resolved from the container.
+		/// </summary>
+		/// <param name="builder">Builder to configure.</param>
+		/// <param name="provider">Container used to resolve the factory.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
 		public static LinqToDbConnectionOptionsBuilder UseDefaultLogging(this LinqToDbConnectionOptionsBuilder builder,
 			IServiceProvider provider)
 		{
@@ -16,6 +22,12 @@ namespace LinqToDB.AspNet.Logging
 			return UseLoggerFactory(builder, factory);
 		}
 
+		/// <summary>
+		/// Configures the connection to use the <see cref="ILoggerFactory"/> passed in.
+		/// </summary>
+		/// <param name="builder">Builder to configure.</param>
+		/// <param name="factory">Factory used to resolve loggers.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
 		public static LinqToDbConnectionOptionsBuilder UseLoggerFactory(this LinqToDbConnectionOptionsBuilder builder,
 			ILoggerFactory factory)
 		{
