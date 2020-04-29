@@ -25,16 +25,14 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
+					var condition   = (LambdaExpression)predicate.Unwrap();
+					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
 
-					operation.Where = new SqlSearchCondition();
-
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
-						conditionExpr,
-						operation.Where.Conditions,
-						false);
+					// builder.BuildSearchCondition(
+					// 	new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
+					// 	conditionExpr,
+					// 	operation.Where.Conditions,
+					// 	false);
 				}
 
 				return mergeContext;

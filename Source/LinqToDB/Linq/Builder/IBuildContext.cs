@@ -14,9 +14,16 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static string GetContextInfo(IBuildContext context)
 		{
-			if (context.SelectQuery == null)
-				return $"{context.GetType().Name}(<none>)";
-			return $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+			var result = context.SelectQuery == null
+				? $"{context.GetType().Name}(<none>)"
+				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+
+			if (context is TableBuilder.TableContext tc)
+			{
+				result += $"(T: {tc.SqlTable.SourceID})";
+			}
+
+			return result;
 		}
 
 		public static string GetPath(this IBuildContext context)

@@ -57,15 +57,8 @@ namespace LinqToDB.Linq.Builder
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
 					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
-					operation.Where = new SqlSearchCondition();
-
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
-						conditionExpr,
-						operation.Where.Conditions,
-						false);
+					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
 				}
 
 				return mergeContext;
