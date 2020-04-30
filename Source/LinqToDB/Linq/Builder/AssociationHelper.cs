@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 			if (definedQueryMethod == null)
 			{
 				var parentParam = Expression.Parameter(parentType, "parent");
-				var childParam  = Expression.Parameter(objectType, "child");
+				var childParam  = Expression.Parameter(objectType, association.AliasName);
 
 				var parentAccessor = TypeAccessor.GetAccessor(parentType);
 				var childAccessor  = TypeAccessor.GetAccessor(objectType);
@@ -283,20 +283,8 @@ namespace LinqToDB.Linq.Builder
 
 			IBuildContext context;
 
-			// if (buildInfo.SelectQuery.From.Tables.Count > 0 && buildInfo.Parent != null)
-			// {
-			// 	context = builder.BuildSequence(new BuildInfo(buildInfo, body, new SelectQuery()));
-			//
-			// 	var tableSource = buildInfo.SelectQuery.From.Tables.Last();
-			// 	var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-			// 		null, false, null);
-			// 	tableSource.Joins.Add(join.JoinedTable);
-			// 	context = new AssociationContext(builder, buildInfo.Parent, context);
-			// }
-			// else
-			{
-				context = builder.BuildSequence(new BuildInfo(buildInfo, body));
-			}
+			context = builder.BuildSequence(new BuildInfo(buildInfo, body));
+			context.SelectQuery.From.Tables[0].Alias = descriptor.GenerateAlias();
 
 			return context;
 		}

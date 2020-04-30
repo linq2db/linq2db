@@ -10,18 +10,20 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery, int level = 0)
+		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
-			_flags       = flags;
-			_selectQuery = selectQuery;
-			_statement   = statement;
-			_level       = level;
+			_flags        = flags;
+			_selectQuery  = selectQuery;
+			_rootElement  = rootElement;
+			_level        = level;
+			_dependencies = dependencies;
 		}
 
 		readonly SqlProviderFlags _flags;
 		readonly SelectQuery      _selectQuery;
-		readonly SqlStatement     _statement;
+		readonly IQueryElement    _rootElement;
 		readonly int              _level;
+		readonly IQueryElement[]  _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
@@ -44,7 +46,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
+			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
 			ResolveFields();
 
 #if DEBUG
@@ -62,16 +64,16 @@ namespace LinqToDB.SqlQuery
 
 		void ResolveFields()
 		{
-			var root = GetQueryData(_statement, _selectQuery);
+			var root = GetQueryData(_rootElement, _selectQuery);
 
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SqlStatement? statement, SelectQuery selectQuery)
+		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
-			new QueryVisitor().VisitParentFirst(statement as IQueryElement ?? selectQuery, e =>
+			new QueryVisitor().VisitParentFirst(root ?? selectQuery, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -395,21 +397,22 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
+		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
 		{
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, _statement, sql, _level + 1).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, _rootElement, sql, _level + 1, _dependencies)
+						.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
 				}
 			});
 
-			ResolveWeakJoins(tables);
+			ResolveWeakJoins();
 			RemoveEmptyJoins();
 			OptimizeColumns();
 			OptimizeApplies   (isApplySupported, optimizeColumns);
@@ -614,7 +617,7 @@ namespace LinqToDB.SqlQuery
 			return searchCondition;
 		}
 
-		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
+		internal void ResolveWeakJoins()
 		{
 			_selectQuery.ForEachTable(table =>
 			{
@@ -625,11 +628,9 @@ namespace LinqToDB.SqlQuery
 					if (join.IsWeak)
 					{
 						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
-						var found   = new HashSet<ISqlExpression>();
 						var ignore  = new HashSet<IQueryElement> { join };
-						QueryHelper.CollectDependencies(_statement, sources, found, ignore);
-
-						if (found.Count > 0)
+						if (QueryHelper.IsDependsOn(_rootElement, sources, ignore) 
+						    || _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, ignore)))
 						{
 							join.IsWeak = false;
 						}
@@ -847,7 +848,7 @@ namespace LinqToDB.SqlQuery
 				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
 				.ToList();
 
-			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
+			var top = _rootElement ?? (IQueryElement)_selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				new WalkOptions(), expr => map.TryGetValue(expr, out var fld) ? fld : expr);
@@ -953,12 +954,10 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var sources = new HashSet<ISqlTableSource> {tableSource.Source};
-				var found = new HashSet<ISqlExpression>();
 				var ignore = new HashSet<IQueryElement>() {sql.Where};
 				ignore.AddRange(QueryHelper.EnumerateJoins(sql).Select(j => j.Condition));
-				QueryHelper.CollectDependencies(sql, sources, found, ignore);
 
-				if (found.Count == 0)
+				if (!QueryHelper.IsDependsOn(sql, sources, ignore))
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)

@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
-			private readonly bool   _associationsToSubQueries;
+			public bool             AssociationsToSubQueries { get; set; }
 
 			#endregion
 
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
 				SelectQuery      = buildInfo.SelectQuery;
-				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
 				SelectQuery      = buildInfo.SelectQuery;
-				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = table.ObjectType!;
 				ObjectType       = GetObjectType();
@@ -118,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 				Parent      = buildInfo.Parent;
 				Expression  = buildInfo.Expression;
 				SelectQuery = buildInfo.SelectQuery;
-				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
@@ -902,15 +902,29 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (contextInfo.Context != this)
 								{
+									SqlInfo[] resultSql;
 									var maxLevel = contextInfo.CurrentExpression!.GetLevel(Builder.MappingSchema);
 									if (maxLevel == 0)
 									{
-										return contextInfo.Context.ConvertToSql(null, 0, flags);
+										resultSql = contextInfo.Context.ConvertToSql(null, 0, flags);
 									}
-									return contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
-										contextInfo.CurrentLevel >= maxLevel
-											? contextInfo.CurrentLevel
-											: contextInfo.CurrentLevel + 1, flags);
+									else
+									{
+										resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
+											contextInfo.CurrentLevel >= maxLevel
+												? contextInfo.CurrentLevel
+												: contextInfo.CurrentLevel + 1, flags);
+									}
+
+									if (contextInfo.AsSubquery)
+									{
+										foreach (var info in resultSql)
+										{
+											info.Sql = ((SqlColumn)info.Sql).Parent;
+										}
+									}
+
+									return resultSql;
 								}
 
 								var q =
@@ -988,6 +1002,13 @@ namespace LinqToDB.Linq.Builder
 								else
 									resultSql = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression,
 										contextInfo.CurrentLevel + 1, flags);
+								if (contextInfo.AsSubquery)
+								{
+									foreach (var info in resultSql)
+									{
+										info.Sql = ((SqlColumn)info.Sql).Parent;
+									}
+								}
 							}
 							return resultSql;
 						}
@@ -1155,6 +1176,7 @@ namespace LinqToDB.Linq.Builder
 			#region GetContext
 
 			Dictionary<MemberInfo, Tuple<IBuildContext, bool>>? _associationContexts;
+			Dictionary<MemberInfo, IBuildContext>? _collectionAssociationContexts;
 
 			public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
@@ -1689,6 +1711,7 @@ namespace LinqToDB.Linq.Builder
 				public Expression? CurrentExpression;
 				public ISqlExpression? Field;
 				public int CurrentLevel;
+				public bool AsSubquery;
 				public AssociationDescriptor? Descriptor;
 			}
 
@@ -1722,9 +1745,10 @@ namespace LinqToDB.Linq.Builder
 							var descriptor = GetAssociationDescriptor(levelExpression, out var memberInto);
 							if (descriptor != null)
 							{
-								var isOuter = descriptor.CanBeNull;
+								var isOuter = descriptor.CanBeNull || ForceLeftJoinAssociations;
 								IBuildContext? associatedContext;
-								if (!descriptor.IsList)
+
+								if (!descriptor.IsList && !AssociationsToSubQueries)
 								{
 									if (_associationContexts == null ||
 									    !_associationContexts.TryGetValue(memberInto, out var foundInfo))
@@ -1765,16 +1789,27 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									var newExpression = expression.Replace(levelExpression,
-										new ContextRefExpression(levelExpression.Type, this));
+									if (_collectionAssociationContexts == null || !_collectionAssociationContexts.TryGetValue(memberInto, out associatedContext))
+									{
+										var newExpression = expression.Replace(levelExpression,
+											new ContextRefExpression(levelExpression.Type, this));
 
-									associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-										new BuildInfo(Parent, newExpression, SelectQuery), this, descriptor,
-										false,
-										ref isOuter);
+										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
+											new BuildInfo(Parent, newExpression, new SelectQuery()), this, descriptor,
+											ref isOuter);
 
-									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) {Descriptor = descriptor};
+										_collectionAssociationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
+										_collectionAssociationContexts.Add(memberInto, associatedContext);
+
+									}
+									var contextRef =
+										new ContextRefExpression(levelExpression.Type, associatedContext);
+									return new ContextInfo(associatedContext,
+										expression.Replace(levelExpression, contextRef), 0)
+									{
+										Descriptor = descriptor,
+										AsSubquery = AssociationsToSubQueries
+									};
 								}
 
 							}

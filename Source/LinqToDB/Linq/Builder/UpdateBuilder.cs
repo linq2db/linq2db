@@ -108,8 +108,8 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery)
-								.ResolveWeakJoins(new List<ISqlTableSource>());
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+								.ResolveWeakJoins();
 							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(

@@ -10,6 +10,42 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryHelper
 	{
+		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependencyFound = false;
+
+			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			{
+				if (dependencyFound)
+					return false;
+
+				if (e is ISqlTableSource source && onSources.Contains(source) || (elementsToIgnore != null && elementsToIgnore.Contains(e)))
+					return false;
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+						{
+							var c = (SqlColumn) e;
+							if (onSources.Contains(c.Parent!))
+								dependencyFound = true;
+							break;
+						}
+					case QueryElementType.SqlField :
+						{
+							var f = (SqlField) e;
+							if (onSources.Contains(f.Table!))
+								dependencyFound = true;
+							break;
+						}
+				}
+
+				return !dependencyFound;
+			});
+
+			return dependencyFound;
+		}
+
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);

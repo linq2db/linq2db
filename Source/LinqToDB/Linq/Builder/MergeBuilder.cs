@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Reflection;
-	using LinqToDB.SqlQuery;
+	using SqlQuery;
 
 	internal partial class MergeBuilder : MethodCallBuilder
 	{
@@ -40,12 +40,8 @@ namespace LinqToDB.Linq.Builder
 
 			tableContext.SelectQuery.From.Tables.RemoveAt(0);
 			var queryVisitor = new QueryVisitor();
-			queryVisitor.VisitParentFirst(query, e =>
+			queryVisitor.Visit(query, e =>
 			{
-				// if (e is SqlJoinedTable join)
-				// {
-				// 	join.IsWeak = false;
-				// }
 				if (e is SelectQuery selectQuery && selectQuery.From.Tables.Count > 0)
 				{
 					if (selectQuery.From.Tables[0].Source is SelectQuery subSelect)
@@ -72,8 +68,6 @@ namespace LinqToDB.Linq.Builder
 
 					}
 				}
-
-				return true;
 			});
 
 			return query;
@@ -89,31 +83,13 @@ namespace LinqToDB.Linq.Builder
 				var tableContext  = (TableBuilder.TableContext)onContext;
 				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
 
-				TableBuilder.TableContext? secondClonedTableContext = null;
-
 				if (secondContext != null)
 				{
-					ContextRefExpression secondContextRefExpression;
-
-					//TODO: Investigate that this is needed for Source
-					var isSecondTableContext = secondContext.IsExpression(null, 0, RequestFor.Table);
-					if (isSecondTableContext.Result)
-					{
-						var secondTableContext = ((TableBuilder.TableContext)isSecondTableContext.Context!);
-						secondClonedTableContext = new TableBuilder.TableContext(builder, new SelectQuery(),
-							secondTableContext.SqlTable);
-						secondContextRefExpression =
-							new ContextRefExpression(condition.Parameters[1].Type, secondClonedTableContext);
-					
-					}
-					else
-					{
-						secondContextRefExpression =
+					var secondContextRefExpression =
 							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
-					}
 
 					var newBody = condition.Body.Replace(condition.Parameters[1], secondContextRefExpression);
-					condition = Expression.Lambda(newBody, condition.Parameters[0]);
+					condition   = Expression.Lambda(newBody, condition.Parameters[0]);
 				}
 
 				var subqueryContext = new SubQueryContext(clonedContext);
@@ -124,17 +100,9 @@ namespace LinqToDB.Linq.Builder
 				var buildSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, whereCall, new SelectQuery()));
 
 				var query = buildSequence.SelectQuery;
+				query     = RemoveContextFromQuery(clonedContext, query);
 
-				if (secondClonedTableContext != null)
-					query.From.Table(secondClonedTableContext.SelectQuery);
-
-				query = RemoveContextFromQuery(clonedContext, query);
-				if (secondClonedTableContext != null)
-				{
-					query = RemoveContextFromQuery(secondClonedTableContext, query);
-				}
-
-				new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, null, query)
+				new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, query, query, 0, statement)
 					.FinalizeAndValidate(false, true);
 
 				if (query.From.Tables.Count == 0)
@@ -150,7 +118,6 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-
 				var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 				result = new SqlSearchCondition();
 

@@ -34,7 +34,7 @@ namespace LinqToDB.SqlProvider
 			statement.WalkQueries(
 				selectQuery =>
 				{
-					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -57,7 +57,7 @@ namespace LinqToDB.SqlProvider
 				statement.WalkQueries(
 					selectQuery =>
 					{
-						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
 							SqlProviderFlags.IsApplyJoinSupported,
 							SqlProviderFlags.IsGroupByExpressionSupported);
 
