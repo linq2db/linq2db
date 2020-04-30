@@ -524,7 +524,7 @@ WHERE
 			int Id { get; set; }
 			int? ParentId { get; set; }
 			IList<TreeItem> Children { get; set; }
-			TreeItem Parent { get; set; }
+			TreeItem? Parent { get; set; }
 		}
 
 		[Table("TreeItem")]

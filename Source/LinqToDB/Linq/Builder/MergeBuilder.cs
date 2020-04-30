@@ -102,9 +102,11 @@ namespace LinqToDB.Linq.Builder
 				var query = buildSequence.SelectQuery;
 				query     = RemoveContextFromQuery(clonedContext, query);
 
-				new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, query, query, 0, statement)
-					.FinalizeAndValidate(false, true);
-
+				//TODO: Why it is not handled by main optimizer
+				var sqlFlags = builder.DataContext.SqlProviderFlags;
+				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
+				
 				if (query.From.Tables.Count == 0)
 				{
 					result = query.Where.SearchCondition;

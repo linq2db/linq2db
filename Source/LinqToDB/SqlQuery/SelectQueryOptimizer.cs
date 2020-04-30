@@ -630,7 +630,7 @@ namespace LinqToDB.SqlQuery
 						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
 						var ignore  = new HashSet<IQueryElement> { join };
 						if (QueryHelper.IsDependsOn(_rootElement, sources, ignore) 
-						    || _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, ignore)))
+						|| _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, ignore)))
 						{
 							join.IsWeak = false;
 						}
@@ -954,7 +954,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var sources = new HashSet<ISqlTableSource> {tableSource.Source};
-				var ignore = new HashSet<IQueryElement>() {sql.Where};
+				var ignore  = new HashSet<IQueryElement>();
 				ignore.AddRange(QueryHelper.EnumerateJoins(sql).Select(j => j.Condition));
 
 				if (!QueryHelper.IsDependsOn(sql, sources, ignore))

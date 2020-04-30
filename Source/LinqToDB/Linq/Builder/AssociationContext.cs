@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using Mapping;
+	using SqlQuery;
+
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}, T: {BuildContextDebuggingHelper.GetContextInfo(TableContext)}")]
 	class AssociationContext : IBuildContext
 	{
@@ -16,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		public string Path => this.GetPath();
 #endif
 		public ExpressionBuilder Builder { get; }
-		public Expression? Expression { get; }
+		public Expression?       Expression { get; }
 
 		public SelectQuery SelectQuery
 		{
@@ -33,18 +35,20 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? Parent { get; set; }
 
-		public IBuildContext TableContext { get; }
-		public IBuildContext SubqueryContext { get; }
-		public SqlJoinedTable Join { get; }
+		public IBuildContext         TableContext    { get; }
+		public AssociationDescriptor Descriptor      { get; }
+		public IBuildContext         SubqueryContext { get; }
+		public SqlJoinedTable        Join            { get; }
 
-		public AssociationContext(ExpressionBuilder builder, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
+		public AssociationContext(ExpressionBuilder builder, AssociationDescriptor descriptor, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
 		{
-			Builder = builder;
-			TableContext = tableContext;
-			SubqueryContext = subqueryContext;
-			Join = join;
+			Builder                = builder;
+			Descriptor             = descriptor;
+			TableContext           = tableContext;
+			SubqueryContext        = subqueryContext;
+			Join                   = join;
 			SubqueryContext.Parent = this;
-			Parent = tableContext;
+			Parent                 = tableContext;
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)

@@ -664,19 +664,13 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					if (tableContext is AssociatedTableContext)
-					{
-						expr = Expression.Constant(null, ObjectType);
-					}
-					else
-					{
 					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null!, null!));
-					var dindex          =
-						(
-							from f in SqlTable.Fields.Values
-							where f.Name == InheritanceMapping[0].DiscriminatorName
-							select ConvertToParentIndex(_indexes[f].Index, this)
-						).First();
+					var dindex =
+					(
+						from f in SqlTable.Fields.Values
+						where f.Name == InheritanceMapping[0].DiscriminatorName
+						select ConvertToParentIndex(_indexes[f].Index, this)
+					).First();
 
 					expr = Expression.Convert(
 						Expression.Call(null, exceptionMethod,
@@ -686,7 +680,6 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(dindex)),
 							Expression.Constant(ObjectType)),
 						ObjectType);
-				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
@@ -1789,17 +1782,25 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									if (_collectionAssociationContexts == null || !_collectionAssociationContexts.TryGetValue(memberInto, out associatedContext))
+									if (AssociationsToSubQueries || _collectionAssociationContexts == null || !_collectionAssociationContexts.TryGetValue(memberInto, out associatedContext))
 									{
 										var newExpression = expression.Replace(levelExpression,
 											new ContextRefExpression(levelExpression.Type, this));
 
 										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-											new BuildInfo(Parent, newExpression, new SelectQuery()), this, descriptor,
+											new BuildInfo(Parent, newExpression, new SelectQuery()) 
+											, this, descriptor,
 											ref isOuter);
 
-										_collectionAssociationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
-										_collectionAssociationContexts.Add(memberInto, associatedContext);
+										if (!AssociationsToSubQueries)
+										{
+											_collectionAssociationContexts ??= new Dictionary<MemberInfo, IBuildContext>();
+											_collectionAssociationContexts.Add(memberInto, associatedContext);
+										}
+										else
+										{
+											associatedContext.SelectQuery.ParentSelect = SelectQuery;
+										}
 
 									}
 									var contextRef =
