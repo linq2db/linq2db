@@ -418,14 +418,18 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (update.NodeType == ExpressionType.Lambda)
+				{
+					var fieldsContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertStatement.Insert.Into);
 					UpdateBuilder.ParseSet(
 						builder,
 						buildInfo,
 						extract,
 						(LambdaExpression)update,
+						fieldsContext,
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
+				}				
 				else
 					UpdateBuilder.ParseSet(
 						builder,

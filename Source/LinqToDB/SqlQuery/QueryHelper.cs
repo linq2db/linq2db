@@ -10,6 +10,12 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryHelper
 	{
+
+		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
+		{
+			return null != new QueryVisitor().Find(testedRoot, e => e == element);
+		}
+
 		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
 			var dependencyFound = false;

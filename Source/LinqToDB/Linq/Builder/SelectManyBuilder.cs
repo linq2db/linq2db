@@ -53,12 +53,9 @@ namespace LinqToDB.Linq.Builder
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
-			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
-			var crossApply     = null != new QueryVisitor().Find(sql, e =>
-				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
-				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table!) ||
-				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent!));
+			var newQuery       = QueryHelper.ContainsElement(sql, collectionInfo.SelectQuery);
+			var sequenceTables = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(sequence.SelectQuery));
+			var crossApply     = QueryHelper.IsDependsOn(sql, sequenceTables);
 
 			if (collection is JoinBuilder.GroupJoinSubQueryContext queryContext)
 			{

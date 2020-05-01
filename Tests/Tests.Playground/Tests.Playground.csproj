@@ -15,6 +15,7 @@
 		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 		<Compile Include="..\Linq\Linq\ConvertExpressionTests.cs" Link="ConvertExpressionTests.cs" />
+		<Compile Include="..\Linq\Linq\CountTests.cs" Link="CountTests.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\Linq\ElementOperationTests.cs" Link="ElementOperationTests.cs" />
@@ -62,6 +63,7 @@
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1885Tests.cs" Link="Issue1885Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2008Tests.cs" Link="Issue2008Tests.cs" />
+		<Compile Include="..\Linq\UserTests\MultiPartIdentifierTests.cs" Link="MultiPartIdentifierTests.cs" />
 	</ItemGroup>
 
 </Project>

@@ -371,17 +371,18 @@ namespace LinqToDB.Linq.Builder
 			BuildInfo                       buildInfo,
 			LambdaExpression                extract,
 			LambdaExpression                update,
-			IBuildContext                   select,
+			IBuildContext                   fieldsContext,
+			IBuildContext                   valuesContext,
 			SqlTable?                       table,
 			List<SqlSetExpression> items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var sp     = select.Parent;
-			var ctx    = new ExpressionContext(buildInfo.Parent, select, extract);
-			var sql    = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
-			var field  = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+			var sp    = fieldsContext.Parent;
+			var ctx   = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
+			var sql   = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
+			var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
 			builder.ReplaceParent(ctx, sp);
 
 			if (sql.Length != 1)
@@ -389,8 +390,8 @@ namespace LinqToDB.Linq.Builder
 
 			var column = table != null && field != null ? table[field.Name] : sql[0].Sql;
 
-			sp       = select.Parent;
-			ctx      = new ExpressionContext(buildInfo.Parent, select, update);
+			sp       = valuesContext.Parent;
+			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
 			var expr = builder.ConvertToSqlExpression(ctx, update.Body);
 
 			builder.ReplaceParent(ctx, sp);
@@ -539,6 +540,7 @@ namespace LinqToDB.Linq.Builder
 						buildInfo,
 						extract,
 						(LambdaExpression)update,
+						sequence,
 						sequence,
 						updateStatement.Update.Table,
 						updateStatement.Update.Items);

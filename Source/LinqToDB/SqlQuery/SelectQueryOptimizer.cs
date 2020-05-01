@@ -771,18 +771,12 @@ namespace LinqToDB.SqlQuery
 
 			if (expr is SqlBinaryExpression e1)
 			{
-				if (e1.Operation.In("*", "+", "-"))
+				if (e1.Operation == "*" && e1.Expr1 is SqlValue)
 				{
-					var toCheck = e1.Expr1;
-					var isValue = e1.Expr2;
-					if (!(isValue is SqlValue))
-					{
-						isValue = e1.Expr2 as SqlValue;
-						toCheck = e1.Expr2;
-					}
+					var value = (SqlValue)e1.Expr1;
 
-					if (isValue != null)
-						return CheckColumn(column, toCheck, query, optimizeValues, optimizeColumns);
+					if (value.Value is int i && i == -1)
+						return CheckColumn(column, e1.Expr2, query, optimizeValues, optimizeColumns);
 				}
 			}
 
