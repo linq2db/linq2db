@@ -9,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Tools;
 
 	class UpdateBuilder : MethodCallBuilder
 	{
@@ -371,53 +372,26 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression                extract,
 			LambdaExpression                update,
 			IBuildContext                   select,
-			SqlTable                        table,
+			SqlTable?                       table,
 			List<SqlSetExpression> items)
 		{
-			var member = MemberHelper.GetMemberInfo(extract.Body);
-
+			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var rootObject = ext.GetRootObject(builder.MappingSchema);
-
-			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-				throw new LinqException("Member expression expected for the 'Set' statement.");
-
-			var body = ext is MemberExpression mex ? mex : Expression.MakeMemberAccess(rootObject, member);
-
-			if (member is MethodInfo)
-				member = ((MethodInfo)member).GetPropertyInfo();
-
-			var members = body.GetMembers();
-			var name    = members
-				.Skip(1)
-				.Select(ex =>
-				{
-					if (!(ex is MemberExpression me))
-						return null;
-
-					var m = me.Member;
-
-					if (m is MethodInfo)
-						m = ((MethodInfo)m).GetPropertyInfo();
-
-					return m;
-				})
-				.Where(m => m != null && !m.IsNullableValueMember())
-				.Select(m => m!.Name)
-				.Aggregate((s1,s2) => s1 + "." + s2);
-
-			if (table != null && !table.Fields.ContainsKey(name))
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, name);
-
-			var column = table != null ?
-				table.Fields[name] :
-				select.ConvertToSql(
-					body, 1, ConvertFlags.Field)[0].Sql;
-					//Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member), 1, ConvertFlags.Field)[0].Sql;
 			var sp     = select.Parent;
-			var ctx    = new ExpressionContext(buildInfo.Parent, select, update);
-			var expr   = builder.ConvertToSqlExpression(ctx, update.Body);
+			var ctx    = new ExpressionContext(buildInfo.Parent, select, extract);
+			var sql    = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
+			var field  = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+			builder.ReplaceParent(ctx, sp);
+
+			if (sql.Length != 1)
+				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+
+			var column = table != null && field != null ? table[field.Name] : sql[0].Sql;
+
+			sp       = select.Parent;
+			ctx      = new ExpressionContext(buildInfo.Parent, select, update);
+			var expr = builder.ConvertToSqlExpression(ctx, update.Body);
 
 			builder.ReplaceParent(ctx, sp);
 
@@ -566,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						updateStatement.Update.Table!,
+						updateStatement.Update.Table,
 						updateStatement.Update.Items);
 				else
 					ParseSet(

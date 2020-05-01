@@ -1360,16 +1360,16 @@ namespace LinqToDB.SqlProvider
 							if (tableToUpdate == null)
 							{
 								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-									.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-									.FirstOrDefault(t => t != null);
+									.OfType<SqlTable>()
+									.FirstOrDefault();
 							}
 
 							if (tableToUpdate == null)
 								throw new LinqToDBException("Can not decide which table to update");
 
 							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+								.OfType<SqlTable>()
+								.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 						}
 
 						break;
@@ -1379,8 +1379,8 @@ namespace LinqToDB.SqlProvider
 						if (tableToUpdate == null)
 						{
 							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
-								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-								.FirstOrDefault(t => t != null);
+								.OfType<SqlTable>()
+								.FirstOrDefault();
 
 							if (tableToUpdate == null)
 								throw new LinqToDBException("Can not decide which table to update");
@@ -1400,8 +1400,8 @@ namespace LinqToDB.SqlProvider
 
 						// return first matched table
 						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
-							.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-							.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+							.OfType<SqlTable>()
+							.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 
 						if (tableToCompare == null)
 							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
