@@ -611,12 +611,12 @@ namespace LinqToDB
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
-#endif		
+#endif
 		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent] RawSqlString sql,
-			params              object[]     parameters
+			[SqlQueryDependent]              RawSqlString sql,
+			[SqlQueryDependentParams] params object[]     parameters
 			)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");

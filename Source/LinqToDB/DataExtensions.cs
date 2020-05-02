@@ -946,7 +946,6 @@ namespace LinqToDB
 					}
 				}
 
-
 				return base.ExpressionsEqual(expr1, expr2, comparer);
 			}
 
@@ -1030,9 +1029,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                IDataContext dataContext,
-			[SqlQueryDependent] RawSqlString sql,
-			[SqlQueryDependent] params object?[] parameters)
+			this                             IDataContext dataContext,
+			[SqlQueryDependent]              RawSqlString sql,
+			[SqlQueryDependentParams] params object?[]    parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 

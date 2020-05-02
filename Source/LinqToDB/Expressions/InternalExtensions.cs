@@ -478,11 +478,27 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						var prevArg = expr1.Arguments[i];
-						if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(expr1.Arguments[i], out var nevValue))
-							prevArg = nevValue;
-						if (!dependentAttribute.ExpressionsEqual(prevArg, expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
-							return false;
+						var enum1 = dependentAttribute.SplitExpression(expr1.Arguments[i]).GetEnumerator();
+						var enum2 = dependentAttribute.SplitExpression(expr2.Arguments[i]).GetEnumerator();
+						using (enum1 as IDisposable)
+						using (enum2 as IDisposable)
+						{
+							while (enum1.MoveNext())
+							{
+								if (!enum2.MoveNext())
+									return false;
+
+								var arg1 = enum1.Current;
+								var arg2 = enum2.Current;
+								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
+									arg1 = nevValue;
+								if (!dependentAttribute.ExpressionsEqual(arg1, arg2, (e1, e2) => e1.EqualsTo(e2, info)))
+									return false;
+							}
+
+							if (enum2.MoveNext())
+								return false;
+						}
 					}
 					else
 					{

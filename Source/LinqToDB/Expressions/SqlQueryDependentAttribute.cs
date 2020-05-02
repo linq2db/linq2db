@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
@@ -61,7 +62,7 @@ namespace LinqToDB.Expressions
 		public virtual bool ExpressionsEqual(Expression expr1, Expression expr2,
 			Func<Expression, Expression, bool> comparer)
 		{
-			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
+			return comparer(expr1, expr2);
 		}
 
 		/// <summary>
@@ -72,6 +73,17 @@ namespace LinqToDB.Expressions
 		public virtual Expression PrepareForCache(Expression expression)
 		{
 			return Expression.Constant(expression.EvaluateExpression());
+		}
+
+		/// <summary>
+		/// Returns sub-expressions, if attribute applied to composite expression.
+		/// Default (non-composite) implementation returns <paramref name="expression"/>.
+		/// </summary>
+		/// <param name="expression">Expression to split.</param>
+		/// <returns>Passed expression of sub-expressions for composite expression.</returns>
+		public virtual IEnumerable<Expression> SplitExpression(Expression expression)
+		{
+			yield return expression;
 		}
 	}
 }

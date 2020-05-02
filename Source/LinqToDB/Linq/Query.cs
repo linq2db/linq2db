@@ -86,13 +86,16 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		internal void AddQueryDependedObject(Expression expr, SqlQueryDependentAttribute attr)
+		internal void AddQueryDependedObject(Expression expression, SqlQueryDependentAttribute attr)
 		{
-			if (_queryDependedObjects.ContainsKey(expr))
-				return;
+			foreach (var expr in attr.SplitExpression(expression))
+			{
+				if (_queryDependedObjects.ContainsKey(expr))
+					continue;
 
-			var prepared = attr.PrepareForCache(expr);
-			_queryDependedObjects.Add(expr, prepared);
+				var prepared = attr.PrepareForCache(expr);
+				_queryDependedObjects.Add(expr, prepared);
+			}
 		}
 
 		internal Expression GetIQueryable(int n, Expression expr)
