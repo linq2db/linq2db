@@ -35,10 +35,10 @@ namespace LinqToDB.Benchmarks
 		private static Job WithDefault(this Job job)
 		{
 			return job.WithJit(Jit.RyuJit)
-				.WithPlatform(Platform.X64)
-				.WithWarmupCount(2)
-				.WithMinIterationCount(3)
-				.WithMaxIterationCount(5);
+				.WithPlatform(Platform.X64);
+				//.WithWarmupCount(2)
+				//.WithMinIterationCount(3)
+				//.WithMaxIterationCount(6);
 		}
 
 		class FilteredColumnProvider : IColumnProvider

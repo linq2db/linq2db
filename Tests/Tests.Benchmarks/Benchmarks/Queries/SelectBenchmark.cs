@@ -11,7 +11,8 @@ namespace LinqToDB.Benchmarks.Queries
 {
 	public class SelectBenchmark
 	{
-		private int            _userId = 100500;
+		private const int      _iterations = 2;
+		private long           _userId = 100500;
 		private DataConnection _db     = null!;
 		private IDbConnection  _cn     = null!;
 		private Func<DataConnection, long, IQueryable<User>> _compiled = null!;
@@ -50,14 +51,17 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			User user = null!;
 
-			var query = from c in _db.GetTable<User>()
-						where c.Id == _userId
-						select c;
+			for (var i = 0; i < _iterations; i++)
+			{
+				var query = from c in _db.GetTable<User>()
+							where c.Id == _userId
+							select c;
 
-			foreach (var record in query)
-				user = record;
+				foreach (var record in query)
+					user = record;
+			}
 
-			return user;
+			return user!;
 		}
 
 		[Benchmark]
@@ -65,23 +69,64 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			User user = null!;
 
-			foreach (var record in _compiled(_db, _userId))
+			for (var i = 0; i < _iterations; i++)
+			{
+				foreach (var record in _compiled(_db, _userId))
+					user = record;
+			}
+
+			return user!;
+		}
+
+		[Benchmark]
+		public User FromSql_Interpolation()
+		{
+			User user = null!;
+
+			for (var i = 0; i < _iterations; i++)
+			{
+				var query = _db.FromSql<User>($"SELECT id, name, login_count FROM public.user_tbl WHERE id = {DataParameter.Int64("id", _userId)}");
+
+				foreach (var record in query)
+					user = record;
+			}
+
+			return user!;
+		}
+
+		[Benchmark]
+		public User FromSql_Formattable()
+		{
+			User user = null!;
+
+			for (var i = 0; i < _iterations; i++)
+			{
+				var query = _db.FromSql<User>("SELECT id, name, login_count FROM public.user_tbl WHERE id = {0}", DataParameter.Int64("id", _userId));
+
+				foreach (var record in query)
+					user = record;
+			}
+
+			return user!;
+		}
+
+		[Benchmark]
+		public User Query()
+		{
+			User user = null!;
+
+			var query = _db.Query<User>("SELECT id, name, login_count FROM public.user_tbl WHERE id = :id", DataParameter.Int64("id", _userId));
+
+			foreach (var record in query)
 				user = record;
 
 			return user;
 		}
 
 		[Benchmark]
-		public User FromSql()
+		public User Execute()
 		{
-			User user = null!;
-
-			var query = _db.Query<User>($"SELECT id, name, login_count FROM public.user_tbl WHERE id = {_userId}");
-
-			foreach (var record in query)
-				user = record;
-
-			return user;
+			return _db.Execute<User>("SELECT id, name, login_count FROM public.user_tbl WHERE id = :id", DataParameter.Int64("id", _userId));
 		}
 
 		// this test-case use most optimal approach without extra checks/loops intentionally
