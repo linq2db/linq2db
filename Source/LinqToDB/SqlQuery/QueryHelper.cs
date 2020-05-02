@@ -25,8 +25,14 @@ namespace LinqToDB.SqlQuery
 				if (dependencyFound)
 					return false;
 
-				if (e is ISqlTableSource source && onSources.Contains(source) || (elementsToIgnore != null && elementsToIgnore.Contains(e)))
+				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
 					return false;
+
+				if (e is ISqlTableSource source && onSources.Contains(source))
+				{
+					dependencyFound = true;
+					return false;
+				}
 
 				switch (e.ElementType)
 				{

@@ -1171,7 +1171,74 @@ namespace LinqToDB.Linq.Builder
 			Dictionary<MemberInfo, Tuple<IBuildContext, bool>>? _associationContexts;
 			Dictionary<MemberInfo, IBuildContext>? _collectionAssociationContexts;
 
-			public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+
+			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			{
+				if (expression == null)
+				{
+					if (buildInfo != null && buildInfo.IsSubQuery)
+					{
+						var table = new TableContext(
+							Builder,
+							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression!, buildInfo.SelectQuery),
+							SqlTable.ObjectType!);
+
+						return table;
+					}
+
+					return this;
+				}
+
+				if (buildInfo != null)
+				{
+
+					if (buildInfo.IsSubQuery)
+					{
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
+						    expression.NodeType == ExpressionType.Call)
+						{
+							var tableLevel  = FindContextExpression(expression, level, true, true)!;
+							
+							if (tableLevel.Descriptor!.IsList)
+							{
+								var ma     = expression.NodeType == ExpressionType.MemberAccess
+												? ((MemberExpression)buildInfo.Expression).Expression
+												: expression.NodeType == ExpressionType.Call
+												? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
+												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+
+								var elementType = tableLevel.Descriptor.GetElementType(Builder.MappingSchema);
+								var parentExactType = ma.Type;
+
+								var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
+									Builder, tableLevel.Descriptor, OriginalType, parentExactType, elementType,
+									false, false, GetLoadWith(), out _);
+								;
+								var expr   = queryMethod.GetBody(ma);
+
+								buildInfo.IsAssociationBuilt = true;
+
+								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+							}
+						}
+						else
+						{
+							var tableLevel  = FindContextExpression(expression, level, true, true)!;
+
+							var result = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, buildInfo);
+							if (result == null)
+								throw new LinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
+							return result;
+						}
+					}
+				}
+
+				throw new InvalidOperationException();
+			}
+
+			public virtual IBuildContext? GetContextNew(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (expression == null)
 				{
@@ -1235,7 +1302,7 @@ namespace LinqToDB.Linq.Builder
 					if (descriptor == null)
 						throw new LinqException($"Can not find association or expression {levelExpression}.");
 
-					if (_associationContexts != null && _associationContexts.ContainsKey(memberInto))
+					if (true || _associationContexts != null && _associationContexts.ContainsKey(memberInto))
 					{
 						// there already association defined, so start from that point
 						var tableLevel = FindContextExpression(expression, level, false, true)!;
