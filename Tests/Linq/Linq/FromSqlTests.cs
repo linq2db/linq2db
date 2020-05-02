@@ -12,6 +12,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture, Parallelizable(ParallelScope.None)]
@@ -452,5 +453,166 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestQueryCaching_Interpolated_DataParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			{
+				var qry1 = GetQuery(1, 114);
+				var qry2 = GetQuery(1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.True(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery(int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						$"SELECT * FROM {GetName(table)} where id >= {DataParameter.Int32("startId", startId)} and id < {DataParameter.Int32("endId", endId)}");
+				}
+			}
+		}
+
+		// TODO: right now we don't create parameter from endId, as expression compiler pass it by value
+		[Test]
+		public void TestQueryCaching_Interpolated_ValueParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			{
+				var qry1 = GetQuery(1, 114);
+				var qry2 = GetQuery(1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.False(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery(int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						$"SELECT * FROM {GetName(table)} where id >= {DataParameter.Int32("startId", startId)} and id < {endId}");
+				}
+			}
+		}
+
+		[Test]
+		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table1 = db.CreateLocalTable(GenerateTestData()))
+			using (var table2 = db.CreateLocalTable<SomeOtherClass>())
+			{
+				var qry1 = GetQuery(table1, 1, 114);
+				var qry2 = GetQuery(table2, 1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.False(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						$"SELECT * FROM {GetName(table)} where id >= {DataParameter.Int32("startId", startId)} and id < {DataParameter.Int32("endId", endId)}");
+				}
+			}
+		}
+
+		[Test]
+		public void TestQueryCaching_Format_DataParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			{
+				var qry1 = GetQuery(1, 114);
+				var qry2 = GetQuery(1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.True(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery(int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						"SELECT * FROM {0} where id >= {1} and id < {2}",
+						GetName(table),
+						DataParameter.Int32("startId", startId),
+						DataParameter.Int32("endId", endId));
+				}
+			}
+		}
+
+		[Test]
+		public void TestQueryCaching_Format_ValueParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			{
+				var qry1 = GetQuery(1, 114);
+				var qry2 = GetQuery(1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.False(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery(int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						"SELECT * FROM {0} where id >= {1} and id < {2}",
+						GetName(table),
+						DataParameter.Int32("startId", startId),
+						endId);
+				}
+			}
+		}
+
+		[Test]
+		public void TestQueryCaching_Format_BySqlExpressionParameter([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table1 = db.CreateLocalTable(GenerateTestData()))
+			using (var table2 = db.CreateLocalTable<SomeOtherClass>())
+			{
+				var qry1 = GetQuery(table1, 1, 114);
+				var qry2 = GetQuery(table2, 1, 115);
+
+				var expr1 = qry1.Expression;
+				var expr2 = qry2.Expression;
+
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+
+				Assert.False(ReferenceEquals(query1, query2));
+
+				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+				{
+					return db.FromSql<SampleClass>(
+						"SELECT * FROM {0} where id >= {1} and id < {2}",
+						GetName(table),
+						new DataParameter("startId", startId, DataType.Int32),
+						new DataParameter("endId", endId, DataType.Int32));
+				}
+			}
+		}
 	}
 }

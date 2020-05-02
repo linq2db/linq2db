@@ -928,6 +928,25 @@ namespace LinqToDB
 					return comparer(mc1.Arguments[1], mc2.Arguments[1]);
 				}
 
+				if (expr1.NodeType == ExpressionType.Constant)
+				{
+					var c1 = (ConstantExpression)expr1;
+					var c2 = (ConstantExpression)expr2;
+
+					if (c1.Value is FormattableString str1 && c2.Value is FormattableString str2)
+					{
+						if (str1.Format != str2.Format || str1.ArgumentCount != str2.ArgumentCount)
+							return false;
+
+						for (var i = 0; i < str1.ArgumentCount; i++)
+							if (!comparer(Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
+								return false;
+
+						return true;
+					}
+				}
+
+
 				return base.ExpressionsEqual(expr1, expr2, comparer);
 			}
 
