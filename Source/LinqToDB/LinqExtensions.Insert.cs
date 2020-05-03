@@ -35,7 +35,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
-					new[] { query.Expression, Expression.Quote(setter) }));
+					query.Expression, Expression.Quote(setter)));
 
 			return items.AsEnumerable().First();
 		}
@@ -62,7 +62,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
-					new[] { query.Expression, Expression.Quote(setter) }));
+					query.Expression, Expression.Quote(setter)));
 
 			return items.AsAsyncEnumerable().FirstAsync(token);
 
@@ -88,7 +88,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					new[] { query.Expression, Expression.Constant(obj) }));
+					query.Expression, Expression.Constant(obj)));
 
 			return items.AsEnumerable().First();
 		}
@@ -115,7 +115,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					new[] { query.Expression, Expression.Constant(obj) }));
+					query.Expression, Expression.Constant(obj)));
 
 			return items.AsAsyncEnumerable().FirstOrDefaultAsync(token);
 		}
@@ -145,7 +145,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					new[] { query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression) }));
+					query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
 
 			return items.AsEnumerable().First();
 		}
@@ -178,7 +178,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					new[] { query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression) }));
+					query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
 
 			return items.AsAsyncEnumerable().FirstAsync(token);
 		}
@@ -206,7 +206,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
-					new[] { query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression }));
+					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression));
 		}
 
 		/// <summary>
@@ -234,7 +234,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
-					new[] { query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression });
+					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression);
 
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);

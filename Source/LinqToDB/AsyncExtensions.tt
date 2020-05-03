@@ -117,7 +117,7 @@ namespace LinqToDB
 					Expression.Call(
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<<#= info.SParam #>><#= paramType #>,<#= info.RetType #>>(Queryable.<#= info.Method #>), source<#= paramName #>),
-						arguments: new Expression[<#= exprCount #>] { source.Expression<#= paramExpr #> }) as Expression,
+						source.Expression<#= paramExpr #>) as Expression,
 					token);
 			}
 

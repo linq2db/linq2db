@@ -885,7 +885,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
-					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
+					cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)));
 		}
 
 		/// <summary>
@@ -998,7 +998,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql)}));
+					Expression.Constant(dataContext), Expression.Constant(sql)));
 		}
 #endif
 
@@ -1041,7 +1041,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql), Expression.Constant(parameters)}));
+					Expression.Constant(dataContext), Expression.Constant(sql), Expression.Constant(parameters)));
 		}
 
 		#endregion
@@ -1089,7 +1089,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
-					new Expression[] { Expression.Constant(dataContext), Expression.Quote(selector) }));
+					Expression.Constant(dataContext), Expression.Quote(selector)));
 		}
 
 

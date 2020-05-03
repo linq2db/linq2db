@@ -546,7 +546,7 @@ namespace LinqToDB.Expressions
 			var prop = Expression.Property(path, property);
 			var i    = 0;
 			foreach (var item in source)
-				func(item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, new Expression[] { Expression.Constant(i++) }));
+				func(item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, Expression.Constant(i++)));
 		}
 
 		static void Path<T>(PathInfo info, IEnumerable<T> source, Expression path, MethodInfo property)

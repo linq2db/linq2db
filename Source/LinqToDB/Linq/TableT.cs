@@ -49,7 +49,7 @@ namespace LinqToDB.Linq
 					Expression = Expression.Call(
 						null,
 						_serverNameMethodInfo ?? (_serverNameMethodInfo = LinqExtensions.ServerNameMethodInfo.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						Expression, Expression.Constant(value));
 
 					_serverName = value;
 				}
@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 					Expression = Expression.Call(
 						null,
 						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						Expression, Expression.Constant(value));
 
 					_databaseName = value;
 				}
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq
 					Expression = Expression.Call(
 						null,
 						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						Expression, Expression.Constant(value));
 
 					_schemaName = value;
 				}
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq
 					Expression = Expression.Call(
 						null,
 						_tableNameMethodInfo ?? (_tableNameMethodInfo = Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						Expression, Expression.Constant(value));
 
 					_tableName = value;
 				}
