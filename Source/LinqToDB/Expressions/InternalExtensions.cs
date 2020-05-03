@@ -434,12 +434,11 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			var parameters = expr1.Method.GetParameters();
-
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
 				expr1.Method, mi =>
 				{
-					var arr = parameters
+					var arr = mi
+						.GetParameters()
 						.Select(p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
 						.ToArray();
 
