@@ -13,24 +13,24 @@ Jit=RyuJit  Platform=X64
 ```
 |                Method |       Runtime |         Mean |       Median |    Ratio |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-------------- |-------------:|-------------:|---------:|-------:|------:|------:|----------:|
-|                  Linq |    .NET 4.6.2 | 112,518.3 ns |  84,991.3 ns |   591.51 |      - |     - |     - |   16384 B |
-|              Compiled |    .NET 4.6.2 |  36,272.5 ns |  30,719.8 ns |   226.53 |      - |     - |     - |         - |
-| FromSql_Interpolation |    .NET 4.6.2 | 121,640.8 ns |  91,866.7 ns |   575.42 |      - |     - |     - |         - |
-|   FromSql_Formattable |    .NET 4.6.2 | 154,965.2 ns | 136,337.2 ns |   943.73 |      - |     - |     - |         - |
-|                 Query |    .NET 4.6.2 |     565.0 ns |     564.4 ns |     2.99 | 0.1087 |     - |     - |     457 B |
-|               Execute |    .NET 4.6.2 |     509.5 ns |     509.6 ns |     2.69 | 0.0839 |     - |     - |     353 B |
-|             RawAdoNet |    .NET 4.6.2 |     189.7 ns |     189.9 ns |     1.00 | 0.0439 |     - |     - |     185 B |
-|                  Linq | .NET Core 2.1 | 133,078.1 ns | 105,617.5 ns |   739.17 |      - |     - |     - |    9016 B |
-|              Compiled | .NET Core 2.1 |  27,228.9 ns |  23,113.0 ns |   174.79 |      - |     - |     - |         - |
-| FromSql_Interpolation | .NET Core 2.1 |  65,871.8 ns |  56,173.3 ns |   347.34 |      - |     - |     - |         - |
-|   FromSql_Formattable | .NET Core 2.1 |  69,683.5 ns |  59,245.3 ns |   364.61 |      - |     - |     - |         - |
-|                 Query | .NET Core 2.1 |     504.2 ns |     497.5 ns |     2.67 | 0.1040 |     - |     - |     440 B |
-|               Execute | .NET Core 2.1 |     442.0 ns |     440.1 ns |     2.33 | 0.0801 |     - |     - |     336 B |
-|             RawAdoNet | .NET Core 2.1 |     127.7 ns |     127.6 ns |     0.67 | 0.0379 |     - |     - |     160 B |
-|                  Linq | .NET Core 3.1 | 236,650.3 ns | 162,522.2 ns | 1,493.44 |      - |     - |     - |    8904 B |
-|              Compiled | .NET Core 3.1 |  44,452.4 ns |  37,448.9 ns |   259.75 |      - |     - |     - |         - |
-| FromSql_Interpolation | .NET Core 3.1 |  21,784.8 ns |  21,819.0 ns |   115.22 | 1.4648 |     - |     - |    6161 B |
-|   FromSql_Formattable | .NET Core 3.1 |  26,217.7 ns |  25,866.7 ns |   136.11 | 1.6174 |     - |     - |    6848 B |
-|                 Query | .NET Core 3.1 |     547.8 ns |     543.6 ns |     2.90 | 0.1049 |     - |     - |     440 B |
-|               Execute | .NET Core 3.1 |     433.3 ns |     422.7 ns |     2.29 | 0.0801 |     - |     - |     336 B |
-|             RawAdoNet | .NET Core 3.1 |     123.1 ns |     123.1 ns |     0.65 | 0.0381 |     - |     - |     160 B |
+|                  Linq |    .NET 4.6.2 | 213,476.0 ns | 170,567.8 ns | 1,066.09 |      - |     - |     - |   16384 B |
+|              Compiled |    .NET 4.6.2 |  45,068.7 ns |  38,326.6 ns |   218.48 |      - |     - |     - |         - |
+| FromSql_Interpolation |    .NET 4.6.2 | 144,864.4 ns | 122,879.1 ns |   679.97 |      - |     - |     - |         - |
+|   FromSql_Formattable |    .NET 4.6.2 |  96,057.2 ns |  79,286.3 ns |   507.39 |      - |     - |     - |         - |
+|                 Query |    .NET 4.6.2 |     609.5 ns |     597.7 ns |     3.23 | 0.1011 |     - |     - |     425 B |
+|               Execute |    .NET 4.6.2 |     512.6 ns |     512.8 ns |     2.70 | 0.0763 |     - |     - |     321 B |
+|             RawAdoNet |    .NET 4.6.2 |     189.6 ns |     189.3 ns |     1.00 | 0.0439 |     - |     - |     185 B |
+|                  Linq | .NET Core 2.1 | 162,525.2 ns | 124,488.2 ns | 1,018.05 |      - |     - |     - |    8616 B |
+|              Compiled | .NET Core 2.1 |  28,980.2 ns |  22,235.3 ns |   229.00 |      - |     - |     - |         - |
+| FromSql_Interpolation | .NET Core 2.1 |  76,414.6 ns |  53,247.6 ns |   315.59 |      - |     - |     - |         - |
+|   FromSql_Formattable | .NET Core 2.1 |  87,761.6 ns |  71,533.2 ns |   496.18 |      - |     - |     - |         - |
+|                 Query | .NET Core 2.1 |     490.9 ns |     489.4 ns |     2.60 | 0.0963 |     - |     - |     408 B |
+|               Execute | .NET Core 2.1 |     449.9 ns |     445.3 ns |     2.34 | 0.0725 |     - |     - |     304 B |
+|             RawAdoNet | .NET Core 2.1 |     138.1 ns |     135.6 ns |     0.73 | 0.0379 |     - |     - |     160 B |
+|                  Linq | .NET Core 3.1 | 234,824.9 ns | 181,100.3 ns | 1,480.60 |      - |     - |     - |    8520 B |
+|              Compiled | .NET Core 3.1 |  54,804.9 ns |  45,055.7 ns |   313.64 |      - |     - |     - |         - |
+| FromSql_Interpolation | .NET Core 3.1 |  21,260.7 ns |  20,839.1 ns |   111.11 | 1.3428 |     - |     - |    5696 B |
+|   FromSql_Formattable | .NET Core 3.1 | 124,917.6 ns |  90,696.5 ns |   813.86 |      - |     - |     - |         - |
+|                 Query | .NET Core 3.1 |     530.5 ns |     515.1 ns |     2.66 | 0.0973 |     - |     - |     408 B |
+|               Execute | .NET Core 3.1 |     423.9 ns |     422.9 ns |     2.25 | 0.0725 |     - |     - |     304 B |
+|             RawAdoNet | .NET Core 3.1 |     130.8 ns |     127.0 ns |     0.73 | 0.0381 |     - |     - |     160 B |

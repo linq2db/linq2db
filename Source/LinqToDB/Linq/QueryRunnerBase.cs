@@ -20,7 +20,7 @@ namespace LinqToDB.Linq
 
 		protected readonly Query    Query;
 
-		protected List<string>      QueryHints = new List<string>();
+		protected List<string>?     QueryHints;
 
 		public IDataContext         DataContext      { get; set; }
 		public Expression           Expression       { get; set; }
@@ -55,6 +55,9 @@ namespace LinqToDB.Linq
 
 					queryContext.QueryHints = new List<string>(DataContext.QueryHints);
 					queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+
+					if (QueryHints == null)
+						QueryHints = new List<string>(DataContext.QueryHints.Count + DataContext.NextQueryHints.Count);
 
 					QueryHints.AddRange(DataContext.QueryHints);
 					QueryHints.AddRange(DataContext.NextQueryHints);
