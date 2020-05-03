@@ -523,7 +523,6 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 		}
 
-		[ActiveIssue(1906)]
 		[Test]
 		public void Issue1906Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{

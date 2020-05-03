@@ -812,8 +812,13 @@ namespace LinqToDB.SqlQuery
 			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
-			if (isQueryOK && parentJoin != JoinType.Inner)
-				isQueryOK = query.From.Tables[0].Joins.Count == 0;
+			if (isQueryOK && parentJoin != JoinType.Inner && query.From.Tables[0].Joins.Count > 0)
+			{
+				if (parentJoin == JoinType.Left)
+					isQueryOK = query.From.Tables[0].Joins.All(j => j.JoinType == JoinType.Left);
+				else
+					isQueryOK = false;
+			}
 
 			if (!isQueryOK)
 				return childSource;
