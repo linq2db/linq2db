@@ -177,19 +177,28 @@ namespace LinqToDB.Linq
 		{
 			if (_preambles == null)
 				return null;
-			return _preambles.Select(p => p.Item1(dc)).ToArray();
+
+			var preambules = new object?[_preambles.Length];
+			for (var i = 0; i < preambules.Length; i++)
+			{
+				preambules[i] = _preambles[i].Item1(dc);
+			}
+
+			return preambules;
 		}
 
 		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
 		{
 			if (_preambles == null)
 				return null;
-			var result = new List<object?>();
-			foreach (var p in _preambles)
+
+			var preambules = new object?[_preambles.Length];
+			for (var i = 0; i < preambules.Length; i++)
 			{
-				result.Add(await p.Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				preambules[i] = await _preambles[i].Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
-			return result.ToArray();
+
+			return preambules;
 		}
 
 		#endregion
