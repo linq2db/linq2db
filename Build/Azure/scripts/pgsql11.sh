@@ -1,9 +1,16 @@
 #!/bin/bash
 #docker pull postgres:11
 docker run -d --name pgsql --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:11
-until docker exec pgsql psql -U postgres -c '\l'; do
->&2 echo "Postgres is unavailable - sleeping"
-sleep 1
+
+retries=0
+until docker exec pgsql psql -U postgres -c '\l' | grep -q 'testdata'; do
+    sleep 1
+    retries=`expr $retries + 1`
+    docker exec pgsql psql -U postgres -c 'create database testdata'
+    if [ $retries -gt 100 ]; then
+        echo postgres not started or database failed to create
+        exit 1
+    fi;
 done
-docker exec pgsql psql -U postgres -c 'create database testdata'
-docker exec pgsql psql -U postgres -c '\l'
+
+docker logs pgsql
