@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using LinqToDB.Common;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
@@ -27,6 +29,9 @@ namespace LinqToDB.Expressions
 			// if both null, ReferenceEquals will return true
 			if (obj1 == null || obj2 == null)
 				return false;
+
+			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
+				return str1.Format == str2.Format;
 
 			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{

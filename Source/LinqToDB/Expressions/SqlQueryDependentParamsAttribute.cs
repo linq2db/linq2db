@@ -11,6 +11,13 @@ namespace LinqToDB.Expressions
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class SqlQueryDependentParamsAttribute : SqlQueryDependentAttribute
 	{
+		public override bool ExpressionsEqual(Expression expr1, Expression expr2, Func<Expression, Expression, bool> comparer)
+		{
+			if (expr1 is ConstantExpression c1 && expr2 is ConstantExpression c2)
+				return comparer(c1, c2);
+
+			return base.ExpressionsEqual(expr1, expr2, comparer);
+		}
 		public override IEnumerable<Expression> SplitExpression(Expression expression)
 		{
 			var val = expression.EvaluateExpression();

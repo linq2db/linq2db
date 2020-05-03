@@ -454,7 +454,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Interpolated_DataParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -480,7 +480,7 @@ namespace Tests.Linq
 
 		// TODO: right now we don't create parameter from endId, as expression compiler pass it by value
 		[Test]
-		public void TestQueryCaching_Interpolated_ValueParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -505,7 +505,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table1 = db.CreateLocalTable(GenerateTestData()))
@@ -531,7 +531,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_DataParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -559,7 +559,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_ValueParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_ValueParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -587,7 +587,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_BySqlExpressionParameter([DataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_BySqlExpressionParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table1 = db.CreateLocalTable(GenerateTestData()))
