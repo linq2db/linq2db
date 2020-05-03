@@ -121,6 +121,8 @@ namespace Tests.Playground
 				
 				var resultNotFiltered = query.ToArray();
 
+				var ignored = query.IgnoreFilters().ToArray();
+
 				// var queryDetails = from m in db.GetTable<MasterClass>()
 				// 	select new
 				// 	{

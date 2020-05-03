@@ -74,6 +74,9 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo ThenLoadMultiple     = MemberHelper.MethodOfGeneric<LinqExtensions.ILoadWithQueryable<object, IEnumerable<string>>>(q => q.ThenLoad(s => s.Length));
 			public static readonly MethodInfo ThenLoadMultipleFunc = MemberHelper.MethodOfGeneric<LinqExtensions.ILoadWithQueryable<object, IEnumerable<string>>>(q => q.ThenLoad(s => new string [0], qq => qq.Where(_ => true)));
 
+			public static readonly MethodInfo RemoveOrderBy       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
+			public static readonly MethodInfo IgnoreFilters       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
+
 			public static class Table
 			{
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName(null!));

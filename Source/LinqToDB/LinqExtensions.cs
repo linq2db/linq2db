@@ -3340,6 +3340,31 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Query Filters
+
+		/// <summary>
+		/// Disables Query Filters in current query.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="entityTypes">Optional types with which filters should be disabled.</param>
+		/// <returns>Query with disabled filters.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] params Type[] entityTypes)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(IgnoreFilters, source, entityTypes), currentSource.Expression, Expression.Constant(entityTypes)));
+		}
+
+		#endregion
+
 		#region Tests
 
 		/// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -125,6 +126,29 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
+		IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, TableContext tableContext)
+		{
+			var entityType = tableContext.ObjectType;
+			if (builder.IsFilterDisabled(entityType))
+				return tableContext;
+
+			var ed = builder.MappingSchema.GetEntityDescriptor(entityType);
+			var filterFunc = ed.QueryFilterFunc;
+			if (filterFunc == null)
+				return tableContext;
+
+			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
+
+			var queryType = typeof(ExpressionQueryImpl<>).MakeGenericType(entityType);
+			var query     = Activator.CreateInstance(queryType, builder.DataContext, refExpression);
+
+			var filtered  = (IQueryable)filterFunc.DynamicInvoke(query, builder.DataContext);
+
+			var ctx = builder.BuildSequence(new BuildInfo(buildInfo, filtered.Expression));
+			return ctx;
+
+		}
+
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var type = FindBuildContext(builder, buildInfo, out var parentContext);
@@ -134,27 +158,15 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.None                   : return null;
 				case BuildContextType.TableConstant:
 					{
-						var queryExpression = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
-						var tableContext    = new TableContext(builder, buildInfo, queryExpression.ElementType);
-
-						var ed = builder.MappingSchema.GetEntityDescriptor(queryExpression.ElementType);
-						var filterFunc = ed.QueryFilterFunc;
-						if (filterFunc != null)
-						{
-							var filtered = (IQueryable)filterFunc.DynamicInvoke(queryExpression, builder.DataContext);
-
-							var refExpression = new ContextRefExpression(queryExpression.GetType(), tableContext);
-							var filteredExpr = filtered.Expression.Transform(e =>
-								e == queryExpression.Expression ? refExpression : e);
-								
-							var ctx = builder.BuildSequence(new BuildInfo(buildInfo, filteredExpr));
-							return ctx;
-						}
-					
-						return tableContext;
+						return ApplyQueryFilters(builder, buildInfo, 
+							new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType));
 					}
 				case BuildContextType.GetTableMethod         :
-				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+				case BuildContextType.MemberAccess           :
+					{
+						return ApplyQueryFilters(builder, buildInfo, new TableContext(builder, buildInfo, 
+							buildInfo.Expression.Type.GetGenericArguments()[0]));
+					}
 				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);

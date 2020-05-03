@@ -3350,25 +3350,31 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		readonly Dictionary<Expression, Tuple<CteClause,IBuildContext?>> _ctes = new Dictionary<Expression, Tuple<CteClause,IBuildContext?>>(new ExpressionEqualityComparer());
-		readonly Dictionary<IQueryable, Expression> _ctesObjectMapping = new Dictionary<IQueryable, Expression>();
+		Dictionary<Expression, Tuple<CteClause,IBuildContext?>>? _ctes;
+		Dictionary<IQueryable, Expression>?                      _ctesObjectMapping;
 
 		public Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
-			if (cteExpression != null && queryable != null && !_ctesObjectMapping.ContainsKey(queryable))
+			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
 			{
+				_ctesObjectMapping ??= new Dictionary<IQueryable, Expression>();
+
 				_ctesObjectMapping.Add(queryable, cteExpression);
 			}
 
 			if (cteExpression == null)
 			{
+				if (_ctesObjectMapping == null)
+					throw new InvalidOperationException();
 				cteExpression = _ctesObjectMapping[queryable!];
 			}
 
-			if (!_ctes.TryGetValue(cteExpression, out var value))
+			if (_ctes == null || !_ctes.TryGetValue(cteExpression, out var value))
 			{
 				var cte = buildFunc();
 				value = Tuple.Create<CteClause, IBuildContext?>(cte, null);
+
+				_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
 				_ctes.Add(cteExpression, value);
 			}
 
@@ -3377,11 +3383,14 @@ namespace LinqToDB.Linq.Builder
 
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
-			if (_ctes.TryGetValue(cteExpression, out var value))
+			Tuple<CteClause, IBuildContext?>? value = null;
+			if (_ctes != null && _ctes.TryGetValue(cteExpression, out value))
 				if (value.Item2 != null)
 					return value;
 
 			value = buildFunc(value?.Item1);
+
+			_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
 			_ctes.Remove(cteExpression);
 			_ctes.Add(cteExpression, value);
 			return value;
@@ -3389,7 +3398,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetCteContext(Expression cteExpression)
 		{
-			if (_ctes.TryGetValue(cteExpression, out var value))
+			if (_ctes != null && _ctes.TryGetValue(cteExpression, out var value))
 				return value.Item2;
 			return null;
 		}
@@ -3415,25 +3424,31 @@ namespace LinqToDB.Linq.Builder
 
 		#region Query Filter
 
-		private Dictionary<Expression, IBuildContext>? _filteringTables;
+		private Stack<Type[]>? _disabledFilters;
 
-		public void AddExpressionTableContext(Expression tableExpression, IBuildContext context)
+		public void AddDisabledQueryFilters(Type[]? disabledFilters)
 		{
-			if (_filteringTables == null)
-				_filteringTables = new Dictionary<Expression, IBuildContext>();
-			_filteringTables.Add(tableExpression, context);
+			if (_disabledFilters == null)
+				_disabledFilters = new Stack<Type[]>();
+			_disabledFilters.Push(disabledFilters);
 		}
 
-		public IBuildContext? GetExpressionTableContext(Expression tableExpression)
+		public bool IsFilterDisabled(Type entityType)
 		{
-			if (_filteringTables != null && _filteringTables.TryGetValue(tableExpression, out var context))
-				return context;
-			return null;
+			if (_disabledFilters == null || _disabledFilters.Count == 0)
+				return false;
+			var filter = _disabledFilters.Peek();
+			if (filter.Length == 0)
+				return true;
+			return Array.IndexOf(filter, entityType) >= 0;
 		}
 
-		public void RemoveExpressionTableContext(Expression tableExpression)
+		public void RemoveDisabledFilter()
 		{
-			_filteringTables?.Remove(tableExpression);
+			if (_disabledFilters == null)
+				throw new InvalidOperationException();
+
+			_ = _disabledFilters.Pop();
 		}
 
 		#endregion

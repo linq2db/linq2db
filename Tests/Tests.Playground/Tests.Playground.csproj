@@ -64,6 +64,7 @@
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1885Tests.cs" Link="Issue1885Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2008Tests.cs" Link="Issue2008Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue421.cs" Link="Issue421.cs" />
 		<Compile Include="..\Linq\UserTests\MultiPartIdentifierTests.cs" Link="MultiPartIdentifierTests.cs" />
 	</ItemGroup>
 

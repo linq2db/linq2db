@@ -6,22 +6,20 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
-	class RemoveOrderByBuilder : MethodCallBuilder
+	class IgnoreFiltersBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(Methods.LinqToDB.RemoveOrderBy);
+			return methodCall.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var types = (Type[])methodCall.Arguments[1].EvaluateExpression()!;
 
-			if (sequence.SelectQuery.Select.TakeValue == null &&
-			    sequence.SelectQuery.Select.SkipValue == null)
-			{
-				sequence.SelectQuery.OrderBy.Items.Clear();
-			}
+			builder.AddDisabledQueryFilters(types);
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			builder.RemoveDisabledFilter();
 
 			return sequence;
 		}
