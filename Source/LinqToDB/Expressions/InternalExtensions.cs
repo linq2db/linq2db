@@ -20,7 +20,7 @@ namespace LinqToDB.Expressions
 	{
 		#region IsConstant
 
-		public static bool IsConstantable(this Type type)
+		public static bool IsConstantable(this Type type, bool includingArrays = true)
 		{
 			if (type.IsEnum)
 				return true;
@@ -44,10 +44,10 @@ namespace LinqToDB.Expressions
 			}
 
 			if (type.IsNullable())
-				return type.GetGenericArguments()[0].IsConstantable();
+				return type.GetGenericArguments()[0].IsConstantable(includingArrays);
 
-			if (type.IsArray)
-				return type.GetElementType().IsConstantable();
+			if (includingArrays && type.IsArray)
+				return type.GetElementType().IsConstantable(includingArrays);
 
 			return false;
 		}
