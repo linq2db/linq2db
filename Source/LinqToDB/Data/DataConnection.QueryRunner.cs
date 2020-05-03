@@ -203,7 +203,7 @@ namespace LinqToDB.Data
 				};
 			}
 
-			static void GetParameters(DataConnection dataConnection, IQueryContext query, PreparedQuery pq)
+			static void GetParameters(DataConnection dataConnection, PreparedQuery pq)
 			{
 				if (pq.SqlParameters.Count == 0)
 					return;
@@ -247,7 +247,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery = GetCommand(dataConnection, queryContext, startIndent);
 
-				GetParameters(dataConnection, queryContext, preparedQuery);
+				GetParameters(dataConnection, preparedQuery);
 
 				return preparedQuery;
 			}
@@ -331,7 +331,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery = GetCommand(dataConnection, context);
 
-				GetParameters(dataConnection, context, preparedQuery);
+				GetParameters(dataConnection, preparedQuery);
 
 				return ExecuteNonQueryImpl(dataConnection, preparedQuery);
 			}
@@ -383,7 +383,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery = GetCommand(dataConnection, context);
 
-				GetParameters(dataConnection, context, preparedQuery);
+				GetParameters(dataConnection, preparedQuery);
 
 				var hasParameters = preparedQuery.Parameters?.Length > 0;
 
@@ -410,7 +410,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery = GetCommand(dataConnection, context);
 
-				GetParameters(dataConnection, context, preparedQuery);
+				GetParameters(dataConnection, preparedQuery);
 
 				var hasParameters = preparedQuery.Parameters?.Length > 0;
 
