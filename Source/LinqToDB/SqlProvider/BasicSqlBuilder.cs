@@ -3313,28 +3313,25 @@ namespace LinqToDB.SqlProvider
 			ValueToSqlConverter.Convert(sb, parameter.Value);
 		}
 
-		public virtual StringBuilder PrintParameters(StringBuilder sb, IDbDataParameter[] parameters)
+		public virtual StringBuilder PrintParameters(StringBuilder sb, IEnumerable<IDbDataParameter> parameters)
 		{
-			if (parameters != null && parameters.Length > 0)
+			foreach (var p in parameters)
 			{
-				foreach (var p in parameters)
-				{
-					sb.Append("DECLARE ");
-					PrintParameterName(sb, p);
-					sb.Append(' ');
-					PrintParameterType(sb, p);
-					sb.AppendLine();
+				sb.Append("DECLARE ");
+				PrintParameterName(sb, p);
+				sb.Append(' ');
+				PrintParameterType(sb, p);
+				sb.AppendLine();
 
-					sb.Append("SET     ");
-					PrintParameterName(sb, p);
-					sb.Append(" = ");
-					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
-						sb.Append(p.Value);
-					sb.AppendLine();
-				}
-
+				sb.Append("SET     ");
+				PrintParameterName(sb, p);
+				sb.Append(" = ");
+				if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+					sb.Append(p.Value);
 				sb.AppendLine();
 			}
+
+			sb.AppendLine();
 
 			return sb;
 		}

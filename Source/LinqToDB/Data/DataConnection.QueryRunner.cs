@@ -138,12 +138,12 @@ namespace LinqToDB.Data
 
 			public class PreparedQuery
 			{
-				public string[]           Commands      = null!;
-				public List<SqlParameter> SqlParameters = null!;
-				public IDbDataParameter[] Parameters    = null!;
-				public SqlStatement       Statement     = null!;
-				public ISqlBuilder        SqlProvider   = null!;
-				public List<string>?      QueryHints;
+				public string[]                        Commands      = null!;
+				public List<SqlParameter>              SqlParameters = null!;
+				public IReadOnlyList<IDbDataParameter> Parameters    = null!;
+				public SqlStatement                    Statement     = null!;
+				public ISqlBuilder                     SqlProvider   = null!;
+				public List<string>?                   QueryHints;
 			}
 
 			PreparedQuery? _preparedQuery;
@@ -210,17 +210,17 @@ namespace LinqToDB.Data
 
 				var parms = new List<IDbDataParameter>(pq.SqlParameters.Count);
 
-					for (var i = 0; i < pq.SqlParameters.Count; i++)
-					{
-						var sqlp = pq.SqlParameters[i];
+				for (var i = 0; i < pq.SqlParameters.Count; i++)
+				{
+					var sqlp = pq.SqlParameters[i];
 
-						if (sqlp.IsQueryParameter)
-						{
-							AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
-						}
+					if (sqlp.IsQueryParameter)
+					{
+						AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
+					}
 				}
 
-				pq.Parameters = parms.ToArray();
+				pq.Parameters = parms;
 			}
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
@@ -261,7 +261,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
@@ -276,7 +276,7 @@ namespace LinqToDB.Data
 			{
 				if (preparedQuery.Commands.Length == 1)
 				{
-					var hasParameters = preparedQuery.Parameters?.Length > 0;
+					var hasParameters = preparedQuery.Parameters?.Count > 0;
 
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
@@ -291,7 +291,7 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < preparedQuery.Commands.Length; i++)
 				{
-					var hasParameters = i == 0 && preparedQuery.Parameters?.Length > 0;
+					var hasParameters = i == 0 && preparedQuery.Parameters?.Count > 0;
 
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null, hasParameters);
 
@@ -385,7 +385,7 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, preparedQuery);
 
-				var hasParameters = preparedQuery.Parameters?.Length > 0;
+				var hasParameters = preparedQuery.Parameters?.Count > 0;
 
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
@@ -412,7 +412,7 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, preparedQuery);
 
-				var hasParameters = preparedQuery.Parameters?.Length > 0;
+				var hasParameters = preparedQuery.Parameters?.Count > 0;
 
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
@@ -427,7 +427,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
@@ -472,7 +472,7 @@ namespace LinqToDB.Data
 
 				base.SetCommand(true);
 
-				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
@@ -495,7 +495,7 @@ namespace LinqToDB.Data
 
 				if (_preparedQuery!.Commands.Length == 1)
 				{
-					var hasParameters = _preparedQuery.Parameters?.Length > 0;
+					var hasParameters = _preparedQuery.Parameters?.Count > 0;
 
 					_dataConnection.InitCommand(
 						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, hasParameters);
@@ -509,7 +509,7 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
 				{
-					var hasParameters = i == 0 && _preparedQuery.Parameters?.Length > 0;
+					var hasParameters = i == 0 && _preparedQuery.Parameters?.Count > 0;
 
 					_dataConnection.InitCommand(
 						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, hasParameters);
