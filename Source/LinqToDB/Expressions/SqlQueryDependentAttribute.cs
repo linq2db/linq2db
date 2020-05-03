@@ -62,7 +62,7 @@ namespace LinqToDB.Expressions
 		public virtual bool ExpressionsEqual(Expression expr1, Expression expr2,
 			Func<Expression, Expression, bool> comparer)
 		{
-			return comparer(expr1, expr2);
+			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
 		}
 
 		/// <summary>
