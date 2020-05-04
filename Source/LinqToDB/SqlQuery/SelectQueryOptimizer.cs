@@ -814,10 +814,7 @@ namespace LinqToDB.SqlQuery
 
 			if (isQueryOK && parentJoin != JoinType.Inner && query.From.Tables[0].Joins.Count > 0)
 			{
-				if (parentJoin == JoinType.Left)
-					isQueryOK = query.From.Tables[0].Joins.All(j => j.JoinType == JoinType.Left);
-				else
-					isQueryOK = false;
+				isQueryOK = false;
 			}
 
 			if (!isQueryOK)

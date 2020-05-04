@@ -911,10 +911,10 @@ namespace LinqToDB.Linq.Builder
 
 									if (contextInfo.AsSubquery)
 									{
-										foreach (var info in resultSql)
+										resultSql = new SqlInfo[]
 										{
-											info.Sql = ((SqlColumn)info.Sql).Parent;
-										}
+											new SqlInfo {Sql = contextInfo.Context.SelectQuery, Query = this.SelectQuery}
+										};
 									}
 
 									return resultSql;
@@ -995,12 +995,13 @@ namespace LinqToDB.Linq.Builder
 								else
 									resultSql = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression,
 										contextInfo.CurrentLevel + 1, flags);
+
 								if (contextInfo.AsSubquery)
 								{
-									foreach (var info in resultSql)
+									resultSql = new SqlInfo[]
 									{
-										info.Sql = ((SqlColumn)info.Sql).Parent;
-									}
+										new SqlInfo {Sql = contextInfo.Context.SelectQuery, Query = this.SelectQuery}
+									};
 								}
 							}
 							return resultSql;
@@ -1876,7 +1877,7 @@ namespace LinqToDB.Linq.Builder
 										expression.Replace(levelExpression, contextRef), 0)
 									{
 										Descriptor = descriptor,
-										AsSubquery = AssociationsToSubQueries
+										AsSubquery = AssociationsToSubQueries || descriptor.IsList
 									};
 								}
 

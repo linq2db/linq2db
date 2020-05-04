@@ -2151,6 +2151,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				isNull = right is ConstantExpression expression && expression.Value == null;
+				
 				lcols  = qsl!.ConvertToSql(left, 0, ConvertFlags.Key);
 
 				if (!sr)
@@ -2164,6 +2165,13 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var lcol in lcols)
 			{
+				if (lcol.Sql is SelectQuery innerQuery && isNull)
+				{
+					var existsPredicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(innerQuery));
+					condition.Conditions.Add(new SqlCondition(nodeType == ExpressionType.Equal, existsPredicate));
+					continue;
+				}
+
 				if (lcol.MemberChain.Count == 0)
 					throw new InvalidOperationException();
 
@@ -2798,6 +2806,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions, bool isNotExpression)
 		{
+			expression = expression.Transform(RemoveNullPropagation);
+
 			switch (expression.NodeType)
 			{
 				case ExpressionType.And     :
