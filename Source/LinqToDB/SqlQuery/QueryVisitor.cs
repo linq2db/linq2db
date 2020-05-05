@@ -1450,27 +1450,6 @@ namespace LinqToDB.SqlQuery
 			return (T?)ConvertInternal(element) ?? element;
 		}
 
-		class ConvertScope : IDisposable
-		{
-			private QueryVisitor _visitor;
-
-			public ConvertScope(QueryVisitor visitor, IQueryElement parent)
-			{
-				_visitor = visitor;
-				_visitor.Stack.Add(parent);
-			}
-
-			public void Dispose()
-			{
-				_visitor.Stack.RemoveAt(_visitor.Stack.Count - 1);
-			}
-		}
-
-		ConvertScope Scope(IQueryElement parent)
-		{
-			return new ConvertScope(this, parent);
-		}
-
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
 		{
 			if (parentQuery == null)
@@ -1521,7 +1500,9 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
-			using (Scope(element))
+			Stack.Add(element);
+			try
+			{
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -2406,6 +2387,11 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+			}
+			}
+			finally
+			{
+				Stack.RemoveAt(Stack.Count - 1);
 			}
 
 			newElement = newElement == null ? _convert!(element) : (_convert!(newElement) ?? newElement);
