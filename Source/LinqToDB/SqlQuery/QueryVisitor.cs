@@ -2013,13 +2013,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SelectClause:
 					{
 						var sc   = (SqlSelectClause)element;
-						var cols = Convert(sc.Columns, column =>
-						{
-							var newColumn = new SqlColumn(sc.SelectQuery, column.Expression);
-							_visitedElements.Remove(column);
-							_visitedElements.Add(column, newColumn);
-							return newColumn;
-						});
+						var cols = Convert(sc.Columns, CloneColumn);
 						var take = (ISqlExpression?)ConvertInternal(sc.TakeValue);
 						var skip = (ISqlExpression?)ConvertInternal(sc.SkipValue);
 
@@ -2032,6 +2026,7 @@ namespace LinqToDB.SqlQuery
 							((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
 						}
 
+						static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(column.Parent!, column.Expression);
 						break;
 					}
 
@@ -2513,13 +2508,24 @@ namespace LinqToDB.SqlQuery
 						list2 = new List<T>(list1.Count);
 
 						for (var j = 0; j < i; j++)
-							list2.Add(clone == null ? list1[j] : clone(list1[j]));
+						{
+							var elem = list1[j];
+							if (clone != null)
+								_visitedElements[elem] = elem = clone(elem);
+
+							list2.Add(elem);
+						}
 					}
 
 					list2.Add(elem2);
 				}
-				else
-					list2?.Add(clone == null ? elem1 : clone(elem1));
+				else if (list2 != null)
+				{
+					if (clone != null)
+						_visitedElements[elem1] = elem1 = clone(elem1);
+
+					list2.Add(elem1);
+				}
 			}
 
 			return list2;

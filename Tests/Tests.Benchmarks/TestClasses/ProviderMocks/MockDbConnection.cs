@@ -8,7 +8,13 @@ namespace LinqToDB.Benchmarks.TestProvider
 	{
 		private readonly QueryResult _result;
 
-		private readonly ConnectionState _state;
+		private ConnectionState _state;
+
+		public MockDbConnection(string connectionString, QueryResult result)
+		{
+			ConnectionString = connectionString;
+			_result = result;
+		}
 
 		public MockDbConnection(QueryResult result, ConnectionState state)
 		{
@@ -33,12 +39,12 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override void Close()
 		{
-			throw new NotImplementedException();
+			_state = ConnectionState.Closed;
 		}
 
 		public override void Open()
 		{
-			throw new NotImplementedException();
+			_state = ConnectionState.Open;
 		}
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)

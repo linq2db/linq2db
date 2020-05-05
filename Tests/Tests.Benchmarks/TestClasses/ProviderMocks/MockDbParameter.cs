@@ -6,6 +6,15 @@ namespace LinqToDB.Benchmarks.TestProvider
 {
 	public class MockDbParameter : DbParameter
 	{
+		public MockDbParameter()
+		{ 
+		}
+
+		public MockDbParameter(string name, object? value)
+		{
+			ParameterName = name;
+			Value = value;
+		}
 		public override string? ParameterName { get; set; }
 		public override DbType  DbType        { get; set; }
 		public override object? Value         { get; set; }

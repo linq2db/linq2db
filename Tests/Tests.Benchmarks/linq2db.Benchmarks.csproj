@@ -11,6 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
 		<PackageReference Include="Npgsql" Version="4.0.10" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />

@@ -37,12 +37,12 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override bool GetBoolean(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (bool)_result.Data[_row][ordinal]!;
 		}
 
 		public override byte GetByte(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (byte)_result.Data[_row][ordinal]!;
 		}
 
 		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
@@ -67,12 +67,12 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override DateTime GetDateTime(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (DateTime)_result.Data[_row][ordinal]!;
 		}
 
 		public override decimal GetDecimal(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (decimal)_result.Data[_row][ordinal]!;
 		}
 
 		public override double GetDouble(int ordinal)
@@ -97,7 +97,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override Guid GetGuid(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (Guid)_result.Data[_row][ordinal]!;
 		}
 
 		public override short GetInt16(int ordinal)
@@ -135,9 +135,14 @@ namespace LinqToDB.Benchmarks.TestProvider
 			throw new NotImplementedException();
 		}
 
-		public override int GetValues(object[] values)
+		public override int GetValues(object?[] values)
 		{
-			throw new NotImplementedException();
+			for (var i = 0; i < FieldCount; i++)
+			{
+				values[i] = _result.Data[_row];
+			}
+
+			return FieldCount;
 		}
 
 		public override bool IsDBNull(int ordinal)
