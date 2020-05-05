@@ -648,9 +648,9 @@ namespace LinqToDB.SqlQuery
 		/// </param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement>(
-			TStatement             statement,
-			Func<SelectQuery, int> wrapTest,
-			Action<SelectQuery[]>  onWrap)
+			TStatement                         statement,
+			Func<SelectQuery, int>             wrapTest,
+			Action<IReadOnlyList<SelectQuery>> onWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -698,23 +698,19 @@ namespace LinqToDB.SqlQuery
 						visitor.VisitedElements.Add(prevColumn, newColumn);
 					}
 
-					onWrap(queries.ToArray());
+					onWrap(queries);
 
-					var levelTables = QueryHelper.EnumerateLevelTables(query).ToArray();
+					var levelTables = EnumerateLevelTables(query).ToArray();
 					var resultQuery = queries[0];
 					foreach (var table in levelTables)
 					{
 						correctedTables.Add(table, resultQuery);
 					}
 
-					var toMap = levelTables
-						.SelectMany(t => t.Fields.Values)
-						.ToArray();
+					var toMap = levelTables.SelectMany(t => t.Fields.Values);
 
 					foreach (var field in toMap)
-					{
 						visitor.VisitedElements.Remove(field);
-					}
 
 					return resultQuery;
 				} 

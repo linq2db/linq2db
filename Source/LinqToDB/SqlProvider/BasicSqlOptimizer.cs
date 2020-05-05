@@ -1937,8 +1937,8 @@ namespace LinqToDB.SqlProvider
 				}
 				, queries =>
 				{
-					var query = queries[queries.Length - 1];
-					var processingQuery = queries[queries.Length - 2];
+					var query = queries[queries.Count - 1];
+					var processingQuery = queries[queries.Count - 2];
 
 					SqlOrderByItem[]? orderByItems = null;
 					if (!query.OrderBy.IsEmpty)
