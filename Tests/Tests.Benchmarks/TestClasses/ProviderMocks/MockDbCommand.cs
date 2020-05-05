@@ -23,7 +23,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public    override string?               CommandText              { get; set; }
 		public    override CommandType           CommandType              { get; set; }
-		protected override DbConnection          DbConnection             { get; set; }
+		protected override DbConnection?         DbConnection             { get; set; }
 		protected override DbParameterCollection DbParameterCollection => _parameters;
 
 		public override int CommandTimeout { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

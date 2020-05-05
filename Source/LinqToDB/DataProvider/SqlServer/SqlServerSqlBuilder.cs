@@ -315,9 +315,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-					if (Provider != null)
-						return Provider.Adapter.QuoteIdentifier(value);
-					return SqlServerTools.BasicQuoteIdentifier(value);
+					return SqlServerTools.QuoteIdentifier(value);
 
 				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
@@ -326,9 +324,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (value.Length > 0 && value[0] == '[')
 							return value;
 
-					if (Provider != null)
-						return Provider.Adapter.QuoteIdentifier(value);
-					return SqlServerTools.BasicQuoteIdentifier(value);
+					return SqlServerTools.QuoteIdentifier(value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
