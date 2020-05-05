@@ -342,12 +342,14 @@ namespace LinqToDB.Linq
 			public Query<T>? Find(IDataContext dataContext, Expression expr)
 			{
 				Query<T>[] cache;
+				int[]      indexes;
 				int        version;
 
 				lock (_syncCache)
 				{
 					cache   = _cache;
 					version = _version;
+					indexes = _indexes;
 				}
 
 				var allowReordering = Monitor.TryEnter(_syncPriority);
@@ -356,16 +358,16 @@ namespace LinqToDB.Linq
 					for (var i = 0; i < cache.Length; i++)
 					{
 						// if we have reordering lock, we can enumerate queries in priority order
-						var idx = allowReordering ? _indexes[i] : i;
+						var idx = allowReordering ? indexes[i] : i;
 
 						if (cache[idx].Compare(dataContext, expr))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
 							{
-								var index       = _indexes[i];
-								_indexes[i]     = _indexes[i - 1];
-								_indexes[i - 1] = index;
+								var index      = indexes[i];
+								indexes[i]     = indexes[i - 1];
+								indexes[i - 1] = index;
 							}
 
 							return cache[idx];
