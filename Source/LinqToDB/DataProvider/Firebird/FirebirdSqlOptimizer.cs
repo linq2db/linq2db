@@ -85,7 +85,7 @@
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
-			var visitor = new QueryVisitor();
+			var visitor = new ConvertVisitor();
 			statement = visitor.Convert(statement, e =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)

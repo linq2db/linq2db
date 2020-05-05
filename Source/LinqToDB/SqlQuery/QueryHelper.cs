@@ -565,7 +565,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			var visitor = new QueryVisitor();
+			var visitor = new ConvertVisitor();
 			statement = visitor.Convert(statement, element =>
 			{
 				if (!(element is SelectQuery q))
@@ -658,7 +658,7 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var visitor = new QueryVisitor();
+			var visitor = new ConvertVisitor();
 			var newStatement = visitor.Convert(statement, element =>
 			{
 				if (element is SelectQuery query)
@@ -851,7 +851,7 @@ namespace LinqToDB.SqlQuery
 		{
 			for (int i = 0; i < searchCondition.Conditions.Count; i++)
 			{
-				var visitor      = new QueryVisitor();
+				var visitor      = new ConvertVisitor();
 				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
 				{
 					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)

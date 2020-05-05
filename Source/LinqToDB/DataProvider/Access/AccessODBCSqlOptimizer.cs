@@ -28,7 +28,7 @@
 			if (statement.QueryType != QueryType.Select)
 				return statement;
 
-			var visitor = new QueryVisitor();
+			var visitor = new ConvertVisitor();
 			statement = visitor.Convert(statement, e =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter && visitor.ParentElement is SqlColumn)

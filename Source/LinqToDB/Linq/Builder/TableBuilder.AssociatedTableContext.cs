@@ -304,7 +304,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression CorrectExpression(ISqlExpression expression)
 			{
-				return new QueryVisitor().Convert(expression, e =>
+				return new ConvertVisitor().Convert(expression, e =>
 				{
 					if (e.ElementType == QueryElementType.SqlField && _replaceMap!.TryGetValue((SqlField)e, out var newField))
 						return newField;

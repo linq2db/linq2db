@@ -243,7 +243,7 @@ namespace LinqToDB.SqlProvider
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
 
-						var nc = new QueryVisitor().Convert(cond, e =>
+						var nc = new ConvertVisitor().Convert(cond, e =>
 						{
 							var ne = e;
 
@@ -412,7 +412,7 @@ namespace LinqToDB.SqlProvider
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
 
-							var nc = new QueryVisitor().Convert(cond, e =>
+							var nc = new ConvertVisitor().Convert(cond, e =>
 							{
 								var ne = e;
 
@@ -497,7 +497,7 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : e);
+			selectQuery = new ConvertVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : e);
 
 			return selectQuery;
 		}
@@ -1420,7 +1420,7 @@ namespace LinqToDB.SqlProvider
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = new QueryVisitor().Convert(item, e =>
+					var newItem = new ConvertVisitor().Convert(item, e =>
 					{
 						if (e is SqlField field && field.Table == tableToCompare)
 						{
@@ -1557,7 +1557,7 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var item in updateStatement.Update.Items)
 				{
-					var ex = new QueryVisitor().Convert(item.Expression!, expr =>
+					var ex = new ConvertVisitor().Convert(item.Expression!, expr =>
 						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
 							? (ISqlExpression) newValue
 							: expr);
@@ -1581,7 +1581,7 @@ namespace LinqToDB.SqlProvider
 						innerQuery.Select.Columns.Clear();
 
 
-						var remapped = new QueryVisitor().Convert(ex,
+						var remapped = new ConvertVisitor().Convert(ex,
 							e =>
 							{
 								if (!(e is ICloneableElement c))
@@ -1676,7 +1676,7 @@ namespace LinqToDB.SqlProvider
 				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
 				{
 					statement.Update.Table = newUpdateTable;
-					statement.Update = new QueryVisitor().Convert(statement.Update, e =>
+					statement.Update = new ConvertVisitor().Convert(statement.Update, e =>
 					{
 						if (e is SqlField field && field.Table == updateTable)
 						{
@@ -1827,7 +1827,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
 		{
-			var visitor = new QueryVisitor();
+			var visitor = new ConvertVisitor();
 			statement = visitor.Convert(statement, e =>
 			{
 				if (e is ISqlExpression sqlExpression)

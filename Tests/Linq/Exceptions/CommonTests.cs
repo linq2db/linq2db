@@ -45,7 +45,7 @@ namespace Tests.Exceptions
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							statement = new QueryVisitor().Convert(statement, e =>
+							statement = new ConvertVisitor().Convert(statement, e =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{

@@ -167,7 +167,7 @@ namespace LinqToDB.Data
 				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);
 
-				if (!object.ReferenceEquals(sql, newSql))
+				if (!ReferenceEquals(sql, newSql))
 				{
 					sql = newSql;
 					sql.IsParameterDependent = true;

@@ -182,7 +182,7 @@ namespace LinqToDB
 				}
 
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
-				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
+				sqlExpr     = new ConvertVisitor().Convert(sqlExpr, e =>
 				{
 					if (e is SqlFunction func && func.Name == "$Convert_Remover$")
 					{

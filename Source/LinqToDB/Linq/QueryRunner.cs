@@ -215,7 +215,7 @@ namespace LinqToDB.Linq
 		private static T NormalizeExpressions<T>(T expression) 
 			where T : class, IQueryElement
 		{
-			var queryVisitor = new QueryVisitor();
+			var queryVisitor = new ConvertVisitor();
 			var result = queryVisitor.Convert(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
@@ -287,7 +287,7 @@ namespace LinqToDB.Linq
 
 			var found                     = new HashSet<ISqlExpression>();
 			var columnExpressions         = new HashSet<ISqlExpression>();
-			var parameterDuplicateVisitor = new QueryVisitor();
+			var parameterDuplicateVisitor = new ConvertVisitor();
 			statement = parameterDuplicateVisitor.Convert(statement, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
