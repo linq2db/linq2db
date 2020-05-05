@@ -28,8 +28,7 @@
 			if (statement.QueryType != QueryType.Select)
 				return statement;
 
-			var visitor = new ConvertVisitor();
-			statement = visitor.Convert(statement, e =>
+			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter && visitor.ParentElement is SqlColumn)
 					return new SqlExpression(p.Type.SystemType, "CVar({0})", Precedence.Primary, p);

@@ -215,8 +215,7 @@ namespace LinqToDB.Linq
 		private static T NormalizeExpressions<T>(T expression) 
 			where T : class, IQueryElement
 		{
-			var queryVisitor = new ConvertVisitor();
-			var result = queryVisitor.Convert(expression, e =>
+			var result = ConvertVisitor.Convert(expression, (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -255,8 +254,7 @@ namespace LinqToDB.Linq
 						// always create copy
 						var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
 						// force re-entrance
-						queryVisitor.VisitedElements.Remove(expr);
-						queryVisitor.VisitedElements.Add(expr, null);
+						visitor.VisitedElements[expr] = null;
 						return newExpression;
 					}
 				}
@@ -287,15 +285,14 @@ namespace LinqToDB.Linq
 
 			var found                     = new HashSet<ISqlExpression>();
 			var columnExpressions         = new HashSet<ISqlExpression>();
-			var parameterDuplicateVisitor = new ConvertVisitor();
-			statement = parameterDuplicateVisitor.Convert(statement, e =>
+			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
 					var parameter = (SqlParameter)e;
 					if (parameter.IsQueryParameter)
 					{
-						var parentElement = parameterDuplicateVisitor.ParentElement;
+						var parentElement = visitor.ParentElement;
 						if (parentElement is SqlColumn)
 							columnExpressions.Add(parameter);
 						else if (parentElement!.ElementType == QueryElementType.SetExpression)
@@ -315,7 +312,7 @@ namespace LinqToDB.Linq
 						}
 
 						// notify visitor to process this parameter always
-						parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
+						visitor.VisitedElements.Add(parameter, null);
 					}
 				}
 

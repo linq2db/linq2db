@@ -1014,8 +1014,7 @@ namespace LinqToDB.SqlQuery
 						var map = sql.Select.Columns.ToDictionary(c => c.Expression);
 						foreach (var condition in searchCondition)
 						{
-							var visitor = new ConvertVisitor();
-							var newPredicate = visitor.Convert(condition.Predicate, e =>
+							var newPredicate = ConvertVisitor.Convert(condition.Predicate, (visitor, e) =>
 							{
 								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
 								{

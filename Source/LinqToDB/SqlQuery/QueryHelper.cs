@@ -565,8 +565,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			var visitor = new ConvertVisitor();
-			statement = visitor.Convert(statement, element =>
+			statement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (!(element is SelectQuery q))
 					return element;
@@ -605,8 +604,8 @@ namespace LinqToDB.SqlQuery
 						subQuery.Select.Columns.Insert(index, subColumn);
 					}
 
-					visitor.VisitedElements.Remove(column);
-					visitor.VisitedElements.Add(column, subColumn);
+					// replace
+					visitor.VisitedElements[column] = subColumn;
 				}
 
 				return subQuery;
@@ -658,8 +657,7 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var visitor = new ConvertVisitor();
-			var newStatement = visitor.Convert(statement, element =>
+			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (element is SelectQuery query)
 				{
@@ -694,8 +692,7 @@ namespace LinqToDB.SqlQuery
 						}
 
 						// correct mapping
-						visitor.VisitedElements.Remove(prevColumn);
-						visitor.VisitedElements.Add(prevColumn, newColumn);
+						visitor.VisitedElements[prevColumn] = newColumn;
 					}
 
 					onWrap(queries);
@@ -847,8 +844,7 @@ namespace LinqToDB.SqlQuery
 		{
 			for (int i = 0; i < searchCondition.Conditions.Count; i++)
 			{
-				var visitor      = new ConvertVisitor();
-				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
+				var newCondition = ConvertVisitor.Convert(searchCondition.Conditions[i], (visitor, e) =>
 				{
 					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 					{

@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class ConvertVisitor
 	{
-		Func<IQueryElement, IQueryElement> _convert = null!;
+		private readonly Func<ConvertVisitor, IQueryElement, IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
 		{
@@ -26,12 +26,15 @@ namespace LinqToDB.SqlQuery
 		public List<IQueryElement>                        Stack          { get; } =  new List<IQueryElement>();
 		public IQueryElement?                             ParentElement           => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 
-		public T Convert<T>(T element, Func<IQueryElement,IQueryElement> convertAction)
+		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			VisitedElements.Clear();
+			return (T?)new ConvertVisitor(convertAction).ConvertInternal(element) ?? element;
+		}
+
+		private ConvertVisitor(Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+		{
 			_convert = convertAction;
-			return (T?)ConvertInternal(element) ?? element;
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -127,7 +130,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlTable:
 						{
 							var table    = (SqlTable)element;
-							var newTable = (SqlTable)_convert(table);
+							var newTable = (SqlTable)_convert(this, table);
 
 							if (ReferenceEquals(newTable, table))
 							{
@@ -159,7 +162,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlCteTable:
 						{
 							var table    = (SqlCteTable)element;
-							var newTable = (SqlCteTable)_convert(table);
+							var newTable = (SqlCteTable)_convert(this, table);
 
 							if (ReferenceEquals(newTable, table))
 							{
@@ -728,10 +731,7 @@ namespace LinqToDB.SqlQuery
 								foreach (var pair in objTree)
 								{
 									if (pair.Key is IQueryElement queryElement)
-									{
-										VisitedElements.Remove(queryElement);
-										VisitedElements.Add(queryElement, (IQueryElement)pair.Value);
-									}
+										VisitedElements[queryElement] = (IQueryElement)pair.Value;
 								}
 
 								newElement = nq;
@@ -880,7 +880,7 @@ namespace LinqToDB.SqlQuery
 								null : Convert(table.Parameters);
 
 							var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
-							var ta = targs != null && !ReferenceEquals(table.Parameters, targs);
+							var ta = targs   != null && !ReferenceEquals(table.Parameters, targs);
 
 							if (fe || ta)
 							{
@@ -938,7 +938,7 @@ namespace LinqToDB.SqlQuery
 
 								newCte.Init(body ?? cte.Body, fields ?? cte.Fields!);
 
-								var elem = _convert(newCte);
+								var elem = _convert(this, newCte);
 								VisitedElements[cte] = elem;
 
 								return elem;
@@ -978,7 +978,7 @@ namespace LinqToDB.SqlQuery
 				Stack.RemoveAt(Stack.Count - 1);
 			}
 
-			newElement = newElement == null ? _convert(element) : _convert(newElement);
+			newElement = newElement == null ? _convert(this, element) : _convert(this, newElement);
 
 			AddVisited(element, newElement);
 
