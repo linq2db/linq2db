@@ -138,12 +138,12 @@ namespace LinqToDB.Data
 
 			public class PreparedQuery
 			{
-				public string[]                        Commands      = null!;
-				public List<SqlParameter>              SqlParameters = null!;
-				public IReadOnlyList<IDbDataParameter> Parameters    = null!;
-				public SqlStatement                    Statement     = null!;
-				public ISqlBuilder                     SqlProvider   = null!;
-				public List<string>?                   QueryHints;
+				public string[]                         Commands      = null!;
+				public List<SqlParameter>               SqlParameters = null!;
+				public IReadOnlyList<IDbDataParameter>? Parameters;
+				public SqlStatement                     Statement     = null!;
+				public ISqlBuilder                      SqlProvider   = null!;
+				public List<string>?                    QueryHints;
 			}
 
 			PreparedQuery? _preparedQuery;
