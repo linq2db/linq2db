@@ -1,6 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.Access
 {
 	using System.Data;
+	using System.Text;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;
 
@@ -27,17 +28,17 @@
 		{
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "?";
+					return sb.Append('?');
 			}
 
-			return base.Convert(value, convertType);
+			return base.Convert(sb, value, convertType);
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()

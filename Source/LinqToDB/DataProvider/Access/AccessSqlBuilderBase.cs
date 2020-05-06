@@ -35,11 +35,9 @@ namespace LinqToDB.DataProvider.Access
 
 				StringBuilder.Append("ALTER TABLE ");
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
-				StringBuilder
-					.Append(" ALTER COLUMN ")
-					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
-					.AppendLine(" COUNTER(1,1)")
-					;
+				StringBuilder.Append(" ALTER COLUMN ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.AppendLine(" COUNTER(1,1)");
 			}
 			else
 			{
@@ -341,41 +339,41 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+							return sb.Append(value);
 
-					return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
-					var name = value;
-
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+							return sb.Append(value);
 
 					if (value.IndexOf('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
-						return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
-					return value.Length > 0 && value[0] == '@'? value.Substring(1) : value;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

@@ -64,7 +64,7 @@ namespace LinqToDB
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -94,7 +94,7 @@ namespace LinqToDB
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -127,7 +127,7 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified field name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				result         = sqlBuilder.Convert(result, ConvertType.NameToQueryField);
+				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
 				
 			return result;

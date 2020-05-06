@@ -56,9 +56,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					AppendIndent()
 						.Append("DECLARE ");
 					AppendOutputTableVariable(insertClause.Into)
-						.Append(" TABLE (")
-						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-						.Append(" ");
+						.Append(" TABLE (");
+					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+					StringBuilder.Append(" ");
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
 							.AppendLine(")")
@@ -78,9 +78,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
-						.Append("OUTPUT [INSERTED].")
-						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-						.AppendLine();
+						.Append("OUTPUT [INSERTED].");
+					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+					StringBuilder.AppendLine();
 					AppendIndent()
 						.Append("INTO ");
 					AppendOutputTableVariable(insertClause.Into)
@@ -173,9 +173,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder
 					.AppendLine();
 				AppendIndent()
-					.Append("SELECT ")
-					.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-					.Append(" FROM ");
+					.Append("SELECT ");
+				Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.Append(" FROM ");
 				AppendOutputTableVariable(insertClause.Into)
 					.AppendLine();
 			}
@@ -211,10 +211,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
-			StringBuilder
-				.Append(" ")
-				.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias))
-				.AppendLine();
+			StringBuilder.Append(" ");
+			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -226,7 +225,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);
 			else
-				StringBuilder.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias));
+				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
@@ -300,37 +299,39 @@ namespace LinqToDB.DataProvider.SqlServer
 			return sb.Append(table);
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+						return sb.Append(value);
 
-					return SqlServerTools.QuoteIdentifier(value);
+					return SqlServerTools.QuoteIdentifier(sb, value);
 
 				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+						return sb.Append(value);
 
-					return SqlServerTools.QuoteIdentifier(value);
+					return SqlServerTools.QuoteIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
-					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

@@ -48,11 +48,9 @@ namespace LinqToDB.DataProvider.Informix
 
 				StringBuilder.Append("ALTER TABLE ");
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
-				StringBuilder
-					.Append(" MODIFY ")
-					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
-					.AppendLine(" SERIAL(1)")
-					;
+				StringBuilder.Append(" MODIFY ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.AppendLine(" SERIAL(1)");
 			}
 			else
 			{
@@ -185,7 +183,7 @@ namespace LinqToDB.DataProvider.Informix
 					c == '_');
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -194,18 +192,22 @@ namespace LinqToDB.DataProvider.Informix
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && !IsValidIdentifier(value))
 						// I wonder what to do if identifier has " in name?
-						return '"' + value + '"';
+						return sb.Append('"').Append(value).Append('"');
 
 					break;
 				case ConvertType.NameToQueryParameter   :
-					return SqlProviderFlags.IsParameterOrderDependent ? "?" : "@" + value;
+					return SqlProviderFlags.IsParameterOrderDependent
+						? sb.Append('?')
+						: sb.Append('@').Append(value);
 				case ConvertType.NameToCommandParameter :
-				case ConvertType.NameToSprocParameter   : return ":" + value;
+				case ConvertType.NameToSprocParameter   : return sb.Append(':').Append(value);
 				case ConvertType.SprocParameterToName   :
-					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
+					return (value.Length > 0 && value[0] == ':')
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableFieldType(SqlField field)

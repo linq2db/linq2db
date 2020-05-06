@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SapHana
 {
+	using System.Text;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 	using SqlProvider;
@@ -16,14 +17,14 @@
 			return new SapHanaOdbcSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return "?";
+					return sb.Append('?');
 				default:
-					return base.Convert(value, convertType);
+					return base.Convert(sb, value, convertType);
 			}
 		}
 
