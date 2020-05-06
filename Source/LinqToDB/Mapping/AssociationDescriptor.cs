@@ -260,6 +260,12 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
+
+		public bool HasQueryMethod()
+		{
+			return ExpressionQuery != null || !ExpressionQueryMethod.IsNullOrEmpty();
+		}
+
 		/// <summary>
 		/// Loads query method expression from <see cref="ExpressionQueryMethod"/> member.
 		/// </summary>
@@ -269,7 +275,7 @@ namespace LinqToDB.Mapping
 		/// by <see cref="ExpressionQueryMethod"/> member.</returns>
 		public LambdaExpression? GetQueryMethod(Type parentType, Type objectType)
 		{
-			if (ExpressionQuery == null && ExpressionQueryMethod.IsNullOrEmpty())
+			if (!HasQueryMethod())
 				return null;
 
 			Expression queryExpression;

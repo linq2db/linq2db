@@ -1185,234 +1185,27 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		Expression? _lastExpr3;
-		bool        _lastResult3;
-
-		bool IsServerSideOnly(Expression expr)
+		public bool IsServerSideOnly(Expression expr)
 		{
-			if (_lastExpr3 == expr)
-				return _lastResult3;
-
-			var result = false;
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.MemberAccess:
-					{
-						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
-
-						if (l != null)
-						{
-							result = IsServerSideOnly(l.Body.Unwrap());
-						}
-						else
-						{
-							var attr = GetExpressionAttribute(ex.Member);
-							result = attr != null && attr.ServerSideOnly;
-						}
-
-						break;
-					}
-
-				case ExpressionType.Call:
-					{
-						var e = (MethodCallExpression)expr;
-
-						if (e.Method.DeclaringType == typeof(Enumerable))
-						{
-							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
-								result = IsQueryMember(e.Arguments[0]);
-						}
-						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
-						{
-							result = true;
-						}
-						else if (e.Method.DeclaringType == typeof(Queryable))
-						{
-							switch (e.Method.Name)
-							{
-								case "Any"      :
-								case "All"      :
-								case "Contains" : result = true; break;
-							}
-						}
-						else
-						{
-							var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
-
-							if (l != null)
-							{
-								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
-							}
-							else
-							{
-								var attr = GetExpressionAttribute(e.Method);
-								result = attr != null && attr.ServerSideOnly;
-							}
-						}
-
-						break;
-					}
-			}
-
-			_lastExpr3 = expr;
-			return _lastResult3 = result;
-		}
-
-		static bool IsQueryMember(Expression expr)
-		{
-			expr = expr.Unwrap();
-			if (expr != null) switch (expr.NodeType)
-			{
-				case ExpressionType.Parameter    : return true;
-				case ExpressionType.MemberAccess : return IsQueryMember(((MemberExpression)expr).Expression);
-				case ExpressionType.Call         :
-					{
-						var call = (MethodCallExpression)expr;
-
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
-
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
-
-						return IsQueryMember(call.Object);
-					}
-			}
-
-			return false;
+			return _optimizationContext.IsServerSideOnly(expr);
 		}
 
 		#endregion
 
 		#region CanBeConstant
 
-		Expression? _lastExpr1;
-		bool        _lastResult1;
-
 		bool CanBeConstant(Expression expr)
 		{
-			if (_lastExpr1 == expr)
-				return _lastResult1;
-
-			var result = null == expr.Find(ex =>
-			{
-				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
-					return false;
-
-				if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Constant     :
-						{
-							var c = (ConstantExpression)ex;
-
-							if (c.Value == null || ex.Type.IsConstantable())
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.MemberAccess :
-						{
-							var ma = (MemberExpression)ex;
-
-							var l = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
-
-							if (l != null)
-								return l.Body.Unwrap().Find(CanBeConstant) == null;
-
-							if (ma.Member.DeclaringType.IsConstantable() || ma.Member.IsNullableValueMember())
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.Call         :
-						{
-							var mc = (MethodCallExpression)ex;
-
-							if (mc.Method.DeclaringType.IsConstantable() || mc.Method.DeclaringType == typeof(object))
-								return false;
-
-							var attr = GetExpressionAttribute(mc.Method);
-
-							if (attr != null && !attr.ServerSideOnly)
-								return false;
-
-							break;
-						}
-				}
-
-				return true;
-			});
-
-
-			_lastExpr1 = expr;
-			return _lastResult1 = result;
+			return _optimizationContext.CanBeConstant(expr);
 		}
 
 		#endregion
 
 		#region CanBeCompiled
 
-		Expression? _lastExpr2;
-		bool        _lastResult2;
-
 		bool CanBeCompiled(Expression expr)
 		{
-			if (_lastExpr2 == expr)
-				return _lastResult2;
-
-			var allowedParams = new HashSet<Expression> { ParametersParam };
-
-			var result = null == expr.Find(ex =>
-			{
-				if (IsServerSideOnly(ex))
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Parameter:
-						return !allowedParams.Contains(ex);
-
-					case ExpressionType.Call     :
-						{
-							var mc = (MethodCallExpression)ex;
-							foreach (var arg in mc.Arguments)
-							{
-								if (arg.NodeType == ExpressionType.Lambda)
-								{
-									var lambda = (LambdaExpression)arg;
-									foreach (var prm in lambda.Parameters)
-										allowedParams.Add(prm);
-								}
-							}
-							break;
-						}
-					case ExpressionType.Constant :
-						{
-							var cnt = (ConstantExpression)ex;
-							if (cnt.Value is ISqlExpression)
-								return true;
-							break;
-						}
-					case ExpressionType.Extension:
-						{
-							if (ex is ContextRefExpression)
-								return true;
-							return !ex.CanReduce;
-						}
-				}
-
-				return false;
-			});
-
-			_lastExpr2 = expr;
-			return _lastResult2 = result;
+			return _optimizationContext.CanBeCompiled(expr);
 		}
 
 		#endregion
@@ -1480,7 +1273,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
+					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
 						p = accessor.Value;
 
 			if (p == null)

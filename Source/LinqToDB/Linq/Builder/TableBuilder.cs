@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 	using Extensions;
 
 	partial class TableBuilder : ISequenceBuilder
@@ -63,9 +64,11 @@ namespace LinqToDB.Linq.Builder
 						switch (mc.Method.Name)
 						{
 							case "GetTable":
-							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
-									return BuildContextType.GetTableMethod;
-								break;
+								{
+									if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+										return BuildContextType.GetTableMethod;
+									break;
+								}
 
 							case "AsCte":
 								return BuildContextType.AsCteMethod;
@@ -126,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, TableContext tableContext)
+		IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
 		{
 			var entityType = tableContext.ObjectType;
 			if (builder.IsFilterDisabled(entityType))
@@ -137,15 +140,42 @@ namespace LinqToDB.Linq.Builder
 			if (filterFunc == null)
 				return tableContext;
 
+			if (memberInfo == null)
+			{
+				memberInfo = Methods.LinqToDB.GetTable.MakeGenericMethod(entityType);
+			}
+
+			var fakeQuery = ExpressionQueryImpl.CreateQuery(entityType, builder.DataContext, null);
+
+			// Here we tell for Equality Comparer to compare optimized expressions 
+			//
+			var closureMappingSchema = builder.MappingSchema;
+			builder.AddQueryableMemberAccessors(memberInfo, mi =>
+			{
+				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext);
+
+				// here we use light version of optimization, only for comparing trees
+				var optimizationContext = new ExpressionTreeOptimizationContext(closureMappingSchema);
+				var optimizedExpr = optimizationContext.ExposeExpression(filtered.Expression);
+				    optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
+				    optimizedExpr = optimizedExpr.OptimizeExpression()!;
+				return optimizedExpr;
+			});
+
+			var filtered = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext);
+			var optimized = filtered.Expression;
+
+			optimized = builder.ConvertExpressionTree(optimized);
+			optimized = builder.ConvertExpression(optimized);
+			optimized = optimized.OptimizeExpression()!;
+
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
+			var replaced = optimized.Replace(fakeQuery.Expression, refExpression);
+			if (replaced == optimized)
+				throw new LinqException("Could not correct query result for processing.");
 
-			var queryType = typeof(ExpressionQueryImpl<>).MakeGenericType(entityType);
-			var query     = Activator.CreateInstance(queryType, builder.DataContext, refExpression);
-
-			var filtered  = (IQueryable)filterFunc.DynamicInvoke(query, builder.DataContext);
-
-			var ctx = builder.BuildSequence(new BuildInfo(buildInfo, filtered.Expression));
-			return ctx;
+			var context   = builder.BuildSequence(new BuildInfo(buildInfo, replaced));
+			return context;
 
 		}
 
@@ -158,14 +188,15 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.None                   : return null;
 				case BuildContextType.TableConstant:
 					{
-						return ApplyQueryFilters(builder, buildInfo, 
+						return ApplyQueryFilters(builder, buildInfo, null,
 							new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType));
 					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :
 					{
-						return ApplyQueryFilters(builder, buildInfo, new TableContext(builder, buildInfo, 
-							buildInfo.Expression.Type.GetGenericArguments()[0]));
+						return ApplyQueryFilters(builder, buildInfo, null,
+							new TableContext(builder, buildInfo,
+								buildInfo.Expression.Type.GetGenericArguments()[0]));
 					}
 				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);

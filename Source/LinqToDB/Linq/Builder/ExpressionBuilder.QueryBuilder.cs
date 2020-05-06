@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			alias = alias ?? GetExpressionAlias(expr);
+			alias = alias ?? _optimizationContext.GetExpressionAlias(expr);
 
 			switch (expr.NodeType)
 			{
@@ -528,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>(), null))
+				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>(), null, null))
 					return item;
 			}
 
@@ -881,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 										var childType  = me.Type;
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.Builder,
-											associationContext.Descriptor, parentType, parentType, childType, false,
+											me.Member, associationContext.Descriptor, parentType, parentType, childType, false,
 											false, null, out _);
 
 										//TODO: MARS
@@ -971,36 +971,5 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region Aliases
-
-		private readonly Dictionary<Expression, string> _expressionAliases = new Dictionary<Expression, string>();
-
-		void RegisterAlias(Expression expression, string alias, bool force = false)
-		{
-			if (_expressionAliases.ContainsKey(expression))
-			{
-				if (!force)
-					return;
-				_expressionAliases.Remove(expression);
-			}
-			_expressionAliases.Add(expression, alias);
-		}
-
-		void RelocateAlias(Expression oldExpression, Expression newExpression)
-		{
-			if (ReferenceEquals(oldExpression, newExpression))
-				return;
-
-			if (_expressionAliases.TryGetValue(oldExpression, out var alias))
-				RegisterAlias(newExpression, alias);
-		}
-
-		string GetExpressionAlias(Expression expression)
-		{
-			_expressionAliases.TryGetValue(expression, out var value);
-			return value;
-		}
-
-		#endregion
 	}
 }

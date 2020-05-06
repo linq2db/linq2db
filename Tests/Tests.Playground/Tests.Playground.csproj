@@ -13,6 +13,7 @@
 		<Compile Include="..\Linq\Exceptions\JoinTests.cs" Link="JoinTests.cs" />
 		<Compile Include="..\Linq\Exceptions\MappingTests.cs" Link="MappingTests.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
+		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests.cs" Link="ComplexTests.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />

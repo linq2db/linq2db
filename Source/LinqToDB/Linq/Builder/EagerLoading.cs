@@ -1038,7 +1038,7 @@ namespace LinqToDB.Linq.Builder
 				var queryableAccessorDic = new Dictionary<Expression, QueryableAccessor>();
 				foreach (var info in keysInfoByParams)
 				{
-					if (!keysInfo.Any(_ => _.ForSelect.EqualsTo(info.ForSelect, queryableAccessorDic, null)))
+					if (!keysInfo.Any(_ => _.ForSelect.EqualsTo(info.ForSelect, queryableAccessorDic, null, null)))
 						keysInfo.Add(info);
 				}
 
@@ -1240,7 +1240,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// Finalize keys for recursive processing
 			var expr = detailQuery.Expression;
-			expr     = ExpressionBuilder.ExpandExpression(expr);
+			expr     = builder.ExposeExpression(expr);
 			expr     = FinalizeExpressionKeys(expr);
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
