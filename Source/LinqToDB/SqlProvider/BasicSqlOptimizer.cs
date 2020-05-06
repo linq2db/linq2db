@@ -1822,7 +1822,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
 		{
-			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
+			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);

@@ -37,7 +37,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (IsParameterDependent)
 			{
-				var statement = ConvertVisitor.Convert(this, (v, e) =>
+				var statement = ConvertVisitor.ConvertAll(this, (v, e) =>
 				{
 					switch (e.ElementType)
 					{

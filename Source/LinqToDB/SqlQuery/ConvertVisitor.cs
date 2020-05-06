@@ -7,6 +7,9 @@ namespace LinqToDB.SqlQuery
 {
 	public class ConvertVisitor
 	{
+		// when true, only changed (and explicitly added) elements added to VisitedElements
+		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
+		private readonly bool												_visitAll;
 		private readonly Func<ConvertVisitor, IQueryElement, IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
@@ -29,12 +32,19 @@ namespace LinqToDB.SqlQuery
 		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor(convertAction).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor(convertAction, false).ConvertInternal(element) ?? element;
 		}
 
-		private ConvertVisitor(Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+			where T : class, IQueryElement
 		{
-			_convert = convertAction;
+			return (T?)new ConvertVisitor(convertAction, true).ConvertInternal(element) ?? element;
+		}
+
+		private ConvertVisitor(Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction, bool visitAll)
+		{
+			_visitAll = visitAll;
+			_convert  = convertAction;
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -980,7 +990,8 @@ namespace LinqToDB.SqlQuery
 
 			newElement = newElement == null ? _convert(this, element) : _convert(this, newElement);
 
-			AddVisited(element, newElement);
+			if (!_visitAll || !ReferenceEquals(element, newElement))
+				AddVisited(element, newElement);
 
 			return newElement;
 		}
