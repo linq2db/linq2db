@@ -5,6 +5,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using NpgsqlTypes;
 using NUnit.Framework;
 
 namespace Tests.Playground
@@ -97,7 +98,7 @@ namespace Tests.Playground
 				
 			}
 
-			public bool IsSafeDeleteFilterEnabled { get; set; } = true;
+			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
 		[Test]
@@ -107,8 +108,8 @@ namespace Tests.Playground
 
 			var builder = new MappingSchema().GetFluentMappingBuilder();
 
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSafeDeleteFilterEnabled || !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSafeDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
 			var ms = builder.MappingSchema;
 
@@ -127,20 +128,20 @@ namespace Tests.Playground
 
 		void CheckFiltersForQuery<T>(MyDataContext db, IQueryable<T> query)
 		{
-			db.IsSafeDeleteFilterEnabled = true;
+			db.IsSoftDeleteFilterEnabled = true;
 			var resultFiltered1 = query.ToArray();
 
-			db.IsSafeDeleteFilterEnabled = false;
+			db.IsSoftDeleteFilterEnabled = false;
 			var resultNotFiltered1 = query.ToArray();
 
 			Assert.That(resultFiltered1.Length, Is.LessThan(resultNotFiltered1.Length));
 
 			var currentMissCount = Query<T>.CacheMissCount;
 
-			db.IsSafeDeleteFilterEnabled = true;
+			db.IsSoftDeleteFilterEnabled = true;
 			var resultFiltered2 = query.ToArray();
 
-			db.IsSafeDeleteFilterEnabled = false;
+			db.IsSoftDeleteFilterEnabled = false;
 			var resultNotFiltered2 = query.ToArray();
 
 			Assert.That(resultFiltered2.Length, Is.LessThan(resultNotFiltered2.Length));
@@ -159,8 +160,8 @@ namespace Tests.Playground
 
 			var builder = new MappingSchema().GetFluentMappingBuilder();
 
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSafeDeleteFilterEnabled || !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSafeDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
 			var ms = builder.MappingSchema;
 
@@ -183,7 +184,7 @@ namespace Tests.Playground
 		{
 			var testData = GenerateTestData();
 
-			Expression<Func<ISoftDelete, MyDataContext, bool>> softDeleteCheck = (e, dc) => !dc.IsSafeDeleteFilterEnabled || !e.IsDeleted;
+			Expression<Func<ISoftDelete, MyDataContext, bool>> softDeleteCheck = (e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted;
 			var builder = new MappingSchema().GetFluentMappingBuilder();
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
@@ -205,6 +206,47 @@ namespace Tests.Playground
 			}
 		}
 
+
+		static IQueryable<T> FilterDeleted<T>(IQueryable<T> query)
+			where T: ISoftDelete
+		{
+			query = query.Where(e => !e.IsDeleted);
+			return query;
+		}
+
+		static IQueryable<T> FilterDeletedCondition<T>(IQueryable<T> query, MyDataContext dc)
+		where T: ISoftDelete
+		{
+			if (dc.IsSoftDeleteFilterEnabled)
+				query = FilterDeleted(query);
+			return query;
+		}
+
+		[Test]
+		public void AssociationToFilteredEntityMethod([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new MappingSchema().GetFluentMappingBuilder();
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+
+			var ms = builder.MappingSchema;
+
+			using (new AllowMultipleQuery())
+			using (var db = new MyDataContext(context, ms))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
+					from d in m.Details
+					select d;
+
+				CheckFiltersForQuery(db, query);
+			}
+		}
 
 	}
 }

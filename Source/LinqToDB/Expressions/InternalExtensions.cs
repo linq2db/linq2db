@@ -1238,6 +1238,13 @@ namespace LinqToDB.Expressions
 			return 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T? EvaluateExpression<T>(this Expression? expr)
+			where T : class
+		{
+			return expr.EvaluateExpression() as T;
+		}
+
 		public static object? EvaluateExpression(this Expression? expr)
 		{
 			if (expr == null)

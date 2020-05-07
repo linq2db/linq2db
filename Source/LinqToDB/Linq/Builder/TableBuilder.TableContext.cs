@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 			public SelectQuery         SelectQuery { get; set; }
 			public SqlStatement?       Statement   { get; set; }
 
-			public List<Tuple<MemberInfo, Expression?>[]>? LoadWith    { get; set; }
+			public List<LoadWithInfo[]>? LoadWith    { get; set; }
 
 			public virtual IBuildContext? Parent   { get; set; }
 
@@ -194,9 +194,9 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
+					if (member.Info.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-						var ma = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.MemberInfo);
+						var ma = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.Info.MemberInfo);
 
 						// if (member.NextLoadWith.Count > 0)
 						// {
@@ -205,28 +205,28 @@ namespace LinqToDB.Linq.Builder
 						// 		tableContext.LoadWith = member.NextLoadWith;
 						// }
 
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedType, member.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType, member.Info.MemberInfo);
 
 
-						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.MemberInfo, out var ex))
+						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.Info.MemberInfo, out var ex))
 						{
 							if (Builder.AssociationPath == null)
-								Builder.AssociationPath = new Stack<Tuple<MemberInfo, IBuildContext>>();
+								Builder.AssociationPath = new Stack<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>();
 
-							Builder.AssociationPath.Push(Tuple.Create(member.MemberInfo, (IBuildContext)this));
+							Builder.AssociationPath.Push(Tuple.Create(member.Info.MemberInfo, (IBuildContext)this, member.NextLoadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
 							if (_loadWithCache == null)
 								_loadWithCache = new Dictionary<MemberInfo, Expression>();
-							_loadWithCache.Add(member.MemberInfo, ex);
+							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
 							_ = Builder.AssociationPath.Pop();
 						}
 
-						if (member.MemberInfo.IsDynamicColumnPropertyEx())
+						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
-							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedType);
-							var setter  = new MemberAccessor(typeAcc, member.MemberInfo, EntityDescriptor).SetterExpression;
+							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType);
+							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
 						}
@@ -235,7 +235,7 @@ namespace LinqToDB.Linq.Builder
 							exprs.Add(Expression.Assign(
 								attr?.Storage != null
 									? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
-									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+									: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo),
 								ex));
 						}
 					}
@@ -476,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (isAssociation)
 						{
-							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
+							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.Info.MemberInfo == member.MemberInfo);
 							if (loadWithItem != null)
 							{
 								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
@@ -1292,7 +1292,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region Helpers
 
-			protected internal virtual List<Tuple<MemberInfo, Expression?>[]>? GetLoadWith()
+			protected internal virtual List<LoadWithInfo[]>? GetLoadWith()
 			{
 				return LoadWith;
 			}

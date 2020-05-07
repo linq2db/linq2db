@@ -302,6 +302,7 @@ namespace Tests.Linq
 			[Column]
 			public int? ParentId { get; set; }
 
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(MainItem.Id))]
 			public MainItem? Parent { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubItem1_Sub.ParentId))]
@@ -404,7 +405,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -420,21 +421,67 @@ namespace Tests.Linq
 					where m.Id > 1
 					select m;
 
-				var query = filterQuery
-					.LoadWith(m => m.SubItems1,
-						q => q
-							.Where(i => i.Id % 2 == 0)
-							.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
-							.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
-					);
+				// var query1 = filterQuery
+				// 	.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 3 == 0).Take(2));
+				//
+				// var result1 = query1.ToArray();
 
-				var result = query.ToArray();
+				// var query2 = filterQuery
+				// 	.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 3 == 0).Take(2),
+				// 		e => e.Where(i => i.Value!.StartsWith("a")));
+				//
+				// var result2 = query2.ToArray();
 
-				var query2 = filterQuery
-					.LoadWith(m => m.SubItems1)
-					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
+				var query3 = filterQuery
+					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 3 == 0).Take(2),
+						e => e.Where(i => i.Value!.StartsWith("b")));
 
-				var result2 = query2.ToArray();
+				var result3 = query3.ToArray();
+
+			}
+		}
+
+		[Test]
+		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				// var filterQuery = from m in db.GetTable<MainItem>()
+				// 	where m.Id > 1
+				// 	select m;
+				//
+				// var query = filterQuery
+				// 	.LoadWith(m => m.SubItems1,
+				// 		q => q
+				// 			.Where(i => i.Id % 2 == 0)
+				// 			.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
+				// 			.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
+				// 	);
+				//
+				// var result = query.ToArray();
+				//
+				// var query2 = filterQuery
+				// 	.LoadWith(m => m.SubItems1)
+				// 	.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
+				//
+				// var result2 = query2.ToArray();
+				//
+				//
+				var mainQuery = from s in db.GetTable<SubItem1>()
+					select s;
+
+				var query3 = mainQuery
+					.LoadWith(s => s.Parent!, q => q.Where(p => p.Id % 3 == 0));
+
+				var result3 = query3.ToArray();
 			}
 		}
 

@@ -910,7 +910,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression? AssociationRoot;
-		public Stack<Tuple<MemberInfo, IBuildContext>>? AssociationPath;
+		public Stack<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 

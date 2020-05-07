@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 			Type parentOriginalType,
 			Type parentType, 
 			Type objectType, bool inline, bool enforceDefault, 
-			List<Tuple<MemberInfo, Expression?>[]>? loadWith, out bool isLeft)
+			List<LoadWithInfo[]>? loadWith, out bool isLeft)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
 
@@ -152,33 +152,46 @@ namespace LinqToDB.Linq.Builder
 			if (loadWith != null)
 			{
 				var associationLoadWith = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.MemberInfo == association.MemberInfo);
+					.FirstOrDefault(li => li.Info.MemberInfo == association.MemberInfo);
 
-				if (associationLoadWith != null)
+				if (associationLoadWith != null &&
+				    (associationLoadWith.Info.MemberFilter != null || associationLoadWith.Info.FilterFunc != null))
 				{
-					var loadWithFunc = associationLoadWith.Filter?.EvaluateExpression() as Delegate;
 
-					if (loadWithFunc != null)
+					var body = definedQueryMethod.Body.Unwrap();
+					var childTableType = typeof(ITable<>).MakeGenericType(objectType);
+					body = body.Transform(e =>
 					{
-						var body = definedQueryMethod.Body.Unwrap();
-						var childTableType = typeof(ITable<>).MakeGenericType(objectType);
-						body = body.Transform(e =>
+						if (e.NodeType == ExpressionType.Call)
 						{
-							if (e.NodeType == ExpressionType.Call)
+							var mc = (MethodCallExpression)e;
+							if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable) && mc.Type == childTableType)
 							{
-								var mc = (MethodCallExpression)e;
-								if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable) && mc.Type == childTableType)
+								var memberFilter = associationLoadWith.Info.MemberFilter;
+								if (memberFilter != null)
 								{
-									var filtered = (IQueryable)loadWithFunc.DynamicInvoke(mc.EvaluateExpression());
+									var filtered   = Expression.Convert(mc, memberFilter.Parameters[0].Type);
+									var filterBody = memberFilter.GetBody(filtered);
+									e = Expression.Call(
+										Methods.Queryable.AsQueryable.MakeGenericMethod(objectType), filterBody);
+								}
+
+								var loadWithFunc =
+									associationLoadWith.Info.FilterFunc?.EvaluateExpression<Delegate>();
+								if (loadWithFunc != null)
+								{
+									var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, e);
+									var filtered = (IQueryable)loadWithFunc.DynamicInvoke(query);
 									e = filtered.Expression;
 								}
+
 							}
+						}
 
-							return e;
-						});
+						return e;
+					});
 
-						definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-					}
+					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 
 					if (associationLoadWith.NextLoadWith != null)
 					{
@@ -276,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		public static Expression EnrichTablesWithLoadWith(Expression expression, Type entityType, List<Tuple<MemberInfo, Expression?>[]> loadWith, MappingSchema mappingSchema)
+		public static Expression EnrichTablesWithLoadWith(Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
 			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
 			var newExpression = expression.Transform(e =>
@@ -296,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression EnrichLoadWith(Expression table, Type entityType, List<Tuple<MemberInfo, Expression?>[]> loadWith, MappingSchema mappingSchema)
+		public static Expression EnrichLoadWith(Expression table, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
 			IQueryable queryable  = (IQueryable)table.EvaluateExpression()!;
 
@@ -312,14 +325,14 @@ namespace LinqToDB.Linq.Builder
 					if (isPrevList)
 						obj = new GetItemExpression(obj, mappingSchema);
 
-					if (member.Item1.DeclaringType != obj.Type)
-						obj = Expression.Convert(obj, member.Item1.DeclaringType);
-					obj = Expression.MakeMemberAccess(obj, member.Item1);
+					if (member.MemberInfo.DeclaringType != obj.Type)
+						obj = Expression.Convert(obj, member.MemberInfo.DeclaringType);
+					obj = Expression.MakeMemberAccess(obj, member.MemberInfo);
 
 					isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
 				}
 
-				var queryFilter = members[members.Length - 1].Item2;
+				var queryFilter = members[members.Length - 1].FilterFunc;
 
 				if (queryFilter == null)
 				{
@@ -332,8 +345,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var method =
 						(isPrevList
-							? Methods.LinqToDB.LoadWithQueryMany
-							: Methods.LinqToDB.LoadWithQuerySingle).MakeGenericMethod(entityType,
+							? Methods.LinqToDB.LoadWithManyFilter
+							: Methods.LinqToDB.LoadWithSingleFilter).MakeGenericMethod(entityType,
 							EagerLoading.GetEnumerableElementType(obj.Type, mappingSchema));
 
 					if (isPrevList)
@@ -349,13 +362,13 @@ namespace LinqToDB.Linq.Builder
 			return queryable.Expression;
 		}
 
-		public static Delegate? GetLoadWithFunc(List<Tuple<MemberInfo, Expression?>[]>? loadWith, MemberInfo memberInfo)
+		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo)
 		{
 			Delegate? loadWithFunc = null;
 			if (loadWith != null)
 			{
 				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.MemberInfo == memberInfo)?.Filter?.EvaluateExpression() as Delegate;
+					.FirstOrDefault(li => li.Info.MemberInfo == memberInfo)?.Info.FilterFunc?.EvaluateExpression() as Delegate;
 			}
 
 			return loadWithFunc;
@@ -363,13 +376,12 @@ namespace LinqToDB.Linq.Builder
 
 		public class LoadWithItem
 		{
-			public MemberInfo  MemberInfo   = null!;
-			public Expression? Filter;
-			public List<Tuple<MemberInfo, Expression?>[]> NextLoadWith = null!;
+			public LoadWithInfo Info  = null!;
+			public List<LoadWithInfo[]> NextLoadWith = null!;
 		}
 
 
-		public static List<LoadWithItem> GetLoadWith(List<Tuple<MemberInfo, Expression?>[]> infos)
+		public static List<LoadWithItem> GetLoadWith(List<LoadWithInfo[]> infos)
 		{
 			return
 			(
@@ -380,11 +392,10 @@ namespace LinqToDB.Linq.Builder
 					tail = lw.Skip(1).ToArray()
 				}
 				into info
-				group info by new { MemberInfo = info.head.Item1, Filter = info.head.Item2 } into gr
+				group info by info.head into gr
 				select new LoadWithItem
 				{
-					MemberInfo   = gr.Key.MemberInfo,
-					Filter       = gr.Key.Filter,
+					Info = gr.Key,
 					NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
 				}
 			).ToList();

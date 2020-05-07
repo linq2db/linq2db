@@ -577,44 +577,44 @@ namespace LinqToDB.Linq.Builder
 		static Expression CorrectLoadWithExpression(Expression detailExpression, IBuildContext context, IList<MemberInfo> associationPath, MappingSchema mappingSchema)
 		{
 			return detailExpression;
-			if (context is TableBuilder.TableContext table)
-			{
-				if (table.LoadWith?.Count > 0)
-				{
-					Tuple<MemberInfo, Expression?>[]? found = null;
-					for (var index = table.LoadWith.Count - 1; index >= 0; index--)
-					{
-						var path = table.LoadWith[index];
-						if (path.Length == associationPath.Count)
-						{
-							found = path;
-							for (int i = 0; i < path.Length; i++)
-							{
-								if (path[i].Item1 != associationPath[i])
-								{
-									found = null;
-									break;
-								}
-							}
-
-							if (found != null)
-								break;
-						}
-					}
-
-					if (found != null && found[found.Length - 1].Item2 != null)
-					{
-						var filterFunc   = (Delegate)found[found.Length - 1].Item2.EvaluateExpression()!;
-						var elementType  = GetEnumerableElementType(detailExpression.Type, mappingSchema);
-						var fakeQuery    = Tools.CreateEmptyQuery(elementType);
-						var appliedQuery = (IQueryable)filterFunc.DynamicInvoke(fakeQuery);
-
-						var queryableExpression = MakeAsQueryable(detailExpression, mappingSchema);
-						detailExpression = appliedQuery.Expression.Transform(e => e == fakeQuery.Expression ? queryableExpression : e);
-					}
-
-				}
-			}
+			// if (context is TableBuilder.TableContext table)
+			// {
+			// 	if (table.LoadWith?.Count > 0)
+			// 	{
+			// 		Tuple<MemberInfo, Expression?>[]? found = null;
+			// 		for (var index = table.LoadWith.Count - 1; index >= 0; index--)
+			// 		{
+			// 			var path = table.LoadWith[index];
+			// 			if (path.Length == associationPath.Count)
+			// 			{
+			// 				found = path;
+			// 				for (int i = 0; i < path.Length; i++)
+			// 				{
+			// 					if (path[i].Item1 != associationPath[i])
+			// 					{
+			// 						found = null;
+			// 						break;
+			// 					}
+			// 				}
+			//
+			// 				if (found != null)
+			// 					break;
+			// 			}
+			// 		}
+			//
+			// 		if (found != null && found[found.Length - 1].Item2 != null)
+			// 		{
+			// 			var filterFunc   = (Delegate)found[found.Length - 1].Item2.EvaluateExpression()!;
+			// 			var elementType  = GetEnumerableElementType(detailExpression.Type, mappingSchema);
+			// 			var fakeQuery    = Tools.CreateEmptyQuery(elementType);
+			// 			var appliedQuery = (IQueryable)filterFunc.DynamicInvoke(fakeQuery);
+			//
+			// 			var queryableExpression = MakeAsQueryable(detailExpression, mappingSchema);
+			// 			detailExpression = appliedQuery.Expression.Transform(e => e == fakeQuery.Expression ? queryableExpression : e);
+			// 		}
+			//
+			// 	}
+			// }
 
 			return detailExpression;
 		}
@@ -636,7 +636,7 @@ namespace LinqToDB.Linq.Builder
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
 
 			
-			var reversedAssociationPath = new List<Tuple<MemberInfo, IBuildContext>>(builder.AssociationPath ?? throw new InvalidOperationException());
+			var reversedAssociationPath = new List<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath ?? throw new InvalidOperationException());
 			reversedAssociationPath.Reverse();
 
 			var associationPath = new List<MemberInfo>(reversedAssociationPath.Select(a => a.Item1));

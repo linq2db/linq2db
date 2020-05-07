@@ -100,14 +100,17 @@ namespace LinqToDB
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
 			[InstantHandle] Expression<Func<TEntity, TProperty>> selector)
+		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var result = source.Provider.CreateQuery<TEntity>(
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(LoadWith, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
+					new[] { currentSource.Expression, Expression.Quote(selector) }));
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -185,19 +188,42 @@ namespace LinqToDB
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
 			[InstantHandle] Expression<Func<TEntity, IEnumerable<TProperty>>> selector,
-			Func<IQueryable<TProperty>, IQueryable<TProperty>> loadFunc)
+			Func<IQueryable<TProperty>, IQueryable<TProperty>> loadFunc) 
+		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var result = source.Provider.CreateQuery<TEntity>(
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
-					new[] { source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		[LinqTunnel]
+		[Pure]
+		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
+			this IQueryable<TEntity> source,
+			[InstantHandle] Expression<Func<TEntity, TProperty>> selector,
+			Func<IQueryable<TProperty>, IQueryable<TProperty>> loadFunc) 
+		where TEntity : class
+		{
+			if (source   == null) throw new ArgumentNullException(nameof(source));
+			if (selector == null) throw new ArgumentNullException(nameof(selector));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
+				Expression.Call(null,
+					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
+					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+
+			return new LoadWithQueryable<TEntity, TProperty>(result);
+		}
 		/// <summary>
 		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
 		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
@@ -245,13 +271,35 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 		
-			var result = source.Provider.CreateQuery<TEntity>(
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
-		
+					new[] { currentSource.Expression, Expression.Quote(selector) }));
+
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
+
+		// [LinqTunnel]
+		// [Pure]
+		// public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
+		// 	this ILoadWithQueryable<TEntity, TPreviousProperty> source,
+		// 	[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>> selector)
+		// 	where TEntity : class
+		// {
+		// 	if (source   == null) throw new ArgumentNullException(nameof(source));
+		// 	if (selector == null) throw new ArgumentNullException(nameof(selector));
+		//
+		// 	var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+		//
+		// 	var result = currentSource.Provider.CreateQuery<TEntity>(
+		// 		Expression.Call(null,
+		// 			MethodHelper.GetMethodInfo(ThenLoad, source, selector),
+		// 			new[] { currentSource.Expression, Expression.Quote(selector) }));
+		//
+		// 	return new LoadWithQueryable<TEntity, TProperty>(result);
+		// }
 
 		/// <summary>
 		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
@@ -293,18 +341,20 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, TPreviousProperty> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>> selector)
-			where TEntity : class
+			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>> source,
+			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>> selector)
+		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
-		
-			var result = source.Provider.CreateQuery<TEntity>(
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
-		
+					new[] { currentSource.Expression, Expression.Quote(selector) }));
+
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
@@ -355,79 +405,88 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		// [LinqTunnel]
+		// [Pure]
+		// public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
+		// 	this ILoadWithQueryable<TEntity, TPreviousProperty>                         source,
+		// 	[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>> selector,
+		// 	Func<IQueryable<TProperty>, IQueryable<TProperty>>                          loadFunc)
+		// 	where TEntity : class
+		// {
+		// 	if (source   == null) throw new ArgumentNullException(nameof(source));
+		// 	if (selector == null) throw new ArgumentNullException(nameof(selector));
+		//
+		// 	var result = source.Provider.CreateQuery<TEntity>(
+		// 		Expression.Call(null,
+		// 			MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+		// 			new[] { source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+		//
+		// 	return new LoadWithQueryable<TEntity, TProperty>(result);
+		// }
+
 		[LinqTunnel]
-		[Pure]
+		[Pure] // 1
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>> selector,
-			Func<IQueryable<TProperty>, IQueryable<TProperty>> loadFunc)
+			this ILoadWithQueryable<TEntity, TPreviousProperty>             source,
+			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>  selector,
+			Func<IQueryable<TProperty>, IQueryable<TProperty>>              loadFunc)
 			where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 		
-			var result = source.Provider.CreateQuery<TEntity>(
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					new[] { source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
 		
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
-		/// <summary>
-		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
-		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
-		/// Take into account that use of this method could require multiple queries to load all requested associations.
-		/// </summary>
-		/// <example>
-		/// <para>
-		///     <para>
-		///         Following queries loads records from Table1 with Reference1 association and then loads records from Reference2 association for each loaded Reference1 record.
-		///         <code>
-		///             db.Table1.LoadWith(r => r.Reference1.Reference2);
-		///         </code>
-		///         Same query using ThenLoad extension.
-		///         <code>
-		///             db.Table1.LoadWith(r => r.Reference1).ThenLoad(r => r.Reference2);
-		///         </code>
-		///     </para>
-		///     <para>
-		///         Note that a way you access collection association record (by index, using First() method) doesn't affect query results and always select all records.
-		///     </para>
-		///     <para>
-		///         <code>
-		///             db.Table1.LoadWith(r => r.References1[0].References2.First().Reference3);
-		///         </code>
-		///         Same query using ThenLoad extension.
-		///         <code>
-		///             db.Table1.LoadWith(r => r.References1).ThenLoad(r => r.References2).ThenLoad(r => r.Reference3);
-		///         </code>
-		///     </para>
-		/// </para>
-		/// </example>
-		/// <typeparam name="TEntity">Type of entity being queried.</typeparam>
-		/// <typeparam name="TPreviousProperty">Type of parent association.</typeparam>
-		/// <typeparam name="TProperty">Type of the related entity to be included.</typeparam>
-		/// <param name="source">The source query.</param>
-		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
-		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
-		[Pure]
+		[Pure] // 2
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
 			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>> selector)
-		where TEntity : class
+			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>   selector,
+			Func<IQueryable<TProperty>, IQueryable<TProperty>>               loadFunc)
+			where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
+		
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			var result = source.Provider.CreateQuery<TEntity>(
+			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
-
+					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+		
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
-	
+
+
+		[LinqTunnel]
+		[Pure] // 3
+		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
+			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>>            source,
+			[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>> selector,
+			Func<IQueryable<TProperty>, IQueryable<TProperty>>                          loadFunc)
+			where TEntity : class
+		{
+			if (source   == null) throw new ArgumentNullException(nameof(source));
+			if (selector == null) throw new ArgumentNullException(nameof(selector));
+		
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(
+				Expression.Call(null,
+					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+		
+			return new LoadWithQueryable<TEntity, TProperty>(result);
+		}
+
 	}
 }
