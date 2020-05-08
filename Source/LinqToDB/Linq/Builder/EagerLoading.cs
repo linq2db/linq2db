@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 			out ParameterExpression?      replaceParam)
 		{
 			queryableExpression = detailExpression;
-			finalExpression     = null!;
+			finalExpression     = detailExpression;
 			replaceParam        = null;
 
 			var allowed = new HashSet<ParameterExpression>(parameters ?? Enumerable.Empty<ParameterExpression>());
@@ -312,65 +312,58 @@ namespace LinqToDB.Linq.Builder
 
 			static bool IsNotSupported(MethodCallExpression methodCall)
 			{
-				return methodCall.IsQueryable(true) &&
-					   methodCall.Method.Name.In(
-						   "Any", "Sum", "Min", "Max", "Count", "Average", 
-						   "Distinct", "Skip", "Take",
-						   "First", "FirstOrDefault", "Last", "LastOrDefault",
-						   "Single", "SingleOrDefault", 
-						   "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending");
-			}
-
-			bool IsDepended(Expression expr)
-			{
-				var depended = null != expr.Find(ee =>
+				if (methodCall.Method.Name.In(
+					"Any", "Sum", "Min", "Max", "Count", "Average",
+					"Distinct", "Skip", "Take",
+					"First", "FirstOrDefault", "Last", "LastOrDefault",
+					"Single", "SingleOrDefault"
+				))
 				{
-					if (ee.NodeType == ExpressionType.Parameter && !allowed.Contains(ee))
-						return true;
-					return false;
-				});
-				return depended;
-			}
-
-			finalExpression = detailExpression.Transform(e =>
-			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.Lambda:
-						{
-							allowed.AddRange(((LambdaExpression)e).Parameters);
-							break;
-						}
-
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)e;
-							if (mc.IsQueryable(true))
-							{
-								var isNotSupported = IsNotSupported(mc);
-								needsTruncation = needsTruncation || isNotSupported;
-								if (needsTruncation && (mc.Arguments[0].NodeType != ExpressionType.Call || !IsNotSupported((MethodCallExpression)mc.Arguments[0]) || IsDepended(mc.Arguments[0])))
-								{ 
-									newQueryable    = mc.Arguments[0];
-									var elementType = GetEnumerableElementType(newQueryable.Type, mappingSchema);
-									newParam        = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
-									var replaceExpr = (Expression)newParam;
-									if (!newQueryable.Type.IsSameOrParentOf(typeof(List<>)))
-									{
-										replaceExpr = Expression.Call(
-											Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType), replaceExpr);
-									}
-									var newMethod       = mc.Update(mc.Object, new[]{replaceExpr}.Concat(mc.Arguments.Skip(1)));
-									return new TransformInfo(newMethod, true);
-								}
-							}
-
-							break;
-						}
+					return true;
 				}
 
-				return new TransformInfo(e);
-			});
+				if (methodCall.Method.Name.In("SelectMany", "Join", "GroupJoin"))
+				{
+					var lambda = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+					var body = lambda.Body.UnwrapWithAs();
+					if (body.NodeType == ExpressionType.Call)
+						return IsNotSupported((MethodCallExpression)body);
+				}
+
+				return false;
+			}
+
+			var current = detailExpression;
+			MethodCallExpression? lastNotSupported = null;
+			while (current.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)current;
+				if (!mc.IsQueryable(true))
+					break;
+
+				if (IsNotSupported(mc))
+					lastNotSupported = mc;
+
+				current = mc.Arguments[0];
+				
+			}
+
+			if (lastNotSupported != null)
+			{
+				newQueryable    = lastNotSupported.Arguments[0];
+				var elementType = GetEnumerableElementType(newQueryable.Type, mappingSchema);
+				newParam        = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
+				var replaceExpr = (Expression)newParam;
+				if (!newQueryable.Type.IsSameOrParentOf(typeof(List<>)))
+				{
+					replaceExpr = Expression.Call(
+						Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType), replaceExpr);
+				}
+
+				var newMethod   = lastNotSupported.Update(lastNotSupported.Object, new[] { replaceExpr }.Concat(lastNotSupported.Arguments.Skip(1)));
+				finalExpression = detailExpression.Replace(lastNotSupported, newMethod);
+			}
+
 
 			if (newQueryable != null)
 			{
@@ -643,8 +636,8 @@ namespace LinqToDB.Linq.Builder
 
 
 			var extractContext = reversedAssociationPath[0].Item2;
-
 			var associationParentType = associationPath[0].DeclaringType;
+			var loadWithItems  = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
 
 			Expression           resultExpression;
 			Expression           finalExpression;
@@ -681,9 +674,20 @@ namespace LinqToDB.Linq.Builder
 					key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
 				}
 
-				detailQuery = ConstructMemberPath(associationPath, detailProp, true)!;
-				detailQuery = CorrectLoadWithExpression(detailQuery, extractContext, associationPath, mappingSchema);
+				var associationMember = associationPath[associationPath.Count - 1];
+				associationPath.RemoveAt(associationPath.Count - 1);
+				if (associationPath.Count == 0)
+					detailQuery = detailProp;
+				else
+					detailQuery = ConstructMemberPath(associationPath, detailProp, true)!;
 
+				var parentType = association.GetParentElementType();
+				var objectType = association.GetElementType(builder.MappingSchema);
+				var associationLambda = AssociationHelper.CreateAssociationQueryLambda(builder, associationMember, association, parentType, parentType,
+					objectType, false, false, loadWithItems, out _);
+
+				detailQuery = associationLambda.GetBody(detailQuery);
+			
 				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
@@ -710,8 +714,19 @@ namespace LinqToDB.Linq.Builder
 
 				var masterKeys = ExtractKeys(extractContext, masterParam).ToArray();
 
-				detailQuery = ConstructMemberPath(associationPath, masterParam, true)!;
-				detailQuery = CorrectLoadWithExpression(detailQuery, extractContext, associationPath, mappingSchema);
+				var associationMember = associationPath[associationPath.Count - 1];
+				associationPath.RemoveAt(associationPath.Count - 1);
+				if (associationPath.Count == 0)
+					detailQuery = masterParam;
+				else
+					detailQuery = ConstructMemberPath(associationPath, masterParam, true)!;
+
+				var parentType = association.GetParentElementType();
+				var objectType = association.GetElementType(builder.MappingSchema);
+				var associationLambda = AssociationHelper.CreateAssociationQueryLambda(builder, associationMember, association, parentType, parentType,
+					objectType, false, false, loadWithItems, out _);
+
+				detailQuery = associationLambda.GetBody(detailQuery);
 
 				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
 

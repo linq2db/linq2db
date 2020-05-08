@@ -157,49 +157,36 @@ namespace LinqToDB.Linq.Builder
 				if (associationLoadWith != null &&
 				    (associationLoadWith.Info.MemberFilter != null || associationLoadWith.Info.FilterFunc != null))
 				{
-
 					var body = definedQueryMethod.Body.Unwrap();
-					var childTableType = typeof(ITable<>).MakeGenericType(objectType);
-					body = body.Transform(e =>
+
+					var memberFilter = associationLoadWith.Info.MemberFilter;
+					if (memberFilter != null)
 					{
-						if (e.NodeType == ExpressionType.Call)
-						{
-							var mc = (MethodCallExpression)e;
-							if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable) && mc.Type == childTableType)
-							{
-								var memberFilter = associationLoadWith.Info.MemberFilter;
-								if (memberFilter != null)
-								{
-									var filtered   = Expression.Convert(mc, memberFilter.Parameters[0].Type);
-									var filterBody = memberFilter.GetBody(filtered);
-									e = Expression.Call(
-										Methods.Queryable.AsQueryable.MakeGenericMethod(objectType), filterBody);
-								}
+						var filtered   = Expression.Convert(body, memberFilter.Parameters[0].Type);
+						var filterBody = memberFilter.GetBody(filtered);
+						body = Expression.Call(
+							Methods.Queryable.AsQueryable.MakeGenericMethod(objectType), filterBody);
+					}
 
-								var loadWithFunc =
-									associationLoadWith.Info.FilterFunc?.EvaluateExpression<Delegate>();
-								if (loadWithFunc != null)
-								{
-									var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, e);
-									var filtered = (IQueryable)loadWithFunc.DynamicInvoke(query);
-									e = filtered.Expression;
-								}
-
-							}
-						}
-
-						return e;
-					});
+					var loadWithFunc =
+						associationLoadWith.Info.FilterFunc?.EvaluateExpression<Delegate>();
+					if (loadWithFunc != null)
+					{
+						var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
+						var filtered = (IQueryable)loadWithFunc.DynamicInvoke(query);
+						body = filtered.Expression;
+					}
 
 					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 
-					if (associationLoadWith.NextLoadWith != null)
-					{
-						definedQueryMethod = (LambdaExpression)EnrichTablesWithLoadWith(definedQueryMethod, objectType,
-							associationLoadWith.NextLoadWith, builder.MappingSchema);
-					}
-					
 				}
+
+				if (associationLoadWith?.NextLoadWith != null)
+				{
+					definedQueryMethod = (LambdaExpression)EnrichTablesWithLoadWith(builder.DataContext, definedQueryMethod, objectType,
+						associationLoadWith.NextLoadWith, builder.MappingSchema);
+				}
+
 			}
 
 			if (parentOriginalType != parentType)
@@ -289,7 +276,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		public static Expression EnrichTablesWithLoadWith(Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
+		public static Expression EnrichTablesWithLoadWith(IDataContext dataContext, Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
 			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
 			var newExpression = expression.Transform(e =>
@@ -299,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 					var mc = (MethodCallExpression)e;
 					if (mc.IsQueryable("GetTable") && tableType.IsSameOrParentOf(mc.Type))
 					{
-						e = EnrichLoadWith(mc, entityType, loadWith, mappingSchema);
+						e = EnrichLoadWith(dataContext, mc, entityType, loadWith, mappingSchema);
 					}
 				}
 
@@ -309,9 +296,9 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression EnrichLoadWith(Expression table, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
+		public static Expression EnrichLoadWith(IDataContext dataContext, Expression table, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
-			IQueryable queryable  = (IQueryable)table.EvaluateExpression()!;
+			IQueryable queryable  = ExpressionQueryImpl.CreateQuery(entityType, dataContext, table);
 
 			foreach (var members in loadWith)
 			{
@@ -330,6 +317,12 @@ namespace LinqToDB.Linq.Builder
 					obj = Expression.MakeMemberAccess(obj, member.MemberInfo);
 
 					isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
+				}
+
+				var lastMember = members[members.Length - 1];
+				if (lastMember.MemberFilter != null)
+				{
+					obj = lastMember.MemberFilter.GetBody(obj);
 				}
 
 				var queryFilter = members[members.Length - 1].FilterFunc;
@@ -383,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static List<LoadWithItem> GetLoadWith(List<LoadWithInfo[]> infos)
 		{
-			return
+			var result =
 			(
 				from lw in infos
 				select new
@@ -399,6 +392,8 @@ namespace LinqToDB.Linq.Builder
 					NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
 				}
 			).ToList();
+
+			return result;
 		}
 
 	}

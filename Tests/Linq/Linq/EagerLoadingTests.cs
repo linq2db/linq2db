@@ -552,7 +552,7 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -562,7 +562,7 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var result   = query.ToArray();

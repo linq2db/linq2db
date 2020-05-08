@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 							if (Builder.AssociationPath == null)
 								Builder.AssociationPath = new Stack<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>();
 
-							Builder.AssociationPath.Push(Tuple.Create(member.Info.MemberInfo, (IBuildContext)this, member.NextLoadWith));
+							Builder.AssociationPath.Push(Tuple.Create(member.Info.MemberInfo, (IBuildContext)this, loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
 							if (_loadWithCache == null)

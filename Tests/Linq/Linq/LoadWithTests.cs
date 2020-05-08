@@ -433,10 +433,22 @@ namespace Tests.Linq
 				// var result2 = query2.ToArray();
 
 				var query3 = filterQuery
-					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 3 == 0).Take(2),
-						e => e.Where(i => i.Value!.StartsWith("b")));
+					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2),
+						e => e.Where(i => i.Value!.StartsWith("Sub2_")));
 
+				var query3_1 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(s => s.Parent)
+					.ThenLoad(p => p.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2), e => e.Where(i => i.Value!.StartsWith("Sub2_")));
+					
+				
 				var result3 = query3.ToArray();
+
+				var query4 = filterQuery
+					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0),
+						e => e.Where(i => i.Value!.StartsWith("Sub1_")));
+
+				var result4 = query4.ToArray();
 
 			}
 		}

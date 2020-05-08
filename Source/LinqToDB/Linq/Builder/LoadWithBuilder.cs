@@ -16,15 +16,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(
-				Methods.LinqToDB.LoadWith, 
-				Methods.LinqToDB.LoadWithManyFilter,
-				Methods.LinqToDB.LoadWithSingleFilter,
-				Methods.LinqToDB.ThenLoadFromSingle,
-				Methods.LinqToDB.ThenLoadFromMany,
-				Methods.LinqToDB.ThenLoadFromManyManyFilter,
-				Methods.LinqToDB.ThenLoadFromManySingleFilter,
-				Methods.LinqToDB.ThenLoadFromSingleSingleFilter);
+			return methodCall.IsQueryable("LoadWith", "ThenLoad");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -46,12 +38,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException(
 					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType.Name}>() method.");
 
-			if (methodCall.IsSameGenericMethod(
-				Methods.LinqToDB.ThenLoadFromSingle,
-				Methods.LinqToDB.ThenLoadFromMany,
-				Methods.LinqToDB.ThenLoadFromManyManyFilter,
-				Methods.LinqToDB.ThenLoadFromManySingleFilter,
-				Methods.LinqToDB.ThenLoadFromSingleSingleFilter))
+			if (methodCall.Method.Name == "ThenLoad")
 			{
 				if (!(table.LoadWith?.Count > 0))
 					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{selector.Body}'.");
