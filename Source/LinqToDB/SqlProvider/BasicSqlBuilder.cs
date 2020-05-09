@@ -2248,18 +2248,19 @@ namespace LinqToDB.SqlProvider
 							else
 							{
 								var table = GetTableAlias(ts);
+								var len = StringBuilder.Length;
 
-								table = table == null ?
-									GetPhysicalTableName(field.Table, null, true) :
-									ConvertInline(table, ConvertType.NameToQueryTableAlias);
+								if (table == null)
+									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true));
+								else
+									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
-								if (string.IsNullOrEmpty(table))
+								if (len == StringBuilder.Length)
 									throw new SqlException("Table {0} should have an alias.", field.Table);
 
 								addAlias = alias != field.PhysicalName;
 
 								StringBuilder
-									.Append(table)
 									.Append('.');
 							}
 						}
