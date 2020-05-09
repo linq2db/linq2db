@@ -266,8 +266,10 @@ namespace LinqToDB.SqlProvider
 
 					// add aliases only for first row
 					if (!MergeSupportsColumnAliasesInSource && i == 0)
+					{
 						StringBuilder.Append(" ");
-					Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+					}
 				}
 
 				if (FakeTable != null)

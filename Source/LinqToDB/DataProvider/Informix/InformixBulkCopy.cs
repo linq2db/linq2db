@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Informix
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sb.Convert(new System.Text.StringBuilder(), columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sb.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
 				TraceAction(
 					dataConnection,
