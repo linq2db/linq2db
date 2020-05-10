@@ -354,6 +354,16 @@ namespace LinqToDB.Expressions
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
+			if (type.IsGenericType) {
+				var typeArguments = type.GetGenericArguments().Select(t => TryMapType(t, out var r) ? r : null).ToArray();
+				if (typeArguments.All(t => t != null))
+				{
+					replacement = type.GetGenericTypeDefinition().MakeGenericType(typeArguments);
+					_typeMappingCache.Add(type, replacement);
+					return true;
+				}
+			}
+
 			_typeMappingCache.Add(type, null);
 			return false;
 		}

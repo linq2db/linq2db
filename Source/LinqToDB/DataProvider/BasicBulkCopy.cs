@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table)
+		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 		{
 			var serverName   = options.ServerName   ?? table.ServerName;
 			var databaseName = options.DatabaseName ?? table.DatabaseName;
@@ -66,10 +66,10 @@ namespace LinqToDB.DataProvider
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
-				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer),
-				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase),
-				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema),
-											  sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable))
+				serverName   == null ? null : escaped ? sqlBuilder.Convert(serverName,   ConvertType.NameToServer)    : serverName,
+				databaseName == null ? null : escaped ? sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase)  : databaseName,
+				schemaName   == null ? null : escaped ? sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema)    : schemaName,
+											  escaped ? sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable): tableName)
 			.ToString();
 		}
 

@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (source == null)
 				throw new ArgumentException(nameof(source));
 
-			return new MySqlBulkCopy().BulkCopy(
+			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,

@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.Sybase
 						// do not convert table and column names to valid sql name, as sybase bulk copy implementation
 						// doesn't understand escaped names (facepalm)
 						// which means it will probably fail when escaping required anyways...
-						bc.DestinationTableName = GetDestinationTableName(sb, options, table);
+						bc.DestinationTableName = GetTableName(sb, options, table, false);
 
 						for (var i = 0; i < columns.Count; i++)
 							bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(columns[i].ColumnName, columns[i].ColumnName));
@@ -96,24 +96,6 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			return MultipleRowsCopy(table, options, source);
-		}
-
-		private static string GetDestinationTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table)
-		{
-			var serverName   = options.ServerName   ?? table.ServerName;
-			var databaseName = options.DatabaseName ?? table.DatabaseName;
-			var schemaName   = options.SchemaName   ?? table.SchemaName;
-			var tableName    = options.TableName    ?? table.TableName;
-
-			// no escaping, as otherwise driver will be unable to load table schema and fail
-			// basically, just another bug in driver, which makes bulk copy unusable for some table names
-			return sqlBuilder.BuildTableName(
-				new StringBuilder(),
-				serverName,
-				databaseName,
-				schemaName,
-				tableName)
-			.ToString();
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(

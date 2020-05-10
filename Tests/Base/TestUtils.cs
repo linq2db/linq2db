@@ -280,7 +280,7 @@ namespace Tests
 		// see ProviderNeedsTimeFix
 		public static DateTime StripMilliseconds(DateTime value, bool fix)
 		{
-			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
+			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
 		class FirebirdTempTable<T> : TempTable<T>
