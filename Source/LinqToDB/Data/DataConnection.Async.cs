@@ -109,9 +109,9 @@ namespace LinqToDB.Data
 				}
 				catch (Exception ex)
 				{
-					if (TraceSwitch.TraceError)
+					if (TraceSwitchConnection.TraceError)
 					{
-						OnTraceConnection?.Invoke(new TraceInfo(this, TraceInfoStep.Error)
+						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 						{
 							TraceLevel     = TraceLevel.Error,
 							StartTime      = DateTime.UtcNow,
@@ -221,14 +221,14 @@ namespace LinqToDB.Data
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteNonQueryAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope(this))
 					ret = await ExecuteNonQueryAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -262,7 +262,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
@@ -290,14 +290,14 @@ namespace LinqToDB.Data
 
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -314,7 +314,7 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope(this))
 					ret = await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -330,7 +330,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
@@ -363,7 +363,7 @@ namespace LinqToDB.Data
 			CommandBehavior commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteReaderAsync(Command, commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -371,7 +371,7 @@ namespace LinqToDB.Data
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (TraceSwitch.TraceInfo)
+			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
@@ -390,7 +390,7 @@ namespace LinqToDB.Data
 					ret = await ExecuteReaderAsync(Command, commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				if (TraceSwitch.TraceInfo)
+				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
@@ -406,7 +406,7 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitch.TraceError)
+				if (TraceSwitchConnection.TraceError)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{

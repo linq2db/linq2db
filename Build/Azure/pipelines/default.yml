@@ -7,6 +7,7 @@ variables:
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  artifact_linq2db_aspnet_binaries: 'linq2db_aspnet_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
@@ -136,6 +137,12 @@ stages:
         artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db.Tools build results
 
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
+        artifact: '$(artifact_linq2db_aspnet_binaries)'
+      displayName: Publish linq2db.AspNet build results
+
 #############################
 #  Build and Publish nugets #
 #############################
@@ -163,6 +170,11 @@ stages:
       inputs:
         artifactName: '$(artifact_linq2db_Tools_binaries)'
         targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(artifact_linq2db_aspnet_binaries)'
+        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
 
     - task: DownloadPipelineArtifact@2
       inputs:

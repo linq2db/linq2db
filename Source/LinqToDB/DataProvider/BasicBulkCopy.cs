@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
+			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
 				{
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider
 			{
 				var count = action();
 
-				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
 					{
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider
 			}
 			catch (Exception ex)
 			{
-				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
+				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
 					{

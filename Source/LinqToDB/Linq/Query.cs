@@ -14,6 +14,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Data;
 	using Common;
+	using Common.Logging;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -314,10 +315,10 @@ namespace LinqToDB.Linq
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 
-				if (DataConnection.TraceSwitch.TraceInfo)
-					DataConnection.WriteTraceLine(
+				if (dataContext.GetTraceSwitch().TraceInfo)
+					dataContext.WriteTraceLine(
 						$"Expression test code generated: \'{testFile}\'.",
-						DataConnection.TraceSwitch.DisplayName,
+						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Info);
 			}
 
@@ -331,9 +332,9 @@ namespace LinqToDB.Linq
 			{
 				if (!Configuration.Linq.GenerateExpressionTest)
 				{
-					DataConnection.WriteTraceLine(
+					dataContext.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-						DataConnection.TraceSwitch.DisplayName,
+						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);
 				}
 
