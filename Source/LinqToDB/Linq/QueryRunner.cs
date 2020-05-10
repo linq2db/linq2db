@@ -66,25 +66,10 @@ namespace LinqToDB.Linq
 			{
 				var dataReaderType = dataReader.GetType();
 
-				ParameterExpression? oldVariable;
-				ParameterExpression? newVariable;
-				LambdaExpression?    converterExpr;
-				Type                variableType;
-
 				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
 				{
-					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
-					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
 
-					oldVariable = null;
-					newVariable = null;
-					var mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
-						e => {
-							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
-
-							return replaceVariable(e);
-						});
+					var mapperExpression = TransformMapperExpression(context, dataReader, dataReaderType, false);
 
 					var qr = QueryRunner;
 					if (qr != null)
@@ -115,23 +100,49 @@ namespace LinqToDB.Linq
 					if (qr != null)
 						qr.MapperExpression = mapperInfo.MapperExpression;
 
-					converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
-					variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
-
-					oldVariable = null;
-					newVariable = null;
-					var expression = (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e => {
-						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable!, context);
-
-						return replaceVariable(e);
-					});
+					var expression = TransformMapperExpression(context, dataReader, dataReaderType, false);
 
 					mapperInfo.Mapper = expression.Compile();
 
 					mapperInfo.IsFaulted = true;
 
 					return mapperInfo.Mapper(queryRunner, dataReader);
+				}
+			}
+
+			// transform extracted to separate method to avoid closures allocation on mapper cache hit
+			private Expression<Func<IQueryRunner, IDataReader, T>> TransformMapperExpression(
+				IDataContext context,
+				IDataReader  dataReader,
+				Type         dataReaderType,
+				bool         slowMode)
+			{
+				var converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
+				var variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
+
+				ParameterExpression? oldVariable = null;
+				ParameterExpression? newVariable = null;
+
+				if (slowMode)
+				{
+					return (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e =>
+					{
+						if (e is ConvertFromDataReaderExpression ex)
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable!, context);
+
+						return replaceVariable(e);
+					});
+				}
+				else
+				{
+					return (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(
+						e =>
+						{
+							if (e is ConvertFromDataReaderExpression ex)
+								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
+
+							return replaceVariable(e);
+						});
 				}
 
 				Expression replaceVariable(Expression e)
@@ -160,6 +171,7 @@ namespace LinqToDB.Linq
 				}
 			}
 		}
+
 
 		#endregion
 

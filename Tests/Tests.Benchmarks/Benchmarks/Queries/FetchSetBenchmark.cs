@@ -33,6 +33,7 @@ namespace LinqToDB.Benchmarks.Queries
 				FieldTypes = SalesOrderHeader.FieldTypes,
 				DbTypes    = SalesOrderHeader.DbTypes,
 				Data       = Enumerable.Range(0, 31465).Select(_ => SalesOrderHeader.SampleRow).ToArray()
+				//Data       = Enumerable.Range(0, 100).Select(_ => SalesOrderHeader.SampleRow).ToArray()
 			};
 
 			_compiled = CompiledQuery.Compile((Db db, int id) => db.SalesOrderHeader);

@@ -5,7 +5,7 @@ namespace LinqToDB.Benchmarks
 {
 	class Program
 	{
-		static void Main_(string[] args)
+		static void Main(string[] args)
 		{
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
@@ -22,8 +22,8 @@ namespace LinqToDB.Benchmarks
 			SelectBenchmark_Measure(b);
 		}
 
-		//static void Main_FetchSetBenchmark_Memory(string[] args)
-		static void Main()
+		static void Main_FetchSetBenchmark_Memory(string[] args)
+		//static void Main()
 		{
 			var b = new FetchSetBenchmark();
 			b.Setup();
