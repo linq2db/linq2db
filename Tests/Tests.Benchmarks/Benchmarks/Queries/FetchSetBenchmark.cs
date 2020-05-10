@@ -11,10 +11,10 @@ using LinqToDB.DataProvider;
 namespace LinqToDB.Benchmarks.Queries
 {
 	// test FetchIndividualBenchmark case from https://github.com/FransBouma/RawDataAccessBencher
-	public class FetchIndividualBenchmark
+	public class FetchSetBenchmark
 	{
 		private string ConnectionString = "test";
-		private Func<Db, int, SalesOrderHeader> _compiled = null!;
+		private Func<Db, int, IQueryable<SalesOrderHeader>> _compiled = null!;
 		private QueryResult _result = null!;
 		private int _key = 124;
 		private string CommandText = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
@@ -23,49 +23,41 @@ namespace LinqToDB.Benchmarks.Queries
 		[GlobalSetup]
 		public void Setup()
 		{
+			var schema = 
+
+
 			_result = new QueryResult()
 			{
 				Schema     = SalesOrderHeader.SchemaTable,
 				Names      = SalesOrderHeader.Names,
 				FieldTypes = SalesOrderHeader.FieldTypes,
 				DbTypes    = SalesOrderHeader.DbTypes,
-				Data       = new object?[][]
-				{
-					SalesOrderHeader.SampleRow
-				},
+				Data       = Enumerable.Range(0, 31465).Select(_ => SalesOrderHeader.SampleRow).ToArray()
 			};
 
-			_compiled = CompiledQuery.Compile((Db db, int id) => db.SalesOrderHeader
-				.Where(p => p.SalesOrderID == id)
-				.FirstOrDefault());
+			_compiled = CompiledQuery.Compile((Db db, int id) => db.SalesOrderHeader);
 		}
 
 		[Benchmark]
-		public SalesOrderHeader? Linq()
+		public List<SalesOrderHeader> Linq()
 		{
 			using (var db = new Db(_provider, _result))
 			{
-				return db.SalesOrderHeader
-					.Where(p => p.SalesOrderID == _key)
-					.FirstOrDefault();
+				return db.SalesOrderHeader.ToList();
 			}
 		}
 
 		[Benchmark]
-		public SalesOrderHeader? Compiled()
+		public List<SalesOrderHeader> Compiled()
 		{
 			using (var db = new Db(_provider, _result))
-				return _compiled(db, _key);
+				return _compiled(db, _key).ToList();
 		}
 
 		[Benchmark(Baseline = true)]
 		public object? RawAdoNet()
 		{
-			var toExecute = new MockDbCommand(CommandText + " WHERE SalesOrderId=@p", _result);
-			toExecute.Parameters.Add(new MockDbParameter("@p", _key));
-
-			var results = MaterializeSet(toExecute);
-			return results.FirstOrDefault();
+			return MaterializeSet(new MockDbCommand(CommandText, _result));
 		}
 
 		private IEnumerable<SalesOrderHeader> MaterializeSet(MockDbCommand toExecute)

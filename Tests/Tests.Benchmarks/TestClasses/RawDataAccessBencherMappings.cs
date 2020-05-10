@@ -135,6 +135,47 @@ namespace LinqToDB.Benchmarks.Mappings
 
 		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Mappings.Customer.CustomerID))]
 		public Customer Customer { get; set; } = null!;
+
+		public static DataTable SchemaTable;
+
+		public static string[]  Names      = new[] { "SalesOrderID", "AccountNumber", "Comment", "CreditCardApprovalCode", "DueDate", "Freight", "ModifiedDate", "OnlineOrderFlag", "OrderDate", "PurchaseOrderNumber", "RevisionNumber", "Rowguid", "SalesOrderNumber", "ShipDate", "Status", "SubTotal", "TaxAmt", "TotalDue", "CustomerID", "SalesPersonID", "TerritoryID", "BillToAddressID", "ShipToAddressID", "ShipMethodID", "CreditCardID", "CurrencyRateID" };
+		public static Type[]    FieldTypes = new[] { typeof(int), typeof(string), typeof(string), typeof(string), typeof(DateTime), typeof(decimal), typeof(DateTime), typeof(bool), typeof(DateTime), typeof(string), typeof(byte), typeof(Guid), typeof(string), typeof(DateTime), typeof(byte), typeof(decimal), typeof(decimal), typeof(decimal), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) };
+		public static string[]  DbTypes    = new[] { "int", "nvarchar", "nvarchar", "varchar", "datetime", "money", "datetime", "bit", "datetime", "nvarchar", "tinyint", "uniqueidentifier", "nvarchar", "datetime", "tinyint", "money", "money", "money", "int", "int", "int", "int", "int", "int", "int", "int" };
+		public static object?[] SampleRow  = new object?[] { 123, "100500", "nothing to see here, please disperse", "666", DateTime.Now, 12.34m, DateTime.Now, true, DateTime.Now, "1123787", (byte)4, Guid.NewGuid(), "sdfsdfsd", DateTime.Now, (byte)12, 1.1m, 4.2m, 423.222m, 1, 2, 3, 4, 5, 6, 7, 8 };
+
+	static SalesOrderHeader()
+		{
+			var schema = new DataTable();
+			schema.Columns.Add("AllowDBNull", typeof(bool));
+			schema.Rows.Add(false);
+			schema.Rows.Add(true);
+			schema.Rows.Add(true);
+			schema.Rows.Add(true);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(true);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(true);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(true);
+			schema.Rows.Add(true);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(false);
+			schema.Rows.Add(true);
+			schema.Rows.Add(true);
+
+			SchemaTable = schema;
+		}
 	}
 
 	[Table(Schema = "Sales", Name = "SalesOrderDetail")]
