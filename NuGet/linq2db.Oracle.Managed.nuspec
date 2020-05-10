@@ -22,11 +22,11 @@
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                       version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.60"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.70"/>
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="linq2db"                       version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.60"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.70"/>
 			</group>
 		</dependencies>
 		<contentFiles>
