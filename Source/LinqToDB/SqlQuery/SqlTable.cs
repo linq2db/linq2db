@@ -374,6 +374,7 @@ namespace LinqToDB.SqlQuery
 				PhysicalName = "INSERTED",
 				Schema       = null,
 				Database     = null,
+				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
 		#endregion
