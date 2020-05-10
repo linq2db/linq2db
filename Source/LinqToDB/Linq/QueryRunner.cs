@@ -18,6 +18,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
+	using Common.Logging;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -104,10 +105,10 @@ namespace LinqToDB.Linq
 					if (mapperInfo.IsFaulted)
 						throw;
 
-					if (DataConnection.TraceSwitch.TraceInfo)
-						DataConnection.WriteTraceLine(
+					if (context.GetTraceSwitch().TraceInfo)
+						context.WriteTraceLine(
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName,
+							context.GetTraceSwitch().DisplayName,
 							TraceLevel.Error);
 
 					var qr = QueryRunner;

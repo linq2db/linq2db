@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 	</ItemGroup>
 

@@ -13,7 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
-		<PackageReference Include="Humanizer.Core" Version="2.8.2" />
+		<PackageReference Include="Humanizer.Core" Version="2.8.11" />
 		
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 		

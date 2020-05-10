@@ -3,6 +3,7 @@ rmdir built /S /Q
 md built
 
 ..\Redist\NuGet Pack linq2db.nuspec -OutputDirectory built
+..\Redist\NuGet Pack linq2db.AspNet.nuspec -OutputDirectory built
 ..\Redist\NuGet Pack linq2db.Tools.nuspec -OutputDirectory built
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec -OutputDirectory built
