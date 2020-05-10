@@ -100,7 +100,7 @@ namespace LinqToDB.Linq
 					if (qr != null)
 						qr.MapperExpression = mapperInfo.MapperExpression;
 
-					var expression = TransformMapperExpression(context, dataReader, dataReaderType, false);
+					var expression = TransformMapperExpression(context, dataReader, dataReaderType, true);
 
 					mapperInfo.Mapper = expression.Compile();
 
