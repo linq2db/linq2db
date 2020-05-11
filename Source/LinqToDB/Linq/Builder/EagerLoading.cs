@@ -268,17 +268,52 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		static void ExtractIndependent(
+		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall)
+		{
+			if (methodCall.Method.Name.In(
+				"Any", "Sum", "Min", "Max", "Count", "Average",
+				"Distinct", "Skip", "Take",
+				"First", "FirstOrDefault", "Last", "LastOrDefault",
+				"Single", "SingleOrDefault", 
+				"OrderBy", "ThenOrderBy", "OrderByDescending", "ThenOrderByDescending",
+				"ToArray", "ToList", "ToDictionary"
+			))
+			{
+				return true;
+			}
+
+			if (methodCall.Method.Name.In("SelectMany", "Join", "GroupJoin"))
+			{
+				var lambda = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+				var body = lambda.Body.UnwrapWithAs();
+				if (body.NodeType == ExpressionType.Call)
+					return IsNotSupportedForDetailQuery((MethodCallExpression)body);
+			}
+			else if (methodCall.Method.Name.In("Load", "ThenLoad"))
+				return false;
+
+			var isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
+				{
+					if (e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable())
+						return IsNotSupportedForDetailQuery((MethodCallExpression)e);
+					return false;
+				}));
+
+			return isNotSupported;
+		}
+
+		static void ExtractNotSupportedPart(
 			MappingSchema                 mappingSchema,
 			Expression                    mainExpression,
 			Expression                    detailExpression,
+			Type                          desiredType,
 			HashSet<ParameterExpression>? parameters,
 			out Expression                queryableExpression,
 			out Expression                finalExpression,
 			out ParameterExpression?      replaceParam)
 		{
 			queryableExpression = detailExpression;
-			finalExpression     = detailExpression;
+			finalExpression     = null;
 			replaceParam        = null;
 
 			var allowed = new HashSet<ParameterExpression>(parameters ?? Enumerable.Empty<ParameterExpression>());
@@ -291,6 +326,18 @@ namespace LinqToDB.Linq.Builder
 					allowed.AddRange(((LambdaExpression)expr).Parameters);
 				}
 			}
+
+			bool IsDepended(Expression expr)
+			{
+				var depended = null != expr.Find(ee =>
+				{
+					if (ee.NodeType == ExpressionType.Parameter && !allowed.Contains(ee))
+						return true;
+					return false;
+				});
+				return depended;
+			}
+
 
 			if (mainExpression.NodeType == ExpressionType.Call)
 			{
@@ -306,99 +353,143 @@ namespace LinqToDB.Linq.Builder
 				CollectLambdaParameters(e);
 			});
 
-			Expression?          newQueryable = null;
-			ParameterExpression? newParam     = null;
-			var                  needsTruncation = false;
-
-			static bool IsNotSupported(MethodCallExpression methodCall)
-			{
-				if (methodCall.Method.Name.In(
-					"Any", "Sum", "Min", "Max", "Count", "Average",
-					"Distinct", "Skip", "Take",
-					"First", "FirstOrDefault", "Last", "LastOrDefault",
-					"Single", "SingleOrDefault"
-				))
-				{
-					return true;
-				}
-
-				if (methodCall.Method.Name.In("SelectMany", "Join", "GroupJoin"))
-				{
-					var lambda = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-					var body = lambda.Body.UnwrapWithAs();
-					if (body.NodeType == ExpressionType.Call)
-						return IsNotSupported((MethodCallExpression)body);
-				}
-
-				return false;
-			}
-
 			var current = detailExpression;
+			var prev = current;
 			MethodCallExpression? lastNotSupported = null;
+			MethodCallExpression? prevNotSupported = detailExpression as MethodCallExpression;
 			while (current.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)current;
 				if (!mc.IsQueryable(true))
 					break;
+			
+				var isNotSupported = IsNotSupportedForDetailQuery(mc);
 
-				if (IsNotSupported(mc))
+				if (isNotSupported)
+				{
+					prevNotSupported = (MethodCallExpression?)prev;
 					lastNotSupported = mc;
-
+				}
+				prev = current;
 				current = mc.Arguments[0];
 				
 			}
-
-			if (lastNotSupported != null)
+			
+			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
+			if (lastNotSupported != null && (lastNotSupported != detailExpression || !lastNotSupported.IsQueryable("Select")))
 			{
-				newQueryable    = lastNotSupported.Arguments[0];
-				var elementType = GetEnumerableElementType(newQueryable.Type, mappingSchema);
-				newParam        = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
-				var replaceExpr = (Expression)newParam;
-				if (!newQueryable.Type.IsSameOrParentOf(typeof(List<>)))
+				if (lastNotSupported.IsQueryable("Select"))
+					lastNotSupported = prevNotSupported ?? lastNotSupported; 
+				queryableExpression = lastNotSupported.Arguments[0];
+				var subElementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
+				replaceParam        = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+				var replaceExpr     = (Expression)replaceParam;
+				if (!queryableExpression.Type.IsSameOrParentOf(typeof(List<>)))
 				{
 					replaceExpr = Expression.Call(
-						Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType), replaceExpr);
+						Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
 				}
-
+			
 				var newMethod   = lastNotSupported.Update(lastNotSupported.Object, new[] { replaceExpr }.Concat(lastNotSupported.Arguments.Skip(1)));
 				finalExpression = detailExpression.Replace(lastNotSupported, newMethod);
 			}
 
+			// Expression? newQuerybale = null;
+			// ParameterExpression? newParam = null;
+			// var needsTruncation = false;
+			// finalExpression = detailExpression.Transform(e =>
+			// {
+			// 	switch (e.NodeType)
+			// 	{
+			// 		case ExpressionType.Lambda:
+			// 			{
+			// 				allowed.AddRange(((LambdaExpression)e).Parameters);
+			// 				break;
+			// 			}
+			//
+			// 		case ExpressionType.Call:
+			// 			{
+			// 				var mc = (MethodCallExpression)e;
+			// 				if (mc.IsQueryable(true))
+			// 				{
+			// 					var isNotSupported = IsNotSupportedForDetailQuery(mc);
+			// 					needsTruncation = needsTruncation || isNotSupported;
+			// 					if (needsTruncation && (mc.Arguments[0].NodeType != ExpressionType.Call || !IsNotSupportedForDetailQuery((MethodCallExpression)mc.Arguments[0]) || IsDepended(mc.Arguments[0])))
+			// 					{ 
+			// 						newQuerybale    = mc.Arguments[0];
+			// 						var subElementType = GetEnumerableElementType(newQuerybale.Type, mappingSchema);
+			// 						newParam        = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+			// 						var replaceExpr = (Expression)newParam;
+			// 						if (!newQuerybale.Type.IsSameOrParentOf(typeof(List<>)))
+			// 						{
+			// 							replaceExpr = Expression.Call(
+			// 								Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
+			// 						}
+			// 						var newMethod       = mc.Update(mc.Object, new[]{replaceExpr}.Concat(mc.Arguments.Skip(1)));
+			// 						return new TransformInfo(newMethod, true);
+			// 					}
+			// 				}
+			//
+			// 				break;
+			// 			}
+			// 	}
+			//
+			// 	return new TransformInfo(e);
+			// });
+			//
+			//
+			// if (newQuerybale != null)
+			// {
+			// 	queryableExpression = newQuerybale;
+			// 	replaceParam = newParam;
+			// 	return;
+			// }
 
-			if (newQueryable != null)
+			
+			if (finalExpression != null && desiredType.IsSameOrParentOf(finalExpression.Type))
+				return;
+
+			var loadedType  = typeof(List<>).MakeGenericType(elementType);
+			if (!desiredType.IsSameOrParentOf(loadedType) || finalExpression != null)
 			{
-				queryableExpression = newQueryable;
-				replaceParam        = newParam;
-			}
-			else
-			{
-				var elementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
-				var loadedType  = typeof(List<>).MakeGenericType(elementType);
-				if (!queryableExpression.Type.IsSameOrParentOf(loadedType))
+				Expression exprToErich;
+				if (replaceParam == null)
 				{
-					replaceParam    = Expression.Parameter(loadedType, "replacement");
-					finalExpression = null!;
-					if (queryableExpression.Type.IsArray)
+					replaceParam = Expression.Parameter(loadedType, "replacement");
+					exprToErich  = replaceParam;
+				}
+				else
+				{
+					exprToErich = finalExpression;
+				}
+
+				finalExpression = null!;
+				if (desiredType.IsArray)
+				{
+					finalExpression = Expression.Call(Methods.Enumerable.ToArray.MakeGenericMethod(elementType),
+						exprToErich);
+				} 
+				else if (typeof(IOrderedEnumerable<>).IsSameOrParentOf(desiredType))
+				{
+					finalExpression = exprToErich;
+				}
+				else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
+				{
+					var convertExpr = mappingSchema.GetConvertExpression(
+						typeof(IEnumerable<>).MakeGenericType(elementType), desiredType);
+					if (convertExpr != null)
+						finalExpression = Expression.Invoke(convertExpr, exprToErich);
+				}
+
+				if (finalExpression == null)
+				{
+					finalExpression = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
+						exprToErich);
+					if (typeof(ITable<>).IsSameOrParentOf(desiredType))
 					{
-						finalExpression = Expression.Call(Methods.Enumerable.ToArray.MakeGenericMethod(elementType),
-							replaceParam);
-					} else if (!typeof(IQueryable<>).IsSameOrParentOf(queryableExpression.Type) && !queryableExpression.Type.IsArray)
-					{
-						var convertExpr = mappingSchema.GetConvertExpression(
-							typeof(IEnumerable<>).MakeGenericType(elementType), queryableExpression.Type);
-						if (convertExpr != null)
-							finalExpression = Expression.Invoke(convertExpr, replaceParam);
-					}
-					if (finalExpression == null)
-					{
-						finalExpression = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
-							replaceParam);
-						if (typeof(ITable<>).IsSameOrParentOf(queryableExpression.Type))
-						{
-							var tableType  = typeof(PersistentTable<>).MakeGenericType(elementType);
-							finalExpression = Expression.New(tableType.GetConstructor(new[] { finalExpression.Type }),
-								finalExpression);
-						}
+						var tableType   = typeof(PersistentTable<>).MakeGenericType(elementType);
+						finalExpression = Expression.New(tableType.GetConstructor(new[] { finalExpression.Type }),
+							finalExpression);
 					}
 				}
 			}
@@ -567,51 +658,6 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Call(method, expression);
 		}
 
-		static Expression CorrectLoadWithExpression(Expression detailExpression, IBuildContext context, IList<MemberInfo> associationPath, MappingSchema mappingSchema)
-		{
-			return detailExpression;
-			// if (context is TableBuilder.TableContext table)
-			// {
-			// 	if (table.LoadWith?.Count > 0)
-			// 	{
-			// 		Tuple<MemberInfo, Expression?>[]? found = null;
-			// 		for (var index = table.LoadWith.Count - 1; index >= 0; index--)
-			// 		{
-			// 			var path = table.LoadWith[index];
-			// 			if (path.Length == associationPath.Count)
-			// 			{
-			// 				found = path;
-			// 				for (int i = 0; i < path.Length; i++)
-			// 				{
-			// 					if (path[i].Item1 != associationPath[i])
-			// 					{
-			// 						found = null;
-			// 						break;
-			// 					}
-			// 				}
-			//
-			// 				if (found != null)
-			// 					break;
-			// 			}
-			// 		}
-			//
-			// 		if (found != null && found[found.Length - 1].Item2 != null)
-			// 		{
-			// 			var filterFunc   = (Delegate)found[found.Length - 1].Item2.EvaluateExpression()!;
-			// 			var elementType  = GetEnumerableElementType(detailExpression.Type, mappingSchema);
-			// 			var fakeQuery    = Tools.CreateEmptyQuery(elementType);
-			// 			var appliedQuery = (IQueryable)filterFunc.DynamicInvoke(fakeQuery);
-			//
-			// 			var queryableExpression = MakeAsQueryable(detailExpression, mappingSchema);
-			// 			detailExpression = appliedQuery.Expression.Transform(e => e == fakeQuery.Expression ? queryableExpression : e);
-			// 		}
-			//
-			// 	}
-			// }
-
-			return detailExpression;
-		}
-
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
@@ -688,7 +734,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 			
-				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, initialMainQuery, detailQuery, associationMember.GetMemberType(), null, out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
@@ -728,7 +774,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractIndependent(mappingSchema, initialMainQuery, detailQuery, null, out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, initialMainQuery, detailQuery, associationMember.GetMemberType(), null, out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}
@@ -956,10 +1002,13 @@ namespace LinqToDB.Linq.Builder
 
 			var builder                 = context.Builder;
 			var initialMainQuery        = ValidateMainQuery(builder.Expression.Unwrap());
+			// initialMainQuery            = RemoveLoadWith(initialMainQuery);
 			var unchangedDetailQuery    = expression;
 			var hasConnectionWithMaster = true;
 
-			ExtractIndependent(builder.MappingSchema, initialMainQuery, unchangedDetailQuery, parameters, out var queryableDetail, out var finalExpression, out var replaceParam);
+			ExtractNotSupportedPart(builder.MappingSchema, initialMainQuery, unchangedDetailQuery,
+				unchangedDetailQuery.Type, parameters, out var queryableDetail, out var finalExpression,
+				out var replaceParam);
 
 			Expression resultExpression;
 			LambdaExpression? detailLambda;
@@ -1289,15 +1338,16 @@ namespace LinqToDB.Linq.Builder
 			return idx;
 		}
 
-		public static LambdaExpression CorrectLambdaType(LambdaExpression before, LambdaExpression after)
+		public static LambdaExpression CorrectLambdaType(LambdaExpression before, LambdaExpression after, MappingSchema mappingSchema)
 		{
-			if (typeof(IQueryable<>).IsSameOrParentOf(after.ReturnType))
+			if (IsEnumerableType(before.ReturnType, mappingSchema))
 			{
-				if (!typeof(IQueryable<>).IsSameOrParentOf(before.ReturnType))
+				var generic     = before.ReturnType.GetGenericTypeDefinition();
+				var elementType = GetEnumerableElementType(after.ReturnType, mappingSchema);
+				var desiredType = generic.MakeGenericType(elementType);
+				if (after.ReturnType != desiredType && IsEnumerableType(after.ReturnType, mappingSchema))
 				{
-					var convertType = typeof(IEnumerable<>).MakeGenericType(after.Body.Type.GetGenericArguments()[0]);
-
-					after = Expression.Lambda(Expression.Convert(after.Body, convertType), after.Parameters);
+					after = Expression.Lambda(Expression.Convert(after.Body, desiredType), after.Parameters);
 				}
 			}
 
@@ -1560,6 +1610,32 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		static Expression RemoveLoadWith(Expression expression)
+		{
+			var result = expression.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)e;
+					if (mc.IsQueryable("LoadWith", "ThenLoad"))
+					{
+						var current = mc.Arguments[0];
+						while (current.NodeType == ExpressionType.Call &&
+						       ((MethodCallExpression)current).IsQueryable("LoadWith", "ThenLoad"))
+						{
+							current = ((MethodCallExpression)current).Arguments[0];
+						}
+
+						return new TransformInfo(current, false, true);
+					}
+				}
+
+				return new TransformInfo(e);
+			});
+
+			return result;
+		}
+
 		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo, bool isQueryable)
 		{
 			var newExpr = expr;
@@ -1582,6 +1658,8 @@ namespace LinqToDB.Linq.Builder
 								var selectMethod  = Methods.Queryable.Select.MakeGenericMethod(itemType, selectBody.Type);
 								var newBody       = Expression.Call(selectMethod, lambdaExpression.Body, Expression.Lambda(selectBody, parameter));
 								newExpr           = Expression.Lambda(newBody, lambdaExpression.Parameters);
+
+								newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr, replaceInfo.MappingSchema);
 							}
 							else
 							{
@@ -1592,7 +1670,6 @@ namespace LinqToDB.Linq.Builder
 								newExpr       = Expression.Lambda(newBody, lambdaExpression.Parameters);
 							}
 
-							newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr);
 						}
 						else
 						{
@@ -1602,7 +1679,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								newExpr = Expression.Lambda(newBody, lambdaExpression.Parameters);
 								if (isQueryable)
-									newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr);
+									newExpr = CorrectLambdaType(lambdaExpression, (LambdaExpression)newExpr, replaceInfo.MappingSchema);
 							}
 
 						}
@@ -1630,14 +1707,29 @@ namespace LinqToDB.Linq.Builder
 								{
 									var genericParameter = genericParameters[i];
 									var expectQueryable = typeof(IEnumerable<>).IsSameOrParentOf(genericParameter.ParameterType);
-									if (!expectQueryable && typeof(Expression<>).IsSameOrParentOf(genericParameter.ParameterType))
+									if (!expectQueryable)
 									{
-										var lambdaType = genericParameter.ParameterType.GetGenericArguments()[0];
+										var lambdaType = typeof(Expression<>).IsSameOrParentOf(genericParameter.ParameterType)
+											? genericParameter.ParameterType.GetGenericArguments()[0]
+											: genericParameter.ParameterType;
+
 										if (lambdaType.IsGenericType)
 										{
 											var lambdaGenericParams = lambdaType.GetGenericArguments();
 											var resultType          = lambdaGenericParams[lambdaGenericParams.Length - 1];
 											expectQueryable         = typeof(IEnumerable<>).IsSameOrParentOf(resultType);
+										}
+									}
+
+									if (!expectQueryable)
+									{
+										var unwrapped = arg.Unwrap();
+										if (unwrapped is LambdaExpression lambda)
+										{
+											if (typeof(IQueryable<>).IsSameOrParentOf(lambda.Body.Type))
+											{
+												expectQueryable = false;
+											}
 										}
 									}
 
@@ -1649,7 +1741,7 @@ namespace LinqToDB.Linq.Builder
 										    && newArg.Unwrap().NodeType == ExpressionType.Lambda)
 										{
 											newArg = Expression.Quote(CorrectLambdaType((LambdaExpression)arg.Unwrap(),
-												(LambdaExpression)newArg.Unwrap()));
+												(LambdaExpression)newArg.Unwrap(), replaceInfo.MappingSchema));
 										}
 
 
@@ -1667,8 +1759,13 @@ namespace LinqToDB.Linq.Builder
 									{
 										var currentLambdaTemplateParams = genericParameters[i];
 										var templateLambdaType = currentLambdaTemplateParams.ParameterType;
-										var lambdaGenericArguments = templateLambdaType.GetGenericArguments()[0]
-											.GetGenericArguments();
+										var lambdaGenericArguments =
+											typeof(Expression<>).IsSameOrParentOf(templateLambdaType)
+												? templateLambdaType.GetGenericArguments()[0]
+													.GetGenericArguments()
+												: templateLambdaType.GetGenericArguments();
+
+										
 										var argLambda = (LambdaExpression)arg;
 										var newParameters = argLambda.Parameters.ToArray();
 										var newBody = argLambda.Body;
@@ -1677,6 +1774,7 @@ namespace LinqToDB.Linq.Builder
 										for (int j = 0; j < argLambda.Parameters.Count; j++)
 										{
 											var prm = argLambda.Parameters[j];
+
 											var genericType = lambdaGenericArguments[j];
 											if (typesMapping.TryGetValue(genericType, out var replacedType))
 											{
@@ -1759,9 +1857,13 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var newArgLambda = Expression.Lambda(newBody, newParameters);
-											newArgLambda = CorrectLambdaType(argLambda, newArgLambda);
+											newArgLambda = CorrectLambdaType(argLambda, newArgLambda, replaceInfo.MappingSchema);
 
-											RegisterTypeRemapping(templateLambdaType.GetGenericArguments()[0],
+											var forRegister = typeof(Expression<>).IsSameOrParentOf(templateLambdaType)
+												? templateLambdaType.GetGenericArguments()[0]
+												: templateLambdaType;
+
+											RegisterTypeRemapping(forRegister,
 												newArgLambda.Type, genericArguments, typesMapping);
 
 											newArguments[i] = newArgLambda;
@@ -1865,7 +1967,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (expr is UnaryExpression unary)
 						{
-							newExpr = unary.Update(ApplyReMapping(unary.Operand, replaceInfo, isQueryable));
+							var newArg = ApplyReMapping(unary.Operand, replaceInfo, isQueryable);
+							if (newArg != unary.Operand && newArg.NodeType == ExpressionType.Lambda)
+							{
+								newArg = CorrectLambdaType((LambdaExpression)unary.Operand, (LambdaExpression)newArg, replaceInfo.MappingSchema);
+							}
+
+							newExpr = unary.Update(newArg);
 						}
 						
 						break;

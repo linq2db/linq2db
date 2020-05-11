@@ -19,6 +19,16 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("LoadWith", "ThenLoad");
 		}
 
+		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
+		{
+			var propType = expectedType;
+			if (EagerLoading.IsEnumerableType(expectedType, mappingSchema))
+				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
+			var itemType = filterType.GetGenericArguments()[0].GetGenericArguments()[0];
+			if (propType != itemType)
+				throw new LinqException("Invalid filter function usage.");
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -50,6 +60,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var lastElement = associations[associations.Length - 1];
 					lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
+					CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
 				}
 
 				// append to the last member chain
@@ -64,6 +75,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var lastElement = associations[associations.Length - 1];
 					lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
+					CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
 				}
 
 				table.LoadWith.Add(associations);

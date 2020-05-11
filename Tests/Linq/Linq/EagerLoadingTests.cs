@@ -713,12 +713,12 @@ namespace Tests.Linq
 						p.Id,
 						p.Title,
 						p.PostContent,
-						Tags = p.PostTags.Where(p => !p.IsDeleted).Select(t => new
+						Tags = p.PostTags.Where(pp => !pp.IsDeleted).Select(t => new
 						{
 							Id = t.TagId,
 							t.Tag.Name
 						}).OrderBy(t => t.Id).ToArray()
-					}).OrderBy(p => p.Id).ToArray()
+					}).OrderBy(op => op.Id).ToArray()
 				});
 
 				var result = new
