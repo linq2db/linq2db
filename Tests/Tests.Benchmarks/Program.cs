@@ -6,7 +6,7 @@ namespace LinqToDB.Benchmarks
 {
 	class Program
 	{
-		static void Main_(string[] args)
+		static void Main(string[] args)
 		{
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
@@ -47,8 +47,8 @@ namespace LinqToDB.Benchmarks
 		#endregion
 
 		#region InsertSet
-		//static void Main_InsertSet(string[] args)
-		static void Main(string[] args)
+		static void Main_InsertSet(string[] args)
+		//static void Main(string[] args)
 		{
 			var b = new InsertSetBenchmark();
 			b.Setup();

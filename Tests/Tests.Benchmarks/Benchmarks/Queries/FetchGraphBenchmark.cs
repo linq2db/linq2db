@@ -31,6 +31,7 @@ namespace LinqToDB.Benchmarks.Queries
 					FieldTypes   = EagerLoad.FieldTypes_SalesOrderDetails,
 					DbTypes      = EagerLoad.DbTypes_SalesOrderDetails,
 					Data         = Enumerable.Range(0, 4768).Select(_ => EagerLoad.SampleRow_SalesOrderDetails(_ % 1000)).ToArray(),
+					//Data         = Enumerable.Range(0, 47).Select(_ => EagerLoad.SampleRow_SalesOrderDetails(_ % 1000)).ToArray(),
 					Match        = sql => sql.Contains("[SalesOrderDetail]")
 				},
 				new QueryResult()
@@ -40,6 +41,7 @@ namespace LinqToDB.Benchmarks.Queries
 					FieldTypes   = EagerLoad.FieldTypes_HeaderCustomer,
 					DbTypes      = EagerLoad.DbTypes_HeaderCustomer,
 					Data         = Enumerable.Range(0, 1000).Select(_ => EagerLoad.SampleRow_HeaderCustomer(_ % 1000)).ToArray(),
+					//Data         = Enumerable.Range(0, 10).Select(_ => EagerLoad.SampleRow_HeaderCustomer(_ % 1000)).ToArray(),
 					Match        = sql => sql.Contains("LEFT JOIN [Sales].[Customer]")
 				}
 			};
