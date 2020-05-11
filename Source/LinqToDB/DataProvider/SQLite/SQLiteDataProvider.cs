@@ -15,6 +15,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
+		/// <summary>
+		/// Creates the specified SQLite provider based on the provider name.
+		/// </summary>
+		/// <param name="name">If ProviderName.SQLite is provided,
+		/// the detection mechanism preferring System.Data.SQLite
+		/// to Microsoft.Data.Sqlite will be used.</param>
 		public SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{

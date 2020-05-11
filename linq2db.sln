@@ -84,6 +84,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Icon_list.png = NuGet\Icon_list.png
 		NuGet\Init.ps1 = NuGet\Init.ps1
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
@@ -252,6 +253,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Android", "Tests\Tests.Android\Tests.Android.csproj", "{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.AspNet", "Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj", "{52EABB0B-0C56-43F1-B98B-6461FA841E5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{ED41F9D3-8E93-4D80-A45F-21A90428253F}"
 	ProjectSection(SolutionItems) = preProject
@@ -463,6 +466,12 @@ Global
 		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Azure|Any CPU.Build.0 = Release|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -495,6 +504,7 @@ Global
 		{B4080869-A89C-4996-938C-D7F42E9AA3CB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{52EABB0B-0C56-43F1-B98B-6461FA841E5F} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{51E64464-E257-4984-A4D5-BF9FF8B7DF1D} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{B7AADC73-2739-4B07-B3EB-C9EF64846874} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}

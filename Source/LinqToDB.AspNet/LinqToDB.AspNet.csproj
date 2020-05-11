@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+
+		<AssemblyName>linq2db.AspNet</AssemblyName>
+		<RootNamespace>LinqToDB.AspNet</RootNamespace>
+		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.AspNet.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.3" />
+	</ItemGroup>
+</Project>
