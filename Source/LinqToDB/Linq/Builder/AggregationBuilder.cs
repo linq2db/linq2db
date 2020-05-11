@@ -162,9 +162,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				var parentQuery = Parent.SelectQuery.ToString();
-				var sqlText = Sql.ToString();
-
 				switch (flags)
 				{
 					case ConvertFlags.Field :
@@ -178,8 +175,6 @@ namespace LinqToDB.Linq.Builder
 									Sql = Sql!,
 								}
 							};
-
-							var newParentQuery = Parent.SelectQuery.ToString();
 
 							return result;
 						}

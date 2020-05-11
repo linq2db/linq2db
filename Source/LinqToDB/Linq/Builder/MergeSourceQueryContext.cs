@@ -35,6 +35,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
+
 			if (expression.GetLevelExpression(Builder.MappingSchema, level) is ContextRefExpression refExpression && refExpression.BuildContext == this)
 				++level;
 

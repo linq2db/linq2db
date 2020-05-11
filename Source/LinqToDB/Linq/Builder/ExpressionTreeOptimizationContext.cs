@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 
 	public class ExpressionTreeOptimizationContext
 	{
-		readonly HashSet<Expression>? _visitedExpressions = new HashSet<Expression>();
+		readonly HashSet<Expression> _visitedExpressions = new HashSet<Expression>();
 
 		public MappingSchema MappingSchema { get; }
 

@@ -409,7 +409,7 @@ namespace Tests.Linq
 				var query2 = filterQuery
 					.LoadWith(m => m.SubItems1, q => q.Where(e => e.Value == e.Value))
 					.ThenLoad(c => c.SubSubItems, q => q.Where(e => e.Value == e.Value))
-					.ThenLoad(ss => ss.ParentSubItem, q => q.Where(e => e.Value == e.Value))
+					.ThenLoad(ss => ss.ParentSubItem, q => q.Where(e => e!.Value == e.Value))
 					.LoadWith(m => m.SubItems2, q => q.Where(e => e.Value == e.Value))
 					.ThenLoad(e => e.Parent);
 				
@@ -476,7 +476,7 @@ namespace Tests.Linq
 				var query3_1 = filterQuery
 					.LoadWith(m => m.SubItems1)
 					.ThenLoad(s => s.Parent)
-					.ThenLoad(p => p.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2), e => e.Where(i => i.Value!.StartsWith("Sub2_")));
+					.ThenLoad(p => p!.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2), e => e.Where(i => i.Value!.StartsWith("Sub2_")));
 				
 				var result3_1 = query3_1.ToArray();
 

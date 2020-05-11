@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 							if (Builder.AssociationPath == null)
 								Builder.AssociationPath = new Stack<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>();
 
-							Builder.AssociationPath.Push(Tuple.Create(member.Info.MemberInfo, (IBuildContext)this, loadWith));
+							Builder.AssociationPath.Push(Tuple.Create(member.Info.MemberInfo, (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
 							if (_loadWithCache == null)
@@ -792,6 +792,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					Expression expr;
 
+					if (contextInfo.CurrentExpression == null)
+						throw new InvalidOperationException("contextInfo.CurrentExpression is null");
+
 					var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
 					 
 					if (contextInfo.CurrentLevel + 1 > maxLevel)
@@ -799,8 +802,8 @@ namespace LinqToDB.Linq.Builder
 					else
 						expr = contextInfo.Context.BuildExpression(contextInfo.CurrentExpression, contextInfo.CurrentLevel + 1, false);
 
-					if (expression is MemberExpression memberExpression)
-					{
+					// if (expression is MemberExpression memberExpression)
+					// {
 						// workaround for not mapped properties
 
 						// if (table.Table is TableContext tableContext)
@@ -818,7 +821,7 @@ namespace LinqToDB.Linq.Builder
 						// 	if (expr == null)
 						// 		expr = tableContext.BuildQuery(tableContext.OriginalType, tableContext, parentObject);
 						//}
-					}
+					// }
 					
 					return expr;
 				}
@@ -941,8 +944,6 @@ namespace LinqToDB.Linq.Builder
 									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!) { Sql = contextInfo.Field }
 								};
 							}
-
-							break;
 						}
 
 					case ConvertFlags.Field :
@@ -1516,7 +1517,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call         :
 						{
 							var descriptor = GetAssociationDescriptor(levelExpression, out var memberInfo);
-							if (descriptor != null)
+							if (descriptor != null && memberInfo != null)
 							{
 								var isOuter = descriptor.CanBeNull || ForceLeftJoinAssociations;
 								IBuildContext? associatedContext;
@@ -1613,7 +1614,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out MemberInfo memberInfo, bool onlyCurrent = true)
+			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out MemberInfo? memberInfo, bool onlyCurrent = true)
 			{
 				memberInfo = null;
 				if (expression.NodeType == ExpressionType.MemberAccess)

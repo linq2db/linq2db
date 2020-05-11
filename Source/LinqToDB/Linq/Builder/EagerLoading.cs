@@ -268,7 +268,18 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall)
+		static bool IsContainOutOfScopeParameters(Expression expr, HashSet<ParameterExpression> allowedParameters)
+		{
+			var depended = null != expr.Find(ee =>
+			{
+				if (ee.NodeType == ExpressionType.Parameter && !allowedParameters.Contains(ee))
+					return true;
+				return false;
+			});
+			return depended;
+		}
+
+		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall, HashSet<ParameterExpression> allowedParameters)
 		{
 			if (methodCall.Method.Name.In(
 				"Any", "Sum", "Min", "Max", "Count", "Average",
@@ -282,20 +293,30 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
+			var isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
+			{
+				if (IsContainOutOfScopeParameters(a, allowedParameters))
+					return true;
+				return false;
+			}));
+
+			if (isNotSupported)
+				return true;
+
 			if (methodCall.Method.Name.In("SelectMany", "Join", "GroupJoin"))
 			{
 				var lambda = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var body = lambda.Body.UnwrapWithAs();
 				if (body.NodeType == ExpressionType.Call)
-					return IsNotSupportedForDetailQuery((MethodCallExpression)body);
+					return IsNotSupportedForDetailQuery((MethodCallExpression)body, allowedParameters);
 			}
 			else if (methodCall.Method.Name.In("Load", "ThenLoad"))
 				return false;
 
-			var isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
+			isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
 				{
 					if (e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable())
-						return IsNotSupportedForDetailQuery((MethodCallExpression)e);
+						return IsNotSupportedForDetailQuery((MethodCallExpression)e, allowedParameters);
 					return false;
 				}));
 
@@ -313,31 +334,21 @@ namespace LinqToDB.Linq.Builder
 			out ParameterExpression?      replaceParam)
 		{
 			queryableExpression = detailExpression;
-			finalExpression     = null;
+			finalExpression     = null!;
 			replaceParam        = null;
 
 			var allowed = new HashSet<ParameterExpression>(parameters ?? Enumerable.Empty<ParameterExpression>());
 
 			void CollectLambdaParameters(Expression expr)
 			{
-				expr = expr.Unwrap();
-				if (expr.NodeType == ExpressionType.Lambda)
+				expr.Visit(e =>
 				{
-					allowed.AddRange(((LambdaExpression)expr).Parameters);
-				}
-			}
-
-			bool IsDepended(Expression expr)
-			{
-				var depended = null != expr.Find(ee =>
-				{
-					if (ee.NodeType == ExpressionType.Parameter && !allowed.Contains(ee))
-						return true;
-					return false;
+					if (e.NodeType == ExpressionType.Lambda)
+					{
+						allowed.AddRange(((LambdaExpression)e).Parameters);
+					}
 				});
-				return depended;
 			}
-
 
 			if (mainExpression.NodeType == ExpressionType.Call)
 			{
@@ -348,13 +359,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			detailExpression.Visit(e =>
-			{
-				CollectLambdaParameters(e);
-			});
+			detailExpression.Visit(CollectLambdaParameters);
 
 			var current = detailExpression;
-			var prev = current;
 			MethodCallExpression? lastNotSupported = null;
 			MethodCallExpression? prevNotSupported = detailExpression as MethodCallExpression;
 			while (current.NodeType == ExpressionType.Call)
@@ -363,20 +370,20 @@ namespace LinqToDB.Linq.Builder
 				if (!mc.IsQueryable(true))
 					break;
 			
-				var isNotSupported = IsNotSupportedForDetailQuery(mc);
+				var isNotSupported = IsNotSupportedForDetailQuery(mc, allowed);
 
 				if (isNotSupported)
 				{
-					prevNotSupported = (MethodCallExpression?)prev;
 					lastNotSupported = mc;
 				}
-				prev = current;
+				
 				current = mc.Arguments[0];
 				
 			}
 			
 			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
-			if (lastNotSupported != null && (lastNotSupported != detailExpression || !lastNotSupported.IsQueryable("Select")))
+			//TODO: need more tests
+			if (lastNotSupported != null && (lastNotSupported != detailExpression || lastNotSupported.Arguments.Count == 1))
 			{
 				if (lastNotSupported.IsQueryable("Select"))
 					lastNotSupported = prevNotSupported ?? lastNotSupported; 
@@ -393,58 +400,6 @@ namespace LinqToDB.Linq.Builder
 				var newMethod   = lastNotSupported.Update(lastNotSupported.Object, new[] { replaceExpr }.Concat(lastNotSupported.Arguments.Skip(1)));
 				finalExpression = detailExpression.Replace(lastNotSupported, newMethod);
 			}
-
-			// Expression? newQuerybale = null;
-			// ParameterExpression? newParam = null;
-			// var needsTruncation = false;
-			// finalExpression = detailExpression.Transform(e =>
-			// {
-			// 	switch (e.NodeType)
-			// 	{
-			// 		case ExpressionType.Lambda:
-			// 			{
-			// 				allowed.AddRange(((LambdaExpression)e).Parameters);
-			// 				break;
-			// 			}
-			//
-			// 		case ExpressionType.Call:
-			// 			{
-			// 				var mc = (MethodCallExpression)e;
-			// 				if (mc.IsQueryable(true))
-			// 				{
-			// 					var isNotSupported = IsNotSupportedForDetailQuery(mc);
-			// 					needsTruncation = needsTruncation || isNotSupported;
-			// 					if (needsTruncation && (mc.Arguments[0].NodeType != ExpressionType.Call || !IsNotSupportedForDetailQuery((MethodCallExpression)mc.Arguments[0]) || IsDepended(mc.Arguments[0])))
-			// 					{ 
-			// 						newQuerybale    = mc.Arguments[0];
-			// 						var subElementType = GetEnumerableElementType(newQuerybale.Type, mappingSchema);
-			// 						newParam        = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
-			// 						var replaceExpr = (Expression)newParam;
-			// 						if (!newQuerybale.Type.IsSameOrParentOf(typeof(List<>)))
-			// 						{
-			// 							replaceExpr = Expression.Call(
-			// 								Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
-			// 						}
-			// 						var newMethod       = mc.Update(mc.Object, new[]{replaceExpr}.Concat(mc.Arguments.Skip(1)));
-			// 						return new TransformInfo(newMethod, true);
-			// 					}
-			// 				}
-			//
-			// 				break;
-			// 			}
-			// 	}
-			//
-			// 	return new TransformInfo(e);
-			// });
-			//
-			//
-			// if (newQuerybale != null)
-			// {
-			// 	queryableExpression = newQuerybale;
-			// 	replaceParam = newParam;
-			// 	return;
-			// }
-
 			
 			if (finalExpression != null && desiredType.IsSameOrParentOf(finalExpression.Type))
 				return;
@@ -453,7 +408,7 @@ namespace LinqToDB.Linq.Builder
 			if (!desiredType.IsSameOrParentOf(loadedType) || finalExpression != null)
 			{
 				Expression exprToErich;
-				if (replaceParam == null)
+				if (finalExpression == null)
 				{
 					replaceParam = Expression.Parameter(loadedType, "replacement");
 					exprToErich  = replaceParam;

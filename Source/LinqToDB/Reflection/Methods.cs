@@ -106,18 +106,18 @@ namespace LinqToDB.Reflection
 
 			abstract class LW1
 			{
-				public int       Value1;
+				public int   Value1;
 
-				public LW2       Single2;
-				public LW2[]     Many2;
+				public LW2   Single2 = null!;
+				public LW2[] Many2   = null!;
 			}
 
 			abstract class LW2
 			{
 				public int   Value2;
 
-				public LW3   Single3;
-				public LW3[] Many3;
+				public LW3   Single3 = null!;
+				public LW3[] Many3   = null!;
 				
 			}
 

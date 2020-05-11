@@ -27,22 +27,7 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public ISqlExpression Expression
-		{
-			get => _expression;
-			set
-			{
-				// if (value != null)
-				// {
-				// 	if (null != new QueryVisitor().Find(value, e => e == this || e is SqlColumn clmn && clmn.Parent == this.Parent))
-				// 	{
-				// 		throw new LinqToDBException("Recursive expression.");
-				// 	}
-				// }
-				//
-				_expression = value;
-			}
-		}
+		public ISqlExpression Expression   { get; set; }
 
 		public   SelectQuery?   Parent     { get; set; }
 		internal string?        RawAlias   { get; set; }
@@ -74,7 +59,6 @@ namespace LinqToDB.SqlQuery
 		private bool   _underlyingColumnSet;
 
 		private SqlColumn? _underlyingColumn;
-		private ISqlExpression _expression;
 
 		public  SqlColumn?  UnderlyingColumn
 		{
