@@ -6,20 +6,27 @@ namespace LinqToDB.Benchmarks.TestProvider
 {
 	public class MockDbConnection : DbConnection
 	{
-		private readonly QueryResult _result;
+		private readonly QueryResult?   _result;
+		private readonly QueryResult[]? _results;
 
 		private ConnectionState _state;
 
 		public MockDbConnection(string connectionString, QueryResult result)
 		{
 			ConnectionString = connectionString;
-			_result = result;
+			_result          = result;
 		}
 
 		public MockDbConnection(QueryResult result, ConnectionState state)
 		{
 			_result = result;
-			_state = state;
+			_state  = state;
+		}
+
+		public MockDbConnection(QueryResult[] results, ConnectionState state)
+		{
+			_results = results;
+			_state   = state;
 		}
 
 		public override string ConnectionString { get; set; } = "MockDbConnection";
@@ -49,12 +56,12 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
-			throw new NotImplementedException();
+			return new MockDbTransaction();
 		}
 
 		protected override DbCommand CreateDbCommand()
 		{
-			return new MockDbCommand(_result);
+			return _result != null ? new MockDbCommand(_result) : new MockDbCommand(_results!);
 		}
 	}
 }

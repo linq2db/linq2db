@@ -18,7 +18,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override DataTable GetSchemaTable()
 		{
-			return _result.Schema;
+			return _result.Schema!;
 		}
 
 		public override object this[int ordinal] => throw new NotImplementedException();
@@ -27,7 +27,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override int Depth => throw new NotImplementedException();
 
-		public override int FieldCount => _result.Names.Length;
+		public override int FieldCount => _result.Names!.Length;
 
 		public override bool HasRows => throw new NotImplementedException();
 
@@ -37,12 +37,12 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override bool GetBoolean(int ordinal)
 		{
-			return (bool)_result.Data[_row][ordinal]!;
+			return (bool)_result.Data![_row][ordinal]!;
 		}
 
 		public override byte GetByte(int ordinal)
 		{
-			return (byte)_result.Data[_row][ordinal]!;
+			return (byte)_result.Data![_row][ordinal]!;
 		}
 
 		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
@@ -62,17 +62,17 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override string GetDataTypeName(int ordinal)
 		{
-			return _result.DbTypes[ordinal];
+			return _result.DbTypes![ordinal];
 		}
 
 		public override DateTime GetDateTime(int ordinal)
 		{
-			return (DateTime)_result.Data[_row][ordinal]!;
+			return (DateTime)_result.Data![_row][ordinal]!;
 		}
 
 		public override decimal GetDecimal(int ordinal)
 		{
-			return (decimal)_result.Data[_row][ordinal]!;
+			return (decimal)_result.Data![_row][ordinal]!;
 		}
 
 		public override double GetDouble(int ordinal)
@@ -87,7 +87,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override Type GetFieldType(int ordinal)
 		{
-			return _result.FieldTypes[ordinal];
+			return _result.FieldTypes![ordinal];
 		}
 
 		public override float GetFloat(int ordinal)
@@ -97,27 +97,27 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override Guid GetGuid(int ordinal)
 		{
-			return (Guid)_result.Data[_row][ordinal]!;
+			return (Guid)_result.Data![_row][ordinal]!;
 		}
 
 		public override short GetInt16(int ordinal)
 		{
-			throw new NotImplementedException();
+			return (short)_result.Data![_row][ordinal]!;
 		}
 
 		public override int GetInt32(int ordinal)
 		{
-			return (int)_result.Data[_row][ordinal]!;
+			return (int)_result.Data![_row][ordinal]!;
 		}
 
 		public override long GetInt64(int ordinal)
 		{
-			return (long)_result.Data[_row][ordinal]!;
+			return (long)_result.Data![_row][ordinal]!;
 		}
 
 		public override string GetName(int ordinal)
 		{
-			return _result.Names[ordinal];
+			return _result.Names![ordinal];
 		}
 
 		public override int GetOrdinal(string name)
@@ -127,7 +127,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override string GetString(int ordinal)
 		{
-			return (string)_result.Data[_row][ordinal]!;
+			return (string)_result.Data![_row][ordinal]!;
 		}
 
 		public override object GetValue(int ordinal)
@@ -139,7 +139,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 		{
 			for (var i = 0; i < FieldCount; i++)
 			{
-				values[i] = _result.Data[_row];
+				values[i] = _result.Data![_row];
 			}
 
 			return FieldCount;
@@ -147,7 +147,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override bool IsDBNull(int ordinal)
 		{
-			return _result.Data[_row][ordinal] == null;
+			return _result.Data![_row][ordinal] == null;
 		}
 
 		public override bool NextResult()
@@ -158,7 +158,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 		public override bool Read()
 		{
 			_row++;
-			return _row < _result.Data.Length;
+			return _row < _result.Data!.Length;
 		}
 	}
 }

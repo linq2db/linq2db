@@ -10,22 +10,17 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.Benchmarks.Queries
 {
-	// test FetchIndividualBenchmark case from https://github.com/FransBouma/RawDataAccessBencher
 	public class FetchSetBenchmark
 	{
 		private string ConnectionString = "test";
-		private Func<Db, int, IQueryable<SalesOrderHeader>> _compiled = null!;
+		private Func<Db, IQueryable<SalesOrderHeader>> _compiled = null!;
 		private QueryResult _result = null!;
-		private int _key = 124;
 		private string CommandText = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
 		private IDataProvider _provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()
 		{
-			var schema = 
-
-
 			_result = new QueryResult()
 			{
 				Schema     = SalesOrderHeader.SchemaTable,
@@ -36,7 +31,7 @@ namespace LinqToDB.Benchmarks.Queries
 				//Data       = Enumerable.Range(0, 100).Select(_ => SalesOrderHeader.SampleRow).ToArray()
 			};
 
-			_compiled = CompiledQuery.Compile((Db db, int id) => db.SalesOrderHeader);
+			_compiled = CompiledQuery.Compile((Db db) => db.SalesOrderHeader);
 		}
 
 		[Benchmark]
@@ -52,7 +47,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public List<SalesOrderHeader> Compiled()
 		{
 			using (var db = new Db(_provider, _result))
-				return _compiled(db, _key).ToList();
+				return _compiled(db).ToList();
 		}
 
 		[Benchmark(Baseline = true)]
