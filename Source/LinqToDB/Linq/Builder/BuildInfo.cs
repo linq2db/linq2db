@@ -37,6 +37,17 @@ namespace LinqToDB.Linq.Builder
 		public JoinType             JoinType                 { get; set; }
 		public bool                 IsSubQuery => Parent != null;
 
-		public bool                 IsAssociationBuilt       { get; set; }
+		private bool _isAssociationBuilt;
+		public  bool  IsAssociationBuilt
+		{
+			get => _isAssociationBuilt;
+			set
+			{
+				_isAssociationBuilt = value;
+
+				if (SequenceInfo != null)
+					SequenceInfo.IsAssociationBuilt = value;
+			}
+		}
 	}
 }
