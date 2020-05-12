@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)expr;
 
-					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
+					if (!expr.Type.IsConstantable(false) || AsParameters.Contains(c))
 					{
 						if (expressionAccessors.TryGetValue(expr, out var val))
 						{
