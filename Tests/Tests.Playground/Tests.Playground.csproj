@@ -10,7 +10,6 @@
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\DataProvider\AccessTests.cs" Link="AccessTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SqlCeTests.cs" Link="SqlCeTests.cs" />
-		<Compile Include="..\Linq\Exceptions\JoinTests.cs" Link="JoinTests.cs" />
 		<Compile Include="..\Linq\Exceptions\MappingTests.cs" Link="MappingTests.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
@@ -27,6 +26,7 @@
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
 		<Compile Include="..\Linq\Linq\InheritanceTests.cs" Link="InheritanceTests.cs" />
+		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
 		<Compile Include="..\Linq\Linq\JoinToLimitedTests.cs" Link="JoinToLimitedTests.cs" />
 		<Compile Include="..\Linq\Linq\LoadWithTests.cs" Link="LoadWithTests.cs" />
 		<Compile Include="..\Linq\Linq\OrderByTests.cs" Link="OrderByTests.cs" />

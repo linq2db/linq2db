@@ -448,38 +448,38 @@ namespace Tests.Linq
 				var filterQuery = from m in db.GetTable<MainItem>()
 					where m.Id > 1
 					select m;
-
+				
 				var query1 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0).Take(2));
 				
 				var result1 = query1.ToArray();
-
+				
 				Assert.That(result1[0].SubItems1.Length, Is.GreaterThan(0));
 				
-
+				
 				var query2 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0).Take(2),
 						e => e.Where(i => i.Value!.StartsWith("Sub1_")));
 				
 				var result2 = query2.ToArray();
-
+				
 				Assert.That(result2[0].SubItems1.Length, Is.GreaterThan(0));
-
+				
 				var query3 = filterQuery
 					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2),
 						e => e.Where(i => i.Value!.StartsWith("Sub2_")));
-
+				
 				var result3 = query3.ToArray();
-
+				
 				Assert.That(result3[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
-
+				
 				var query3_1 = filterQuery
 					.LoadWith(m => m.SubItems1)
 					.ThenLoad(s => s.Parent)
 					.ThenLoad(p => p!.SubItems2.Where(e => e.ParentId % 2 == 0).Take(2), e => e.Where(i => i.Value!.StartsWith("Sub2_")));
 				
 				var result3_1 = query3_1.ToArray();
-
+				
 				Assert.That(result3_1[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
 
 				var query4 = filterQuery
@@ -506,27 +506,27 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item4))
 			using (db.CreateLocalTable(testData.Item5))
 			{
-				// var filterQuery = from m in db.GetTable<MainItem>()
-				// 	where m.Id > 1
-				// 	select m;
-				//
-				// var query = filterQuery
-				// 	.LoadWith(m => m.SubItems1,
-				// 		q => q
-				// 			.Where(i => i.Id % 2 == 0)
-				// 			.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
-				// 			.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
-				// 	);
-				//
-				// var result = query.ToArray();
-				//
-				// var query2 = filterQuery
-				// 	.LoadWith(m => m.SubItems1)
-				// 	.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
-				//
-				// var result2 = query2.ToArray();
-				//
-				//
+				var filterQuery = from m in db.GetTable<MainItem>()
+					where m.Id > 1
+					select m;
+				
+				var query = filterQuery
+					.LoadWith(m => m.SubItems1,
+						q => q
+							.Where(i => i.Id % 2 == 0)
+							.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
+							.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
+					);
+				
+				var result = query.ToArray();
+				
+				var query2 = filterQuery
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
+				
+				var result2 = query2.ToArray();
+				
+				
 				var mainQuery = from s in db.GetTable<SubItem1>()
 					select s;
 

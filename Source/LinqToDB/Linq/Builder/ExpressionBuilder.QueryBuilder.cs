@@ -838,7 +838,7 @@ namespace LinqToDB.Linq.Builder
 				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
 			}
 
-			valueExpression = EagerLoading.EnsureDestinationType(valueExpression, expression.Type, mappingSchema);
+			valueExpression = EagerLoading.AdjustType(valueExpression, expression.Type, mappingSchema);
 
 			isLazy = false;
 			return valueExpression;

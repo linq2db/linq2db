@@ -162,7 +162,9 @@ namespace LinqToDB.Linq.Builder
 					var memberFilter = associationLoadWith.Info.MemberFilter;
 					if (memberFilter != null)
 					{
-						var filtered   = Expression.Convert(body, memberFilter.Parameters[0].Type);
+						var elementType = EagerLoading.GetEnumerableElementType(memberFilter.Parameters[0].Type,
+							builder.MappingSchema);
+						var filtered   = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(elementType));
 						var filterBody = memberFilter.GetBody(filtered);
 						body = Expression.Call(
 							Methods.Queryable.AsQueryable.MakeGenericMethod(objectType), filterBody);

@@ -268,67 +268,42 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		static bool IsContainOutOfScopeParameters(Expression expr, HashSet<ParameterExpression> allowedParameters)
-		{
-			var depended = null != expr.Find(ee =>
-			{
-				if (ee.NodeType == ExpressionType.Parameter && !allowedParameters.Contains(ee))
-					return true;
-				return false;
-			});
-			return depended;
-		}
-
-		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall, HashSet<ParameterExpression> allowedParameters)
+		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall)
 		{
 			if (methodCall.Method.Name.In(
 				"Any", "Sum", "Min", "Max", "Count", "Average",
 				"Distinct", "Skip", "Take",
 				"First", "FirstOrDefault", "Last", "LastOrDefault",
 				"Single", "SingleOrDefault", 
-				"OrderBy", "ThenOrderBy", "OrderByDescending", "ThenOrderByDescending",
 				"ToArray", "ToList", "ToDictionary"
 			))
 			{
 				return true;
 			}
 
-			var isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
+			return false;
+		}
+
+		static bool IsChainContainsNotSupported(Expression expression)
+		{
+			var current = expression;
+			while (current?.NodeType == ExpressionType.Call)
 			{
-				if (IsContainOutOfScopeParameters(a, allowedParameters))
-					return true;
-				return false;
-			}));
-
-			if (isNotSupported)
-				return true;
-
-			if (methodCall.Method.Name.In("SelectMany", "Join", "GroupJoin"))
-			{
-				var lambda = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var body = lambda.Body.UnwrapWithAs();
-				if (body.NodeType == ExpressionType.Call)
-					return IsNotSupportedForDetailQuery((MethodCallExpression)body, allowedParameters);
-			}
-			else if (methodCall.Method.Name.In("Load", "ThenLoad"))
-				return false;
-
-			isNotSupported = methodCall.Arguments.Skip(1).Any(a => null != a.Find(e =>
-				{
-					if (e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable())
-						return IsNotSupportedForDetailQuery((MethodCallExpression)e, allowedParameters);
+				var mc = (MethodCallExpression)current;
+				if (!mc.IsQueryable())
 					return false;
-				}));
+				if (IsNotSupportedForDetailQuery(mc))
+					return true;
+				current = mc.Arguments[0];
+			}
 
-			return isNotSupported;
+			return false;
 		}
 
 		static void ExtractNotSupportedPart(
 			MappingSchema                 mappingSchema,
-			Expression                    mainExpression,
 			Expression                    detailExpression,
 			Type                          desiredType,
-			HashSet<ParameterExpression>? parameters,
 			out Expression                queryableExpression,
 			out Expression                finalExpression,
 			out ParameterExpression?      replaceParam)
@@ -337,118 +312,146 @@ namespace LinqToDB.Linq.Builder
 			finalExpression     = null!;
 			replaceParam        = null;
 
-			var allowed = new HashSet<ParameterExpression>(parameters ?? Enumerable.Empty<ParameterExpression>());
+			Expression?          newQueryable = null;
+			ParameterExpression? newParam     = null;
 
-			void CollectLambdaParameters(Expression expr)
+			finalExpression = detailExpression.Transform(e =>
 			{
-				expr.Visit(e =>
+				switch (e.NodeType)
 				{
-					if (e.NodeType == ExpressionType.Lambda)
+					case ExpressionType.Call:
+						{
+							if (newQueryable != null)
+								return new TransformInfo(e, true);;
+
+							var mc = (MethodCallExpression)e;
+							if (mc.IsQueryable("LoadWith", "ThenLoad"))
+								return new TransformInfo(mc, true);
+
+							if (mc.IsQueryable(true))
+							{
+								var isSupported = !IsNotSupportedForDetailQuery(mc);
+								var isChainContainsNotSupported = IsChainContainsNotSupported(mc.Arguments[0]);
+								if (isSupported && !isChainContainsNotSupported)
+								{
+									newQueryable       = mc;
+									var subElementType = GetEnumerableElementType(newQueryable.Type, mappingSchema);
+									newParam           = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+									var replaceExpr    = (Expression)newParam;
+									if (mc.IsQueryable(false))
+									{
+										replaceExpr = Expression.Call(
+											Methods.Queryable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
+									}
+									return new TransformInfo(replaceExpr, true);
+								}
+
+								if (!isSupported && !isChainContainsNotSupported)
+								{ 
+									newQueryable       = mc.Arguments[0];
+									var subElementType = GetEnumerableElementType(newQueryable.Type, mappingSchema);
+									newParam           = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+									var replaceExpr    = (Expression)newParam;
+									if (typeof(IQueryable<>).IsSameOrParentOf(mc.Method.GetParameters()[0].ParameterType))
+									{
+										replaceExpr = Expression.Call(
+											Methods.Queryable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
+									}
+									var newMethod       = mc.Update(mc.Object, new[]{replaceExpr}.Concat(mc.Arguments.Skip(1)));
+									return new TransformInfo(newMethod, true);
+								}
+							}
+
+							break;
+						}
+				}
+
+				return new TransformInfo(e);
+			});
+			
+			if (newQueryable != null)
+			{
+				queryableExpression = newQueryable;
+				replaceParam        = newParam;
+
+				// remove not needed AsQueryable() call
+				while (finalExpression is MethodCallExpression mc && mc.IsQueryable("AsQueryable"))
+				{
+					finalExpression = mc.Arguments[0];
+				}
+
+				if (!IsEnumerableType(desiredType, mappingSchema))
+				{
+					if (desiredType != finalExpression.Type)
 					{
-						allowed.AddRange(((LambdaExpression)e).Parameters);
+						finalExpression =
+							Expression.Call(Methods.Enumerable.FirstOrDefault.MakeGenericMethod(desiredType),
+								finalExpression);
 					}
-				});
-			}
 
-			if (mainExpression.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)mainExpression;
-				for (int i = 1; i < mc.Arguments.Count; i++)
-				{
-					CollectLambdaParameters(mc.Arguments[i]);
-				}
-			}
-
-			detailExpression.Visit(CollectLambdaParameters);
-
-			var current = detailExpression;
-			MethodCallExpression? lastNotSupported = null;
-			MethodCallExpression? prevNotSupported = detailExpression as MethodCallExpression;
-			while (current.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)current;
-				if (!mc.IsQueryable(true))
-					break;
-			
-				var isNotSupported = IsNotSupportedForDetailQuery(mc, allowed);
-
-				if (isNotSupported)
-				{
-					lastNotSupported = mc;
-				}
-				
-				current = mc.Arguments[0];
-				
-			}
-			
-			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
-			//TODO: need more tests
-			if (lastNotSupported != null && (lastNotSupported != detailExpression || lastNotSupported.Arguments.Count == 1))
-			{
-				if (lastNotSupported.IsQueryable("Select"))
-					lastNotSupported = prevNotSupported ?? lastNotSupported; 
-				queryableExpression = lastNotSupported.Arguments[0];
-				var subElementType = GetEnumerableElementType(queryableExpression.Type, mappingSchema);
-				replaceParam        = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
-				var replaceExpr     = (Expression)replaceParam;
-				if (!queryableExpression.Type.IsSameOrParentOf(typeof(List<>)))
-				{
-					replaceExpr = Expression.Call(
-						Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
-				}
-			
-				var newMethod   = lastNotSupported.Update(lastNotSupported.Object, new[] { replaceExpr }.Concat(lastNotSupported.Arguments.Skip(1)));
-				finalExpression = detailExpression.Replace(lastNotSupported, newMethod);
-			}
-			
-			if (finalExpression != null && desiredType.IsSameOrParentOf(finalExpression.Type))
-				return;
-
-			var loadedType  = typeof(List<>).MakeGenericType(elementType);
-			if (!desiredType.IsSameOrParentOf(loadedType) || finalExpression != null)
-			{
-				Expression exprToErich;
-				if (finalExpression == null)
-				{
-					replaceParam = Expression.Parameter(loadedType, "replacement");
-					exprToErich  = replaceParam;
-				}
-				else
-				{
-					exprToErich = finalExpression;
-				}
-
-				finalExpression = null!;
-				if (desiredType.IsArray)
-				{
-					finalExpression = Expression.Call(Methods.Enumerable.ToArray.MakeGenericMethod(elementType),
-						exprToErich);
+					return;
 				} 
-				else if (typeof(IOrderedEnumerable<>).IsSameOrParentOf(desiredType))
+			}
+
+			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
+			if (replaceParam == null)
+			{
+				replaceParam    = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
+				finalExpression = replaceParam;
+			}
+
+			finalExpression = AdjustType(finalExpression, desiredType, mappingSchema);
+
+		}
+
+		public static Expression AdjustType(Expression expression, Type desiredType, MappingSchema mappingSchema)
+		{
+			if (desiredType.IsSameOrParentOf(expression.Type))
+				return expression;
+
+			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
+
+			var result = (Expression?)null;
+
+			if (desiredType.IsArray)
+			{
+				var method = typeof(IQueryable<>).IsSameOrParentOf(expression.Type)
+					? Methods.Queryable.ToArray
+					: Methods.Enumerable.ToArray;
+
+				result = Expression.Call(method.MakeGenericMethod(elementType),
+					expression);
+			} 
+			else if (typeof(IOrderedEnumerable<>).IsSameOrParentOf(desiredType))
+			{
+				result = expression;
+			}
+			else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
+			{
+				var convertExpr = mappingSchema.GetConvertExpression(
+					typeof(IEnumerable<>).MakeGenericType(elementType), desiredType);
+				if (convertExpr != null)
+					result = Expression.Invoke(convertExpr, expression);
+			}
+
+			if (result == null)
+			{
+				result = expression;
+				if (!typeof(IQueryable<>).IsSameOrParentOf(result.Type))
 				{
-					finalExpression = exprToErich;
-				}
-				else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
-				{
-					var convertExpr = mappingSchema.GetConvertExpression(
-						typeof(IEnumerable<>).MakeGenericType(elementType), desiredType);
-					if (convertExpr != null)
-						finalExpression = Expression.Invoke(convertExpr, exprToErich);
+					result = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+						expression);
 				}
 
-				if (finalExpression == null)
+				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
 				{
-					finalExpression = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
-						exprToErich);
-					if (typeof(ITable<>).IsSameOrParentOf(desiredType))
-					{
-						var tableType   = typeof(PersistentTable<>).MakeGenericType(elementType);
-						finalExpression = Expression.New(tableType.GetConstructor(new[] { finalExpression.Type }),
-							finalExpression);
-					}
+					var tableType   = typeof(PersistentTable<>).MakeGenericType(elementType);
+					result = Expression.New(tableType.GetConstructor(new[] { result.Type }),
+						result);
 				}
 			}
 
+			return result;
 		}
 
 		class KeyInfo
@@ -589,30 +592,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public static Expression EnsureDestinationType(Expression expression, Type destinationType, MappingSchema mappingSchema)
-		{
-			if (destinationType.IsArray)
-			{
-				if (destinationType.IsArray)
-				{
-					var destinationElementType = GetEnumerableElementType(destinationType, mappingSchema);
-					expression = Expression.Call(null, Methods.Enumerable.ToArray.MakeGenericMethod(destinationElementType), expression);
-				}
-			}
-
-			return expression;
-		}
-
-		static Expression MakeAsQueryable(Expression expression, MappingSchema mappingSchema)
-		{
-			if (typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
-				return expression;
-
-			var elementType = GetEnumerableElementType(expression.Type, mappingSchema);
-			var method = Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType);
-			return Expression.Call(method, expression);
-		}
-
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
@@ -689,7 +668,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 			
-				ExtractNotSupportedPart(mappingSchema, initialMainQuery, detailQuery, associationMember.GetMemberType(), null, out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
@@ -729,18 +708,16 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractNotSupportedPart(mappingSchema, initialMainQuery, detailQuery, associationMember.GetMemberType(), null, out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}
 
 			if (replaceParam != null)
 			{
-				resultExpression = finalExpression.Transform(e => e == replaceParam ? resultExpression : e);
+				resultExpression = finalExpression.Replace(replaceParam, resultExpression);
 			}
-
-			resultExpression = EnsureDestinationType(resultExpression, association.MemberInfo.GetMemberType(), builder.MappingSchema);
-
+			
 			return resultExpression;
 		}
 
@@ -961,8 +938,8 @@ namespace LinqToDB.Linq.Builder
 			var unchangedDetailQuery    = expression;
 			var hasConnectionWithMaster = true;
 
-			ExtractNotSupportedPart(builder.MappingSchema, initialMainQuery, unchangedDetailQuery,
-				unchangedDetailQuery.Type, parameters, out var queryableDetail, out var finalExpression,
+			ExtractNotSupportedPart(builder.MappingSchema, unchangedDetailQuery,
+				unchangedDetailQuery.Type, out var queryableDetail, out var finalExpression,
 				out var replaceParam);
 
 			Expression resultExpression;
