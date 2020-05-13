@@ -21,7 +21,7 @@ namespace LinqToDB.Expressions
 	{
 		#region IsConstant
 
-		public static bool IsConstantable(this Type type, bool includingArrays = true)
+		public static bool IsConstantable(this Type type, bool includingArrays)
 		{
 			if (type.IsEnum)
 				return true;
@@ -423,7 +423,7 @@ namespace LinqToDB.Expressions
 			if (expr1.Value == null && expr2.Value == null)
 				return true;
 
-			if (IsConstantable(expr1.Type))
+			if (IsConstantable(expr1.Type, false))
 				return Equals(expr1.Value, expr2.Value);
 
 			if (expr1.Value == null || expr2.Value == null)

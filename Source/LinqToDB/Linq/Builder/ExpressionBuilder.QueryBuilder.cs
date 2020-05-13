@@ -276,7 +276,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Constant:
 					{
-						if (expr.Type.IsConstantable())
+						if (expr.Type.IsConstantable(true))
 							break;
 
 						if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(expr)) && IsSequence(new BuildInfo(context, expr, new SelectQuery())))

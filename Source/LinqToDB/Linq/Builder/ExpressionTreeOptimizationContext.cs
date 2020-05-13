@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var c = (ConstantExpression)ex;
 
-							if (c.Value == null || ex.Type.IsConstantable())
+							if (c.Value == null || ex.Type.IsConstantable(false))
 								return false;
 
 							break;
@@ -445,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 							if (l != null)
 								return l.Body.Unwrap().Find(CanBeConstant) == null;
 
-							if (ma.Member.DeclaringType.IsConstantable() || ma.Member.IsNullableValueMember())
+							if (ma.Member.DeclaringType.IsConstantable(false) || ma.Member.IsNullableValueMember())
 								return false;
 
 							break;
@@ -455,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mc = (MethodCallExpression)ex;
 
-							if (mc.Method.DeclaringType.IsConstantable() || mc.Method.DeclaringType == typeof(object))
+							if (mc.Method.DeclaringType.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
 								return false;
 
 							var attr = GetExpressionAttribute(mc.Method);
