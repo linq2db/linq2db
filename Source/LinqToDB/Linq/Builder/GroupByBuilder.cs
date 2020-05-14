@@ -66,30 +66,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			// var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
-			// var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
-			//
-			// if (sequence.SelectQuery.Select.IsDistinct       ||
-			//     sequence.SelectQuery.GroupBy.Items.Count > 0 ||
-			//     groupSql.Any(_ => !(_.Sql is SqlField || _.Sql is SqlColumn)))
-			// {
-				sequence = new SubQueryContext(sequence);
-				var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
-				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
-//			}
+			sequence     = new SubQueryContext(sequence);
+			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
+			var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
 
 			foreach (var sql in groupSql)
 				sequence.SelectQuery.GroupBy.Expr(sql.Sql);
-
-//			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
-//			{
-//				if (e.ElementType == QueryElementType.JoinedTable)
-//				{
-//					var jt = (SelectQuery.JoinedTable)e;
-//					if (jt.JoinType == SelectQuery.JoinType.Inner)
-//						jt.IsWeak = false;
-//				}
-//			});
 
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);

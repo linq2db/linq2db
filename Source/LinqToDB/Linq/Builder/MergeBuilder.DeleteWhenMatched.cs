@@ -27,12 +27,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					var condition   = (LambdaExpression)predicate.Unwrap();
 					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
-
-					// builder.BuildSearchCondition(
-					// 	new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
-					// 	conditionExpr,
-					// 	operation.Where.Conditions,
-					// 	false);
 				}
 
 				return mergeContext;

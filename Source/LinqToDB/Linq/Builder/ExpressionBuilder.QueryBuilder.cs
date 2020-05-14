@@ -179,28 +179,14 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							if ((ma.Type.IsGenericType || ma.Type.IsArray) && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
-							{
-								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
-
-								// if (res.Result)
-								// {
-								// 	var table = (TableBuilder.AssociatedTableContext)res.Context!;
-								// 	if (table.IsList)
-								// 	{
-								// 		var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>(), out _);
-								// 		return new TransformInfo(BuildExpression(context, mexpr, enforceServerSide));
-								// 	}
-								// }
-							}
-
 							var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 							var expression = ctx.BuildExpression(ma, 0, enforceServerSide);
 
-							if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression && ma.Expression?.NodeType == ExpressionType.Parameter)
+							if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
+							                                                    && ma.Expression?.NodeType == ExpressionType.Parameter)
 							{
 								var objExpression = BuildExpression(ctx, ma.Expression, enforceServerSide, alias);
-								var varTempVar = objExpression.NodeType == ExpressionType.Parameter
+								var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
 									? objExpression
 									: BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
 
@@ -219,8 +205,8 @@ namespace LinqToDB.Linq.Builder
 
 						var ex = ma.Expression;
 
-						while (ex is MemberExpression)
-							ex = ((MemberExpression)ex).Expression;
+						while (ex is MemberExpression memberExpression)
+							ex = memberExpression.Expression;
 
 						if (ex is MethodCallExpression ce)
 						{
@@ -456,48 +442,48 @@ namespace LinqToDB.Linq.Builder
 					obj = b.Left;
 				}
 
-						if (cnt != null)
-						{
-							var objContext = GetContext(context, obj);
-							if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
-							{
-								var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
-								if (sql.Length == 0)
-									sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
+				if (cnt != null)
+				{
+					var objContext = GetContext(context, obj);
+					if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
+					{
+						var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
+						if (sql.Length == 0)
+							sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
 
-								if (sql.Length > 0)
-								{
+						if (sql.Length > 0)
+						{
 							Expression? predicate = null;
-									foreach (var f in sql)
-									{
+							foreach (var f in sql)
+							{
 								if (f.Sql is SqlField field && field.Table!.All == field)
 											continue;
 
 								var valueType = f.Sql.SystemType!;
 
-										if (!valueType.IsNullable() && valueType.IsValueType)
-											valueType = typeof(Nullable<>).MakeGenericType(valueType);
+								if (!valueType.IsNullable() && valueType.IsValueType)
+									valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
-										var reader     = BuildSql(context, f.Sql, valueType, null);
-										var comparison = Expression.MakeBinary(cond.Test.NodeType,
-											Expression.Default(valueType), reader);
+								var reader     = BuildSql(context, f.Sql, valueType, null);
+								var comparison = Expression.MakeBinary(cond.Test.NodeType,
+									Expression.Default(valueType), reader);
 
-										predicate = predicate == null
-											? comparison
-											: Expression.MakeBinary(
-												cond.Test.NodeType == ExpressionType.Equal
-													? ExpressionType.AndAlso
-													: ExpressionType.OrElse, predicate, comparison);
-									}
+								predicate = predicate == null
+									? comparison
+									: Expression.MakeBinary(
+										cond.Test.NodeType == ExpressionType.Equal
+											? ExpressionType.AndAlso
+											: ExpressionType.OrElse, predicate, comparison);
+							}
 
-									if (predicate != null)
+							if (predicate != null)
 								cond = cond.Update(predicate,
 									CorrectConditional(context, cond.IfTrue,  enforceServerSide, alias),
 									CorrectConditional(context, cond.IfFalse, enforceServerSide, alias));
-							}
 						}
 					}
 				}
+			}
 
 			if (cond == expr)
 				expr = BuildExpression(context, expr, enforceServerSide, alias);
@@ -809,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			static TRet ExecuteSubQuery(
-				IDataContext                     dataContext,
+				IDataContext                      dataContext,
 				object?[]                         parameters,
 				Func<IDataContext,object?[],TRet> queryReader)
 			{
@@ -821,16 +807,13 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static readonly MethodInfo _whereMethodInfo =
-			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null!,null!)).GetGenericMethodDefinition();
-
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
-			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression, parameters);
+			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression);
 
 			if (valueExpression == null)
 			{
@@ -884,7 +867,6 @@ namespace LinqToDB.Linq.Builder
 											me.Member, associationContext.Descriptor, parentType, parentType, childType, false,
 											false, null, out _);
 
-										//TODO: MARS
 										var dcConst = Expression.Constant(context.Builder.DataContext.Clone(true));
 
 										var expr = queryMethod.GetBody(me.Expression, dcConst);

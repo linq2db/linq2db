@@ -418,7 +418,6 @@ namespace LinqToDB.SqlQuery
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
-			//RemoveEmptyJoins();
 
 			OptimizeDistinctOrderBy();
 		}

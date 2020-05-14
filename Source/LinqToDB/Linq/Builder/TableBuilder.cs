@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
 	using Extensions;
 
 	partial class TableBuilder : ISequenceBuilder

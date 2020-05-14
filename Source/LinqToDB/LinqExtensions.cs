@@ -2829,13 +2829,6 @@ namespace LinqToDB
 
 		#region Stub helpers
 
-		// Please do not move it if you do not understand why it's here.
-		//
-		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
-		{
-			throw new InvalidOperationException();
-		}
-
 		internal static TOutput AsQueryable<TOutput,TInput>(TInput source)
 		{
 			throw new InvalidOperationException();

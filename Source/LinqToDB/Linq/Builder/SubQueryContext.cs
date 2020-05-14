@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -41,6 +40,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
+
 			var indexes = SubQuery
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();

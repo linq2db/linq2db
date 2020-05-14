@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public ISqlExpression Expression   { get; set; }
+		public ISqlExpression   Expression { get; set; }
 
 		public   SelectQuery?   Parent     { get; set; }
 		internal string?        RawAlias   { get; set; }
@@ -263,15 +263,12 @@ namespace LinqToDB.SqlQuery
 			sb.Append('[').Append(_columnNumber).Append(']');
 #endif
 
-			if (Expression is SelectQuery selectQuery)
+			if (Expression is SelectQuery)
 			{
-				sb.Append("(SELECT ");
-				sb.Append(selectQuery.SourceID);
-				sb.Append(")");
-				// sb.Append("(\n\t\t");
-				// var len = sb.Length;
-				// Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
-				// sb.Append("\n\t)");
+				sb.Append("(\n\t\t");
+				var len = sb.Length;
+				Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
+				sb.Append("\n\t)");
 			}
 			else
 			{

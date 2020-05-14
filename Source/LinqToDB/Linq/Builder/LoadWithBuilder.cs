@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
-	using Reflection;
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
@@ -98,8 +97,7 @@ namespace LinqToDB.Linq.Builder
 			return table;
 		}
 
-		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder,
-			Expression expression)
+		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression)
 		{
 			expression = expression.Unwrap();
 			var currentExpression = expression;
@@ -191,8 +189,7 @@ namespace LinqToDB.Linq.Builder
 							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType, member);
 
 							if (attr == null)
-								throw new LinqToDBException(
-									string.Format("Member '{0}' is not an association.", expression));
+								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
 							yield return member;
 
@@ -226,8 +223,7 @@ namespace LinqToDB.Linq.Builder
 
 					default :
 						{
-							throw new LinqToDBException(
-								string.Format("Expression '{0}' is not an association.", expression));
+							throw new LinqToDBException($"Expression '{expression}' is not an association.");
 						}
 				}
 			}

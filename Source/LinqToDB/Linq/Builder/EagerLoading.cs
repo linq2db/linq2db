@@ -19,10 +19,10 @@ namespace LinqToDB.Linq.Builder
 
 	internal class EagerLoading
 	{
-		private static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOfGeneric(() =>
+		static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionality<int, int, int>(null!, null!, null!, null!, null!));
 
-		private static readonly MethodInfo EnlistEagerLoadingFunctionalityDetachedMethodInfo = MemberHelper.MethodOfGeneric(() =>
+		static readonly MethodInfo EnlistEagerLoadingFunctionalityDetachedMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionalityDetached<int>(null!, null!));
 
 		static MethodCallExpression MakeMethodCall(MethodInfo methodInfo, params Expression[] arguments)
@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (count > MutableTuple.MaxMemberCount)
 			{
-				count = MutableTuple.MaxMemberCount;
+				count     = MutableTuple.MaxMemberCount;
 				arguments = new Expression[count];
 				Array.Copy(members, startIndex, arguments, 0, count - 1);
 				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count);
@@ -132,9 +132,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsDetailType(Type type)
 		{
-			var isEnumerable = false;
-
-			isEnumerable = type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type);
+			var isEnumerable = type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type);
 
 			if (!isEnumerable && type.IsClass && type.IsGenericType && type.Name.StartsWith("<>"))
 			{
@@ -375,6 +373,7 @@ namespace LinqToDB.Linq.Builder
 				replaceParam        = newParam;
 
 				// remove not needed AsQueryable() call
+				//
 				while (finalExpression is MethodCallExpression mc && mc.IsQueryable("AsQueryable"))
 				{
 					finalExpression = mc.Arguments[0];
@@ -497,6 +496,7 @@ namespace LinqToDB.Linq.Builder
 			var noIndexSql = exprCtx.ConvertToSql(forExpr, 0, flags);
 
 			// filter out keys which are queries
+			//
 			if (noIndexSql.Any(s => s.Sql.ElementType == QueryElementType.SqlQuery))
 			{ 
 				yield break;
@@ -601,6 +601,7 @@ namespace LinqToDB.Linq.Builder
 			var mappingSchema    = builder.MappingSchema;
 
 			// that means we processing association from TableContext. First parameter is master
+			//
 			Expression? detailQuery;
 
 			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
@@ -686,8 +687,7 @@ namespace LinqToDB.Linq.Builder
 
 					detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
 
-					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailQuery,
-						new HashSet<ParameterExpression>());
+					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailQuery);
 
 					return result;
 				}
@@ -927,14 +927,12 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public static Expression? GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema,
-			Expression expression, HashSet<ParameterExpression> parameters)
+		public static Expression? GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema, Expression expression)
 		{
 			expression                  = expression.Unwrap();
 
 			var builder                 = context.Builder;
 			var initialMainQuery        = ValidateMainQuery(builder.Expression.Unwrap());
-			// initialMainQuery            = RemoveLoadWith(initialMainQuery);
 			var unchangedDetailQuery    = expression;
 			var hasConnectionWithMaster = true;
 
@@ -1542,32 +1540,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		static Expression RemoveLoadWith(Expression expression)
-		{
-			var result = expression.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsQueryable("LoadWith", "ThenLoad"))
-					{
-						var current = mc.Arguments[0];
-						while (current.NodeType == ExpressionType.Call &&
-						       ((MethodCallExpression)current).IsQueryable("LoadWith", "ThenLoad"))
-						{
-							current = ((MethodCallExpression)current).Arguments[0];
-						}
-
-						return new TransformInfo(current, false, true);
-					}
-				}
-
-				return new TransformInfo(e);
-			});
-
-			return result;
-		}
-
 		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo, bool isQueryable)
 		{
 			var newExpr = expr;
@@ -1633,8 +1605,7 @@ namespace LinqToDB.Linq.Builder
 
 							for (int i = 0; i < mc.Arguments.Count; i++)
 							{
-								var arg    = mc.Arguments[i];
-								var newArg = arg;
+								var arg = mc.Arguments[i];
 								if (!methodNeedsUpdate)
 								{
 									var genericParameter = genericParameters[i];
@@ -1665,7 +1636,7 @@ namespace LinqToDB.Linq.Builder
 										}
 									}
 
-									newArg = ApplyReMapping(arg, replaceInfo, expectQueryable);
+									var newArg = ApplyReMapping(arg, replaceInfo, expectQueryable);
 
 									if (arg != newArg)
 									{
@@ -1698,10 +1669,10 @@ namespace LinqToDB.Linq.Builder
 												: templateLambdaType.GetGenericArguments();
 
 										
-										var argLambda = (LambdaExpression)arg;
+										var argLambda     = (LambdaExpression)arg;
 										var newParameters = argLambda.Parameters.ToArray();
-										var newBody = argLambda.Body;
-										var needsUpdate = false;
+										var newBody       = argLambda.Body;
+										var needsUpdate   = false;
 										ParameterExpression? transientParam = null;
 										for (int j = 0; j < argLambda.Parameters.Count; j++)
 										{
@@ -1716,8 +1687,8 @@ namespace LinqToDB.Linq.Builder
 
 													if (typeof(KDH<,>).IsSameOrParentOf(replacedType))
 													{
-														var newParam = Expression.Parameter(replacedType, prm.Name);
-														transientParam = newParam;
+														var newParam     = Expression.Parameter(replacedType, prm.Name);
+														transientParam   = newParam;
 														newParameters[j] = newParam;
 
 														var accessExpr =
@@ -1752,11 +1723,9 @@ namespace LinqToDB.Linq.Builder
 														// not SelectMany second param
 														if (i == mc.Arguments.Count - 1)
 														{
-															var neededKey =
-																ExpressionHelper.PropertyOrField(transientParam, "Key");
-															var itemType = GetEnumerableElementType(newBody.Type,
-																replaceInfo.MappingSchema);
-															var parameter = Expression.Parameter(itemType, "t");
+															var neededKey  = ExpressionHelper.PropertyOrField(transientParam, "Key");
+															var itemType   = GetEnumerableElementType(newBody.Type, replaceInfo.MappingSchema);
+															var parameter  = Expression.Parameter(itemType, "t");
 															var selectBody = CreateKDH(neededKey, parameter);
 
 															var selectMethod =
@@ -1789,7 +1758,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var newArgLambda = Expression.Lambda(newBody, newParameters);
-											newArgLambda = CorrectLambdaType(argLambda, newArgLambda, replaceInfo.MappingSchema);
+											    newArgLambda = CorrectLambdaType(argLambda, newArgLambda, replaceInfo.MappingSchema);
 
 											var forRegister = typeof(Expression<>).IsSameOrParentOf(templateLambdaType)
 												? templateLambdaType.GetGenericArguments()[0]
@@ -1813,8 +1782,7 @@ namespace LinqToDB.Linq.Builder
 									return methodGenericArguments[i];
 								}).ToArray();
 
-								var newMethodInfo =
-									methodGenericDefinition.MakeGenericMethod(newGenericArguments);
+								var newMethodInfo = methodGenericDefinition.MakeGenericMethod(newGenericArguments);
 								newExpr = Expression.Call(newMethodInfo, newArguments);
 							}
 						}
@@ -1857,7 +1825,7 @@ namespace LinqToDB.Linq.Builder
 						Expression? updated = null;
 						for (int i = 0; i < ne.Arguments.Count; i++)
 						{
-							var arg = ne.Arguments[i];
+							var arg    = ne.Arguments[i];
 							var newArg = ApplyReMapping(arg, replaceInfo, false);
 							if (arg != newArg)
 							{
@@ -1920,8 +1888,8 @@ namespace LinqToDB.Linq.Builder
 			if (templateType.IsGenericType)
 			{
 				var currentTemplateArguments = templateType.GetGenericArguments();
+				var replacedArguments        = replaced.GetGenericArguments();
 
-				var replacedArguments = replaced.GetGenericArguments();
 				for (int i = 0; i < currentTemplateArguments.Length; i++)
 				{
 					RegisterTypeRemapping(currentTemplateArguments[i], replacedArguments[i], templateArguments, typeMappings);

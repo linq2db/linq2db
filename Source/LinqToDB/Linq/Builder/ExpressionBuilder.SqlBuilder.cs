@@ -25,29 +25,6 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Build Where
 
-		public IBuildContext BuildWhereNew(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
-		{
-			var expr          = ConvertExpression(condition.Body.Unwrap());
-			var refExpr       = new ContextRefExpression(condition.Parameters[0].Type, sequence);
-			var conditionExpr = expr.Transform(e => e == condition.Parameters[0] ? refExpr : e);
-			var makeHaving    = false;
-
-			if (checkForSubQuery && CheckSubQueryForWhere(sequence, conditionExpr, out makeHaving))
-			{
-				sequence      = new SubQueryContext(sequence);
-				refExpr       = new ContextRefExpression(condition.Parameters[0].Type, sequence);
-				conditionExpr = expr.Transform(e => e == condition.Parameters[0] ? refExpr : e);
-			}
-
-			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
-				sequence.SelectQuery.Having.SearchCondition.Conditions :
-				sequence.SelectQuery.Where. SearchCondition.Conditions;
-
-			BuildSearchCondition(sequence, conditionExpr, conditions, false);
-
-			return sequence;
-		}
-
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
 			var prevParent = sequence.Parent;

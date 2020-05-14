@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -9,7 +8,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
-	using System.Diagnostics.CodeAnalysis;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{

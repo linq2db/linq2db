@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 
@@ -56,38 +55,15 @@ namespace LinqToDB.Linq.Builder
 			SubqueryContext.BuildQuery(query, queryParameter);
 		}
 
-		static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)
-		{
-			if (expression != null)
-			{
-				var root = expression.GetRootObject(current.Builder.MappingSchema);
-				if (root is ContextRefExpression refExpression)
-				{
-					if (refExpression.BuildContext == current)
-					{
-						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying));
-					};
-				}
-			}
-
-			return expression;
-		}
-
-		public void MarkNotWeak()
-		{
-			// Join.IsWeak = false;
-		}
-
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			MarkNotWeak();
-			expression = CorrectExpression(expression, this, SubqueryContext);
+			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			return SubqueryContext.BuildExpression(expression, level, enforceServerSide);
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression  = CorrectExpression(expression, this, SubqueryContext);
+			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
 			foreach (var sqlInfo in indexes)
 			{
@@ -99,35 +75,25 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			MarkNotWeak();
-
-			expression = CorrectExpression(expression, this, SubqueryContext);
+			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 
 			var indexes = SubqueryContext
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();
-
-			// foreach (var sqlInfo in indexes)
-			// {
-			// 	sqlInfo.Index = SelectQuery.Select.Add(sqlInfo.Sql);
-			// 	sqlInfo.Sql   = SelectQuery.Select.Columns[sqlInfo.Index];
-			// 	sqlInfo.Query = SelectQuery;
-			//
-			// }
 
 			return indexes;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			expression = CorrectExpression(expression, this, SubqueryContext);
+			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			return SubqueryContext.IsExpression(expression, level, requestFlag);
 		}
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
 			//???
-			expression = CorrectExpression(expression, this, SubqueryContext);
+			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			return SubqueryContext.GetContext(expression, level, buildInfo);
 		}
 
@@ -147,8 +113,6 @@ namespace LinqToDB.Linq.Builder
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			MarkNotWeak();
-
 			if (context != null)
 			{
 				if (context.SelectQuery != SelectQuery)

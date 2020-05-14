@@ -649,13 +649,6 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var zz = from ch in db.Child
-					group ch by ch.Parent
-					into g
-					select g.Key.Children.Sum(p => p.ChildID);
-
-				var r = zz.ToArray();
-
 				AreEqual(
 					from ch in Child
 					group ch by ch.Parent
@@ -665,7 +658,8 @@ namespace Tests.Linq
 					group ch by ch.Parent
 					into g
 					select g.Key.Children.Sum(p => p.ChildID));
-			}		}
+			}
+		}
 
 		[Test]
 		public void SumSubQuery1([DataSources] string context)
