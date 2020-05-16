@@ -25,7 +25,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			FinalizeCte(statement);
 
@@ -36,7 +36,8 @@ namespace LinqToDB.SqlProvider
 				{
 					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
-						SqlProviderFlags.IsGroupByExpressionSupported);
+						SqlProviderFlags.IsGroupByExpressionSupported,
+						inlineParameters);
 
 					return selectQuery;
 				}
@@ -59,7 +60,8 @@ namespace LinqToDB.SqlProvider
 					{
 						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 							SqlProviderFlags.IsApplyJoinSupported,
-							SqlProviderFlags.IsGroupByExpressionSupported);
+							SqlProviderFlags.IsGroupByExpressionSupported,
+							inlineParameters);
 
 						return selectQuery;
 					}
@@ -1852,7 +1854,7 @@ namespace LinqToDB.SqlProvider
 					if (selectClause.SkipValue != null && ReferenceEquals(expr, selectClause.SkipValue))
 					{ 
 						var skip = expr;
-						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery) 
+						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery)
 						    && SqlProviderFlags.AcceptsTakeAsParameter)
 						{
 							if (expr.ElementType != QueryElementType.SqlParameter)

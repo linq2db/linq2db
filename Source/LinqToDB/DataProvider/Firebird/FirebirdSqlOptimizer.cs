@@ -11,11 +11,11 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(statement, inlineParameters);
 
 			statement = WrapParameters(statement);
 

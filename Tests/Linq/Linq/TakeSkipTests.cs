@@ -174,6 +174,7 @@ namespace Tests.Linq
 					db.Child.Skip(2).Count());
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake1([DataSources] string context)
@@ -186,6 +187,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake2([DataSources] string context)
@@ -198,6 +200,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake3([DataSources] string context)
@@ -207,6 +210,116 @@ namespace Tests.Linq
 				var expected = Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
 				var result   = db.Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake21([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake22([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake23([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake31([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake32([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake33([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
 			}
 		}
 
