@@ -154,15 +154,15 @@ namespace LinqToDB.Data
 				{
 					return new PreparedQuery
 					{
-						Commands      = (string[])query.Context,
+						Commands = (string[])query.Context,
 						SqlParameters = query.Statement.Parameters,
-						Statement     = query.Statement,
-						QueryHints    = query.QueryHints,
-					 };
+						Statement = query.Statement,
+						QueryHints = query.QueryHints,
+					};
 				}
 
 				// before processing query we correct parameters
-				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+				var sql = query.Statement.ProcessParameters(dataConnection.MappingSchema);
 
 				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);
@@ -191,7 +191,12 @@ namespace LinqToDB.Data
 				}
 
 				if (!sql.IsParameterDependent)
+				{
 					query.Context = commands;
+
+					query.Statement.Parameters.Clear();
+					query.Statement.Parameters.AddRange(sqlProvider.ActualParameters);
+				}
 
 				return new PreparedQuery
 				{
