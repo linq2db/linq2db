@@ -429,6 +429,8 @@ namespace LinqToDB.SqlQuery
 
 				if (supportsParameter && _selectQuery.Select.TakeValue is SqlValue takeValue)
 					_selectQuery.Select.Take(new SqlParameter(takeValue.ValueType, "take", takeValue.Value){ IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
+				else if (!supportsParameter && _selectQuery.Select.TakeValue is SqlParameter)
+					_selectQuery.IsParameterDependent = true;
 				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression expr)
 				{
 					if (visitor.Find(expr, e => e is SqlParameter) != null)
@@ -451,6 +453,8 @@ namespace LinqToDB.SqlQuery
 				if (supportsParameter && _selectQuery.Select.SkipValue is SqlValue skipValue)
 					_selectQuery.Select.Skip(new SqlParameter(skipValue.ValueType, "skip", skipValue.Value)
 						{ IsQueryParameter = !inlineParameters });
+				else if (!supportsParameter && _selectQuery.Select.SkipValue is SqlParameter)
+					_selectQuery.IsParameterDependent = true;
 				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression expr)
 				{
 					if (visitor.Find(expr, e => e is SqlParameter) != null)
