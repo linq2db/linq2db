@@ -365,7 +365,7 @@ namespace SqlCeDataContext
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public static IQueryable<Person> People0(this Doctor obj, IDataContext db)
+		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
@@ -374,7 +374,7 @@ namespace SqlCeDataContext
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public static Doctor Person0(this Person obj, IDataContext db)
+		public static Doctor Person(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
 		}
@@ -422,7 +422,7 @@ namespace SqlCeDataContext
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public static IQueryable<Person> People1(this Patient obj, IDataContext db)
+		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
@@ -431,7 +431,7 @@ namespace SqlCeDataContext
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public static Patient Person1(this Person obj, IDataContext db)
+		public static Patient Person0(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
 		}

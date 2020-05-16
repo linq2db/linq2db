@@ -807,10 +807,10 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						ServerName   == null ? null : (string)SqlBuilder.Convert(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
-						DatabaseName == null ? null : (string)SqlBuilder.Convert(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						p.Schema     == null ? null : (string)SqlBuilder.Convert(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						                              (string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.ConvertInline(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.ConvertInline(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.ConvertInline(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.ConvertInline(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
 				spName = ToStringLiteral(spName);
@@ -1020,7 +1020,7 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 		members,
 		reservedNames,
 		m => m is Table tbl ? (tbl.Schema != null && (PrefixTableMappingForDefaultSchema || !tbl.IsDefaultSchema) && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
-		(m, newName) =>
+		(m, newName, _) =>
 		{
 			if (m is TypeBase t)
 				t.Name = newName;

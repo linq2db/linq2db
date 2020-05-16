@@ -29,7 +29,7 @@ namespace DataContextMS
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
 		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
 		public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
-		public ITable<Customer0>                  Customers                    { get { return this.GetTable<Customer0>(); } }
+		public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
 		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
 		public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
 		public ITable<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
@@ -74,6 +74,14 @@ namespace DataContextMS
 
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
 		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
+
+		#endregion
+
+		#region Table Functions
+
+		#region Issue449
+
+		#endregion
 
 		#endregion
 	}
@@ -123,7 +131,7 @@ namespace DataContextMS
 	}
 
 	[Table("Customers")]
-	public partial class Customer0
+	public partial class Customer
 	{
 		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  PrimaryKey,  NotNull] public string  CustomerID   { get; set; } = null!; // nchar(5)
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),              NotNull] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
@@ -175,7 +183,7 @@ namespace DataContextMS
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public Customer0 Customer { get; set; } = null!;
+		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo
@@ -332,7 +340,7 @@ namespace DataContextMS
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public Customer0? Customer { get; set; }
+		public Customer? Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
@@ -704,7 +712,7 @@ namespace DataContextMS
 				t.CategoryID == CategoryID);
 		}
 
-		public static Customer0 Find(this ITable<Customer0> table, string CustomerID)
+		public static Customer Find(this ITable<Customer> table, string CustomerID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CustomerID == CustomerID);
@@ -781,7 +789,7 @@ namespace DataContextMS
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this Customer0 obj, IDataContext db)
+		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
 		}
@@ -790,7 +798,7 @@ namespace DataContextMS
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders0(this Customer0 obj, IDataContext db)
+		public static IQueryable<Order> Orders(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
 		}
@@ -803,16 +811,16 @@ namespace DataContextMS
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static IQueryable<Customer0> Customers0(this CustomerCustomerDemo obj, IDataContext db)
+		public static IQueryable<Customer> Customers(this CustomerCustomerDemo obj, IDataContext db)
 		{
-			return db.GetTable<Customer0>().Where(c => c.CustomerID == obj.CustomerID);
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
 		}
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static CustomerCustomerDemo Customer0(this Customer0 obj, IDataContext db)
+		public static CustomerCustomerDemo Customer(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
 		}
@@ -843,7 +851,7 @@ namespace DataContextMS
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes1(this CustomerDemographic obj, IDataContext db)
+		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this CustomerDemographic obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
 		}
@@ -856,7 +864,7 @@ namespace DataContextMS
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Employee obj, IDataContext db)
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID);
 		}
@@ -892,7 +900,7 @@ namespace DataContextMS
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders1(this Employee obj, IDataContext db)
+		public static IQueryable<Order> Orders0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID);
 		}
@@ -905,7 +913,7 @@ namespace DataContextMS
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
-		public static IQueryable<Employee> Employees0(this EmployeeTerritory obj, IDataContext db)
+		public static IQueryable<Employee> Employees(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
 		}
@@ -914,7 +922,7 @@ namespace DataContextMS
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
-		public static EmployeeTerritory Employee0(this Employee obj, IDataContext db)
+		public static EmployeeTerritory Employee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID).First();
 		}
@@ -923,7 +931,7 @@ namespace DataContextMS
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
-		public static IQueryable<Territory> Territories0(this EmployeeTerritory obj, IDataContext db)
+		public static IQueryable<Territory> Territories(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.TerritoryID == obj.TerritoryID);
 		}
@@ -945,16 +953,16 @@ namespace DataContextMS
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static IQueryable<Customer0> Customers1(this Order obj, IDataContext db)
+		public static IQueryable<Customer> Customers0(this Order obj, IDataContext db)
 		{
-			return db.GetTable<Customer0>().Where(c => c.CustomerID == obj.CustomerID);
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
 		}
 
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static Order Customer1(this Customer0 obj, IDataContext db)
+		public static Order Customer0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
 		}
@@ -963,7 +971,7 @@ namespace DataContextMS
 		/// FK_Orders_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public static IQueryable<Employee> Employees1(this Order obj, IDataContext db)
+		public static IQueryable<Employee> Employees0(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
 		}
@@ -972,7 +980,7 @@ namespace DataContextMS
 		/// FK_Orders_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public static Order Employee1(this Employee obj, IDataContext db)
+		public static Order Employee0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
 		}
@@ -1012,7 +1020,7 @@ namespace DataContextMS
 		/// FK_Order_Details_Orders
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
-		public static IQueryable<Order> Orders2(this OrderDetail obj, IDataContext db)
+		public static IQueryable<Order> Orders1(this OrderDetail obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.OrderID == obj.ID);
 		}
@@ -1034,7 +1042,7 @@ namespace DataContextMS
 		/// FK_Territories_Region_BackReference
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Territory> Territories1(this Region obj, IDataContext db)
+		public static IQueryable<Territory> Territories0(this Region obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID);
 		}
@@ -1047,7 +1055,7 @@ namespace DataContextMS
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
 		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders3(this Shipper obj, IDataContext db)
+		public static IQueryable<Order> Orders2(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID);
 		}
@@ -1060,7 +1068,7 @@ namespace DataContextMS
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories1(this Territory obj, IDataContext db)
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID);
 		}
@@ -1093,7 +1101,7 @@ namespace DataContextMS
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<Customer1>               Customers                { get { return this.GetTable<Customer1>(); } }
+		public ITable<Customer0>               Customers                { get { return this.GetTable<Customer0>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
@@ -1260,7 +1268,7 @@ namespace DataContextMS
 	}
 
 	[Table("Customer")]
-	public partial class Customer1
+	public partial class Customer0
 	{
 		[Column(           DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
 		[Column(           DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } = null!; // nvarchar(255)
@@ -1953,7 +1961,7 @@ namespace DataContextMS
 				t.Id == Id);
 		}
 
-		public static Customer1 Find(this ITable<Customer1> table, int ID)
+		public static Customer0 Find(this ITable<Customer0> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -2170,7 +2178,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAID);
 		}
@@ -2179,7 +2187,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID).First();
 		}
@@ -2188,7 +2196,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
 		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.OriginTestSchemaAID);
 		}
@@ -2197,7 +2205,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
 		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-		public static MySchemaSchema.TestSchemaB OriginTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		public static MySchemaSchema.TestSchemaB OriginTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID).First();
 		}
@@ -2206,7 +2214,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAId);
 		}
@@ -2215,7 +2223,7 @@ namespace DataContextMS
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-		public static MySchemaSchema.TestSchemaB TargetTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		public static MySchemaSchema.TestSchemaB TargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID).First();
 		}
@@ -2277,7 +2285,7 @@ namespace DataContextMS
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public static IQueryable<TestSchemaX> ParentTestSchemaX0(this TestSchemaY obj, IDataContext db)
+		public static IQueryable<TestSchemaX> ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.ParentTestSchemaXID);
 		}
@@ -2286,7 +2294,7 @@ namespace DataContextMS
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public static TestSchemaY ParentTestSchemaX1(this TestSchemaX obj, IDataContext db)
+		public static TestSchemaY ParentTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID).First();
 		}
@@ -2295,7 +2303,7 @@ namespace DataContextMS
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public static IQueryable<TestSchemaX> TestSchemaX0(this TestSchemaY obj, IDataContext db)
+		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
@@ -2304,7 +2312,7 @@ namespace DataContextMS
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public static TestSchemaY TestSchemaX1(this TestSchemaX obj, IDataContext db)
+		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
