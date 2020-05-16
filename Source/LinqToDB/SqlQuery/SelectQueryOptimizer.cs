@@ -414,6 +414,19 @@ namespace LinqToDB.SqlQuery
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
 			OptimizeDistinctOrderBy();
+
+			OptimizeSearchConditions();
+		}
+
+		private void OptimizeSearchConditions()
+		{
+			((ISqlExpressionWalkable)_selectQuery).Walk(new WalkOptions(), expr =>
+			{
+				if (expr is SqlSearchCondition cond)
+					return OptimizeSearchCondition(cond);
+
+				return expr;
+			});
 		}
 
 		public static bool? GetBoolValue(ISqlExpression expression)
@@ -496,6 +509,14 @@ namespace LinqToDB.SqlQuery
 					{
 						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(
 							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))));
+					}
+
+					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
+					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+					    && exprExpr.Expr1 is SqlParameter p1 && !p1.CanBeNull
+					    && exprExpr.Expr2 is SqlParameter p2 && Equals(p1, p2))
+					{
+						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(true)));
 					}
 				}
 
