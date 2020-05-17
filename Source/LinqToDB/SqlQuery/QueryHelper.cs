@@ -913,30 +913,6 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
-		{
-			for (int i = 0; i < searchCondition.Conditions.Count; i++)
-			{
-				var visitor      = new QueryVisitor();
-				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
-				{
-					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
-					{
-						if (visitor.ParentElement?.ElementType != QueryElementType.Column)
-						{
-							var column = NeedColumnForExpression(selectQuery, (ISqlExpression)e, false);
-							if (column != null)
-								return column;
-						}
-					}
-
-					return e;
-				});
-
-				searchCondition.Conditions[i] = newCondition;
-			}
-		}
-
 		public static object? EvaluateExpression(this ISqlExpression expr)
 		{
 			switch (expr.ElementType)

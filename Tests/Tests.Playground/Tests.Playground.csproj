@@ -69,6 +69,7 @@
 		<Compile Include="..\Linq\Update\UpdateFromTests.cs" Link="UpdateFromTests.cs" />
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1885Tests.cs" Link="Issue1885Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1964Tests.cs" Link="Issue1964Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1968Tests.cs" Link="Issue1968Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2008Tests.cs" Link="Issue2008Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue356Tests.cs" Link="Issue356Tests.cs" />
