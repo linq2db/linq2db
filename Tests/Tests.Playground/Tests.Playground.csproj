@@ -24,6 +24,7 @@
 		<Compile Include="..\Linq\Linq\ElementOperationTests.cs" Link="ElementOperationTests.cs" />
 		<Compile Include="..\Linq\Linq\ExpressionsTests.cs" Link="ExpressionsTests.cs" />
 		<Compile Include="..\Linq\Linq\FromSqlTests.cs" Link="FromSqlTests.cs" />
+		<Compile Include="..\Linq\Linq\GroupByExtensionsTests.cs" Link="GroupByExtensionsTests.cs" />
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
 		<Compile Include="..\Linq\Linq\InheritanceTests.cs" Link="InheritanceTests.cs" />

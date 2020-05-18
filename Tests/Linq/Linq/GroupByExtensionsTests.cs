@@ -30,7 +30,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByRollup([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByRollup([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -44,7 +44,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						IsGroping = Sql.Grouping(g.Key.Id1),
+						IsGroping = Sql.Grouping(g.Key.Id1) == 1,
 						g.Key.Id1,
 						Count = g.Count()
 					};
@@ -54,7 +54,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCube([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByCube([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -78,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSets([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByGroupingSets([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -102,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSetsHaving([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByGroupingSetsHaving([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -115,7 +115,7 @@ namespace Tests.Linq
 					group q by Sql.GroupBy.GroupingSets(() => new
 						{ Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
 					into g
-					where g.Count() > 0 || Sql.Grouping(g.Key.Set1.Id1)
+					where g.Count() > 0 || Sql.Grouping(g.Key.Set1.Id1) == 1
 					select
 						new
 						{
@@ -128,7 +128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSetsHaving2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByGroupingSetsHaving2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
