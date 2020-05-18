@@ -93,6 +93,16 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo WithTableExpression = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.WithTableExpression(""));
 			}
 
+			public static class GroupBy
+			{
+				public static readonly MethodInfo Rollup       = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Rollup<object>(null!));
+				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Cube<object>(null!));
+				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
+
+				public static readonly MethodInfo Grouping     = MemberHelper.MethodOfGeneric(() => Sql.Grouping<object>(null!));
+
+			}
+
 			public static class Tools
 			{
 				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());

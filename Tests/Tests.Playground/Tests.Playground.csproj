@@ -39,6 +39,7 @@
 		<Compile Include="..\Linq\Linq\StringFunctionsTests.cs" Link="StringFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\SubQueryTests.cs" Link="SubQueryTests.cs" />
 		<Compile Include="..\Linq\Linq\TableFunctionTests.cs" Link="TableFunctionTests.cs" />
+		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\ExpressionUtils.cs" Link="ExpressionUtils.cs" />
 		<Compile Include="..\Linq\OrmBattle\Helper\GenericEqualityComparer.cs" Link="GenericEqualityComparer.cs" />
 		<Compile Include="..\Linq\OrmBattle\OrmBattleTests.cs" Link="OrmBattleTests.cs" />

@@ -305,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var e = (MethodCallExpression)expression;
 
-				if (e.Method.DeclaringType == typeof(Enumerable))
+				if (e.Method.DeclaringType == typeof(Enumerable) && !typeof(IGrouping<,>).IsSameOrParentOf(e.Arguments[0].Type))
 				{
 					return new[] { new SqlInfo { Sql = Builder.SubQueryToSql(this, e) } };
 				}

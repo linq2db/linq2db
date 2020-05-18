@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expres.Result)
 						{
-							if (expres.Expression != null && IsGrouping(expres.Expression))
+							if (expres.Expression != null && IsGrouping(expres.Expression, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							if (IsGrouping(expr))
+							if (IsGrouping(expr, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 							if (Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method) != null)
 								return true;
 
-							if (IsGrouping(e))
+							if (IsGrouping(e, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 			return makeSubQuery || isHaving && isWhere;
 		}
 
-		bool IsGrouping(Expression expression)
+		bool IsGrouping(Expression expression, MappingSchema mappingSchema)
 		{
 			switch (expression.NodeType)
 			{
@@ -168,6 +168,9 @@ namespace LinqToDB.Linq.Builder
 					var mce = (MethodCallExpression)expression;
 
 					if (mce.Object != null && typeof(IGrouping<,>).IsSameOrParentOf(mce.Object.Type))
+						return true;
+
+					if (mce.IsAggregate(mappingSchema))
 						return true;
 
 					return mce.Arguments.Any(a => typeof(IGrouping<,>).IsSameOrParentOf(a.Type));
