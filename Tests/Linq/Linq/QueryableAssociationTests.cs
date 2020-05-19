@@ -559,5 +559,83 @@ WHERE
 			var result2 = query2.ToArray();
 
 		}
+
+
+		public class Entity
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(Entity2LanguageExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
+			public Entity2Language Entity2Language { get; set; }
+
+			public static Expression<Func<Entity, IDataContext, IQueryable<Entity2Language>>> Entity2LanguageExpr()
+			{
+				return (e, db) => db
+					.GetTable<Entity2Language>()
+					.Where(x => x.EntityId == e.Id)
+					.Take(1);
+			}
+		}
+
+		public class Entity2Language
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int EntityId { get; set; }
+
+			[Column]
+			public int LanguageId { get; set; }
+
+			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = false, Relationship = Relationship.OneToOne)]
+			public Language Language { get; set; }
+		}
+
+		public class Language
+		{
+			[Column]
+			public int Id { get; set; }
+		
+			[Column]
+			public string Name { get; set; }
+		}
+
+		[Test]
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new Entity {Id = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Entity2Language {Id = 1, EntityId = 1, LanguageId = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Language {Id = 1, Name = "English"}
+			}))
+			{
+				var value = db
+					.GetTable<Entity>()
+					.Select(x => new
+					{
+						// This works
+						EntityId = x.Id,
+						x.Entity2Language.LanguageId,
+						// This caused exception
+						LanguageName = x.Entity2Language.Language.Name
+					})
+					.First();
+			
+				Assert.AreEqual(1, value.EntityId);
+				Assert.AreEqual(1, value.LanguageId);
+				Assert.AreEqual("English", value.LanguageName);
+			}
+		}
+
 	}
 }
