@@ -70,14 +70,7 @@ namespace LinqToDB.Benchmarks
 		}
 		#endregion
 
-		static void Main_SelectBenchmark_Memory(string[] args)
-		{
-			var b = new SelectBenchmark();
-			b.Setup();
-			SelectBenchmark_WarmUp(b);
-			SelectBenchmark_Measure(b);
-		}
-
+		#region FetchSet
 		static void Main_FetchSetBenchmark_Memory(string[] args)
 		//static void Main()
 		{
@@ -103,7 +96,9 @@ namespace LinqToDB.Benchmarks
 			b.Compiled();
 			b.RawAdoNet();
 		}
+		#endregion
 
+		#region FetchIndividual
 		static void Main_FetchIndividualBenchmark_Memory(string[] args)
 		//static void Main()
 		{
@@ -129,6 +124,17 @@ namespace LinqToDB.Benchmarks
 			b.Compiled();
 			b.RawAdoNet();
 		}
+		#endregion
+
+		#region Select
+		static void Main_SelectBenchmark_Memory(string[] args)
+		{
+			var b = new SelectBenchmark();
+			b.Setup();
+			SelectBenchmark_WarmUp(b);
+			SelectBenchmark_Measure(b);
+		}
+
 
 		private static void SelectBenchmark_WarmUp(SelectBenchmark b)
 		{
@@ -154,5 +160,6 @@ namespace LinqToDB.Benchmarks
 			b.Execute();
 			b.RawAdoNet();
 		}
+		#endregion
 	}
 }

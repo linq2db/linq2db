@@ -8,11 +8,14 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.SqlQuery;
 	using LinqToDB.Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
 	using System.Diagnostics.CodeAnalysis;
+	using LinqToDB.Reflection;
+	using LinqToDB.Common;
 
 	static class InternalExtensions
 	{
@@ -185,6 +188,10 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Block:
 					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
+				case ExpressionType.Extension:
+					if (expr1 is FormattableParameterExpression)
+						return expr1.Equals(expr2);
+					break;
 			}
 
 			throw new InvalidOperationException();
@@ -653,8 +660,103 @@ namespace LinqToDB.Expressions
 					{
 						path = ConvertTo(path, typeof(MethodCallExpression));
 
-						Path(info, ((MethodCallExpression)expr).Object,    path, ReflectionHelper.MethodCall.Object);
-						Path(info, ((MethodCallExpression)expr).Arguments, path, ReflectionHelper.MethodCall.Arguments);
+						var call = (MethodCallExpression)expr;
+
+						// process FromSql(string, object[]) override
+						if (call.Method.IsGenericMethod && call.Method.GetGenericMethodDefinition() == Methods.LinqToDB.FromSqlRaw)
+						{
+							var argumentsPath = Expression.Property(path, ReflectionHelper.MethodCall.Arguments);
+
+							// IDataContext
+							path = Expression.Call(argumentsPath, ReflectionHelper.IndexExpressor<Expression>.Item, Expression.Constant(0));
+							Path(info, call.Arguments[0], path);
+
+							// object[] parameters
+							path = Expression.Call(argumentsPath, ReflectionHelper.IndexExpressor<Expression>.Item, Expression.Constant(2));
+
+							// TODO: maybe we have some generic code for this already? as now we handle limited set of expression types
+							int type;
+							var argumentsExpr = call.Arguments[2];
+
+							if (argumentsExpr is ConstantExpression)
+							{
+								type = 1;
+								path = ConvertTo(
+									Expression.Property(
+										ConvertTo(path, typeof(ConstantExpression)),
+										ReflectionHelper.Constant.Value),
+									typeof(object[]));
+							}
+							else if (argumentsExpr is MemberExpression me)
+							{
+								type = 2;
+								path = Expression.Property(
+									ConvertTo(path, typeof(MemberExpression)),
+									ReflectionHelper.Member.MemberInfo);
+
+								MethodInfo getValue;
+								if (me.Member.IsFieldEx())
+								{
+									path     = ConvertTo(path, typeof(FieldInfo));
+									getValue = ReflectionHelper.Reflection.Field.GetValue;
+								}
+								else if (me.Member.IsPropertyEx())
+								{
+									path     = ConvertTo(path, typeof(PropertyInfo));
+									getValue = ReflectionHelper.Reflection.Property.GetValue;
+								}
+								else
+									throw new NotImplementedException($"Unsupported member type: {me.Member.MemberType}");
+
+								path = ConvertTo(Expression.Call(path, getValue, me.Expression), argumentsExpr.Type);
+							}
+							else if (argumentsExpr is NewArrayExpression)
+							{
+								type = 3;
+								path = Expression.Property(
+									ConvertTo(path, typeof(NewArrayExpression)),
+									ReflectionHelper.NewArray.Expressions);
+							}
+							else
+								throw new NotImplementedException($"Unsupported arguments node: {argumentsExpr.NodeType}");
+
+							// create path to each parameter
+							var parameters = (object[])argumentsExpr.EvaluateExpression()!;
+							for (var i = 0; i < parameters.Length; i++)
+							{
+								var paramType = parameters[i]?.GetType() ?? typeof(object);
+
+								if (typeof(ISqlExpression).IsAssignableFrom(paramType))
+									continue;
+
+								var paramExpression = new FormattableParameterExpression(call.Arguments[1], argumentsExpr, i, paramType);
+
+								var paramPath = path;
+								if (info.Visited.Add(paramExpression))
+								{
+									switch (type)
+									{
+										case 1:
+										case 2:
+											paramPath = Expression.ArrayIndex(path, Expression.Constant(i));
+											break;
+										case 3:
+											paramPath = Expression.Call(
+												path,
+												ReflectionHelper.IndexExpressor<Expression>.Item,
+												Expression.Constant(i));
+											break;
+									}
+
+									Path(info, paramExpression, paramPath);
+								}
+							}
+
+							break;
+						}
+
+						Path(info, call.Object,    path, ReflectionHelper.MethodCall.Object);
+						Path(info, call.Arguments, path, ReflectionHelper.MethodCall.Arguments);
 
 						break;
 					}
@@ -793,9 +895,11 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Constant:
 					{
+						var constant = (ConstantExpression)expr;
+
 						path = ConvertTo(path, typeof(ConstantExpression));
 
-						if (((ConstantExpression)expr).Value is IQueryable iq && !info.Visited.Contains(iq.Expression))
+						if (constant.Value is IQueryable iq && !info.Visited.Contains(iq.Expression))
 						{
 							info.Visited.Add(iq.Expression);
 
@@ -803,7 +907,27 @@ namespace LinqToDB.Expressions
 							p = ConvertTo(p, typeof(IQueryable));
 							Path(info, iq.Expression, p, ReflectionHelper.QueryableInt.Expression);
 						}
+#if !NET45
+						// create path to FormattableString parameters
+						else if (constant.Value is FormattableString formattable)
+						{
+							Expression p = Expression.Property(path, ReflectionHelper.Constant.Value);
+							p = ConvertTo(p, typeof(FormattableString));
 
+							var formattableString = (FormattableString)constant.Value;
+
+							for (var i = 0; i < formattable.ArgumentCount; i++)
+							{
+								var type = formattableString.GetArgument(i)?.GetType() ?? typeof(object);
+								if (!typeof(ISqlExpression).IsAssignableFrom(type))
+								{
+									var paramExpression = new FormattableParameterExpression(constant, i);
+									if (info.Visited.Add(paramExpression))
+										Path(info, paramExpression, Expression.Call(p, ReflectionHelper.Functions.FormattableString.GetArguments, Expression.Constant(i)));
+								}
+							}
+						}
+#endif
 						break;
 					}
 
@@ -811,7 +935,7 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 					{
-						if (expr.CanReduce)
+						if (expr.CanReduce && !(expr is FormattableParameterExpression))
 						{
 							expr = expr.Reduce();
 							Path(info, expr, path);
@@ -823,9 +947,9 @@ namespace LinqToDB.Expressions
 			info.Func(expr, path);
 		}
 
-		#endregion
+#endregion
 
-		#region Helpers
+#region Helpers
 
 		[return: NotNullIfNotNull("ex")]
 		public static Expression? Unwrap(this Expression? ex)
@@ -925,6 +1049,10 @@ namespace LinqToDB.Expressions
 							}
 						}
 
+						break;
+					case ExpressionType.Extension      :
+						if (e is FormattableParameterExpression)
+							accessors.Add(e, p);
 						break;
 				}
 			});
@@ -1222,6 +1350,6 @@ namespace LinqToDB.Expressions
 			return value;
 		}
 
-		#endregion
+#endregion
 	}
 }

@@ -1527,6 +1527,14 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
+				else if (expr is FormattableParameterExpression p)
+				{
+					if (!expr.Type.IsConstantable() || AsParameters.Contains(p))
+					{
+						if (expressionAccessors.TryGetValue(expr, out var val))
+							expr = Expression.Convert(val, expr.Type);
+					}
+				}
 
 				return expr;
 			});

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -43,32 +42,38 @@ namespace LinqToDB.Linq.Builder
 					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 				}
 			}
-			else
-			{
-				var evaluatedSql = formatArg.EvaluateExpression()!;
 #if !NET45
-				if (evaluatedSql is FormattableString formattable)
-				{
-					format = formattable.Format;
-					arguments = formattable.GetArguments().Select(Expression.Constant);
-				}
-				else
-#endif
-				{
-					var rawSqlString = (RawSqlString)evaluatedSql;
-
-					format        = rawSqlString.Format;
-					var arrayExpr = parametersArg!;
-
-					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
-						arguments = ((NewArrayExpression)arrayExpr).Expressions;
-					else
+			else if (formatArg is ConstantExpression constExpr && typeof(FormattableString).IsAssignableFrom(formatArg.Type))
+			{
+				var formattable    = (FormattableString)constExpr.Value;
+				format             = formattable.Format;
+				arguments          = formattable
+					.GetArguments()
+					.Select((a, i) =>
 					{
-						var array = (object[])arrayExpr.EvaluateExpression()!;
-						arguments = array.Select(Expression.Constant);
-					}
+						var type = a?.GetType();
+						if (type == null || !typeof(ISqlExpression).IsAssignableFrom(type))
+							return (Expression)new FormattableParameterExpression(constExpr, i);
+						return Expression.Constant(a);
+					});
+			}
+#endif
+			else if (formatArg.Type == typeof(RawSqlString))
+			{
+				format = ((RawSqlString)formatArg.EvaluateExpression()!).Format;
+
+				var arrayExpr = parametersArg!;
+
+				if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
+					arguments = ((NewArrayExpression)arrayExpr).Expressions;
+				else
+				{
+					var array = (object[])arrayExpr.EvaluateExpression()!;
+					arguments = array.Select((a, i) => new FormattableParameterExpression(formatArg, arrayExpr, i, a?.GetType() ?? typeof(object)));
 				}
 			}
+			else
+				throw new NotImplementedException($"Unsupported {nameof(formatArg)}: {formatArg.NodeType} ({formatArg.Type})");
 		}
 
 		class RawSqlContext : TableContext

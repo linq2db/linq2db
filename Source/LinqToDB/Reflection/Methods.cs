@@ -7,6 +7,7 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using Expressions;
+	using LinqToDB.Common;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -43,6 +44,8 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo ThenLoadSingle       = MemberHelper.MethodOfGeneric<LinqExtensions.ILoadWithQueryable<object, string>>(q => q.ThenLoad(e => e.ToString()));
 			public static readonly MethodInfo ThenLoadMultiple     = MemberHelper.MethodOfGeneric<LinqExtensions.ILoadWithQueryable<object, IEnumerable<string>>>(q => q.ThenLoad(s => s.Length));
 			public static readonly MethodInfo ThenLoadMultipleFunc = MemberHelper.MethodOfGeneric<LinqExtensions.ILoadWithQueryable<object, IEnumerable<string>>>(q => q.ThenLoad(s => new string [0], qq => qq.Where(_ => true)));
+
+			public static readonly MethodInfo FromSqlRaw           = MemberHelper.MethodOfGeneric<IDataContext>(ctx => ctx.FromSql<string>(default(RawSqlString), null!));
 
 			public static class Table
 			{

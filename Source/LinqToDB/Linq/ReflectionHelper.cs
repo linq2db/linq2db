@@ -85,6 +85,7 @@ namespace LinqToDB.Linq
 		public class Member : Expressor<MemberExpression>
 		{
 			public static MethodInfo Expression = MethodOf(e => e.Expression);
+			public static MethodInfo MemberInfo = MethodOf(e => e.Member);
 		}
 
 		public class MemberInit : Expressor<MemberInitExpression>
@@ -149,6 +150,19 @@ namespace LinqToDB.Linq
 			public static MethodInfo IsDBNull = MethodOf(rd => rd.IsDBNull(0));
 		}
 
+		public class Reflection
+		{
+			public class Field : Expressor<FieldInfo>
+			{
+				public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(null));
+			}
+
+			public class Property : Expressor<PropertyInfo>
+			{
+				public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(null));
+			}
+		}
+
 		public class Functions
 		{
 			public class String : Expressor<string>
@@ -161,6 +175,13 @@ namespace LinqToDB.Linq
 				public static MethodInfo Like21 = MethodOf(s => Sql.Like(s, ""));
 				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
 			}
+
+#if !NET45
+			public class FormattableString : Expressor<System.FormattableString>
+			{
+				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
+			}
+#endif
 		}
 	}
 }
