@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
+	using Tools;
 
 	class GroupByBuilder : MethodCallBuilder
 	{
@@ -130,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
 
-				foreach (var sql in groupSql)
+				foreach (var sql in groupSql.Where(s => s.Sql.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlValue)))
 					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
 			}
 			else
