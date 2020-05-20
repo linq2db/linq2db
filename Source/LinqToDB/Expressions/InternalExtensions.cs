@@ -1053,7 +1053,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
+			if (methodCall.IsQueryable(AggregationBuilder.MethodNames) || methodCall.IsQueryable(CountBuilder.MethodNames))
 				return true;
 
 			if (methodCall.Arguments.Count > 0)

@@ -998,13 +998,28 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call        :
 					{
 						var e = (MethodCallExpression)expression;
+
 						var isAggregation = e.IsAggregate(MappingSchema);
+						if (isAggregation && !e.IsQueryable())
+						{
+							var arg = e.Arguments[0];
+							var enumerableType = arg.Type;
+							if (!EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
+								isAggregation = false;
+							else
+							{
+								var elementType = EagerLoading.GetEnumerableElementType(enumerableType, MappingSchema);
+								if (!e.Method.GetParameters()[0].ParameterType.IsSameOrParentOf(typeof(IEnumerable<>).MakeGenericType(elementType)))
+									isAggregation = false;
+							}
+						}
+
 						if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context!, e))
 								return SubQueryToSql(context!, e);
 
-							if (isAggregation || CountBuilder.MethodNames.Contains(e.Method.Name))
+							if (isAggregation)
 							{
 								var ctx = GetContext(context, expression);
 

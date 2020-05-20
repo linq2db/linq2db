@@ -11,8 +11,10 @@
 		<Compile Include="..\..\..\linq2db.alternative\linq2db\Tests\Linq\Linq\NotMappedTests.cs" Link="NotMappedTests.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\DataProvider\AccessTests.cs" Link="AccessTests.cs" />
+		<Compile Include="..\Linq\DataProvider\PostgreSQLTests.cs" Link="PostgreSQLTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SqlCeTests.cs" Link="SqlCeTests.cs" />
 		<Compile Include="..\Linq\Exceptions\MappingTests.cs" Link="MappingTests.cs" />
+		<Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests.cs" Link="ComplexTests.cs" />
