@@ -537,11 +537,23 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
+		/// <summary>
+		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
 		public EntityMappingBuilder<T> HasQueryFilter(Func<IQueryable<T>, IDataContext, IQueryable<T>> filterFunc)
 		{
 			return HasQueryFilter<IDataContext>(filterFunc);
 		}
 
+		/// <summary>
+		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
 		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Func<IQueryable<T>, TDataContext, IQueryable<T>> filterFunc)
 			where TDataContext : IDataContext
 		{
@@ -549,19 +561,31 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
-		public EntityMappingBuilder<T> HasQueryFilter(Expression<Func<T, IDataContext, bool>> filterExpression)
+		/// <summary>
+		///     Specifies a LINQ predicate expression that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
+		public EntityMappingBuilder<T> HasQueryFilter(Expression<Func<T, IDataContext, bool>> filter)
 		{
-			return HasQueryFilter<IDataContext>(filterExpression);
+			return HasQueryFilter<IDataContext>(filter);
 		}
 
-		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Expression<Func<T, TDataContext, bool>> filterExpression)
+		/// <summary>
+		///     Specifies a LINQ predicate expression that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
+		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Expression<Func<T, TDataContext, bool>> filter)
 			where TDataContext : IDataContext
 		{
 			var queryParam   = Expression.Parameter(typeof(IQueryable<T>), "q");
 			var dcParam      = Expression.Parameter(typeof(TDataContext), "dc");
-			var replaceParam = filterExpression.Parameters[1];
-			var filterBody   = filterExpression.Body.Transform(e => e == replaceParam ? dcParam : e);
-			var filterLambda = Expression.Lambda(filterBody, filterExpression.Parameters[0]);
+			var replaceParam = filter.Parameters[1];
+			var filterBody   = filter.Body.Transform(e => e == replaceParam ? dcParam : e);
+			var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
 			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(T)), queryParam, filterLambda);
 			var lambda       = Expression.Lambda<Func<IQueryable<T>, TDataContext, IQueryable<T>>>(body, queryParam, dcParam);
 
