@@ -45,9 +45,8 @@ namespace LinqToDB.DataProvider
 		{
 			var p = Expression.Parameter(typeof(string));
 			var l = Expression.Lambda<Func<string, IDbConnection>>(
-				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
+				Expression.Convert(Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p), typeof(IDbConnection)),
 				p);
-
 			return l;
 		}
 
