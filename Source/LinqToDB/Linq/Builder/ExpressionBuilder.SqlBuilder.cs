@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 					if (mce.Object != null && typeof(IGrouping<,>).IsSameOrParentOf(mce.Object.Type))
 						return true;
 
-					if (mce.IsAggregate(mappingSchema))
+					if (mce.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Grouping))
 						return true;
 
 					return mce.Arguments.Any(a => typeof(IGrouping<,>).IsSameOrParentOf(a.Type));
