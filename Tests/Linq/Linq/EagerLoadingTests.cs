@@ -573,6 +573,48 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
+					join d in detail on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+							.AsEnumerable()
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
+					};
+
+				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
+					join d in detailRecords on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
 		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();

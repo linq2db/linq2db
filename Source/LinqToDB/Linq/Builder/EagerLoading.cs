@@ -273,7 +273,8 @@ namespace LinqToDB.Linq.Builder
 				"Distinct", "Skip", "Take",
 				"First", "FirstOrDefault", "Last", "LastOrDefault",
 				"Single", "SingleOrDefault", 
-				"ToArray", "ToList", "ToDictionary"
+				"ToArray", "ToList", "ToDictionary",
+				"AsEnumerable", "GroupBy"
 			))
 			{
 				return true;
