@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -635,6 +636,93 @@ WHERE
 				Assert.AreEqual(1, value.LanguageId);
 				Assert.AreEqual("English", value.LanguageName);
 			}
+		}
+
+		class EntityWithUser
+		{
+			[Column]
+			public int UserId { get; set; }
+
+			[ExpressionMethod(nameof(BelongsToCurrentUserExpr))]
+			public bool BelongsToCurrentUser { get; set; }
+
+			[ExpressionMethod(nameof(BelongsToCurrentUserFailExpr))]
+			public bool BelongsToCurrentUserFail { get; set; }
+			
+			public static Expression<Func<EntityWithUser, CustomDataConnection, bool>> BelongsToCurrentUserExpr()
+			{
+				return (e, db) => e.UserId == db.CurrentUserId;
+			}
+
+			public static Expression<Func<EntityWithUser, CustomDataContext, bool>> BelongsToCurrentUserFailExpr()
+			{
+				return (e, db) => e.UserId == db.CurrentUserId;
+			}
+		}
+	
+		[Test]
+		public void TestPropertiesFromDataConnection([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int currentUser)
+		{
+			using (var db = new CustomDataConnection(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new EntityWithUser {UserId = 1},
+				new EntityWithUser {UserId = 2},
+				new EntityWithUser {UserId = 2},
+				new EntityWithUser {UserId = 3},
+				new EntityWithUser {UserId = 3},
+				new EntityWithUser {UserId = 3},
+			}))
+			{
+				db.CurrentUserId = currentUser;
+				var count = db
+					.GetTable<EntityWithUser>()
+					.Count(x => x.BelongsToCurrentUser);
+			
+				Assert.AreEqual(currentUser, count);
+			}
+		}
+	
+		[Test]
+		public void TestPropertiesFromDataContext([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new CustomDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new EntityWithUser {UserId = 1},
+				new EntityWithUser {UserId = 2},
+				new EntityWithUser {UserId = 2},
+				new EntityWithUser {UserId = 3},
+				new EntityWithUser {UserId = 3},
+				new EntityWithUser {UserId = 3},
+			}))
+			{
+				db.CurrentUserId = 1;
+
+				Assert.Throws<LinqException>(() => db
+					.GetTable<EntityWithUser>()
+					.Count(x => x.BelongsToCurrentUser));
+		
+			}
+		}
+	
+		class CustomDataConnection : DataConnection
+		{
+			public CustomDataConnection(string? configurationString) : base(configurationString)
+			{
+			}
+
+			public int CurrentUserId { get; set; }
+		}
+
+		class CustomDataContext : DataContext
+		{
+		
+			public CustomDataContext(string? configurationString) : base(configurationString)
+			{
+			}
+
+			public int CurrentUserId { get; set; }
 		}
 
 	}

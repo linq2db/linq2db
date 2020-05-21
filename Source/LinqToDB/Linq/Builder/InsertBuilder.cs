@@ -145,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = 
-										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam);
+										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam);
 									builder.AddCurrentSqlParameter(parameter);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));

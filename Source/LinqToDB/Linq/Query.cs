@@ -511,8 +511,8 @@ namespace LinqToDB.Linq
 	{
 		public ParameterAccessor(
 			Expression                             expression,
-			Func<Expression,object?[]?,object?>    accessor,
-			Func<Expression,object?[]?,DbDataType> dbDataTypeAccessor,
+			Func<Expression,IDataContext?,object?[]?,object?>    accessor,
+			Func<Expression,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
 			SqlParameter                           sqlParameter)
 		{
 			Expression         = expression;
@@ -521,9 +521,9 @@ namespace LinqToDB.Linq
 			SqlParameter       = sqlParameter;
 		}
 
-		public          Expression                             Expression;
-		public readonly Func<Expression,object?[]?,object?>    Accessor;
-		public readonly Func<Expression,object?[]?,DbDataType> DbDataTypeAccessor;
-		public readonly SqlParameter                           SqlParameter;
+		public          Expression                                           Expression;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>    Accessor;
+		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType> DbDataTypeAccessor;
+		public readonly SqlParameter                                         SqlParameter;
 	}
 }
