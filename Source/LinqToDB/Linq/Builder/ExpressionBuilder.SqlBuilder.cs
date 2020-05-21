@@ -1291,7 +1291,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				p = CreateParameterAccessor(
-					DataContext, newExpr.ValueExpression, newExpr.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, name!, buildParameterType, expr: convertExpr);
+					DataContext, newExpr.ValueExpression, newExpr.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, DataContextParam, name!, buildParameterType, expr: convertExpr);
 				AddCurrentSqlParameter(p);
 			}
 
@@ -2051,7 +2051,7 @@ namespace LinqToDB.Linq.Builder
 			var vte  = ReplaceParameter(_expressionAccessors, ex, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, DataContextParam, member.Name);
 
 			_parameters.Add(expr, p);
 			AddCurrentSqlParameter(p);
@@ -2154,6 +2154,7 @@ namespace LinqToDB.Linq.Builder
 			Expression          expression,
 			ParameterExpression expressionParam,
 			ParameterExpression parametersParam,
+			ParameterExpression dataContextParam,
 			string              name,
 			BuildParameterType  buildParameterType = BuildParameterType.Default,
 			LambdaExpression?   expr = null)
@@ -2203,6 +2204,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (e.NodeType)
 				{
+					case ExpressionType.Parameter:
+						{
+							// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
+							// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
+							// So for now decided to throw exception.
+							if (e == dataContextParam && !typeof(DataConnection).IsSameOrParentOf(dataContext.GetType()))
+								throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
+							return e;
+						}
 					case ExpressionType.MemberAccess:
 						var ma = (MemberExpression) e;
 
@@ -2230,13 +2240,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			});
 
-			var mapper = Expression.Lambda<Func<Expression,object?[]?,object?>>(
+			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
-				new [] { expressionParam, parametersParam });
+				new [] { expressionParam, dataContextParam, parametersParam });
 
-			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,object?[]?,DbDataType>>(
+			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,DbDataType>>(
 				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
-				new [] { expressionParam, parametersParam });
+				new [] { expressionParam, dataContextParam, parametersParam });
 
 			return new ParameterAccessor
 			(

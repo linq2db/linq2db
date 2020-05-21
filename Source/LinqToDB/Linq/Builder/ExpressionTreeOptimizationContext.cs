@@ -356,7 +356,7 @@ namespace LinqToDB.Linq.Builder
 			if (_lastExpr2 == expr)
 				return _lastResult2;
 
-			var allowedParams = new HashSet<Expression> { ExpressionBuilder.ParametersParam };
+			var allowedParams = new HashSet<Expression> { ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam };
 
 			var result = null == expr.Find(ex =>
 			{

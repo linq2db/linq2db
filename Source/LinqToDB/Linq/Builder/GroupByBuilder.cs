@@ -274,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 						var ps = new object?[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
-							ps[i] = _parameters[i].Accessor(_queryRunner.Expression, _queryRunner.Parameters);
+							ps[i] = _parameters[i].Accessor(_queryRunner.Expression, _queryRunner.DataContext, _queryRunner.Parameters);
 
 						return _itemReader(db, Key, ps).ToList();
 					}
