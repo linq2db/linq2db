@@ -1551,11 +1551,16 @@ namespace LinqToDB.SqlProvider
 			if (items.Count == 0)
 				return;
 
+			BuildGroupByBody(selectQuery.GroupBy.GroupingType, items);
+		}
+
+		protected virtual void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		{
 			AppendIndent();
 
 			StringBuilder.Append("GROUP BY");
 
-			switch (selectQuery.GroupBy.GroupingType)
+			switch (groupingType)
 			{
 				case GroupingType.Default:
 					break;
@@ -1572,7 +1577,7 @@ namespace LinqToDB.SqlProvider
 					throw new ArgumentOutOfRangeException();
 			}
 
-			if (selectQuery.GroupBy.GroupingType != GroupingType.Default)
+			if (groupingType != GroupingType.Default)
 				StringBuilder.Append(" (");
 
 			StringBuilder.AppendLine();
@@ -1593,12 +1598,11 @@ namespace LinqToDB.SqlProvider
 
 			Indent--;
 
-			if (selectQuery.GroupBy.GroupingType != GroupingType.Default)
+			if (groupingType != GroupingType.Default)
 			{
 				AppendIndent();
 				StringBuilder.Append(")").AppendLine();
 			}
-
 		}
 
 		#endregion

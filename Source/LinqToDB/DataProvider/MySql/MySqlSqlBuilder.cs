@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using LinqToDB.Mapping;
 	using LinqToDB.Extensions;
+	using LinqToDB.Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -509,6 +510,49 @@ namespace LinqToDB.DataProvider.MySql
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		{
+			if (groupingType.In(GroupingType.GroupBySets, GroupingType.Default))
+			{
+				base.BuildGroupByBody(groupingType, items);
+				return;
+			}
+
+			AppendIndent();
+
+			StringBuilder.Append("GROUP BY");
+
+			StringBuilder.AppendLine();
+
+			Indent++;
+
+			for (var i = 0; i < items.Count; i++)
+			{
+				AppendIndent();
+
+				BuildExpression(items[i]);
+
+				if (i + 1 < items.Count)
+					StringBuilder.Append(',');
+
+				StringBuilder.AppendLine();
+			}
+
+			Indent--;
+
+			switch (groupingType)
+			{
+				case GroupingType.Rollup:
+					StringBuilder.Append("WITH ROLLUP");
+					break;
+				case GroupingType.Cube:
+					StringBuilder.Append("WITH CUBE");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 	}
 }

@@ -99,7 +99,7 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Cube<object>(null!));
 				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
 
-				public static readonly MethodInfo Grouping     = MemberHelper.MethodOfGeneric(() => Sql.Grouping<object>(null!));
+				public static readonly MethodInfo Grouping     = MemberHelper.MethodOf(() => Sql.Grouping(null!));
 
 			}
 
