@@ -635,7 +635,7 @@ namespace LinqToDB.SqlQuery
 						}
 						else
 						{
-							table.Joins.RemoveAt(i); ;
+							table.Joins.RemoveAt(i);
 						}
 					}
 				}

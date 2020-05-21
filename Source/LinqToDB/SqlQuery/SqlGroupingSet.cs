@@ -59,7 +59,8 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
-			return true;		}
+			return true;
+		}
 
 		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{

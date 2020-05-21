@@ -39,7 +39,7 @@ namespace LinqToDB
 
 		[Sql.Extension("GROUPING({field})", ServerSideOnly = true, CanBeNull = false, IsAggregate = true)]
 		public static int Grouping<T>([ExprParameter] T field) 
-			=> throw new LinqException($"'{nameof(GroupBy)}' should not be called directly.");
+			=> throw new LinqException($"'{nameof(Grouping)}' should not be called directly.");
 
 	}
 }

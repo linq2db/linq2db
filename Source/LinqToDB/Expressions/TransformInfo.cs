@@ -28,6 +28,6 @@ namespace LinqToDB.Expressions
 
 		public Expression Expression;
 		public bool       Stop;
-		public bool		  Continue;
+		public bool       Continue;
 	}
 }
