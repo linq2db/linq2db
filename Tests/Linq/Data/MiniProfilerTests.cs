@@ -600,11 +600,12 @@ namespace Tests.Data
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+
 				// test MARS not set
-				Assert.False(db.IsMarsEnabled);
+				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
 
 				// test server version
-				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
@@ -639,16 +640,6 @@ namespace Tests.Data
 						Assert.True(trace.Contains("[AllTypes]"));
 					}
 				}
-			}
-
-			// test MARS is set
-#if NET46
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection), ";MultipleActiveResultSets=true"))
-#else
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient", ";MultipleActiveResultSets=true"))
-#endif
-			{
-				Assert.True(db.IsMarsEnabled);
 			}
 		}
 
@@ -738,11 +729,12 @@ namespace Tests.Data
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+
 				// test MARS not set
-				Assert.False(db.IsMarsEnabled);
+				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
 
 				// test server version
-				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
@@ -778,10 +770,6 @@ namespace Tests.Data
 					}
 				}
 			}
-
-			// test MARS is set
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", ";MultipleActiveResultSets=true"))
-				Assert.True(db.IsMarsEnabled);
 		}
 
 		[Test]
