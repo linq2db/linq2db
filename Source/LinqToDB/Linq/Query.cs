@@ -179,13 +179,13 @@ namespace LinqToDB.Linq
 			if (_preambles == null)
 				return null;
 
-			var preambules = new object?[_preambles.Length];
-			for (var i = 0; i < preambules.Length; i++)
+			var preambles = new object?[_preambles.Length];
+			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambules[i] = _preambles[i].Item1(dc);
+				preambles[i] = _preambles[i].Item1(dc);
 			}
 
-			return preambules;
+			return preambles;
 		}
 
 		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
@@ -193,13 +193,13 @@ namespace LinqToDB.Linq
 			if (_preambles == null)
 				return null;
 
-			var preambules = new object?[_preambles.Length];
-			for (var i = 0; i < preambules.Length; i++)
+			var preambles = new object?[_preambles.Length];
+			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambules[i] = await _preambles[i].Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
-			return preambules;
+			return preambles;
 		}
 
 		#endregion
