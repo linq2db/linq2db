@@ -9,6 +9,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using Common.Internal.Cache;
 	using System.Diagnostics.CodeAnalysis;
+	using System.Linq;
 
 	static partial class QueryRunner
 	{
@@ -16,20 +17,21 @@ namespace LinqToDB.Linq
 		{
 			static Query<object> CreateQuery(
 				IDataContext dataContext, EntityDescriptor descriptor, [DisallowNull] T obj,
+				Func<T, ColumnDescriptor, bool>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null) sqlTable.PhysicalName = tableName;
+				if (serverName != null) sqlTable.Server = serverName;
+				if (databaseName != null) sqlTable.Database = databaseName;
+				if (schemaName != null) sqlTable.Schema = schemaName;
 
-				var sqlQuery        = new SelectQuery();
+				var sqlQuery = new SelectQuery();
 				var insertStatement = new SqlInsertStatement(sqlQuery);
 
-				insertStatement.Insert.Into         = sqlTable;
+				insertStatement.Insert.Into = sqlTable;
 				insertStatement.Insert.WithIdentity = true;
 
 				var ei = new Query<object>(dataContext, null)
@@ -37,7 +39,7 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = insertStatement, } }
 				};
 
-				foreach (var field in sqlTable.Fields.Values)
+				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.Value.ColumnDescriptor)).Select(x => x.Value))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
@@ -62,7 +64,15 @@ namespace LinqToDB.Linq
 			}
 
 			public static object Query(
+					IDataContext dataContext, T obj,
+					string? tableName, string? serverName, string? databaseName, string? schemaName)
+			{
+				return Query(dataContext, obj, null, tableName, serverName, databaseName, schemaName);
+			}
+
+			public static object Query(
 				IDataContext dataContext, T obj,
+				Func<T, ColumnDescriptor, bool>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
 				if (Equals(default(T), obj))
@@ -70,21 +80,30 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type)
+				var ei = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
+					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<object> QueryAsync(
+					IDataContext dataContext, T obj,
+					string? tableName, string? serverName, string? databaseName, string? schemaName,
+					CancellationToken token)
+			{
+				return await QueryAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, token);
+			}
+
+			public static async Task<object> QueryAsync(
 				IDataContext dataContext, T obj,
+				Func<T, ColumnDescriptor, bool>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
@@ -94,13 +113,13 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj!, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				return await ((Task<object>)ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token)!).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
