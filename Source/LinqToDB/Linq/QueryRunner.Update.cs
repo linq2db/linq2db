@@ -10,7 +10,6 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Mapping;
 	using Common.Internal.Cache;
-	using System.Collections.Generic;
 
 	static partial class QueryRunner
 	{
@@ -18,18 +17,11 @@ namespace LinqToDB.Linq
 		{
 			static Query<int>? CreateQuery(
 				IDataContext dataContext,
-				EntityDescriptor descriptor, T obj,
+				EntityDescriptor descriptor,
+				T obj,
+				Func<T, ColumnDescriptor, bool>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
-			{
-				return CreateQuery(dataContext, descriptor, obj, null, tableName, serverName, databaseName, schemaName, type);
-			}
-
-			static Query<int>? CreateQuery(
-			IDataContext dataContext,
-			EntityDescriptor descriptor, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
-			string? tableName, string? serverName, string? databaseName, string? schemaName,
-			Type type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
@@ -113,7 +105,7 @@ namespace LinqToDB.Linq
 						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
-							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 							return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type);
 						});
 
@@ -144,7 +136,7 @@ namespace LinqToDB.Linq
 						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, type },
 						o =>
 						{
-							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 							return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type);
 						});
 
