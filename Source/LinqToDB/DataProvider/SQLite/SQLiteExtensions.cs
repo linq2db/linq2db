@@ -5,6 +5,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -540,7 +541,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
-				columns[i]         = sqlBuilder.Convert(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
+				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
 				parameterTokens[i] = $"@p{i}";
 				parameters[i]      = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(dc.MappingSchema, record)!);
 			}

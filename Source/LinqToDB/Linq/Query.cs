@@ -87,13 +87,16 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		internal void AddQueryDependedObject(Expression expr, SqlQueryDependentAttribute attr)
+		internal void AddQueryDependedObject(Expression expression, SqlQueryDependentAttribute attr)
 		{
-			if (_queryDependedObjects.ContainsKey(expr))
-				return;
+			foreach (var expr in attr.SplitExpression(expression))
+			{
+				if (_queryDependedObjects.ContainsKey(expr))
+					continue;
 
-			var prepared = attr.PrepareForCache(expr);
-			_queryDependedObjects.Add(expr, prepared);
+				var prepared = attr.PrepareForCache(expr);
+				_queryDependedObjects.Add(expr, prepared);
+			}
 		}
 
 		internal Expression GetIQueryable(int n, Expression expr)
@@ -175,19 +178,28 @@ namespace LinqToDB.Linq
 		{
 			if (_preambles == null)
 				return null;
-			return _preambles.Select(p => p.Item1(dc)).ToArray();
+
+			var preambles = new object?[_preambles.Length];
+			for (var i = 0; i < preambles.Length; i++)
+			{
+				preambles[i] = _preambles[i].Item1(dc);
+			}
+
+			return preambles;
 		}
 
 		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
 		{
 			if (_preambles == null)
 				return null;
-			var result = new List<object?>();
-			foreach (var p in _preambles)
+
+			var preambles = new object?[_preambles.Length];
+			for (var i = 0; i < preambles.Length; i++)
 			{
-				result.Add(await p.Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				preambles[i] = await _preambles[i].Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
-			return result.ToArray();
+
+			return preambles;
 		}
 
 		#endregion
@@ -218,61 +230,179 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 
 		#endregion
 
-		#region GetInfo
+		#region Query cache
+		class QueryCache
+		{
+			// lock for cache instance modification
+			readonly object _syncCache    = new object();
+			// lock for query priority modification
+			readonly object _syncPriority = new object();
 
-		static readonly List<Query<T>> _orderedCache;
+			// stores all cached queries
+			// when query added or removed from cache, query and priority arrays recreated
+			Query<T>[] _cache   = Array<Query<T>>.Empty;
 
-		/// <summary>
-		/// LINQ query cache version. Changed when query added or removed from cache.
-		/// Not changed when cache reordered.
-		/// </summary>
-		static int _cacheVersion;
+			// stores ordered list of query indexes for Find operation
+			int[]      _indexes = Array<int     >.Empty;
 
-		/// <summary>
-		/// Count of queries which has not been found in cache.
-		/// </summary>
-		static long _cacheMissCount;
+			// version of cache, increased after each recreation of _cache instance
+			int _version;
 
-		/// <summary>
-		/// LINQ query cache synchronization object.
-		/// </summary>
-		static readonly object _sync;
+			/// <summary>
+			/// Count of queries which has not been found in cache.
+			/// </summary>
+			internal long CacheMissCount;
 
-		/// <summary>
-		/// LINQ query cache size (per entity type).
-		/// </summary>
-		const int CacheSize = 100;
+			/// <summary>
+			/// LINQ query max cache size (per entity type).
+			/// </summary>
+			const int CacheSize = 100;
+
+			/// <summary>
+			/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
+			/// </summary>
+			public void Clear()
+			{
+				if (_cache.Length > 0)
+					lock (_syncCache)
+						if (_cache.Length > 0)
+						{
+							_cache   = Array<Query<T>>.Empty;
+							_indexes = Array<int     >.Empty;
+							_version++;
+						}
+			}
+
+			/// <summary>
+			/// Adds query to cache if it is not cached already.
+			/// </summary>
+			public void TryAdd(IDataContext dataContext, Query<T> query)
+			{
+				// because Add is less frequient operation than Find, it is fine to have put bigger locks here
+				Query<T>[] cache;
+				int        version;
+
+				lock (_syncCache)
+				{
+					cache   = _cache;
+					version = _version;
+				}
+
+				for (var i = 0; i < cache.Length; i++)
+					if (cache[i].Compare(dataContext, query.Expression!))
+						// already added by another thread
+						return;
+
+				lock (_syncCache)
+				{
+					var priorities   = _indexes;
+					var versionsDiff = _version - version;
+
+					if (versionsDiff > 0)
+					{
+						cache = _cache;
+
+						// check only added queries, each version could add 1 query to first position, so we
+						// test only first N queries
+						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
+							if (cache[i].Compare(dataContext, query.Expression!))
+								// already added by another thread
+								return;
+					}
+
+					// create new cache instance and reorder items according to priorities to inprove Find without
+					// reorder lock
+					var newCache      = new Query<T>[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
+					var newPriorities = new int[newCache.Length];
+
+					newCache[0]      = query;
+					newPriorities[0] = 0;
+
+					for (var i = 1; i < newCache.Length; i++)
+					{
+						newCache[i]      = cache[i - 1];
+						newPriorities[i] = i;
+					}
+
+					_cache   = newCache;
+					_indexes = newPriorities;
+					version  = _version;
+				}
+			}
+
+
+			/// <summary>
+			/// Search for query in cache and of found, try to move it to better position in cache.
+			/// </summary>
+			public Query<T>? Find(IDataContext dataContext, Expression expr)
+			{
+				Query<T>[] cache;
+				int[]      indexes;
+				int        version;
+
+				lock (_syncCache)
+				{
+					cache   = _cache;
+					version = _version;
+					indexes = _indexes;
+				}
+
+				var allowReordering = Monitor.TryEnter(_syncPriority);
+				try
+				{
+					for (var i = 0; i < cache.Length; i++)
+					{
+						// if we have reordering lock, we can enumerate queries in priority order
+						var idx = allowReordering ? indexes[i] : i;
+
+						if (cache[idx].Compare(dataContext, expr))
+						{
+							// do reorder only if it is not blocked and cache wasn't replaced by new one
+							if (i > 0 && version == _version && allowReordering)
+							{
+								var index      = indexes[i];
+								indexes[i]     = indexes[i - 1];
+								indexes[i - 1] = index;
+							}
+
+							return cache[idx];
+						}
+					}
+				}
+				finally
+				{
+					if (allowReordering)
+						Monitor.Exit(_syncPriority);
+				}
+
+				Interlocked.Increment(ref CacheMissCount);
+
+				return null;
+			}
+		}
+		#endregion
+
+		#region Query
+
+		private static readonly QueryCache _queryCache = new QueryCache();
 
 		static Query()
 		{
-			_sync         = new object();
-			_orderedCache = new List<Query<T>>(CacheSize);
-
 			CacheCleaners.Enqueue(ClearCache);
 		}
 
 		/// <summary>
 		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
 		/// </summary>
-		public static void ClearCache()
-		{
-			if (_orderedCache.Count != 0)
-				lock (_sync)
-				{
-					if (_orderedCache.Count != 0)
-						_cacheVersion++;
+		public static void ClearCache() => _queryCache.Clear();
 
-					_orderedCache.Clear();
-				}
-		}
-
-		public static long CacheMissCount => _cacheMissCount;
+		public static long CacheMissCount => _queryCache.CacheMissCount;
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
@@ -284,26 +414,14 @@ namespace LinqToDB.Linq
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(dataContext, expr);
 
-			var query = FindQuery(dataContext, expr);
+			var query = _queryCache.Find(dataContext, expr);
 
 			if (query == null)
 			{
-				var oldVersion = _cacheVersion;
 				query = CreateQuery(dataContext, expr);
 
-				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
-					lock (_sync)
-					{
-						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
-						{
-							if (_orderedCache.Count == CacheSize)
-								_orderedCache.RemoveAt(CacheSize - 1);
-
-							_orderedCache.Insert(0, query);
-							_cacheVersion++;
-						}
-					}
+					_queryCache.TryAdd(dataContext, query);
 			}
 
 			return query;
@@ -343,49 +461,6 @@ namespace LinqToDB.Linq
 
 			return query;
 		}
-
-		static Query<T>? FindQuery(IDataContext dataContext, Expression expr)
-		{
-			Query<T>[] queries;
-
-			// create thread-safe copy
-			lock (_sync)
-				queries = _orderedCache.ToArray();
-
-			foreach (var query in queries)
-			{
-				if (query.Compare(dataContext, expr))
-				{
-					// move found query up in cache
-					lock (_sync)
-					{
-						var oldIndex = _orderedCache.IndexOf(query);
-						if (oldIndex > 0)
-						{
-							var prev = _orderedCache[oldIndex - 1];
-							_orderedCache[oldIndex - 1] = query;
-							_orderedCache[oldIndex] = prev;
-						}
-						else if (oldIndex == -1)
-						{
-							// query were evicted from cache - readd it
-							if (_orderedCache.Count == CacheSize)
-								_orderedCache.RemoveAt(CacheSize - 1);
-
-							_orderedCache.Insert(0, query);
-							_cacheVersion++;
-						}
-					}
-
-					return query;
-				}
-			}
-
-			Interlocked.Increment(ref _cacheMissCount);
-
-			return null;
-		}
-
 		#endregion
 	}
 

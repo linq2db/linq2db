@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using LinqToDB.Common;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
@@ -26,6 +29,9 @@ namespace LinqToDB.Expressions
 			// if both null, ReferenceEquals will return true
 			if (obj1 == null || obj2 == null)
 				return false;
+
+			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
+				return str1.Format == str2.Format;
 
 			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{
@@ -72,6 +78,17 @@ namespace LinqToDB.Expressions
 		public virtual Expression PrepareForCache(Expression expression)
 		{
 			return Expression.Constant(expression.EvaluateExpression());
+		}
+
+		/// <summary>
+		/// Returns sub-expressions, if attribute applied to composite expression.
+		/// Default (non-composite) implementation returns <paramref name="expression"/>.
+		/// </summary>
+		/// <param name="expression">Expression to split.</param>
+		/// <returns>Passed expression of sub-expressions for composite expression.</returns>
+		public virtual IEnumerable<Expression> SplitExpression(Expression expression)
+		{
+			yield return expression;
 		}
 	}
 }

@@ -4,30 +4,31 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
+	using LinqToDB.Common;
 	using SqlProvider;
 
 	class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery, int level = 0)
 		{
-			_flags       = flags;
+			_flags = flags;
 			_selectQuery = selectQuery;
-			_statement   = statement;
-			_level       = level;
+			_statement = statement;
+			_level = level;
 		}
 
 		readonly SqlProviderFlags _flags;
-		readonly SelectQuery      _selectQuery;
-		readonly SqlStatement     _statement;
-		readonly int              _level;
+		readonly SelectQuery _selectQuery;
+		readonly SqlStatement _statement;
+		readonly int _level;
 
-		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
+		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns, bool inlineParameters)
 		{
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = _selectQuery.SqlText;
 
-			var dic = new Dictionary<SelectQuery,SelectQuery>();
+			var dic = new Dictionary<SelectQuery, SelectQuery>();
 
 			new QueryVisitor().VisitAll(_selectQuery, e =>
 			{
@@ -42,7 +43,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
+			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>(), inlineParameters);
 			ResolveFields();
 
 #if DEBUG
@@ -393,14 +394,14 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
+		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables, bool inlineParameters)
 		{
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, _statement, sql, _level + 1).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, _statement, sql, _level + 1).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables, inlineParameters);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -414,6 +415,73 @@ namespace LinqToDB.SqlQuery
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
 			OptimizeDistinctOrderBy();
+			OptimizeSkipTake(inlineParameters);
+
+			OptimizeSearchConditions();
+		}
+
+		private void OptimizeSkipTake(bool inlineParameters)
+		{
+			var visitor = new QueryVisitor();
+			if (_selectQuery.Select.TakeValue != null)
+			{
+				var supportsParameter = _flags.GetAcceptsTakeAsParameterFlag(_selectQuery);
+
+				if (supportsParameter && _selectQuery.Select.TakeValue is SqlValue takeValue)
+					_selectQuery.Select.Take(new SqlParameter(takeValue.ValueType, "take", takeValue.Value){ IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
+				else if (!supportsParameter && _selectQuery.Select.TakeValue is SqlParameter)
+					_selectQuery.IsParameterDependent = true;
+				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression expr)
+				{
+					if (visitor.Find(expr, e => e is SqlParameter) != null)
+						_selectQuery.IsParameterDependent = true;
+					else
+					{
+						var value = expr.EvaluateExpression()!;
+
+						if (supportsParameter)
+							_selectQuery.Select.Take(new SqlParameter(new DbDataType(value.GetType()), "take", value) { IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
+						else
+							_selectQuery.Select.Take(new SqlValue(value), _selectQuery.Select.TakeHints);
+					}
+				}
+			}
+			if (_selectQuery.Select.SkipValue != null)
+			{
+				var supportsParameter = _flags.AcceptsTakeAsParameter;
+
+				if (supportsParameter && _selectQuery.Select.SkipValue is SqlValue skipValue)
+					_selectQuery.Select.Skip(new SqlParameter(skipValue.ValueType, "skip", skipValue.Value)
+						{ IsQueryParameter = !inlineParameters });
+				else if (!supportsParameter && _selectQuery.Select.SkipValue is SqlParameter)
+					_selectQuery.IsParameterDependent = true;
+				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression expr)
+				{
+					if (visitor.Find(expr, e => e is SqlParameter) != null)
+						_selectQuery.IsParameterDependent = true;
+					else
+					{
+						var value = expr.EvaluateExpression()!;
+
+						if (supportsParameter)
+							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)
+								{ IsQueryParameter = !inlineParameters });
+						else
+							_selectQuery.Select.Skip(new SqlValue(value));
+					}
+				}
+			}
+		}
+
+		private void OptimizeSearchConditions()
+		{
+			_selectQuery.Walk(new WalkOptions(), expr =>
+			{
+				if (expr is SqlSearchCondition cond)
+					return OptimizeSearchCondition(cond);
+
+				return expr;
+			});
 		}
 
 		public static bool? GetBoolValue(ISqlExpression expression)
@@ -496,6 +564,14 @@ namespace LinqToDB.SqlQuery
 					{
 						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(
 							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))));
+					}
+
+					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
+					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+					    && exprExpr.Expr1 is SqlParameter p1 && !p1.CanBeNull
+					    && exprExpr.Expr2 is SqlParameter p2 && Equals(p1, p2))
+					{
+						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(true)));
 					}
 				}
 
@@ -1014,8 +1090,7 @@ namespace LinqToDB.SqlQuery
 						var map = sql.Select.Columns.ToDictionary(c => c.Expression);
 						foreach (var condition in searchCondition)
 						{
-							var visitor = new QueryVisitor();
-							var newPredicate = visitor.Convert(condition.Predicate, e =>
+							var newPredicate = ConvertVisitor.Convert(condition.Predicate, (visitor, e) =>
 							{
 								if (e is ISqlExpression ex && map.TryGetValue(ex, out var newExpr))
 								{

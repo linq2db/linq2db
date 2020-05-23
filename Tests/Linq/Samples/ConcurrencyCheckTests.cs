@@ -34,7 +34,7 @@ namespace Tests.Samples
 
 				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
 
-				clone = new QueryVisitor().Convert(clone, e =>
+				clone = ConvertVisitor.Convert(clone, (v, e) =>
 					e is SqlParameter param && dic.TryGetValue(param, out var newParam) ? newParam : e);
 
 				clone.Parameters.Clear();

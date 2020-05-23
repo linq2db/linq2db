@@ -107,7 +107,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(LoadWith, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
+					source.Expression, Expression.Quote(selector)));
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -193,7 +193,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
-					new[] { source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+					source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc)));
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -248,7 +248,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
+					source.Expression, Expression.Quote(selector)));
 		
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -303,7 +303,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
+					source.Expression, Expression.Quote(selector)));
 		
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -369,7 +369,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					new[] { source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc) }));
+					source.Expression, Expression.Quote(selector), Expression.Constant(loadFunc)));
 		
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
@@ -424,7 +424,7 @@ namespace LinqToDB
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { source.Expression, Expression.Quote(selector) }));
+					source.Expression, Expression.Quote(selector)));
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}

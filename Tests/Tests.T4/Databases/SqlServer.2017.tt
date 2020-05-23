@@ -1,9 +1,9 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
-<#@ output extension=".generated.cs"                                                        #>
-<#@ include file="Shared.ttinclude"                                                         #>
-<#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
-<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                #>
+<#@ output extension=".generated.cs"                                                       #>
+<#@ include file="..\Shared.ttinclude"                                                     #>
+<#@ include file="SqlServer.ttinclude"                                                     #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"         #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"         #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
 	NamespaceName   = "Sql2017";
@@ -21,6 +21,7 @@
 
 //	GetSchemaOptions.GetProcedures = false;
 
+	GenerateProcedureErrors = false;
 	IncludeDefaultSchema = false;
 	GenerateObsoleteAttributeForAliases = true;
 	GenerateDataTypes = true;

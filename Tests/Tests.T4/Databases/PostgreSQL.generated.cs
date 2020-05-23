@@ -3182,7 +3182,7 @@ namespace PostreSQLDataContext
 		#region Bool
 
 		[Sql.Function(Name="pg_catalog.bool", ServerSideOnly=true)]
-		public static bool? Bool0(int? par451)
+		public static bool? Bool(int? par451)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19792,7 +19792,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="pg_catalog.reverse", ServerSideOnly=true)]
-		public static string? Reverse0(string? par5834)
+		public static string? Reverse(string? par5834)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24552,7 +24552,7 @@ namespace PostreSQLDataContext
 		#region Bool
 
 		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
-		public static string? Bool1(int? param)
+		public static string? Bool0(int? param)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24592,7 +24592,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse1(string? par7471)
+		public static string? Reverse0(string? par7471)
 		{
 			throw new InvalidOperationException();
 		}

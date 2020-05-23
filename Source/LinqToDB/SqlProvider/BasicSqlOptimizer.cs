@@ -25,7 +25,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			FinalizeCte(statement);
 
@@ -36,7 +36,8 @@ namespace LinqToDB.SqlProvider
 				{
 					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
-						SqlProviderFlags.IsGroupByExpressionSupported);
+						SqlProviderFlags.IsGroupByExpressionSupported,
+						inlineParameters);
 
 					return selectQuery;
 				}
@@ -59,7 +60,8 @@ namespace LinqToDB.SqlProvider
 					{
 						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 							SqlProviderFlags.IsApplyJoinSupported,
-							SqlProviderFlags.IsGroupByExpressionSupported);
+							SqlProviderFlags.IsGroupByExpressionSupported,
+							inlineParameters);
 
 						return selectQuery;
 					}
@@ -138,7 +140,7 @@ namespace LinqToDB.SqlProvider
 
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
-					Utils.MakeUniqueNames(ordered, n => !ReservedWords.IsReserved(n), c => c.Name, (c, n) => c.Name = n,
+					Utils.MakeUniqueNames(ordered, null, (n, a) => !ReservedWords.IsReserved(n), c => c.Name, (c, n, a) => c.Name = n,
 						c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
@@ -243,7 +245,7 @@ namespace LinqToDB.SqlProvider
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
 
-						var nc = new QueryVisitor().Convert(cond, e =>
+						var nc = ConvertVisitor.Convert(cond, (v, e) =>
 						{
 							var ne = e;
 
@@ -412,7 +414,7 @@ namespace LinqToDB.SqlProvider
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
 
-							var nc = new QueryVisitor().Convert(cond, e =>
+							var nc = ConvertVisitor.Convert(cond, (v, e) =>
 							{
 								var ne = e;
 
@@ -497,7 +499,7 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : e);
+			selectQuery = ConvertVisitor.Convert(selectQuery, (v, e) => dic.TryGetValue(e, out var ne) ? ne : e);
 
 			return selectQuery;
 		}
@@ -1420,12 +1422,10 @@ namespace LinqToDB.SqlProvider
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = new QueryVisitor().Convert(item, e =>
+					var newItem = ConvertVisitor.Convert(item, (v, e) =>
 					{
 						if (e is SqlField field && field.Table == tableToCompare)
-						{
 							return tableToUpdate.Fields[field.Name];
-						}
 
 						return e;
 					});
@@ -1557,7 +1557,7 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var item in updateStatement.Update.Items)
 				{
-					var ex = new QueryVisitor().Convert(item.Expression!, expr =>
+					var ex = ConvertVisitor.Convert(item.Expression!, (v, expr) =>
 						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
 							? (ISqlExpression) newValue
 							: expr);
@@ -1580,9 +1580,8 @@ namespace LinqToDB.SqlProvider
 
 						innerQuery.Select.Columns.Clear();
 
-
-						var remapped = new QueryVisitor().Convert(ex,
-							e =>
+						var remapped = ConvertVisitor.Convert(ex,
+							(v, e) =>
 							{
 								if (!(e is ICloneableElement c))
 									return e;
@@ -1676,12 +1675,10 @@ namespace LinqToDB.SqlProvider
 				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
 				{
 					statement.Update.Table = newUpdateTable;
-					statement.Update = new QueryVisitor().Convert(statement.Update, e =>
+					statement.Update = ConvertVisitor.Convert(statement.Update, (v, e) =>
 					{
 						if (e is SqlField field && field.Table == updateTable)
-						{
 							return newUpdateTable.Fields[field.Name];
-						}
 
 						return e;
 					});
@@ -1827,8 +1824,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
 		{
-			var visitor = new QueryVisitor();
-			statement = visitor.Convert(statement, e =>
+			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);
@@ -1858,7 +1854,7 @@ namespace LinqToDB.SqlProvider
 					if (selectClause.SkipValue != null && ReferenceEquals(expr, selectClause.SkipValue))
 					{ 
 						var skip = expr;
-						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery) 
+						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery)
 						    && SqlProviderFlags.AcceptsTakeAsParameter)
 						{
 							if (expr.ElementType != QueryElementType.SqlParameter)
@@ -1937,8 +1933,8 @@ namespace LinqToDB.SqlProvider
 				}
 				, queries =>
 				{
-					var query = queries[queries.Length - 1];
-					var processingQuery = queries[queries.Length - 2];
+					var query = queries[queries.Count - 1];
+					var processingQuery = queries[queries.Count - 2];
 
 					SqlOrderByItem[]? orderByItems = null;
 					if (!query.OrderBy.IsEmpty)

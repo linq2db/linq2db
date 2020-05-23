@@ -15,7 +15,7 @@ namespace Tests.Data
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int? @id)
 		{
 			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
-			var escapedTableName = ((SqlServerDataProvider)dataConnection.DataProvider).Adapter.QuoteIdentifier(databaseName);
+			var escapedTableName = SqlServerTools.QuoteIdentifier(databaseName);
 
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKey]",
 				new DataParameter("@id", @id));
@@ -24,7 +24,7 @@ namespace Tests.Data
 		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, int? @id)
 		{
 			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
-			var escapedTableName = ((SqlServerDataProvider)dataConnection.DataProvider).Adapter.QuoteIdentifier(databaseName);
+			var escapedTableName = SqlServerTools.QuoteIdentifier(databaseName);
 
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKeyLowercase]",
 				new DataParameter("@id", @id));

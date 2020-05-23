@@ -20,6 +20,7 @@ namespace InformixDataContext
 	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
+		public ITable<Blobclass>         Blobclasses        { get { return this.GetTable<Blobclass>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
@@ -77,6 +78,13 @@ namespace InformixDataContext
 		[Column("datetimedatatype"), Nullable            ] public DateTime? Datetimedatatype { get; set; } // DATETIME YEAR TO SECOND
 		[Column("intervaldatatype"), Nullable            ] public TimeSpan? Intervaldatatype { get; set; } // INTERVAL HOUR TO SECOND
 		[Column("bytedatatype"),     Nullable            ] public byte[]?   Bytedatatype     { get; set; } // BYTE
+	}
+
+	[Table(Schema="informix", Name="blobclass")]
+	public partial class Blobclass
+	{
+		[Column("id"),        PrimaryKey,  NotNull] public int     Id        { get; set; } // INTEGER
+		[Column("blobvalue"),    Nullable         ] public byte[]? Blobvalue { get; set; } // BYTE
 	}
 
 	[Table(Schema="informix", Name="child")]
@@ -311,6 +319,12 @@ namespace InformixDataContext
 	public static partial class TableExtensions
 	{
 		public static Alltype Find(this ITable<Alltype> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static Blobclass Find(this ITable<Blobclass> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

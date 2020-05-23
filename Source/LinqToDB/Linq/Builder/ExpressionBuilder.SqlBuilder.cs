@@ -185,20 +185,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = context.SelectQuery;
 
-			if (!context.Builder.DataContext.InlineParameters && expr is SqlValue sqlValue)
-				expr = new SqlParameter(sqlValue.ValueType, "take", sqlValue.Value);
-
 			sql.Select.Take(expr, hints);
 
 			if (sql.Select.SkipValue != null &&
 				 DataContext.SqlProviderFlags.IsTakeSupported &&
 				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
-			{
 				sql.Select.Take(
 					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
-			}
-
-			sql.IsParameterDependent = true;
 		}
 
 		#endregion

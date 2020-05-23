@@ -28,8 +28,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OrderBy, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -65,8 +64,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OrderByDescending, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -101,8 +99,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(ThenBy, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -119,8 +116,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(ThenByDescending, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -225,8 +221,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator),
-					new[] { source.Expression, Expression.Constant(separator) }
-				));
+					source.Expression, Expression.Constant(separator)));
 
 			return new StringAggregateNotOrderedImpl<string>(query);
 		}
@@ -274,8 +269,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator, selector),
-					new[] { source.Expression, Expression.Constant(separator), Expression.Quote(selector) }
-				));
+					source.Expression, Expression.Constant(separator), Expression.Quote(selector)));
 
 			return new StringAggregateNotOrderedImpl<T>(query);
 		}

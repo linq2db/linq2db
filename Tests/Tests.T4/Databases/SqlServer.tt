@@ -22,6 +22,7 @@
 
 //	GetSchemaOptions.GetProcedures = false;
 
+	GenerateProcedureErrors = false;
 	IncludeDefaultSchema = false;
 	GenerateObsoleteAttributeForAliases = true;
 	GenerateDataTypes = true;
