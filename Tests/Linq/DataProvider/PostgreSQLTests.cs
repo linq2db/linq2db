@@ -15,6 +15,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 
 using NpgsqlTypes;
@@ -1565,6 +1566,46 @@ namespace Tests.DataProvider
 			}
 		}
 
+		class TableWithArray
+		{
+			[Column]
+			public string[] StringArray { get; set; } = null!;
+		}
+
+		[Test]
+		public void UnnestTest([IncludeDataSources(TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from t in db.GetTable<TableWithArray>()
+					select new
+					{
+						StringValue = TestPgFunctions.Unnest(t.StringArray)
+					};
+
+				var str = query.ToString();
+				Console.WriteLine(str);
+			}
+		}
+
+		[Test]
+		public void UnnestTest2([IncludeDataSources(TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from t in db.GetTable<TableWithArray>()
+					select new
+					{
+						StringValue = TestPgFunctions.Unnest(t.StringArray)
+					};
+
+				var str = query.ToString();
+				Console.WriteLine(str);
+			}
+		}
+
 	}
 
 	public static class TestPgAggregates
@@ -1654,6 +1695,12 @@ namespace Tests.DataProvider
 			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) });
 
 			return _ctx.GetTable<TRecord>(this, methodInfo, json);
+		}
+
+		[Sql.Function("unnest", 0, IsAggregate = true, ServerSideOnly = true, Precedence = Precedence.Primary)]
+		public static T Unnest<T>(T[] array)
+		{
+			throw new InvalidOperationException();
 		}
 
 		public class TestScalarTableFunctionResult

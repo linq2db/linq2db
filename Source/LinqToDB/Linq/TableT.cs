@@ -3,15 +3,21 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using LinqToDB.Common;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.Reflection;
+
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 	{
 		public Table(IDataContext dataContext)
 		{
-			InitTable(dataContext, null);
+			var expression = typeof(T).IsScalar()
+				? null
+				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
+					Expression.Constant(dataContext));
+			InitTable(dataContext, expression);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)

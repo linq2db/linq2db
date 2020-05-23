@@ -648,13 +648,17 @@ namespace Tests.Linq
 		public void Sum3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from ch in Child
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					select g.Key.Children.Sum(p => p.ChildID),
 					from ch in db.Child
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					select g.Key.Children.Sum(p => p.ChildID));
+			}
 		}
 
 		[Test]
@@ -1156,7 +1160,7 @@ namespace Tests.Linq
 					select g.Key
 					,
 					from p in db.Parent
-					group p by p.Children.Average(c => c.ParentID) > 3 into g
+					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
 					select g.Key);
 		}
 
@@ -1867,7 +1871,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy2([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinGroupBy2([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

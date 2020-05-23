@@ -390,7 +390,7 @@ namespace Tests.Linq
 					from p in db.Parent
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
-					select new { p1 = lj1, p2 = lj1.First() }
+					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
 				var expected =
@@ -398,7 +398,7 @@ namespace Tests.Linq
 					from p in Parent
 						join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
-					select new { p1 = lj1, p2 = lj1.First() }
+					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
 				Assert.AreEqual(expected.Count, result.Count);

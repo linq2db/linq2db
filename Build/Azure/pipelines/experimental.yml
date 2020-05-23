@@ -121,8 +121,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: ne(variables['Build.SourceBranchName'], 'release')
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: ne(variables['Build.SourceBranchName'], 'release')
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -137,14 +137,18 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
-        Oracle11:
-          title: 'Oracle 11g XE'
-          config: 'oracle11'
-          script: 'oracle11.sh'
-        Oracle12:
-          title: 'Oracle 12c'
-          config: 'oracle12'
-          script: 'oracle12.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.sh'
+#        Oracle11:
+#          title: 'Oracle 11g XE'
+#          config: 'oracle11'
+#          script: 'oracle11.sh'
+#        Oracle12:
+#          title: 'Oracle 12c'
+#          config: 'oracle12'
+#          script: 'oracle12.sh'
     steps:
     - checkout: none
 
@@ -311,8 +315,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -378,8 +382,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:

@@ -70,6 +70,7 @@ namespace LinqToDB.Linq
 							query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
+							query.ClearMemberQueryableInfo();
 							_infos.Add(key, query);
 
 							_lastContextID     = contextID;

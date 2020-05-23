@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 
 			var info = Query<T>.GetQuery(DataContext, ref expression);
 
-			if (cache)
+			if (cache && info.IsFastCacheable)
 				Info = info;
 
 			return info;

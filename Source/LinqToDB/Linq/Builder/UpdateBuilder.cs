@@ -9,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Tools;
 
 	class UpdateBuilder : MethodCallBuilder
 	{
@@ -89,8 +90,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 								//
-								var body      = expression.Body;
-								var level = body.GetLevel();
+								var body  = expression.Body;
+								var level = body.GetLevel(builder.MappingSchema);
 
 
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
@@ -108,8 +109,8 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery)
-								.ResolveWeakJoins(new List<ISqlTableSource>());
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+								.ResolveWeakJoins();
 							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(
@@ -141,10 +142,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					ctx.Statement!.RequireUpdateClause().Table = atc.SqlTable;
+					var atc = res.Context!.IsExpression(null, 0, RequestFor.Table);
+					if (atc.Result && atc.Context is TableBuilder.TableContext tableContext)
+					{
+						ctx.Statement!.RequireUpdateClause().Table = tableContext.SqlTable;
+					}
 				}
 				else
 				{
@@ -367,54 +371,28 @@ namespace LinqToDB.Linq.Builder
 			BuildInfo                       buildInfo,
 			LambdaExpression                extract,
 			LambdaExpression                update,
-			IBuildContext                   select,
-			SqlTable                        table,
+			IBuildContext                   fieldsContext,
+			IBuildContext                   valuesContext,
+			SqlTable?                       table,
 			List<SqlSetExpression> items)
 		{
-			var member = MemberHelper.GetMemberInfo(extract.Body);
-
+			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var rootObject = ext.GetRootObject(builder.MappingSchema);
+			var sp    = fieldsContext.Parent;
+			var ctx   = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
+			var sql   = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
+			var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+			builder.ReplaceParent(ctx, sp);
 
-			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-				throw new LinqException("Member expression expected for the 'Set' statement.");
+			if (sql.Length != 1)
+				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
-			var body = ext is MemberExpression mex ? mex : Expression.MakeMemberAccess(rootObject, member);
+			var column = table != null && field != null ? table[field.Name] : sql[0].Sql;
 
-			if (member is MethodInfo)
-				member = ((MethodInfo)member).GetPropertyInfo();
-
-			var members = body.GetMembers();
-			var name    = members
-				.Skip(1)
-				.Select(ex =>
-				{
-					if (!(ex is MemberExpression me))
-						return null;
-
-					var m = me.Member;
-
-					if (m is MethodInfo)
-						m = ((MethodInfo)m).GetPropertyInfo();
-
-					return m;
-				})
-				.Where(m => m != null && !m.IsNullableValueMember())
-				.Select(m => m!.Name)
-				.Aggregate((s1,s2) => s1 + "." + s2);
-
-			if (table != null && !table.Fields.ContainsKey(name))
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, name);
-
-			var column = table != null ?
-				table.Fields[name] :
-				select.ConvertToSql(
-					body, 1, ConvertFlags.Field)[0].Sql;
-					//Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member), 1, ConvertFlags.Field)[0].Sql;
-			var sp     = select.Parent;
-			var ctx    = new ExpressionContext(buildInfo.Parent, select, update);
-			var expr   = builder.ConvertToSqlExpression(ctx, update.Body);
+			sp       = valuesContext.Parent;
+			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
+			var expr = builder.ConvertToSqlExpression(ctx, update.Body);
 
 			builder.ReplaceParent(ctx, sp);
 
@@ -470,7 +448,7 @@ namespace LinqToDB.Linq.Builder
 			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
-			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
+			if (!update.Type.IsConstantable(false) && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
 
@@ -563,7 +541,8 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						updateStatement.Update.Table!,
+						sequence,
+						updateStatement.Update.Table,
 						updateStatement.Update.Items);
 				else
 					ParseSet(

@@ -393,7 +393,11 @@ AS RETURN
 			using (db.CreateLocalTable(others))
 			{
 				CreateFunction(db, "SomeOtherEntity");
-				var query = db.GetTable<SomeEntity>().With("NOLOCK").LoadWith(e => e.Other).LoadWith(e => e.Others).LoadWith(e => e.OthersFromSql).Take(2);
+				var query = db.GetTable<SomeEntity>().With("NOLOCK")
+					.LoadWith(e => e.Other)
+					.LoadWith(e => e.Others)
+					.LoadWith(e => e.OthersFromSql)
+					.Take(2);
 
 				var expectedQuery = entities.Take(2);
 
@@ -434,7 +438,7 @@ AS RETURN
 					Other         = e.Other,
 					OthersFromSql = e.OthersFromSql.ToArray(),
 					OtherFromSql  = e.OtherFromSql
-				});
+				}).ToArray();
 
 				AreEqualWithComparer(expected, result);
 				DropFunction(db);
@@ -509,6 +513,7 @@ WHERE
 			int Id { get; set; }
 			int? ParentId { get; set; }
 			IList<TreeItem> Children { get; set; }
+			TreeItem? Parent { get; set; }
 		}
 
 		[Table("TreeItem")]
@@ -521,11 +526,16 @@ WHERE
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
 			public IList<TreeItem> Children { get; set; } = null!;
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
+			public TreeItem? Parent { get; set; }
+
 		}
 
 		[Test]
 		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<TreeItem>())
 			{
@@ -537,9 +547,95 @@ WHERE
 		
 		void DoGeneric<T>(ITable<T> treeItems) where T: ITreeItem
 		{
-			var q = treeItems.Where(x => x.Children.Any());
-				
-			Console.WriteLine(q.ToString());
+			var query1 = treeItems
+				.Where(x => x.Children.Any());
+
+			var result1 = query1.ToArray();
+
+			var query2 = from t in treeItems
+				where t.Parent!.Id > 0 
+				select t.Children;
+
+			var result2 = query2.ToArray();
+
 		}
+
+
+		public class Entity
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(Entity2LanguageExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
+			public Entity2Language? Entity2Language { get; set; }
+
+			public static Expression<Func<Entity, IDataContext, IQueryable<Entity2Language>>> Entity2LanguageExpr()
+			{
+				return (e, db) => db
+					.GetTable<Entity2Language>()
+					.Where(x => x.EntityId == e.Id)
+					.Take(1);
+			}
+		}
+
+		public class Entity2Language
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int EntityId { get; set; }
+
+			[Column]
+			public int LanguageId { get; set; }
+
+			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = false, Relationship = Relationship.OneToOne)]
+			public Language Language { get; set; } = null!;
+		}
+
+		public class Language
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public string Name { get; set; } = null!;
+		}
+
+		[Test]
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new Entity {Id = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Entity2Language {Id = 1, EntityId = 1, LanguageId = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Language {Id = 1, Name = "English"}
+			}))
+			{
+				var value = db
+					.GetTable<Entity>()
+					.Select(x => new
+					{
+						// This works
+						EntityId = x.Id,
+						x.Entity2Language!.LanguageId,
+						// This caused exception
+						LanguageName = x.Entity2Language.Language.Name
+					})
+					.First();
+			
+				Assert.AreEqual(1, value.EntityId);
+				Assert.AreEqual(1, value.LanguageId);
+				Assert.AreEqual("English", value.LanguageName);
+			}
+		}
+
 	}
 }

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using System.Collections.Concurrent;
+	using System.Data.SqlTypes;
 	using System.Diagnostics;
 	using System.Diagnostics.CodeAnalysis;
 	using Async;
@@ -68,7 +69,6 @@ namespace LinqToDB.Linq
 
 				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
 				{
-
 					var mapperExpression = TransformMapperExpression(context, dataReader, dataReaderType, false);
 
 					var qr = QueryRunner;
@@ -84,7 +84,9 @@ namespace LinqToDB.Linq
 				{
 					return mapperInfo.Mapper(queryRunner, dataReader);
 				}
-				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException)
+				// SqlNullValueException: MySqlData
+				// OracleNullValueException: managed and native oracle providers
+				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)

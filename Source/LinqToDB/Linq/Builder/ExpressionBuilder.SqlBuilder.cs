@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expres.Result)
 						{
-							if (expres.Expression != null && IsGrouping(expres.Expression))
+							if (expres.Expression != null && IsGrouping(expres.Expression, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							if (IsGrouping(expr))
+							if (IsGrouping(expr, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 							if (Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method) != null)
 								return true;
 
-							if (IsGrouping(e))
+							if (IsGrouping(e, MappingSchema))
 							{
 								isHaving = true;
 								return false;
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 			return makeSubQuery || isHaving && isWhere;
 		}
 
-		bool IsGrouping(Expression expression)
+		bool IsGrouping(Expression expression, MappingSchema mappingSchema)
 		{
 			switch (expression.NodeType)
 			{
@@ -168,6 +168,9 @@ namespace LinqToDB.Linq.Builder
 					var mce = (MethodCallExpression)expression;
 
 					if (mce.Object != null && typeof(IGrouping<,>).IsSameOrParentOf(mce.Object.Type))
+						return true;
+
+					if (mce.Method == Methods.LinqToDB.GroupBy.Grouping)
 						return true;
 
 					return mce.Arguments.Any(a => typeof(IGrouping<,>).IsSameOrParentOf(a.Type));
@@ -966,16 +969,50 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
+				case ExpressionType.Extension   :
+					{
+						var ctx = GetContext(context, expression);
+
+						if (ctx != null)
+						{
+							var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
+
+							switch (sql.Length)
+							{
+								case 0  : break;
+								case 1  : return sql[0].Sql;
+								default : throw new InvalidOperationException();
+							}
+						}
+
+						break;
+					}
+
 				case ExpressionType.Call        :
 					{
 						var e = (MethodCallExpression)expression;
+
 						var isAggregation = e.IsAggregate(MappingSchema);
+						if (isAggregation && !e.IsQueryable())
+						{
+							var arg = e.Arguments[0];
+							var enumerableType = arg.Type;
+							if (!EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
+								isAggregation = false;
+							else
+							{
+								var elementType = EagerLoading.GetEnumerableElementType(enumerableType, MappingSchema);
+								if (!e.Method.GetParameters()[0].ParameterType.IsSameOrParentOf(typeof(IEnumerable<>).MakeGenericType(elementType)))
+									isAggregation = false;
+							}
+						}
+
 						if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context!, e))
 								return SubQueryToSql(context!, e);
 
-							if (isAggregation || CountBuilder.MethodNames.Contains(e.Method.Name))
+							if (isAggregation)
 							{
 								var ctx = GetContext(context, expression);
 
@@ -1101,12 +1138,6 @@ namespace LinqToDB.Linq.Builder
 				case ChangeTypeExpression.ChangeTypeType :
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
 
-				case ExpressionType.Extension :
-					{
-						if (expression.CanReduce)
-							return ConvertToSql(context, expression.Reduce());
-						break;
-					}
 				case ExpressionType.Constant:
 					{
 						var cnt = (ConstantExpression)expression;
@@ -1142,228 +1173,27 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		Expression? _lastExpr3;
-		bool        _lastResult3;
-
-		bool IsServerSideOnly(Expression expr)
+		public bool IsServerSideOnly(Expression expr)
 		{
-			if (_lastExpr3 == expr)
-				return _lastResult3;
-
-			var result = false;
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.MemberAccess:
-					{
-						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
-
-						if (l != null)
-						{
-							result = IsServerSideOnly(l.Body.Unwrap());
-						}
-						else
-						{
-							var attr = GetExpressionAttribute(ex.Member);
-							result = attr != null && attr.ServerSideOnly;
-						}
-
-						break;
-					}
-
-				case ExpressionType.Call:
-					{
-						var e = (MethodCallExpression)expr;
-
-						if (e.Method.DeclaringType == typeof(Enumerable))
-						{
-							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
-								result = IsQueryMember(e.Arguments[0]);
-						}
-						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
-						{
-							result = true;
-						}
-						else if (e.Method.DeclaringType == typeof(Queryable))
-						{
-							switch (e.Method.Name)
-							{
-								case "Any"      :
-								case "All"      :
-								case "Contains" : result = true; break;
-							}
-						}
-						else
-						{
-							var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
-
-							if (l != null)
-							{
-								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
-							}
-							else
-							{
-								var attr = GetExpressionAttribute(e.Method);
-								result = attr != null && attr.ServerSideOnly;
-							}
-						}
-
-						break;
-					}
-			}
-
-			_lastExpr3 = expr;
-			return _lastResult3 = result;
-		}
-
-		static bool IsQueryMember(Expression expr)
-		{
-			expr = expr.Unwrap();
-			if (expr != null) switch (expr.NodeType)
-			{
-				case ExpressionType.Parameter    : return true;
-				case ExpressionType.MemberAccess : return IsQueryMember(((MemberExpression)expr).Expression);
-				case ExpressionType.Call         :
-					{
-						var call = (MethodCallExpression)expr;
-
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
-
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
-
-						return IsQueryMember(call.Object);
-					}
-			}
-
-			return false;
+			return _optimizationContext.IsServerSideOnly(expr);
 		}
 
 		#endregion
 
 		#region CanBeConstant
 
-		Expression? _lastExpr1;
-		bool        _lastResult1;
-
 		bool CanBeConstant(Expression expr)
 		{
-			if (_lastExpr1 == expr)
-				return _lastResult1;
-
-			var result = null == expr.Find(ex =>
-			{
-				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
-					return false;
-
-				if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Constant     :
-						{
-							var c = (ConstantExpression)ex;
-
-							if (c.Value == null || ex.Type.IsConstantable())
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.MemberAccess :
-						{
-							var ma = (MemberExpression)ex;
-
-							var l = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
-
-							if (l != null)
-								return l.Body.Unwrap().Find(CanBeConstant) == null;
-
-							if (ma.Member.DeclaringType.IsConstantable() || ma.Member.IsNullableValueMember())
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.Call         :
-						{
-							var mc = (MethodCallExpression)ex;
-
-							if (mc.Method.DeclaringType.IsConstantable() || mc.Method.DeclaringType == typeof(object))
-								return false;
-
-							var attr = GetExpressionAttribute(mc.Method);
-
-							if (attr != null && !attr.ServerSideOnly)
-								return false;
-
-							break;
-						}
-				}
-
-				return true;
-			});
-
-
-			_lastExpr1 = expr;
-			return _lastResult1 = result;
+			return _optimizationContext.CanBeConstant(expr);
 		}
 
 		#endregion
 
 		#region CanBeCompiled
 
-		Expression? _lastExpr2;
-		bool        _lastResult2;
-
 		bool CanBeCompiled(Expression expr)
 		{
-			if (_lastExpr2 == expr)
-				return _lastResult2;
-
-			var allowedParams = new HashSet<Expression> { ParametersParam };
-
-			var result = null == expr.Find(ex =>
-			{
-				if (IsServerSideOnly(ex))
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Parameter:
-						return !allowedParams.Contains(ex);
-
-					case ExpressionType.Call     :
-						{
-							var mc = (MethodCallExpression)ex;
-							foreach (var arg in mc.Arguments)
-							{
-								if (arg.NodeType == ExpressionType.Lambda)
-								{
-									var lambda = (LambdaExpression)arg;
-									foreach (var prm in lambda.Parameters)
-										allowedParams.Add(prm);
-								}
-							}
-							break;
-						}
-					case ExpressionType.Constant :
-						{
-							var cnt = (ConstantExpression)ex;
-							if (cnt.Value is ISqlExpression)
-								return true;
-							break;
-						}
-				}
-
-				return false;
-			});
-
-			_lastExpr2 = expr;
-			return _lastResult2 = result;
+			return _optimizationContext.CanBeCompiled(expr);
 		}
 
 		#endregion
@@ -1431,7 +1261,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, compareConstantValues: true))
+					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
 						p = accessor.Value;
 
 			if (p == null)
@@ -1492,7 +1322,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)expr;
 
-					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
+					if (!expr.Type.IsConstantable(false) || AsParameters.Contains(c))
 					{
 						if (expressionAccessors.TryGetValue(expr, out var val))
 						{
@@ -2102,6 +1932,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				isNull = right is ConstantExpression expression && expression.Value == null;
+				
 				lcols  = qsl!.ConvertToSql(left, 0, ConvertFlags.Key);
 
 				if (!sr)
@@ -2115,6 +1946,13 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var lcol in lcols)
 			{
+				if (lcol.Sql is SelectQuery innerQuery && isNull)
+				{
+					var existsPredicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(innerQuery));
+					condition.Conditions.Add(new SqlCondition(nodeType == ExpressionType.Equal, existsPredicate));
+					continue;
+				}
+
 				if (lcol.MemberChain.Count == 0)
 					throw new InvalidOperationException();
 
@@ -2749,6 +2587,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions, bool isNotExpression)
 		{
+			expression = expression.Transform(RemoveNullPropagation);
+
 			switch (expression.NodeType)
 			{
 				case ExpressionType.And     :
@@ -2900,6 +2740,9 @@ namespace LinqToDB.Linq.Builder
 			//		}) != null;
 			//	}
 			//}
+
+			if (null != new QueryVisitor().Find(predicate, e => e.ElementType == QueryElementType.SelectClause))
+				return null;
 
 			if (predicate.CanBeNull && predicate is SqlPredicate.ExprExpr || inList != null)
 			{
@@ -3094,6 +2937,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var root = expression.GetRootObject(MappingSchema);
 			root = root.Unwrap();
+
+			if (root is ContextRefExpression refExpression)
+				return refExpression.BuildContext;
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
@@ -3295,25 +3141,31 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		readonly Dictionary<Expression, Tuple<CteClause,IBuildContext?>> _ctes = new Dictionary<Expression, Tuple<CteClause,IBuildContext?>>(new ExpressionEqualityComparer());
-		readonly Dictionary<IQueryable, Expression> _ctesObjectMapping = new Dictionary<IQueryable, Expression>();
+		Dictionary<Expression, Tuple<CteClause,IBuildContext?>>? _ctes;
+		Dictionary<IQueryable, Expression>?                      _ctesObjectMapping;
 
 		public Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
-			if (cteExpression != null && queryable != null && !_ctesObjectMapping.ContainsKey(queryable))
+			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
 			{
+				_ctesObjectMapping ??= new Dictionary<IQueryable, Expression>();
+
 				_ctesObjectMapping.Add(queryable, cteExpression);
 			}
 
 			if (cteExpression == null)
 			{
+				if (_ctesObjectMapping == null)
+					throw new InvalidOperationException();
 				cteExpression = _ctesObjectMapping[queryable!];
 			}
 
-			if (!_ctes.TryGetValue(cteExpression, out var value))
+			if (_ctes == null || !_ctes.TryGetValue(cteExpression, out var value))
 			{
 				var cte = buildFunc();
 				value = Tuple.Create<CteClause, IBuildContext?>(cte, null);
+
+				_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
 				_ctes.Add(cteExpression, value);
 			}
 
@@ -3322,11 +3174,14 @@ namespace LinqToDB.Linq.Builder
 
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
-			if (_ctes.TryGetValue(cteExpression, out var value))
+			Tuple<CteClause, IBuildContext?>? value = null;
+			if (_ctes != null && _ctes.TryGetValue(cteExpression, out value))
 				if (value.Item2 != null)
 					return value;
 
 			value = buildFunc(value?.Item1);
+
+			_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
 			_ctes.Remove(cteExpression);
 			_ctes.Add(cteExpression, value);
 			return value;
@@ -3334,7 +3189,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetCteContext(Expression cteExpression)
 		{
-			if (_ctes.TryGetValue(cteExpression, out var value))
+			if (_ctes != null && _ctes.TryGetValue(cteExpression, out var value))
 				return value.Item2;
 			return null;
 		}
@@ -3354,6 +3209,37 @@ namespace LinqToDB.Linq.Builder
 				_preambles = new List<Tuple<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>>();
 			_preambles.Add(Tuple.Create<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>(dc => func(dc), async dc => await funcAsync(dc)) );
 			return _preambles.Count - 1;
+		}
+
+		#endregion
+
+		#region Query Filter
+
+		private Stack<Type[]>? _disabledFilters;
+
+		public void AddDisabledQueryFilters(Type[] disabledFilters)
+		{
+			if (_disabledFilters == null)
+				_disabledFilters = new Stack<Type[]>();
+			_disabledFilters.Push(disabledFilters);
+		}
+
+		public bool IsFilterDisabled(Type entityType)
+		{
+			if (_disabledFilters == null || _disabledFilters.Count == 0)
+				return false;
+			var filter = _disabledFilters.Peek();
+			if (filter.Length == 0)
+				return true;
+			return Array.IndexOf(filter, entityType) >= 0;
+		}
+
+		public void RemoveDisabledFilter()
+		{
+			if (_disabledFilters == null)
+				throw new InvalidOperationException();
+
+			_ = _disabledFilters.Pop();
 		}
 
 		#endregion

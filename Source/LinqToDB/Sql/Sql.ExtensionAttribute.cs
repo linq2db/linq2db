@@ -774,7 +774,7 @@ namespace LinqToDB
 				var chain  = BuildFunctionsChain(dataContext, query, expression, helper);
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequence found");
+					throw new InvalidOperationException("No sequence found for expression '{expression}'");
 
 				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension!.ChainPrecedence).ToArray();
 				var main    = ordered.FirstOrDefault();
@@ -782,7 +782,7 @@ namespace LinqToDB
 				{
 					var replaced = chain.Where(c => c.Expression != null).ToArray();
 					if (replaced.Length != 1)
-						throw new InvalidOperationException("Can not find root sequence");
+						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
 
 					return replaced[0].Expression!;
 				}

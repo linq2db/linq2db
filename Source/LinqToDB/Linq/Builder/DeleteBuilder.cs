@@ -31,9 +31,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					var isTableResult = res.Context!.IsExpression(null, 0, RequestFor.Table);
+					if (!isTableResult.Result)
+						throw new LinqException("Can not retrieve Table context from association.");
+
+					var atc = (TableBuilder.TableContext)isTableResult.Context!;
 					deleteStatement.Table = atc.SqlTable;
 				}
 				else

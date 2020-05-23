@@ -643,8 +643,21 @@ namespace LinqToDB.SqlQuery
 
 							if (es != null && !ReferenceEquals(gc.Items, es))
 							{
-								newElement = new SqlGroupByClause(es ?? gc.Items);
+								newElement = new SqlGroupByClause(gc.GroupingType, es ?? gc.Items);
 								((SqlGroupByClause)newElement).SetSqlQuery(gc.SelectQuery);
+							}
+
+							break;
+						}
+
+					case QueryElementType.GroupingSet:
+						{
+							var gc = (SqlGroupingSet)element;
+							var es = Convert(gc.Items);
+
+							if (es != null && !ReferenceEquals(gc.Items, es))
+							{
+								newElement = new SqlGroupingSet(es ?? gc.Items);
 							}
 
 							break;

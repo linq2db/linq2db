@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -141,6 +142,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class ArrayContext : IBuildContext
 		{
 			readonly Type _elementType;

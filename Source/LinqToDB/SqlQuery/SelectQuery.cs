@@ -79,7 +79,7 @@ namespace LinqToDB.SqlQuery
 		public  List<object>   Properties => _properties ?? (_properties = new List<object>());
 
 		public SelectQuery?   ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,12 +67,16 @@ namespace LinqToDB.Linq
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
 				ContextType            == dataContext.GetType()        &&
-				Expression!.EqualsTo(expr, _queryableAccessorDic, _queryDependedObjects);
+				Expression!.EqualsTo(expr, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
+		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new List<QueryableAccessor>();
 		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new Dictionary<Expression,Expression>();
+
+
+		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -85,6 +90,20 @@ namespace LinqToDB.Linq
 			_queryableAccessorList.Add(e);
 
 			return _queryableAccessorList.Count - 1;
+		}
+
+		internal Expression AddQueryableMemberAccessors(MemberInfo memberInfo, Func<MemberInfo,Expression> qe)
+		{
+			if (_queryableMemberAccessorDic != null && _queryableMemberAccessorDic.TryGetValue(memberInfo, out var e))
+				return e.Expression;
+
+			e = new QueryableMemberAccessor { Accessor = qe };
+			e.Expression = e.Accessor(memberInfo);
+
+			_queryableMemberAccessorDic ??= new Dictionary<MemberInfo, QueryableMemberAccessor>(MemberInfoComparer.Instance);
+			_queryableMemberAccessorDic.Add(memberInfo, e);
+
+			return e.Expression;
 		}
 
 		internal void AddQueryDependedObject(Expression expression, SqlQueryDependentAttribute attr)
@@ -102,6 +121,11 @@ namespace LinqToDB.Linq
 		internal Expression GetIQueryable(int n, Expression expr)
 		{
 			return _queryableAccessorList[n].Accessor(expr).Expression;
+		}
+
+		public void ClearMemberQueryableInfo()
+		{
+			_queryableMemberAccessorDic = null;
 		}
 
 		#endregion
@@ -230,9 +254,9 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
 
 		#endregion
 
@@ -254,19 +278,19 @@ namespace LinqToDB.Linq
 			// version of cache, increased after each recreation of _cache instance
 			int _version;
 
-			/// <summary>
+		/// <summary>
 			/// Count of queries which has not been found in cache.
-			/// </summary>
+		/// </summary>
 			internal long CacheMissCount;
 
-			/// <summary>
+		/// <summary>
 			/// LINQ query max cache size (per entity type).
-			/// </summary>
+		/// </summary>
 			const int CacheSize = 100;
 
-			/// <summary>
+		/// <summary>
 			/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
-			/// </summary>
+		/// </summary>
 			public void Clear()
 			{
 				if (_cache.Length > 0)
@@ -279,9 +303,9 @@ namespace LinqToDB.Linq
 						}
 			}
 
-			/// <summary>
+		/// <summary>
 			/// Adds query to cache if it is not cached already.
-			/// </summary>
+		/// </summary>
 			public void TryAdd(IDataContext dataContext, Query<T> query)
 			{
 				// because Add is less frequient operation than Find, it is fine to have put bigger locks here
@@ -325,7 +349,7 @@ namespace LinqToDB.Linq
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
-					{
+		{
 						newCache[i]      = cache[i - 1];
 						newPriorities[i] = i;
 					}
@@ -334,14 +358,14 @@ namespace LinqToDB.Linq
 					_indexes = newPriorities;
 					version  = _version;
 				}
-			}
+		}
 
 
-			/// <summary>
+		/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
-			/// </summary>
+		/// </summary>
 			public Query<T>? Find(IDataContext dataContext, Expression expr)
-			{
+		{
 				Query<T>[] cache;
 				int[]      indexes;
 				int        version;
@@ -384,7 +408,7 @@ namespace LinqToDB.Linq
 				Interlocked.Increment(ref CacheMissCount);
 
 				return null;
-			}
+				}
 		}
 		#endregion
 
@@ -406,7 +430,7 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
-			expr = ExpressionBuilder.ExpandExpression(expr);
+			expr = ExpressionTreeOptimizationContext.ExpandExpression(expr);
 
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);

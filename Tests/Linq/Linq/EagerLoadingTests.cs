@@ -552,7 +552,7 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -562,7 +562,49 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
+					join d in detail on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+							.AsEnumerable()
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
+					};
+
+				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
+					join d in detailRecords on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
 
 				var result   = query.ToArray();
@@ -713,12 +755,12 @@ namespace Tests.Linq
 						p.Id,
 						p.Title,
 						p.PostContent,
-						Tags = p.PostTags.Where(p => !p.IsDeleted).Select(t => new
+						Tags = p.PostTags.Where(pp => !pp.IsDeleted).Select(t => new
 						{
 							Id = t.TagId,
 							t.Tag.Name
 						}).OrderBy(t => t.Id).ToArray()
-					}).OrderBy(p => p.Id).ToArray()
+					}).OrderBy(op => op.Id).ToArray()
 				});
 
 				var result = new

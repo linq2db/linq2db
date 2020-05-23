@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 					UpdateMissingFields();
 				}
 
-				return base.ConvertToParentIndex(index, context);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
