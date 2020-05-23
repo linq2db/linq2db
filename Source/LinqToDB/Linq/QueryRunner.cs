@@ -86,7 +86,7 @@ namespace LinqToDB.Linq
 				}
 				// SqlNullValueException: MySqlData
 				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException || ex is SqlNullValueException || ex.GetType().Name == "OracleNullValueException")
+				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)
