@@ -1874,5 +1874,36 @@ namespace Tests.xUpdate
 			}
 		}
 
+
+		[Test]
+		public void TestInsertWithColumnFilter([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "InsertColumnFilterUpdated";
+				try
+				{
+					var p = new Person()
+					{
+						FirstName = "InsertColumnFilter",
+						LastName = "whatever",
+						MiddleName = "som middle name",
+						Gender = Gender.Male
+					};
+
+					var columsToInsert = new List<string> { nameof(p.FirstName), nameof(p.LastName), nameof(p.Gender) };
+					db.Insert(p, (a, b) => columsToInsert.Contains(b.ColumnName));
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					Assert.IsTrue(string.IsNullOrWhiteSpace(p.MiddleName));
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
+
 	}
 }
