@@ -137,8 +137,7 @@ namespace LinqToDB.Linq.Builder
 
 				SqlCondition CorrectSearchConditionNesting(SqlCondition condition)
 				{
-					var visitor      = new QueryVisitor();
-					var newCondition = visitor.Convert(condition, e =>
+					var newCondition = ConvertVisitor.Convert(condition, (v, e) =>
 					{
 						if (e is SqlColumn column && column.Parent != null && usedTableSources.Contains(column.Parent))
 						{

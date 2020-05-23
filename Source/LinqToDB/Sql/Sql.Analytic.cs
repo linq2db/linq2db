@@ -428,7 +428,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Average, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
 
@@ -470,7 +470,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Corr, source, expr1, expr2),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
 
@@ -508,7 +508,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
 
@@ -556,7 +556,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarPop, source, expr1, expr2),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
 
@@ -592,7 +592,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarSamp, source, expr1, expr2),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
 
@@ -696,7 +696,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Max, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
 
@@ -734,7 +734,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Median, source, expr),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr) }
+					currentSource.Expression, Expression.Quote(expr)
 				));
 		}
 
@@ -766,8 +766,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Min, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
-				));
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
 		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -941,8 +940,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDev, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
-				));
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
 		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -981,8 +979,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevPop, source, expr),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr) }
-				));
+					currentSource.Expression, Expression.Quote(expr)));
 		}
 
 		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -1013,8 +1010,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevSamp, source, expr),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr) }
-				));
+					currentSource.Expression, Expression.Quote(expr)));
 		}
 
 		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -1057,8 +1053,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.VarPop, source, expr),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr) }
-				));
+					currentSource.Expression, Expression.Quote(expr)));
 		}
 
 		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -1089,8 +1084,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.VarSamp, source, expr),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr) }
-				));
+					currentSource.Expression, Expression.Quote(expr)));
 		}
 
 		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -1127,8 +1121,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Variance, source, expr, modifier),
-					new Expression[] { currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
-				));
+					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
 		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]

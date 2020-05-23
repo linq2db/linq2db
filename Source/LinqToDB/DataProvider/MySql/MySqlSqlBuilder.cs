@@ -300,10 +300,9 @@ namespace LinqToDB.DataProvider.MySql
 				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
 				deleteStatement.SelectQuery.From.Tables[0];
 
-			AppendIndent()
-				.Append("DELETE ")
-				.Append(Convert(GetTableAlias(table)!, ConvertType.NameToQueryTableAlias))
-				.AppendLine();
+			AppendIndent().Append("DELETE ");
+			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -343,15 +342,15 @@ namespace LinqToDB.DataProvider.MySql
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return ParameterSymbol + value;
+					return sb.Append(ParameterSymbol).Append(value);
 
 				case ConvertType.NameToCommandParameter:
-					return ParameterSymbol + CommandParameterPrefix + value;
+					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
@@ -363,7 +362,7 @@ namespace LinqToDB.DataProvider.MySql
 					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
 						value = value.Substring(SprocParameterPrefix.Length);
 
-					return ParameterSymbol + SprocParameterPrefix + value;
+					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
 
 				case ConvertType.SprocParameterToName:
 					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
@@ -371,28 +370,28 @@ namespace LinqToDB.DataProvider.MySql
 					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
 						value = value.Substring(SprocParameterPrefix.Length);
 
-					return value;
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '`')
-							return value;
-						return "`" + value + "`";
+						return sb.Append(value);
+					return sb.Append('`').Append(value).Append('`');
 
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
 					if (value.Length > 0 && value[0] == '`')
-							return value;
+						return sb.Append(value);
 
 					if (value.IndexOf('.') > 0)
 						value = string.Join("`.`", value.Split('.'));
 
-						return "`" + value + "`";
-					}
+					return sb.Append('`').Append(value).Append('`');
+			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override StringBuilder BuildExpression(

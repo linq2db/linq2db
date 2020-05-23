@@ -51,11 +51,9 @@ namespace LinqToDB.DataProvider.DB2
 
 				StringBuilder.Append("ALTER TABLE ");
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
-				StringBuilder
-					.Append(" ALTER ")
-					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
-					.AppendLine(" RESTART WITH 1")
-					;
+				StringBuilder.Append(" ALTER ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.AppendLine(" RESTART WITH 1");
 			}
 			else
 			{
@@ -184,19 +182,21 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return ":" + value;
+					return sb.Append(':').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					return value.Length > 0 && value[0] == ':'? value.Substring(1): value;
+					return value.Length > 0 && value[0] == ':'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
@@ -205,18 +205,18 @@ namespace LinqToDB.DataProvider.DB2
 					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
-							return value;
+							return sb.Append(value);
 
 						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
 							value.StartsWith("_") ||
 							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-							return '"' + value + '"';
+							return sb.Append('"').Append(value).Append('"');
 					}
 
 					break;
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

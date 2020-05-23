@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported, builder.DataContext.InlineParameters);
 				
 				if (query.From.Tables.Count == 0)
 				{

@@ -1189,7 +1189,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1204,7 +1203,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1219,7 +1217,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1234,7 +1231,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1249,7 +1245,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1264,7 +1259,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1279,7 +1273,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1294,7 +1287,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1317,7 +1309,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllAccess)]
 			string context)
@@ -1346,7 +1337,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllAccess)]
 			string context)
@@ -1494,7 +1484,6 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]

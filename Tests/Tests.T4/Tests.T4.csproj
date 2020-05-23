@@ -78,6 +78,10 @@
 		  <LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<None Update="Databases\SqlServer.2017.tt">
+			<LastGenOutput>SqlServer.2017.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Databases\SqlServerAzure.tt">
 			<LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -242,6 +246,11 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>SqlServer.MS.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.2017.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
 			<DesignTime>True</DesignTime>

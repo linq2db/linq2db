@@ -1316,7 +1316,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						Expression.Constant(_query),
 						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						new[] { Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)) });
+						Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
 
 				var qex = _query.GetIQueryable(n, expression);
 

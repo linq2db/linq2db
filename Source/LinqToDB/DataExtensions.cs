@@ -885,7 +885,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
-					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
+					cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)));
 		}
 
 		/// <summary>
@@ -926,6 +926,24 @@ namespace LinqToDB
 					if (!ObjectsEqual(mc1.Arguments[0].EvaluateExpression(), mc2.Arguments[0].EvaluateExpression()))
 						return false;
 					return comparer(mc1.Arguments[1], mc2.Arguments[1]);
+				}
+
+				if (expr1.NodeType == ExpressionType.Constant)
+				{
+					var c1 = (ConstantExpression)expr1;
+					var c2 = (ConstantExpression)expr2;
+
+					if (c1.Value is FormattableString str1 && c2.Value is FormattableString str2)
+					{
+						if (str1.Format != str2.Format || str1.ArgumentCount != str2.ArgumentCount)
+							return false;
+
+						for (var i = 0; i < str1.ArgumentCount; i++)
+							if (!comparer(Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
+								return false;
+
+						return true;
+					}
 				}
 
 				return base.ExpressionsEqual(expr1, expr2, comparer);
@@ -980,7 +998,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql)}));
+					Expression.Constant(dataContext), Expression.Constant(sql)));
 		}
 #endif
 
@@ -1011,9 +1029,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                IDataContext dataContext,
-			[SqlQueryDependent] RawSqlString sql,
-			[SqlQueryDependent] params object?[] parameters)
+			this                             IDataContext dataContext,
+			[SqlQueryDependent]              RawSqlString sql,
+			[SqlQueryDependentParams] params object?[]    parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -1023,7 +1041,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql), Expression.Constant(parameters)}));
+					Expression.Constant(dataContext), Expression.Constant(sql), Expression.Constant(parameters)));
 		}
 
 		#endregion
@@ -1071,7 +1089,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
-					new Expression[] { Expression.Constant(dataContext), Expression.Quote(selector) }));
+					Expression.Constant(dataContext), Expression.Quote(selector)));
 		}
 
 

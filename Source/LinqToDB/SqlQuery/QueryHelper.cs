@@ -192,10 +192,10 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
 			if (tableSource.Source is SelectQuery q)
-			{
-				foreach (var ts in EnumerateAccessibleSources(q))
-					yield return ts;
-			}
+				{
+					foreach (var ts in EnumerateAccessibleSources(q))
+						yield return ts;
+				}
 			else 
 				yield return tableSource.Source;
 
@@ -631,8 +631,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			var visitor = new QueryVisitor();
-			statement = visitor.Convert(statement, element =>
+			statement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (!(element is SelectQuery q))
 					return element;
@@ -671,8 +670,8 @@ namespace LinqToDB.SqlQuery
 						subQuery.Select.Columns.Insert(index, subColumn);
 					}
 
-					visitor.VisitedElements.Remove(column);
-					visitor.VisitedElements.Add(column, subColumn);
+					// replace
+					visitor.VisitedElements[column] = subColumn;
 				}
 
 				return subQuery;
@@ -716,7 +715,7 @@ namespace LinqToDB.SqlQuery
 		public static TStatement WrapQuery<TStatement>(
 			TStatement             statement,
 			Func<SelectQuery, int> wrapTest,
-			Action<SelectQuery[]>  onWrap)
+			Action<IReadOnlyList<SelectQuery>> onWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -724,8 +723,7 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var visitor = new QueryVisitor();
-			var newStatement = visitor.Convert(statement, element =>
+			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (element is SelectQuery query)
 				{
@@ -760,27 +758,22 @@ namespace LinqToDB.SqlQuery
 						}
 
 						// correct mapping
-						visitor.VisitedElements.Remove(prevColumn);
-						visitor.VisitedElements.Add(prevColumn, newColumn);
+						visitor.VisitedElements[prevColumn] = newColumn;
 					}
 
-					onWrap(queries.ToArray());
+					onWrap(queries);
 
-					var levelTables = QueryHelper.EnumerateLevelTables(query).ToArray();
+					var levelTables = EnumerateLevelTables(query).ToArray();
 					var resultQuery = queries[0];
 					foreach (var table in levelTables)
 					{
 						correctedTables.Add(table, resultQuery);
 					}
 
-					var toMap = levelTables
-						.SelectMany(t => t.Fields.Values)
-						.ToArray();
+					var toMap = levelTables.SelectMany(t => t.Fields.Values);
 
 					foreach (var field in toMap)
-					{
 						visitor.VisitedElements.Remove(field);
-					}
 
 					return resultQuery;
 				} 

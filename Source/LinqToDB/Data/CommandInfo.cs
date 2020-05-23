@@ -19,9 +19,7 @@ namespace LinqToDB.Data
 	using Extensions;
 	using Mapping;
 	using Async;
-	using Linq;
 	using Reflection;
-	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -1494,8 +1492,8 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection, dataReader));
+				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dc, dr));
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -1505,8 +1503,8 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection));
+			var func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dc));
 
 			_objectReaders[key] = func;
 
@@ -1516,7 +1514,7 @@ namespace LinqToDB.Data
 		static Func<IDataReader,T> CreateObjectReader<T>(
 			DataConnection dataConnection,
 			IDataReader    dataReader,
-			Func<Type,int,Expression,Expression> getMemberExpression)
+			Func<DataConnection, IDataReader, Type, int,Expression,Expression> getMemberExpression)
 		{
 			var parameter      = Expression.Parameter(typeof(IDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
@@ -1545,7 +1543,7 @@ namespace LinqToDB.Data
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{
-				expr = getMemberExpression(typeof(T), 0, dataReaderExpr);
+				expr = getMemberExpression(dataConnection, dataReader, typeof(T), 0, dataReaderExpr);
 			}
 			else
 			{
@@ -1582,6 +1580,8 @@ namespace LinqToDB.Data
 							ctor.c,
 							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
 								getMemberExpression(
+									dataConnection,
+									dataReader,
 									p.ParameterType,
 									(names
 										.Select((n,i) => new { n, i })
@@ -1602,7 +1602,7 @@ namespace LinqToDB.Data
 						select new
 						{
 							Member = member,
-							Expr   = getMemberExpression(member.MemberType, n.idx, dataReaderExpr),
+							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, dataReaderExpr),
 						}
 					).ToList();
 

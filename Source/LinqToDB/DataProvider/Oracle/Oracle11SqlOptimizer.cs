@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement);
+			return base.Finalize(statement, inlineParameters);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -167,8 +167,8 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 				, queries =>
 				{
-					var query = queries[queries.Length - 1];
-					var processingQuery = queries[queries.Length - 2];
+					var query = queries[queries.Count - 1];
+					var processingQuery = queries[queries.Count - 2];
 
 					if (query.Select.SkipValue != null)
 					{
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.Oracle
 									query.Select.SkipValue, "+", query.Select.TakeValue));
 						}
 
-						queries[queries.Length - 3].Where.Expr(rnColumn).Greater.Expr(query.Select.SkipValue);
+						queries[queries.Count - 3].Where.Expr(rnColumn).Greater.Expr(query.Select.SkipValue);
 					}
 					else
 					{

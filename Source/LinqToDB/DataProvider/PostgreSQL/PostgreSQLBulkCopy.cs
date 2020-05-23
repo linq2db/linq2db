@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var tableName  = GetTableName(sqlBuilder, options, table);
 				var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
 
-				var fields      = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
+				var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 				var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
 				var rowsCopied = new BulkCopyRowsCopied();
