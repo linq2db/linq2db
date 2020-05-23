@@ -76,7 +76,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						IsGroping = Sql.Grouping(g.Key.Id1) == 1,
+						IsGrouping = Sql.Grouping(g.Key.Id1) == 1,
 						g.Key.Id1,
 						Count = g.Count()
 					};
@@ -101,7 +101,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						IsGroping = Sql.Grouping(g.Key.Id1, g.Key.Id2) == 1,
+						IsGrouping = Sql.Grouping(g.Key.Id1, g.Key.Id2) == 1,
 						g.Key.Id1,
 						Count = g.Count()
 					};
@@ -129,7 +129,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						IsGroping = Sql.Grouping(g.Key.Id1),
+						IsGrouping = Sql.Grouping(g.Key.Id1),
 						g.Key.Id1,
 						Count = g.Count()
 					};
@@ -157,7 +157,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						IsGroping = Sql.Grouping(g.Key.Set1.Id1),
+						IsGrouping = Sql.Grouping(g.Key.Set1.Id1),
 						g.Key.Set1.Id1,
 						Count = g.Count()
 					};
