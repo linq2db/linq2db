@@ -1569,7 +1569,7 @@ namespace Tests.DataProvider
 		class TableWithArray
 		{
 			[Column]
-			public string[] StringArray { get; set; }
+			public string[] StringArray { get; set; } = null!;
 		}
 
 		[Test]

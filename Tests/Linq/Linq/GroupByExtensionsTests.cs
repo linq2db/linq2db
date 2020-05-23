@@ -30,11 +30,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByRollup([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
-			TestProvName.AllSapHana, 
+		public void GroupByRollup([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana,
 			TestProvName.AllMySql57Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
@@ -58,10 +58,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByRollupGrouping([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
+		public void GroupByRollupGrouping([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
 			TestProvName.AllSapHana)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
@@ -86,8 +86,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByRollupGroupingMany([IncludeDataSources(true, 
-			TestProvName.AllMySql57Plus)] string context)
+		public void GroupByRollupGroupingMany([IncludeDataSources(true,
+			TestProvName.AllMySqlServer57Plus)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -111,12 +111,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCube([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllMySql57Plus)] string context)
+		public void GroupByCube([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -140,12 +139,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSets([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllMySql57Plus)] string context)
+		public void GroupByGroupingSets([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -169,12 +167,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSetsHaving([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllMySql57Plus)] string context)
+		public void GroupByGroupingSetsHaving([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -200,12 +197,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGroupingSetsHaving2([IncludeDataSources(true, 
-			TestProvName.AllSqlServer2008Plus, 
-			TestProvName.AllPostgreSQL95Plus, 
-			TestProvName.AllOracle, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllMySql57Plus)] string context)
+		public void GroupByGroupingSetsHaving2([IncludeDataSources(true,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL95Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 

@@ -567,7 +567,7 @@ WHERE
 			public int Id { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(Entity2LanguageExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
-			public Entity2Language Entity2Language { get; set; }
+			public Entity2Language? Entity2Language { get; set; }
 
 			public static Expression<Func<Entity, IDataContext, IQueryable<Entity2Language>>> Entity2LanguageExpr()
 			{
@@ -590,16 +590,16 @@ WHERE
 			public int LanguageId { get; set; }
 
 			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = false, Relationship = Relationship.OneToOne)]
-			public Language Language { get; set; }
+			public Language Language { get; set; } = null!;
 		}
 
 		public class Language
 		{
 			[Column]
 			public int Id { get; set; }
-		
+
 			[Column]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 		}
 
 		[Test]
@@ -625,7 +625,7 @@ WHERE
 					{
 						// This works
 						EntityId = x.Id,
-						x.Entity2Language.LanguageId,
+						x.Entity2Language!.LanguageId,
 						// This caused exception
 						LanguageName = x.Entity2Language.Language.Name
 					})

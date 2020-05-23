@@ -541,7 +541,7 @@ namespace LinqToDB.Mapping
 		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
 		///     this entity type.
 		/// </summary>
-		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <param name="filterFunc">The LINQ predicate expression. </param>
 		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
 		public EntityMappingBuilder<T> HasQueryFilter(Func<IQueryable<T>, IDataContext, IQueryable<T>> filterFunc)
 		{
@@ -552,7 +552,7 @@ namespace LinqToDB.Mapping
 		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
 		///     this entity type.
 		/// </summary>
-		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <param name="filterFunc"> The LINQ predicate expression. </param>
 		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
 		public EntityMappingBuilder<T> HasQueryFilter<TDataContext>(Func<IQueryable<T>, TDataContext, IQueryable<T>> filterFunc)
 			where TDataContext : IDataContext

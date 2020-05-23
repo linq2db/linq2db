@@ -5,6 +5,8 @@
 		<AssemblyName>linq2db.Tests</AssemblyName>
 		<!--suppress complains about IBM.Data.DB2.Core.dll-->
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
