@@ -139,10 +139,12 @@ namespace LinqToDB.DataProvider.Oracle
 				isIdentitySql = "CASE c.IDENTITY_COLUMN WHEN 'YES' THEN 1 ELSE 0 END as IsIdentity,";
 			}
 
+			string sql;
+
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
-				return dataConnection.Query<ColumnInfo>(@"
+				sql = @"
 					SELECT
 						c.OWNER || '.' || c.TABLE_NAME             as TableID,
 						c.COLUMN_NAME                              as Name,
@@ -150,6 +152,7 @@ namespace LinqToDB.DataProvider.Oracle
 						CASE c.NULLABLE WHEN 'Y' THEN 1 ELSE 0 END as IsNullable,
 						c.COLUMN_ID                                as Ordinal,
 						c.DATA_LENGTH                              as Length,
+						c.CHAR_LENGTH                              as CharLength,
 						c.DATA_PRECISION                           as Precision,
 						c.DATA_SCALE                               as Scale,
 						" + isIdentitySql + @"
@@ -159,14 +162,12 @@ namespace LinqToDB.DataProvider.Oracle
 							c.OWNER       = cc.OWNER      AND
 							c.TABLE_NAME  = cc.TABLE_NAME AND
 							c.COLUMN_NAME = cc.COLUMN_NAME
-					ORDER BY TableID, Ordinal
-					")
-				.ToList();
+					";
 			}
 			else
 			{
 				// This is significally faster
-				return dataConnection.Query<ColumnInfo>(@"
+				sql = @"
 					SELECT 
 						(SELECT USER FROM DUAL) || '.' || c.TABLE_NAME as TableID,
 						c.COLUMN_NAME                                  as Name,
@@ -174,6 +175,7 @@ namespace LinqToDB.DataProvider.Oracle
 						CASE c.NULLABLE WHEN 'Y' THEN 1 ELSE 0 END     as IsNullable,
 						c.COLUMN_ID                                    as Ordinal,
 						c.DATA_LENGTH                                  as Length,
+						c.CHAR_LENGTH                                  as CharLength,
 						c.DATA_PRECISION                               as Precision,
 						c.DATA_SCALE                                   as Scale,
 						" + isIdentitySql + @"
@@ -182,10 +184,30 @@ namespace LinqToDB.DataProvider.Oracle
 						JOIN USER_COL_COMMENTS cc ON
 							c.TABLE_NAME  = cc.TABLE_NAME AND
 							c.COLUMN_NAME = cc.COLUMN_NAME
-					ORDER BY TableID, Ordinal
-					")
-				.ToList();
+					";
 			}
+
+			return dataConnection.Query(rd =>
+			{
+				var dataType   = rd.IsDBNull(2) ?       null : rd.GetString(2);
+				var dataLength = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+				var charLength = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6);
+				return new ColumnInfo
+				{
+					TableID     = rd.GetString(0),
+					Name        = rd.GetString(1),
+					DataType    = rd.IsDBNull(2) ? null : rd.GetString(2),
+					IsNullable  = rd.GetInt32(3) != 0,
+					Ordinal     = rd.IsDBNull(4) ? 0 : rd.GetInt32(4),
+					Precision   = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
+					Scale       = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
+					IsIdentity  = rd.GetInt32(9) != 0,
+					Description = rd.IsDBNull(10) ? null : rd.GetString(10),
+					Length      = dataType == "CHAR" || dataType == "NCHAR" || dataType == "NVARCHAR2" || dataType == "VARCHAR2" || dataType == "VARCHAR"
+									? charLength : dataLength
+				};
+			},
+				sql).ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)

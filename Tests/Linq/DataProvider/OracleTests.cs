@@ -2831,5 +2831,49 @@ namespace Tests.DataProvider
 					|| proc.IsTableFunction && proc.ResultException != null).Count());
 			}
 		}
+
+		[Table]
+		public class TypesTest
+		{
+			[Column(DbType = "CHAR(10)")     ] public string Char10       { get; set; } = null!;
+			[Column(DbType = "NCHAR(10)")    ] public string NChar10      { get; set; } = null!;
+			[Column(DbType = "VARCHAR(10)")  ] public string VarChar10    { get; set; } = null!;
+			[Column(DbType = "VARCHAR2(10)") ] public string VarChar2_10  { get; set; } = null!;
+			[Column(DbType = "NVARCHAR2(10)")] public string NVarChar2_10 { get; set; } = null!;
+		}
+
+		// TODO: add more types and assertions
+		[Test]
+		public void TestSchemaTypes([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<TypesTest>())
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables = true,
+					GetProcedures = false
+				});
+
+				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault();
+				Assert.IsNotNull(table);
+				Assert.AreEqual(5, table.Columns.Count);
+
+				AssertColumn(nameof(TypesTest.Char10)      , "CHAR(10)"     , 10);
+				AssertColumn(nameof(TypesTest.NChar10)     , "NCHAR(10)"    , 10);
+				AssertColumn(nameof(TypesTest.VarChar10)   , "VARCHAR2(10)" , 10); // VARCHAR is alias to VARCHAR2
+				AssertColumn(nameof(TypesTest.VarChar2_10) , "VARCHAR2(10)" , 10);
+				AssertColumn(nameof(TypesTest.NVarChar2_10), "NVARCHAR2(10)", 10);
+
+				void AssertColumn(string name, string dbType, int? length)
+				{
+					var column = table.Columns.SingleOrDefault(c => c.ColumnName == name.ToUpperInvariant());
+
+					Assert.IsNotNull(column);
+					Assert.AreEqual(dbType, column.ColumnType);
+					Assert.AreEqual(length, column.Length);
+				}
+			}
+		}
 	}
 }
