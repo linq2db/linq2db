@@ -22,7 +22,7 @@ namespace Tests.Linq
 			TestImpl(context);
 		}
 
-		async void TestImpl(string context)
+		async Task TestImpl(string context)
 		{
 			Test1(context);
 
@@ -49,7 +49,7 @@ namespace Tests.Linq
 			TestForEachImpl(context);
 		}
 
-		async void TestForEachImpl(string context)
+		async Task TestForEachImpl(string context)
 		{
 			using (var db = GetDataContext(context + ".LinqService"))
 			{
@@ -67,7 +67,7 @@ namespace Tests.Linq
 			TestExecute1Impl(context);
 		}
 
-		async void TestExecute1Impl(string context)
+		async Task TestExecute1Impl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
@@ -106,7 +106,7 @@ namespace Tests.Linq
 			TestQueryToArrayImpl(context);
 		}
 
-		async void TestQueryToArrayImpl(string context)
+		async Task TestQueryToArrayImpl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
