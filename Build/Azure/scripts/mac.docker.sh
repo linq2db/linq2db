@@ -8,8 +8,21 @@ retries=0
 brew cask install docker
 # install working 2.0.0.3-ce-mac81,31259
 #brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/8ce4e89d10716666743b28c5a46cd54af59a9cc2/Casks/docker.rb
-sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
-/Applications/Docker.app/Contents/MacOS/Docker --unattended &
+
+# https://github.com/docker/for-mac/issues/2359#issuecomment-607154849
+# allow the app to run without confirmation
+xattr -d -r com.apple.quarantine /Applications/Docker.app
+# preemptively do docker.app's setup to avoid any gui prompts
+sudo /bin/cp /Applications/Docker.app/Contents/Library/LaunchServices/com.docker.vmnetd /Library/PrivilegedHelperTools
+sudo /bin/cp /Applications/Docker.app/Contents/Resources/com.docker.vmnetd.plist /Library/LaunchDaemons/
+sudo /bin/chmod 544 /Library/PrivilegedHelperTools/com.docker.vmnetd
+sudo /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
+sudo /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
+
+open -g -a Docker.app || exit
+
+#sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
+#/Applications/Docker.app/Contents/MacOS/Docker --unattended &
 while ! docker info 2>/dev/null ; do
     sleep 5
     retries=`expr $retries + 1`
@@ -17,7 +30,8 @@ while ! docker info 2>/dev/null ; do
         echo 'docker still running'
     else
         echo 'docker not running, restart'
-        /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+        #/Applications/Docker.app/Contents/MacOS/Docker --unattended &
+        open -g -a Docker.app || exit
     fi
     if [ $retries -gt 30 ]; then
         >&2 echo 'Failed to run docker'
