@@ -17,9 +17,9 @@ namespace Tests.Linq
 	public class AsyncTests : TestBase
 	{
 		[Test]
-		public void Test([DataSources(false)] string context)
+		public async Task Test([DataSources(false)] string context)
 		{
-			TestImpl(context);
+			await TestImpl(context);
 		}
 
 		async Task TestImpl(string context)
@@ -44,9 +44,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestForEach([DataSources(false)] string context)
+		public async Task TestForEach([DataSources(false)] string context)
 		{
-			TestForEachImpl(context);
+			await TestForEachImpl(context);
 		}
 
 		async Task TestForEachImpl(string context)
@@ -62,9 +62,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExecute1([DataSources(false)] string context)
+		public async Task TestExecute1([DataSources(false)] string context)
 		{
-			TestExecute1Impl(context);
+			await TestExecute1Impl(context);
 		}
 
 		async Task TestExecute1Impl(string context)
@@ -101,9 +101,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryToArray([DataSources(false)] string context)
+		public async Task TestQueryToArray([DataSources(false)] string context)
 		{
-			TestQueryToArrayImpl(context);
+			await TestQueryToArrayImpl(context);
 		}
 
 		async Task TestQueryToArrayImpl(string context)

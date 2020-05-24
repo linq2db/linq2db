@@ -370,9 +370,16 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 /Diag:diag.logz /Blame'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        archiveFilePatterns: '**/*.logz'
+        path: '$(System.DefaultWorkingDirectory)'
+        artifact: 'win_core_test_logs'
+      displayName: Publish test diagnostics
 
 ###########################
 #  Tests: Windows (NETFX) #
