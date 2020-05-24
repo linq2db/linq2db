@@ -79,7 +79,7 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -130,7 +130,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				return Query<TResult>.GetQuery(DataContext, ref expression)
 					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
@@ -145,7 +145,7 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				await query
 					.GetForEachAsync(DataContext, Expression, Parameters, Preambles, r =>
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -230,7 +230,7 @@ namespace LinqToDB.Linq
 			
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -251,7 +251,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				return query.GetIEnumerable(DataContext, Expression, Parameters, Preambles).GetEnumerator();
 			}
@@ -265,7 +265,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				return query.GetIEnumerable(DataContext, Expression, Parameters, Preambles).GetEnumerator();
 			}
