@@ -1880,12 +1880,12 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var newName = "InsertColumnFilterUpdated";
+				var newName = "InsertColumnFilter";
 				try
 				{
 					var p = new Person()
 					{
-						FirstName = "InsertColumnFilter",
+						FirstName = newName,
 						LastName = "whatever",
 						MiddleName = "som middle name",
 						Gender = Gender.Male
