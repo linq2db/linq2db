@@ -135,10 +135,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        Access_JET:
+        Access_OLEDB_JET:
           title: 'Access Jet'
           config: 'access'
-        Access_ACE:
+        Access_OLEDB_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
@@ -286,6 +286,10 @@ stages:
         Access_ODBC_ACE:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+        Access_OLEDB_ACE:
+          title: 'Access OleDb ACE'
+          config: 'access.ace'
           script: 'access.ace.x64.cmd'
         SQLite:
           title: 'SQLite'
