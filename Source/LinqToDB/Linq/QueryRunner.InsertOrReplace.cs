@@ -16,17 +16,23 @@ namespace LinqToDB.Linq
 		public static class InsertOrReplace<T>
 		{
 			static Query<int> CreateQuery(
-				IDataContext dataContext, EntityDescriptor descriptor, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
+				IDataContext     dataContext, 
+				EntityDescriptor descriptor, 
+				T                obj, 
+				Func<T, ColumnDescriptor, bool>? columnFilter,
+				string? tableName, 
+				string? serverName, 
+				string? databaseName, 
+				string? schemaName,
 				Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
-				if (tableName != null) sqlTable.PhysicalName = tableName;
-				if (serverName != null) sqlTable.Server = serverName;
-				if (databaseName != null) sqlTable.Database = databaseName;
-				if (schemaName != null) sqlTable.Schema = schemaName;
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var sqlQuery = new SelectQuery();
 
@@ -47,20 +53,25 @@ namespace LinqToDB.Linq
 
 				// Insert.
 				//
-				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.Value.ColumnDescriptor)).Select(f => f.Value))
+				var fieldsForInsert = sqlTable.Fields.Values;
+				foreach (var field in fieldsForInsert)
 				{
-					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
+					if (field.IsInsertable)
 					{
-						if (!supported || !fieldDic.TryGetValue(field, out param))
+						if (!field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert) 
+						    || columnFilter == null || columnFilter(obj, field.ColumnDescriptor))
 						{
-							param = GetParameter(type, dataContext, field);
-							ei.Queries[0].Parameters.Add(param);
+							if (!supported || !fieldDic.TryGetValue(field, out param))
+							{
+								param = GetParameter(type, dataContext, field);
+								ei.Queries[0].Parameters.Add(param);
 
-							if (supported)
-								fieldDic.Add(field, param);
+								if (supported)
+									fieldDic.Add(field, param);
+							}
+
+							insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 						}
-
-						insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
 					{
@@ -121,13 +132,6 @@ namespace LinqToDB.Linq
 			}
 
 			public static int Query(
-				IDataContext dataContext, T obj,
-				string? tableName, string? serverName, string? databaseName, string? schema)
-			{
-				return Query(dataContext, obj, null, tableName, serverName, databaseName, schema);
-			}
-
-			public static int Query(
 				IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schema)
 			{
@@ -136,9 +140,12 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var ei = Common.Configuration.Linq.DisableQueryCache
-						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+				var cacheDisabled = Common.Configuration.Linq.DisableQueryCache
+				                   || columnFilter != null
+				                   || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
+				                   || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+
+				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, type },
@@ -170,9 +177,12 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var ei               = Common.Configuration.Linq.DisableQueryCache
-						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+				var cacheDisabled = Common.Configuration.Linq.DisableQueryCache
+				                    || columnFilter != null
+				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
+				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+
+				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, type },
