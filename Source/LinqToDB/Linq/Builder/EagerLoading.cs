@@ -176,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 			for (int i = 0; i < memberPath.Count; i++)
 			{
 				var memberInfo = memberPath[i];
-				if (result.Type != memberInfo.DeclaringType)
+				if (!memberInfo.DeclaringType.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");

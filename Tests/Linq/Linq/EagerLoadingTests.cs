@@ -812,6 +812,7 @@ namespace Tests.Linq
 			{
 			}
 
+			[PrimaryKey]
 			[Column] public int  Id                        { get; set; }
 			[Column] public int  EventId                   { get; set; }
 			[Column] public bool IsActive                  { get; set; } = true;
@@ -907,18 +908,23 @@ namespace Tests.Linq
 			{
 				var eventId = 1;
 
-				db.GetTable<EventScheduleItem>()
+				var query = db.GetTable<EventScheduleItem>()
 					.Where(p => p.EventId == eventId && p.IsActive)
 					.Select(p => new EventScheduleListModel()
 					{
 						Id      = p.Id,
-						Persons = p.Persons.Select(p => new EventScheduleListPersonModel()
+						Persons = p.Persons.Select(pp => new EventScheduleListPersonModel()
 						{
-							EventSchedulePersonId = p.EventSchedulePersonId,
-							Id                    = p.Id,
-							TicketNumberId        = p.Person.TicketNumberId
+							EventSchedulePersonId = pp.EventSchedulePersonId,
+							Id                    = pp.Id,
+							TicketNumberId        = pp.Person.TicketNumberId
 						}).ToList()
-					}).ToList();
+					});
+
+				var result = query.ToList();
+
+				Assert.That(result.Count, Is.EqualTo(1));
+				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
 			}
 		}
 		#endregion
