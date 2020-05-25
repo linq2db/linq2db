@@ -1905,5 +1905,46 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Patient>("xxxPatient"))
+			{
+				var newName = "InsertColumnFilter";
+				try
+				{
+					var p = new Patient()
+					{
+						Diagnosis = "Diagnosis",
+						PersonID = 1
+					};
+
+					var columnsToInsert = new List<string> { nameof(p.Diagnosis), nameof(p.PersonID) };
+
+					db.InsertOrReplace(p, (a, b) => columnsToInsert.Contains(b.ColumnName), tableName: table.TableName);
+					p = table.Where(x => x.Diagnosis == "Diagnosis").FirstOrDefault();
+
+					Assert.IsNotNull(p);
+
+					var p2 = new Patient()
+					{
+						Diagnosis = "Diagnosis 2",
+						PersonID = 1
+					};
+
+					db.InsertOrReplace(p2, (a, b) => columnsToInsert.Contains(b.ColumnName), tableName: table.TableName);
+
+					p2 = table.Where(x => x.Diagnosis == "Diagnosis 2").FirstOrDefault();
+					Assert.IsNotNull(p2);
+
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
+
 	}
 }
