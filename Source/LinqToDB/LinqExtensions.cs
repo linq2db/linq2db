@@ -622,6 +622,11 @@ namespace LinqToDB
 			}
 
 			public IQueryable<T> Query;
+
+			public override string ToString()
+			{
+				return Query.ToString();
+			}
 		}
 
 		static readonly MethodInfo _asUpdatableMethodInfo = MemberHelper.MethodOf(() => AsUpdatable<int>(null!)).GetGenericMethodDefinition();
@@ -1138,6 +1143,11 @@ namespace LinqToDB
 			}
 
 			public IQueryable<T> Query;
+
+			public override string ToString()
+			{
+				return Query.ToString();
+			}
 		}
 
 		static readonly MethodInfo _intoMethodInfo = MemberHelper.MethodOf(() => Into<int>(null!,null!)).GetGenericMethodDefinition();
@@ -1785,6 +1795,11 @@ namespace LinqToDB
 			}
 
 			public IQueryable<T> Query;
+
+			public override string ToString()
+			{
+				return Query.ToString();
+			}
 		}
 
 		static Expression WrapConstant<TV>(Expression body, TV value)
