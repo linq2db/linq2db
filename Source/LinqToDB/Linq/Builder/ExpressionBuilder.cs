@@ -1394,10 +1394,10 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		public Expression AddQueryableMemberAccessors(MemberInfo memberInfo,
+		public Expression AddQueryableMemberAccessors(AccessorMember memberInfo,
 			Func<MemberInfo, Expression> qe)
 		{
-			return _query.AddQueryableMemberAccessors(memberInfo, qe);
+			return _query.AddQueryableMemberAccessors(memberInfo.MemberInfo, qe);
 		}
 
 

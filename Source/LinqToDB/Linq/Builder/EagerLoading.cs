@@ -167,6 +167,36 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		static Expression? ConstructMemberPath(List<AccessorMember> memberPath, Expression ob, bool throwOnError)
+		{
+			if (memberPath.Count == 0)
+				return null;
+
+			Expression result = ob;
+			for (int i = 0; i < memberPath.Count; i++)
+			{
+				var memberInfo = memberPath[i];
+				if (result.Type != memberInfo.MemberInfo.DeclaringType)
+				{
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
+					return null;
+				}
+				if (memberInfo.MemberInfo.IsMethodEx())
+				{
+					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
+					if (methodInfo.IsStatic)
+						result = Expression.Call(methodInfo, memberInfo.Arguments.ToArray());
+					else
+						result = Expression.Call(result, methodInfo, memberInfo.Arguments.ToArray());
+				}
+				else
+					result = Expression.MakeMemberAccess(result, memberInfo.MemberInfo);
+			}
+
+			return result;
+		}
+
 		static Expression? ConstructMemberPath(List<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
 			if (memberPath.Count == 0)
@@ -611,14 +641,14 @@ namespace LinqToDB.Linq.Builder
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
 
 			
-			var reversedAssociationPath = new List<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath ?? throw new InvalidOperationException());
+			var reversedAssociationPath = new List<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath ?? throw new InvalidOperationException());
 			reversedAssociationPath.Reverse();
 
-			var associationPath = new List<MemberInfo>(reversedAssociationPath.Select(a => a.Item1));
+			var associationPath = new List<AccessorMember>(reversedAssociationPath.Select(a => a.Item1));
 
 
 			var extractContext = reversedAssociationPath[0].Item2;
-			var associationParentType = associationPath[0].DeclaringType;
+			var associationParentType = associationPath[0].MemberInfo.DeclaringType;
 			var loadWithItems  = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
 
 			Expression           resultExpression;
@@ -670,7 +700,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 			
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
@@ -709,7 +739,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}

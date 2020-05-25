@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
-		public static LambdaExpression CreateAssociationQueryLambda(ExpressionBuilder builder, MemberInfo onMember, AssociationDescriptor association, 
+		public static LambdaExpression CreateAssociationQueryLambda(ExpressionBuilder builder, AccessorMember onMember, AssociationDescriptor association, 
 			Type parentOriginalType,
 			Type parentType, 
 			Type objectType, bool inline, bool enforceDefault, 
@@ -50,7 +50,34 @@ namespace LinqToDB.Linq.Builder
 
 				cacheCheckAdded = true;
 
-				var body = definedQueryMethod.GetBody(definedQueryMethod.Parameters[0], dataContextConstant);
+				var parameterMatch = new Dictionary<ParameterExpression, Expression>();
+				if (onMember.Arguments == null)
+				{
+					if (definedQueryMethod.Parameters.Count > 1 && typeof(IDataContext).IsSameOrParentOf(definedQueryMethod.Parameters[1].Type))
+						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextConstant);
+				}
+				else
+				{
+					var definedCount = definedQueryMethod.Parameters.Count;
+					var argumentsCount = onMember.Arguments.Count;
+					var diff = definedCount - argumentsCount;
+					for (int i = definedCount - 1; i >= diff; i--)
+					{
+						parameterMatch.Add(definedQueryMethod.Parameters[i], onMember.Arguments[i - diff]);
+					}
+				}
+
+				var body = definedQueryMethod.Body.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.Parameter &&
+					    parameterMatch.TryGetValue((ParameterExpression)e, out var newExpression))
+					{
+						return newExpression;
+					}
+
+					return e;
+				});
+
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters[0]);
 			}
 
@@ -252,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
-			MemberInfo onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
@@ -276,7 +303,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
-			MemberInfo onMember, AssociationDescriptor descriptor, ref bool isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
 		{
 			var elementType = descriptor.GetElementType(builder.MappingSchema);
 

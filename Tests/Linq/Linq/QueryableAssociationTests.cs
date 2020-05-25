@@ -594,15 +594,6 @@ WHERE
 			public Language Language { get; set; } = null!;
 		}
 
-		public class Language
-		{
-			[Column]
-			public int Id { get; set; }
-
-			[Column]
-			public string Name { get; set; } = null!;
-		}
-
 		[Test]
 		public void SelectAssociations([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -724,6 +715,178 @@ WHERE
 
 			public int CurrentUserId { get; set; }
 		}
+
+
+		public class UserGroup
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression), Relationship = Relationship.OneToMany)]
+			public IQueryable<User> UsersWithLanguage(IDataContext db, int languageId)
+			{
+				return (_usersWithLanguageExpression = _usersWithLanguageExpression ?? UsersWithLanguageExpression().Compile())(this, db, languageId);
+			}
+			
+			[ExpressionMethod(nameof(UsersWithLanguageExpression))]
+			public IQueryable<User> UsersWithLanguageEM(IDataContext db, int languageId)
+			{
+				return (_usersWithLanguageExpression = _usersWithLanguageExpression ?? UsersWithLanguageExpression().Compile())(this, db, languageId);
+			}
+			
+			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> UsersWithLanguageExpression()
+			{
+				return (p, db, languageId) => db
+					.GetTable<User>()
+					.Where(x => x.UserGroupId == p.Id && x.LanguageId == languageId);
+			}
+			
+			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _usersWithLanguageExpression;
+			
+			
+			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
+			public User FirstUsersWithLanguage(IDataContext db, int languageId)
+			{
+				return (_firstUserWithLanguageExpression = _firstUserWithLanguageExpression ?? FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
+			}
+			
+			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> FirstUserWithLanguageExpression()
+			{
+				return (p, db, languageId) => db
+					.GetTable<User>()
+					.Where(x => x.UserGroupId == p.Id && x.LanguageId == languageId)
+					.Take(1);
+			}
+			
+			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _firstUserWithLanguageExpression;
+		}
+		
+		public class User
+		{
+			[Column]
+			public int Id { get; set; }
+			
+			[Column]
+			public int UserGroupId { get; set; }
+			
+			[Column]
+			public int LanguageId { get; set; }
+			
+			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), Relationship = Relationship.OneToOne, CanBeNull = true)]
+			public Language? Language { get; set; }
+		}
+		
+		public class Language
+		{
+			[Column]
+			public int Id { get; set; }
+			
+			[Column]
+			public string? Name { get; set; }
+		}
+
+		[Test]
+		public void TestOneToOneAssociation([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new UserGroup {Id = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new User {Id = 1, UserGroupId = 1, LanguageId = 1},
+				new User {Id = 2, UserGroupId = 1, LanguageId = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Language {Id = 1, Name = "English"},
+				new Language {Id = 2, Name = "French"}
+			}))
+			{
+				var data = db
+					.GetTable<UserGroup>()
+					.Select(x => new
+					{
+						x.Id,
+						FirstUserId = x.FirstUsersWithLanguage(db, 1).Id,
+						LanguageName = x.FirstUsersWithLanguage(db, 1).Language!.Name
+					})
+					.First();
+
+				Assert.AreEqual(1, data.FirstUserId);
+				Assert.AreEqual("English", data.LanguageName);
+			}
+		}
+		
+		[Test]
+		public void TestOneToManyAssociation([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new UserGroup {Id = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new User {Id = 1, UserGroupId = 1, LanguageId = 1},
+				new User {Id = 2, UserGroupId = 1, LanguageId = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Language {Id = 1, Name = "English"},
+				new Language {Id = 2, Name = "French"}
+			}))
+			{
+				var data = db
+					.GetTable<UserGroup>()
+					.Select(x => new
+					{
+						x.Id,
+						EnglishUserCount = x.UsersWithLanguage(db, 1).Count(),
+						FrenchhUserCount = x.UsersWithLanguage(db, 2).Count()
+					})
+					.First();
+
+				Assert.AreEqual(2, data.EnglishUserCount);
+				Assert.AreEqual(0, data.FrenchhUserCount);
+			}
+		}
+
+		[Test]
+		public void TestOneToManyAssociationEM([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new UserGroup {Id = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new User {Id = 1, UserGroupId = 1, LanguageId = 1},
+				new User {Id = 2, UserGroupId = 1, LanguageId = 1}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new Language {Id = 1, Name = "English"},
+				new Language {Id = 2, Name = "French"}
+			}))
+			{
+				var data = db
+					.GetTable<UserGroup>()
+					.Select(x => new
+					{
+						x.Id,
+						EnglishUserCount = x.UsersWithLanguageEM(db, 1).Count(),
+						FrenchhUserCount = x.UsersWithLanguageEM(db, 2).Count()
+					})
+					.First();
+
+				Assert.AreEqual(2, data.EnglishUserCount);
+				Assert.AreEqual(0, data.FrenchhUserCount);
+			}
+		}
+
 
 	}
 }

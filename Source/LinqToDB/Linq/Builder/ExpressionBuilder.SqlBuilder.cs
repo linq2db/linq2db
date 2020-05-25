@@ -292,7 +292,12 @@ namespace LinqToDB.Linq.Builder
 				while (mc != null)
 				{
 					if (!mc.IsQueryable())
+					{
+						if (mc.IsAssociation(MappingSchema))
+							return true;
+
 						return GetTableFunctionAttribute(mc.Method) != null;
+					}
 
 					mc = mc.Arguments[0] as MethodCallExpression;
 				}

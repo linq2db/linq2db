@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 			// Here we tell for Equality Comparer to compare optimized expressions 
 			//
 			var closureMappingSchema = builder.MappingSchema;
-			builder.AddQueryableMemberAccessors(memberInfo, mi =>
+			builder.AddQueryableMemberAccessors(new AccessorMember(memberInfo), mi =>
 			{
 				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext);
 
