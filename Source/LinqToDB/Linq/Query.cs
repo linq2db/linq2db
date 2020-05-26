@@ -180,10 +180,10 @@ namespace LinqToDB.Linq
 
 		#region Eager Loading
 
-		Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>[]? _preambles;
+		Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>[]? _preambles;
 
 		public void SetPreambles(
-			IEnumerable<Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>>? preambles)
+			IEnumerable<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>>? preambles)
 		{
 			_preambles = preambles?.ToArray();
 		}
@@ -198,7 +198,7 @@ namespace LinqToDB.Linq
 			return _preambles?.Length ?? 0;
 		}
 
-		public object?[]? InitPreambles(IDataContext dc)
+		public object?[]? InitPreambles(IDataContext dc, Expression rootExpression, object?[]? ps)
 		{
 			if (_preambles == null)
 				return null;
@@ -206,13 +206,13 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Item1(dc);
+				preambles[i] = _preambles[i].Item1(dc, rootExpression, ps);
 			}
 
 			return preambles;
 		}
 
-		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc)
+		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, object?[]? ps)
 		{
 			if (_preambles == null)
 				return null;
@@ -220,7 +220,7 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].Item2(dc).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].Item2(dc, rootExpression, ps).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return preambles;

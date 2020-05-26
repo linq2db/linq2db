@@ -176,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 			for (int i = 0; i < memberPath.Count; i++)
 			{
 				var memberInfo = memberPath[i];
-				if (result.Type != memberInfo.DeclaringType)
+				if (!memberInfo.DeclaringType.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
@@ -1212,18 +1212,59 @@ namespace LinqToDB.Linq.Builder
 			return resultExpression;
 		}
 
+		private static void PrepareParameters(Expression expr, ExpressionBuilder builder, out ParameterContainer container,
+			out Expression correctedExpression)
+		{
+			container           = new ParameterContainer();
+			var indexes         = new Dictionary<ParameterAccessor, Expression>();
+			var knownParameters = builder._parameters;
+			var containerLocal  = container;
+
+			correctedExpression = expr.Transform(e =>
+			{
+				if (knownParameters.TryGetValue(e, out var accessor))
+				{
+					if (!indexes.TryGetValue(accessor, out var accessExpression))
+					{
+						var idx = containerLocal.RegisterAccessor(accessor);
+
+						accessExpression = Expression.Call(Expression.Constant(containerLocal),
+							ParameterContainer.GetValueMethodInfo, Expression.Constant(idx));
+
+						indexes.Add(accessor, accessExpression);
+					}
+
+					if (e.Type != accessExpression.Type)
+						accessExpression = Expression.Convert(accessExpression, e.Type);
+
+					return accessExpression;
+				}
+
+				return e;
+			});
+		}
+
 		private static int RegisterPreamblesDetached<TD>(ExpressionBuilder builder, IQueryable<TD> detailQuery)
 		{
-			var expr = detailQuery.Expression;
-			var idx = builder.RegisterPreamble(dc =>
+			PrepareParameters(detailQuery.Expression, builder, out var container, out var detailExpression);
+
+			var idx = builder.RegisterPreamble((dc, expr, ps) =>
 				{
-					var queryable = new ExpressionQueryImpl<TD>(dc, expr);
+					container.DataContext         = dc;
+					container.CompiledParameters  = ps;
+					container.ParameterExpression = expr;
+
+					var queryable = new ExpressionQueryImpl<TD>(dc, detailExpression);
 					var details = queryable.ToList();
 					return details;
 				},
-				async dc =>
+				async (dc, expr, ps) =>
 				{
-					var queryable = new ExpressionQueryImpl<TD>(dc, expr);
+					container.DataContext         = dc;
+					container.CompiledParameters  = ps;
+					container.ParameterExpression = expr;
+
+					var queryable = new ExpressionQueryImpl<TD>(dc, detailExpression);
 					var details = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					return details;
 				}
@@ -1234,14 +1275,20 @@ namespace LinqToDB.Linq.Builder
 		private static int RegisterPreambles<TD, TKey>(ExpressionBuilder builder, IQueryable<KeyDetailEnvelope<TKey, TD>> detailQuery)
 		{
 			// Finalize keys for recursive processing
-			var expr = detailQuery.Expression;
-			expr     = builder.ExposeExpression(expr);
-			expr     = FinalizeExpressionKeys(expr);
+			var expression = detailQuery.Expression;
+			expression     = builder.ExposeExpression(expression);
+			expression     = FinalizeExpressionKeys(expression);
+
+			PrepareParameters(expression, builder, out var container, out var detailExpression);
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
-			var idx = builder.RegisterPreamble(dc =>
+			var idx = builder.RegisterPreamble((dc, expr, ps) =>
 				{
-					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, expr);
+					container.DataContext         = dc;
+					container.CompiledParameters  = ps;
+					container.ParameterExpression = expr;
+
+					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, detailExpression);
 					var detailsWithKey      = queryable.ToList();
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
@@ -1252,9 +1299,13 @@ namespace LinqToDB.Linq.Builder
 
 					return eagerLoadingContext;
 				},
-				async dc =>
+				async (dc, expr, ps) =>
 				{
-					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, expr);
+					container.DataContext         = dc;
+					container.CompiledParameters  = ps;
+					container.ParameterExpression = expr;
+
+					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, detailExpression);
 					var detailsWithKey      = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
