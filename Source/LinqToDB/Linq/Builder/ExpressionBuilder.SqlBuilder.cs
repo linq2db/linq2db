@@ -1239,7 +1239,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Parameter
 
-		readonly Dictionary<Expression,ParameterAccessor> _parameters = new Dictionary<Expression,ParameterAccessor>();
+		internal readonly Dictionary<Expression,ParameterAccessor> _parameters = new Dictionary<Expression,ParameterAccessor>();
 
 		public readonly HashSet<Expression> AsParameters = new HashSet<Expression>();
 
@@ -1265,9 +1265,9 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
-						p = accessor.Value;
+			foreach (var accessor in _parameters)
+				if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
+					p = accessor.Value;
 
 			if (p == null)
 			{
@@ -3213,16 +3213,19 @@ namespace LinqToDB.Linq.Builder
 
 		#region Eager Loading
 
-		private List<Tuple<Func<IDataContext, object?>, Func<IDataContext, Task<object?>>>>? _preambles;
+		private List<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>>? _preambles;
 
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
-		public int RegisterPreamble<T>(Func<IDataContext, T> func, Func<IDataContext, Task<T>> funcAsync)
+		public int RegisterPreamble<T>(Func<IDataContext, Expression, object?[]?, T> func, Func<IDataContext, Expression, object?[]?, Task<T>> funcAsync)
 		{
 			if (_preambles == null)
-				_preambles = new List<Tuple<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>>();
-			_preambles.Add(Tuple.Create<Func<IDataContext,object?>,Func<IDataContext,Task<object?>>>(dc => func(dc), async dc => await funcAsync(dc)) );
+				_preambles = new List<Tuple<Func<IDataContext, Expression, object?[]?, object?>,Func<IDataContext, Expression, object?[]?, Task<object?>>>>();
+			_preambles.Add(
+				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>(
+					(dc, e, ps) => func(dc, e, ps),
+					async (dc, e, ps) => await funcAsync(dc, e, ps)));
 			return _preambles.Count - 1;
 		}
 

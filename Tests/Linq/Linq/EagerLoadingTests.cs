@@ -803,5 +803,130 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+
+		#region issue 2196
+		public class EventScheduleItemBase
+		{
+			public EventScheduleItemBase()
+			{
+			}
+
+			[PrimaryKey]
+			[Column] public int  Id                        { get; set; }
+			[Column] public int  EventId                   { get; set; }
+			[Column] public bool IsActive                  { get; set; } = true;
+			[Column] public int? ParentEventScheduleItemId { get; set; }
+		}
+
+		[Table]
+		public class EventScheduleItem : EventScheduleItemBase
+		{
+			public EventScheduleItem()
+			{
+				Persons = new List<EventScheduleItemPerson>();
+				ChildSchedules = new List<EventScheduleItem>();
+			}
+
+			[Association(ThisKey = nameof(ParentEventScheduleItemId), OtherKey = nameof(Id))]
+			public virtual EventScheduleItem? ParentSchedule { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentEventScheduleItemId))]
+			public virtual List<EventScheduleItem> ChildSchedules { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EventScheduleItemPerson.EventScheduleItemId))]
+			public virtual List<EventScheduleItemPerson> Persons { get; set; } = null!;
+
+			public static EventScheduleItem[] Items { get; } =
+				new[]
+				{
+					new EventScheduleItem() { Id = 1, EventId = 1, IsActive = true, ParentEventScheduleItemId = 1 },
+					new EventScheduleItem() { Id = 2, EventId = 2, IsActive = true, ParentEventScheduleItemId = 2 }
+				};
+		}
+
+		[Table]
+		public class EventScheduleItemPerson
+		{
+			[Column] public int Id                    { get; set; }
+			[Column] public int EventSchedulePersonId { get; set; }
+			[Column] public int EventScheduleItemId   { get; set; }
+
+			[Association(ThisKey = nameof(EventSchedulePersonId), OtherKey = nameof(EventSchedulePerson.Id))]
+			public virtual EventSchedulePerson Person { get; set; } = null!;
+			[Association(ThisKey = nameof(EventScheduleItemId), OtherKey = nameof(EventScheduleItem.Id))]
+			public virtual EventScheduleItem ScheduleItem { get; set; } = null!;
+
+			public static EventScheduleItemPerson[] Items { get; } =
+				new[]
+				{
+					new EventScheduleItemPerson() { Id = 1, EventSchedulePersonId = 1, EventScheduleItemId = 1 },
+					new EventScheduleItemPerson() { Id = 2, EventSchedulePersonId = 2, EventScheduleItemId = 2 }
+				};
+		}
+
+		[Table]
+		public class EventSchedulePerson
+		{
+			public EventSchedulePerson()
+			{
+				EventScheduleItemPersons = new List<EventScheduleItemPerson>();
+			}
+
+			[Column] public int  Id             { get; set; }
+			[Column] public int? TicketNumberId { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EventScheduleItemPerson.EventSchedulePersonId))]
+			public virtual ICollection<EventScheduleItemPerson> EventScheduleItemPersons { get; set; }
+
+			public static EventSchedulePerson[] Items { get; } =
+				new[]
+				{
+					new EventSchedulePerson() { Id = 1, TicketNumberId = 1 },
+					new EventSchedulePerson() { Id = 2, TicketNumberId = 2 }
+				};
+		}
+
+		public class EventScheduleListModel : EventScheduleItemBase
+		{
+			public List<EventScheduleListPersonModel> Persons { get; set; } = new List<EventScheduleListPersonModel>();
+		}
+
+		public class EventScheduleListPersonModel
+		{
+			public int  Id                    { get; set; }
+			public int  EventSchedulePersonId { get; set; }
+			public int? TicketNumberId        { get; set; }
+		}
+
+		[Test]
+		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(EventScheduleItem.Items))
+			using (db.CreateLocalTable(EventScheduleItemPerson.Items))
+			using (db.CreateLocalTable(EventSchedulePerson.Items))
+			{
+				var eventId = 1;
+
+				var query = db.GetTable<EventScheduleItem>()
+					.Where(p => p.EventId == eventId && p.IsActive)
+					.Select(p => new EventScheduleListModel()
+					{
+						Id      = p.Id,
+						Persons = p.Persons.Select(pp => new EventScheduleListPersonModel()
+						{
+							EventSchedulePersonId = pp.EventSchedulePersonId,
+							Id                    = pp.Id,
+							TicketNumberId        = pp.Person.TicketNumberId
+						}).ToList()
+					});
+
+				var result = query.ToList();
+
+				Assert.That(result.Count, Is.EqualTo(1));
+				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
+			}
+		}
+		#endregion
 	}
 }
