@@ -17,16 +17,16 @@ namespace LinqToDB.Linq.Builder
 			return _accessors.Count - 1;
 		}
 
-		public Expression ParameterExpression { get; set; }
-		public object?[]? CompiledParameters { get; set; }
-		public IDataContext DataContext { get; set; }
+		public Expression?   ParameterExpression { get; set; }
+		public object?[]?    CompiledParameters  { get; set; }
+		public IDataContext? DataContext         { get; set; }
 
 		public static readonly MethodInfo GetValueMethodInfo =
 			MemberHelper.MethodOf<ParameterContainer>(c => c.GetValue(0));
 
 		public object? GetValue(int index)
 		{
-			if (_accessors == null || index >= _accessors.Count)
+			if (_accessors == null || index >= _accessors.Count || ParameterExpression == null || DataContext == null)
 				throw new InvalidOperationException();
 			
 			var accessor = _accessors[index];
