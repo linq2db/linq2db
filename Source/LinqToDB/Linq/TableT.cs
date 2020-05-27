@@ -54,7 +54,7 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_serverNameMethodInfo ?? (_serverNameMethodInfo = LinqExtensions.ServerNameMethodInfo.MakeGenericMethod(typeof(T))),
+						_serverNameMethodInfo ?? (_serverNameMethodInfo = Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T))),
 						Expression, Expression.Constant(value));
 
 					_serverName = value;

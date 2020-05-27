@@ -37,11 +37,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
-				var closureMappingSchema = builder.MappingSchema;
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, mi =>
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
 				{
 					var queryLambda         = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
-					var optimizationContext = new ExpressionTreeOptimizationContext(closureMappingSchema);
+					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;
@@ -164,11 +163,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
-				var closureExpr          = definedQueryMethod;
-				var closureMappingSchema = builder.MappingSchema;
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, mi =>
+				var closureExpr    = definedQueryMethod;
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
 				{
-					var optimizationContext = new ExpressionTreeOptimizationContext(closureMappingSchema);
+					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;

@@ -17,11 +17,13 @@ namespace LinqToDB.Linq.Builder
 	{
 		readonly HashSet<Expression> _visitedExpressions = new HashSet<Expression>();
 
+		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
 
-		public ExpressionTreeOptimizationContext(MappingSchema mappingSchema)
+		public ExpressionTreeOptimizationContext(IDataContext dataContext)
 		{
-			MappingSchema = mappingSchema;
+			DataContext   = dataContext;
+			MappingSchema = dataContext.MappingSchema;
 		}
 
 		public void ClearVisitedCache()
@@ -134,6 +136,7 @@ namespace LinqToDB.Linq.Builder
 						var queryable = (IQueryable)mc.EvaluateExpression()!;
 
 						if (!queryable.Expression.EqualsTo(mc,
+							DataContext,
 							new Dictionary<Expression, QueryableAccessor>(), null, null,
 							compareConstantValues: true))
 						{

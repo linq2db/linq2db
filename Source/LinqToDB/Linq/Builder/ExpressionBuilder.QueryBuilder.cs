@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>(), null, null))
+				if (expr.EqualsTo(item.Method, DataContext, new Dictionary<Expression,QueryableAccessor>(), null, null))
 					return item;
 			}
 
