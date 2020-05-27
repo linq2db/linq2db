@@ -1002,7 +1002,7 @@ namespace Tests.Data
 		[ActiveIssue(Configurations = new[]
 		{
 			ProviderName.MySqlConnector,
-			ProviderName.SapHana,
+			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSqlServer,
@@ -1164,7 +1164,8 @@ namespace Tests.Data
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
 #if NETCOREAPP2_1
-				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context.Contains("Oracle") && context.Contains("Managed")) ||
+				(context.Contains("Oracle") && context.Contains("Managed")) ||
+				context == ProviderName.SapHanaNative       ||
 #endif
 				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
@@ -1185,6 +1186,7 @@ namespace Tests.Data
 				// SQLCE: The connection object can not be enlisted in transaction scope.
 				// Sybase native: Only One Local connection allowed in the TransactionScope
 				// Oracle managed: Operation is not supported on this platform.
+				// SAP.Native: Operation is not supported on this platform.
 				// SqlServer: The operation is not valid for the state of the transaction.
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
