@@ -399,7 +399,7 @@ namespace Tests.Linq
 						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
 							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
-							Another = masterP_1.SubDetails
+							Another = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
 						}).ToArray()
 					};
 
@@ -471,7 +471,7 @@ namespace Tests.Linq
 					{
 						Detail = d,
 						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray(),
-						SubDetailsAssocaited = d.SubDetails
+						SubDetailsAssocaited = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
 					};
 
 				var result   = query.ToArray();
