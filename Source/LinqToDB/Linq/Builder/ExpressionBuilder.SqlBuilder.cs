@@ -292,7 +292,12 @@ namespace LinqToDB.Linq.Builder
 				while (mc != null)
 				{
 					if (!mc.IsQueryable())
+					{
+						if (mc.IsAssociation(MappingSchema))
+							return true;
+
 						return GetTableFunctionAttribute(mc.Method) != null;
+					}
 
 					mc = mc.Arguments[0] as MethodCallExpression;
 				}
@@ -1261,7 +1266,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 			foreach (var accessor in _parameters)
-				if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
+				if (accessor.Key.EqualsTo(expr, DataContext, new Dictionary<Expression, QueryableAccessor>(), null, null, compareConstantValues: true))
 					p = accessor.Value;
 
 			if (p == null)

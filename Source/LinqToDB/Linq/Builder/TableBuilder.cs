@@ -149,13 +149,12 @@ namespace LinqToDB.Linq.Builder
 
 			// Here we tell for Equality Comparer to compare optimized expressions 
 			//
-			var closureMappingSchema = builder.MappingSchema;
-			builder.AddQueryableMemberAccessors(memberInfo, mi =>
+			builder.AddQueryableMemberAccessors(new AccessorMember(memberInfo), builder.DataContext, (mi, dc) =>
 			{
-				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext);
+				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, dc);
 
 				// here we use light version of optimization, only for comparing trees
-				var optimizationContext = new ExpressionTreeOptimizationContext(closureMappingSchema);
+				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 				var optimizedExpr = optimizationContext.ExposeExpression(filtered.Expression);
 				    optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 				    optimizedExpr = optimizedExpr.OptimizeExpression()!;

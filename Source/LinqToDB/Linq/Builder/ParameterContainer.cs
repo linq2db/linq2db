@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 
 		public object? GetValue(int index)
 		{
-			if (_accessors == null || index >= _accessors.Count)
+			if (_accessors == null || index >= _accessors.Count || ParameterExpression == null || DataContext == null)
 				throw new InvalidOperationException();
 			
 			var accessor = _accessors[index];

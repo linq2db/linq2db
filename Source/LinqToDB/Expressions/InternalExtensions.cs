@@ -70,22 +70,25 @@ namespace LinqToDB.Expressions
 		#region EqualsTo
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2,
+			IDataContext                                     dataContext,
 			Dictionary<Expression, QueryableAccessor>        queryableAccessorDic,
 			Dictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
 			Dictionary<Expression, Expression>?              queryDependedObjects,
 			bool compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, new EqualsToInfo(queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues));
+			return EqualsTo(expr1, expr2, new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues));
 		}
 
 		class EqualsToInfo
 		{
 			public EqualsToInfo(
+				IDataContext                                     dataContext,
 				Dictionary<Expression, QueryableAccessor>        queryableAccessorDic,
 				Dictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
 				Dictionary<Expression, Expression>?              queryDependedObjects,
 				bool                                             compareConstantValues)
 			{
+				DataContext                = dataContext;
 				QueryableAccessorDic       = queryableAccessorDic;
 				QueryableMemberAccessorDic = queryableMemberAccessorDic;
 				QueryDependedObjects       = queryDependedObjects;
@@ -93,6 +96,7 @@ namespace LinqToDB.Expressions
 			}
 
 			public HashSet<Expression>                              Visited                    { get; } = new HashSet<Expression>();
+			public IDataContext                                     DataContext                { get; }
 			public Dictionary<Expression, QueryableAccessor>        QueryableAccessorDic       { get; }
 			public Dictionary<MemberInfo, QueryableMemberAccessor>? QueryableMemberAccessorDic { get; }
 			public Dictionary<Expression, Expression>?              QueryDependedObjects       { get; }
@@ -112,7 +116,7 @@ namespace LinqToDB.Expressions
 			if (info.MemberCompareCache == null ||
 			    !info.MemberCompareCache.TryGetValue(memberInfo, out var compareResult))
 			{
-				compareResult = accessor.Expression.EqualsTo(accessor.Accessor(memberInfo), info);
+				compareResult = accessor.Expression.EqualsTo(accessor.Accessor(memberInfo, info.DataContext), info);
 				info.MemberCompareCache ??= new Dictionary<MemberInfo, bool>(MemberInfoComparer.Instance);
 				info.MemberCompareCache.Add(memberInfo, compareResult);
 			}
@@ -1297,6 +1301,24 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+
+		public static bool IsEvaluable(Expression? expression)
+		{
+			if (expression == null)
+				return true;
+			switch (expression.NodeType)
+			{
+				case ExpressionType.Convert:
+					return IsEvaluable(((UnaryExpression) expression).Operand);
+				case ExpressionType.Constant:
+					return true;
+				case ExpressionType.MemberAccess:
+					return IsEvaluable(((MemberExpression) expression).Expression);
+				default:
+					return false;
+			}
+		}
+
 		/// <summary>
 		/// Optimizes expression context by evaluating constants and simplifying boolean operations. 
 		/// </summary>
@@ -1323,36 +1345,46 @@ namespace LinqToDB.Expressions
 					else if (e is UnaryExpression unaryExpression)
 					{
 						newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
-					}
-					else if (e is MemberExpression memberExpression)
-					{
-						newExpr = memberExpression.Update(OptimizeExpression(memberExpression.Expression));
+						if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
+						{
+							// remove double convert
+							newExpr = Expression.Convert(
+								((UnaryExpression) ((UnaryExpression) newExpr).Operand).Operand, newExpr.Type);
+						}
 					}
 
-					switch (newExpr)
+					if (IsEvaluable(newExpr))
 					{
-						case NewArrayExpression _:
+						newExpr = newExpr.NodeType == ExpressionType.Constant
+							? newExpr
+							: Expression.Constant(EvaluateExpression(newExpr));
+					}					
+					else
+					{
+						switch (newExpr)
+						{
+							case NewArrayExpression _:
 							{
-								return new TransformInfo(e, true);
+								return new TransformInfo(newExpr, true);
 							}
-						case UnaryExpression unary when unary.Operand.NodeType == ExpressionType.Constant:
+							case UnaryExpression unary when IsEvaluable(unary.Operand):
 							{
 								newExpr = Expression.Constant(EvaluateExpression(unary));
 								break;
 							}
-						case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
+							case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
 							{
 								newExpr = Expression.Constant(EvaluateExpression(me));
 								break;
 							}
-						case BinaryExpression be when be.Left.NodeType == ExpressionType.Constant && be.Right.NodeType == ExpressionType.Constant:
+							case BinaryExpression be when IsEvaluable(be.Left) && IsEvaluable(be.Right):
 							{
 								newExpr = Expression.Constant(EvaluateExpression(be));
 								break;
 							}
-						case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
+							case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
 							{
-								if (be.Left.NodeType == ExpressionType.Constant)
+								if (IsEvaluable(be.Left))
 								{
 									var leftBool = EvaluateExpression(be.Left) as bool?;
 									if (leftBool == true)
@@ -1360,8 +1392,7 @@ namespace LinqToDB.Expressions
 									else if (leftBool == false)
 										newExpr = Expression.Constant(false);
 								}
-								else
-								if (be.Right.NodeType == ExpressionType.Constant)
+								else if (IsEvaluable(be.Right))
 								{
 									var rightBool = EvaluateExpression(be.Right) as bool?;
 									if (rightBool == true)
@@ -1369,11 +1400,12 @@ namespace LinqToDB.Expressions
 									else if (rightBool == false)
 										newExpr = Expression.Constant(false);
 								}
+
 								break;
 							}
-						case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
+							case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
 							{
-								if (be.Left.NodeType == ExpressionType.Constant)
+								if (IsEvaluable(be.Left))
 								{
 									var leftBool = EvaluateExpression(be.Left) as bool?;
 									if (leftBool == false)
@@ -1381,8 +1413,7 @@ namespace LinqToDB.Expressions
 									else if (leftBool == true)
 										newExpr = Expression.Constant(true);
 								}
-								else
-								if (be.Right.NodeType == ExpressionType.Constant)
+								else if (IsEvaluable(be.Right))
 								{
 									var rightBool = EvaluateExpression(be.Right) as bool?;
 									if (rightBool == false)
@@ -1390,8 +1421,10 @@ namespace LinqToDB.Expressions
 									else if (rightBool == true)
 										newExpr = Expression.Constant(true);
 								}
+
 								break;
 							}
+						}
 					}
 
 					if (newExpr.Type != e.Type)

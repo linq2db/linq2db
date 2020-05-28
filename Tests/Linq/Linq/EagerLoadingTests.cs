@@ -386,7 +386,8 @@ namespace Tests.Linq
 						master_1.Id1,
 						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
+							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+							Another = masterP_1.SubDetails
 						}).ToArray()
 					};
 
@@ -397,7 +398,8 @@ namespace Tests.Linq
 						master_1.Id1,
 						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
+							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+							Another = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
 						}).ToArray()
 					};
 
@@ -459,7 +461,8 @@ namespace Tests.Linq
 					select new
 					{
 						Detail = d,
-						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray()
+						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+						SubDetailsAssocaited = d.SubDetails
 					};
 
 				var expectedQuery = from m in masterRecords.Take(20)
@@ -467,7 +470,8 @@ namespace Tests.Linq
 					select new
 					{
 						Detail = d,
-						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
+						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+						SubDetailsAssocaited = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -538,12 +542,13 @@ namespace Tests.Linq
 		[Test]
 		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var (masterRecords, detailRecords) = GenerateData();
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
 			{
 				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
 					join d in detail on m.Id1 equals d.MasterId into j
@@ -552,6 +557,8 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
+						DetailAssociated = dd.SubDetails,
+						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
 						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
@@ -562,6 +569,8 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
+						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
+						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
 						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 

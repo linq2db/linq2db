@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>(), null, null))
+				if (expr.EqualsTo(item.Method, DataContext, new Dictionary<Expression,QueryableAccessor>(), null, null))
 					return item;
 			}
 
@@ -864,7 +864,7 @@ namespace LinqToDB.Linq.Builder
 										var childType  = me.Type;
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.Builder,
-											me.Member, associationContext.Descriptor, parentType, parentType, childType, false,
+											new AccessorMember(me), associationContext.Descriptor, parentType, parentType, childType, false,
 											false, null, out _);
 
 										var dcConst = Expression.Constant(context.Builder.DataContext.Clone(true));
@@ -892,7 +892,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression? AssociationRoot;
-		public Stack<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
+		public Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 

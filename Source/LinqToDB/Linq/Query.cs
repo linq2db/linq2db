@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
 				ContextType            == dataContext.GetType()        &&
-				Expression!.EqualsTo(expr, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
+				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
@@ -92,13 +92,13 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		internal Expression AddQueryableMemberAccessors(MemberInfo memberInfo, Func<MemberInfo,Expression> qe)
+		internal Expression AddQueryableMemberAccessors(MemberInfo memberInfo, IDataContext dataContext, Func<MemberInfo, IDataContext, Expression> qe)
 		{
 			if (_queryableMemberAccessorDic != null && _queryableMemberAccessorDic.TryGetValue(memberInfo, out var e))
 				return e.Expression;
 
 			e = new QueryableMemberAccessor { Accessor = qe };
-			e.Expression = e.Accessor(memberInfo);
+			e.Expression = e.Accessor(memberInfo, dataContext);
 
 			_queryableMemberAccessorDic ??= new Dictionary<MemberInfo, QueryableMemberAccessor>(MemberInfoComparer.Instance);
 			_queryableMemberAccessorDic.Add(memberInfo, e);

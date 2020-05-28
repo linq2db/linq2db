@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
+	[DebuggerDisplay("{this}")]
 	public class SelectQuery : ISqlTableSource
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]

@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
 
-			_optimizationContext = new ExpressionTreeOptimizationContext(MappingSchema);
+			_optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
 			
@@ -1394,10 +1394,10 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		public Expression AddQueryableMemberAccessors(MemberInfo memberInfo,
-			Func<MemberInfo, Expression> qe)
+		public Expression AddQueryableMemberAccessors(AccessorMember memberInfo, IDataContext dataContext,
+			Func<MemberInfo, IDataContext, Expression> qe)
 		{
-			return _query.AddQueryableMemberAccessors(memberInfo, qe);
+			return _query.AddQueryableMemberAccessors(memberInfo.MemberInfo, dataContext, qe);
 		}
 
 

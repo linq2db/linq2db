@@ -167,6 +167,36 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		static Expression? ConstructMemberPath(List<AccessorMember> memberPath, Expression ob, bool throwOnError)
+		{
+			if (memberPath.Count == 0)
+				return null;
+
+			Expression result = ob;
+			for (int i = 0; i < memberPath.Count; i++)
+			{
+				var memberInfo = memberPath[i];
+				if (result.Type != memberInfo.MemberInfo.DeclaringType)
+				{
+					if (throwOnError)
+						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
+					return null;
+				}
+				if (memberInfo.MemberInfo.IsMethodEx())
+				{
+					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
+					if (methodInfo.IsStatic)
+						result = Expression.Call(methodInfo, memberInfo.Arguments.ToArray());
+					else
+						result = Expression.Call(result, methodInfo, memberInfo.Arguments.ToArray());
+				}
+				else
+					result = Expression.MakeMemberAccess(result, memberInfo.MemberInfo);
+			}
+
+			return result;
+		}
+
 		static Expression? ConstructMemberPath(List<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
 			if (memberPath.Count == 0)
@@ -610,16 +640,51 @@ namespace LinqToDB.Linq.Builder
 			
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
 
-			
-			var reversedAssociationPath = new List<Tuple<MemberInfo, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath ?? throw new InvalidOperationException());
+
+			var reversedAssociationPath = builder.AssociationPath == null
+				? new List<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>()
+				: new List<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath);
+
 			reversedAssociationPath.Reverse();
 
-			var associationPath = new List<MemberInfo>(reversedAssociationPath.Select(a => a.Item1));
+			var projectionVariant = false;
+
+			if (reversedAssociationPath.Count == 0)
+			{
+				reversedAssociationPath.Add(new Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>(
+					new AccessorMember(expression),
+					context,
+					null
+				));
+
+				projectionVariant = true;
+			}
+
+			var associationPath = new List<AccessorMember>(reversedAssociationPath.Select(a => a.Item1));
 
 
-			var extractContext = reversedAssociationPath[0].Item2;
-			var associationParentType = associationPath[0].DeclaringType;
-			var loadWithItems  = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
+			var extractContext        = reversedAssociationPath[0].Item2;
+			var associationParentType = associationPath[0].MemberInfo.DeclaringType;
+			var loadWithItems         = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
+
+			if (!mainQueryElementType.IsSameOrParentOf(associationParentType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
+			{ 
+				var parentExpr = builder.AssociationRoot;
+
+				if (parentExpr == null)
+				{
+					throw new NotImplementedException();
+				}
+
+				if (projectionVariant)
+					detailQuery = parentExpr;
+				else 
+					detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
+
+				var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailQuery);
+
+				return result;
+			}
 
 			Expression           resultExpression;
 			Expression           finalExpression;
@@ -630,6 +695,27 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
 					throw new InvalidOperationException("Unexpected Main Query");
+
+				var detailProp   = ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
+
+				if (!detailProp.Type.IsSameOrParentOf(associationParentType))
+				{ 
+					var parentExpr = builder.AssociationRoot;
+
+					if (parentExpr == null)
+					{
+						throw new NotImplementedException();
+					}
+
+					if (projectionVariant)
+						detailQuery = parentExpr;
+					else 
+						detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
+
+					var result = GenerateDetailsExpression(context.Parent!, builder.MappingSchema, detailQuery);
+
+					return result;
+				}
 
 				var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
 				var envelopeCreateMethod = (MemberInitExpression)envelopeCreateLambda.Body;
@@ -649,7 +735,6 @@ namespace LinqToDB.Linq.Builder
 						key.ForSelect = correctLookup[key.ForSelect].First();
 				}
 
-				var detailProp   = ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
 				var subMasterObj = detailExpression;
 				foreach (var key in subMasterKeys)
 				{
@@ -670,7 +755,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 			
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
@@ -709,7 +794,7 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
 			}
@@ -993,12 +1078,17 @@ namespace LinqToDB.Linq.Builder
 				var searchExpression = queryableDetail;
 
 				// handling case with association
-				while (searchExpression.NodeType == ExpressionType.MemberAccess)
-					searchExpression = ((MemberExpression)searchExpression).Expression;
+				for (;;)
+				{
+					detailLambda = FindContainingLambda(initialMainQuery, searchExpression);
+					if (detailLambda != null)
+						break;
 
-				detailLambda = FindContainingLambda(initialMainQuery, searchExpression);
-				if (detailLambda == null)
-					throw new NotImplementedException();
+					if (searchExpression.NodeType == ExpressionType.MemberAccess)
+						searchExpression = ((MemberExpression)searchExpression).Expression;
+					else
+						throw new NotImplementedException();
+				}
 
 				CollectDependencies(queryableDetail, dependencies, dependencyParameters);
 
@@ -1033,7 +1123,7 @@ namespace LinqToDB.Linq.Builder
 				var queryableAccessorDic = new Dictionary<Expression, QueryableAccessor>();
 				foreach (var info in keysInfoByParams)
 				{
-					if (!keysInfo.Any(_ => _.ForSelect.EqualsTo(info.ForSelect, queryableAccessorDic, null, null)))
+					if (!keysInfo.Any(_ => _.ForSelect.EqualsTo(info.ForSelect, builder.DataContext, queryableAccessorDic, null, null)))
 						keysInfo.Add(info);
 				}
 
