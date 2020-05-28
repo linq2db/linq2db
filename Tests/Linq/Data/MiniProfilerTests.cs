@@ -1126,7 +1126,7 @@ namespace Tests.Data
 
 				void TestBulkCopy()
 				{
-					using (db.CreateTempTable<OracleBulkCopyTable>())
+					using (db.CreateLocalTable<OracleBulkCopyTable>())
 					{
 						long copied = 0;
 						var options = new BulkCopyOptions()

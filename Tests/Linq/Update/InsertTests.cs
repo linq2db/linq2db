@@ -1077,7 +1077,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configurations = new[]
+		{
+			TestProvName.AllOracleNative
+#if NETCOREAPP2_1
+				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
+				, ProviderName.Access
+#endif
+		})]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

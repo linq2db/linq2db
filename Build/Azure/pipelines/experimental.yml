@@ -121,8 +121,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: ne(variables['Build.SourceBranchName'], 'release')
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -209,8 +209,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -226,15 +226,10 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
-        Oracle11:
-          title: 'Oracle 11g XE'
-          config: 'oracle11'
-          script: 'oracle11.sh'
-          docker: 'true'
-        Oracle12:
-          title: 'Oracle 12c'
-          config: 'oracle12'
-          script: 'oracle12.sh'
+        SqlServer2017_MS:
+          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2017.ms'
+          script: 'mac.sqlserver.2017.sh'
           docker: 'true'
 
     steps:
@@ -293,10 +288,9 @@ stages:
       condition: and(succeeded(), variables['script'])
       displayName: Setup tests
 
-    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx /Diag:diag.logz /Blame
       condition: succeeded()
       displayName: '$(title)'
-
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -304,6 +298,14 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
         testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        archiveFilePatterns: '**/*.logz'
+        path: '$(System.DefaultWorkingDirectory)'
+        artifact: 'mac_test_logs'
+      displayName: Publish test diagnostics
+
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
@@ -315,19 +317,19 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Access_ODBC_ACE:
-          title: 'Access ODBC ACE'
-          config: 'access.odbc.ace'
-          script: 'access.ace.x64.cmd'
-#        Access_ACE:
-#          title: 'Access ACE (x64)'
-#          config: 'access.ace'
+#        Access_ODBC_ACE:
+#          title: 'Access ODBC ACE'
+#          config: 'access.odbc.ace'
 #          script: 'access.ace.x64.cmd'
+        Access_ACE:
+          title: 'Access OleDb ACE'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
     steps:
     - checkout: none
 
@@ -368,9 +370,16 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1 /Diag:diag.logz /Blame'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        archiveFilePatterns: '**/*.logz'
+        path: '$(System.DefaultWorkingDirectory)'
+        artifact: 'win_core_test_logs'
+      displayName: Publish test diagnostics
 
 ###########################
 #  Tests: Windows (NETFX) #
