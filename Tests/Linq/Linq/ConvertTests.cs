@@ -606,7 +606,15 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
+		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit",
+			Configurations = new[]
+			{
+				ProviderName.DB2
+#if NETCOREAPP2_1
+				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
+				, ProviderName.Access
+#endif
+})]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
@@ -702,7 +710,7 @@ namespace Tests.Linq
 			}
 		}
 
-		#region redundant convert https://github.com/linq2db/linq2db/issues/2039
+#region redundant convert https://github.com/linq2db/linq2db/issues/2039
 
 		[Table]
 		public class IntegerConverts
@@ -1277,6 +1285,6 @@ namespace Tests.Linq
 				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
-		#endregion
+#endregion
 	}
 }
