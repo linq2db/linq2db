@@ -104,9 +104,16 @@ namespace LinqToDB.Linq
 
 					var expression = TransformMapperExpression(context, dataReader, dataReaderType, true);
 
-					mapperInfo.Mapper = expression.Compile();
+					// create new instance to avoid race conditions without locks
+					var expr   = mapperInfo.MapperExpression;
+					mapperInfo = new ReaderMapperInfo()
+					{
+						MapperExpression = expr,
+						Mapper           = expression.Compile(),
+						IsFaulted        = true
+					};
 
-					mapperInfo.IsFaulted = true;
+					_mappers[dataReaderType] = mapperInfo;
 
 					return mapperInfo.Mapper(queryRunner, dataReader);
 				}

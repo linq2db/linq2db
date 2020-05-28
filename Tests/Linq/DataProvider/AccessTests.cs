@@ -394,6 +394,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataSources(ProviderName.Access)] string context)
 		{
+			var cs = DataConnection.GetConnectionString(context);
+			if (!cs.Contains("Microsoft.Jet.OLEDB"))
+				Assert.Inconclusive("Test requires JET provider");
+
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
 
