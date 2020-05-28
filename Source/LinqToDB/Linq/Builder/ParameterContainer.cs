@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			
 			var accessor = _accessors[index];
 			
-			return accessor.Accessor(ParameterExpression, DataContext, CompiledParameters);
+			return accessor.Accessor(ParameterExpression!, DataContext, CompiledParameters);
 		}
 	}
 }

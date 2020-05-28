@@ -595,7 +595,7 @@ WHERE
 		}
 
 		[Test]
-		public void SelectAssociations([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new[]
