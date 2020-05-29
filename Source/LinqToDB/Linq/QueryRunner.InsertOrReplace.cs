@@ -109,7 +109,7 @@ namespace LinqToDB.Linq
 						ei.Queries[0].Parameters.Add(param);
 
 						if (supported)
-							fieldDic.Add(field, param = GetParameter(typeof(T), dataContext, field));
+							fieldDic.Add(field, param);
 					}
 
 					insertOrUpdateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
