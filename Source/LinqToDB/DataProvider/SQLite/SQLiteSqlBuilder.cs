@@ -59,39 +59,41 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+						return sb.Append(value);
 
-					return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && value[0] == '[')
-						return value;
+						return sb.Append(value);
 
 					if (value.IndexOf('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
-					return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
-					return value.Length > 0 && value[0] == '@'? value.Substring(1): value;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

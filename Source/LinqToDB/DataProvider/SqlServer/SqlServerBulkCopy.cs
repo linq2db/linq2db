@@ -5,6 +5,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using System.Data;
+	using System.Text;
 	using Data;
 	using SqlProvider;
 
@@ -69,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						bc.DestinationTableName = tableName;
 
 						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField)));
+							bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, sb.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
 						TraceAction(
 							dataConnection,

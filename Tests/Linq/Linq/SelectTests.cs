@@ -1597,9 +1597,8 @@ namespace Tests.Linq
 			[Column] public string? Prop { get; set; }
 		}
 
-		[ActiveIssue(860)]
 		[Test]
-		public void Issue860Test([DataSources] string context)
+		public void Issue860Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table860_1>())

@@ -76,6 +76,11 @@ namespace LinqToDB.Linq.Builder
 									return TargetContext.ConvertToSql(expression, level, flags);
 								}
 
+								if (root is ContextRefExpression contextRef)
+								{
+									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
+								}
+
 								break;
 							}
 					}

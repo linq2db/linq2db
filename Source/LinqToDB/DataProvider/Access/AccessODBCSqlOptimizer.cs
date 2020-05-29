@@ -9,9 +9,9 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
-			statement = base.Finalize(statement);
+			statement = base.Finalize(statement, inlineParameters);
 
 			statement = WrapParameters(statement);
 
@@ -28,8 +28,7 @@
 			if (statement.QueryType != QueryType.Select)
 				return statement;
 
-			var visitor = new QueryVisitor();
-			statement = visitor.Convert(statement, e =>
+			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter && visitor.ParentElement is SqlColumn)
 					return new SqlExpression(p.Type.SystemType, "CVar({0})", Precedence.Primary, p);

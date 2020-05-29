@@ -472,7 +472,7 @@ namespace Tests.xUpdate
 						t => new Person()
 						{
 							FirstName = "Updated",
-							LastName = t.Patient!.Diagnosis
+							LastName = t.Patient!.Person.Patient!.Diagnosis
 						})
 					.Merge();
 

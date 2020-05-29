@@ -109,9 +109,10 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.StringBuilder.AppendFormat("\tINTO {0} (", helper.TableName);
 
 				foreach (var column in helper.Columns)
-					helper.StringBuilder
-						.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-						.Append(", ");
+				{
+					helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+					helper.StringBuilder.Append(", ");
+				}
 
 				helper.StringBuilder.Length -= 2;
 
@@ -144,9 +145,10 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
 
 			foreach (var column in helper.Columns)
-				helper.StringBuilder
-					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-					.Append(", ");
+			{
+				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+				helper.StringBuilder.Append(", ");
+			}
 
 			helper.StringBuilder.Length -= 2;
 
@@ -193,11 +195,13 @@ namespace LinqToDB.DataProvider.Oracle
 				.Append("(");
 
 			foreach (var column in helper.Columns)
+			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t")
-					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-					.Append(",");
+					.Append("\t");
+				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+				helper.StringBuilder.Append(",");
+			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder

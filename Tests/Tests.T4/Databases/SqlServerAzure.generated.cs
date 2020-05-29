@@ -47,8 +47,8 @@ namespace TestAzureSQL
 		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
-		public ITable<SameTableName>            SameTableNames0          { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName> SameTableNames1          { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }

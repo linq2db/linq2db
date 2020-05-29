@@ -18,7 +18,7 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
 		{
 			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, queryHints);
 		}
@@ -588,7 +588,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
@@ -1229,7 +1229,14 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
-					case QueryElementType.GroupByClause : Append(((SqlGroupByClause)e).Items);           break;
+					case QueryElementType.GroupByClause :
+						{
+							Append((int)((SqlGroupByClause)e).GroupingType);
+							Append(((SqlGroupByClause)e).Items);
+							break;
+						}
+
+					case QueryElementType.GroupingSet   : Append(((SqlGroupingSet)e).Items);             break;
 					case QueryElementType.OrderByClause : Append(((SqlOrderByClause)e).Items);           break;
 
 					case QueryElementType.OrderByItem :
@@ -2013,7 +2020,8 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
-					case QueryElementType.GroupByClause : obj = new SqlGroupByClause(ReadArray<ISqlExpression>()!);                break;
+					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
+					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet(ReadArray<ISqlExpression>()!);                  break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
 
 					case QueryElementType.OrderByItem :

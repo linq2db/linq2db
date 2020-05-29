@@ -194,7 +194,7 @@ namespace LinqToDB.SqlProvider
 
 					first = false;
 					AppendIndent();
-					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				}
 
 				--Indent;
@@ -266,9 +266,10 @@ namespace LinqToDB.SqlProvider
 
 					// add aliases only for first row
 					if (!MergeSupportsColumnAliasesInSource && i == 0)
-						StringBuilder
-							.Append(" ")
-							.Append(Convert(sourceFields[j].PhysicalName, ConvertType.NameToQueryField));
+					{
+						StringBuilder.Append(" ");
+						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+					}
 				}
 
 				if (FakeTable != null)
@@ -299,7 +300,10 @@ namespace LinqToDB.SqlProvider
 					BuildExpression(new SqlValue(field.Type!.Value, null));
 
 				if (!MergeSupportsColumnAliasesInSource)
-					StringBuilder.Append(" ").Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+				{
+					StringBuilder.Append(" ");
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
 			}
 
 			StringBuilder

@@ -441,7 +441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)
-				return (udtSchema != null ? Provider.Adapter.QuoteIdentifier(udtSchema) + '.' : null) + Provider.Adapter.QuoteIdentifier(udtName);
+				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
 
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}

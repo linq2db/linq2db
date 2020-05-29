@@ -1392,7 +1392,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1431,7 +1431,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1535,7 +1535,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1588,7 +1588,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,

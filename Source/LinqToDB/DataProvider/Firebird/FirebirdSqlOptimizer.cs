@@ -11,11 +11,11 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(statement, inlineParameters);
 
 			statement = WrapParameters(statement);
 
@@ -85,8 +85,7 @@
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
-			var visitor = new QueryVisitor();
-			statement = visitor.Convert(statement, e =>
+			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)
 				{

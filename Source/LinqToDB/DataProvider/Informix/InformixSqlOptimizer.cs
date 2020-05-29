@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Informix
 						new QueryVisitor().VisitAll(select, ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(statement, inlineParameters);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

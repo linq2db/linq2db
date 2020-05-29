@@ -8,7 +8,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
-	using System.Diagnostics.CodeAnalysis;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -213,6 +212,7 @@ namespace LinqToDB.Linq.Builder
 				if (_checkNullIndex < 0)
 				{
 					_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
+					SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
 

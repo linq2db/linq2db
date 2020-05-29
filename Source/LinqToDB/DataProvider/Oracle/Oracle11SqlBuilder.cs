@@ -257,12 +257,12 @@ namespace LinqToDB.DataProvider.Oracle
 					c == '_');
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return ":" + value;
+					return sb.Append(':').Append(value);
 				// needs proper list of reserved words and name validation
 				// something like we did for Firebird
 				// right now reserved words list contains garbage
@@ -270,12 +270,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
 					if (!IsValidIdentifier(value))
-						return '"' + value + '"';
+						return sb.Append('"').Append(value).Append('"');
 
-					return value;
+					return sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

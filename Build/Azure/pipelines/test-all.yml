@@ -2,8 +2,6 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  artifact_linq2db_binaries: 'linq2db_binaries'
-  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
@@ -118,18 +116,6 @@ stages:
         artifact: '$(netcore21_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.1
 
-    - task: PublishPipelineArtifact@1
-      inputs:
-        path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-        artifact: '$(artifact_linq2db_binaries)'
-      displayName: Publish linq2db build results
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-        artifact: '$(artifact_linq2db_tools_binaries)'
-      displayName: Publish linq2db.Tools build results
-
 ##############################################################################################
 #  Tests: Windows (NETFX 4.6)                                                                #
 #  Windows 2019 (for Win2019 docker images, chocolatey-dependent tests and non-docker tests) #
@@ -149,10 +135,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        Access_JET:
+        Access_OLEDB_JET:
           title: 'Access Jet'
           config: 'access'
-        Access_ACE:
+        Access_OLEDB_ACE:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
@@ -300,6 +286,10 @@ stages:
         Access_ODBC_ACE:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+        Access_OLEDB_ACE:
+          title: 'Access OleDb ACE'
+          config: 'access.ace'
           script: 'access.ace.x64.cmd'
         SQLite:
           title: 'SQLite'

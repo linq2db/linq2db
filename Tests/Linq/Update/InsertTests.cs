@@ -292,6 +292,26 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Insert4String([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var insertable = db.Child
+					.Where(c => c.ChildID == 11)
+					.Into(db.Child)
+					.Value(c => c.ParentID, c => c.ParentID)
+					.Value(c => c.ChildID, () => id);
+
+				var sql = insertable.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Does.Contain("INSERT"));
+			}
+		}
+
+		[Test]
 		public async Task Insert4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1057,7 +1077,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configurations = new[]
+		{
+			TestProvName.AllOracleNative
+#if NETCOREAPP2_1
+				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
+				, ProviderName.Access
+#endif
+		})]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

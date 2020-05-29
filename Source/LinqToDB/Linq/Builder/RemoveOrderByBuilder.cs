@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using Reflection;
+
 	class RemoveOrderByBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("RemoveOrderBy");
+			return methodCall.IsSameGenericMethod(Methods.LinqToDB.RemoveOrderBy);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

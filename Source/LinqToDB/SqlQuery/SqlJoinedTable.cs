@@ -79,6 +79,9 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
+			if (IsWeak)
+				sb.Append("WEAK ");
+
 			switch (JoinType)
 			{
 				case JoinType.Inner      : sb.Append("INNER JOIN ");  break;

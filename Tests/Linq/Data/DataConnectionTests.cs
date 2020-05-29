@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -15,9 +17,12 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+	using Microsoft.Extensions.DependencyInjection;
+
 	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
 	using System.Transactions;
+	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
 	using Model;
@@ -26,7 +31,7 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([NorthwindDataContext] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -265,6 +270,61 @@ namespace Tests.Data
 			{
 				await conn.SelectAsync(() => 1);
 			}
+		}
+
+		[Test]
+		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>();
+			Assert.True(con is DataConnection);
+			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<DataConnection>();
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		public class DbConnection1 : DataConnection
+		{
+			public DbConnection1(LinqToDbConnectionOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection2 : DataConnection
+		{
+			public DbConnection2(LinqToDbConnectionOptions<DbConnection2> options) : base(options)
+			{
+			}
+		}
+
+		[Test]
+		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDbContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
+
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetService<DbConnection1>();
+			var c2 = serviceProvider.GetService<DbConnection2>();
+			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
+			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+		}
+
+		[Test]
+		public void TestConstructorThrowsWhenGivenInvalidSettings()
+		{
+			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDbConnectionOptionsBuilder().Build<DbConnection2>()));
 		}
 
 		// informix connection limits interfere with test
@@ -675,15 +735,6 @@ namespace Tests.Data
 					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
 				}
 
-				db.OnTraceConnection = null;
-
-				Assert.IsNull(db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.IsNull(cdb.OnTraceConnection);
-				}
-
 				db.OnTraceConnection = DataConnection.OnTrace;
 
 				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
@@ -948,10 +999,10 @@ namespace Tests.Data
 
 		// strange provider errors, review in v3 with more recent providers
 		// also some providers remove credentials from connection string in non-design mode
-		[ActiveIssue(Configurations = new[] 
-		{ 
+		[ActiveIssue(Configurations = new[]
+		{
 			ProviderName.MySqlConnector,
-			ProviderName.SapHana,
+			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSqlServer,
@@ -1113,7 +1164,8 @@ namespace Tests.Data
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
 #if NETCOREAPP2_1
-				(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context.Contains("Oracle") && context.Contains("Managed")) ||
+				(context.Contains("Oracle") && context.Contains("Managed")) ||
+				context == ProviderName.SapHanaNative       ||
 #endif
 				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
@@ -1134,6 +1186,7 @@ namespace Tests.Data
 				// SQLCE: The connection object can not be enlisted in transaction scope.
 				// Sybase native: Only One Local connection allowed in the TransactionScope
 				// Oracle managed: Operation is not supported on this platform.
+				// SAP.Native: Operation is not supported on this platform.
 				// SqlServer: The operation is not valid for the state of the transaction.
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}

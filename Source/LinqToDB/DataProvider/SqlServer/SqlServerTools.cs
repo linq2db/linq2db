@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using System.Collections.Concurrent;
+	using System.Text;
 	using Common;
 	using Configuration;
 	using Data;
@@ -135,9 +136,23 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
-		internal static string BasicQuoteIdentifier(string identifier)
+		internal static string QuoteIdentifier(string identifier)
 		{
-			return '[' + identifier.Replace("]", "]]") + ']';
+			return QuoteIdentifier(new StringBuilder(), identifier).ToString();
+		}
+
+		internal static StringBuilder QuoteIdentifier(StringBuilder sb, string identifier)
+		{
+			sb.Append("[");
+
+			if (identifier.Contains("]"))
+				sb.Append(identifier.Replace("]", "]]"));
+			else
+				sb.Append(identifier);
+
+			sb.Append("]");
+
+			return sb;
 		}
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)

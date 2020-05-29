@@ -37,11 +37,10 @@ namespace LinqToDB.Linq.Builder
 					mergeContext.AddTargetParameter(condition.Parameters[0]);
 					mergeContext.AddSourceParameter(condition.Parameters[1]);
 
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
-						conditionExpr,
-						statement.On.Conditions,
-						false);
+					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
+						condition);
+
+					statement.On.Conditions.AddRange(filterExpression.Conditions);
 				}
 				else if (methodCall.Arguments.Count == 3)
 				{
@@ -120,11 +119,10 @@ namespace LinqToDB.Linq.Builder
 
 					var condition = Expression.Lambda(ex, pTarget, pSource);
 
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
-						ex,
-						statement.On.Conditions,
-						false);
+					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
+						condition);
+
+					statement.On.Conditions.AddRange(filterExpression.Conditions);
 				}
 
 				mergeContext.SourceContext.MatchBuilt();
