@@ -2014,26 +2014,24 @@ namespace Tests.xUpdate
 		[Table("test_insert_or_replace")]
 		public partial class TestInsertOrReplaceInfo
 		{
-			[Column("id"), PrimaryKey, NotNull]                   public long      Id        { get; set; } // bigint
+			[Column("id"), PrimaryKey, NotNull]                   public int       Id        { get; set; } // bigint
 			[Column("name"), Nullable]                            public string?   Name      { get; set; } // character varying(100)
-			[Column("created", SkipOnUpdate = true), NotNull]     public DateTime  Created   { get; set; } // timestamp (6) without time zone
 			[Column("created_by", SkipOnUpdate = true), NotNull]  public string?   CreatedBy { get; set; } // character varying(100)
-			[Column("updated", SkipOnInsert = true), Nullable]    public DateTime? Updated   { get; set; } // timestamp (6) without time zone
 			[Column("updated_by", SkipOnInsert = true), Nullable] public string?   UpdatedBy { get; set; } // character varying(100)
 		}
 
 		[Test]
-		public void Issue2243([DataSources] string context)
+		public void Issue2243([DataSources] string context, [Values(1, 2, 3)] int seed)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
 			{
+				var user = $"TEST_USER{seed}";
 				var item = new TestInsertOrReplaceInfo()
 				{
 					Id        = 1,
 					Name      = "Test1",
-					Created   = DateTime.Now,
-					CreatedBy = "TEST_USER"
+					CreatedBy = user
 				};
 
 				db.InsertOrReplace(item);
@@ -2041,23 +2039,19 @@ namespace Tests.xUpdate
 				var res = table.Single();
 				Assert.AreEqual(1, res.Id);
 				Assert.AreEqual("Test1", res.Name);
-				Assert.IsNotNull(res.Created);
-				Assert.AreEqual("TEST_USER", res.CreatedBy);
-				Assert.IsNull(res.Updated);
+				Assert.AreEqual(user, res.CreatedBy);
 				Assert.IsNull(res.UpdatedBy);
 
 				item.Name      = "Test2";
-				item.Updated   = DateTime.Now;
-				item.UpdatedBy = "TEST_USER";
+				item.UpdatedBy = user;
 
 				db.InsertOrReplace(item);
 
 				res = table.Single();
 				Assert.AreEqual(1, res.Id);
 				Assert.AreEqual("Test2", res.Name);
-				Assert.AreEqual("TEST_USER", res.CreatedBy);
-				Assert.IsNotNull(res.Updated);
-				Assert.AreEqual("TEST_USER", res.UpdatedBy);
+				Assert.AreEqual(user, res.CreatedBy);
+				Assert.AreEqual(user, res.UpdatedBy);
 			}
 		}
 		#endregion
