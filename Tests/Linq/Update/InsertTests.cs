@@ -1968,43 +1968,44 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Table]
+		class TestInsertOrReplaceTable
+		{
+			[PrimaryKey] public int     ID         { get; set; }
+			[Column]     public string? FirstName  { get; set; }
+			[Column]     public string? LastName   { get; set; }
+			[Column]     public string? MiddleName { get; set; }
+		}
+
 		[Test]
-		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context, [Values] bool withMiddleName, [Values] bool onInsert)
+		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context, [Values] bool withMiddleName, [Values] bool skipOnInsert)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<Patient>("xxxPatient"))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
 			{
 				var newName = "InsertOrReplaceColumnFilter";
-				try
+				var p = new TestInsertOrReplaceTable()
 				{
-					var p = new Person()
-					{
-						FirstName  = newName,
-						LastName   = "whatever",
-						MiddleName = "som middle name",
-						Gender     = Gender.Male
-					};
+					FirstName = newName,
+					LastName = "whatever",
+					MiddleName = "som middle name",
+				};
 
-					db.InsertOrReplace(p, (a, b, isInsert) => isInsert == onInsert && (b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName));
+				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || !skipOnInsert);
 
-					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
 
-					Assert.AreEqual(!withMiddleName && onInsert, string.IsNullOrWhiteSpace(p.MiddleName));
+				Assert.AreEqual(!withMiddleName && skipOnInsert, string.IsNullOrWhiteSpace(p.MiddleName));
 
-					p.MiddleName = "updated name";
-					db.InsertOrReplace(p, (a, b, isInsert) => isInsert == onInsert && (b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName));
+				p.MiddleName = "updated name";
+				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || skipOnInsert);
 
-					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
 
-					if (onInsert || withMiddleName)
-						Assert.AreEqual("updated name", p.MiddleName);
-					else
-						Assert.AreNotEqual("updated name", p.MiddleName);
-				}
-				finally
-				{
-					db.Person.Where(x => x.FirstName == newName).Delete();
-				}
+				if (skipOnInsert || withMiddleName)
+					Assert.AreEqual("updated name", p.MiddleName);
+				else
+					Assert.AreNotEqual("updated name", p.MiddleName);
 			}
 		}
 
