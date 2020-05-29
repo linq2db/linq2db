@@ -3156,8 +3156,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		Dictionary<Expression, Tuple<CteClause,IBuildContext?>>? _ctes;
-		Dictionary<IQueryable, Expression>?                      _ctesObjectMapping;
+		List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>? _ctes;
+		Dictionary<IQueryable, Expression>?                        _ctesObjectMapping;
 
 		public Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
@@ -3175,38 +3175,67 @@ namespace LinqToDB.Linq.Builder
 				cteExpression = _ctesObjectMapping[queryable!];
 			}
 
-			if (_ctes == null || !_ctes.TryGetValue(cteExpression, out var value))
+			var value = FindRegisteredCteByExpression(cteExpression, out _);
+
+			if (value == null)
 			{
 				var cte = buildFunc();
 				value = Tuple.Create<CteClause, IBuildContext?>(cte, null);
 
-				_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
-				_ctes.Add(cteExpression, value);
+				_ctes ??= new List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>();
+				_ctes.Add(Tuple.Create(cteExpression, value));
 			}
 
 			return Tuple.Create(value.Item1, value.Item2, cteExpression);
 		}
 
+		Tuple<CteClause, IBuildContext?>? FindRegisteredCteByExpression(Expression cteExpression, out int? idx)
+		{
+			if (_ctes != null)
+			{
+				var queryableAccessorDic = new Dictionary<Expression, QueryableAccessor>();
+				for (var index = 0; index < _ctes.Count; index++)
+				{
+					var tuple = _ctes[index];
+					if (tuple.Item1.EqualsTo(cteExpression, DataContext, queryableAccessorDic, null, null,
+						compareConstantValues: false))
+					{
+						idx = index;
+						return tuple.Item2;
+					}
+				}
+			}
+
+			idx = null;
+			return null;
+		}
+		
+
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
-			Tuple<CteClause, IBuildContext?>? value = null;
-			if (_ctes != null && _ctes.TryGetValue(cteExpression, out value))
-				if (value.Item2 != null)
-					return value;
+			var value = FindRegisteredCteByExpression(cteExpression, out var idx);
+			if (value?.Item2 != null)
+				return value;
 
 			value = buildFunc(value?.Item1);
 
-			_ctes ??= new Dictionary<Expression, Tuple<CteClause, IBuildContext?>>();
-			_ctes.Remove(cteExpression);
-			_ctes.Add(cteExpression, value);
+			if (idx != null)
+			{
+				_ctes!.RemoveAt(idx.Value);
+			}
+			else
+			{
+				_ctes ??= new List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>();
+			}
+
+			_ctes.Add(Tuple.Create(cteExpression, value));
+
 			return value;
 		}
 
 		public IBuildContext? GetCteContext(Expression cteExpression)
 		{
-			if (_ctes != null && _ctes.TryGetValue(cteExpression, out var value))
-				return value.Item2;
-			return null;
+			return FindRegisteredCteByExpression(cteExpression, out _)?.Item2;
 		}
 
 		#endregion

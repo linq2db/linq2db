@@ -38,6 +38,7 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException();
 			}
 
+			bodyExpr = builder.ConvertExpression(bodyExpr);
 			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
 
 			var cte = builder.BuildCte(bodyExpr,
