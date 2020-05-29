@@ -52,10 +52,9 @@ namespace LinqToDB.Linq
 				//
 				foreach (var field in sqlTable.Fields.Values)
 				{
-					if (field.IsInsertable)
+					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
-						if (!field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert) 
-						    || columnFilter == null || columnFilter(obj, field.ColumnDescriptor, true))
+						if (columnFilter == null || columnFilter(obj, field.ColumnDescriptor, true))
 						{
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
