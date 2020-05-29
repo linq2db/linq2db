@@ -164,6 +164,25 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Update4String([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1001;
+
+				var updatable =
+					db.Child
+						.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
+						.Set(c => c.ChildID, c => c.ChildID + 1);
+
+				var sql = updatable.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Does.Contain("UPDATE"));
+			}
+		}
+
+		[Test]
 		public async Task Update4Async([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))

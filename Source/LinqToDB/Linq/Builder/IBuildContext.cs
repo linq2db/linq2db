@@ -10,14 +10,20 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-#if DEBUG
 	internal static class BuildContextDebuggingHelper
 	{
-		static string GetContextInfo(IBuildContext context)
+		public static string GetContextInfo(IBuildContext context)
 		{
-			if (context.SelectQuery == null)
-				return $"{context.GetType()}(<none>)";
-			return $"{context.GetType()}({context.SelectQuery.SourceID})";
+			var result = context.SelectQuery == null
+				? $"{context.GetType().Name}(<none>)"
+				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+
+			if (context is TableBuilder.TableContext tc)
+			{
+				result += $"(T: {tc.SqlTable.SourceID})";
+			}
+
+			return result;
 		}
 
 		public static string GetPath(this IBuildContext context)
@@ -42,7 +48,6 @@ namespace LinqToDB.Linq.Builder
 			return str;
 		}
 	}
-#endif
 
 	interface IBuildContext
 	{

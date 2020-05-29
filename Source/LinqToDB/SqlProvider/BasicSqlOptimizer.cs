@@ -34,7 +34,7 @@ namespace LinqToDB.SqlProvider
 			statement.WalkQueries(
 				selectQuery =>
 				{
-					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported,
 						inlineParameters);
@@ -58,7 +58,7 @@ namespace LinqToDB.SqlProvider
 				statement.WalkQueries(
 					selectQuery =>
 					{
-						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
 							SqlProviderFlags.IsApplyJoinSupported,
 							SqlProviderFlags.IsGroupByExpressionSupported,
 							inlineParameters);
@@ -1362,16 +1362,16 @@ namespace LinqToDB.SqlProvider
 							if (tableToUpdate == null)
 							{
 								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-									.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-									.FirstOrDefault(t => t != null);
+									.OfType<SqlTable>()
+									.FirstOrDefault();
 							}
 
 							if (tableToUpdate == null)
 								throw new LinqToDBException("Can not decide which table to update");
 
 							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+								.OfType<SqlTable>()
+								.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 						}
 
 						break;
@@ -1381,8 +1381,8 @@ namespace LinqToDB.SqlProvider
 						if (tableToUpdate == null)
 						{
 							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
-								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-								.FirstOrDefault(t => t != null);
+								.OfType<SqlTable>()
+								.FirstOrDefault();
 
 							if (tableToUpdate == null)
 								throw new LinqToDBException("Can not decide which table to update");
@@ -1402,8 +1402,8 @@ namespace LinqToDB.SqlProvider
 
 						// return first matched table
 						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
-							.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-							.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+							.OfType<SqlTable>()
+							.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 
 						if (tableToCompare == null)
 							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
@@ -1493,7 +1493,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Take(2).Count();
+			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
 			if (sourcesCount > 1)
@@ -1510,8 +1510,8 @@ namespace LinqToDB.SqlProvider
 				if (tableToUpdate == null)
 				{
 					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
-						.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
-						.FirstOrDefault(t => t != null);
+						.OfType<SqlTable>()
+						.FirstOrDefault();
 				}
 
 				if (tableToUpdate == null)
@@ -1533,7 +1533,7 @@ namespace LinqToDB.SqlProvider
 				} 
 
 				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
-					.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+					.Select(ts => ts as SqlTable)
 					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
 
 				if (tableToCompare == null)

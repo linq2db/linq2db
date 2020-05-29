@@ -1560,22 +1560,36 @@ namespace LinqToDB.SqlProvider
 			if (items.Count == 0)
 				return;
 
-			//			if (SelectQuery.GroupBy.Items.Count == 1)
-			//			{
-			//				var item = SelectQuery.GroupBy.Items[0];
-			//
-			//				if (item is SqlValue || item is SqlParameter)
-			//				{
-			//					var value = ((SqlValue)item).Value;
-			//
-			//					if (value is Sql.GroupBy || value is int)
-			//						return;
-			//				}
-			//			}
+			BuildGroupByBody(selectQuery.GroupBy.GroupingType, items);
+		}
 
+		protected virtual void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		{
 			AppendIndent();
 
-			StringBuilder.Append("GROUP BY").AppendLine();
+			StringBuilder.Append("GROUP BY");
+
+			switch (groupingType)
+			{
+				case GroupingType.Default:
+					break;
+				case GroupingType.GroupBySets:
+					StringBuilder.Append(" GROUPING SETS");
+					break;
+				case GroupingType.Rollup:
+					StringBuilder.Append(" ROLLUP");
+					break;
+				case GroupingType.Cube:
+					StringBuilder.Append(" CUBE");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			if (groupingType != GroupingType.Default)
+				StringBuilder.Append(" (");
+
+			StringBuilder.AppendLine();
 
 			Indent++;
 
@@ -1592,6 +1606,12 @@ namespace LinqToDB.SqlProvider
 			}
 
 			Indent--;
+
+			if (groupingType != GroupingType.Default)
+			{
+				AppendIndent();
+				StringBuilder.Append(")").AppendLine();
+			}
 		}
 
 		#endregion
@@ -2388,6 +2408,23 @@ namespace LinqToDB.SqlProvider
 						var table = (ISqlTableSource) expr;
 						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, true);
 						StringBuilder.Append(tableAlias);
+					}
+
+					break;
+
+				case QueryElementType.GroupingSet:
+					{
+						var groupingSet = (SqlGroupingSet) expr;
+						StringBuilder.Append("(");
+						for (var index = 0; index < groupingSet.Items.Count; index++)
+						{
+							var setItem = groupingSet.Items[index];
+							BuildExpression(setItem, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+							if (index < groupingSet.Items.Count - 1)
+								StringBuilder.Append(", ");
+						}
+
+						StringBuilder.Append(")");
 					}
 
 					break;

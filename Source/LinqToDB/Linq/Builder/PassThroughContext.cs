@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	abstract class PassThroughContext : IBuildContext
 	{
 		protected PassThroughContext(IBuildContext context)
@@ -33,26 +35,31 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.BuildExpression(expression, level, enforceServerSide);
 		}
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.ConvertToSql(expression, level, flags);
 		}
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.IsExpression(expression, level, requestFlag);
 		}
 
 		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.GetContext(expression, level, buildInfo);
 		}
 

@@ -27,7 +27,8 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public   ISqlExpression Expression { get; set; }
+		public ISqlExpression   Expression { get; set; }
+
 		public   SelectQuery?   Parent     { get; set; }
 		internal string?        RawAlias   { get; set; }
 
@@ -58,6 +59,7 @@ namespace LinqToDB.SqlQuery
 		private bool   _underlyingColumnSet;
 
 		private SqlColumn? _underlyingColumn;
+
 		public  SqlColumn?  UnderlyingColumn
 		{
 			get
@@ -99,7 +101,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			var hashCode = Parent!.GetHashCode();
+			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
 			if (UnderlyingColumn != null)

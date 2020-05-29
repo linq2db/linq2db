@@ -52,6 +52,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
 				if (!Disabled && expression == null)
@@ -64,7 +66,10 @@ namespace LinqToDB.Linq.Builder
 					var idx = q.DefaultIfEmpty(-1).First();
 
 					if (idx == -1)
+					{
 						idx = SelectQuery.Select.Add(new SqlValue((int?)1));
+						SelectQuery.Select.Columns[idx].RawAlias = "is_empty";
+					}
 
 					var n = ConvertToParentIndex(idx, this);
 
@@ -110,21 +115,25 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToSql(expression, level, flags);
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToIndex(expression, level, flags);
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.GetContext(expression, level, buildInfo);
 			}
 		}

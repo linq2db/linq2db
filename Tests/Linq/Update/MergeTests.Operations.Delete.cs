@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Tests.xUpdate
 {
@@ -131,7 +132,7 @@ namespace Tests.xUpdate
 					.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.That(exception.Message,  Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
 
@@ -220,7 +221,7 @@ namespace Tests.xUpdate
 					.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
 
@@ -438,7 +439,7 @@ namespace Tests.xUpdate
 						.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Id' cannot be converted to SQL.", exception.Message);
+				Assert.That(exception.Message, Does.EndWith(".Id' cannot be converted to SQL."));
 			}
 		}
 	}

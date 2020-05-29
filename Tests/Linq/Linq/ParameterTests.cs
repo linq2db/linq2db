@@ -366,9 +366,8 @@ namespace Tests.Linq
 		}
 
 		[Repeat(2)] // don't ever remove Repeat, as it used to test issue #2174
-		[ActiveIssue(2174, Details = "issue reproduced when test run against multiple providers or just twice")]
 		[Test]
-		public void Issue404Test([DataSources] string context)
+		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (new AllowMultipleQuery(true))
 			using (var db = GetDataContext(context))

@@ -883,12 +883,42 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderPostgreSql : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				string expStr;
+				switch (part)
+				{
+					case DateParts.Year:        expStr = "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))";    break;
+					case DateParts.Month:       
+						expStr = "((DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date)))"; 
+						break;
+					case DateParts.Week:        expStr = "TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)";   break;
+					case DateParts.Day:         expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400";  break;
+					case DateParts.Hour:        expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600";   break;
+					case DateParts.Minute:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60";     break;
+					case DateParts.Second:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))";          break;
+					case DateParts.Millisecond: expStr = "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)";  break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
 		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

@@ -288,6 +288,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.GroupingSet:
+					{
+						Visit1X((SqlGroupingSet)element);
+						break;
+					}
+
 				case QueryElementType.OrderByClause:
 					{
 						Visit1X((SqlOrderByClause)element);
@@ -381,6 +387,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		void Visit1X(SqlGroupByClause element)
+		{
+			foreach (var i in element.Items) Visit1(i);
+		}
+
+		void Visit1X(SqlGroupingSet element)
 		{
 			foreach (var i in element.Items) Visit1(i);
 		}
@@ -822,6 +833,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.GroupingSet:
+					{
+						
+						Visit2X((SqlGroupingSet)element);
+						break;
+					}
+
 				case QueryElementType.OrderByClause:
 					{
 						Visit2X((SqlOrderByClause)element);
@@ -945,6 +963,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		void Visit2X(SqlGroupByClause element)
+		{
+			foreach (var i in element.Items) Visit2(i);
+		}
+
+		void Visit2X(SqlGroupingSet element)
 		{
 			foreach (var i in element.Items) Visit2(i);
 		}
@@ -1167,6 +1190,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.FromClause        : return Find(((SqlFromClause)        element).Tables         );
 				case QueryElementType.WhereClause       : return Find(((SqlWhereClause)       element).SearchCondition);
 				case QueryElementType.GroupByClause     : return Find(((SqlGroupByClause)     element).Items          );
+				case QueryElementType.GroupingSet       : return Find(((SqlGroupingSet)       element).Items          );
 				case QueryElementType.OrderByClause     : return Find(((SqlOrderByClause)     element).Items          );
 				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression     );
 				case QueryElementType.SetOperator       : return Find(((SqlSetOperator)       element).SelectQuery    );

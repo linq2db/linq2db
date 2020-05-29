@@ -394,6 +394,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataSources(ProviderName.Access)] string context)
 		{
+			var cs = DataConnection.GetConnectionString(context);
+			if (!cs.Contains("Microsoft.Jet.OLEDB"))
+				Assert.Inconclusive("Test requires JET provider");
+
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
 
@@ -523,7 +527,6 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 		}
 
-		[ActiveIssue(1906)]
 		[Test]
 		public void Issue1906Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{

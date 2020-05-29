@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
@@ -132,6 +135,46 @@ namespace LinqToDB.Mapping
 			return string.Empty;
 		}
 
+		public bool IsList
+		{
+			get
+			{
+				var type = MemberInfo.GetMemberType();
+				return typeof(IEnumerable).IsSameOrParentOf(type);
+			}
+		}
+
+		public Type GetElementType(MappingSchema mappingSchema)
+		{
+			var type = MemberInfo.GetMemberType();
+			return EagerLoading.GetEnumerableElementType(type, mappingSchema);
+		}
+
+		public Type GetParentElementType()
+		{
+			if (MemberInfo.MemberType == MemberTypes.Method)
+			{
+				var methodInfo = (MethodInfo)MemberInfo;
+				if (methodInfo.IsStatic)
+				{
+					var pms = methodInfo.GetParameters();
+					if (pms.Length > 0)
+					{
+						return pms[0].ParameterType;
+					}
+				}
+				else
+				{
+					return methodInfo.DeclaringType;
+				}
+
+				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+			}
+
+			return MemberInfo.DeclaringType;
+		}
+
+
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
 		/// </summary>
@@ -217,6 +260,12 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
+
+		public bool HasQueryMethod()
+		{
+			return ExpressionQuery != null || !ExpressionQueryMethod.IsNullOrEmpty();
+		}
+
 		/// <summary>
 		/// Loads query method expression from <see cref="ExpressionQueryMethod"/> member.
 		/// </summary>
@@ -226,7 +275,7 @@ namespace LinqToDB.Mapping
 		/// by <see cref="ExpressionQueryMethod"/> member.</returns>
 		public LambdaExpression? GetQueryMethod(Type parentType, Type objectType)
 		{
-			if (ExpressionQuery == null && ExpressionQueryMethod.IsNullOrEmpty())
+			if (!HasQueryMethod())
 				return null;
 
 			Expression queryExpression;
@@ -242,7 +291,7 @@ namespace LinqToDB.Mapping
 				queryExpression = ExpressionQuery!;
 
 			var lambda = queryExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (lambda == null || lambda.Parameters.Count < 1)
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.Name}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
@@ -252,9 +301,6 @@ namespace LinqToDB.Mapping
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
 				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
-
-			if (typeof(IDataContext) != lambda.Parameters[1].Type)
-				throw new LinqToDBException("Second parameter of expression predicate should be 'IDataContext'");
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))

@@ -75,7 +75,7 @@ namespace Tests.Update
 			};
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestWhere(
 			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
@@ -126,7 +126,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestJoin(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
@@ -176,7 +176,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
 				ProviderName.SqlServer,
@@ -230,7 +230,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestJoinSkipTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
 			string context)
@@ -281,7 +281,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestJoinTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
@@ -331,7 +331,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestAssociation(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
@@ -356,7 +356,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestAssociationAsUpdatable(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
 			string context)
@@ -384,7 +384,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestAssociationSimple(
 			[DataSources(TestProvName.AllInformix)]
 			string context)
@@ -414,7 +414,7 @@ namespace Tests.Update
 			}
 		}		
 
-		[Test, Combinatorial]
+		[Test]
 		public void UpdateTestAssociationSimpleAsUpdatable(
 			[DataSources(TestProvName.AllInformix)]
 			string context)
