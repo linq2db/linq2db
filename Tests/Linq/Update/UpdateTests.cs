@@ -523,7 +523,45 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateWithColumnFilter([DataSources] string context)
+		public void TestUpdateWithColumnFilter1([DataSources] string context, [Values] bool withMiddleName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "UpdateColumnFilterUpdated";
+				try
+				{
+					var p = new Person()
+					{
+						FirstName = newName,
+						LastName = "whatever",
+						MiddleName = "som middle name",
+						Gender = Gender.Male
+					};
+
+					db.Insert(p);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					p.MiddleName = "updated name";
+
+					db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					if (withMiddleName)
+						Assert.AreEqual("updated name", p.MiddleName);
+					else
+						Assert.AreNotEqual("updated name", p.MiddleName);
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
+
+		[Test]
+		public void TestUpdateWithColumnFilter2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -560,7 +598,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Where(x=> x.ID == p.ID).Delete();
+					db.Person.Where(x => x.ID == p.ID).Delete();
 				}
 			}
 		}

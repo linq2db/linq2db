@@ -16,14 +16,11 @@ namespace LinqToDB.Linq
 		public static class InsertOrReplace<T>
 		{
 			static Query<int> CreateQuery(
-				IDataContext     dataContext, 
-				EntityDescriptor descriptor, 
-				T                obj, 
-				Func<T, ColumnDescriptor, bool>? columnFilter,
-				string? tableName, 
-				string? serverName, 
-				string? databaseName, 
-				string? schemaName,
+				IDataContext                   dataContext,
+				EntityDescriptor               descriptor,
+				T                              obj,
+				InsertOrUpdateColumnFilter<T>? columnFilter,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -39,7 +36,7 @@ namespace LinqToDB.Linq
 				ParameterAccessor? param = null;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
-				insertOrUpdateStatement.Insert.Into = sqlTable;
+				insertOrUpdateStatement.Insert.Into  = sqlTable;
 				insertOrUpdateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
@@ -53,13 +50,12 @@ namespace LinqToDB.Linq
 
 				// Insert.
 				//
-				var fieldsForInsert = sqlTable.Fields.Values;
-				foreach (var field in fieldsForInsert)
+				foreach (var field in sqlTable.Fields.Values)
 				{
 					if (field.IsInsertable)
 					{
 						if (!field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert) 
-						    || columnFilter == null || columnFilter(obj, field.ColumnDescriptor))
+						    || columnFilter == null || columnFilter(obj, field.ColumnDescriptor, true))
 						{
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
@@ -81,9 +77,9 @@ namespace LinqToDB.Linq
 
 				// Update.
 				//
-				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update))
-									 .Except(keys).ToList();
+									 .Except(keys);
 
 				if (keys.Count == 0)
 					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
@@ -102,11 +98,12 @@ namespace LinqToDB.Linq
 						sqlTable.Name,
 						missedKey.Name);
 
-				if (fields.Count == 0)
-					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.Name);
-
+				var fieldCount = 0;
 				foreach (var field in fields)
 				{
+					if (columnFilter != null && !columnFilter(obj, field.ColumnDescriptor, false))
+						continue;
+
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
 						param = GetParameter(type, dataContext, field);
@@ -117,7 +114,12 @@ namespace LinqToDB.Linq
 					}
 
 					insertOrUpdateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+
+					fieldCount++;
 				}
+
+				if (fieldCount == 0)
+					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.Name);
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
@@ -132,7 +134,8 @@ namespace LinqToDB.Linq
 			}
 
 			public static int Query(
-				IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
+				IDataContext dataContext, T obj,
+				InsertOrUpdateColumnFilter<T>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schema)
 			{
 				if (Equals(default(T), obj))
@@ -152,23 +155,15 @@ namespace LinqToDB.Linq
 					o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, type);
+						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, type);
 					});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
-
 			public static async Task<int> QueryAsync(
-					IDataContext dataContext, T obj,
-					string? tableName, string? serverName, string? databaseName, string? schema,
-					CancellationToken token)
-			{
-				return await QueryAsync(dataContext, obj, null, tableName, serverName, databaseName, schema, token);
-			}
-
-			public static async Task<int> QueryAsync(
-				IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
+				IDataContext dataContext, T obj,
+				InsertOrUpdateColumnFilter<T>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schema,
 				CancellationToken token)
 			{
@@ -189,7 +184,7 @@ namespace LinqToDB.Linq
 					o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, type);
+						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, type);
 					});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

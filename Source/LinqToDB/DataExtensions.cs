@@ -17,6 +17,7 @@ namespace LinqToDB
 	using Expressions;
 	using Mapping;
 
+
 	/// <summary>
 	/// Data context extension methods.
 	/// </summary>
@@ -217,7 +218,7 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int Insert<T>(this IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
+		public static int Insert<T>(this IDataContext dataContext, T obj, InsertColumnFilter<T>? columnFilter,
 			string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -265,12 +266,12 @@ namespace LinqToDB
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
-			string?           tableName    = null,
-			string?           databaseName = null,
-			string?           schemaName   = null,
-			string?           serverName   = null,
-			CancellationToken token = default)
+			InsertColumnFilter<T>? columnFilter,
+			string?                tableName    = null,
+			string?                databaseName = null,
+			string?                schemaName   = null,
+			string?                serverName   = null,
+			CancellationToken      token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -309,14 +310,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
-		/// <param name="columnFilter">Filter columns to insert and update.</param>
+		/// <param name="columnFilter">Filter columns to insert and update. Parameters: entity, column descriptor and operation (<c>true</c> for insert )</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertOrUpdateColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -368,7 +369,7 @@ namespace LinqToDB
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertOrUpdateColumnFilter<T>? columnFilter,
 			string?           tableName    = null,
 			string?           databaseName = null,
 			string?           schemaName   = null,
@@ -422,7 +423,7 @@ namespace LinqToDB
 		public static object InsertWithIdentity<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -471,7 +472,7 @@ namespace LinqToDB
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -520,7 +521,7 @@ namespace LinqToDB
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -569,7 +570,7 @@ namespace LinqToDB
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -621,7 +622,7 @@ namespace LinqToDB
 		public static Task<object> InsertWithIdentityAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName       = null,
 			string? databaseName    = null,
 			string? schemaName      = null,
@@ -674,7 +675,7 @@ namespace LinqToDB
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string?           tableName    = null,
 			string?           databaseName = null,
 			string?           schemaName   = null,
@@ -729,7 +730,7 @@ namespace LinqToDB
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName       = null,
 			string? databaseName    = null,
 			string? schemaName      = null,
@@ -784,7 +785,7 @@ namespace LinqToDB
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			InsertColumnFilter<T>? columnFilter,
 			string? tableName       = null,
 			string? databaseName    = null,
 			string? schemaName      = null,
@@ -840,7 +841,7 @@ namespace LinqToDB
 		public static int Update<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			UpdateColumnFilter<T>? columnFilter,
 			string? tableName    = null,
 			string? databaseName = null,
 			string? schemaName   = null,
@@ -892,7 +893,7 @@ namespace LinqToDB
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T obj,
-			Func<T, ColumnDescriptor, bool>? columnFilter,
+			UpdateColumnFilter<T>? columnFilter,
 			string?           tableName    = null,
 			string?           databaseName = null,
 			string?           schemaName   = null,

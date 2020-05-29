@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 				IDataContext dataContext,
 				EntityDescriptor descriptor,
 				T obj,
-				Func<T, ColumnDescriptor, bool>? columnFilter,
+				UpdateColumnFilter<T>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				Type type)
 			{
@@ -43,10 +43,21 @@ namespace LinqToDB.Linq
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields.Values
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
-					.Except(keys)
-					.ToList();
+					.Except(keys);
 
-				if (fields.Count == 0)
+				var fieldCount = 0;
+				foreach (var field in fields)
+				{
+					var param = GetParameter(type, dataContext, field);
+
+					ei.Queries[0].Parameters.Add(param);
+
+					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+
+					fieldCount++;
+				}
+
+				if (fieldCount == 0)
 				{
 					if (Configuration.Linq.IgnoreEmptyUpdate)
 						return null;
@@ -55,15 +66,6 @@ namespace LinqToDB.Linq
 						keys.Count == sqlTable.Fields.Count ?
 							$"There are no fields to update in the type '{sqlTable.Name}'. No PK is defined or all fields are keys." :
 							$"There are no fields to update in the type '{sqlTable.Name}'.");
-				}
-
-				foreach (var field in fields)
-				{
-					var param = GetParameter(type, dataContext, field);
-
-					ei.Queries[0].Parameters.Add(param);
-
-					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				foreach (var field in keys)
@@ -84,14 +86,7 @@ namespace LinqToDB.Linq
 			}
 
 			public static int Query(
-				IDataContext dataContext, T obj,
-				string? tableName, string? serverName, string? databaseName, string? schemaName)
-			{
-				return Query(dataContext, obj, null, tableName, serverName, databaseName, schemaName);
-			}
-
-			public static int Query(
-				IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
+				IDataContext dataContext, T obj, UpdateColumnFilter<T>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
 				if (Equals(default(T), obj))
@@ -106,22 +101,14 @@ namespace LinqToDB.Linq
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
-				IDataContext dataContext, T obj,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				CancellationToken token)
-			{
-				return await QueryAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, token);
-			}
-
-			public static async Task<int> QueryAsync(
-				IDataContext dataContext, T obj, Func<T, ColumnDescriptor, bool>? columnFilter,
+				IDataContext dataContext, T obj, UpdateColumnFilter<T>? columnFilter,
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
@@ -137,7 +124,7 @@ namespace LinqToDB.Linq
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);

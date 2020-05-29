@@ -1901,9 +1901,37 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void TestInsertWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "InsertColumnFilter";
+				try
+				{
+					var p = new Person()
+					{
+						FirstName  = newName,
+						LastName   = "whatever",
+						MiddleName = "som middle name",
+						Gender     = Gender.Male
+					};
+
+					db.Insert(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					Assert.AreEqual(!withMiddleName, string.IsNullOrWhiteSpace(p.MiddleName));
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
 
 		[Test]
-		public void TestInsertWithColumnFilter([DataSources] string context)
+		public void TestUpdateWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1918,12 +1946,20 @@ namespace Tests.xUpdate
 						Gender = Gender.Male
 					};
 
-					var columsToInsert = new List<string> { nameof(p.FirstName), nameof(p.LastName), nameof(p.Gender) };
-					db.Insert(p, (a, b) => columsToInsert.Contains(b.ColumnName));
+					db.Insert(p);
 
 					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					Assert.IsTrue(string.IsNullOrWhiteSpace(p.MiddleName));
+					p.MiddleName = "updated name";
+
+					db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					if (withMiddleName)
+						Assert.AreEqual("updated name", p.MiddleName);
+					else
+						Assert.AreNotEqual("updated name", p.MiddleName);
 				}
 				finally
 				{
@@ -1933,38 +1969,37 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context)
+		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context, [Values] bool withMiddleName, [Values] bool onInsert)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Patient>("xxxPatient"))
 			{
-				var newName = "InsertColumnFilter";
+				var newName = "InsertOrReplaceColumnFilter";
 				try
 				{
-					var p = new Patient()
+					var p = new Person()
 					{
-						Diagnosis = "Diagnosis",
-						PersonID = 1
+						FirstName  = newName,
+						LastName   = "whatever",
+						MiddleName = "som middle name",
+						Gender     = Gender.Male
 					};
 
-					var columnsToInsert = new List<string> { nameof(p.Diagnosis), nameof(p.PersonID) };
+					db.InsertOrReplace(p, (a, b, isInsert) => isInsert == onInsert && (b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName));
 
-					db.InsertOrReplace(p, (a, b) => columnsToInsert.Contains(b.ColumnName), tableName: table.TableName);
-					p = table.Where(x => x.Diagnosis == "Diagnosis").FirstOrDefault();
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					Assert.IsNotNull(p);
+					Assert.AreEqual(!withMiddleName && onInsert, string.IsNullOrWhiteSpace(p.MiddleName));
 
-					var p2 = new Patient()
-					{
-						Diagnosis = "Diagnosis 2",
-						PersonID = 1
-					};
+					p.MiddleName = "updated name";
+					db.InsertOrReplace(p, (a, b, isInsert) => isInsert == onInsert && (b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName));
 
-					db.InsertOrReplace(p2, (a, b) => columnsToInsert.Contains(b.ColumnName), tableName: table.TableName);
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					p2 = table.Where(x => x.Diagnosis == "Diagnosis 2").FirstOrDefault();
-					Assert.IsNotNull(p2);
-
+					if (onInsert || withMiddleName)
+						Assert.AreEqual("updated name", p.MiddleName);
+					else
+						Assert.AreNotEqual("updated name", p.MiddleName);
 				}
 				finally
 				{
