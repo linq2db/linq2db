@@ -6,7 +6,6 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\Equatable.ttinclude"           #>
 <#
 
-	//AddNullablePragma             = true;
 	EnableNullableReferenceTypes  = true;
 	DataContextName               = "EquatableDB";
 	NamespaceName                 = "EquatableDataContext";

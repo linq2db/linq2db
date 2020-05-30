@@ -552,7 +552,7 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
+						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest!.Value1).ThenByDesc(c.ParentID).ToValue(),
 						ListAgg2  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1, Sql.NullsPosition.Last).ThenByDesc(c.ParentID, Sql.NullsPosition.First).ToValue(),
 						ListAgg3  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1, Sql.NullsPosition.First).ThenBy(c.ParentID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
 						ListAgg4  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderByDesc(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
@@ -757,7 +757,7 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						NTile1     = Sql.Ext.NTile(p.Value1.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						NTile1     = Sql.Ext.NTile(p.Value1!.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						NTile2     = Sql.Ext.NTile(1).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 
 					};
@@ -1316,7 +1316,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1359,7 +1359,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1392,13 +1392,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1431,13 +1431,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1479,7 +1479,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1523,25 +1523,25 @@ namespace Tests.Linq
 		[Table]
 		class Issue1799Table2
 		{
-			[Column] public int UserId        { get; set; }
-			[Column] public string UserGroups { get; set; }
+			[Column] public int     UserId        { get; set; }
+			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
 		class Issue1799Table3
 		{
-			[Column] public int    ProcessID   { get; set; }
-			[Column] public string ProcessName { get; set; }
+			[Column] public int     ProcessID   { get; set; }
+			[Column] public string? ProcessName { get; set; }
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1588,13 +1588,13 @@ namespace Tests.Linq
 		}
 
 		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlWithoutMariaDB, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -3,7 +3,6 @@
 
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
-		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
 		<DefineConstants>$([System.String]::Copy('$(DefineConstants)').Replace(';',','))</DefineConstants>
 	</PropertyGroup>
 

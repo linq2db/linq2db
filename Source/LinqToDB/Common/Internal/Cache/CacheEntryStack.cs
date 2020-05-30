@@ -1,5 +1,4 @@
-﻿#nullable disable
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -8,8 +7,8 @@ namespace LinqToDB.Common.Internal.Cache
 {
     internal class CacheEntryStack
     {
-        private readonly CacheEntryStack _previous;
-        private readonly CacheEntry _entry;
+        private readonly CacheEntryStack? _previous;
+        private readonly CacheEntry? _entry;
 
         private CacheEntryStack()
         {
@@ -33,7 +32,7 @@ namespace LinqToDB.Common.Internal.Cache
             return new CacheEntryStack(this, c);
         }
 
-        public CacheEntry Peek()
+        public CacheEntry? Peek()
         {
             return _entry;
         }

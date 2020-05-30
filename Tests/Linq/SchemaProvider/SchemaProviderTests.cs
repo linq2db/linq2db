@@ -70,7 +70,7 @@ namespace Tests.SchemaProvider
 					}
 				}
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName.ToLower() == "parent");
+				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent");
 
 				Assert.That(table,                                           Is.Not.Null);
 				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
@@ -78,7 +78,10 @@ namespace Tests.SchemaProvider
 				AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
-				Assert.That(dbSchema.Tables.Single(t => t.TableName.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+				if (context != ProviderName.AccessOdbc)
+					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+				else // no FK information for ACCESS ODBC
+					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
 
 				switch (context)
 				{
@@ -130,7 +133,7 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
 			Assert.IsNotNull(schemaTable, e.TableName);
 
 			Assert.That(schemaTable.Columns.Count >= e.Columns.Count);
@@ -168,13 +171,13 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
-				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
+				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
 
 				Assert.That(table.Columns.Single(c => c.ColumnName.Equals("intUnsignedDataType", StringComparison.OrdinalIgnoreCase)).MemberType, Is.EqualTo("uint?"));
 
-				var view = dbSchema.Tables.Single(t => t.TableName.Equals("personview", StringComparison.OrdinalIgnoreCase));
+				var view = dbSchema.Tables.Single(t => t.TableName!.Equals("personview", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(view.Columns.Count, Is.EqualTo(1));
 			}
@@ -188,7 +191,7 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
-				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("person", StringComparison.OrdinalIgnoreCase));
+				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("person", StringComparison.OrdinalIgnoreCase));
 				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 				Assert.That(pk, Is.Not.Null);
@@ -269,7 +272,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string[] { null }}))
+					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }}))
 					.Tables.Select(_ => _.SchemaName)
 					.Distinct()
 					.ToList();
@@ -325,8 +328,9 @@ namespace Tests.SchemaProvider
 		}
 
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
+		// Access.Odbc: no FK information available for provider
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12, ProviderName.AccessOdbc)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -338,14 +342,14 @@ namespace Tests.SchemaProvider
 					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				}));
 
-				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
-				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+				var fkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
 				Assert.AreEqual(1, fkCountDoctor);
 				Assert.AreEqual(1, pkCountDoctor);
 
-				var fkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
-				var pkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+				var fkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
 				Assert.AreEqual(2, fkCountPerson);
 				Assert.AreEqual(1, pkCountPerson);

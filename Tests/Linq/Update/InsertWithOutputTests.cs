@@ -16,17 +16,25 @@ namespace Tests.Playground
 		[Table]
 		class TableWithData
 		{
-			[Column]              public int    Id       { get; set; }
-			[Column]              public int    Value    { get; set; }
-			[Column(Length = 50)] public string ValueStr { get; set; }
+			[Column]              public int     Id       { get; set; }
+			[Column]              public int     Value    { get; set; }
+			[Column(Length = 50)] public string? ValueStr { get; set; }
+		}
+
+		[Table(Schema = "TestSchema")]
+		class TableWithDataAndSchema
+		{
+			[Column]              public int     Id       { get; set; }
+			[Column]              public int     Value    { get; set; }
+			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
 
 		[Table]
 		class DestinationTable
 		{
-			[Column]              public int    Id       { get; set; }
-			[Column]              public int    Value    { get; set; }
-			[Column(Length = 50)] public string ValueStr { get; set; }
+			[Column]              public int     Id       { get; set; }
+			[Column]              public int     Value    { get; set; }
+			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
 
 		static TableWithData[] GetSourceData()
@@ -418,6 +426,25 @@ namespace Tests.Playground
 			}
 		}
 
+		[Test]
+		public void InsertWithOutputWithSchema([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		{
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithDataAndSchema>())
+			{
+				var data = new TableWithDataAndSchema()
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
 
+				var output = source.InsertWithOutput(data);
+
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
 	}
 }

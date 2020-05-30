@@ -109,7 +109,7 @@ namespace LinqToDB.Mapping
 		public override bool IsDefined(Type attributeType, bool inherit)
 			=> false;
 
-		/// <inheritdoc cref="PropertyInfo.SetValue(Object, Object, BindingFlags, Binder, object[], CultureInfo)"/>
+		/// <inheritdoc cref="PropertyInfo.SetValue(object, object, BindingFlags, Binder, object[], CultureInfo)"/>
 		public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
 			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
 

@@ -214,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, ProviderName.Access)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -538,8 +538,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Parent.Max(p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
-					db.Parent.Max(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+					   Parent.Max(p =>    Child.Count(c => c.Parent!.ParentID == p.ParentID)),
+					db.Parent.Max(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)));
 		}
 
 		[Test]
@@ -547,8 +547,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					         Parent.Max     (p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
-					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+					         Parent.Max     (p =>    Child.Count(c => c.Parent!.ParentID == p.ParentID)),
+					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)));
 		}
 
 		[Test]
@@ -654,11 +654,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
-					   Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1),
-					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					   Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 				Assert.AreEqual(
-					db.Child.Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
-					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					db.Child.Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 			}
 		}
 
@@ -669,7 +669,7 @@ namespace Tests.Linq
 			[Column] public int  ChildID;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-			public Parent Parent;
+			public Parent? Parent;
 		}
 
 		[Test]
@@ -678,8 +678,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
-					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
-					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1),
+					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 			}
 		}
 	}

@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.DB2
 			_provider = provider;
 		}
 
-		readonly HashSet<string> _systemSchemas =
+		readonly HashSet<string?> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
 				StringComparer.OrdinalIgnoreCase);
 
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 				CurrentSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 			(
@@ -144,7 +144,7 @@ WHERE
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-						Name        = rd.ToString(2),
+						Name        = rd.ToString(2)!,
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
@@ -189,12 +189,12 @@ WHERE
 			}
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection
 				.Query(rd => new
 				{
-					name         = rd.ToString(0),
+					name         = rd.ToString(0)!,
 					thisTable    = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumns  = rd.ToString(3)!,
 					otherTable   = dataConnection.Connection.Database + "." + rd.ToString(4)  + "." + rd.ToString(5),
@@ -248,7 +248,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var type = GetDataType(columnType, options);
 
@@ -286,7 +286,7 @@ WHERE
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -328,7 +328,7 @@ WHERE
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
@@ -405,7 +405,7 @@ WHERE
 				.Query(rd =>
 					{
 						var schema = rd.ToString(0);
-						var name   = rd.ToString(1);
+						var name   = rd.ToString(1)!;
 
 						return new ProcedureInfo
 						{
@@ -420,7 +420,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd =>

@@ -10,27 +10,27 @@ namespace Tests
 {
 	namespace Dynamic
 	{
-		public delegate void        SimpleDelegate              (string input);
+		public delegate void        SimpleDelegate              (string? input);
 		public delegate void        SimpleDelegateWithMapping   (SampleClass input);
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
 		public class SampleClass
 		{
-			public int    Id       { get; set; }
-			public int    Value    { get; set; }
-			public string StrValue { get; set; }
+			public int     Id       { get; set; }
+			public int     Value    { get; set; }
+			public string? StrValue { get; set; }
 
 			public OtherClass GetOther       (int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx        };
 			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
 
 			public void SomeAction() => ++Value;
 
-			public event SimpleDelegate               SimpleDelegateEvent;
-			public event SimpleDelegateWithMapping    SimpleDelegateWithMappingEvent;
+			public event SimpleDelegate?               SimpleDelegateEvent;
+			public event SimpleDelegateWithMapping?    SimpleDelegateWithMappingEvent;
 			// just test-case, nobody in their mind should use returning events
-			public event ReturningDelegate            ReturningDelegateEvent;
-			public event ReturningDelegateWithMapping ReturningDelegateWithMappingEvent;
+			public event ReturningDelegate?            ReturningDelegateEvent;
+			public event ReturningDelegateWithMapping? ReturningDelegateWithMappingEvent;
 
 			public void DebugFire()
 			{
@@ -63,7 +63,7 @@ namespace Tests
 
 			public SampleClass(int id, int value)
 			{
-				Id = id;
+				Id    = id;
 				Value = value;
 			}
 
@@ -82,7 +82,7 @@ namespace Tests
 
 		public static class SampleClassExtensions
 		{
-			public static string GetOtherStr(this SampleClass sc, int idx)
+			public static string? GetOtherStr(this SampleClass sc, int idx)
 			{
 				return sc.GetOther(idx).OtherStrProp;
 			}
@@ -90,7 +90,7 @@ namespace Tests
 
 		public class OtherClass
 		{
-			public string OtherStrProp { get; set; }
+			public string? OtherStrProp { get; set; }
 		}
 
 		public class CollectionSample : CollectionBase
@@ -203,9 +203,9 @@ namespace Tests
 				nameof(ReturningDelegateWithMappingEvent),
 			};
 
-			public int    Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
-			public int    Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
-			public string StrValue { get; set; }
+			public int     Id    => ((Func<SampleClass, int>)CompiledWrappers[0])(this);
+			public int     Value => ((Func<SampleClass, int>)CompiledWrappers[1])(this);
+			public string? StrValue { get; set; }
 
 			public OtherClass GetOther       (int idx) => throw new NotImplementedException();
 			public OtherClass GetOtherAnother(int idx) => ((Func<SampleClass, int, OtherClass>)CompiledWrappers[2])(this, idx);
@@ -240,29 +240,29 @@ namespace Tests
 
 			public void Fire(bool withHandlers) => ((Action<SampleClass, bool>)CompiledWrappers[10])(this, withHandlers);
 
-			private      SimpleDelegate _SimpleDelegateEvent;
-			public event SimpleDelegate  SimpleDelegateEvent
+			private      SimpleDelegate? _SimpleDelegateEvent;
+			public event SimpleDelegate?  SimpleDelegateEvent
 			{
 				add    => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Combine(_SimpleDelegateEvent, value);
 				remove => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Remove (_SimpleDelegateEvent, value);
 			}
 
-			private      SimpleDelegateWithMapping _SimpleDelegateWithMappingEvent;
-			public event SimpleDelegateWithMapping  SimpleDelegateWithMappingEvent
+			private      SimpleDelegateWithMapping? _SimpleDelegateWithMappingEvent;
+			public event SimpleDelegateWithMapping?  SimpleDelegateWithMappingEvent
 			{
 				add    => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Combine(_SimpleDelegateWithMappingEvent, value);
 				remove => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Remove (_SimpleDelegateWithMappingEvent, value);
 			}
 
-			private      ReturningDelegate _ReturningDelegateEvent;
-			public event ReturningDelegate  ReturningDelegateEvent
+			private      ReturningDelegate? _ReturningDelegateEvent;
+			public event ReturningDelegate?  ReturningDelegateEvent
 			{
 				add    => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Combine(_ReturningDelegateEvent, value);
 				remove => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Remove (_ReturningDelegateEvent, value);
 			}
 
-			private      ReturningDelegateWithMapping _ReturningDelegateWithMappingEvent;
-			public event ReturningDelegateWithMapping  ReturningDelegateWithMappingEvent
+			private      ReturningDelegateWithMapping? _ReturningDelegateWithMappingEvent;
+			public event ReturningDelegateWithMapping?  ReturningDelegateWithMappingEvent
 			{
 				add    => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Combine(_ReturningDelegateWithMappingEvent, value);
 				remove => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Remove (_ReturningDelegateWithMappingEvent, value);
@@ -525,8 +525,8 @@ namespace Tests
 				wrapper.Fire(false);
 
 				// subscribed
-				string strValue1 = null;
-				SampleClass thisValue1 = null;
+				string? strValue1 = null;
+				SampleClass? thisValue1 = null;
 				wrapper.SimpleDelegateEvent                    += handler1;
 				wrapper.SimpleDelegateWithMappingEvent         += handler2;
 				wrapper.ReturningDelegateEvent                 += handler3;
@@ -534,7 +534,7 @@ namespace Tests
 				wrapper.Fire(true);
 
 				Assert.AreEqual("param1", strValue1);
-				Assert.AreEqual(5, ((Dynamic.SampleClass)thisValue1.instance_).Id);
+				Assert.AreEqual(5, ((Dynamic.SampleClass)thisValue1!.instance_).Id);
 
 
 				wrapper.SimpleDelegateEvent                    -= handler1;

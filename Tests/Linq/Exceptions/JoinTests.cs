@@ -23,7 +23,7 @@ namespace Tests.Exceptions
 			public int Value;
 
 			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
-			public IEnumerable<Childs> Childs;
+			public IEnumerable<Childs> Childs = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -34,7 +34,7 @@ namespace Tests.Exceptions
 			public int ParentID;
 
 			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
-			public Parents Parent;
+			public Parents? Parent;
 		}
 
 		[Table("GrandChild", IsColumnAttributeRequired = false)]
@@ -45,7 +45,7 @@ namespace Tests.Exceptions
 			public int? GrandChildID;
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID")]
-			public Child Child;
+			public Child? Child;
 		}
 		[Test]
 		public void InnerJoin([DataSources] string context)
@@ -151,15 +151,15 @@ namespace Tests.Exceptions
 						(
 							from child1      in db.GetTable<Childs>()
 							join parent1     in db.GetTable<Parents>()     on child1.ParentID  equals parent1.ParentID
-							join grandChild1 in db.GetTable<GrandChilds>() on parent1.ParentID equals grandChild1.Child.ParentID
-							where grandChild1.ParentID == child.Parent.ParentID
+							join grandChild1 in db.GetTable<GrandChilds>() on parent1.ParentID equals grandChild1.Child!.ParentID
+							where grandChild1.ParentID == child.Parent!.ParentID
 							select grandChild1
 					).Take(1).DefaultIfEmpty()
 					select new
 					{
 						GrandChildID   = grandChild.GrandChildID,
 						ChildID        = child.ChildID,
-						ParentParentId = child.Parent.ParentID,
+						ParentParentId = child.Parent!.ParentID,
 						Tmp            = pf.GrandChildID
 					};
 
@@ -170,15 +170,15 @@ namespace Tests.Exceptions
 						(
 							from child1      in Child
 							join parent1     in Parent     on child1.ParentID  equals parent1.ParentID
-							join grandChild1 in GrandChild on parent1.ParentID equals grandChild1.Child.ParentID
-							where grandChild1.ParentID == child.Parent.ParentID
+							join grandChild1 in GrandChild on parent1.ParentID equals grandChild1.Child!.ParentID
+							where grandChild1.ParentID == child.Parent!.ParentID
 							select grandChild1
 					).Take(1).DefaultIfEmpty()
 					select new
 					{
 						GrandChildID   = grandChild.GrandChildID,
 						ChildID        = child.ChildID,
-						ParentParentId = child.Parent.ParentID,
+						ParentParentId = child.Parent!.ParentID,
 						Tmp            = pf.GrandChildID
 					};
 

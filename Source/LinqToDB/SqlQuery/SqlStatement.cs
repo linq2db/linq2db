@@ -37,7 +37,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (IsParameterDependent)
 			{
-				var statement = new QueryVisitor().ConvertImmutable(this, e =>
+				var statement = ConvertVisitor.ConvertAll(this, (v, e) =>
 				{
 					switch (e.ElementType)
 					{
@@ -378,15 +378,16 @@ namespace LinqToDB.SqlQuery
 
 							Utils.MakeUniqueNames(
 								source.SourceFields,
-								n => !ReservedWords.IsReserved(n),
+								null,
+								(n, a) => !ReservedWords.IsReserved(n),
 								f => f.PhysicalName,
-								(f, n) => { f.PhysicalName = n; },
+								(f, n, a) => { f.PhysicalName = n; },
 								f =>
 								{
 									var a = f.PhysicalName;
 									return a.IsNullOrEmpty()
 										? "c1"
-										: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+										: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 								},
 								StringComparer.OrdinalIgnoreCase);
 
@@ -407,13 +408,14 @@ namespace LinqToDB.SqlQuery
 							{
 								var isRootQuery = query.ParentSelect == null;
 
-								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-									n => !ReservedWords.IsReserved(n), 
+								Utils.MakeUniqueNames(
+									query.Select.Columns.Where(c => c.Alias != "*"),
+									isRootQuery ? allAliases : null,
+									(n, a) => !ReservedWords.IsReserved(n), 
 									c => c.Alias, 
-									(c, n) =>
+									(c, n, a) =>
 									{
-										if (isRootQuery)
-											allAliases.Add(n);
+										a?.Add(n);
 										c.Alias = n;
 									},
 									c =>
@@ -421,7 +423,7 @@ namespace LinqToDB.SqlQuery
 										var a = c.Alias;
 										return a.IsNullOrEmpty()
 											? "c1"
-											: a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+											: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
 									StringComparer.OrdinalIgnoreCase);
 
@@ -468,22 +470,25 @@ namespace LinqToDB.SqlQuery
 			});
 
 			Utils.MakeUniqueNames(tablesVisited,
-				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
+				allAliases,
+				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n, a) =>
 				{
-					allAliases.Add(n);
+					a!.Add(n);
 					ts.Alias = n;
 				},
 				ts =>
 				{
 					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a! + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+					return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 				},
 				StringComparer.OrdinalIgnoreCase);
 
-			Utils.MakeUniqueNames(Parameters,
-				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n) =>
+			Utils.MakeUniqueNames(
+				Parameters,
+				allAliases,
+				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
 				{
-					allAliases.Add(n);
+					a!.Add(n);
 					p.Name = n;
 				},
 				p => p.Name.IsNullOrEmpty() ? "p1" : p.Name + "_1",

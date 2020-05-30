@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using LinqToDB.Common.Internal;
 
 namespace System.Threading.Tasks
 {
@@ -25,15 +24,12 @@ namespace System.Threading.Tasks
 			return Task.Delay(delay, cancellationToken);
 		}
 
-#if NET45
-		private static readonly Task _completedTask = Task.FromResult(false);
-#endif
 		public static Task CompletedTask
 		{
 			get
 			{
 #if NET45
-				return _completedTask;
+				return TaskCache.False;
 #else
 				return Task.CompletedTask;
 #endif

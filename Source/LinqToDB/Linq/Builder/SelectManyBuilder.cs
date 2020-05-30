@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -52,12 +53,9 @@ namespace LinqToDB.Linq.Builder
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
-			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
-			var crossApply     = null != new QueryVisitor().Find(sql, e =>
-				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
-				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table!) ||
-				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent!));
+			var newQuery       = QueryHelper.ContainsElement(sql, collectionInfo.SelectQuery);
+			var sequenceTables = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(sequence.SelectQuery));
+			var crossApply     = QueryHelper.IsDependsOn(sql, sequenceTables);
 
 			if (collection is JoinBuilder.GroupJoinSubQueryContext queryContext)
 			{
@@ -118,6 +116,8 @@ namespace LinqToDB.Linq.Builder
 
 			void MoveSearchConditionsToJoin(SqlFromClause.Join join)
 			{
+				var usedTableSources = new HashSet<ISqlTableSource>(sql.Select.From.Tables.Select(t => t.Source));
+
 				var tableSources = new HashSet<ISqlTableSource>();
 
 				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
@@ -135,6 +135,21 @@ namespace LinqToDB.Linq.Builder
 						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
 				}
 
+				SqlCondition CorrectSearchConditionNesting(SqlCondition condition)
+				{
+					var newCondition = ConvertVisitor.Convert(condition, (v, e) =>
+					{
+						if (e is SqlColumn column && column.Parent != null && usedTableSources.Contains(column.Parent))
+						{
+							e = sql.Select.AddColumn((ISqlExpression)e);
+						}
+
+						return e;
+					});
+
+					return newCondition;
+				}
+
 				var conditions = sql.Where.SearchCondition.Conditions;
 
 				if (conditions.Count > 0)
@@ -145,7 +160,8 @@ namespace LinqToDB.Linq.Builder
 
 						if (!tableSources.Any(ts => ContainsTable(ts, condition)))
 						{
-							join.JoinedTable.Condition.Conditions.Insert(0, condition);
+							var corrected = CorrectSearchConditionNesting(condition);
+							join.JoinedTable.Condition.Conditions.Insert(0, corrected);
 							conditions.RemoveAt(i);
 						}
 					}
@@ -203,17 +219,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					//if (collectionInfo.IsAssociationBuilt)
-					//{
-					//	collectionInfo.AssosiationContext.ParentAssociationJoin.IsWeak = false;
-					//}
-					//else
-					{
-						sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					}
+					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
 
-				QueryHelper.CorrectSearchConditionNesting(sequence.SelectQuery, join.JoinedTable.Condition);
 				context.Collection = new SubQueryContext(table, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
@@ -230,8 +238,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-				QueryHelper.CorrectSearchConditionNesting(sequence.SelectQuery, join.JoinedTable.Condition);
-
+				
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}

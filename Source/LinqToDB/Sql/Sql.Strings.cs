@@ -28,8 +28,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OrderBy, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -65,8 +64,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OrderByDescending, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -101,8 +99,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(ThenBy, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -119,8 +116,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(ThenByDescending, aggregate, expr),
-					new Expression[] { Expression.Constant(aggregate), Expression.Quote(expr) }
-				));
+					Expression.Constant(aggregate), Expression.Quote(expr)));
 
 			return new Sql.StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -179,7 +175,8 @@ namespace LinqToDB
 					data = builder.GetExpression("selector");
 
 				// https://github.com/linq2db/linq2db/issues/1765
-				if (data is SqlField field && field.Type!.Value.DataType != DataType.Undefined)
+				var field = QueryHelper.GetUnderlyingField(data);
+				if (field != null && field.Type!.Value.DataType != DataType.Undefined)
 				{
 					var separator = builder.GetExpression("separator");
 
@@ -215,7 +212,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] this IQueryable<string> source,
+			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
@@ -225,8 +222,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator),
-					new[] { source.Expression, Expression.Constant(separator) }
-				));
+					source.Expression, Expression.Constant(separator)));
 
 			return new StringAggregateNotOrderedImpl<string>(query);
 		}
@@ -245,7 +241,7 @@ namespace LinqToDB
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 							this IEnumerable<T> source,
 			[ExprParameter] string separator,
-			[ExprParameter] Func<T, string> selector)
+			[ExprParameter] Func<T, string?> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
@@ -264,7 +260,7 @@ namespace LinqToDB
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 							this IQueryable<T> source,
 			[ExprParameter] string separator,
-			[ExprParameter] Expression<Func<T, string>> selector)
+			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -274,8 +270,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator, selector),
-					new[] { source.Expression, Expression.Constant(separator), Expression.Quote(selector) }
-				));
+					source.Expression, Expression.Constant(separator), Expression.Quote(selector)));
 
 			return new StringAggregateNotOrderedImpl<T>(query);
 		}
@@ -292,7 +287,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
-			[ExprParameter] this IEnumerable<string> source,
+			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");

@@ -194,7 +194,7 @@ namespace LinqToDB.SqlProvider
 
 					first = false;
 					AppendIndent();
-					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				}
 
 				--Indent;
@@ -213,7 +213,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("(");
 
 				if (MergeSupportsSourceDirectValues)
-					BuildValues(merge.Source, true);
+					BuildValues(merge.Source);
 				else
 					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable);
 
@@ -266,9 +266,10 @@ namespace LinqToDB.SqlProvider
 
 					// add aliases only for first row
 					if (!MergeSupportsColumnAliasesInSource && i == 0)
-						StringBuilder
-							.Append(" ")
-							.Append(Convert(sourceFields[j].PhysicalName, ConvertType.NameToQueryField));
+					{
+						StringBuilder.Append(" ");
+						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+					}
 				}
 
 				if (FakeTable != null)
@@ -299,7 +300,10 @@ namespace LinqToDB.SqlProvider
 					BuildExpression(new SqlValue(field.Type!.Value, null));
 
 				if (!MergeSupportsColumnAliasesInSource)
-					StringBuilder.Append(" ").Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+				{
+					StringBuilder.Append(" ");
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
 			}
 
 			StringBuilder
@@ -324,7 +328,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		private void BuildValues(SqlMergeSourceTable mergeSource, bool typed)
+		private void BuildValues(SqlMergeSourceTable mergeSource)
 		{
 			var columnTypes = new SqlDataType[mergeSource.SourceFields.Count];
 			for (var i = 0; i < mergeSource.SourceFields.Count; i++)

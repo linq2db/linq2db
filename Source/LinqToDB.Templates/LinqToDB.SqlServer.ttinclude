@@ -42,69 +42,14 @@ void DoGenerateSqlServerFreeText()
 			Region  = "FreeTextTable",
 			Members =
 			{
-				new Class("FreeTextKey",
-					new MemberGroup
-					{
-						IsCompact = true,
-						Members   =
-						{
-							new Field(() => "T",   "Key"),
-							new Field(() => "int", "Rank")
-						}
-					})
-				{
-					GenericArguments = { "T" },
-					IsPartial        = false,
-					DisableNullable  = true
-				},
-
-				new Field(() => "MethodInfo", "_freeTextTableMethod1")
-				{
-					AccessModifier = AccessModifier.Private,
-					IsStatic       = true,
-					InitValue      = "typeof(" + DataContextObject.Name + ").GetMethod(\"FreeTextTable\", new Type[] { typeof(string), typeof(string) })"
-				},
-
-				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new Func<string>[] { () => "string field", () => "string text" },
+				new Method(() => "IQueryable<SqlServerExtensions.FreeTextKey<TKey>>", "FreeTextTable",
+					new Func<string>[] { () => "ITable<TTable> table", () => $"Expression<Func<TTable,{ModelType.Create<object>(true).ToTypeName()}>> columns", () => "string search" },
 					() => new[]
 					{
-						"return this.GetTable<FreeTextKey<TKey>>(",
-						"	this,",
-						"	_freeTextTableMethod1,",
-						"	field,",
-						"	text);",
+						"return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);"
 					})
 				{
-					GenericArguments = new List<string>() { "TTable", "TKey" },
-					Attributes = { new Attribute("FreeTextTableExpression") }
-				},
-
-				new Field(() => "MethodInfo", "_freeTextTableMethod2")
-				{
-					AccessModifier = AccessModifier.Private,
-					IsStatic       = true,
-					InitValue      =                                                                                                                                                      Environment.NewLine +
-					"	typeof(" + DataContextObject.Name + ").GetMethods()"                                                                                                            + Environment.NewLine +
-					"		.Where(m => m.Name == \"FreeTextTable\" &&  m.IsGenericMethod && m.GetParameters().Length == 2)"                                                            + Environment.NewLine +
-					"		.Where(m => m.GetParameters()[0].ParameterType.IsGenericTypeEx() && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>))" + Environment.NewLine +
-					"		.Where(m => m.GetParameters()[1].ParameterType == typeof(string))"                                                                                          + Environment.NewLine +
-					"		.Single()"
-				},
-
-				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new Func<string>[] { () => $"Expression<Func<TTable,{ModelType.Create<string>(true).ToTypeName()}>> fieldSelector", () => "string text" },
-					() => new[]
-					{
-						"return this.GetTable<FreeTextKey<TKey>>(",
-						"	this,",
-						"	_freeTextTableMethod2,",
-						"	fieldSelector,",
-						"	text);",
-					})
-				{
-					GenericArguments = { "TTable", "TKey" },
-					Attributes       = { new Attribute("FreeTextTableExpression") }
+					GenericArguments = { "TTable", "TKey" }
 				},
 			}
 		}

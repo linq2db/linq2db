@@ -53,8 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			LambdaExpression GetOutputExpression(Type outputType)
 			{
-				int index;
-				if (!indexedParameters.TryGetValue("outputExpression", out index))
+				if (!indexedParameters.TryGetValue("outputExpression", out var index))
 				{
 					var param = Expression.Parameter(outputType);
 					return Expression.Lambda(param, param);
@@ -146,8 +145,8 @@ namespace LinqToDB.Linq.Builder
 
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = 
-										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam);
-									builder.CurrentSqlParameters.Add(parameter);
+										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam);
+									builder.AddCurrentSqlParameter(parameter);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
@@ -419,18 +418,21 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (update.NodeType == ExpressionType.Lambda)
+				{
+					var fieldsContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertStatement.Insert.Into);
 					UpdateBuilder.ParseSet(
 						builder,
 						buildInfo,
 						extract,
 						(LambdaExpression)update,
+						fieldsContext,
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
+				}				
 				else
 					UpdateBuilder.ParseSet(
 						builder,
-						buildInfo,
 						extract,
 						update,
 						sequence,

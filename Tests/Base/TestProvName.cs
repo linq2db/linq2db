@@ -39,11 +39,14 @@
 		public const string NoopProvider  = "TestNoopProvider";
 
 		public const string AllMySql               = "MySql,MySqlConnector,MySql55,MariaDB";
-		public const string AllMySqlWithoutMariaDB = "MySql,MySqlConnector,MySql55";
+		// MySql server providers (no mariaDB)
+		public const string AllMySqlServer         = "MySql,MySqlConnector,MySql55";
 		// MySql <5.7 has inadequate FTS behavior
 		public const string AllMySqlFullText       = "MySql,MySqlConnector,MariaDB";
 		public const string AllMySql57Plus         = "MySql,MySqlConnector,MariaDB";
-		public const string AllMySqlData57Plus     = "MySql,MySqlConnector";
+		// MySql server providers (no mariaDB) without MySQL 5.5
+		public const string AllMySqlServer57Plus   = "MySql,MySqlConnector";
+		// MySql.Data server providers (no mysqlconnector)
 		public const string AllMySqlData           = "MySql,MySql55,MariaDB";
 		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQLv3        = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
@@ -71,5 +74,6 @@
 		public const string AllSQLiteNorthwind     = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = "Informix,Informix.DB2";
+		public const string AllAccess              = "Access,Access.Odbc";
 	}
 }

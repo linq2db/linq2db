@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		{
 			[Column(), NotNull] public int Id { get; set; }
 
-			[Column(DataType = DataType.VarChar), NotNull] public ITest1 F { get; set; }
+			[Column(DataType = DataType.VarChar), NotNull] public ITest1 F { get; set; } = null!;
 		}
 
 		[Test]

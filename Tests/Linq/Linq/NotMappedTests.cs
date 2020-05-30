@@ -13,10 +13,10 @@ namespace Tests.Linq
 		class SuperClass
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
-			[Column] public string Value       { get; set; }
+			[Column] public string? Value      { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(Subclass1.ParentId))]
-			public Subclass1 Association1      { get; set; }
+			public Subclass1? Association1     { get; set; }
 		}
 
 		[Table]
@@ -24,10 +24,10 @@ namespace Tests.Linq
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
 			[Column] public int? ParentId      { get; set; }
-			[Column] public string Value       { get; set; }
+			[Column] public string? Value      { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(Subclass2.ParentId))]
-			public Subclass2 Association2      { get; set; }
+			public Subclass2? Association2     { get; set; }
 		}
 
 		[Table]
@@ -35,8 +35,8 @@ namespace Tests.Linq
 		{
 			[Column, PrimaryKey] public int Id  { get; set; }
 			[Column] public int? ParentId       { get; set; }
-			[Column] public string Value        { get; set; }
-			[NotColumn] public Type NotMapped   { get; set; }
+			[Column] public string? Value       { get; set; }
+			[NotColumn] public Type? NotMapped  { get; set; }
 		}
 
 
@@ -135,7 +135,7 @@ namespace Tests.Linq
 					};
 
 				var query3 = from q in query2
-					from s in db.GetTable<Subclass2>().LeftJoin(s => s.ParentId == q.Association1.Id)
+					from s in db.GetTable<Subclass2>().LeftJoin(s => s.ParentId == q.Association1!.Id)
 					select new SuperClass
 					{
 						Id = q.Id,

@@ -184,8 +184,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				string firstName = null;
-				int?   id        = null;
+				string? firstName = null;
+				int?    id        = null;
 
 				var _ =
 				(
@@ -219,29 +219,29 @@ namespace Tests.Linq
 				// https://github.com/linq2db/linq2db/issues/2005
 				if (context.Contains("Firebird"))
 				{
-					Assert.True(db.LastQuery.Contains(" STARTING WITH 'Jo'"));
+					Assert.True(db.LastQuery!.Contains(" STARTING WITH 'Jo'"));
 					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
 				}
 				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE N'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE N'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
 				}
 				else if (context.Contains("Informix"))
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
 				}
 				else
 				{
-					Assert.True(db.LastQuery.Contains(" LIKE 'Jo%'"));
+					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
 					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
 				}
 			}
 		}
 
 		[Test]
-		public void StartsWith2([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith2([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -250,7 +250,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith3([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith3([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			var str = "John123";
 
@@ -261,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith4([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith4([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -277,7 +277,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith5([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
+		public void StartsWith5([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -377,7 +377,7 @@ namespace Tests.Linq
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
 			string context)
 		{
 			var s = "e";
@@ -394,7 +394,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix,
-			ProviderName.SqlCe, ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -407,7 +407,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -421,7 +421,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -505,7 +505,7 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
-			ProviderName.Access, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -525,18 +525,16 @@ namespace Tests.Linq
 			}
 		}
 
-#pragma warning disable 0109
-		new class Category
+		class Category
 		{
-			[PrimaryKey, Identity] public int    Id;
-			[Column, NotNull]      public string Name;
+			[PrimaryKey, Identity] public int     Id;
+			[Column, NotNull]      public string? Name;
 		}
-#pragma warning restore 0109
 
 		class Task
 		{
-			[PrimaryKey, Identity] public int    Id;
-			[Column, NotNull]      public string Name;
+			[PrimaryKey, Identity] public int     Id;
+			[Column, NotNull]      public string? Name;
 		}
 
 		class TaskCategory
@@ -670,7 +668,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Replace([DataSources(ProviderName.Access)] string context)
+		public void Replace([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

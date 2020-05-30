@@ -1,6 +1,8 @@
-﻿using LinqToDB.Expressions;
+﻿using System.Linq;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System.Linq.Expressions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -25,16 +27,8 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
-
-					operation.Where = new SqlSearchCondition();
-
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext }, condition),
-						conditionExpr,
-						operation.Where.Conditions,
-						false);
+					var condition   = (LambdaExpression)predicate.Unwrap();
+					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, null, condition);
 				}
 
 				return mergeContext;

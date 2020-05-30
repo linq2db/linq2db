@@ -13,44 +13,44 @@ namespace Tests.UserTests
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name"), SkipValuesOnInsert("John", "Max")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipValuesOnInsert(2, 5)]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Mixed_Table")]
 		public class TestTableMixed
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name"), SkipValuesOnInsert("John"), SkipValuesOnUpdate("Max")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age")]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Insert_Null_Table")]
 		public class TestTableNull
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipValuesOnInsert(null)]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Insert_Fluent_Table")]
 		public class TestTableFluent
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age")]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Table("PR_1598_Insert_Enum_Table")]
@@ -67,11 +67,11 @@ namespace Tests.UserTests
 			}
 
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age")]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 			[Column("Gender"), SkipValuesOnInsert(GenderType.Female)]
 			public GenderType Gender { get; set; }
 		}
@@ -198,7 +198,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				// Change default value, so that null is not inserted as default.
-				db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
+				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
 				using (db.CreateLocalTable<TestTableNull>())
 				{
 					
@@ -219,7 +219,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				// Change default value, so that null is not inserted as default.
-				db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
+				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
 
 				var mapping = db.MappingSchema.GetFluentMappingBuilder();
 				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5);

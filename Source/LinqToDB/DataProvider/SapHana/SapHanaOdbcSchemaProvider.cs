@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query(rd =>
 			{
@@ -63,9 +63,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new PrimaryKeyInfo
 				{
-					TableID = string.Concat(schema, '.', tableName),
-					ColumnName = columnName,
-					Ordinal = position,
+					TableID        = string.Concat(schema, '.', tableName),
+					ColumnName     = columnName,
+					Ordinal        = position,
 					PrimaryKeyName = indexName
 				};
 			}, @"

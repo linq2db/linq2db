@@ -15,7 +15,7 @@
 		<Nullable>enable</Nullable>
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
-		<NoWarn>1701;1591</NoWarn>
+		<NoWarn>1591</NoWarn>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>

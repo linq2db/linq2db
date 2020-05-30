@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCteTable : SqlTable
+	public class SqlCteTable : SqlTable, ICloneableElement
 	{
 		public          CteClause? Cte  { get; private set; }
 
@@ -84,5 +87,43 @@ namespace LinqToDB.SqlQuery
 
 
 		#endregion
+
+		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		{
+			if (!doClone(this))
+				return this;
+
+			if (!objectTree.TryGetValue(this, out var clone))
+			{
+				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new ArgumentException() : (CteClause)Cte.Clone(objectTree, doClone))
+				{
+					Name               = base.Name,
+					Alias              = Alias,
+					Server             = Server,
+					Database           = Database,
+					Schema             = Schema,
+					PhysicalName       = base.PhysicalName,
+					ObjectType         = ObjectType,
+					SqlTableType       = SqlTableType,
+				};
+
+				table.Fields.Clear();
+
+				foreach (var field in Fields)
+				{
+					var fc = new SqlField(field.Value);
+
+					objectTree.Add(field.Value, fc);
+					table.     Add(fc);
+				}
+
+				objectTree.Add(this, table);
+				objectTree.Add(All,  table.All);
+
+				clone = table;
+			}
+
+			return clone;
+		}
 	}
 }

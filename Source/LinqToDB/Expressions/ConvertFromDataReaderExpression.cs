@@ -30,7 +30,7 @@ namespace LinqToDB.Expressions
 
 		readonly int           _idx;
 		readonly Expression    _dataReaderParam;
-		         Type          _type;
+		readonly Type          _type;
 		readonly IDataContext? _slowModeDataContext;
 
 		public override Type           Type        => _type;
@@ -203,9 +203,20 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (Type.IsValueType)
+			if (Type.IsValueType && !Type.IsNullable())
 			{
 				var type = typeof(Nullable<>).MakeGenericType(Type);
+				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam);
+			}
+
+			return this;
+		}
+
+		public ConvertFromDataReaderExpression MakeNotNullable()
+		{
+			if (typeof(Nullable<>).IsSameOrParentOf(Type))
+			{
+				var type = Type.GetGenericArguments()[0];
 				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam);
 			}
 

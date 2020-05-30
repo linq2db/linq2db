@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -21,8 +20,8 @@ namespace Tests
 			ProviderName = providerName;
 		}
 
-		public string Category     { get; }
-		public string ProviderName { get; }
+		public string  Category     { get; }
+		public string? ProviderName { get; }
 
 		public void ApplyToTest(Test test)
 		{

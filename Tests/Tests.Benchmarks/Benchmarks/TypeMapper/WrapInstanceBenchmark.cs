@@ -6,8 +6,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows reasonable performance degradation and allcation due to wrapper instance creation
 	public class WrapInstanceBenchmark
 	{
-		private Original.TestClass2 _originalInstance;
-		private TypeMapper          _typeMapper;
+		private Original.TestClass2 _originalInstance = null!;
+		private TypeMapper          _typeMapper = null!;
 
 		[GlobalSetup]
 		public void Setup()

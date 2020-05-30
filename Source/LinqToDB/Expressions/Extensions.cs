@@ -32,7 +32,7 @@ namespace LinqToDB.Expressions
 				try
 				{
 					var l = Expression.Lambda<Func<Expression,string>>(
-						Expression.PropertyOrField(p, "DebugView"),
+						ExpressionHelper.PropertyOrField(p, "DebugView"),
 						p);
 
 					_getDebugView = l.Compile();
@@ -927,6 +927,11 @@ namespace LinqToDB.Expressions
 
 		#region Transform
 
+		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy)
+		{
+			return Transform(expression, e => e == toReplace ? replacedBy : e);
+		}
+
 		/// <summary>
 		/// Returns the body of <paramref name="lambda"/> but replaces the first parameter of that
 		/// lambda expression with the <paramref name="exprToReplaceParameter"/> expression.
@@ -1364,11 +1369,15 @@ namespace LinqToDB.Expressions
 
 			TransformInfo ti;
 
+			do
 			{
 				ti = func(expr);
-				if (ti.Stop || ti.Expression != expr)
+				if (ti.Stop || !ti.Continue && ti.Expression != expr)
 					return ti.Expression;
-			}
+				if (expr == ti.Expression)
+					break;
+				expr = ti.Expression;
+			} while (true);
 
 			switch (expr.NodeType)
 			{
@@ -1717,7 +1726,7 @@ namespace LinqToDB.Expressions
 					Expression.Constant(mi.Name));
 			}
 			else
-				return Expression.PropertyOrField(obj, mi.Name);
+				return Expression.MakeMemberAccess(obj, mi);
 		}
 	}
 }

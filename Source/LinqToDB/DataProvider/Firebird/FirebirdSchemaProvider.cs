@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var pks = ((DbConnection)dataConnection.Connection).GetSchema("PrimaryKeys");
 
@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					ProcedureID         = catalog + "." + schema + "." + name,
 					CatalogName         = catalog,
-					SchemaName          = schema, //schema,
+					SchemaName          = schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = schema.IsNullOrEmpty(),
 					ProcedureDefinition = p.Field<string>("SOURCE")
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 
@@ -215,9 +215,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "array"            : return DataType.VarBinary;
 				case "bigint"           : return DataType.Int64;

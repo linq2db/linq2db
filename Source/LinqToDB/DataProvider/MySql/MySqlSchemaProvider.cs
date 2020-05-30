@@ -78,7 +78,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
@@ -149,7 +149,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
 			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html
@@ -188,9 +188,9 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "bit"        : return DataType.UInt64;
 				case "blob"       : return DataType.Blob;
@@ -253,7 +253,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// don't use GetSchema("PROCEDURE PARAMETERS") as MySql provider's implementation does strange stuff
 			// instead of just quering of INFORMATION_SCHEMA view. It returns incorrect results and breaks provider
@@ -334,9 +334,9 @@ SELECT
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
 				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
@@ -349,9 +349,9 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (columnType != null && columnType.Contains("unsigned"))
+			if (dataType != null && columnType != null && columnType.Contains("unsigned"))
 			{
 				switch (dataType.ToLower())
 				{

@@ -56,13 +56,13 @@ namespace Tests.UserTests
 		/// <param name="values">The values.</param>
 		/// <returns></returns>
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
 		{
 			return values.Contains(field);
 		}
 
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
 		{
 			return values.Contains(field);
 		}

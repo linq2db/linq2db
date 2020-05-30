@@ -19,10 +19,10 @@ namespace Tests.UserTests
 		internal sealed class Animal
 		{
 			[PrimaryKey, Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 
 			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Color { get; set; }
+			public string Color { get; set; } = null!;
 
 			[Column(CanBeNull = false)]
 			public int Length { get; set; }
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		internal sealed class AnimalUpdate
 		{
 			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-			public string Name { get; set; }
+			public string Name { get; set; } = null!;
 
 			[Column(CanBeNull = false)]
 			public int Length { get; set; }
@@ -43,9 +43,9 @@ namespace Tests.UserTests
 
 		internal sealed class Data
 		{
-			public string Color { get; set; }
+			public string Color { get; set; } = null!;
 
-			public List<AnimalUpdate> Updates { get; set; }
+			public List<AnimalUpdate> Updates { get; set; } = null!;
 		}
 
 		[Table("InsertTable1398")]
@@ -86,6 +86,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Retry(3)] // could fail due to deadlock
 		[Test]
 		public void TestMerge([MergeDataContextSource(
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
@@ -129,6 +130,11 @@ namespace Tests.UserTests
 							.ToList()
 					};
 
+					foreach (var record in mammalsUpdate.Updates)
+						db.Insert(record);
+					foreach (var record in reptilesUpdate.Updates)
+						db.Insert(record);
+
 					var updateMammalsTask  = Task.Run(() => Update(context, mammalsUpdate, iteration));
 
 					var updateReptilesTask = Task.Run(() => Update(context, reptilesUpdate, iteration + repeatsCount));
@@ -156,10 +162,8 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				foreach (var record in data.Updates)
-					db.Insert(record);
-
-				db.GetTable<Animal>().Merge()
+				db.GetTable<Animal>()
+					.Merge()
 					.Using(db.GetTable<AnimalUpdate>().Where(_ => _.Iteration == iteration))
 					.On((target, source) => target.Name == source.Name)
 					.UpdateWhenMatched(

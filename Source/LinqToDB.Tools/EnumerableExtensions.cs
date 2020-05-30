@@ -15,9 +15,7 @@ namespace LinqToDB.Tools
 	{
 		class ValueHolder<T>
 		{
-#nullable disable
-			[UsedImplicitly] public T Value;
-#nullable restore
+			[UsedImplicitly] public T Value = default!;
 		}
 
 		/// <summary>

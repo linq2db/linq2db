@@ -6,10 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Common
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Reflection;
 
 	/// <summary>
@@ -18,23 +17,11 @@ namespace LinqToDB.Common
 	public static class Tools
 	{
 		/// <summary>
-		/// Shortcut extension method for <see cref="string.Format(string, object)"/> method.
-		/// </summary>
-		/// <param name="format">Format string.</param>
-		/// <param name="args">Format parameters.</param>
-		/// <returns>String, generated from <paramref name="format"/> format string using <paramref name="args"/> parameters.</returns>
-		[Obsolete("Use either string interpolation or CodeJam.FormatWith instead."), StringFormatMethod("format")]
-		public static string Args(this string format, params object?[] args)
-		{
-			return string.Format(format, args);
-		}
-
-		/// <summary>
 		/// Checks that collection is not null and have at least one element.
 		/// </summary>
 		/// <param name="array">Collection to check.</param>
 		/// <returns><c>true</c> if collection is null or contains no elements, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this ICollection? array)
+		public static bool IsNullOrEmpty([NotNullWhen(false)] this ICollection? array)
 		{
 			return array == null || array.Count == 0;
 		}
@@ -44,9 +31,20 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="str">String value to check.</param>
 		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty(this string? str)
+		public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str)
 		{
 			return string.IsNullOrEmpty(str);
+		}
+
+		// another reason to use those shortcuts - nullability annotations not available for string methods
+		/// <summary>
+		/// Shortcut extension method for <see cref="string.IsNullOrWhiteSpace(string)"/> method.
+		/// </summary>
+		/// <param name="str">String value to check.</param>
+		/// <returns><c>true</c> if string is null or contains only whitespace characters, <c>false</c> otherwise.</returns>
+		public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str)
+		{
+			return string.IsNullOrWhiteSpace(str);
 		}
 
 		/// <summary>
@@ -100,7 +98,7 @@ namespace LinqToDB.Common
 
 		public static string ToDebugDisplay(string str)
 		{
-			string RemoveDuplicates(string pattern, string input)
+			static string RemoveDuplicates(string pattern, string input)
 			{
 				var toSearch = pattern + pattern;
 				do

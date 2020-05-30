@@ -1,14 +1,10 @@
-﻿#nullable disable
-using System;
-using System.Linq.Expressions;
-
-using JetBrains.Annotations;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Tools.Mapper
 {
 	public class MemberMapperInfo
 	{
-		[NotNull] public LambdaExpression ToMember { get; set; }
-		[NotNull] public LambdaExpression Setter   { get; set; }
+		public LambdaExpression ToMember { get; set; } = null!;
+		public LambdaExpression Setter   { get; set; } = null!;
 	}
 }

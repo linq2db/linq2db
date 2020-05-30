@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
 				_isAzure
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
@@ -292,7 +292,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureParameterInfo>(
 				_isAzure
@@ -335,7 +335,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -383,7 +383,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		// spatial types (which is handled by T4 template for now)
 		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
@@ -423,7 +423,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -437,11 +437,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override string GetDbType(GetSchemaOptions options, string columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)
-				return (udtSchema != null ? Provider.Adapter.QuoteIdentifier(udtSchema) + '.' : null) + Provider.Adapter.QuoteIdentifier(udtName);
+				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
 
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
@@ -469,7 +469,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var sql = base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 
-			// TODO: v3.0: refactor method to use query as parameter instead of manual escaping...
+			// TODO: refactor method to use query as parameter instead of manual escaping...
 			// https://github.com/linq2db/linq2db/issues/1921
 			if (_compatibilityLevel >= 140)
 				sql = $"EXEC('{sql.Replace("'", "''")}')";

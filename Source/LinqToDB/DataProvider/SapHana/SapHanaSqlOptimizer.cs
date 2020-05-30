@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
 	using Extensions;
 	using SqlProvider;
@@ -13,22 +11,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		static void SetQueryParameter(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-
-				// enforce timespan as parameter
-				if (p.Type.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
-					p.IsQueryParameter = true;
-			}
-		}
-
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			new QueryVisitor().VisitAll(statement, SetQueryParameter);
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;

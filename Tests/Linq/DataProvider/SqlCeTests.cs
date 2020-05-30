@@ -91,7 +91,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
@@ -243,7 +243,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as ntext)", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -312,7 +312,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)",       new DataParameter("p", true)).                  Value, Is.EqualTo(true));
 				Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)",       new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
 
-				var conv = conn.MappingSchema.GetConverter<string,SqlXml>();
+				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
 
 				Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)",      new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)",      new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
@@ -402,7 +402,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -462,7 +462,7 @@ namespace Tests.DataProvider
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
 				var sh = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var t  = sh.Tables.Single(_ => _.TableName.Equals("Issue695", StringComparison.OrdinalIgnoreCase));
+				var t  = sh.Tables.Single(_ => _.TableName!.Equals("Issue695", StringComparison.OrdinalIgnoreCase));
 
 				Assert.AreEqual(2, t.Columns.Count);
 				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
@@ -510,7 +510,7 @@ namespace Tests.DataProvider
 						.Where(_ => (_.DateTimeValue ?? SqlDateTime.MinValue.Value) <= DateTime.Now)
 						.ToList();
 
-					Assert.True(db.LastQuery.Contains(", @") != inline);
+					Assert.True(db.LastQuery!.Contains(", @") != inline);
 				}
 			}
 			finally
@@ -525,7 +525,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
 			[Column(DataType = DataType.Image), Nullable]
-			public byte[] imageDataType { get; set; } 
+			public byte[]? imageDataType { get; set; } 
 		}
 
 		[Test]

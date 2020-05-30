@@ -14,22 +14,6 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			var selectQuery = statement.SelectQuery;
-			if (selectQuery != null)
-				new QueryVisitor().Visit(selectQuery.Select, element =>
-				{
-					if (element.ElementType == QueryElementType.SqlParameter)
-					{
-						var p = (SqlParameter)element;
-						if (p.Type.SystemType.IsScalar(false))
-						{
-							p.IsQueryParameter = false;
-
-							selectQuery.IsParameterDependent = true;
-						}
-					}
-				});
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :

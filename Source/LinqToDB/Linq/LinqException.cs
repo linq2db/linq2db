@@ -32,7 +32,7 @@ namespace LinqToDB.Linq
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the exception is thrown.</param>
-		/// <param name="args">An System.Object array containing zero or more objects to format.</param>
+		/// <param name="args">An <see cref="System.Object"/> array containing zero or more objects to format.</param>
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]
 		public LinqException(string message, params object?[] args)

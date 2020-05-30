@@ -19,7 +19,6 @@ namespace LinqToDB.Data
 	using Extensions;
 	using Mapping;
 	using Async;
-	using Linq;
 	using Reflection;
 
 	/// <summary>
@@ -574,13 +573,13 @@ namespace LinqToDB.Data
 			return indexMap;
 		}
 
-		static MethodInfo _readAsArrayMethodInfo =
+		static readonly MethodInfo _readAsArrayMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArray<int>(null!)).GetGenericMethodDefinition();
 
-		static MethodInfo _readAsListMethodInfo =
+		static readonly MethodInfo _readAsListMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
-		static MethodInfo _readSingletMethodInfo =
+		static readonly MethodInfo _readSingletMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(IDataReader rd)
@@ -642,13 +641,13 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		static MethodInfo _readAsArrayAsyncMethodInfo =
+		static readonly MethodInfo _readAsArrayAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArrayAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		static MethodInfo _readAsListAsyncMethodInfo =
+		static readonly MethodInfo _readAsListAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		static MethodInfo _readSingletAsyncMethodInfo =
+		static readonly MethodInfo _readSingletAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
@@ -677,9 +676,7 @@ namespace LinqToDB.Data
 			bool                      _isFaulted;
 			bool                      _isFinished;
 
-#nullable disable
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd)
-#nullable enable
 			{
 				_commandInfo   = commandInfo;
 				_rd            = rd;
@@ -692,7 +689,7 @@ namespace LinqToDB.Data
 			{
 			}
 
-			public T Current { get; set; }
+			public T Current { get; set; } = default!;
 
 			public async Task<bool> MoveNext(CancellationToken cancellationToken)
 			{
@@ -1183,19 +1180,19 @@ namespace LinqToDB.Data
 		{
 			foreach (var parameter in parameters)
 			{
-				var p        = dataConnection.Command.CreateParameter();
-				var dataType = parameter.DataType;
-				var dbType   = parameter.DbType;
-				var size     = parameter.Size;
-				var value    = parameter.Value;
+				var p          = dataConnection.Command.CreateParameter();
+				var dbDataType = parameter.DbDataType;
+				var value      = parameter.Value;
 
-				if (dataType == DataType.Undefined && value != null)
-					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType;
+				if (dbDataType.DataType == DataType.Undefined && value != null)
+					dbDataType = dbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType);
 
-				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
-				if (size                != null) p.Size      = size.               Value;
+				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
+				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
+				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
+				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
 
-				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType, size), value);
+				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}
@@ -1207,7 +1204,7 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		private static MethodInfo _convertParameterValueMethodInfo =
+		private static readonly MethodInfo _convertParameterValueMethodInfo =
 			MemberHelper.MethodOf(() => ConvertParameterValue(1, MappingSchema.Default)).GetGenericMethodDefinition();
 
 		static object? ConvertParameterValue(object? value, MappingSchema mappingSchema)
@@ -1282,10 +1279,9 @@ namespace LinqToDB.Data
 		static readonly ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>> _parameterReaders =
 			new ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>>();
 
-		static readonly PropertyInfo _dataParameterName     = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
-		static readonly PropertyInfo _dataParameterDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DataType);
-		static readonly PropertyInfo _dataParameterDbType   = MemberHelper.PropertyOf<DataParameter>(p => p.DbType);
-		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
+		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
+		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
+		static readonly PropertyInfo _dataParameterValue      = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
 		static DataParameter[]? GetDataParameters(DataConnection dataConnection, object? parameters)
 		{
@@ -1325,7 +1321,7 @@ namespace LinqToDB.Data
 											new[] { pobj },
 											new Expression[]
 											{
-												Expression.Assign(pobj, Expression.PropertyOrField(obj, column.MemberName)),
+												Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
 												Expression.MemberInit(
 													Expression.New(typeof(DataParameter)),
 													Expression.Bind(
@@ -1334,11 +1330,8 @@ namespace LinqToDB.Data
 															Expression.MakeMemberAccess(pobj, _dataParameterName),
 															Expression.Constant(column.ColumnName))),
 													Expression.Bind(
-														_dataParameterDataType,
-														Expression.MakeMemberAccess(pobj, _dataParameterDataType)),
-													Expression.Bind(
-														_dataParameterDbType,
-														Expression.MakeMemberAccess(pobj, _dataParameterDbType)),
+														_dataParameterDbDataType,
+														Expression.MakeMemberAccess(pobj, _dataParameterDbDataType)),
 													Expression.Bind(
 														_dataParameterValue,
 														Expression.Convert(
@@ -1348,7 +1341,7 @@ namespace LinqToDB.Data
 									}
 
 									var memberType  = column.MemberType.ToNullableUnderlying();
-									var valueGetter = Expression.PropertyOrField(obj, column.MemberName) as Expression;
+									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
 									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
@@ -1368,17 +1361,18 @@ namespace LinqToDB.Data
 										valueGetter = convExpr.GetBody(valueGetter);
 									}
 
+									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
+									if (columnDbDataType.DataType == DataType.Undefined)
+										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),
 										Expression.Bind(
 											_dataParameterName,
 											Expression.Constant(column.ColumnName)),
 										Expression.Bind(
-											_dataParameterDataType,
-											Expression.Constant(column.DataType != DataType.Undefined ? column.DataType : dataConnection.MappingSchema.GetDataType(memberType).Type.DataType)),
-										Expression.Bind(
-											_dataParameterDbType,
-											Expression.Constant(column.DbType, typeof(string))),
+											_dataParameterDbDataType,
+											Expression.Constant(columnDbDataType, typeof(DbDataType))),
 										Expression.Bind(
 											_dataParameterValue,
 											Expression.Convert(valueGetter, typeof(object))));
@@ -1498,8 +1492,8 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection, dataReader));
+				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dc, dr));
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -1509,8 +1503,8 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dataConnection));
+			var func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr).Reduce(dc));
 
 			_objectReaders[key] = func;
 
@@ -1520,7 +1514,7 @@ namespace LinqToDB.Data
 		static Func<IDataReader,T> CreateObjectReader<T>(
 			DataConnection dataConnection,
 			IDataReader    dataReader,
-			Func<Type,int,Expression,Expression> getMemberExpression)
+			Func<DataConnection, IDataReader, Type, int,Expression,Expression> getMemberExpression)
 		{
 			var parameter      = Expression.Parameter(typeof(IDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
@@ -1549,7 +1543,7 @@ namespace LinqToDB.Data
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{
-				expr = getMemberExpression(typeof(T), 0, dataReaderExpr);
+				expr = getMemberExpression(dataConnection, dataReader, typeof(T), 0, dataReaderExpr);
 			}
 			else
 			{
@@ -1586,6 +1580,8 @@ namespace LinqToDB.Data
 							ctor.c,
 							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
 								getMemberExpression(
+									dataConnection,
+									dataReader,
 									p.ParameterType,
 									(names
 										.Select((n,i) => new { n, i })
@@ -1606,7 +1602,7 @@ namespace LinqToDB.Data
 						select new
 						{
 							Member = member,
-							Expr   = getMemberExpression(member.MemberType, n.idx, dataReaderExpr),
+							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, dataReaderExpr),
 						}
 					).ToList();
 

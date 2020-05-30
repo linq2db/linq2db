@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -33,6 +32,12 @@ namespace Tests.xUpdate
 				// takes too long
 				case ProviderName.Informix       : batchSize = 500; break;
 				case ProviderName.InformixDB2    : batchSize = 500; break;
+
+				// original 2500 actually works, but sometimes fails with
+				// "cannot allocate enough memory: please check traces for further information"
+				// as HANA virtual machine is PITA to configure, we just use smaller data set
+				case ProviderName.SapHanaNative  : batchSize = 1000; break;
+				case ProviderName.SapHanaOdbc    : batchSize = 1000; break;
 
 				// big batches leads to a lot of memory use by oracle, which could mess with testing environment
 				case TestProvName.Oracle11Managed:

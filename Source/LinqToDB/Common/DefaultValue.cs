@@ -53,9 +53,7 @@ namespace LinqToDB.Common
 
 			var ms = mappingSchema ?? MappingSchema.Default;
 
-			object? value;
-
-			if (_values.TryGetValue(type, out value))
+			if (_values.TryGetValue(type, out var value))
 				return value;
 
 			if (type.IsEnum)
@@ -97,9 +95,7 @@ namespace LinqToDB.Common
 		/// <returns>Default value for specific type.</returns>
 		public static T GetValue<T>()
 		{
-			object? value;
-
-			if (_values.TryGetValue(typeof(T), out value))
+			if (_values.TryGetValue(typeof(T), out var value))
 				return (T)value!;
 
 			_values[typeof(T)] = default(T)!;

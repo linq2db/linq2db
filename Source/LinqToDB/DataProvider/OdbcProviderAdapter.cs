@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
 {
@@ -15,13 +17,18 @@ namespace LinqToDB.DataProvider
 			Type dataReaderType,
 			Type parameterType,
 			Type commandType,
-			Type transactionType)
+			Type transactionType,
+			Action<IDbDataParameter, OdbcType> dbTypeSetter,
+			Func  <IDbDataParameter, OdbcType> dbTypeGetter)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
 			ParameterType   = parameterType;
 			CommandType     = commandType;
 			TransactionType = transactionType;
+
+			SetDbType = dbTypeSetter;
+			GetDbType = dbTypeGetter;
 		}
 
 		public Type ConnectionType  { get; }
@@ -29,6 +36,9 @@ namespace LinqToDB.DataProvider
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		public Action<IDbDataParameter, OdbcType> SetDbType { get; }
+		public Func  <IDbDataParameter, OdbcType> GetDbType { get; }
 
 		public static OdbcProviderAdapter GetInstance()
 		{
@@ -49,16 +59,66 @@ namespace LinqToDB.DataProvider
 						var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true);
 						var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true);
 						var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true);
+						var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true);
+
+						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<OdbcType>(dbType);
+						typeMapper.RegisterTypeWrapper<OdbcParameter>(parameterType);
+						typeMapper.FinalizeMappings();
+
+						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
+						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
 
 						_instance = new OdbcProviderAdapter(
 							connectionType,
 							dataReaderType,
 							parameterType,
 							commandType,
-							transactionType);
+							transactionType,
+							typeSetter,
+							typeGetter);
 					}
 
 			return _instance;
 		}
+
+		#region Wrappers
+
+		[Wrapper]
+		private class OdbcParameter
+		{
+			public OdbcType OdbcType { get; set; }
+		}
+
+		[Wrapper]
+		public enum OdbcType
+		{
+			BigInt           = 1,
+			Binary           = 2,
+			Bit              = 3,
+			Char             = 4,
+			Date             = 23,
+			DateTime         = 5,
+			Decimal          = 6,
+			Double           = 8,
+			Image            = 9,
+			Int              = 10,
+			NChar            = 11,
+			NText            = 12,
+			Numeric          = 7,
+			NVarChar         = 13,
+			Real             = 14,
+			SmallDateTime    = 16,
+			SmallInt         = 17,
+			Text             = 18,
+			Time             = 24,
+			Timestamp        = 19,
+			TinyInt          = 20,
+			UniqueIdentifier = 15,
+			VarBinary        = 21,
+			VarChar          = 22
+		}
+		#endregion
 	}
 }

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -19,13 +18,13 @@ namespace Tests.Linq
 		{
 			[Column] [PrimaryKey] public int Id1    { get; set; }
 			[Column] [PrimaryKey] public int Id2    { get; set; }
-			[Column] public string Value { get; set; }
+			[Column] public string? Value { get; set; }
 
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
-			public List<DetailClass> Details { get; set; }
+			public List<DetailClass> Details { get; set; } = null!;
 
 			[Association(QueryExpressionMethod = nameof(DetailsQueryImpl))]
-			public DetailClass[] DetailsQuery { get; set; }
+			public DetailClass[] DetailsQuery { get; set; } = null!;
 
 			static Expression<Func<MasterClass, IDataContext, IQueryable<DetailClass>>> DetailsQueryImpl()
 			{
@@ -46,35 +45,35 @@ namespace Tests.Linq
 			[Column] public int Id8    { get; set; }
 			[Column] public int Id9    { get; set; }
 
-			[Column] public string Value { get; set; }
+			[Column] public string? Value { get; set; }
 
-			public List<DetailClass> Details { get; set; }
-		}
+			public List<DetailClass> Details { get; set; } = null!;
+}
 
 		[Table]
 		class DetailClass
 		{
 			[Column] [PrimaryKey] public int DetailId    { get; set; }
 			[Column] public int? MasterId    { get; set; }
-			[Column] public string DetailValue { get; set; }
+			[Column] public string? DetailValue { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
-			public SubDetailClass[] SubDetails { get; set; }
-		}
+			public SubDetailClass[] SubDetails { get; set; } = null!;
+}
 
 		[Table]
 		class SubDetailClass
 		{
 			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
 			[Column] public int? DetailId    { get; set; }
-			[Column] public string SubDetailValue { get; set; }
+			[Column] public string? SubDetailValue { get; set; }
 		}
 
 		class SubDetailDTO
 		{
 			public int SubDetailId    { get; set; }
 			public int? DetailId    { get; set; }
-			public string SubDetailValue { get; set; }
+			public string? SubDetailValue { get; set; }
 		}
 
 		static IQueryable<SubDetailDTO> MakeDTO(IQueryable<SubDetailClass> details)
@@ -387,7 +386,8 @@ namespace Tests.Linq
 						master_1.Id1,
 						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
+							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+							Another = masterP_1.SubDetails
 						}).ToArray()
 					};
 
@@ -398,7 +398,8 @@ namespace Tests.Linq
 						master_1.Id1,
 						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
+							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+							Another = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
 						}).ToArray()
 					};
 
@@ -460,7 +461,8 @@ namespace Tests.Linq
 					select new
 					{
 						Detail = d,
-						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray()
+						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+						SubDetailsAssocaited = d.SubDetails
 					};
 
 				var expectedQuery = from m in masterRecords.Take(20)
@@ -468,7 +470,8 @@ namespace Tests.Linq
 					select new
 					{
 						Detail = d,
-						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
+						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+						SubDetailsAssocaited = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -539,6 +542,48 @@ namespace Tests.Linq
 		[Test]
 		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
+					join d in detail on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						DetailAssociated = dd.SubDetails,
+						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
+						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+					};
+
+				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
+					join d in detailRecords on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Master = m,
+						Detail = dd,
+						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
+						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
+						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
 			var (masterRecords, detailRecords) = GenerateData();
 
 			using (new AllowMultipleQuery())
@@ -553,7 +598,10 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+							.AsEnumerable()
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -563,7 +611,9 @@ namespace Tests.Linq
 					{
 						Master = m,
 						Detail = dd,
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).ToArray()
+						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+							.GroupBy(_ => _.Id1)
+							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
 
 				var result   = query.ToArray();
@@ -613,6 +663,279 @@ namespace Tests.Linq
 			}
 		}
 
+		#region issue 1862
+		[Table]
+		public partial class Blog
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public string? Title  { get; set; }
+			[Column] public string? Slogan { get; set; }
+			[Column] public string? UserId { get; set; }
 
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Post.BlogId))]
+			public virtual ICollection<Post> Posts { get; set; } = null!;
+
+			public static readonly Blog[] Data = new[]
+			{
+				new Blog() { Id = 1, Title = "Another .NET Core Guy", Slogan = "Doing .NET Core Stuff", UserId = Guid.NewGuid().ToString("N") }
+			};
+		}
+
+		[Table]
+		public partial class Post
+		{
+			[Column] public int     Id          { get; set; }
+			[Column] public int     BlogId      { get; set; }
+			[Column] public string? Title       { get; set; }
+			[Column] public string? PostContent { get; set; }
+			[Column] public bool    IsDeleted   { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PostTag.PostId), CanBeNull = true)]
+			public virtual ICollection<PostTag> PostTags { get; set; } = null!;
+
+			public static readonly Post[] Data = new[]
+			{
+				new Post() { Id = 1, BlogId = 1, Title = "Post 1", PostContent = "Content 1 is about EF Core and Razor page", IsDeleted = false },
+				new Post() { Id = 2, BlogId = 1, Title = "Post 2", PostContent = "Content 2 is about Dapper", IsDeleted = false },
+				new Post() { Id = 3, BlogId = 1, Title = "Post 3", PostContent = "Content 3", IsDeleted = true },
+				new Post() { Id = 4, BlogId = 1, Title = "Post 4", PostContent = "Content 4", IsDeleted = false },
+			};
+		}
+
+		[Table]
+		public partial class Tag
+		{
+			[Column] public int     Id        { get; set; }
+			[Column] public string? Name      { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PostTag.TagId), CanBeNull = true)]
+			public virtual ICollection<PostTag> PostTags { get; set; } = null!;
+
+			public static readonly Tag[] Data = new[]
+			{
+				new Tag() { Id = 1, Name = "Razor Page", IsDeleted = false },
+				new Tag() { Id = 2, Name = "EF Core", IsDeleted = false },
+				new Tag() { Id = 3, Name = "Dapper", IsDeleted = false },
+				new Tag() { Id = 4, Name = "Slapper Dapper", IsDeleted = false },
+				new Tag() { Id = 5, Name = "SqlKata", IsDeleted = true },
+			};
+		}
+
+		[Table]
+		public partial class PostTag
+		{
+			[Column] public int  Id        { get; set; }
+			[Column] public int  PostId    { get; set; }
+			[Column] public int  TagId     { get; set; }
+			[Column] public bool IsDeleted { get; set; }
+
+			[Association(ThisKey = nameof(PostId), OtherKey = nameof(EagerLoadingTests.Post.Id), CanBeNull = false)]
+			public virtual Post Post { get; set; } = null!;
+			[Association(ThisKey = nameof(TagId), OtherKey = nameof(EagerLoadingTests.Tag.Id), CanBeNull = false)]
+			public virtual Tag  Tag  { get; set; } = null!;
+
+			public static readonly PostTag[] Data = new[]
+			{
+				new PostTag() { Id = 1, PostId = 1, TagId = 1, IsDeleted = false },
+				new PostTag() { Id = 2, PostId = 1, TagId = 2, IsDeleted = false },
+				new PostTag() { Id = 3, PostId = 2, TagId = 3, IsDeleted = false },
+				new PostTag() { Id = 4, PostId = 4, TagId = 5, IsDeleted = false },
+			};
+		}
+
+		[Test]
+		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db      = GetDataContext(context))
+			using (var blog    = db.CreateLocalTable(Blog.Data))
+			using (var post    = db.CreateLocalTable(Post.Data))
+			using (var tage    = db.CreateLocalTable(Tag.Data))
+			using (var postTag = db.CreateLocalTable(PostTag.Data))
+			{
+				var blogId = 1;
+				var query = blog.Where(b => b.Id == blogId).Select(b => new
+				{
+					b.Id,
+					b.Title,
+					Posts = b.Posts.Select(p => new
+					{
+						p.Id,
+						p.Title,
+						p.PostContent,
+						Tags = p.PostTags.Where(pp => !pp.IsDeleted).Select(t => new
+						{
+							Id = t.TagId,
+							t.Tag.Name
+						}).OrderBy(t => t.Id).ToArray()
+					}).OrderBy(op => op.Id).ToArray()
+				});
+
+				var result = new
+				{
+					Blog = query.ToArray()
+				};
+
+				Assert.AreEqual(1, result.Blog.Length);
+				Assert.AreEqual(1, result.Blog[0].Id);
+				Assert.AreEqual("Another .NET Core Guy", result.Blog[0].Title);
+				Assert.AreEqual(4, result.Blog[0].Posts.Length);
+
+				Assert.AreEqual(1, result.Blog[0].Posts[0].Id);
+				Assert.AreEqual("Post 1", result.Blog[0].Posts[0].Title);
+				Assert.AreEqual("Content 1 is about EF Core and Razor page", result.Blog[0].Posts[0].PostContent);
+				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags.Length);
+				Assert.AreEqual(1, result.Blog[0].Posts[0].Tags[0].Id);
+				Assert.AreEqual("Razor Page", result.Blog[0].Posts[0].Tags[0].Name);
+				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags[1].Id);
+				Assert.AreEqual("EF Core", result.Blog[0].Posts[0].Tags[1].Name);
+
+				Assert.AreEqual(2, result.Blog[0].Posts[1].Id);
+				Assert.AreEqual("Post 2", result.Blog[0].Posts[1].Title);
+				Assert.AreEqual("Content 2 is about Dapper", result.Blog[0].Posts[1].PostContent);
+				Assert.AreEqual(1, result.Blog[0].Posts[1].Tags.Length);
+				Assert.AreEqual(3, result.Blog[0].Posts[1].Tags[0].Id);
+				Assert.AreEqual("Dapper", result.Blog[0].Posts[1].Tags[0].Name);
+
+				Assert.AreEqual(3, result.Blog[0].Posts[2].Id);
+				Assert.AreEqual("Post 3", result.Blog[0].Posts[2].Title);
+				Assert.AreEqual("Content 3", result.Blog[0].Posts[2].PostContent);
+				Assert.AreEqual(0, result.Blog[0].Posts[2].Tags.Length);
+
+				Assert.AreEqual(4, result.Blog[0].Posts[3].Id);
+				Assert.AreEqual("Post 4", result.Blog[0].Posts[3].Title);
+				Assert.AreEqual("Content 4", result.Blog[0].Posts[3].PostContent);
+				Assert.AreEqual(1, result.Blog[0].Posts[3].Tags.Length);
+				Assert.AreEqual(5, result.Blog[0].Posts[3].Tags[0].Id);
+				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
+			}
+		}
+		#endregion
+
+
+		#region issue 2196
+		public class EventScheduleItemBase
+		{
+			public EventScheduleItemBase()
+			{
+			}
+
+			[PrimaryKey]
+			[Column] public int  Id                        { get; set; }
+			[Column] public int  EventId                   { get; set; }
+			[Column] public bool IsActive                  { get; set; } = true;
+			[Column] public int? ParentEventScheduleItemId { get; set; }
+		}
+
+		[Table]
+		public class EventScheduleItem : EventScheduleItemBase
+		{
+			public EventScheduleItem()
+			{
+				Persons = new List<EventScheduleItemPerson>();
+				ChildSchedules = new List<EventScheduleItem>();
+			}
+
+			[Association(ThisKey = nameof(ParentEventScheduleItemId), OtherKey = nameof(Id))]
+			public virtual EventScheduleItem? ParentSchedule { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentEventScheduleItemId))]
+			public virtual List<EventScheduleItem> ChildSchedules { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EventScheduleItemPerson.EventScheduleItemId))]
+			public virtual List<EventScheduleItemPerson> Persons { get; set; } = null!;
+
+			public static EventScheduleItem[] Items { get; } =
+				new[]
+				{
+					new EventScheduleItem() { Id = 1, EventId = 1, IsActive = true, ParentEventScheduleItemId = 1 },
+					new EventScheduleItem() { Id = 2, EventId = 2, IsActive = true, ParentEventScheduleItemId = 2 }
+				};
+		}
+
+		[Table]
+		public class EventScheduleItemPerson
+		{
+			[Column] public int Id                    { get; set; }
+			[Column] public int EventSchedulePersonId { get; set; }
+			[Column] public int EventScheduleItemId   { get; set; }
+
+			[Association(ThisKey = nameof(EventSchedulePersonId), OtherKey = nameof(EventSchedulePerson.Id))]
+			public virtual EventSchedulePerson Person { get; set; } = null!;
+			[Association(ThisKey = nameof(EventScheduleItemId), OtherKey = nameof(EventScheduleItem.Id))]
+			public virtual EventScheduleItem ScheduleItem { get; set; } = null!;
+
+			public static EventScheduleItemPerson[] Items { get; } =
+				new[]
+				{
+					new EventScheduleItemPerson() { Id = 1, EventSchedulePersonId = 1, EventScheduleItemId = 1 },
+					new EventScheduleItemPerson() { Id = 2, EventSchedulePersonId = 2, EventScheduleItemId = 2 }
+				};
+		}
+
+		[Table]
+		public class EventSchedulePerson
+		{
+			public EventSchedulePerson()
+			{
+				EventScheduleItemPersons = new List<EventScheduleItemPerson>();
+			}
+
+			[Column] public int  Id             { get; set; }
+			[Column] public int? TicketNumberId { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EventScheduleItemPerson.EventSchedulePersonId))]
+			public virtual ICollection<EventScheduleItemPerson> EventScheduleItemPersons { get; set; }
+
+			public static EventSchedulePerson[] Items { get; } =
+				new[]
+				{
+					new EventSchedulePerson() { Id = 1, TicketNumberId = 1 },
+					new EventSchedulePerson() { Id = 2, TicketNumberId = 2 }
+				};
+		}
+
+		public class EventScheduleListModel : EventScheduleItemBase
+		{
+			public List<EventScheduleListPersonModel> Persons { get; set; } = new List<EventScheduleListPersonModel>();
+		}
+
+		public class EventScheduleListPersonModel
+		{
+			public int  Id                    { get; set; }
+			public int  EventSchedulePersonId { get; set; }
+			public int? TicketNumberId        { get; set; }
+		}
+
+		[Test]
+		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(EventScheduleItem.Items))
+			using (db.CreateLocalTable(EventScheduleItemPerson.Items))
+			using (db.CreateLocalTable(EventSchedulePerson.Items))
+			{
+				var eventId = 1;
+
+				var query = db.GetTable<EventScheduleItem>()
+					.Where(p => p.EventId == eventId && p.IsActive)
+					.Select(p => new EventScheduleListModel()
+					{
+						Id      = p.Id,
+						Persons = p.Persons.Select(pp => new EventScheduleListPersonModel()
+						{
+							EventSchedulePersonId = pp.EventSchedulePersonId,
+							Id                    = pp.Id,
+							TicketNumberId        = pp.Person.TicketNumberId
+						}).ToList()
+					});
+
+				var result = query.ToList();
+
+				Assert.That(result.Count, Is.EqualTo(1));
+				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
+			}
+		}
+		#endregion
 	}
 }

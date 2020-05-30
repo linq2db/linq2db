@@ -43,7 +43,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SearchCondition1([DataSources(ProviderName.Access)] string context)
+		public void SearchCondition1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -106,5 +106,65 @@ namespace Tests.Linq
 					vbResults);
 			}
 		}
-	}
+
+		[ActiveIssue(649)]
+		[Test]
+		public void Issue649Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test1(db);
+			}
+		}
+
+		[Test]
+		public void Issue649Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test2(db);
+			}
+		}
+
+		[Test]
+		public void Issue649Test3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test3(db);
+			}
+		}
+
+		[ActiveIssue(649)]
+		[Test]
+		public void Issue649Test4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = true;
+				var q1 = db.Child.GroupBy(c => new
+				{
+					c.ParentID,
+					c.ChildID
+				}, (c, g) => new
+				{
+					Child = c,
+					Grouped = g
+				}).Select(data => new
+				{
+					ParentID  = data.Child.ParentID,
+					ChildID   = data.Child.ChildID,
+					LastChild = data.Grouped.Max(f => f.ChildID)
+				});
+
+				var str = q1.ToString();
+			}
+		}
+		}
 }

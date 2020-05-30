@@ -26,7 +26,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
 			[Column(Configuration = TestProvName.MySql55,        IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
-			public string String;
+			public string? String;
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
@@ -37,7 +37,7 @@ namespace Tests.Linq
 			[Column("char20DataType" , Configuration = TestProvName.MySql55)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
-			public string NString;
+			public string? NString;
 		}
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]

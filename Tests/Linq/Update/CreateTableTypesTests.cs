@@ -42,15 +42,15 @@ namespace Tests.xUpdate
 			public IntEnum?    IntEnumNullable    { get; set; }
 			public StringEnum  StringEnum         { get; set; }
 			public StringEnum? StringEnumNullable { get; set; }
-			public string      String             { get; set; }
+			public string?     String             { get; set; }
 
 			// converters test
 			// see https://github.com/linq2db/linq2db/issues/1032
-			public List<(uint field1, string field2)> StringConverted;
+			public List<(uint field1, string field2)> StringConverted = null!;
 
 			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
-			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
+			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>()
 			{
 				(1, "one"),
 				(2, "two")
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		// TODO: add more cases: other types, different DataType values
 		// TODO: add length validation to fields with length (text/binary)
-		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
+		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder?, Func<string, bool>?, Func<string, bool>?)> TestCases
 		{
 			[UsedImplicitly]
 			get
@@ -108,8 +108,8 @@ namespace Tests.xUpdate
 				yield return (e => e.Property (_ => _.String).IsNullable(),                    v => v.String = "test max value nullable"                       , null,                                                                                                                        null,                            null);
 				// Oracle treats empty string as null in this context
 				// Sybase roundtrips empty string to " " (WAT?)
-				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
-				yield return (e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        null,                            null);
+				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, ctx => ctx.Contains("Oracle") && ctx.Contains("Native"), null);
+				yield return (e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        ctx => ctx.Contains("Oracle") && ctx.Contains("Native"), null);
 				// https://github.com/linq2db/linq2db/issues/1032 with DataType specified
 				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                             null,                            null);
 				yield return (e => e.Property(_ => _.StringConverted).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                               null,                            null);
@@ -119,17 +119,18 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// TODO: fix
 		// oracle native tests could fail due to bug in provider:
 		// InitialLONGFetchSize option makes it read garbage for String/StringNullable testcases
 		[Test]
 		public void TestCreateTableColumnType(
 			[DataSources] string context,
 			[ValueSource(nameof(TestCases))] (
-				ColumnBuilder columnBuilder,
-				ValueBuilder valueBuilder,
-				DefaultValueBuilder defaultValueBuilder,
-				Func<string, bool> skipAssert,
-				Func<string, bool> skipCase) testCase)
+				ColumnBuilder        columnBuilder,
+				ValueBuilder         valueBuilder,
+				DefaultValueBuilder? defaultValueBuilder,
+				Func<string, bool>?  skipAssert,
+				Func<string, bool>?  skipCase) testCase)
 		{
 			if (testCase.skipCase?.Invoke(context) == true)
 			{

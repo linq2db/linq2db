@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 	public class SqlTableSource : ISqlTableSource
 	{
 #if DEBUG
-		int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+		readonly int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 #endif
 
 		public SqlTableSource(ISqlTableSource source, string? alias)

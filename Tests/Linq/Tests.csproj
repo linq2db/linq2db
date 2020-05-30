@@ -3,12 +3,14 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Nullable>disable</Nullable>
 		<!--suppress complains about IBM.Data.DB2.Core.dll-->
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>

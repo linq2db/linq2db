@@ -1,6 +1,4 @@
-﻿#nullable disable
-using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -19,23 +17,23 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets or sets SQL name of data type.
 		/// </summary>
-		public string TypeName;
+		public string TypeName = null!;
 		/// <summary>
 		/// Gets or sets .NET type name, used by provider for current type.
 		/// </summary>
-		public string DataType;
+		public string DataType = null!;
 		/// <summary>
 		/// Gets or sets SQL type name template - type name and, optionally, parameters. This template could be used
 		/// to define column or variable of specific type.
 		/// E.g. DECIMAL({0}, {1}).
 		/// </summary>
-		public string CreateFormat;
+		public string? CreateFormat;
 		/// <summary>
 		/// Gets or sets comma-separated positional list of <see cref="CreateFormat"/> parameters.
 		/// E.g. "precision,scale".
 		/// Order of parameters must match order in <see cref="CreateFormat"/>.
 		/// </summary>
-		public string CreateParameters;
+		public string? CreateParameters;
 		/// <summary>
 		/// Gets or sets provider-specific type identifier to use for query parameters of this type.
 		/// Corresponds to some provider's enumeration, e.g. SqlDbType, OracleType, etc.

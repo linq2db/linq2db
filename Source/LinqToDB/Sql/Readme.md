@@ -14,7 +14,7 @@ At the same time, some people prefer having LINQ (or even lambda) expressions th
 
  - `Sql.CurrentTimestamp` : Normally, `DateTime` instances passed into queries are parameterized on the client side. This includes `DateTime.Now`. `Sql.CurrentTimestamp` on the other hand will use the database server's current time instead of the time on the .NET server executing the query.
 
- - `Sql.Between` : Allows you to use `Between(myTable.MyCol1,1,2)` instead of an expression such as `(myTable.MyCol1 >= 1 && myTable.MyCol1 <=2)`.
+ - `Sql.Between` : Allows you to use `Between(myTable.MyColumn, 1, 2)` instead of an expression such as `(myTable.MyColumn >= 1 && myTable.MyColumn <=2)`.
    - `Sql.NotBetween` : The inverse of `Sql.Between`
  
  - `Sql.Reverse` : Reverses a string.
@@ -26,19 +26,20 @@ At the same time, some people prefer having LINQ (or even lambda) expressions th
 
 There are times where you may wish to add a more custom expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, this would typically become a `CASE` statement, whereas some people may prefer being able to use the database server's built in `NullIf` function via a call like `SqlExpr.NullIf(table.SomeProperty,someValue)`. To do so, they merely would need to have a class such as this:
 
-```
+```cs
 using Linq2db;
+
 namespace MyProject
 {
     public static partial class SqlExpr
     {
-        [Sql.Expression("NULLIF({0},{1})", PreferServerSide = true)]
+        [Sql.Expression("NULLIF({0}, {1})", PreferServerSide = true)]
         public static T NullIf<T>(T value, T compareTo) where T: class, IComparable<T>
         {
             return value.HasValue && value.Value.CompareTo(compareTo) == 0 ? null : value;
         }
 
-        [Sql.Expression("NULLIF({0},{1})", PreferServerSide = true)]
+        [Sql.Expression("NULLIF({0}, {1})", PreferServerSide = true)]
         public static T? NullIf<T>(T? value, T compareTo) where T: struct, IComparable<T>
         {
             return value.HasValue && value.Value.CompareTo(compareTo) == 0 ? null : value;
@@ -49,14 +50,15 @@ namespace MyProject
 
 Additionally, you may write server-specific patterns as needed. Take the example of checking if a VARCHAR value is convertable to a positive integer and is not a decimal value. In SQL Server, you can do this with some clever use of `ISNUMERIC`. However, in SQLite, the only reliable way to do so is with GLOB. The below example shows how you can specify provider-specifc usages.
 
-```
+```cs
 using Linq2db;
+
 namespace MyProject
 {
     public static partial class SqlExpr
     {
-        [Sql.Expression("SqlServer","ISNUMERIC('-' + {0} + '.0e0')", PreferServerSide = true)]
-        [Sql.Expression("SQLite","NOT {0} GLOB '*[^0-9]*' AND {0} LIKE '_%'", PreferServerSide = true)]
+        [Sql.Expression("SqlServer", "ISNUMERIC('-' + {0} + '.0e0')", PreferServerSide = true)]
+        [Sql.Expression("SQLite", "NOT {0} GLOB '*[^0-9]*' AND {0} LIKE '_%'", PreferServerSide = true)]
         public static bool IsPositiveInteger<T>(T value)
         {
             int checkDecimal = 0;
@@ -85,8 +87,9 @@ namespace MyProject
 
 `Sql.FunctionAttribute` is a more specific case of the `ExpressionAttribute`: consider it a convenience method when calling a server function with known parameters. For example, if you wanted to use IsNumeric in a more normal fashion:
 
-```
+```cs
 using Linq2db;
+
 namespace MyProject
 {
     public static partial class SqlExpr

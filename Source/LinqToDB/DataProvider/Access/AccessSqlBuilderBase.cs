@@ -1,35 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using SqlQuery;
-	using SqlProvider;
 	using LinqToDB.Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	class AccessSqlBuilder : BasicSqlBuilder
+	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		private readonly AccessDataProvider? _provider;
-
-		public AccessSqlBuilder(
-			AccessDataProvider? provider,
+		protected AccessSqlBuilderBase(
 			MappingSchema       mappingSchema,
 			ISqlOptimizer       sqlOptimizer,
 			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider = provider;
-		}
-
-		// remote context
-		public AccessSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -49,11 +35,9 @@ namespace LinqToDB.DataProvider.Access
 
 				StringBuilder.Append("ALTER TABLE ");
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
-				StringBuilder
-					.Append(" ALTER COLUMN ")
-					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
-					.AppendLine(" COUNTER(1,1)")
-					;
+				StringBuilder.Append(" ALTER COLUMN ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.AppendLine(" COUNTER(1,1)");
 			}
 			else
 			{
@@ -170,11 +154,6 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		#endregion
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new AccessSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
 		{
@@ -360,41 +339,41 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+							return sb.Append(value);
 
-					return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
-					var name = value;
-
 					if (value.Length > 0 && value[0] == '[')
-							return value;
+							return sb.Append(value);
 
 					if (value.IndexOf('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
-						return "[" + value + "]";
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
-					return value.Length > 0 && value[0] == '@'? value.Substring(1) : value;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -418,18 +397,6 @@ namespace LinqToDB.DataProvider.Access
 				sb.Append(database).Append(".");
 
 			return sb.Append(table);
-		}
-
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
-		{
-			if (_provider != null)
-		{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
-				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

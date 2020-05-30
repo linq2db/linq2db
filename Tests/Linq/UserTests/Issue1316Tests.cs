@@ -34,12 +34,12 @@ namespace Tests.UserTests
 
 		public class Test
 		{
-			public Test Child;
+			public Test? Child;
 
 			public int Id;
 
 			public int GetId() => Id;
-			public Test GetChild() => Child;
+			public Test? GetChild() => Child;
 		}
 
 		[Test]
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 					}
 				};
 
-				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild().Child.GetId()).Single();
-				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild().Child.Id).Single();
+				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild()!.Child!.GetId()).Single();
+				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild()!.Child!.Id).Single();
 			}
 		}
 

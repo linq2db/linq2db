@@ -280,7 +280,7 @@ namespace LinqToDB.Expressions
 					var handlerGenerator = new ExpressionGenerator(this);
 					var delegateVariable = handlerGenerator.DeclareVariable(wrapperEvent.EventHandlerType, "handler");
 
-					handlerGenerator.Assign(delegateVariable, Expression.Field(pWrapper, "_" + eventName));
+					handlerGenerator.Assign(delegateVariable, ExpressionHelper.Field(pWrapper, "_" + eventName));
 
 					// returning event is a bad idea
 					if (returnType != typeof(void))
@@ -297,7 +297,7 @@ namespace LinqToDB.Expressions
 
 					subscribeGenerator.AddExpression(
 						Expression.Call(
-							Expression.Convert(Expression.Property(pWrapper, nameof(TypeWrapper.instance_)), targetType),
+							Expression.Convert(ExpressionHelper.Property(pWrapper, nameof(TypeWrapper.instance_)), targetType),
 							ei.AddMethod,
 							Expression.Lambda(delegateType, handlerGenerator.ResultExpression, parameters)));
 				}
@@ -326,7 +326,7 @@ namespace LinqToDB.Expressions
 					expr = MapExpressionInternal(Expression.Lambda(expr, paramExpressions), paramValues);
 
 					if (returnType != null && typeof(TypeWrapper).IsSameOrParentOf(returnType))
-						expr = Expression.Property(Expression.Convert(expr, returnType), nameof(TypeWrapper.instance_));
+						expr = ExpressionHelper.Property(Expression.Convert(expr, returnType), nameof(TypeWrapper.instance_));
 
 					return expr;
 				}
@@ -344,19 +344,7 @@ namespace LinqToDB.Expressions
 					.Select(e => e is Tuple<LambdaExpression, bool> tuple
 						? new { expr = tuple.Item1, optional = tuple.Item2 }
 						: new { expr = (LambdaExpression)e, optional = false })
-					.Select(e =>
-					{
-						try
-						{
-							return BuildWrapper(e.expr);
-						}
-						catch
-						{
-							if (!e.optional)
-								throw;
-							return null!;
-						}
-					}).ToArray();
+					.Select(e => BuildWrapper(e.expr, e.optional)!).ToArray();
 
 			return null;
 		}
@@ -370,7 +358,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		private static MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
+		private static readonly MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
 
 		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
 		{
@@ -400,7 +388,7 @@ namespace LinqToDB.Expressions
 			return TryMapType(type, out var replacement) ? replacement : type;
 		}
 
-		private LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false, bool convertResult = true)
+		private LambdaExpression MapLambdaInternal(LambdaExpression lambda, bool mapConvert = false, bool convertResult = true, bool ignoreMissingMembers = false)
 		{
 			if (_lambdaMappingCache.TryGetValue(lambda, out var mappedLambda))
 				return mappedLambda;
@@ -409,7 +397,7 @@ namespace LinqToDB.Expressions
 				.Select(p => TryMapType(p.Type, out var replacement) ? Expression.Parameter(replacement, p.Name) : p)
 				.ToArray();
 
-			MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
+			static MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
 			{
 				var newMembers = targetType.GetMember(memberInfo.Name);
 				if (newMembers.Length == 0)
@@ -424,8 +412,13 @@ namespace LinqToDB.Expressions
 				if (expression == null)
 					return null;
 
+				var aborted = false;
+
 				var converted = expression.Transform(e =>
 				{
+					if (aborted)
+						return e;
+
 					switch (e.NodeType)
 					{
 						case ExpressionType.Convert  :
@@ -450,6 +443,12 @@ namespace LinqToDB.Expressions
 
 										if (method == null)
 										{
+											if (ignoreMissingMembers)
+											{
+												aborted = true;
+												return e;
+											}
+
 											var name = replacement.FullName + "." + ue.Method.Name + "(" +
 													   string.Join(", ", types.Select(t => t.Name)) + ")";
 											throw new LinqToDBException($"Method not found in target type: {name}");
@@ -510,7 +509,16 @@ namespace LinqToDB.Expressions
 
 									var prop = replacement.GetProperty(ma.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 									if (prop == null)
+									{
+										if (ignoreMissingMembers)
+										{
+											aborted = true;
+											return e;
+										}
+
 										throw new LinqToDBException($"Property not found in target type: {replacement.FullName}.{ma.Member.Name}");
+									}
+
 									return Expression.MakeMemberAccess(expr, prop);
 								}
 
@@ -540,6 +548,12 @@ namespace LinqToDB.Expressions
 
 									if (ctor == null)
 									{
+										if (ignoreMissingMembers)
+										{
+											aborted = true;
+											return e;
+										}
+
 										var name = replacement.FullName + "." + ne.Constructor.Name + "(" +
 										           string.Join(", ", paramTypes.Select(t => t.Name)) + ")";
 										throw new LinqToDBException($"Constructor not found in target type: {name}");
@@ -612,6 +626,12 @@ namespace LinqToDB.Expressions
 
 										if (method == null)
 										{
+											if (ignoreMissingMembers)
+											{
+												aborted = true;
+												return e;
+											}
+
 											var name = replacement.FullName + "." + mc.Method.Name + "<" +
 													   string.Join(", ", typeArgs.Select(t => t.Name))+ ">(" +
 													   string.Join(", ", types.Select(t => t.Name)) + ")";
@@ -628,6 +648,12 @@ namespace LinqToDB.Expressions
 
 										if (method == null)
 										{
+											if (ignoreMissingMembers)
+											{
+												aborted = true;
+												return e;
+											}
+
 											var name = replacement.FullName + "." + mc.Method.Name + "(" +
 													   string.Join(", ", types.Select(t => t.Name)) + ")";
 											throw new LinqToDBException($"Method not found in target type: {name}");
@@ -645,10 +671,13 @@ namespace LinqToDB.Expressions
 
 					return e;
 				});
-				return converted;
+				
+				return aborted ? null : converted;
 			}
 
 			var convertedBody = ReplaceTypes(lambda.Body)!;
+			if (convertedBody == null)
+				return null!;
 
 			if (convertResult && _typeMappingReverseCache.TryGetValue(convertedBody.Type, out var wrapperType) && wrapperType.IsEnum)
 				convertedBody = _enumToWrapperCache[convertedBody.Type].GetBody(convertedBody);
@@ -989,17 +1018,19 @@ namespace LinqToDB.Expressions
 			if (!TryMapType(wrapperType, out var _))
 				throw new LinqToDBException($"Wrapper type {wrapperType} is not registered");
 
-			return BuildWrapperImpl(lambda, wrapResult);
+			return BuildWrapperImpl(lambda, wrapResult, false)!;
 		}
 
-		private Delegate BuildWrapper(LambdaExpression lambda)
+		private Delegate? BuildWrapper(LambdaExpression lambda, bool optional)
 		{
-			return BuildWrapperImpl(lambda, true);
+			return BuildWrapperImpl(lambda, true, optional);
 		}
 
-		private Delegate BuildWrapperImpl(LambdaExpression lambda, bool wrapResult)
+		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional)
 		{
-			var mappedLambda = MapLambdaInternal(lambda, true);
+			var mappedLambda = MapLambdaInternal(lambda, true, ignoreMissingMembers: optional);
+			if (optional && mappedLambda == null)
+				return null;
 
 			var parametersMap = new Dictionary<Expression, Expression>();
 			for (var i = 0; i < lambda.Parameters.Count; i++)
@@ -1011,7 +1042,7 @@ namespace LinqToDB.Expressions
 					if (typeof(TypeWrapper).IsSameOrParentOf(oldParameter.Type))
 						parametersMap.Add(
 							mappedLambda.Parameters[i],
-							Expression.Convert(Expression.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
+							Expression.Convert(ExpressionHelper.Property(oldParameter, nameof(TypeWrapper.instance_)), mappedType));
 					else if (oldParameter.Type.IsEnum)
 						parametersMap.Add(
 							mappedLambda.Parameters[i],

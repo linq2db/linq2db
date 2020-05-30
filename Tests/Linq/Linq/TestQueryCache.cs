@@ -18,17 +18,17 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			public int Id        { get; set; }
-			public string StrKey { get; set; }
-			public string Value  { get; set; }
+			public int Id         { get; set; }
+			public string? StrKey { get; set; }
+			public string? Value  { get; set; }
 		}
 
 		[Table]
 		class SampleClassWithIdentity
 		{
 			[Identity]
-			public int Id        { get; set; }
-			public string Value  { get; set; }
+			public int Id         { get; set; }
+			public string? Value  { get; set; }
 		}
 
 		[Table]
@@ -120,14 +120,14 @@ namespace Tests.Linq
 		[Test]
 		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			void TestMethod(string columnName, string schemaName = null)
+			void TestMethod(string columnName, string? schemaName = null)
 			{
 				var ms = CreateMappingSchema(columnName, schemaName);
 				using (var db = (DataConnection)GetDataContext(context, ms))
 				using (db.CreateLocalTable<SampleClass>())
 				{
 					db.Insert(new SampleClass() { Id = 1, StrKey = "K1", Value = "V1" });
-					if (!db.LastQuery.Contains(columnName))
+					if (!db.LastQuery!.Contains(columnName))
 						throw new Exception("Invalid schema");
 				}
 			}
@@ -139,7 +139,7 @@ namespace Tests.Linq
 			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
 		}
 
-		private static MappingSchema CreateMappingSchema(string columnName, string schemaName = null)
+		private static MappingSchema CreateMappingSchema(string columnName, string? schemaName = null)
 		{
 			var ms = new MappingSchema(schemaName);
 			var builder = ms.GetFluentMappingBuilder();

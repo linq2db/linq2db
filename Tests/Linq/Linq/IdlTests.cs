@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
@@ -21,7 +20,7 @@ namespace Tests.Linq
 		{
 			public IdlProvidersAttribute()
 				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus,
-					ProviderName.Access)
+					TestProvName.AllAccess)
 			{
 			}
 		}
@@ -52,11 +51,11 @@ namespace Tests.Linq
 			}
 
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey] public int    ID        { get; set; }
-			[Column, NotNull]                          public string FirstName { get; set; }
-			[Column, NotNull]                          public string LastName;
-			[Column, Nullable]                         public string MiddleName;
-			[Column]                                   public Gender Gender;
+			[Column("PersonID"), Identity, PrimaryKey] public int     ID        { get; set; }
+			[Column, NotNull]                          public string  FirstName { get; set; } = null!;
+			[Column, NotNull]                          public string  LastName = null!;
+			[Column, Nullable]                         public string? MiddleName;
+			[Column]                                   public Gender  Gender;
 
 			public string Name => FirstName + " " + LastName;
 
@@ -65,7 +64,7 @@ namespace Tests.Linq
 				return Equals(obj as PersonWithId);
 			}
 
-			public bool Equals(PersonWithId other)
+			public bool Equals(PersonWithId? other)
 			{
 				if (ReferenceEquals(null, other)) return false;
 				if (ReferenceEquals(this, other)) return true;
@@ -132,7 +131,7 @@ namespace Tests.Linq
 
 		public class PersonWithObjectId : WithObjectIdBase, IHasObjectId2
 		{
-			public string FistName { get; set; }
+			public string FistName { get; set; } = null!;
 		}
 
 		public struct NullableObjectId
@@ -615,7 +614,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person
 							where p.ID < 0
-							select new { Rank = 0, FirstName = (string)null, LastName = (string)null };
+							select new { Rank = 0, FirstName = (string?)null, LastName = (string?)null };
 				var q2 =
 					q.Concat(
 						from p in db.Person
@@ -729,8 +728,8 @@ namespace Tests.Linq
 			public GenericConcatQuery(ITestDataContext ds, object[] args)
 				: base(ds)
 			{
-				@p1 = (System.String)args[0];
-				@p2 = (System.Int32)args[1];
+				@p1 = (string)args[0];
+				@p2 = (int)   args[1];
 			}
 
 			public override IEnumerable<object> Query()
@@ -835,20 +834,20 @@ namespace Tests.Linq
 
 	public class IdlPerson
 	{
-		public IdlTests.ObjectId Id { get; set; }
-		public string Name { get; set; }
+		public IdlTests.ObjectId Id   { get; set; }
+		public string?           Name { get; set; }
 	}
 
 	public class IdlGrandChild
 	{
-		public IdlTests.ObjectId ParentID { get; set; }
-		public IdlTests.ObjectId ChildID { get; set; }
+		public IdlTests.ObjectId ParentID     { get; set; }
+		public IdlTests.ObjectId ChildID      { get; set; }
 		public IdlTests.ObjectId GrandChildID { get; set; }
 	}
 
 	public class IdlPatientEx : IdlPatient
 	{
-		public IdlPerson Person { get; set; }
+		public IdlPerson Person { get; set; } = null!;
 	}
 
 	public class IdlPatientSource
@@ -864,9 +863,9 @@ namespace Tests.Linq
 		{
 				return m_dc.GrandChild.Select(x => new IdlGrandChild
 					{
-						ChildID = new IdlTests.ObjectId {Value = x.ChildID.Value},
-						GrandChildID = new IdlTests.ObjectId { Value = x.GrandChildID.Value },
-						ParentID = new IdlTests.ObjectId { Value = x.ParentID.Value }
+						ChildID      = new IdlTests.ObjectId {Value = x.ChildID!.Value},
+						GrandChildID = new IdlTests.ObjectId { Value = x.GrandChildID!.Value },
+						ParentID     = new IdlTests.ObjectId { Value = x.ParentID!.Value }
 					});
 		}
 

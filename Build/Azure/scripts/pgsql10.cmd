@@ -7,11 +7,11 @@ docker ps -a
 echo "Waiting"
 set max = 100
 :repeat
+set /a max=max-1
+if %max% EQU 0 goto fail
 echo pinging postgres
 sleep 1
 docker exec pgsql psql -U postgres -c "\l"
-set /a max=max-1
-if %max% EQU 0 goto fail
 if %errorlevel% NEQ 0 goto repeat
 echo "postgres is UP"
 

@@ -1,7 +1,4 @@
-﻿#nullable disable
-using System;
-
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -9,17 +6,17 @@ namespace Tests.Model
 	{
 		[PrimaryKey]
 		public int    PersonID;
-		public string Diagnosis;
+		public string Diagnosis = null!;
 
 		[Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)]
-		public Person Person;
+		public Person Person = null!;
 
 		public override bool Equals(object obj)
 		{
 			return Equals(obj as Patient);
 		}
 
-		public bool Equals(Patient other)
+		public bool Equals(Patient? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

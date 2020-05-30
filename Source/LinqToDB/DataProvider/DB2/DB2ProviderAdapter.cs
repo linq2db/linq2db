@@ -220,7 +220,6 @@ namespace LinqToDB.DataProvider.DB2
 						var db2TimeType         = loadType("DB2Time"        , DataType.Time)!;
 						var db2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
 						var db2XmlType          = loadType("DB2Xml"         , DataType.Xml)!;
-						// TODO: register only for Informix
 						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 
 						var typeMapper = new TypeMapper();
@@ -300,7 +299,7 @@ namespace LinqToDB.DataProvider.DB2
 
 							if (register)
 							{
-								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object))).Compile();
+								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).Compile();
 								mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 							}
 

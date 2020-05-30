@@ -38,6 +38,7 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException();
 			}
 
+			bodyExpr = builder.ConvertExpression(bodyExpr);
 			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
 
 			var cte = builder.BuildCte(bodyExpr,
@@ -214,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 					UpdateMissingFields();
 				}
 
-				return base.ConvertToParentIndex(index, context);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)

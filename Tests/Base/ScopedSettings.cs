@@ -25,13 +25,13 @@ namespace Tests
 
 		public FirebirdQuoteMode(FirebirdIdentifierQuoteMode mode)
 		{
-			_oldMode = FirebirdSqlBuilder.IdentifierQuoteMode;
-			FirebirdSqlBuilder.IdentifierQuoteMode = mode;
+			_oldMode = FirebirdConfiguration.IdentifierQuoteMode;
+			FirebirdConfiguration.IdentifierQuoteMode = mode;
 		}
 
 		void IDisposable.Dispose()
 		{
-			FirebirdSqlBuilder.IdentifierQuoteMode = _oldMode;
+			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
 		}
 	}
 }

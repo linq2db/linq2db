@@ -5,11 +5,11 @@ docker ps -a
 echo "Waiting"
 set max = 100
 :repeat
+set /a max=max-1
+if %max% EQU 0 goto fail
 echo pinging
 sleep 1
 docker exec mysql mysql --protocol TCP -uroot -p54321 -e "show databases;"
-set /a max=max-1
-if %max% EQU 0 goto fail
 if %errorlevel% NEQ 0 goto repeat
 echo "Container is UP"
 

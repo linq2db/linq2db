@@ -66,7 +66,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
-					new[] { target.Expression, Expression.Constant(null, typeof(string)) }));
+					target.Expression, Expression.Constant(null, typeof(string))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -90,7 +90,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
-					new[] { target.Expression, Expression.Constant(hint) }));
+					target.Expression, Expression.Constant(hint)));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -115,7 +115,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { source.Expression, target.Expression, Expression.Constant(null, typeof(string)) }));
+					source.Expression, target.Expression, Expression.Constant(null, typeof(string))));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -143,7 +143,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { source.Expression, target.Expression, Expression.Constant(hint) }));
+					source.Expression, target.Expression, Expression.Constant(hint)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -169,7 +169,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, source.Expression }));
+					mergeQuery.Expression, source.Expression));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -198,13 +198,13 @@ namespace LinqToDB
 					Expression.Call(
 						null,
 						UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-						new[] { mergeQuery.Expression, querySource.Expression }));
+						mergeQuery.Expression, querySource.Expression));
 			else
 				query = mergeQuery.Provider.CreateQuery<TTarget>(
 					Expression.Call(
 						null,
 						UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-						new[] { mergeQuery.Expression, Expression.Constant(source) }));
+						mergeQuery.Expression, Expression.Constant(source)));
 
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -227,7 +227,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UsingTargetMethodInfo.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression }));
+					mergeQuery.Expression));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -259,7 +259,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					OnMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TKey)),
-					new[] { mergeQuery.Expression, Expression.Quote(targetKey), Expression.Quote(sourceKey) }));
+					mergeQuery.Expression, Expression.Quote(targetKey), Expression.Quote(sourceKey)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -285,7 +285,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					OnMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(matchCondition) }));
+					mergeQuery.Expression, Expression.Quote(matchCondition)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -307,7 +307,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					OnTargetKeyMethodInfo.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression }));
+					mergeQuery.Expression));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -333,7 +333,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -361,7 +361,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -390,7 +390,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TSource, bool>>)), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TSource, bool>>)), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -423,7 +423,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -449,7 +449,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -477,7 +477,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -506,7 +506,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -539,7 +539,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -570,7 +570,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition)));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -603,7 +603,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition)));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -637,7 +637,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter), Expression.Quote(deleteCondition)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -675,7 +675,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter), Expression.Quote(deleteCondition)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -702,7 +702,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>))));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -730,7 +730,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -762,7 +762,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -796,7 +796,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -824,7 +824,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)) }));
+					mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>))));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -853,7 +853,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+					mergeQuery.Expression, Expression.Quote(searchCondition)));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}

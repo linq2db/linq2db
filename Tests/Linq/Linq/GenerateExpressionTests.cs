@@ -10,21 +10,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GenerateExpressionTests : TestBase
 	{
-		[OneTimeSetUp]
-		public void SetUp()
-		{
-			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
-		}
-
-		[OneTimeTearDown]
-		public void TearDown()
-		{
-			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
-		}
-
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			using(new GenerateExpressionTest(true))
 			using (var db = GetDataContext(context))
 			{
 				var q2 =
@@ -41,7 +30,7 @@ namespace Tests.Linq
 						join p   in db.Parent on ch.ParentID equals p.ParentID
 						join gc2 in q2        on p.ParentID  equals gc2.ParentID into g
 						from gc3 in g.DefaultIfEmpty()
-				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
+				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 				select new { p.ParentID, gc3 };
 
 

@@ -34,7 +34,7 @@ namespace LinqToDB.Mapping
 		/// <returns><c>true</c> if object should be skipped for the operation.</returns>
 		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 		{
-			return Values?.Contains(columnDescriptor.MemberAccessor.Getter(obj)) ?? false;
+			return Values?.Contains(columnDescriptor.MemberAccessor.Getter!(obj)) ?? false;
 		}
 	}
 }

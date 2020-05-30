@@ -59,6 +59,18 @@ namespace LinqToDB.Common
 		public int?     Precision  { get; }
 		public int?     Scale      { get; }
 
+		public DbDataType WithSetValues(DbDataType from)
+		{
+			return new DbDataType(
+				SystemType,
+				from.DataType != DataType.Undefined ? from.DataType : DataType,
+				!from.DbType.IsNullOrEmpty()        ? from.DbType   : DbType,
+				from.Length    ?? Length,
+				from.Precision ?? Precision,
+				from.Scale     ?? Scale);
+		}
+
+
 		public DbDataType WithoutSystemType(DbDataType       from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 		public DbDataType WithoutSystemType(ColumnDescriptor from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 

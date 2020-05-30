@@ -165,7 +165,7 @@ namespace Tests.Linq
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -174,6 +174,7 @@ namespace Tests.Linq
 					db.Child.Skip(2).Count());
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake1([DataSources] string context)
@@ -186,6 +187,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake2([DataSources] string context)
@@ -198,6 +200,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake3([DataSources] string context)
@@ -210,13 +213,123 @@ namespace Tests.Linq
 			}
 		}
 
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake21([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake22([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake23([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake31([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake32([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake33([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -269,10 +382,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTake6([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -284,10 +398,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTakeCount([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -403,7 +518,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(true, ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -418,7 +533,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -509,10 +624,10 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "BatchId", CanBeNull = false)]
-			public List<Confirmation> Confirmations { get; set; }
+			public List<Confirmation> Confirmations { get; set; } = null!;
 		}
 
 		public class Confirmation
@@ -571,7 +686,7 @@ namespace Tests.Linq
 		class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			protected bool Equals(TakeSkipClass other)
 			{
@@ -582,7 +697,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((TakeSkipClass)obj);
 			}
 

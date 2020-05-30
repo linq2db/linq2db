@@ -152,11 +152,22 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var table = Table!.Clone(objectTree, doClone);
-			if (table == Table)
-				return this;
-
-			return objectTree[this];
+			if (Table != null)
+			{
+				var table = Table.Clone(objectTree, doClone);
+				if (table == Table)
+					return this;
+				return objectTree[this];
+			}
+			else
+			{
+				if (!objectTree.TryGetValue(this, out var clone))
+				{
+					clone = new SqlField(this);
+					objectTree.Add(this, clone);
+				}
+				return clone;
+			}
 		}
 
 		#endregion

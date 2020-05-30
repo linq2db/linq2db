@@ -87,13 +87,13 @@ namespace Tests.Data
 		// tests must check all code, that use provider-specific functionality for specific provider
 		// also test must create new instance of provider, to not benefit from existing instance
 		[Test]
-		public void TestAccess([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		public void TestAccessOleDb([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NET46
-			using (var db = CreateDataConnection(new AccessDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
-			using (var db = CreateDataConnection(new AccessDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
 #endif
 			{
 				var trace = string.Empty;
@@ -122,6 +122,30 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
 #endif
+			}
+		}
+
+		[Test]
+		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+#if NET46
+			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+#else
+			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+#endif
+			{
+				var trace = string.Empty;
+				db.OnTraceConnection += (TraceInfo ti) =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				// assert provider-specific parameter type name
+				// Variant => Binary
+				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE oleObjectDataType = ?", DataParameter.Variant("@p", new byte[] { 5, 6, 7, 8 })));
+				Assert.True(trace.Contains("DECLARE @p Binary("));
 			}
 		}
 
@@ -218,7 +242,7 @@ namespace Tests.Data
 
 		class MapperExpressionTest3
 		{
-			public object Value { get; set; }
+			public object? Value { get; set; }
 		}
 
 		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
@@ -235,7 +259,7 @@ namespace Tests.Data
 
 				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
 				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
+				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue!).Value);
 			}
 		}
 
@@ -347,7 +371,7 @@ namespace Tests.Data
 				// test readers + mapper.map
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
-				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
+				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value!;
 				Assert.True    (rawDtValue is MySqlDataDateTime);
 				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
 
@@ -562,7 +586,7 @@ namespace Tests.Data
 
 				// test SqlException handing
 				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
-				Exception sex = null;
+				Exception? sex = null;
 				try
 				{
 					db.Execute<object>("SELECT 1 / 0");
@@ -572,15 +596,16 @@ namespace Tests.Data
 					sex = ex;
 				}
 
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+
 				// test MARS not set
-				Assert.False(db.IsMarsEnabled);
+				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
 
 				// test server version
-				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
@@ -615,16 +640,6 @@ namespace Tests.Data
 						Assert.True(trace.Contains("[AllTypes]"));
 					}
 				}
-			}
-
-			// test MARS is set
-#if NET46
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection), ";MultipleActiveResultSets=true"))
-#else
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient", ";MultipleActiveResultSets=true"))
-#endif
-			{
-				Assert.True(db.IsMarsEnabled);
 			}
 		}
 
@@ -701,7 +716,7 @@ namespace Tests.Data
 
 				// test SqlException handing
 				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
-				Exception sex = null;
+				Exception? sex = null;
 				try
 				{
 					db.Execute<object>("SELECT 1 / 0");
@@ -710,15 +725,16 @@ namespace Tests.Data
 				{
 					sex = ex;
 				}
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex, out errors));
+				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
 				Assert.AreEqual(1, errors.Count());
 				Assert.AreEqual(8134, errors.Single());
 
+				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
+
 				// test MARS not set
-				Assert.False(db.IsMarsEnabled);
+				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
 
 				// test server version
-				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
@@ -754,10 +770,6 @@ namespace Tests.Data
 					}
 				}
 			}
-
-			// test MARS is set
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", ";MultipleActiveResultSets=true"))
-				Assert.True(db.IsMarsEnabled);
 		}
 
 		[Test]
@@ -1071,9 +1083,8 @@ namespace Tests.Data
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = DateTimeOffset.Now;
-				// TODO: add precision/scale support to DataParameter instead of adjusting value precision to 6
+				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6});
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
 
@@ -1084,8 +1095,6 @@ namespace Tests.Data
 				// ToLower, because native prodiver returns it lowercased
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
-
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
 
 				// dbcommand properties
 				db.DisposeCommand();
@@ -1117,7 +1126,7 @@ namespace Tests.Data
 
 				void TestBulkCopy()
 				{
-					using (db.CreateTempTable<OracleBulkCopyTable>())
+					using (db.CreateLocalTable<OracleBulkCopyTable>())
 					{
 						long copied = 0;
 						var options = new BulkCopyOptions()
@@ -1168,17 +1177,14 @@ namespace Tests.Data
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = DateTimeOffset.Now;
-				// TODO: add precision/scale support to DataParameter instead of adjusting value precision to 6
+				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
-
-				Assert.True(((OracleDataProvider)db.DataProvider).IsXmlTypeSupported);
 
 				// dbcommand properties
 				db.DisposeCommand();
@@ -1330,20 +1336,20 @@ namespace Tests.Data
 			MiniProfilerNoMappings
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null)
 		{
 			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(connectionType, cs), csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null)
 		{
 			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName), cs), csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string? csExtra = null)
 		{
 			var ms = new MappingSchema(context);
-			DataConnection db = null;
+			DataConnection? db = null;
 			db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types

@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Informix
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 			(
@@ -360,7 +360,7 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var names = new HashSet<string>();
 

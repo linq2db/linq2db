@@ -118,27 +118,23 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool         CanBeNull           { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public string?      KeyName             { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public string?      BackReferenceName   { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public bool         IsBackReference     { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public Relationship Relationship        { get; set; }
 

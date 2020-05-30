@@ -2,19 +2,20 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  nugetVersion: 3.0.0-preview.2
+  nugetVersion: 3.0.0-rc.0
+  nugetDevVersion: 3.0.0
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  artifact_linq2db_aspnet_binaries: 'linq2db_aspnet_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
 
-# build on commits to important branches: 'release', 'master' + 'release.3.0' wip branch
+# build on commits to important branches: 'release', 'master'
 trigger:
   - master
   - release
-  - release.3.0
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
@@ -35,6 +36,9 @@ stages:
     displayName: 'Build'
 
     steps:
+
+    # mitigate https://status.dev.azure.com/_event/182998791
+    - task: NuGetToolInstaller@1
 
     - task: PowerShell@2
       inputs:
@@ -133,6 +137,12 @@ stages:
         artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db.Tools build results
 
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
+        artifact: '$(artifact_linq2db_aspnet_binaries)'
+      displayName: Publish linq2db.AspNet build results
+
 #############################
 #  Build and Publish nugets #
 #############################
@@ -141,7 +151,7 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Nugets Generation'
     variables:
-      packageVersion: $(nugetVersion)
+      - template: nuget-vars.yml
     dependsOn: build_job
     condition: succeeded()
 
@@ -160,6 +170,11 @@ stages:
       inputs:
         artifactName: '$(artifact_linq2db_Tools_binaries)'
         targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(artifact_linq2db_aspnet_binaries)'
+        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -192,7 +207,7 @@ stages:
         nuGetFeedType: 'internal'
         publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
       displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'release.3.0')))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
 # apikey exires around 31/07/2020
     - task: NuGetCommand@2
@@ -223,12 +238,19 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        Access_JET:
+        Access_OLEDB_JET:
           title: 'Access Jet'
           config: 'access'
-        Access_ACE:
+        Access_OLEDB_ACE:
           title: 'Access ACE'
           config: 'access.ace'
+          script: 'access.ace.cmd'
+        Access_ODBC_MDB:
+          title: 'Access ODBC MDB'
+          config: 'access.odbc.mdb'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
           script: 'access.ace.cmd'
         SqlCE:
           title: 'SQL CE'
@@ -364,6 +386,14 @@ stages:
 
     strategy:
       matrix:
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
+          script: 'access.ace.x64.cmd'
+        Access_OLEDB_ACE:
+          title: 'Access OleDb ACE'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
         SQLite:
           title: 'SQLite'
           config: 'sqlite'

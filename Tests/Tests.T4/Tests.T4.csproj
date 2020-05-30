@@ -13,9 +13,14 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
-		<PackageReference Include="Humanizer.Core" Version="2.7.9" />
+		<PackageReference Include="Humanizer.Core" Version="2.8.11" />
 		
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+		
+		<None Update="Databases\AccessODBC.tt">
+		  <LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Databases\Access.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -72,6 +77,10 @@
 		<None Update="Databases\SqlServer.MS.tt">
 		  <LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\SqlServer.2017.tt">
+			<LastGenOutput>SqlServer.2017.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Databases\SqlServerAzure.tt">
 			<LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>
@@ -148,10 +157,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Databases\Access - Copy.generated.cs">
+		  <DependentUpon>Access.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Databases\Access.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Access.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\AccessODBC.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>Access.tt</DependentUpon>
+			<DependentUpon>AccessODBC.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\DB2.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -227,6 +246,11 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>SqlServer.MS.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.2017.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
 			<DesignTime>True</DesignTime>

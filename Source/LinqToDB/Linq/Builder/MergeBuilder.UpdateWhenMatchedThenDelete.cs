@@ -58,30 +58,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var predicateCondition     = (LambdaExpression)predicate.Unwrap();
-					var predicateConditionExpr = builder.ConvertExpression(predicateCondition.Body.Unwrap());
+					var predicateCondition = (LambdaExpression)predicate.Unwrap();
 
-					operation.Where = new SqlSearchCondition();
-
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, predicateCondition),
-						predicateConditionExpr,
-						operation.Where.Conditions,
-						false);
+					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, predicateCondition);
 				}
 
 				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
 				{
-					var deleteCondition     = (LambdaExpression)deletePredicate.Unwrap();
-					var deleteConditionExpr = builder.ConvertExpression(deleteCondition.Body.Unwrap());
-
-					operation.WhereDelete = new SqlSearchCondition();
-
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, deleteCondition),
-						deleteConditionExpr,
-						operation.WhereDelete.Conditions,
-						false);
+					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
+	
+					operation.WhereDelete = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, deleteCondition);;
 				}
 
 				return mergeContext;

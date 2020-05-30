@@ -64,7 +64,7 @@ namespace LinqToDB
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -94,7 +94,7 @@ namespace LinqToDB
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().Convert(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -127,7 +127,7 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified field name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				result         = sqlBuilder.Convert(result, ConvertType.NameToQueryField);
+				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
 				
 			return result;
@@ -171,13 +171,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr)
 		{
 			return FieldsExpr(table, fieldsExpr, true);
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr, bool qualified)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr, bool qualified)
 		{
 			var mappingSchema = MappingSchema.Default;
 
@@ -462,7 +462,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
-		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object entityOrColumn)
+		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
 		{
 			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}
@@ -606,17 +606,17 @@ namespace LinqToDB
 		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[JetBrains.Annotations.NotNull, DataExtensions.SqlFormattableComparer] FormattableString sql
+			[DataExtensions.SqlFormattableComparer] FormattableString sql
 			)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
-#endif		
+#endif
 		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent] RawSqlString sql,
-			params              object[]     parameters
+			[SqlQueryDependent]              RawSqlString sql,
+			[SqlQueryDependentParams] params object[]     parameters
 			)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");

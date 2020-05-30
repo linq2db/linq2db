@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -38,15 +37,12 @@ namespace LinqToDB
 			{
 			}
 
-			protected new string Name
-			{
-				get { return base.Name; }
-			}
+			protected new string? Name => base.Name;
 
-			public string Expression
+			public string? Expression
 			{
-				get { return base.Name;  }
-				set { base.Name = value; }
+				get => base.Name;
+				set => base.Name = value;
 			}
 
 			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)

@@ -1,8 +1,6 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
@@ -15,7 +13,7 @@ namespace LinqToDB.Data
 		/// Creates new transaction controller for data connection.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance.</param>
-		public DataConnectionTransaction([NotNull] DataConnection dataConnection)
+		public DataConnectionTransaction(DataConnection dataConnection)
 		{
 			DataConnection = dataConnection ?? throw new ArgumentNullException(nameof(dataConnection));
 		}
@@ -23,7 +21,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Returns associated data connection instance.
 		/// </summary>
-		public DataConnection DataConnection { get; private set; }
+		public DataConnection DataConnection { get; }
 
 		bool _disposeTransaction = true;
 
