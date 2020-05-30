@@ -25,6 +25,7 @@ namespace Tests.DataProvider
 {
 	using LinqToDB.Tools.Comparers;
 	using Model;
+	using System.Collections;
 	using System.Collections.Generic;
 	using System.Data;
 	using System.Diagnostics;
@@ -304,6 +305,7 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(context))
 			{
+				EnableNativeBulk(conn, context);
 				DataConnectionTransaction? transaction = null;
 				if (withTransaction)
 					transaction = conn.BeginTransaction();
@@ -377,7 +379,6 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssue("MySqlConnector 0.66.0 has issue with binary types")]
 		[Test]
 		public void BulkCopyProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool withTransaction)
 		{
@@ -390,6 +391,94 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
+		private static void EnableNativeBulk(DataConnection db, string context)
+		{
+			if (context == ProviderName.MySqlConnector)
+				db.Execute("SET GLOBAL local_infile=ON");
+		}
+
+		[Table("needs escaping")]
+		class BinaryTypes
+		{
+			[Column("needs escaping", IsPrimaryKey = true)] public int Id { get; set; }
+
+			[Column(DbType = "bit(64)", DataType = DataType.BitArray)] public ulong?    Bit_1 { get; set; }
+			[Column(DbType = "bit(63)", DataType = DataType.BitArray)] public long?     Bit_2 { get; set; }
+			[Column(DbType = "bit(64)")                              ] public BitArray? Bit_3 { get; set; }
+			[Column(DbType = "bit(30)", DataType = DataType.BitArray)] public uint?     Bit_4 { get; set; }
+			[Column(DbType = "bit(1)" , DataType = DataType.BitArray)] public bool?     Bit_5 { get; set; }
+			[Column("needs escaping2", DbType = "bit(1)")            ] public BitArray? Bit_6 { get; set; }
+
+			[Column(DbType = "binary(3)")                                  ] public byte[]? Binary_1     { get; set; }
+			[Column(DbType = "binary(3)")                                  ] public Binary? Binary_2     { get; set; }
+			[Column(DbType = "binary(3)"   , DataType = DataType.Binary)   ] public byte[]? Binary_3     { get; set; }
+			[Column(DbType = "binary(3)"   , DataType = DataType.Binary)   ] public Binary? Binary_4     { get; set; }
+			[Column(DbType = "varbinary(3)", DataType = DataType.VarBinary)] public byte[]? VarBinary_1  { get; set; }
+			[Column(DbType = "varbinary(3)", DataType = DataType.VarBinary)] public Binary? VarBinary_2  { get; set; }
+			[Column(DbType = "blob"        , DataType = DataType.Blob)     ] public byte[]? Blob_1       { get; set; }
+			[Column(DbType = "blob"        , DataType = DataType.Blob)     ] public Binary? Blob_2       { get; set; }
+			[Column(DbType = "tinyblob"    , DataType = DataType.Blob)     ] public byte[]? TinyBlob_1   { get; set; }
+			[Column(DbType = "tinyblob"    , DataType = DataType.Blob)     ] public Binary? TinyBlob_2   { get; set; }
+			[Column(DbType = "mediumblob"  , DataType = DataType.Blob)     ] public byte[]? MediumBlob_1 { get; set; }
+			[Column(DbType = "mediumblob"  , DataType = DataType.Blob)     ] public Binary? MediumBlob_2 { get; set; }
+			[Column(DbType = "longblob"    , DataType = DataType.Blob)     ] public byte[]? LongBlob_1   { get; set; }
+			[Column(DbType = "longblob"    , DataType = DataType.Blob)     ] public Binary? LongBlob_2   { get; set; }
+		}
+
+		// this test tests binary and bit types, that require special handling by MySqlConnector bulk copy
+		[Test]
+		public void BulkCopyBinaryAndBitTypes([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
+		{
+			using (var db    = new DataConnection(context))
+			using (var table = db.CreateLocalTable<BinaryTypes>())
+			{
+				EnableNativeBulk(db, context);
+
+
+				// just to make assert work, as we receive 64 bits from server in ulong value
+				var bit1 = new BitArray(64);
+				bit1.Set(0, true);
+
+				var data = new BinaryTypes[]
+				{
+					new BinaryTypes() { Id = 1 },
+					new BinaryTypes()
+					{
+						Id = 2,
+
+						Bit_1 = 0xFFFFFFFFFFFFFFFF,
+						Bit_2 = 0x7FFFFFFFFFFFFFFF,
+						Bit_3 = new BitArray(BitConverter.GetBytes(0xFFFFFFFFFFFFFFFF)),
+						Bit_4 = 0x3FFFFFFF,
+						Bit_5 = true,
+						Bit_6 = bit1,
+
+						Binary_1     = new byte[] { 1, 2, 3},
+						Binary_2     = new Binary(new byte[] { 4, 5, 6 }),
+						Binary_3     = new byte[] { 7, 8, 9 },
+						Binary_4     = new Binary(new byte[] { 10, 11, 12 }),
+						VarBinary_1  = new byte[] { 13, 14, 15 },
+						VarBinary_2  = new Binary(new byte[] { 16, 17, 18 }),
+						Blob_1       = new byte[] { 19, 20, 21 },
+						Blob_2       = new Binary(new byte[] { 22, 23, 24 }),
+						TinyBlob_1   = new byte[] { 25, 26, 27 },
+						TinyBlob_2   = new Binary(new byte[] { 28, 29, 30 }),
+						MediumBlob_1 = new byte[] { 31, 32, 33 },
+						MediumBlob_2 = new Binary(new byte[] { 34, 35, 36 }),
+						LongBlob_1   = new byte[] { 37, 38, 39 },
+						LongBlob_2   = new Binary(new byte[] { 40, 41, 42 }),
+					},
+				};
+
+				db.BulkCopy(new BulkCopyOptions { BulkCopyType = bulkCopyType }, data);
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(data.Length, res.Length);
+
+				AreEqual(data, res, ComparerBuilder.GetEqualityComparer<BinaryTypes>());
+			}
+		}
+
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
@@ -397,16 +486,17 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
+					EnableNativeBulk(db, context);
 					db.BulkCopy(
 						new BulkCopyOptions { BulkCopyType = bulkCopyType },
 						Enumerable.Range(0, 10).Select(n =>
 						new LinqDataTypes
 						{
-							ID = 4000 + n,
-							MoneyValue = 1000m + n,
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
 							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-							BoolValue = true,
-							GuidValue = Guid.NewGuid(),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
 							SmallIntValue = (short)n
 						}));
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
@@ -428,6 +518,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
+				EnableNativeBulk(db, context);
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize = 5,

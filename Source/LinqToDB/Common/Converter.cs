@@ -7,6 +7,7 @@ using System.Xml;
 
 namespace LinqToDB.Common
 {
+	using System.Collections;
 	using Expressions;
 	using JetBrains.Annotations;
 	using Mapping;
@@ -42,6 +43,15 @@ namespace LinqToDB.Common
 			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, null, DateTimeStyles.NoCurrentDateDefault));
 			SetConverter<char,           bool>       (v => ToBoolean(v));
 			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+
+			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
+			SetConverter<sbyte , BitArray>(v => new BitArray(new byte[] { unchecked((byte)v) }));
+			SetConverter<short , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+			SetConverter<ushort, BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+			SetConverter<int   , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+			SetConverter<uint  , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+			SetConverter<long  , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+			SetConverter<ulong , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
 		}
 
 		static bool ToBoolean(char ch)

@@ -192,7 +192,7 @@ SELECT
 		{
 			switch (dataType?.ToLower())
 			{
-				case "bit"        : return DataType.UInt64;
+				case "bit"        : return DataType.BitArray;
 				case "blob"       : return DataType.Blob;
 				case "tinyblob"   : return DataType.Binary;
 				case "mediumblob" : return DataType.Binary;
