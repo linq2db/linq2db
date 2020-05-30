@@ -261,7 +261,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("alltypes")]
+		[Table("AllTypes")]
 		public partial class AllType
 		{
 			[IgnoreComparison]

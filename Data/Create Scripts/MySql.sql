@@ -170,10 +170,10 @@ CREATE TABLE TestIdentity (
 GO
 
 
-DROP TABLE IF EXISTS AllTypes
+DROP TABLE IF EXISTS `AllTypes`
 GO
 
-CREATE TABLE AllTypes
+CREATE TABLE `AllTypes`
 (
 	ID                  int AUTO_INCREMENT       NOT NULL,
 
@@ -223,7 +223,7 @@ CREATE TABLE AllTypes
 )
 GO
 
-INSERT INTO AllTypes
+INSERT INTO `AllTypes`
 (
 	bigintDataType,
 	smallintDataType,
@@ -441,7 +441,7 @@ DROP PROCEDURE IF EXISTS AddIssue792Record
 GO
 CREATE PROCEDURE AddIssue792Record()
 BEGIN
-	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO `AllTypes`(char20DataType) VALUES('issue792');
 END
 GO
 DROP PROCEDURE IF EXISTS `TestOutputParametersWithoutTableProcedure`
