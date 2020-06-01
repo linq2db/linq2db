@@ -20,6 +20,8 @@ namespace Tests.Linq
 			[Column] [PrimaryKey] public int Id2    { get; set; }
 			[Column] public string? Value { get; set; }
 
+			[Column] public byte[] ByteValues        { get; set; }
+
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
 			public List<DetailClass> Details { get; set; } = null!;
 
@@ -660,6 +662,46 @@ namespace Tests.Linq
 					select q.Item1;
 
 				var result = query2.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			{
+				var query1 = master.Select(e => new { e.Id1, e.Value, e.ByteValues });
+				var query2 = master.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+
+				var concated = query1.Concat(query2);
+
+				var query = concated.Select(e1 => new
+				{
+					e1.Id1,
+					e1.Value,
+					e1.ByteValues
+				});
+
+				var result = query.ToArray(); 
+
+				var equery1 = masterRecords.Select(e => new { e.Id1, e.Value, e.ByteValues });
+				var equery2 = masterRecords.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+
+				var econcated = equery1.Concat(equery2);
+
+				var equery = econcated.Select(e1 => new
+				{
+					e1.Id1,
+					e1.Value,
+					e1.ByteValues
+				});
+
+				var expected = equery.ToArray();
+
+				AreEqual(expected, result);
 			}
 		}
 

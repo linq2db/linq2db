@@ -142,9 +142,16 @@ namespace LinqToDB.Linq.Builder
 			return isEnumerable;
 		}
 
-		public static bool IsDetailsMember(MemberInfo memberInfo)
+		public static bool IsDetailsMember(IBuildContext context, Expression expression)
 		{
-			return IsDetailType(memberInfo.GetMemberType());
+			if (IsDetailType(expression.Type))
+			{
+				var buildInfo = new BuildInfo(context, expression, new SelectQuery());
+				if (context.Builder.IsSequence(buildInfo))
+					return true;
+			}
+
+			return false;
 		}
 
 		public static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)
