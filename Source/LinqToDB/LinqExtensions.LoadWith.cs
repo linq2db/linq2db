@@ -33,7 +33,7 @@ namespace LinqToDB
 		/// // loads records from Reference2 collection association for each loaded Reference1 record
 		/// // loads records from Reference3 association for each loaded Reference2 record
 		/// // note that a way you access collection association record (by index, using First() method) doesn't affect
-		/// // query results and allways select all records
+		/// // query results and always select all records
 		/// db.Table1.LoadWithAsTable(r => r.References1[0].References2.First().Reference3);
 		/// </code>
 		/// </summary>
