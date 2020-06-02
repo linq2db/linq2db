@@ -160,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 					expression,
 					level,
 					(ctx, ex, l) => ctx.BuildExpression(ex, l, enforceServerSide),
-					() => GetSequence(expression, level)!.BuildExpression(null, 0, enforceServerSide));
+					() => GetSequence(expression, level)!.BuildExpression(null, 0, enforceServerSide), true);
 			}
 			else
 			{
@@ -335,7 +335,7 @@ namespace LinqToDB.Linq.Builder
 								expression,
 								level,
 								(ctx, ex, l) => ctx.ConvertToSql(ex, l, flags),
-								() => new[] { new SqlInfo { Sql = Builder.ConvertToSql(this, expression) } });
+								() => new[] { new SqlInfo { Sql = Builder.ConvertToSql(this, expression) } }, true);
 						}
 				}
 			}
@@ -550,7 +550,7 @@ namespace LinqToDB.Linq.Builder
 							expression,
 							level,
 							(ctx, ex, l) => ctx.ConvertToIndex(ex, l, flags),
-							() => GetSequence(expression, level)!.ConvertToIndex(expression, level + 1, flags));
+							() => GetSequence(expression, level)!.ConvertToIndex(expression, level + 1, flags), true);
 				}
 			}
 			else
@@ -723,7 +723,7 @@ namespace LinqToDB.Linq.Builder
 							expression,
 							level,
 							(ctx, ex, l) => ctx.IsExpression(ex, l, requestFlag),
-							() => new IsExpressionResult(requestFlag == RequestFor.Expression));
+							() => new IsExpressionResult(requestFlag == RequestFor.Expression), false);
 					default                     : return IsExpressionResult.False;
 				}
 			}
@@ -869,7 +869,7 @@ namespace LinqToDB.Linq.Builder
 					expression,
 					level,
 					(ctx, ex, l) => ctx.GetContext(ex, l, buildInfo),
-					() => throw new NotImplementedException());
+					() => throw new NotImplementedException(), true);
 			}
 			else
 			{
@@ -1000,7 +1000,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext,Expression?,int,T> action, Func<T> defaultAction)
+		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext,Expression?,int,T> action, Func<T> defaultAction, bool throwOnError)
 		{
 			if (level == 0)
 			{
@@ -1024,9 +1024,11 @@ namespace LinqToDB.Linq.Builder
 				if (expression.NodeType == ExpressionType.Parameter)
 				{
 					var sequence  = GetSequence(expression, level)!;
-					var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
+					var idx       = Array.IndexOf(Sequence, sequence);
+					var parameter = Sequence.Length == 0 ? Lambda.Parameters[0] :
+						idx < 0 ? null : Lambda.Parameters[idx];
 
-					if (ReferenceEquals(levelExpression, parameter))
+					if (parameter != null && ReferenceEquals(levelExpression, parameter))
 						return action(sequence, null, 0);
 				}
 
@@ -1065,9 +1067,13 @@ namespace LinqToDB.Linq.Builder
 					Builder.RemoveConvertedExpression(newExpression);
 
 					return result;
-				}			}
+				}
+			}
 
-			throw new NotImplementedException();
+			if (throwOnError)
+				throw new NotImplementedException();
+
+			return default;
 		}
 
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
