@@ -1689,6 +1689,18 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		internal static bool IsTransientParam(MethodCallExpression mc, int paramIndex)
+		{
+			if (mc.IsSameGenericMethod(
+				Methods.Enumerable.GroupJoin, Methods.Queryable.GroupJoin,
+				Methods.Enumerable.Join, Methods.Queryable.Join))
+			{
+				return paramIndex.In(2, 3);
+			}
+
+			return false;
+		}
+
 		internal static Expression ApplyReMapping(Expression expr, ReplaceInfo replaceInfo, bool isQueryable)
 		{
 			var newExpr = expr;
@@ -1895,7 +1907,7 @@ namespace LinqToDB.Linq.Builder
 																replaceInfo.MappingSchema) ==
 															GetEnumerableElementType(methodGenericDefinition.ReturnType,
 																replaceInfo.MappingSchema);
-														if (!isTransient)
+														if (!isTransient && !IsTransientParam(mc, i))
 														{
 															var neededKey =
 																ExpressionHelper.PropertyOrField(transientParam, "Key");

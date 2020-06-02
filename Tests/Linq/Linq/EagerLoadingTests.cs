@@ -584,6 +584,90 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = master.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.GroupJoin(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Masters = mm.ToArray()
+						}
+					);
+
+				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.GroupJoin(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Masters = mm.ToArray()
+						}
+					);
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+				
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = master.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.Join(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Master = mm
+						}
+					);
+
+				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.Join(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Master = mm
+						}
+					);
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+				
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
