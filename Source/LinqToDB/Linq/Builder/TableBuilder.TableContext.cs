@@ -987,7 +987,7 @@ namespace LinqToDB.Linq.Builder
 			protected virtual SqlInfo GetIndex(SqlInfo expr)
 			{
 				if (_indexes.TryGetValue(expr.Sql, out var n))
-					return n;
+					return n.Clone();
 
 				int index;
 				if (expr.Sql is SqlField field)
@@ -1008,7 +1008,7 @@ namespace LinqToDB.Linq.Builder
 				
 				_indexes.Add(expr.Sql, newExpr);
 
-				return newExpr;
+				return newExpr.Clone();
 			}
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

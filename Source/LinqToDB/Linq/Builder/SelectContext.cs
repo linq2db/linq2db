@@ -1073,7 +1073,7 @@ namespace LinqToDB.Linq.Builder
 			if (throwOnError)
 				throw new NotImplementedException();
 
-			return default;
+			return default!;
 		}
 
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,

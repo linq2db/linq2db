@@ -885,6 +885,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctSelect([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
+						.Select(c => c.ChildID),
+					db.GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
+						.Select(c => c.ChildID));
+		}
+
+
+		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
