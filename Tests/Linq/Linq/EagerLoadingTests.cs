@@ -20,6 +20,8 @@ namespace Tests.Linq
 			[Column] [PrimaryKey] public int Id2    { get; set; }
 			[Column] public string? Value { get; set; }
 
+			[Column] public byte[] ByteValues        { get; set; }
+
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
 			public List<DetailClass> Details { get; set; } = null!;
 
@@ -582,6 +584,90 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = master.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.GroupJoin(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Masters = mm.ToArray()
+						}
+					);
+
+				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.GroupJoin(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Masters = mm.ToArray()
+						}
+					);
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+				
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = master.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.Join(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Master = mm
+						}
+					);
+
+				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+					.Join(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+						new
+						{
+							dd.m.Id1,
+							Details = dd.ds.ToArray(),
+							Master = mm
+						}
+					);
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+				
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -660,6 +746,46 @@ namespace Tests.Linq
 					select q.Item1;
 
 				var result = query2.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			{
+				var query1 = master.Select(e => new { e.Id1, e.Value, e.ByteValues });
+				var query2 = master.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+
+				var concated = query1.Concat(query2);
+
+				var query = concated.Select(e1 => new
+				{
+					e1.Id1,
+					e1.Value,
+					e1.ByteValues
+				});
+
+				var result = query.ToArray(); 
+
+				var equery1 = masterRecords.Select(e => new { e.Id1, e.Value, e.ByteValues });
+				var equery2 = masterRecords.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+
+				var econcated = equery1.Concat(equery2);
+
+				var equery = econcated.Select(e1 => new
+				{
+					e1.Id1,
+					e1.Value,
+					e1.ByteValues
+				});
+
+				var expected = equery.ToArray();
+
+				AreEqual(expected, result);
 			}
 		}
 
