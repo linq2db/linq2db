@@ -668,6 +668,42 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestSubSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.Select(m => new { Master = m })
+					.Distinct();
+
+				var result = query.Select(e => new
+				{
+					e.Master,
+					Details = e.Master.Details.Select(d => new { d.DetailId, d.DetailValue }).ToArray()
+				});
+
+				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
+					.Take(20)
+					.Select(m => new { Master = m })
+					.Distinct();
+
+				var expected = expectedQuery.Select(e => new
+				{
+					e.Master,
+					Details = detailRecords.Where(dr => dr.MasterId == e.Master.Id1).Select(d => new { d.DetailId, d.DetailValue }).ToArray()
+				});;
+				
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
