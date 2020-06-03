@@ -3158,6 +3158,30 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Disable Grouping Guard
+
+		/// <summary>
+		/// Disables grouping guard for particular <paramref name="grouping"/> query.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <returns>Query with suppressed grouping guard.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<IGrouping<TKey, TElement>> DisableGuard<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<IGrouping<TKey, TElement>>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(DisableGuard, grouping), grouping.Expression));
+		}
+		
+
+		#endregion
+
 		#region HasUniqueKey
 
 		/// <summary>

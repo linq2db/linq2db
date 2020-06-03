@@ -1889,6 +1889,19 @@ namespace Tests.Linq
 			}
 		}
 
+		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
+		{
+			Assert.Throws<LinqToDBException>(() =>
+			{
+				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+
+			Assert.DoesNotThrow(() =>
+			{
+				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+		}
+
 		[Test]
 		public void GroupByGuard([DataSources] string context)
 		{
@@ -1918,20 +1931,8 @@ namespace Tests.Linq
 				)
 				.ToDictionary(_ => _.Key);
 
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					// group on server
-					db.Person
-						.GroupBy(_ => _.Gender)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
-
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					db.Person
-						.GroupBy(_ => _)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
+				CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
+				CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
 				Assert.Throws<LinqToDBException>(() =>
 				{
@@ -1939,6 +1940,15 @@ namespace Tests.Linq
 						.GroupBy(_ => _)
 						.ToList();
 				});
+
+				Assert.DoesNotThrow(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.DisableGuard()
+						.ToList();
+				});
+
 			}
 		}
 
