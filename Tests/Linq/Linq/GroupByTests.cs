@@ -1903,7 +1903,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByGuard([DataSources] string context)
+		public void GroupByGuard([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using(new AllowMultipleQuery())
 			using(new GuardGrouping(true))
