@@ -604,9 +604,10 @@ namespace LinqToDB.Linq.Builder
 					if (flags == ConvertFlags.Field && !_key.IsScalar)
 						return _element.ConvertToSql(null, 0, flags);
 					var keys = _key.ConvertToSql(null, 0, flags);
-					foreach (var key in keys)
+					for (var i = 0; i < keys.Length; i++)
 					{
-						key.MemberChain.Add(_keyProperty!);
+						var key = keys[i];
+						keys[i] = key.AppendMember(_keyProperty!);
 					}
 
 					return keys;
@@ -624,7 +625,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 								{
-									return new[] { new SqlInfo { Sql = ConvertEnumerable(e) } };
+									return new[] { new SqlInfo(ConvertEnumerable(e)) };
 								}
 
 								break;
@@ -674,10 +675,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					info = ConvertToSql(expression, level, flags);
 
-					foreach (var item in info)
+					for (var i = 0; i < info.Length; i++)
 					{
-						item.Query = SelectQuery;
-						item.Index = SelectQuery.Select.Add(item.Sql);
+						var item = info[i];
+						info[i] = item
+							.WithQuery(SelectQuery)
+							.WithIndex(SelectQuery.Select.Add(item.Sql));
 					}
 				}
 

@@ -47,10 +47,7 @@ namespace LinqToDB.Linq.Builder
 					var expr  = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
 
-					return new SqlInfo(info.MemberChain)
-					{
-						Sql = field
-					};
+					return new SqlInfo(info.MemberChain, field);
 				})
 				.ToArray();
 		}

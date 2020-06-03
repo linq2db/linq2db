@@ -65,10 +65,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
-			foreach (var sqlInfo in indexes)
-			{
-				sqlInfo.Query = SelectQuery;
-			}
+
+			indexes = indexes.Select(idx => idx.WithQuery(SelectQuery))
+				.ToArray();
 
 			return indexes;
 		}

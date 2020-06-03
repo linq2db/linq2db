@@ -161,7 +161,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in info1)
 				{
-					if (info.MemberChain.Count == 0)
+					if (info.MemberChain.Length == 0)
 						throw new InvalidOperationException();
 
 					var mi = info.MemberChain.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter!.Type));
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in info2)
 				{
-					if (info.MemberChain.Count == 0)
+					if (info.MemberChain.Length == 0)
 						throw new InvalidOperationException();
 
 					var em = unionMembers.FirstOrDefault(m =>
@@ -221,11 +221,12 @@ namespace LinqToDB.Linq.Builder
 					if (member.Info1 == null)
 					{
 						var type = unionMembers.First(m => m.Info1 != null).Info1!.MemberChain.First().GetMemberType();
-						member.Info1 = new SqlInfo(member.Info2!.MemberChain)
-						{
-							Sql   = new SqlValue(type, null),
-							Query = _sequence1.SelectQuery,
-						};
+						member.Info1 = new SqlInfo
+						(
+							member.Info2!.MemberChain,
+							new SqlValue(type, null),
+							_sequence1.SelectQuery
+						);
 
 						member.Member.SequenceInfo = member.Info1;
 					}
@@ -235,11 +236,12 @@ namespace LinqToDB.Linq.Builder
 						var spam = unionMembers.First(m => m.Info2 != null).Info2!.MemberChain.First();
 						var type = spam.GetMemberType();
 
-						member.Info2 = new SqlInfo(member.Info1.MemberChain)
-						{
-							Sql   = new SqlValue(type, null),
-							Query = _sequence2.SelectQuery,
-						};
+						member.Info2 = new SqlInfo
+						(
+							member.Info1.MemberChain,
+							new SqlValue(type, null),
+							_sequence2.SelectQuery
+						);
 					}
 
 					static string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
@@ -252,7 +254,8 @@ namespace LinqToDB.Linq.Builder
 					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql, GetAlias(aliases1, member.Info1.Sql)));
 					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql, GetAlias(aliases2, member.Info2.Sql)));
 
-					member.Member.SequenceInfo!.Index = i;
+					if (member.Member.SequenceInfo != null)
+						member.Member.SequenceInfo = member.Member.SequenceInfo.WithIndex(i);
 
 					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
@@ -419,20 +422,29 @@ namespace LinqToDB.Linq.Builder
 					return ConvertToSql(expression, level, flags)
 						.Select(idx =>
 						{
-							if (idx.Index < 0)
+							if (idx.Index >= 0) return idx;
+
+							var newIdx = idx;
+							if (idx.Index == -2)
 							{
-								if (idx.Index == -2)
+								SelectQuery.Select.Columns.Add(new SqlColumn(SelectQuery, idx.Sql));
+								newIdx = idx.WithIndex(SelectQuery.Select.Columns.Count - 1);
+							}
+							else
+							{
+								newIdx = idx.WithIndex(SelectQuery.Select.Add(idx.Sql));
+							}
+
+							if (!ReferenceEquals(newIdx, idx))
+							{
+								foreach (var member in _members)
 								{
-									SelectQuery.Select.Columns.Add(new SqlColumn(SelectQuery, idx.Sql));
-									idx.Index = SelectQuery.Select.Columns.Count - 1;
-								}
-								else
-								{
-									idx.Index = SelectQuery.Select.Add(idx.Sql);
+									if (ReferenceEquals(idx, member.Value.SqlQueryInfo))
+										member.Value.SqlQueryInfo = newIdx;
 								}
 							}
 
-							return idx;
+							return newIdx;
 						})
 						.ToArray();
 				}
@@ -491,12 +503,13 @@ namespace LinqToDB.Linq.Builder
 
 									if (member.SqlQueryInfo == null)
 									{
-										member.SqlQueryInfo = new SqlInfo(member.MemberExpression.Member)
-										{
-											Index = -2,
-											Sql   = SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
-											Query = SelectQuery,
-										};
+										member.SqlQueryInfo = new SqlInfo
+										(
+											member.MemberExpression.Member,
+											SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
+											SelectQuery,
+											-2
+										);
 									}
 
 									return new[] { member.SqlQueryInfo };

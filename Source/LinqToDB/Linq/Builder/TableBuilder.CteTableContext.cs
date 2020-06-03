@@ -146,10 +146,7 @@ namespace LinqToDB.Linq.Builder
 						                  info.MemberChain.LastOrDefault()?.Name;
 						}	
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
-						return new SqlInfo(info.MemberChain)
-						{
-							Sql = field,
-						};
+						return new SqlInfo(info.MemberChain, field);
 					})
 					.ToArray();
 				return result;
