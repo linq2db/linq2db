@@ -30,8 +30,9 @@ namespace LinqToDB
 			/// <param name="expression">The SQL expression. Use {0},{1}... for parameters given to the method call.</param>
 			public ExpressionAttribute(string? expression)
 			{
-				Expression = expression;
-				Precedence = SqlQuery.Precedence.Primary;
+				Expression   = expression;
+				Precedence   = SqlQuery.Precedence.Primary;
+				IsIdempotent = true;
 			}
 
 			/// <summary>
@@ -43,9 +44,10 @@ namespace LinqToDB
 			/// being passed into the function.</param>
 			public ExpressionAttribute(string expression, params int[] argIndices)
 			{
-				Expression = expression;
-				ArgIndices = argIndices;
-				Precedence = SqlQuery.Precedence.Primary;
+				Expression   = expression;
+				ArgIndices   = argIndices;
+				Precedence   = SqlQuery.Precedence.Primary;
+				IsIdempotent = true;
 			}
 
 			/// <summary>
@@ -60,6 +62,7 @@ namespace LinqToDB
 				Configuration = configuration;
 				Expression    = expression;
 				Precedence    = SqlQuery.Precedence.Primary;
+				IsIdempotent  = true;
 			}
 
 			/// <summary>
@@ -77,6 +80,7 @@ namespace LinqToDB
 				Expression    = expression;
 				ArgIndices    = argIndices;
 				Precedence    = SqlQuery.Precedence.Primary;
+				IsIdempotent  = true;
 			}
 
 			/// <summary>
@@ -129,6 +133,16 @@ namespace LinqToDB
 			/// Examples would be SUM(),COUNT().
 			/// </summary>
 			public bool           IsAggregate      { get; set; }
+			/// <summary>
+			/// If <c>true</c>, it notifies SQL Optimizer that expression is idempotent if the same values/parameters are used. It gives optimizer additional information how to simplify query.
+			/// For example ORDER BY IdempotentFunction("Str") can be removed because idempotent function uses constant value.
+			/// <example>
+			/// For example Random function is NOT Idempotent function because it returns different result all time.
+			/// But expression <see cref="Sql.CurrentTimestamp"/> is idempotent in case of executed query.
+			/// <see cref="Sql.DateAdd(LinqToDB.Sql.DateParts,System.Nullable{double},System.Nullable{System.DateTime})"/> is also idempotent function because it returns the same result with the same parameters.  
+			/// </example>
+			/// </summary>
+			public bool           IsIdempotent      { get; set; }
 			/// <summary>
 			/// Used to determine whether the return type should be treated as
 			/// something that can be null If CanBeNull is not explicitly set.
@@ -214,7 +228,7 @@ namespace LinqToDB
 				var sqlExpressions = ConvertArgs(member, args);
 
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence,
-					IsAggregate, sqlExpressions)
+					IsAggregate, IsIdempotent, sqlExpressions)
 				{
 					CanBeNull = GetCanBeNull(sqlExpressions)
 				};

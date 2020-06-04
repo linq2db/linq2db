@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -142,6 +143,7 @@ namespace LinqToDB.Linq.Builder
 				public MemberExpression  MemberExpression = null!;
 			}
 
+			[DebuggerDisplay("{Member, Sql1: {Info1}, Sql2: {Info2}")]
 			class UnionMember
 			{
 				public Member   Member = null!;
@@ -220,7 +222,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info1 == null)
 					{
-						var type = unionMembers.First(m => m.Info1 != null).Info1!.MemberChain.First().GetMemberType();
+						var type = member.Info2!.Sql.SystemType;
+						if (type == null)
+							type = member.Info2!.MemberChain.Last().GetMemberType();
 						member.Info1 = new SqlInfo
 						(
 							member.Info2!.MemberChain,

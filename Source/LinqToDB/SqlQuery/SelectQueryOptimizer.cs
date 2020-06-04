@@ -906,9 +906,12 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var c in query.Select.Columns)
 			{
-				map.Add(c, c.Expression);
-				if (c.RawAlias != null && c.Expression is SqlColumn clmn && clmn.RawAlias == null)
-					clmn.RawAlias = c.RawAlias;
+				if (!map.ContainsKey(c))
+				{
+					map.Add(c, c.Expression);
+					if (c.RawAlias != null && c.Expression is SqlColumn clmn && clmn.RawAlias == null)
+						clmn.RawAlias = c.RawAlias;
+				}			
 			}
 
 			List<ISqlExpression[]>? uniqueKeys = null;

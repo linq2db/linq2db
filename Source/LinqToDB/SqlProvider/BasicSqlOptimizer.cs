@@ -1959,7 +1959,7 @@ namespace LinqToDB.SqlProvider
 
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
-					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, parameters);
+					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -2026,7 +2026,7 @@ namespace LinqToDB.SqlProvider
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							true, parameters);
+							true, true, parameters);
 
 						var additionalProjection = orderItems.Except(columnItems).ToArray();
 						foreach (var expr in additionalProjection)

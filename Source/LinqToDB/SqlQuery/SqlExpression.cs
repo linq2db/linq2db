@@ -7,22 +7,23 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, bool isIdempotent, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
 				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Expr        = expr;
-			Precedence  = precedence;
-			Parameters  = parameters;
-			IsAggregate = isAggregate;
+			SystemType   = systemType;
+			Expr         = expr;
+			Precedence   = precedence;
+			Parameters   = parameters;
+			IsAggregate  = isAggregate;
+			IsIdempotent = isIdempotent;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, parameters)
+			: this(systemType, expr, precedence, false, true, parameters)
 		{
 		}
 
@@ -41,11 +42,12 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type?            SystemType  { get; }
-		public string           Expr        { get; }
-		public int              Precedence  { get; }
-		public ISqlExpression[] Parameters  { get; }
-		public bool             IsAggregate { get; }
+		public Type?            SystemType   { get; }
+		public string           Expr         { get; }
+		public int              Precedence   { get; }
+		public ISqlExpression[] Parameters   { get; }
+		public bool             IsAggregate  { get; }
+		public bool             IsIdempotent { get; }
 
 		#region Overrides
 

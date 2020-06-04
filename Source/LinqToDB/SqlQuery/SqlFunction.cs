@@ -8,16 +8,26 @@ namespace LinqToDB.SqlQuery
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(systemType, name, false, SqlQuery.Precedence.Primary, parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isIdempotent, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, isIdempotent, SqlQuery.Precedence.Primary, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, SqlQuery.Precedence.Primary, parameters)
+			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, true, precedence, parameters)
+		{
+		}
+		
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isIdempotent, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
@@ -27,18 +37,20 @@ namespace LinqToDB.SqlQuery
 			foreach (var p in parameters)
 				if (p == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Name        = name;
-			Precedence  = precedence;
-			IsAggregate = isAggregate;
-			Parameters  = parameters;
+			SystemType   = systemType;
+			Name         = name;
+			Precedence   = precedence;
+			IsAggregate  = isAggregate;
+			IsIdempotent = isIdempotent;
+			Parameters   = parameters;
 		}
 
-		public Type             SystemType  { get; }
-		public string           Name        { get; }
-		public int              Precedence  { get; }
-		public bool             IsAggregate { get; }
-		public ISqlExpression[] Parameters  { get; }
+		public Type             SystemType   { get; }
+		public string           Name         { get; }
+		public int              Precedence   { get; }
+		public bool             IsAggregate  { get; }
+		public bool             IsIdempotent { get; }
+		public ISqlExpression[] Parameters   { get; }
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
 
