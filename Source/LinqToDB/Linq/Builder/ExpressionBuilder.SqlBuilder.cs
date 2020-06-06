@@ -3230,6 +3230,14 @@ namespace LinqToDB.Linq.Builder
 
 			_ctes.Add(Tuple.Create(cteExpression, value));
 
+			var names = _ctes.Select(e => e.Item2.Item1).Where(c => c?.Name != null);
+			var lookup = names.ToLookup(c => c.Name);
+			foreach (var g in lookup)
+			{
+				if (g.Count() > 1)
+					throw new InvalidOperationException($"CTE '{g.Key}' duplication detected.");
+			}
+
 			return value;
 		}
 
