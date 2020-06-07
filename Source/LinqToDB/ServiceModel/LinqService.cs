@@ -24,7 +24,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		public LinqService(MappingSchema mappingSchema)
+		public LinqService(MappingSchema? mappingSchema)
 		{
 			_mappingSchema = mappingSchema;
 		}
@@ -50,7 +50,7 @@ namespace LinqToDB.ServiceModel
 
 		public static Func<string,Type?> TypeResolver = _ => null;
 
-		public virtual DataConnection CreateDataContext(string configuration)
+		public virtual DataConnection CreateDataContext(string? configuration)
 		{
 			return MappingSchema != null ? new DataConnection(configuration, MappingSchema) : new DataConnection(configuration);
 		}
@@ -68,15 +68,15 @@ namespace LinqToDB.ServiceModel
 		#region ILinqService Members
 
 		[WebMethod]
-		public virtual LinqServiceInfo GetInfo(string configuration)
+		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{
 			using (var ctx = CreateDataContext(configuration))
 			{
 				return new LinqServiceInfo()
 				{
-					MappingSchemaType = ctx.DataProvider.MappingSchema                      .GetType().AssemblyQualifiedName,
+					MappingSchemaType = ctx.DataProvider.MappingSchema.     GetType().AssemblyQualifiedName,
 					SqlBuilderType    = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName,
-					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer()                  .GetType().AssemblyQualifiedName,
+					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer(). GetType().AssemblyQualifiedName,
 					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags
 				};
 			}
@@ -96,7 +96,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteNonQuery(string configuration, string queryData)
+		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			try
 			{
@@ -123,7 +123,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public object? ExecuteScalar(string configuration, string queryData)
+		public object? ExecuteScalar(string? configuration, string queryData)
 		{
 			try
 			{
@@ -150,7 +150,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public string ExecuteReader(string configuration, string queryData)
+		public string ExecuteReader(string? configuration, string queryData)
 		{
 			try
 			{
@@ -188,6 +188,19 @@ namespace LinqToDB.ServiceModel
 
 						var names = new HashSet<string>();
 
+						SelectQuery select;
+						switch (query.Statement.QueryType)
+						{
+							case QueryType.Select:
+								select = query.Statement.SelectQuery!;
+								break;
+							case QueryType.Insert:
+								select = ((SqlInsertStatement)query.Statement).Output!.OutputQuery!;
+								break;
+							default:
+								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
+						}
+
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
 							var name = rd.GetName(i);
@@ -205,7 +218,7 @@ namespace LinqToDB.ServiceModel
 							ret.FieldNames[i] = name;
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
-							ret.FieldTypes[i] = query.Statement.SelectQuery!.Select.Columns[i].SystemType;
+							ret.FieldTypes[i] = select.Select.Columns[i].SystemType!;
 
 							// async compiled query support
 							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
@@ -249,7 +262,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteBatch(string configuration, string queryData)
+		public int ExecuteBatch(string? configuration, string queryData)
 		{
 			try
 			{

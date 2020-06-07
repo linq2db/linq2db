@@ -70,6 +70,7 @@ namespace LinqToDB.Linq
 							query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
+							query.ClearMemberQueryableInfo();
 							_infos.Add(key, query);
 
 							_lastContextID     = contextID;
@@ -84,26 +85,26 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		public IQueryable<T> Create(object[] parameters)
+		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
 			var db = (IDataContext)parameters[0];
 			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
 		}
 
-		public T Execute(object[] parameters)
+		public T Execute(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)query.GetElement(db, _expression, parameters)!;
+			return (T)query.GetElement(db, _expression, parameters, preambles)!;
 		}
 
-		public async Task<T> ExecuteAsync(object[] parameters)
+		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)(await query.GetElementAsync(db, _expression, parameters, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))!;
+			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))!;
 		}
 	}
 }

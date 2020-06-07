@@ -1,5 +1,3 @@
-#nullable disable
-using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.Configuration
@@ -17,7 +15,7 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets a name of this data provider configuration.
 		/// </summary>
-		string Name { get; }
+		string? Name { get; }
 
 		/// <summary>
 		/// Gets a value indicating whether the provider is default.

@@ -154,6 +154,11 @@ namespace LinqToDB.SqlQuery
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr));
 		}
 
+		public SqlColumn AddColumn(ISqlExpression expr)
+		{
+			return SelectQuery.Select.Columns[Add(expr)];
+		}
+
 		public int AddNew(ISqlExpression expr)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)

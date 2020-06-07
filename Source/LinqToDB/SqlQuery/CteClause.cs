@@ -101,7 +101,7 @@ namespace LinqToDB.SqlQuery
 
 			var newField = fieldFactory();
 
-			Utils.MakeUniqueNames(new[] { newField }, Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n) =>
+			Utils.MakeUniqueNames(new[] { newField }, Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
 			{
 				f.Name = n;
 				f.PhysicalName = n;

@@ -2,14 +2,22 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.Reflection;
+
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 	{
 		public Table(IDataContext dataContext)
 		{
-			InitTable(dataContext, null);
+			var expression = typeof(T).IsScalar()
+				? null
+				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
+					Expression.Constant(dataContext));
+			InitTable(dataContext, expression);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
@@ -46,8 +54,8 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_serverNameMethodInfo ?? (_serverNameMethodInfo = LinqExtensions.ServerNameMethodInfo.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						_serverNameMethodInfo ?? (_serverNameMethodInfo = Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T))),
+						Expression, Expression.Constant(value));
 
 					_serverName = value;
 				}
@@ -64,8 +72,8 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = LinqExtensions.DatabaseNameMethodInfo.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T))),
+						Expression, Expression.Constant(value));
 
 					_databaseName = value;
 				}
@@ -82,8 +90,8 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = LinqExtensions.SchemaNameMethodInfo.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T))),
+						Expression, Expression.Constant(value));
 
 					_schemaName = value;
 				}
@@ -100,8 +108,8 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_tableNameMethodInfo ?? (_tableNameMethodInfo = LinqExtensions.TableNameMethodInfo.MakeGenericMethod(typeof(T))),
-						new[] { Expression, Expression.Constant(value) });
+						_tableNameMethodInfo ?? (_tableNameMethodInfo = Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T))),
+						Expression, Expression.Constant(value));
 
 					_tableName = value;
 				}

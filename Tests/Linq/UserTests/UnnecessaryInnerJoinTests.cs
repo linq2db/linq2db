@@ -16,18 +16,18 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey(1)]
 			[Identity]
-			public Int64 Field1 { get; set; }
-			public Int64 Field2 { get; set; }
+			public long Field1 { get; set; }
+			public long Field2 { get; set; }
 		}
 
 		class Table2
 		{
 			[PrimaryKey(1)]
 			[Identity]
-			public Int64 Field2 { get; set; }
+			public long Field2 { get; set; }
 
 			[Association(ThisKey = "Field2", OtherKey = "Field2", CanBeNull = false)]
-			public List<Table1> Field3 { get; set; }
+			public List<Table1> Field3 { get; set; } = null!;
 		}
 
 		[Test]

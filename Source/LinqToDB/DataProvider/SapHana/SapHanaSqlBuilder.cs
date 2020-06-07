@@ -148,25 +148,25 @@ namespace LinqToDB.DataProvider.SapHana
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return ":" + value;
+					return sb.Append(':').Append(value);
 
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
 				case ConvertType.SprocParameterToName:
-					return value;
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					{
 						if (value.Length > 0 && value[0] == '"')
-							return value;
-						return "\"" + value + "\"";
+							return sb.Append(value);
+						return sb.Append('"').Append(value).Append('"');
 					}
 
 				case ConvertType.NameToServer     :
@@ -174,12 +174,12 @@ namespace LinqToDB.DataProvider.SapHana
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
 					if (value.Length > 0 && value[0] == '\"')
-						return value;
+						return sb.Append(value);
 
-					return "\"" + value + "\"";
+					return sb.Append('"').Append(value).Append('"');
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)

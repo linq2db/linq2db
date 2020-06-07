@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -11,5 +10,5 @@ namespace LinqToDB.Common.Internal.Cache
     /// <param name="value"></param>
     /// <param name="reason">The <see cref="EvictionReason"/>.</param>
     /// <param name="state">The information that was passed when registering the callback.</param>
-    public delegate void PostEvictionDelegate(object key, object value, EvictionReason reason, object state);
+    public delegate void PostEvictionDelegate(object key, object? value, EvictionReason reason, object? state);
 }

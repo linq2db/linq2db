@@ -26,13 +26,12 @@ namespace Tests.UserTests
 		// TODO: sqlce, mysql - need to add default db type for create table for Guid
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
-			ProviderName.Access,
-			ProviderName.SqlCe,
-			TestProvName.AllMySql,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
-			TestProvName.AllSybase,
 			TestProvName.AllFirebird,
-			TestProvName.AllInformix
+			TestProvName.AllInformix,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase,
 		})]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]

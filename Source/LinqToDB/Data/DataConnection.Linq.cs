@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Linq;
 
 	public partial class DataConnection : IDataContext
 	{
@@ -51,9 +52,9 @@ namespace LinqToDB.Data
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
-		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
 		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
@@ -68,10 +69,23 @@ namespace LinqToDB.Data
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection)
 				{
-					MappingSchema    = MappingSchema,
-					TransactionAsync = TransactionAsync,
-					IsMarsEnabled    = IsMarsEnabled,
-					ConnectionString = ConnectionString,
+					MappingSchema               = MappingSchema,
+					TransactionAsync            = TransactionAsync,
+					IsMarsEnabled               = IsMarsEnabled,
+					ConnectionString            = ConnectionString,
+					OnEntityCreated             = OnEntityCreated,
+					RetryPolicy                 = RetryPolicy,
+					CommandTimeout              = CommandTimeout,
+					InlineParameters            = InlineParameters,
+					ThrowOnDisposed             = ThrowOnDisposed,
+					_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+					OnTraceConnection           = OnTraceConnection,
+					OnClosed                    = OnClosed,
+					OnClosing                   = OnClosing,
+					OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
+					OnConnectionOpened          = OnConnectionOpened,
+					OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
+					OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
 				};
 
 			return (DataConnection)Clone();

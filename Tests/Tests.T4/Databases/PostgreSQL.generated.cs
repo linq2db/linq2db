@@ -1530,20 +1530,15 @@ namespace PostreSQLDataContext
 	public partial class Doctor
 	{
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, NotNull] public int    PersonID { get; set; } // integer
-		#nullable disable
-		[Column(DataType=DataType.NVarChar, Length=50),                         NotNull] public string Taxonomy { get; set; } // character varying(50)
-		#nullable enable
+		[Column(DataType=DataType.NVarChar, Length=50),                         NotNull] public string Taxonomy { get; set; } = null!; // character varying(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// Doctor_PersonID_fkey
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="Doctor_PersonID_fkey", BackReferenceName="DoctorPersonIDfkey")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -1551,9 +1546,7 @@ namespace PostreSQLDataContext
 	[Table(Schema="public", Name="entity")]
 	public partial class Entity
 	{
-		#nullable disable
-		[Column("the_name", DataType=DataType.NVarChar, Length=255), NotNull] public string TheName { get; set; } // character varying(255)
-		#nullable enable
+		[Column("the_name", DataType=DataType.NVarChar, Length=255), NotNull] public string TheName { get; set; } = null!; // character varying(255)
 	}
 
 	[Table(Schema="public", Name="GrandChild")]
@@ -1624,20 +1617,15 @@ namespace PostreSQLDataContext
 	public partial class Patient
 	{
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey, NotNull] public int    PersonID  { get; set; } // integer
-		#nullable disable
-		[Column(DataType=DataType.NVarChar, Length=256),                        NotNull] public string Diagnosis { get; set; } // character varying(256)
-		#nullable enable
+		[Column(DataType=DataType.NVarChar, Length=256),                        NotNull] public string Diagnosis { get; set; } = null!; // character varying(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// Patient_PersonID_fkey
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="Patient_PersonID_fkey", BackReferenceName="PatientPersonIDfkey")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -1652,12 +1640,8 @@ namespace PostreSQLDataContext
 		/// This is the Person.PersonID column
 		/// </summary>
 		[Column(DataType=DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  Identity] public int     PersonID   { get; set; } // integer
-		#nullable disable
-		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  FirstName  { get; set; } // character varying(50)
-		#nullable enable
-		#nullable disable
-		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  LastName   { get; set; } // character varying(50)
-		#nullable enable
+		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  FirstName  { get; set; } = null!; // character varying(50)
+		[Column(DataType=DataType.NVarChar, Length=50),             NotNull              ] public string  LastName   { get; set; } = null!; // character varying(50)
 		[Column(DataType=DataType.NVarChar, Length=50),                Nullable          ] public string? MiddleName { get; set; } // character varying(50)
 		[Column(DataType=DataType.NChar,    Length=1),              NotNull              ] public char    Gender     { get; set; } // character(1)
 
@@ -1790,9 +1774,7 @@ namespace PostreSQLDataContext
 	public partial class Transaction
 	{
 		[Column(DataType=DataType.Int32,          Precision=32, Scale=0), PrimaryKey, NotNull] public int            TransactionId   { get; set; } // integer
-		#nullable disable
 		[Column(DataType=DataType.DateTimeOffset, Precision=6),                       NotNull] public NpgsqlDateTime TransactionDate { get; set; } // timestamp (6) with time zone
-		#nullable enable
 	}
 
 	public static partial class SqlFunctions
@@ -3200,7 +3182,7 @@ namespace PostreSQLDataContext
 		#region Bool
 
 		[Sql.Function(Name="pg_catalog.bool", ServerSideOnly=true)]
-		public static bool? Bool0(int? par451)
+		public static bool? Bool(int? par451)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19810,7 +19792,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="pg_catalog.reverse", ServerSideOnly=true)]
-		public static string? Reverse0(string? par5834)
+		public static string? Reverse(string? par5834)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24570,7 +24552,7 @@ namespace PostreSQLDataContext
 		#region Bool
 
 		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
-		public static string? Bool1(int? param)
+		public static string? Bool0(int? param)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24610,7 +24592,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse1(string? par7471)
+		public static string? Reverse0(string? par7471)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24770,5 +24752,4 @@ namespace PostreSQLDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -10,40 +11,14 @@ namespace LinqToDB.Linq.Builder
 	{
 		private readonly SqlMergeStatement _merge;
 
-		public MergeSourceQueryContext(
-			ExpressionBuilder builder,
-			BuildInfo buildInfo,
-			SqlMergeStatement merge,
-			IBuildContext sourceContext,
-			Type sourceType)
-			:base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
-		{
-			_merge = merge;
-
-			_merge.Source = new SqlMergeSourceTable()
-			{
-				SourceQuery = sourceContext.SelectQuery
-			};
-
-			if (SubQuery is SelectContext select)
-				select.AllowAddDefault = false;
-		}
-
-		public MergeSourceQueryContext(
-			ExpressionBuilder builder,
-			BuildInfo buildInfo,
-			SqlMergeStatement merge,
-			EnumerableContext sourceContext,
-			Type sourceType,
-			bool _)
+		public MergeSourceQueryContext(SqlMergeStatement merge, IBuildContext sourceContext)
 			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
 			_merge = merge;
-			//_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
-			_merge.Source = new SqlMergeSourceTable()
-			{
-				SourceEnumerable = sourceContext.Table
-			};
+
+			_merge.Source = sourceContext is EnumerableContext enumerableSource
+				? new SqlMergeSourceTable() { SourceEnumerable = enumerableSource.Table }
+				: new SqlMergeSourceTable() { SourceQuery = sourceContext.SelectQuery };
 
 			if (SubQuery is SelectContext select)
 				select.AllowAddDefault = false;
@@ -60,6 +35,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+			if (expression.GetLevelExpression(Builder.MappingSchema, level) is ContextRefExpression refExpression && refExpression.BuildContext == this)
+				++level;
+
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
 				.Select(info =>

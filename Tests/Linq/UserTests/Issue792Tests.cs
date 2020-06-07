@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		public class AllTypes
 		{
 			[Column("CHAR20DATATYPE", Configuration = ProviderName.DB2)]
-			public string char20DataType;
+			public string? char20DataType;
 		}
 
 		[Test]
@@ -86,6 +86,7 @@ namespace Tests.UserTests
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
+			ProviderName.Access,
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllSqlServer)]

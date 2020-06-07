@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var data = dataConnection.Query<PrimaryKeyInfo>(
 				@"
@@ -100,7 +100,7 @@ WHERE PRIMARY_KEY = 1");
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var data = dataConnection.Query<ForeignKeyInfo>(
 				@"
@@ -122,9 +122,9 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return Path.GetFileNameWithoutExtension(((DbConnection)connection.Connection).Database);
 		}
 
-		protected override Type? GetSystemType(string dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "tinyint" : return typeof(byte);
 			}
@@ -132,9 +132,9 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToLower())
+			switch (dataType?.ToLower())
 			{
 				case "smallint"         : return DataType.Int16;
 				case "int"              : return DataType.Int32;
@@ -161,7 +161,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override string GetProviderSpecificTypeNamespace() => SqlTypes.TypesNamespace;
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{

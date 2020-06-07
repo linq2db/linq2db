@@ -45,7 +45,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			Func  <IDbDataParameter, string> typeNameGetter,
 
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
-			Func<string, string>                     quoteIdentifier,
 			Func<string, SqlConnection>              createConnection,
 
 			Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction?, SqlBulkCopy> createBulkCopy,
@@ -68,7 +67,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			GetTypeName    = typeNameGetter;
 
 			_createConnectionStringBuilder = createConnectionStringBuilder;
-			_quoteIdentifier               = quoteIdentifier;
 			_createConnection              = createConnection;
 
 			_createBulkCopy              = createBulkCopy;
@@ -107,10 +105,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public Action<IDbDataParameter, string> SetTypeName { get; }
 		public Func  <IDbDataParameter, string> GetTypeName { get; }
-
-
-		private readonly Func<string, string> _quoteIdentifier;
-		public string QuoteIdentifier(string identifier) => _quoteIdentifier(identifier);
 
 		private readonly Func<string, SqlConnection> _createConnection;
 		public SqlConnection CreateConnection(string connectionString) => _createConnection(connectionString);
@@ -185,7 +179,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			typeMapper.RegisterTypeWrapper<SqlConnection>(connectionType);
 			typeMapper.RegisterTypeWrapper<SqlParameter>(parameterType);
 			typeMapper.RegisterTypeWrapper<SqlTransaction>(transactionType);
-			typeMapper.RegisterTypeWrapper<SqlCommandBuilder>(sqlCommandBuilderType);
 			typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
 			typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
 			typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
@@ -204,11 +197,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			var dbTypeBuilder      = paramMapper.Member(p => p.SqlDbType);
 			var udtTypeNameBuilder = paramMapper.Member(p => p.UdtTypeName);
 			var typeNameBuilder    = paramMapper.Member(p => p.TypeName);
-
-			var builder = typeMapper.BuildWrappedFactory(() => new SqlCommandBuilder());
-
-			Func<Exception, IEnumerable<int>> exceptionErrorsGettter = (Exception ex)
-				=> typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 
 			SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
@@ -229,11 +217,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeNameBuilder.BuildGetter<IDbDataParameter>(),
 
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
-				builder().QuoteIdentifier,
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
 
 				typeMapper.BuildWrappedFactory((IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction) => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
+
+			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 		}
 
 		#region Wrappers
@@ -304,25 +293,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			public int Number => ((Func<SqlError, int>)CompiledWrappers[0])(this);
 		}
 		#endregion
-
-		[Wrapper]
-		internal class SqlCommandBuilder : TypeWrapper
-		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: QuoteIdentifier
-				(Expression<Func<SqlCommandBuilder, string, string>>)((SqlCommandBuilder this_, string identifier) => this_.QuoteIdentifier(identifier)),
-			};
-
-			public SqlCommandBuilder(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public SqlCommandBuilder() => throw new NotImplementedException();
-
-			public string QuoteIdentifier(string unquotedIdentifier) => ((Func<SqlCommandBuilder, string, string>)CompiledWrappers[0])(this, unquotedIdentifier);
-		}
 
 		[Wrapper]
 		private class SqlParameter

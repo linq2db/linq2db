@@ -1,15 +1,12 @@
-﻿#nullable disable
-using System;
-
-namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider
 {
 	public class ForeignKeyInfo
 	{
-		public string Name;
-		public string ThisTableID;
-		public string ThisColumn;
-		public string OtherTableID;
-		public string OtherColumn;
+		public string Name         = null!;
+		public string ThisTableID  = null!;
+		public string ThisColumn   = null!;
+		public string OtherTableID = null!;
+		public string OtherColumn  = null!;
 		public int    Ordinal;
 	}
 }

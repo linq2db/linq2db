@@ -10,6 +10,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Tools;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -32,7 +33,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -71,7 +72,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -291,6 +292,26 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Insert4String([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var insertable = db.Child
+					.Where(c => c.ChildID == 11)
+					.Into(db.Child)
+					.Value(c => c.ParentID, c => c.ParentID)
+					.Value(c => c.ChildID, () => id);
+
+				var sql = insertable.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Does.Contain("INSERT"));
+			}
+		}
+
+		[Test]
 		public async Task Insert4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -493,7 +514,7 @@ namespace Tests.xUpdate
 			[Column] public DateTime? DateTimeValue;
 			[Column] public bool      BoolValue;
 			[Column] public Guid      GuidValue;
-			[Column] public byte[]    BinaryValue;
+			[Column] public byte[]?   BinaryValue;
 			[Column] public short     SmallIntValue;
 		}
 
@@ -529,7 +550,7 @@ namespace Tests.xUpdate
 				{
 					types.Delete(t => t.ID > 1000);
 
-					byte[] arr = null;
+					byte[]? arr = null;
 
 					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
@@ -1056,7 +1077,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configuration = TestProvName.AllOracleNative)]
+		[ActiveIssue("InsertOrUpdate() == -1", Configurations = new[]
+		{
+			TestProvName.AllOracleNative
+#if NETCOREAPP2_1
+				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
+				, ProviderName.Access
+#endif
+		})]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1313,6 +1341,47 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertOrUpdate4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					}));
+
+					for (var i = 0; i < 3; i++)
+					{
+						var diagnosis = "abc";
+						db.Patient.InsertOrUpdate(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = (Sql.AsSql(diagnosis).Length + i).ToString(),
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							});
+					}
+
+					Assert.AreEqual("3", db.Patient.Single(p => p.PersonID == id).Diagnosis);
+				}
+				finally
+				{
+					db.Patient.Delete(p => p.PersonID == id);
+					db.Person.Delete(p => p.ID == id);
+				}
+			}
+		}
+
+		[Test]
 		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
@@ -1437,7 +1506,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void Insert14([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005, TestProvName.AllSybase)]
 			string context)
 		{
@@ -1490,6 +1559,35 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+				}
+			}
+		}
+
+		[Test]
+		public void Insert16([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+
+				try
+				{
+					var name = "Insert16";
+					var idx = 4;
+
+					db.Person.Insert(() => new Person()
+					{
+						FirstName = "Insert16",
+						LastName  = (Sql.AsSql(name).Length + idx).ToString(),
+						Gender    = Gender.Male,
+					});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
 				}
 			}
 		}
@@ -1598,7 +1696,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		internal static string GetTableName(string context, [CallerMemberName] string methodName = null)
+		internal static string GetTableName(string context, [CallerMemberName] string? methodName = null)
 		{
 			var tableName  = "xxPerson";
 
@@ -1626,7 +1724,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "35");
 
 			using (var db = GetDataContext(context))
@@ -1672,7 +1770,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = GetTableName(context, "31");
 
 			using (var db = GetDataContext(context))
@@ -1715,7 +1813,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
@@ -1761,7 +1859,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
-			const string schemaName = null;
+			const string? schemaName = null;
 			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
@@ -1802,5 +1900,160 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test]
+		public void TestInsertWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "InsertColumnFilter";
+				try
+				{
+					var p = new Person()
+					{
+						FirstName  = newName,
+						LastName   = "whatever",
+						MiddleName = "som middle name",
+						Gender     = Gender.Male
+					};
+
+					db.Insert(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					Assert.AreEqual(!withMiddleName, string.IsNullOrWhiteSpace(p.MiddleName));
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
+
+		[Test]
+		public void TestUpdateWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var newName = "InsertColumnFilter";
+				try
+				{
+					var p = new Person()
+					{
+						FirstName = newName,
+						LastName = "whatever",
+						MiddleName = "som middle name",
+						Gender = Gender.Male
+					};
+
+					db.Insert(p);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					p.MiddleName = "updated name";
+
+					db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+
+					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+
+					if (withMiddleName)
+						Assert.AreEqual("updated name", p.MiddleName);
+					else
+						Assert.AreNotEqual("updated name", p.MiddleName);
+				}
+				finally
+				{
+					db.Person.Where(x => x.FirstName == newName).Delete();
+				}
+			}
+		}
+
+		[Table]
+		class TestInsertOrReplaceTable
+		{
+			[PrimaryKey] public int     ID         { get; set; }
+			[Column]     public string? FirstName  { get; set; }
+			[Column]     public string? LastName   { get; set; }
+			[Column]     public string? MiddleName { get; set; }
+		}
+
+		[Test]
+		public void TestInsertOrReplaceWithColumnFilter([DataSources] string context, [Values] bool withMiddleName, [Values] bool skipOnInsert)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
+			{
+				var newName = "InsertOrReplaceColumnFilter";
+				var p = new TestInsertOrReplaceTable()
+				{
+					FirstName = newName,
+					LastName = "whatever",
+					MiddleName = "som middle name",
+				};
+
+				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || !skipOnInsert);
+
+				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
+
+				Assert.AreEqual(!withMiddleName && skipOnInsert, string.IsNullOrWhiteSpace(p.MiddleName));
+
+				p.MiddleName = "updated name";
+				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || skipOnInsert);
+
+				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
+
+				if (skipOnInsert || withMiddleName)
+					Assert.AreEqual("updated name", p.MiddleName);
+				else
+					Assert.AreNotEqual("updated name", p.MiddleName);
+			}
+		}
+
+
+		#region issue 2243
+		[Table("test_insert_or_replace")]
+		public partial class TestInsertOrReplaceInfo
+		{
+			[Column("id"), PrimaryKey, NotNull]                   public int       Id        { get; set; } // bigint
+			[Column("name"), Nullable]                            public string?   Name      { get; set; } // character varying(100)
+			[Column("created_by", SkipOnUpdate = true), NotNull]  public string?   CreatedBy { get; set; } // character varying(100)
+			[Column("updated_by", SkipOnInsert = true), Nullable] public string?   UpdatedBy { get; set; } // character varying(100)
+		}
+
+		[Test]
+		public void Issue2243([DataSources] string context, [Values(1, 2, 3)] int seed)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var user = $"TEST_USER{seed}";
+				var item = new TestInsertOrReplaceInfo()
+				{
+					Id        = 1,
+					Name      = "Test1",
+					CreatedBy = user
+				};
+
+				db.InsertOrReplace(item);
+
+				var res = table.Single();
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual("Test1", res.Name);
+				Assert.AreEqual(user, res.CreatedBy);
+				Assert.IsNull(res.UpdatedBy);
+
+				item.Name      = "Test2";
+				item.UpdatedBy = user;
+
+				db.InsertOrReplace(item);
+
+				res = table.Single();
+				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual("Test2", res.Name);
+				Assert.AreEqual(user, res.CreatedBy);
+				Assert.AreEqual(user, res.UpdatedBy);
+			}
+		}
+		#endregion
 	}
 }

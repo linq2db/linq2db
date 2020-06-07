@@ -20,6 +20,7 @@ namespace InformixDataContext
 	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
+		public ITable<Blobclass>         Blobclasses        { get { return this.GetTable<Blobclass>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
@@ -79,6 +80,13 @@ namespace InformixDataContext
 		[Column("bytedatatype"),     Nullable            ] public byte[]?   Bytedatatype     { get; set; } // BYTE
 	}
 
+	[Table(Schema="informix", Name="blobclass")]
+	public partial class Blobclass
+	{
+		[Column("id"),        PrimaryKey,  NotNull] public int     Id        { get; set; } // INTEGER
+		[Column("blobvalue"),    Nullable         ] public byte[]? Blobvalue { get; set; } // BYTE
+	}
+
 	[Table(Schema="informix", Name="child")]
 	public partial class Child
 	{
@@ -90,20 +98,15 @@ namespace InformixDataContext
 	public partial class Doctor
 	{
 		[Column("personid"), PrimaryKey, NotNull] public int    Personid { get; set; } // INTEGER
-		#nullable disable
-		[Column("taxonomy"),             NotNull] public string Taxonomy { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column("taxonomy"),             NotNull] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_doctor_person
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_doctor_person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -160,20 +163,15 @@ namespace InformixDataContext
 	public partial class Patient
 	{
 		[Column("personid"),  PrimaryKey, NotNull] public int    Personid  { get; set; } // INTEGER
-		#nullable disable
-		[Column("diagnosis"),             NotNull] public string Diagnosis { get; set; } // NVARCHAR(100)
-		#nullable enable
+		[Column("diagnosis"),             NotNull] public string Diagnosis { get; set; } = null!; // NVARCHAR(100)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_patient_person
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_patient_person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -182,12 +180,8 @@ namespace InformixDataContext
 	public partial class Person
 	{
 		[Column("personid"),   PrimaryKey,  Identity] public int     Personid   { get; set; } // SERIAL
-		#nullable disable
-		[Column("firstname"),  NotNull              ] public string  Firstname  { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("lastname"),   NotNull              ] public string  Lastname   { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column("firstname"),  NotNull              ] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)
+		[Column("lastname"),   NotNull              ] public string  Lastname   { get; set; } = null!; // NVARCHAR(50)
 		[Column("middlename"),    Nullable          ] public string? Middlename { get; set; } // NVARCHAR(50)
 		[Column("gender"),     NotNull              ] public char    Gender     { get; set; } // CHAR(1)
 
@@ -212,12 +206,8 @@ namespace InformixDataContext
 	public partial class Personview
 	{
 		[Column("personid"),   Identity   ] public int     Personid   { get; set; } // SERIAL
-		#nullable disable
-		[Column("firstname"),  NotNull    ] public string  Firstname  { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("lastname"),   NotNull    ] public string  Lastname   { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column("firstname"),  NotNull    ] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)
+		[Column("lastname"),   NotNull    ] public string  Lastname   { get; set; } = null!; // NVARCHAR(50)
 		[Column("middlename"),    Nullable] public string? Middlename { get; set; } // NVARCHAR(50)
 		[Column("gender"),     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
 	}
@@ -232,22 +222,17 @@ namespace InformixDataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_1
 		/// </summary>
 		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="FkTestfkuniqueTestunique1BackReferences")]
-		public Testunique FkTestfkuniqueTestunique1 { get; set; }
+		public Testunique FkTestfkuniqueTestunique1 { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique
 		/// </summary>
 		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="Testfkuniques")]
-		public Testunique Testunique { get; set; }
-
-		#nullable enable
+		public Testunique Testunique { get; set; } = null!;
 
 		#endregion
 	}
@@ -316,22 +301,17 @@ namespace InformixDataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_1_BackReference
 		/// </summary>
 		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; }
+		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_BackReference
 		/// </summary>
 		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<Testfkunique> Testfkuniques { get; set; }
-
-		#nullable enable
+		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		#endregion
 	}
@@ -339,6 +319,12 @@ namespace InformixDataContext
 	public static partial class TableExtensions
 	{
 		public static Alltype Find(this ITable<Alltype> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static Blobclass Find(this ITable<Blobclass> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -401,5 +387,4 @@ namespace InformixDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

@@ -14,15 +14,18 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table);
-		string           Convert              (string value, ConvertType convertType);
+		string           ConvertInline        (string value, ConvertType convertType);
+		StringBuilder    Convert              (StringBuilder sb, string value, ConvertType convertType);
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
-		StringBuilder    PrintParameters      (StringBuilder sb, IDbDataParameter[] parameters);
+		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<IDbDataParameter>? parameters);
 		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 
 		string           Name { get; }
+
+		List<SqlParameter> ActualParameters { get; }
 	}
 }

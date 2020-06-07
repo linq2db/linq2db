@@ -47,8 +47,8 @@ namespace TestAzureSQL
 		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
-		public ITable<SameTableName>            SameTableNames0          { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName> SameTableNames1          { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
@@ -99,9 +99,7 @@ namespace TestAzureSQL
 
 		public partial class Issue1921Result
 		{
-			#nullable disable
-			public string name  { get; set; }
-			#nullable enable
+			public string name  { get; set; } = null!;
 			public int?   objid { get; set; }
 		}
 
@@ -183,15 +181,9 @@ namespace TestAzureSQL
 	public partial class sys_DatabaseFirewallRule
 	{
 		[Column("id"),               Identity] public int      Id             { get; set; } // int
-		#nullable disable
-		[Column("name"),             NotNull ] public string   Name           { get; set; } // nvarchar(128)
-		#nullable enable
-		#nullable disable
-		[Column("start_ip_address"), NotNull ] public string   StartIpAddress { get; set; } // varchar(45)
-		#nullable enable
-		#nullable disable
-		[Column("end_ip_address"),   NotNull ] public string   EndIpAddress   { get; set; } // varchar(45)
-		#nullable enable
+		[Column("name"),             NotNull ] public string   Name           { get; set; } = null!; // nvarchar(128)
+		[Column("start_ip_address"), NotNull ] public string   StartIpAddress { get; set; } = null!; // varchar(45)
+		[Column("end_ip_address"),   NotNull ] public string   EndIpAddress   { get; set; } = null!; // varchar(45)
 		[Column("create_date"),      NotNull ] public DateTime CreateDate     { get; set; } // datetime
 		[Column("modify_date"),      NotNull ] public DateTime ModifyDate     { get; set; } // datetime
 	}
@@ -210,20 +202,15 @@ namespace TestAzureSQL
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -277,14 +264,11 @@ namespace TestAzureSQL
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public IndexTable Patient2IndexTable { get; set; }
-
-		#nullable enable
+		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
 	}
@@ -369,20 +353,15 @@ namespace TestAzureSQL
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -391,12 +370,8 @@ namespace TestAzureSQL
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
@@ -513,30 +488,23 @@ namespace TestAzureSQL
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; }
+		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; }
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; }
-
-		#nullable enable
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 		#endregion
 	}
@@ -551,30 +519,23 @@ namespace TestAzureSQL
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; }
+		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
 		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; }
+		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; }
-
-		#nullable enable
+		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 		#endregion
 	}
@@ -593,30 +554,23 @@ namespace TestAzureSQL
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchemaY> TestSchemaY { get; set; }
+		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; }
+		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; }
-
-		#nullable enable
+		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
 	}
@@ -630,30 +584,23 @@ namespace TestAzureSQL
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public TestSchemaX FkTestSchemaYOtherID { get; set; }
+		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public TestSchemaX ParentTestSchemaX { get; set; }
+		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
-		#nullable enable
-		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public TestSchemaX TestSchemaX { get; set; }
-
-		#nullable enable
+		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
 	}
@@ -687,9 +634,7 @@ namespace TestAzureSQL
 		public partial class DuplicateColumnNamesResult
 		{
 			               public int    id      { get; set; }
-			#nullable disable
-			[Column("id")] public string Column2 { get; set; }
-			#nullable enable
+			[Column("id")] public string Column2 { get; set; } = null!;
 		}
 
 		#endregion
@@ -752,17 +697,11 @@ namespace TestAzureSQL
 		public partial class PatientSelectAllResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
 			public char    Gender     { get; set; }
-			#nullable disable
-			public string  Diagnosis  { get; set; }
-			#nullable enable
+			public string  Diagnosis  { get; set; } = null!;
 		}
 
 		#endregion
@@ -779,17 +718,11 @@ namespace TestAzureSQL
 		public partial class PatientSelectByNameResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
 			public char    Gender     { get; set; }
-			#nullable disable
-			public string  Diagnosis  { get; set; }
-			#nullable enable
+			public string  Diagnosis  { get; set; } = null!;
 		}
 
 		#endregion
@@ -855,6 +788,22 @@ namespace TestAzureSQL
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		#endregion
+
+		#region PersonSelectByKeyLowercase
+
+		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this Issue1733DB dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[dbo].[Person_SelectByKeyLowercase]",
+				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyLowercaseResult
+		{
+			public int    personid  { get; set; }
+			public string firstname { get; set; } = null!;
 		}
 
 		#endregion
@@ -964,12 +913,8 @@ namespace TestAzureSQL
 		public partial class VariableResultsResult
 		{
 			public int    Code   { get; set; }
-			#nullable disable
-			public string Value1 { get; set; }
-			#nullable enable
-			#nullable disable
-			public string Value2 { get; set; }
-			#nullable enable
+			public string Value1 { get; set; } = null!;
+			public string Value2 { get; set; } = null!;
 		}
 
 		#endregion
@@ -1137,5 +1082,4 @@ namespace TestAzureSQL
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

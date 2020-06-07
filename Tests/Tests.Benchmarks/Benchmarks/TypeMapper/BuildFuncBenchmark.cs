@@ -9,14 +9,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private Original.TestClass _classInstance = new Original.TestClass();
 
-		private Func<ITestClass, Guid, object[], DataTable> _functionCall;
+		private Func<ITestClass, Guid, object[]?, DataTable> _functionCall = null!;
 
 		[GlobalSetup]
 		public void Setup()
 		{
 			var typeMapper = Wrapped.Helper.CreateTypeMapper();
 
-			_functionCall = typeMapper.BuildFunc<ITestClass, Guid, object[], DataTable>(typeMapper.MapLambda((Wrapped.TestClass conn, Guid schema, object[] restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
+			_functionCall = typeMapper.BuildFunc<ITestClass, Guid, object[]?, DataTable>(typeMapper.MapLambda((Wrapped.TestClass conn, Guid schema, object[] restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 		}
 
 		[Benchmark]

@@ -1,8 +1,8 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Common.Internal.Cache
 {
@@ -17,7 +17,7 @@ namespace LinqToDB.Common.Internal.Cache
         /// <param name="key">An object identifying the requested entry.</param>
         /// <param name="value">The located value or null.</param>
         /// <returns>True if the key was found.</returns>
-        bool TryGetValue(object key, out object value);
+        bool TryGetValue(object key, [MaybeNullWhen(false)] out object? value);
 
         /// <summary>
         /// Create or overwrite an entry in the cache.

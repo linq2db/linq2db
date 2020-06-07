@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,7 +7,6 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using Extensions;
-	using Mapping;
 
 	public class TypeAccessor<T> : TypeAccessor
 	{
@@ -20,7 +18,7 @@ namespace LinqToDB.Reflection
 
 			if (type.IsValueType)
 			{
-				_createInstance = () => default;
+				_createInstance = () => default!;
 			}
 			else
 			{
@@ -91,7 +89,7 @@ namespace LinqToDB.Reflection
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
-		static readonly IObjectFactory   _objectFactory;
+		static readonly IObjectFactory?  _objectFactory;
 
 		internal TypeAccessor()
 		{
@@ -106,7 +104,7 @@ namespace LinqToDB.Reflection
 		static readonly Func<T> _createInstance;
 		public override object   CreateInstance()
 		{
-			return _createInstance();
+			return _createInstance()!;
 		}
 
 		public T Create()

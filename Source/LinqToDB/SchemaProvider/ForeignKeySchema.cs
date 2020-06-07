@@ -1,19 +1,17 @@
-﻿#nullable disable
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.SchemaProvider
 {
 	public class ForeignKeySchema
 	{
-		public string             KeyName       { get; set; }
-		public TableSchema        ThisTable     { get; set; }
-		public TableSchema        OtherTable    { get; set; }
-		public List<ColumnSchema> ThisColumns   { get; set; }
-		public List<ColumnSchema> OtherColumns  { get; set; }
+		public string             KeyName       { get; set; } = null!;
+		public TableSchema?       ThisTable     { get; set; }
+		public TableSchema        OtherTable    { get; set; } = null!;
+		public List<ColumnSchema> ThisColumns   { get; set; } = null!;
+		public List<ColumnSchema> OtherColumns  { get; set; } = null!;
 		public bool               CanBeNull     { get; set; }
-		public ForeignKeySchema   BackReference { get; set; }
-		public string             MemberName    { get; set; }
+		public ForeignKeySchema?  BackReference { get; set; }
+		public string             MemberName    { get; set; } = null!;
 
 		private AssociationType _associationType = AssociationType.Auto;
 		public  AssociationType  AssociationType

@@ -103,20 +103,15 @@ namespace SybaseDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(150)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(150)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -180,20 +175,15 @@ namespace SybaseDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(768)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(768)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
-
-		#nullable enable
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -202,12 +192,8 @@ namespace SybaseDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(150)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(150)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(150)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(150)
 		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(150)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
@@ -231,14 +217,10 @@ namespace SybaseDataContext
 	[Table("sysobjects")]
 	public partial class SysObject
 	{
-		#nullable disable
-		[Column, NotNull    ] public string   name      { get; set; } // varchar
-		#nullable enable
+		[Column, NotNull    ] public string   name      { get; set; } = null!; // varchar
 		[Column, NotNull    ] public int      id        { get; set; } // int
 		[Column, NotNull    ] public int      uid       { get; set; } // int
-		#nullable disable
-		[Column, NotNull    ] public string   type      { get; set; } // char
-		#nullable enable
+		[Column, NotNull    ] public string   type      { get; set; } = null!; // char
 		[Column, NotNull    ] public short    userstat  { get; set; } // smallint
 		[Column, NotNull    ] public short    sysstat   { get; set; } // smallint
 		[Column, NotNull    ] public short    indexdel  { get; set; } // smallint
@@ -406,5 +388,4 @@ namespace SybaseDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

@@ -45,8 +45,8 @@ namespace Tests.UserTests
 //	        public Reference Reference { get; set; }
 //
 	        [Association(ThisKey = nameof(Id_Defect), OtherKey = nameof(Issue1869Tests.Defect.Id), CanBeNull = false)]
-	        public Defect Defect { get; set; }
-	    }
+	        public Defect Defect { get; set; } = null!;
+		}
 
 	    [Table(Name = "tblDefect")]
 	    public class Defect : PropertyChangedNotifier
@@ -55,9 +55,9 @@ namespace Tests.UserTests
 	        public int Id { get; set; }
 
 	        [Column, NotNull]
-	        public string Nam { get; set; }
+	        public string Nam { get; set; } = null!;
 
-	        [Column, NotNull]
+			[Column, NotNull]
 	        public int Id_Workstation { get; set; }
 
 	        [Column, NotNull]
@@ -67,8 +67,8 @@ namespace Tests.UserTests
 	        public bool Del { get; set; }
 	       
 	        [Association(ThisKey = nameof(Id_Workstation), OtherKey = nameof(Issue1869Tests.Workstation.Id), CanBeNull = false)]
-	        public Workstation Workstation { get; set; }
-	    }
+	        public Workstation Workstation { get; set; } = null!;
+		}
 
 	    [Table(Name = "tblWorkstation")]
 	    public class Workstation : PropertyChangedNotifier
@@ -80,14 +80,14 @@ namespace Tests.UserTests
 	        public int Id_WorkstationGroup { get; set; }
 
 	        [Column, NotNull]
-	        public string Nam { get; set; }
+	        public string Nam { get; set; } = null!;
 
-	        [Column, NotNull]
+			[Column, NotNull]
 	        public bool Del { get; set; }
 	        
 	        [Association(ThisKey = nameof(Id_WorkstationGroup), OtherKey = nameof(Issue1869Tests.WorkstationGroup.Id), CanBeNull = false)]
-	        public WorkstationGroup WorkstationGroup { get; set; }
-	    }
+	        public WorkstationGroup WorkstationGroup { get; set; } = null!;
+		}
 
 	    [Table(Name = "tblWorkstationGroup")]
 	    public class WorkstationGroup : PropertyChangedNotifier
@@ -96,9 +96,9 @@ namespace Tests.UserTests
 	        public int Id { get; set; }
 
 	        [Column, NotNull]
-	        public string Nam { get; set; }
+	        public string Nam { get; set; } = null!;
 
-	        [Column, NotNull]
+			[Column, NotNull]
 	        public int Id_SectorPart { get; set; }
 
 	        [Column, NotNull]
@@ -119,11 +119,11 @@ namespace Tests.UserTests
 	    {
 	        [Column]
 	        public int MonthNumber { get; set; }
-	    }				
+	    }
 
 
 		[Test]
-		public void TestLeftJoin([IncludeDataSources(ProviderName.Access)] string context)
+		public void TestLeftJoin([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Month>())

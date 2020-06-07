@@ -1,15 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	// tests for empty enumerable source
 	public partial class MergeTests
 	{

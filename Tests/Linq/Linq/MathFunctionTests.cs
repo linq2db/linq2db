@@ -20,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Acos([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Asin([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -47,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Atan2([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -96,8 +96,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15).Value * 15) where t != 0.1 select t,
-					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15).Value * 15) where t != 0.1 select t);
+					from t in from p in    Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15)!.Value * 15) where t != 0.1 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15)!.Value * 15) where t != 0.1 select t);
 		}
 
 		[Test]
@@ -105,8 +105,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Math.Floor(Sql.Degrees(p.MoneyValue).Value) where t != 0.1m select t,
-					from t in from p in db.Types select Math.Floor(Sql.Degrees(p.MoneyValue).Value) where t != 0.1m select t);
+					from t in from p in    Types select Math.Floor(Sql.Degrees(p.MoneyValue)!.Value) where t != 0.1m select t,
+					from t in from p in db.Types select Math.Floor(Sql.Degrees(p.MoneyValue)!.Value) where t != 0.1m select t);
 		}
 
 		[Test]
@@ -114,8 +114,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Sql.Degrees((double)p.MoneyValue).Value where t != 0.1 select Math.Floor(t),
-					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue).Value where t != 0.1 select Math.Floor(t));
+					from t in from p in    Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t),
+					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t));
 		}
 
 		[Test]
@@ -123,8 +123,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Sql.Degrees((int)p.MoneyValue).Value where t != 0.1 select t,
-					from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue).Value where t != 0.1 select t);
+					from t in from p in    Types select Sql.Degrees((int)p.MoneyValue)!.Value where t != 0.1 select t,
+					from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue)!.Value where t != 0.1 select t);
 		}
 
 		[Test]

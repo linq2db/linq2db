@@ -15,8 +15,8 @@ namespace Tests.UserTests
 		class Table1
 		{
 			[PrimaryKey(1)]
-			[Identity] public Int64 Field1 { get; set; }
-			[Nullable] public Char? Foeld2 { get; set; }
+			[Identity] public long  Field1 { get; set; }
+			[Nullable] public char? Foeld2 { get; set; }
 		}
 
 		class Repository : DataConnection
@@ -25,11 +25,11 @@ namespace Tests.UserTests
 			{
 			}
 
-			public ITable<Table1> Table1 => this.GetTable<Table1>();
+			public ITable<Table1> Table1 => GetTable<Table1>();
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.Access)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = new Repository(context))
 			{

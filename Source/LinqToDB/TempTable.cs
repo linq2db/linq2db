@@ -172,7 +172,7 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
+		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
 
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.
@@ -197,7 +197,7 @@ namespace LinqToDB
 					return Expression.Lambda<Func<T,T>>(
 						Expression.New(
 							nctor.Constructor,
-							members.Select(m => Expression.PropertyOrField(p, m.Name)),
+							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
 							members),
 						p);
 				}

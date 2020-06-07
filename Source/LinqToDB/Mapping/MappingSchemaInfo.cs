@@ -12,12 +12,12 @@ namespace LinqToDB.Mapping
 
 	class MappingSchemaInfo
 	{
-		public MappingSchemaInfo(string configuration)
+		public MappingSchemaInfo(string? configuration)
 		{
 			Configuration = configuration;
 		}
 
-		public string           Configuration;
+		public string?          Configuration;
 		public IMetadataReader? MetadataReader;
 
 		#region Default Values
@@ -157,8 +157,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_scalarTypes != null)
 			{
-				bool isScalarType;
-				if (_scalarTypes.TryGetValue(type, out isScalarType))
+				if (_scalarTypes.TryGetValue(type, out var isScalarType))
 					return Option<bool>.Some(isScalarType);
 			}
 
@@ -185,8 +184,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_dataTypes != null)
 			{
-				SqlDataType dataType;
-				if (_dataTypes.TryGetValue(type, out dataType))
+				if (_dataTypes.TryGetValue(type, out var dataType))
 					return Option<SqlDataType>.Some(dataType);
 			}
 

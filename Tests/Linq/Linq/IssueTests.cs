@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections.Generic;
 	using Model;
 
 	[TestFixture]
@@ -73,7 +74,7 @@ namespace Tests.Linq
 				var q =
 					from t in dbSchema.Tables
 					from c in t.Columns
-					where c.ColumnType.StartsWith("tinyint") && c.MemberType.StartsWith("sbyte")
+					where c.ColumnType!.StartsWith("tinyint") && c.MemberType.StartsWith("sbyte")
 					select c;
 
 				var column = q.FirstOrDefault();
@@ -192,7 +193,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
@@ -205,7 +206,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
@@ -257,6 +258,7 @@ namespace Tests.Linq
 		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
@@ -275,6 +277,7 @@ namespace Tests.Linq
 		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
@@ -293,6 +296,7 @@ namespace Tests.Linq
 		public void Issue528Test3([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
@@ -340,12 +344,12 @@ namespace Tests.Linq
 		public class PersonWrapper
 		{
 			public int    ID;
-			public string FirstName;
-			public string SecondName;
+			public string FirstName  = null!;
+			public string SecondName = null!;
 		}
 
 		[Test]
-		public void Issue535Test([DataSources] string context)
+		public void Issue535Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -366,33 +370,108 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		class CustomerBase
+		{
+			[PrimaryKey, Identity] public int        Id           { get; set; }
+			[Column, NotNull]      public ClientType ClientType   { get; set; }
+			[Column, Nullable]     public string?    Name         { get; set; }
+			[Column, Nullable]     public string?    ContactEmail { get; set; }
+			[Column, Nullable]     public bool?      Enabled      { get; set; }
+		}
+
+		public class PersonBase
+		{
+			public   int     Id              { get; set; }
+			public   string? Name            { get; set; }
+			internal string? CompositeEmails { get; set; }
+		}
+
+		public class PersonCustomer : PersonBase
+		{
+			public List<string>? Emails { get; set; }
+			public bool          IsEnabled { get; set; }
+		}
+
+		enum ClientType
+		{
+			[MapValue("Client")]
+			Client
+		}
+
+		[ActiveIssue(535)]
+		[Test]
+		public void Issue535Test2([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CustomerBase>())
+			{
+				var query = from cb in table
+							where cb.ClientType == ClientType.Client
+						//orderby cb.Name
+						select new PersonCustomer
+						{
+							Id = cb.Id,
+							Name = cb.Name,
+							CompositeEmails = cb.ContactEmail,
+							IsEnabled = cb.Enabled ?? false
+						};
+
+				var filter = "test";
+
+				query = from q in query where q.Name!.Contains(filter) || q.CompositeEmails!.Contains(filter) select q;
+
+				query.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CustomerBase>())
+			{
+				var query = from cb in table
+							 where cb.ClientType == ClientType.Client
+							 select new
+							 {
+								 Id              = cb.Id,
+								 Name            = cb.Name,
+								 CompositeEmails = cb.ContactEmail,
+								 IsEnabled       = cb.Enabled ?? false
+							 };
+
+				query.ToList();
+			}
+		}
+
 		[Table(Name = "Person")]
 		public class Person376 //: Person
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[Column("PersonID"), Identity, PrimaryKey]
 			public int ID;
-			[NotNull] public string FirstName { get; set; }
-			[NotNull] public string LastName;
-			[Nullable] public string MiddleName;
+			[NotNull] public string FirstName { get; set; } = null!;
+			[NotNull] public string LastName = null!;
+			[Nullable] public string? MiddleName;
 
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
-			public Doctor Doctor { get; set; }
+			public Doctor? Doctor { get; set; }
 		}
 
 		public class PersonDto
 		{
 			public int    Id;
-			public string Name;
+			public string Name = null!;
 
-			public DoctorDto Doc;
+			public DoctorDto? Doc;
 		}
 
 		public class DoctorDto
 		{
 			public int    PersonId;
-			public string Taxonomy;
+			public string Taxonomy = null!;
 		}
 
 		[ExpressionMethod("MapToDtoExpr1")]
@@ -434,7 +513,7 @@ namespace Tests.Linq
 			{
 				var l = db
 					.GetTable<Person376>()
-					.Where(_ => _.Doctor.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
+					.Where(_ => _.Doctor!.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
 					.Select(_ => MapToDto(_)).ToList();
 
 				Assert.IsNotEmpty(l);
@@ -448,11 +527,11 @@ namespace Tests.Linq
 		public class Person88
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey] public int    ID;
-			[NotNull]                                  public string FirstName { get; set; }
-			[NotNull]                                  public string LastName;
-			[Nullable]                                 public string MiddleName;
-			                                           public char   Gender;
+			[Column("PersonID"), Identity, PrimaryKey] public int     ID;
+			[NotNull]                                  public string  FirstName { get; set; } = null!;
+			[NotNull]                                  public string  LastName = null!;
+			[Nullable]                                 public string? MiddleName;
+			                                           public char    Gender;
 		}
 
 		[Test]
@@ -566,7 +645,7 @@ namespace Tests.Linq
 
 				var actual = from c in db.GetTable<Child>()
 					where (from p in db.GetTable<Parent>()
-						where p.ParentID == c.ParentID && !values.Contains(p.Value1.Value)
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1!.Value)
 						select p).Any()
 					select c;
 

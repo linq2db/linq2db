@@ -85,8 +85,7 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression GetConverter(Type from, Type to)
 		{
-			LambdaExpression l;
-			_expressions.TryGetValue(new { from, to }, out l);
+			_expressions.TryGetValue(new { from, to }, out var l);
 			return l;
 		}
 
@@ -170,9 +169,7 @@ namespace LinqToDB.Common
 			var from = value.GetType();
 			var to   = typeof(T);
 
-			Func<object,T> l;
-
-			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
+			if (!ExprHolder<T>.Converters.TryGetValue(from, out var l))
 			{
 				var li = ConvertInfo.Default.Get(from, to) ?? ConvertInfo.Default.Create(mappingSchema, from, to);
 				var b  = li.CheckNullLambda.Body;

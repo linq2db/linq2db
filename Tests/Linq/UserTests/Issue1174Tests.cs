@@ -45,7 +45,7 @@ namespace Tests.UserTests
 		public class User
 		{
 			[PrimaryKey, NotNull] public Guid Id { get; set; }
-			[Column, Nullable] public string Name { get; set; }
+			[Column, Nullable] public string? Name { get; set; }
 		}
 
 		[Test]

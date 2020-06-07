@@ -13,17 +13,17 @@ namespace Tests.UserTests
 		class FullClass
 		{
 			[Column, Identity]
-			         public int    Id        { get; set; }
-			[Column] public string Name      { get; set; }
-			[Column] public bool   IsDeleted { get; set; }
+			         public int     Id        { get; set; }
+			[Column] public string? Name      { get; set; }
+			[Column] public bool    IsDeleted { get; set; }
 		}
 
 		[Table("DynamicColumnTable")]
 		class RepresentTable
 		{
 			[Column, Identity]
-			         public int    Id        { get; set; }
-			[Column] public string Name      { get; set; }
+			         public int     Id        { get; set; }
+			[Column] public string? Name      { get; set; }
 
 			[DynamicColumnsStore]
 			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();

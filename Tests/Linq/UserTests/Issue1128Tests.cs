@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -16,7 +15,7 @@ namespace Tests.UserTests
 
 		class FluentDerived : FluentBase
 		{
-			public string StringValue { get; set; }
+			public string? StringValue { get; set; }
 		}
 
 		[Table(nameof(AttributeBase), IsColumnAttributeRequired = false)]
@@ -28,7 +27,7 @@ namespace Tests.UserTests
 
 		class AttributeDerived : AttributeBase
 		{
-			public string StringValue { get; set; }
+			public string? StringValue { get; set; }
 		}
 
 		MappingSchema SetFluentMappings()

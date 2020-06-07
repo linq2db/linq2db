@@ -161,6 +161,13 @@ namespace LinqToDB.Linq
 				public static MethodInfo Like21 = MethodOf(s => Sql.Like(s, ""));
 				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
 			}
+
+#if !NET45
+			public class FormattableString : Expressor<System.FormattableString>
+			{
+				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
+			}
+#endif
 		}
 	}
 }

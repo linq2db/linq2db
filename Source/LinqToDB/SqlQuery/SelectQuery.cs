@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
+	[DebuggerDisplay("{this}")]
 	public class SelectQuery : ISqlTableSource
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -79,7 +79,7 @@ namespace LinqToDB.SqlQuery
 		public  List<object>   Properties => _properties ?? (_properties = new List<object>());
 
 		public SelectQuery?   ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
@@ -123,10 +123,8 @@ namespace LinqToDB.SqlQuery
 
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			ICloneableElement parentClone;
-
 			if (clone.ParentSelect != null)
-				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
+				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out var parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
 			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);
@@ -149,9 +147,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(this, expr =>
 			{
-				var sb = expr as SelectQuery;
-
-				if (sb != null && sb.ParentSelect == clone)
+				if (expr is SelectQuery sb && sb.ParentSelect == clone)
 					sb.ParentSelect = this;
 			});
 		}
@@ -263,7 +259,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = this.DoNotRemove };
+				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = DoNotRemove };
 
 			return clone;
 		}

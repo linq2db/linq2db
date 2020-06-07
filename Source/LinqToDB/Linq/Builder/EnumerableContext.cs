@@ -4,11 +4,13 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	// based on ArrayContext
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
@@ -22,7 +24,8 @@ namespace LinqToDB.Linq.Builder
 		public  SelectQuery          SelectQuery   { get; set; }
 		public  SqlStatement?        Statement     { get; set; }
 		public  IBuildContext?       Parent        { get; set; }
-		private EntityDescriptor     _entityDescriptor;
+
+		private readonly EntityDescriptor _entityDescriptor;
 
 		public SqlValuesTable Table = new SqlValuesTable();
 		private readonly IList<SqlValue> _records;
@@ -107,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 											if (expr is SqlParameter p)
 											{
 												// avoid parameters is source, because their number is limited
-												p.IsQueryParameter = false;
+												p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
 												p.Type             = p.Type.WithoutSystemType(column);
 											}
 											else if (expr is SqlValue val)

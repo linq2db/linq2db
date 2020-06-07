@@ -15,6 +15,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
+		/// <summary>
+		/// Creates the specified SQLite provider based on the provider name.
+		/// </summary>
+		/// <param name="name">If ProviderName.SQLite is provided,
+		/// the detection mechanism preferring System.Data.SQLite
+		/// to Microsoft.Data.Sqlite will be used.</param>
 		public SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{
@@ -32,6 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -124,10 +131,10 @@ namespace LinqToDB.DataProvider.SQLite
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public override Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			if (Name != ProviderName.SQLiteMS)
-				return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+				return base.GetReaderExpression(reader, idx, readerExpression, toType);
 
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);

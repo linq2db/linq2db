@@ -506,9 +506,9 @@ namespace Tests.Linq
 				var ts = q.GetTableSource();
 				Assert.AreEqual(1, ts.Joins.Count, "Join should be optimized");
 
-#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning disable CS0472 // comparison of int with null
 				var qw = q.Where(v => v.OrderID1 != null);
-#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+#pragma warning restore CS0472
 				var str = qw.ToString();
 				Assert.AreEqual(2, qw.GetTableSource().Joins.Count, "If LEFT join is used in where condition - it can not be optimized");
 
@@ -541,7 +541,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q2.GetTableSource().Joins.Count);
 
 				var q3 = from od in db.Order
-					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID.Value} equals new {ID1 = od2.EmployeeID.Value, ID2 = od2.OrderID}
+					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID!.Value} equals new {ID1 = od2.EmployeeID!.Value, ID2 = od2.OrderID}
 					select od;
 
 				Assert.AreEqual(1, q3.GetTableSource().Joins.Count);
@@ -578,7 +578,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 

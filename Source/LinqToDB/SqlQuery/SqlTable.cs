@@ -365,5 +365,18 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		#region System tables
+		internal static SqlTable Inserted(Type objectType)
+			=> new SqlTable(objectType)
+			{
+				Name         = "INSERTED",
+				PhysicalName = "INSERTED",
+				Schema       = null,
+				Database     = null,
+				Server       = null,
+				SqlTableType = SqlTableType.SystemTable,
+			};
+		#endregion
 	}
 }

@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
-				return new SqlExpression("GEN_ID(" + table.SequenceAttributes![0].SequenceName + ", 1)", Precedence.Primary);
+				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
 
 			return base.GetIdentityExpression(table);
 		}
@@ -162,14 +162,6 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		/// <summary>
-		/// Specifies how identifiers like table and field names should be quoted.
-		/// </summary>
-		/// <remarks>
-		/// Default value: <see cref="FirebirdIdentifierQuoteMode.Auto"/>.
-		/// </remarks>
-		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto;
-
-		/// <summary>
 		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
 		/// </summary>
 		private bool IsValidIdentifier(string name)
@@ -185,18 +177,18 @@ namespace LinqToDB.DataProvider.Firebird
 					c == '_');
 		}
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
-					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
 						// I wonder what to do if identifier has " in name?
-						return '"' + value + '"';
+						return sb.Append('"').Append(value).Append('"');
 					}
 
 					break;
@@ -204,13 +196,15 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter  :
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName  :
-					return value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -281,8 +275,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-					    IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 
 					BuildValue(null, identifierValue);
@@ -300,8 +294,8 @@ namespace LinqToDB.DataProvider.Firebird
 				dropCommand
 					.Append("DROP ")
 					.Append(objectName)
-					.Append(" ")
-					.Append(Convert(identifier, ConvertType.NameToQueryTable));
+					.Append(" ");
+				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
 
 				BuildValue(null, dropCommand.ToString());
 
@@ -318,36 +312,40 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
-					StringBuilder
-						.Append("SET GENERATOR ")
-						.Append(Convert("GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable))
-						.AppendLine(" TO 0")
-						;
+					StringBuilder.Append("SET GENERATOR ");
+					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable);
+					StringBuilder.AppendLine(" TO 0");
 					break;
 
 				case SqlCreateTableStatement createTable:
 					{
 						if (commandNumber == 1)
 						{
-							StringBuilder
-								.Append("CREATE GENERATOR ")
-								.Append(Convert("GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable))
-								.AppendLine();
+							StringBuilder.Append("CREATE GENERATOR ");
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder.AppendLine();
 						}
 						else
 						{
 							StringBuilder
-								.AppendFormat(
-									"CREATE TRIGGER {0} FOR {1}",
-									Convert("TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable),
-									Convert(createTable.Table.PhysicalName!, ConvertType.NameToQueryTable))
+								.Append("CREATE TRIGGER ");
+							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder
+								.Append(" FOR ");
+							Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
+							StringBuilder
 								.AppendLine  ()
 								.AppendLine  ("BEFORE INSERT POSITION 0")
-								.AppendLine  ("AS BEGIN")
-								.AppendFormat(
-									"\tNEW.{0} = GEN_ID({1}, 1);",
-									Convert(_identityField!.PhysicalName, ConvertType.NameToQueryField),
-									Convert("GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable))
+								.AppendLine  ("AS BEGIN");
+							StringBuilder
+								.Append("\tNEW.");
+							Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
+							StringBuilder
+								.Append(" = GEN_ID(");
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder
+								.Append(", 1);");
+							StringBuilder
 								.AppendLine  ()
 								.AppendLine  ("END");
 						}

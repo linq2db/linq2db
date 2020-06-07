@@ -46,6 +46,8 @@
 		SqlRawSqlTable,
 		SqlValuesTable,
 
+		OutputClause,
+
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,
@@ -59,5 +61,7 @@
 
 		MergeSourceTable,
 		MergeOperationClause,
+
+		GroupingSet
 	}
 }

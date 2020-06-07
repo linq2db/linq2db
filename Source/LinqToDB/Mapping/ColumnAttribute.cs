@@ -4,7 +4,6 @@ namespace LinqToDB.Mapping
 {
 	using SqlQuery;
 
-	// TODO: V2 - make Has* methods internal
 	/// <summary>
 	/// Configures mapping of mapping class member to database column.
 	/// Could be applied directly to a property or field or to mapping class/interface.
@@ -174,7 +173,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="SkipOnInsert"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="SkipOnInsert"/> property was set in attribute.</returns>
-		public bool HasSkipOnInsert() { return _skipOnInsert.HasValue; }
+		internal bool HasSkipOnInsert() => _skipOnInsert.HasValue; 
 
 		private bool? _skipOnUpdate;
 		/// <summary>
@@ -193,7 +192,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="SkipOnUpdate"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="SkipOnUpdate"/> property was set in attribute.</returns>
-		public bool HasSkipOnUpdate() { return _skipOnUpdate.HasValue; }
+		internal bool HasSkipOnUpdate() => _skipOnUpdate.HasValue;
 
 		private bool? _isIdentity;
 		/// <summary>
@@ -210,7 +209,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="IsIdentity"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="IsIdentity"/> property was set in attribute.</returns>
-		public bool HasIsIdentity() { return _isIdentity.HasValue; }
+		internal bool HasIsIdentity() => _isIdentity.HasValue;
 
 		private bool? _isPrimaryKey;
 		/// <summary>
@@ -227,7 +226,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="IsPrimaryKey"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="IsPrimaryKey"/> property was set in attribute.</returns>
-		public bool HasIsPrimaryKey() { return _isPrimaryKey.HasValue; }
+		internal bool HasIsPrimaryKey() => _isPrimaryKey.HasValue;
 
 		/// <summary>
 		/// Gets or sets the Primary Key order.
@@ -249,7 +248,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="CanBeNull"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="CanBeNull"/> property was set in attribute.</returns>
-		public bool HasCanBeNull() { return _canBeNull.HasValue; }
+		internal bool HasCanBeNull() => _canBeNull.HasValue;
 
 		private int? _length;
 		/// <summary>
@@ -266,7 +265,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="Length"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Length"/> property was set in attribute.</returns>
-		public bool HasLength() { return _length.HasValue; }
+		internal bool HasLength() => _length.HasValue;
 
 		private int? _precision;
 		/// <summary>
@@ -283,7 +282,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="Precision"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Precision"/> property was set in attribute.</returns>
-		public bool HasPrecision() { return _precision.HasValue; }
+		internal bool HasPrecision() => _precision.HasValue;
 
 		private int? _scale;
 		/// <summary>
@@ -300,7 +299,7 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="Scale"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Scale"/> property was set in attribute.</returns>
-		public bool HasScale() { return _scale.HasValue; }
+		internal bool HasScale() => _scale.HasValue;
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
@@ -331,6 +330,6 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="Order"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
-		public bool HasOrder() { return _order.HasValue; }
+		internal bool HasOrder() => _order.HasValue;
 	}
 }

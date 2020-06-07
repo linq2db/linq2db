@@ -41,7 +41,6 @@ namespace OracleDataContext
 		public ITable<StgTradeInformation>   StgTradeInformation    { get { return this.GetTable<StgTradeInformation>(); } }
 		public ITable<STRINGTEST>            Stringtests            { get { return this.GetTable<STRINGTEST>(); } }
 		public ITable<TEntity>               TEntities              { get { return this.GetTable<TEntity>(); } }
-		public ITable<TEST0431>              TEST0431               { get { return this.GetTable<TEST0431>(); } }
 		public ITable<TESTIDENTITY>          Testidentities         { get { return this.GetTable<TESTIDENTITY>(); } }
 		public ITable<TESTMERGE1>            TESTMERGE1             { get { return this.GetTable<TESTMERGE1>(); } }
 		public ITable<TESTMERGE2>            TESTMERGE2             { get { return this.GetTable<TESTMERGE2>(); } }
@@ -88,8 +87,8 @@ namespace OracleDataContext
 		[Column(DbType="CHAR(20)",                          DataType=DataType.Char,           Length=20),                           Nullable         ] public string?         CHAR20DATATYPE         { get; set; } // CHAR(20)
 		[Column(DbType="VARCHAR2(20)",                      DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
 		[Column(DbType="CLOB",                              DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         TEXTDATATYPE           { get; set; } // CLOB
-		[Column(DbType="NCHAR(40)",                         DataType=DataType.NChar,          Length=40),                           Nullable         ] public string?         NCHARDATATYPE          { get; set; } // NCHAR(40)
-		[Column(DbType="NVARCHAR2(40)",                     DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string?         NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
+		[Column(DbType="NCHAR(20)",                         DataType=DataType.NChar,          Length=20),                           Nullable         ] public string?         NCHARDATATYPE          { get; set; } // NCHAR(20)
+		[Column(DbType="NVARCHAR2(20)",                     DataType=DataType.NVarChar,       Length=20),                           Nullable         ] public string?         NVARCHARDATATYPE       { get; set; } // NVARCHAR2(20)
 		[Column(DbType="NCLOB",                             DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         NTEXTDATATYPE          { get; set; } // NCLOB
 		[Column(DbType="BLOB",                              DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
 		[Column(DbType="BFILE",                             DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
@@ -104,9 +103,7 @@ namespace OracleDataContext
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID             { get; set; } // NUMBER
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal DEVTYPEID      { get; set; } // NUMBER
-		#nullable disable
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME           { get; set; } // VARCHAR2(50)
-		#nullable enable
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME           { get; set; } = null!; // VARCHAR2(50)
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal RESPONSIBILITY { get; set; } // NUMBER
 	}
 
@@ -115,9 +112,7 @@ namespace OracleDataContext
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
 		[Column(DbType="TIMESTAMP(6)", DataType=DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP(6)
-		#nullable disable
-		[Column(DbType="BLOB",         DataType=DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } // BLOB
-		#nullable enable
+		[Column(DbType="BLOB",         DataType=DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } = null!; // BLOB
 	}
 
 	[Table(Schema="MANAGED", Name="CHILD")]
@@ -130,28 +125,28 @@ namespace OracleDataContext
 	[Table(Schema="MANAGED", Name="DATATYPETEST")]
 	public partial class DATATYPETEST
 	{
-		[Column(             DbType="NUMBER",         DataType=DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DATATYPEID { get; set; } // NUMBER
-		[Column("BINARY_",   DbType="RAW(50)",        DataType=DataType.Binary,   Length=50),                           Nullable         ] public byte[]?   Binary     { get; set; } // RAW(50)
-		[Column("BOOLEAN_",  DbType="NUMBER (1,0)",   DataType=DataType.Decimal,  Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?    Boolean    { get; set; } // NUMBER (1,0)
-		[Column("BYTE_",     DbType="NUMBER (3,0)",   DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Byte       { get; set; } // NUMBER (3,0)
-		[Column("BYTES_",    DbType="BLOB",           DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Bytes      { get; set; } // BLOB
-		[Column("CHAR_",     DbType="NCHAR(2)",       DataType=DataType.NChar,    Length=2),                            Nullable         ] public string?   Char       { get; set; } // NCHAR(2)
-		[Column("DATETIME_", DbType="DATE",           DataType=DataType.DateTime, Length=7),                            Nullable         ] public DateTime? Datetime   { get; set; } // DATE
-		[Column("DECIMAL_",  DbType="NUMBER (19,5)",  DataType=DataType.Decimal,  Length=22, Precision=19, Scale=5),    Nullable         ] public decimal?  Decimal    { get; set; } // NUMBER (19,5)
-		[Column("DOUBLE_",   DbType="FLOAT(126)",     DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Double     { get; set; } // FLOAT(126)
-		[Column("GUID_",     DbType="RAW(16)",        DataType=DataType.Binary,   Length=16),                           Nullable         ] public byte[]?   Guid       { get; set; } // RAW(16)
-		[Column("INT16_",    DbType="NUMBER (5,0)",   DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      INT16      { get; set; } // NUMBER (5,0)
-		[Column("INT32_",    DbType="NUMBER (10,0)",  DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     INT32      { get; set; } // NUMBER (10,0)
-		[Column("INT64_",    DbType="NUMBER (20,0)",  DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  INT64      { get; set; } // NUMBER (20,0)
-		[Column("MONEY_",    DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),                           Nullable         ] public decimal?  Money      { get; set; } // NUMBER
-		[Column("SBYTE_",    DbType="NUMBER (3,0)",   DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Sbyte      { get; set; } // NUMBER (3,0)
-		[Column("SINGLE_",   DbType="FLOAT(126)",     DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Single     { get; set; } // FLOAT(126)
-		[Column("STREAM_",   DbType="BLOB",           DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Stream     { get; set; } // BLOB
-		[Column("STRING_",   DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),                          Nullable         ] public string?   String     { get; set; } // NVARCHAR2(100)
-		[Column("UINT16_",   DbType="NUMBER (5,0)",   DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      UINT16     { get; set; } // NUMBER (5,0)
-		[Column("UINT32_",   DbType="NUMBER (10,0)",  DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     UINT32     { get; set; } // NUMBER (10,0)
-		[Column("UINT64_",   DbType="NUMBER (20,0)",  DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  UINT64     { get; set; } // NUMBER (20,0)
-		[Column("XML_",      DbType="XMLTYPE",        DataType=DataType.Xml,      Length=2000),                         Nullable         ] public string?   Xml        { get; set; } // XMLTYPE
+		[Column(             DbType="NUMBER",        DataType=DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DATATYPEID { get; set; } // NUMBER
+		[Column("BINARY_",   DbType="RAW(50)",       DataType=DataType.Binary,   Length=50),                           Nullable         ] public byte[]?   Binary     { get; set; } // RAW(50)
+		[Column("BOOLEAN_",  DbType="NUMBER (1,0)",  DataType=DataType.Decimal,  Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?    Boolean    { get; set; } // NUMBER (1,0)
+		[Column("BYTE_",     DbType="NUMBER (3,0)",  DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Byte       { get; set; } // NUMBER (3,0)
+		[Column("BYTES_",    DbType="BLOB",          DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Bytes      { get; set; } // BLOB
+		[Column("CHAR_",     DbType="NCHAR(1)",      DataType=DataType.NChar,    Length=1),                            Nullable         ] public char?     Char       { get; set; } // NCHAR(1)
+		[Column("DATETIME_", DbType="DATE",          DataType=DataType.DateTime, Length=7),                            Nullable         ] public DateTime? Datetime   { get; set; } // DATE
+		[Column("DECIMAL_",  DbType="NUMBER (19,5)", DataType=DataType.Decimal,  Length=22, Precision=19, Scale=5),    Nullable         ] public decimal?  Decimal    { get; set; } // NUMBER (19,5)
+		[Column("DOUBLE_",   DbType="FLOAT(126)",    DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Double     { get; set; } // FLOAT(126)
+		[Column("GUID_",     DbType="RAW(16)",       DataType=DataType.Binary,   Length=16),                           Nullable         ] public byte[]?   Guid       { get; set; } // RAW(16)
+		[Column("INT16_",    DbType="NUMBER (5,0)",  DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      INT16      { get; set; } // NUMBER (5,0)
+		[Column("INT32_",    DbType="NUMBER (10,0)", DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     INT32      { get; set; } // NUMBER (10,0)
+		[Column("INT64_",    DbType="NUMBER (20,0)", DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  INT64      { get; set; } // NUMBER (20,0)
+		[Column("MONEY_",    DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),                           Nullable         ] public decimal?  Money      { get; set; } // NUMBER
+		[Column("SBYTE_",    DbType="NUMBER (3,0)",  DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Sbyte      { get; set; } // NUMBER (3,0)
+		[Column("SINGLE_",   DbType="FLOAT(126)",    DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Single     { get; set; } // FLOAT(126)
+		[Column("STREAM_",   DbType="BLOB",          DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Stream     { get; set; } // BLOB
+		[Column("STRING_",   DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),                           Nullable         ] public string?   String     { get; set; } // NVARCHAR2(50)
+		[Column("UINT16_",   DbType="NUMBER (5,0)",  DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      UINT16     { get; set; } // NUMBER (5,0)
+		[Column("UINT32_",   DbType="NUMBER (10,0)", DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     UINT32     { get; set; } // NUMBER (10,0)
+		[Column("UINT64_",   DbType="NUMBER (20,0)", DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  UINT64     { get; set; } // NUMBER (20,0)
+		[Column("XML_",      DbType="XMLTYPE",       DataType=DataType.Xml,      Length=2000),                         Nullable         ] public string?   Xml        { get; set; } // XMLTYPE
 	}
 
 	[Table(Schema="MANAGED", Name="DECIMALOVERFLOW")]
@@ -167,21 +162,16 @@ namespace OracleDataContext
 	[Table(Schema="MANAGED", Name="DOCTOR")]
 	public partial class DOCTOR
 	{
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PERSONID { get; set; } // NUMBER
-		#nullable disable
-		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),             NotNull] public string  TAXONOMY { get; set; } // NVARCHAR2(100)
-		#nullable enable
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey, NotNull] public decimal PERSONID { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string  TAXONOMY { get; set; } = null!; // NVARCHAR2(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
-		public PERSON PERSON { get; set; }
-
-		#nullable enable
+		public PERSON PERSON { get; set; } = null!;
 
 		#endregion
 	}
@@ -197,18 +187,18 @@ namespace OracleDataContext
 	[Table(Schema="MANAGED", Name="INHERITANCECHILD")]
 	public partial class INHERITANCECHILD
 	{
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey,  NotNull] public decimal  INHERITANCECHILDID  { get; set; } // NUMBER
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),               NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),     Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(100)
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  INHERITANCECHILDID  { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),              NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),    Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(50)
 	}
 
 	[Table(Schema="MANAGED", Name="INHERITANCEPARENT")]
 	public partial class INHERITANCEPARENT
 	{
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey,  NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),     Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(100)
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),    Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(50)
 	}
 
 	[Table(Schema="MANAGED", Name="LINQDATATYPES")]
@@ -245,20 +235,15 @@ namespace OracleDataContext
 	public partial class PATIENT
 	{
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PERSONID  { get; set; } // NUMBER
-		#nullable disable
-		[Column(DbType="NVARCHAR2(512)", DataType=DataType.NVarChar, Length=512),             NotNull] public string  DIAGNOSIS { get; set; } // NVARCHAR2(512)
-		#nullable enable
+		[Column(DbType="NVARCHAR2(256)", DataType=DataType.NVarChar, Length=256),             NotNull] public string  DIAGNOSIS { get; set; } = null!; // NVARCHAR2(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_PATIENT_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_PATIENT_PERSON", BackReferenceName="PATIENT")]
-		public PERSON PERSON { get; set; }
-
-		#nullable enable
+		public PERSON PERSON { get; set; } = null!;
 
 		#endregion
 	}
@@ -267,12 +252,8 @@ namespace OracleDataContext
 	public partial class PERSON
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal PERSONID   { get; set; } // NUMBER
-		#nullable disable
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  FIRSTNAME  { get; set; } // VARCHAR2(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  LASTNAME   { get; set; } // VARCHAR2(50)
-		#nullable enable
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  FIRSTNAME  { get; set; } = null!; // VARCHAR2(50)
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  LASTNAME   { get; set; } = null!; // VARCHAR2(50)
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable         ] public string? MIDDLENAME { get; set; } // VARCHAR2(50)
 		[Column(DbType="CHAR(1)",      DataType=DataType.Char,    Length=1),               NotNull] public char    GENDER     { get; set; } // CHAR(1)
 
@@ -297,9 +278,7 @@ namespace OracleDataContext
 	public partial class SEQUENCETEST
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
-		#nullable disable
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } // VARCHAR2(50)
-		#nullable enable
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } = null!; // VARCHAR2(50)
 	}
 
 	[Table(Schema="MANAGED", Name="STG_TRADE_INFORMATION")]
@@ -319,9 +298,7 @@ namespace OracleDataContext
 	{
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable] public string? STRINGVALUE1 { get; set; } // VARCHAR2(50)
 		[Column(DbType="CHAR(50)",     DataType=DataType.Char,    Length=50),    Nullable] public string? STRINGVALUE2 { get; set; } // CHAR(50)
-		#nullable disable
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50), NotNull    ] public string  KEYVALUE     { get; set; } // VARCHAR2(50)
-		#nullable enable
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50), NotNull    ] public string  KEYVALUE     { get; set; } = null!; // VARCHAR2(50)
 	}
 
 	[Table(Schema="MANAGED", Name="T_ENTITY")]
@@ -330,23 +307,6 @@ namespace OracleDataContext
 		[Column("ENTITY_ID", DbType="NUMBER",                       DataType=DataType.Decimal,   Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
 		[Column(             DbType="DATE",                         DataType=DataType.DateTime,  Length=7),                           Nullable         ] public DateTime? TIME     { get; set; } // DATE
 		[Column(             DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object?   DURATION { get; set; } // INTERVAL DAY(3) TO SECOND(2)
-	}
-
-	[Table(Schema="MANAGED", Name="TEST0431")]
-	public partial class TEST0431
-	{
-		[Column(                    DbType="DATE",                        DataType=DataType.DateTime,       Length=7),           NotNull] public DateTime       Date            { get; set; } // DATE
-		[Column(                    DbType="TIMESTAMP(6)",                DataType=DataType.DateTime2,      Length=11, Scale=6), NotNull] public DateTime       DATETIME        { get; set; } // TIMESTAMP(6)
-		[Column("DATETIME_",        DbType="DATE",                        DataType=DataType.DateTime,       Length=7),           NotNull] public DateTime       Datetime        { get; set; } // DATE
-		[Column(                    DbType="TIMESTAMP(6)",                DataType=DataType.DateTime2,      Length=11, Scale=6), NotNull] public DateTime       DATETIME2       { get; set; } // TIMESTAMP(6)
-		[Column("DATETIME2_0",      DbType="TIMESTAMP(0)",                DataType=DataType.DateTime2,      Length=7, Scale=0),  NotNull] public DateTime       DATETIME20      { get; set; } // TIMESTAMP(0)
-		[Column("DATETIME2_1",      DbType="TIMESTAMP(1)",                DataType=DataType.DateTime2,      Length=11, Scale=1), NotNull] public DateTime       DATETIME21      { get; set; } // TIMESTAMP(1)
-		[Column("DATETIME2_9",      DbType="TIMESTAMP(9)",                DataType=DataType.DateTime2,      Length=11, Scale=9), NotNull] public DateTime       DATETIME29      { get; set; } // TIMESTAMP(9)
-		[Column(                    DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6), NotNull] public DateTimeOffset DATETIMEOFFSET  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-		[Column("DATETIMEOFFSET_",  DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6), NotNull] public DateTimeOffset Datetimeoffset  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-		[Column("DATETIMEOFFSET_0", DbType="TIMESTAMP(0) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=0), NotNull] public DateTimeOffset Datetimeoffset0 { get; set; } // TIMESTAMP(0) WITH TIME ZONE
-		[Column("DATETIMEOFFSET_1", DbType="TIMESTAMP(1) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=1), NotNull] public DateTimeOffset Datetimeoffset1 { get; set; } // TIMESTAMP(1) WITH TIME ZONE
-		[Column("DATETIMEOFFSET_9", DbType="TIMESTAMP(9) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=9), NotNull] public DateTimeOffset Datetimeoffset9 { get; set; } // TIMESTAMP(9) WITH TIME ZONE
 	}
 
 	[Table(Schema="MANAGED", Name="TESTIDENTITY")]
@@ -367,13 +327,13 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER (20,0)",               DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FIELDINT64      { get; set; } // NUMBER (20,0)
 		[Column(DbType="NUMBER (1,0)",                DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FIELDBOOLEAN    { get; set; } // NUMBER (1,0)
 		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDSTRING     { get; set; } // VARCHAR2(20)
-		[Column(DbType="NVARCHAR2(40)",               DataType=DataType.NVarChar,       Length=40),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(40)
+		[Column(DbType="NVARCHAR2(20)",               DataType=DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(20)
 		[Column(DbType="CHAR(1)",                     DataType=DataType.Char,           Length=1),                             Nullable         ] public char?           FIELDCHAR       { get; set; } // CHAR(1)
-		[Column(DbType="NCHAR(2)",                    DataType=DataType.NChar,          Length=2),                             Nullable         ] public string?         FIELDNCHAR      { get; set; } // NCHAR(2)
+		[Column(DbType="NCHAR(1)",                    DataType=DataType.NChar,          Length=1),                             Nullable         ] public char?           FIELDNCHAR      { get; set; } // NCHAR(1)
 		[Column(DbType="BINARY_FLOAT",                DataType=DataType.Single,         Length=4),                             Nullable         ] public float?          FIELDFLOAT      { get; set; } // BINARY_FLOAT
 		[Column(DbType="BINARY_DOUBLE",               DataType=DataType.Double,         Length=8),                             Nullable         ] public double?         FIELDDOUBLE     { get; set; } // BINARY_DOUBLE
 		[Column(DbType="DATE",                        DataType=DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FIELDDATETIME   { get; set; } // DATE
-		[Column(DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
 		[Column(DbType="BLOB",                        DataType=DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FIELDBINARY     { get; set; } // BLOB
 		[Column(DbType="RAW(16)",                     DataType=DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FIELDGUID       { get; set; } // RAW(16)
 		[Column(DbType="NUMBER (24,10)",              DataType=DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FIELDDECIMAL    { get; set; } // NUMBER (24,10)
@@ -393,13 +353,13 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER (20,0)",               DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FIELDINT64      { get; set; } // NUMBER (20,0)
 		[Column(DbType="NUMBER (1,0)",                DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FIELDBOOLEAN    { get; set; } // NUMBER (1,0)
 		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDSTRING     { get; set; } // VARCHAR2(20)
-		[Column(DbType="NVARCHAR2(40)",               DataType=DataType.NVarChar,       Length=40),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(40)
+		[Column(DbType="NVARCHAR2(20)",               DataType=DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(20)
 		[Column(DbType="CHAR(1)",                     DataType=DataType.Char,           Length=1),                             Nullable         ] public char?           FIELDCHAR       { get; set; } // CHAR(1)
-		[Column(DbType="NCHAR(2)",                    DataType=DataType.NChar,          Length=2),                             Nullable         ] public string?         FIELDNCHAR      { get; set; } // NCHAR(2)
+		[Column(DbType="NCHAR(1)",                    DataType=DataType.NChar,          Length=1),                             Nullable         ] public char?           FIELDNCHAR      { get; set; } // NCHAR(1)
 		[Column(DbType="BINARY_FLOAT",                DataType=DataType.Single,         Length=4),                             Nullable         ] public float?          FIELDFLOAT      { get; set; } // BINARY_FLOAT
 		[Column(DbType="BINARY_DOUBLE",               DataType=DataType.Double,         Length=8),                             Nullable         ] public double?         FIELDDOUBLE     { get; set; } // BINARY_DOUBLE
 		[Column(DbType="DATE",                        DataType=DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FIELDDATETIME   { get; set; } // DATE
-		[Column(DbType="TIMESTAMP(6) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=6),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
 		[Column(DbType="BLOB",                        DataType=DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FIELDBINARY     { get; set; } // BLOB
 		[Column(DbType="RAW(16)",                     DataType=DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FIELDGUID       { get; set; } // RAW(16)
 		[Column(DbType="NUMBER (24,10)",              DataType=DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FIELDDECIMAL    { get; set; } // NUMBER (24,10)
@@ -411,20 +371,15 @@ namespace OracleDataContext
 	public partial class TTestUser
 	{
 		[Column("USER_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserId { get; set; } // NUMBER
-		#nullable disable
-		[Column(           DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME   { get; set; } // VARCHAR2(255)
-		#nullable enable
+		[Column(           DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME   { get; set; } = null!; // VARCHAR2(255)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
-		/// SYS_C00476199_BackReference
+		/// SYS_C00613092_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TTestUserContract> Syscs { get; set; }
-
-		#nullable enable
+		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
 	}
@@ -435,20 +390,15 @@ namespace OracleDataContext
 		[Column("USER_CONTRACT_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserContractId { get; set; } // NUMBER
 		[Column("USER_ID",          DbType="NUMBER",        DataType=DataType.Decimal, Length=22),              NotNull] public decimal UserId         { get; set; } // NUMBER
 		[Column("CONTRACT_NO",      DbType="NUMBER",        DataType=DataType.Decimal, Length=22),              NotNull] public decimal ContractNo     { get; set; } // NUMBER
-		#nullable disable
-		[Column(                    DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME           { get; set; } // VARCHAR2(255)
-		#nullable enable
+		[Column(                    DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME           { get; set; } = null!; // VARCHAR2(255)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
-		/// SYS_C00476199
+		/// SYS_C00613092
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00476199", BackReferenceName="Syscs")]
-		public TTestUser USER { get; set; }
-
-		#nullable enable
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00613092", BackReferenceName="Syscs")]
+		public TTestUser USER { get; set; } = null!;
 
 		#endregion
 	}
@@ -625,5 +575,4 @@ namespace OracleDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

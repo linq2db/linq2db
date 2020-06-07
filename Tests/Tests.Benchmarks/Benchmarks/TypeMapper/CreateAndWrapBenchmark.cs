@@ -16,15 +16,15 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private readonly Original.TestClass _testClassInstance   = new Original.TestClass();
 		private readonly Original.TestClass2 _testClass2Instance = new Original.TestClass2();
 
-		private Func<Wrapped.TestClass2                                           > _factoryParameterless;
-		private Func<string, Wrapped.TestClass2                                   > _factoryOneParameterString;
-		private Func<TimeSpan, object                                             > _factoryOneParameterTimeSpanInstance;
-		private Func<int, string, Wrapped.TestClass2                              > _factoryTwoParametersIntString;
-		private Func<string, string, Wrapped.TestClass2                           > _factoryTwoParametersStringString;
-		private Func<ITestClass2, Wrapped.TestEnum, Wrapped.TestClass2            > _factoryThoParametersWrapperEnum;
-		private Func<ITestClass2, string, Wrapped.TestClass2                      > _factoryThoParametersWrapperString;
-		private Func<ITestClass2, Wrapped.TestEnum, ITestClass, Wrapped.TestClass2> _factoryThreeParameters;
-		private Func<DateTimeOffset, string, object                               > _tstsFactory;
+		private Func<Wrapped.TestClass2                                           > _factoryParameterless = null!;
+		private Func<string, Wrapped.TestClass2                                   > _factoryOneParameterString = null!;
+		private Func<TimeSpan, object                                             > _factoryOneParameterTimeSpanInstance = null!;
+		private Func<int, string, Wrapped.TestClass2                              > _factoryTwoParametersIntString = null!;
+		private Func<string, string, Wrapped.TestClass2                           > _factoryTwoParametersStringString = null!;
+		private Func<ITestClass2, Wrapped.TestEnum, Wrapped.TestClass2            > _factoryThoParametersWrapperEnum = null!;
+		private Func<ITestClass2, string, Wrapped.TestClass2                      > _factoryThoParametersWrapperString = null!;
+		private Func<ITestClass2, Wrapped.TestEnum, ITestClass, Wrapped.TestClass2> _factoryThreeParameters = null!;
+		private Func<DateTimeOffset, string, object                               > _tstsFactory = null!;
 
 		[GlobalSetup]
 		public void Setup()

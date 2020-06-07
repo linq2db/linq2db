@@ -26,30 +26,30 @@ namespace SapHanaDataContext
 	{
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>                                           AbstractSqlPlanEntries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>                                           AbstractSqlPlanQueries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>(); } }
-		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes0                                                                                { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
-		                                           public ITable<AllType>                                                                              AllTypes1                                                                                { get { return this.GetTable<AllType>(); } }
+		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes                                                                                 { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
+		                                           public ITable<AllType>                                                                              AllTypes0                                                                                { get { return this.GetTable<AllType>(); } }
+		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos                                                                             { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
 		                                           public ITable<AllTypesGeo>                                                                          AllTypesGeos0                                                                            { get { return this.GetTable<AllTypesGeo>(); } }
-		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos1                                                                            { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
 		/// <summary>
 		/// This table contains a summary of Best Record group master statistics
 		/// </summary>
-		                                           public ITable<_SYS_TASK_BestRecordGroupMasterStatistic>                                             BestRecordGroupMasterStatistics0                                                         { get { return this.GetTable<_SYS_TASK_BestRecordGroupMasterStatistic>(); } }
-		                                           public ITable<_SYS_TASK_BestRecordGroupMasterStatistics>                                            BestRecordGroupMasterStatistics1                                                         { get { return this.GetTable<_SYS_TASK_BestRecordGroupMasterStatistics>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordGroupMasterStatistic>                                             BestRecordGroupMasterStatistics                                                          { get { return this.GetTable<_SYS_TASK_BestRecordGroupMasterStatistic>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordGroupMasterStatistics>                                            BestRecordGroupMasterStatistics0                                                         { get { return this.GetTable<_SYS_TASK_BestRecordGroupMasterStatistics>(); } }
 		/// <summary>
 		/// This table contains governance information for every column in every record that is updated in the best record process
 		/// </summary>
-		                                           public ITable<_SYS_TASK_BestRecordResult>                                                           BestRecordResults0                                                                       { get { return this.GetTable<_SYS_TASK_BestRecordResult>(); } }
-		                                           public ITable<_SYS_TASK_BestRecordResults>                                                          BestRecordResults1                                                                       { get { return this.GetTable<_SYS_TASK_BestRecordResults>(); } }
-		                                           public ITable<_SYS_TASK_BestRecordStrategies>                                                       BestRecordStrategies0                                                                    { get { return this.GetTable<_SYS_TASK_BestRecordStrategies>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordResult>                                                           BestRecordResults                                                                        { get { return this.GetTable<_SYS_TASK_BestRecordResult>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordResults>                                                          BestRecordResults0                                                                       { get { return this.GetTable<_SYS_TASK_BestRecordResults>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordStrategies>                                                       BestRecordStrategies                                                                     { get { return this.GetTable<_SYS_TASK_BestRecordStrategies>(); } }
 		/// <summary>
 		/// This table contains information on which strategies are used in each strategy group and in which order
 		/// </summary>
-		                                           public ITable<_SYS_TASK_BestRecordSTRATEGy>                                                         BestRecordStrategies1                                                                    { get { return this.GetTable<_SYS_TASK_BestRecordSTRATEGy>(); } }
+		                                           public ITable<_SYS_TASK_BestRecordSTRATEGy>                                                         BestRecordStrategies0                                                                    { get { return this.GetTable<_SYS_TASK_BestRecordSTRATEGy>(); } }
 		                                           public ITable<_SYS_TASK_BestRecordStrategyGroups>                                                   BestRecordStrategyGroups                                                                 { get { return this.GetTable<_SYS_TASK_BestRecordStrategyGroups>(); } }
-		                                           public ITable<BulkInsertLowerCaseColumn>                                                            BulkInsertLowerCaseColumns0                                                              { get { return this.GetTable<BulkInsertLowerCaseColumn>(); } }
-		                                           public ITable<TESTHANAODBC_BulkInsertLowerCaseColumn>                                               BulkInsertLowerCaseColumns1                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertLowerCaseColumn>(); } }
-		                                           public ITable<BulkInsertUpperCaseColumn>                                                            BulkInsertUpperCaseColumns0                                                              { get { return this.GetTable<BulkInsertUpperCaseColumn>(); } }
-		                                           public ITable<TESTHANAODBC_BulkInsertUpperCaseColumn>                                               BulkInsertUpperCaseColumns1                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertUpperCaseColumn>(); } }
+		                                           public ITable<BulkInsertLowerCaseColumn>                                                            BulkInsertLowerCaseColumns                                                               { get { return this.GetTable<BulkInsertLowerCaseColumn>(); } }
+		                                           public ITable<TESTHANAODBC_BulkInsertLowerCaseColumn>                                               BulkInsertLowerCaseColumns0                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertLowerCaseColumn>(); } }
+		                                           public ITable<BulkInsertUpperCaseColumn>                                                            BulkInsertUpperCaseColumns                                                               { get { return this.GetTable<BulkInsertUpperCaseColumn>(); } }
+		                                           public ITable<TESTHANAODBC_BulkInsertUpperCaseColumn>                                               BulkInsertUpperCaseColumns0                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertUpperCaseColumn>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotation>                                                                CdsAnnotations                                                                           { get { return this.GetTable<_SYS_RT_CdsAnnotation>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotationAssignment>                                                      CdsAnnotationAssignments                                                                 { get { return this.GetTable<_SYS_RT_CdsAnnotationAssignment>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotationValue>                                                           CdsAnnotationValues                                                                      { get { return this.GetTable<_SYS_RT_CdsAnnotationValue>(); } }
@@ -72,33 +72,33 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_CdsStructure>                                                                 CdsStructures                                                                            { get { return this.GetTable<_SYS_RT_CdsStructure>(); } }
 		                                           public ITable<_SYS_RT_CdsStructureComponent>                                                        CdsStructureComponents                                                                   { get { return this.GetTable<_SYS_RT_CdsStructureComponent>(); } }
 		                                           public ITable<_SYS_RT_CdsView>                                                                      CdsViews                                                                                 { get { return this.GetTable<_SYS_RT_CdsView>(); } }
+		                                           public ITable<Child>                                                                                Children                                                                                 { get { return this.GetTable<Child>(); } }
 		                                           public ITable<TESTHANAODBC_Child>                                                                   Children0                                                                                { get { return this.GetTable<TESTHANAODBC_Child>(); } }
-		                                           public ITable<Child>                                                                                Children1                                                                                { get { return this.GetTable<Child>(); } }
-		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo0>                                                  CleanseAddressRecordInfo0                                                                { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo0>(); } }
+		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo>                                                   CleanseAddressRecordInfo                                                                 { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo>(); } }
 		/// <summary>
 		/// The table tells a user how well an address assigned and the type of address
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo1>                                                  CleanseAddressRecordInfo1                                                                { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo1>(); } }
-		                                           public ITable<_SYS_TASK_CleanseChangeInfo0>                                                         CleanseChangeInfo0                                                                       { get { return this.GetTable<_SYS_TASK_CleanseChangeInfo0>(); } }
+		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo0>                                                  CleanseAddressRecordInfo0                                                                { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo0>(); } }
+		                                           public ITable<_SYS_TASK_CleanseChangeInfo>                                                          CleanseChangeInfo                                                                        { get { return this.GetTable<_SYS_TASK_CleanseChangeInfo>(); } }
 		/// <summary>
 		/// This table describes the changes made during the cleansing process
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CleanseChangeInfo1>                                                         CleanseChangeInfo1                                                                       { get { return this.GetTable<_SYS_TASK_CleanseChangeInfo1>(); } }
-		                                           public ITable<_SYS_TASK_CleanseComponentInfo0>                                                      CleanseComponentInfo0                                                                    { get { return this.GetTable<_SYS_TASK_CleanseComponentInfo0>(); } }
+		                                           public ITable<_SYS_TASK_CleanseChangeInfo0>                                                         CleanseChangeInfo0                                                                       { get { return this.GetTable<_SYS_TASK_CleanseChangeInfo0>(); } }
+		                                           public ITable<_SYS_TASK_CleanseComponentInfo>                                                       CleanseComponentInfo                                                                     { get { return this.GetTable<_SYS_TASK_CleanseComponentInfo>(); } }
 		/// <summary>
 		/// This table identifies the location of parsed data elements in the input and output
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CleanseComponentInfo1>                                                      CleanseComponentInfo1                                                                    { get { return this.GetTable<_SYS_TASK_CleanseComponentInfo1>(); } }
+		                                           public ITable<_SYS_TASK_CleanseComponentInfo0>                                                      CleanseComponentInfo0                                                                    { get { return this.GetTable<_SYS_TASK_CleanseComponentInfo0>(); } }
 		/// <summary>
 		/// This table contains one row per info code generated by the cleansing process
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CleanseInfoCode>                                                            CleanseInfoCodes0                                                                        { get { return this.GetTable<_SYS_TASK_CleanseInfoCode>(); } }
-		                                           public ITable<_SYS_TASK_CleanseInfoCodes>                                                           CleanseInfoCodes1                                                                        { get { return this.GetTable<_SYS_TASK_CleanseInfoCodes>(); } }
+		                                           public ITable<_SYS_TASK_CleanseInfoCode>                                                            CleanseInfoCodes                                                                         { get { return this.GetTable<_SYS_TASK_CleanseInfoCode>(); } }
+		                                           public ITable<_SYS_TASK_CleanseInfoCodes>                                                           CleanseInfoCodes0                                                                        { get { return this.GetTable<_SYS_TASK_CleanseInfoCodes>(); } }
 		/// <summary>
 		/// This table contains a summary of Cleanse statistics
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CleanseStatistic>                                                           CleanseStatistics0                                                                       { get { return this.GetTable<_SYS_TASK_CleanseStatistic>(); } }
-		                                           public ITable<_SYS_TASK_CleanseStatistics>                                                          CleanseStatistics1                                                                       { get { return this.GetTable<_SYS_TASK_CleanseStatistics>(); } }
+		                                           public ITable<_SYS_TASK_CleanseStatistic>                                                           CleanseStatistics                                                                        { get { return this.GetTable<_SYS_TASK_CleanseStatistic>(); } }
+		                                           public ITable<_SYS_TASK_CleanseStatistics>                                                          CleanseStatistics0                                                                       { get { return this.GetTable<_SYS_TASK_CleanseStatistics>(); } }
 		/// <summary>
 		/// Telemetry Client Information
 		/// </summary>
@@ -110,8 +110,8 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// This table contains messages generated by create task command
 		/// </summary>
-		                                           public ITable<_SYS_TASK_CreateTaskMessage>                                                          CreateTaskMessages0                                                                      { get { return this.GetTable<_SYS_TASK_CreateTaskMessage>(); } }
-		                                           public ITable<_SYS_TASK_CreateTaskMessages>                                                         CreateTaskMessages1                                                                      { get { return this.GetTable<_SYS_TASK_CreateTaskMessages>(); } }
+		                                           public ITable<_SYS_TASK_CreateTaskMessage>                                                          CreateTaskMessages                                                                       { get { return this.GetTable<_SYS_TASK_CreateTaskMessage>(); } }
+		                                           public ITable<_SYS_TASK_CreateTaskMessages>                                                         CreateTaskMessages0                                                                      { get { return this.GetTable<_SYS_TASK_CreateTaskMessages>(); } }
 		/// <summary>
 		/// Runtime data of column tables
 		/// </summary>
@@ -123,10 +123,10 @@ namespace SapHanaDataContext
 		/// Disk usage information on host basis group by usage_types
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_DiskUsage>                                                             DiskUsages                                                                               { get { return this.GetTable<_SYS_TELEMETRY_DiskUsage>(); } }
+		                                           public ITable<Doctor>                                                                               Doctors                                                                                  { get { return this.GetTable<Doctor>(); } }
 		                                           public ITable<TESTHANAODBC_Doctor>                                                                  Doctors0                                                                                 { get { return this.GetTable<TESTHANAODBC_Doctor>(); } }
-		                                           public ITable<Doctor>                                                                               Doctors1                                                                                 { get { return this.GetTable<Doctor>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_EdgeStatistic>                                                      EdgeStatistics0                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_EdgeStatistic>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_EdgeStatistics>                                                     EdgeStatistics1                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_EdgeStatistics>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_EdgeStatistic>                                                      EdgeStatistics                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_EdgeStatistic>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_EdgeStatistics>                                                     EdgeStatistics0                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_EdgeStatistics>(); } }
 		                                           public ITable<_SYS_AFL_EmlModelConfiguration>                                                       EmlModelConfigurations                                                                   { get { return this.GetTable<_SYS_AFL_EmlModelConfiguration>(); } }
 		                                           public ITable<_SYS_EPM_EpmModel>                                                                    EpmModels                                                                                { get { return this.GetTable<_SYS_EPM_EpmModel>(); } }
 		                                           public ITable<_SYS_EPM_EpmQuerySource>                                                              EpmQuerySources                                                                          { get { return this.GetTable<_SYS_EPM_EpmQuerySource>(); } }
@@ -134,20 +134,20 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Enterprise Search configuration
 		/// </summary>
-		                                           public ITable<_SYS_RT_EshModel0>                                                                    EshModel                                                                                 { get { return this.GetTable<_SYS_RT_EshModel0>(); } }
+		                                           public ITable<_SYS_RT_EshModel>                                                                     EshModel                                                                                 { get { return this.GetTable<_SYS_RT_EshModel>(); } }
 		/// <summary>
 		/// Enterprise Search configuration
 		/// </summary>
-		                                           public ITable<_SYS_RT_EshModel1>                                                                    EshModels                                                                                { get { return this.GetTable<_SYS_RT_EshModel1>(); } }
+		                                           public ITable<_SYS_RT_EshModel0>                                                                    EshModels                                                                                { get { return this.GetTable<_SYS_RT_EshModel0>(); } }
 		                                           public ITable<_SYS_RT_EshModelAuth>                                                                 EshModelAuth                                                                             { get { return this.GetTable<_SYS_RT_EshModelAuth>(); } }
 		/// <summary>
 		/// Enterprise Search configuration properties
 		/// </summary>
-		                                           public ITable<_SYS_RT_EshModelProperty0>                                                            EshModelProperty                                                                         { get { return this.GetTable<_SYS_RT_EshModelProperty0>(); } }
+		                                           public ITable<_SYS_RT_EshModelProperty>                                                             EshModelProperty                                                                         { get { return this.GetTable<_SYS_RT_EshModelProperty>(); } }
 		/// <summary>
 		/// Enterprise Search configuration properties
 		/// </summary>
-		                                           public ITable<_SYS_RT_EshModelProperty1>                                                            EshModelProperties                                                                       { get { return this.GetTable<_SYS_RT_EshModelProperty1>(); } }
+		                                           public ITable<_SYS_RT_EshModelProperty0>                                                            EshModelProperties                                                                       { get { return this.GetTable<_SYS_RT_EshModelProperty0>(); } }
 		/// <summary>
 		/// Internal events
 		/// </summary>
@@ -165,15 +165,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// This table contains one row per info code generated by the geocode transformation process
 		/// </summary>
-		                                           public ITable<_SYS_TASK_GeocodeInfoCode>                                                            GeocodeInfoCodes0                                                                        { get { return this.GetTable<_SYS_TASK_GeocodeInfoCode>(); } }
-		                                           public ITable<_SYS_TASK_GeocodeInfoCodes>                                                           GeocodeInfoCodes1                                                                        { get { return this.GetTable<_SYS_TASK_GeocodeInfoCodes>(); } }
+		                                           public ITable<_SYS_TASK_GeocodeInfoCode>                                                            GeocodeInfoCodes                                                                         { get { return this.GetTable<_SYS_TASK_GeocodeInfoCode>(); } }
+		                                           public ITable<_SYS_TASK_GeocodeInfoCodes>                                                           GeocodeInfoCodes0                                                                        { get { return this.GetTable<_SYS_TASK_GeocodeInfoCodes>(); } }
 		/// <summary>
 		/// This table contains a summary of Geocode statistics
 		/// </summary>
-		                                           public ITable<_SYS_TASK_GeocodeStatistic>                                                           GeocodeStatistics0                                                                       { get { return this.GetTable<_SYS_TASK_GeocodeStatistic>(); } }
-		                                           public ITable<_SYS_TASK_GeocodeStatistics>                                                          GeocodeStatistics1                                                                       { get { return this.GetTable<_SYS_TASK_GeocodeStatistics>(); } }
+		                                           public ITable<_SYS_TASK_GeocodeStatistic>                                                           GeocodeStatistics                                                                        { get { return this.GetTable<_SYS_TASK_GeocodeStatistic>(); } }
+		                                           public ITable<_SYS_TASK_GeocodeStatistics>                                                          GeocodeStatistics0                                                                       { get { return this.GetTable<_SYS_TASK_GeocodeStatistics>(); } }
+		                                           public ITable<GrandChild>                                                                           GrandChildren                                                                            { get { return this.GetTable<GrandChild>(); } }
 		                                           public ITable<TESTHANAODBC_GrandChild>                                                              GrandChildren0                                                                           { get { return this.GetTable<TESTHANAODBC_GrandChild>(); } }
-		                                           public ITable<GrandChild>                                                                           GrandChildren1                                                                           { get { return this.GetTable<GrandChild>(); } }
 		/// <summary>
 		/// General HANA feature usage information
 		/// </summary>
@@ -190,14 +190,14 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_InaActiveObject>                                                              InaActiveObjects                                                                         { get { return this.GetTable<_SYS_RT_InaActiveObject>(); } }
 		                                           public ITable<_SYS_RT_InaActiveObjectProperty>                                                      InaActiveObjectProperties                                                                { get { return this.GetTable<_SYS_RT_InaActiveObjectProperty>(); } }
 		                                           public ITable<_SYS_RT_InaActivePerspectiveV>                                                        InaActivePerspectiveV                                                                    { get { return this.GetTable<_SYS_RT_InaActivePerspectiveV>(); } }
+		                                           public ITable<IndexTable>                                                                           IndexTables                                                                              { get { return this.GetTable<IndexTable>(); } }
 		                                           public ITable<TESTHANAODBC_IndexTable>                                                              IndexTables0                                                                             { get { return this.GetTable<TESTHANAODBC_IndexTable>(); } }
-		                                           public ITable<IndexTable>                                                                           IndexTables1                                                                             { get { return this.GetTable<IndexTable>(); } }
+		                                           public ITable<IndexTable2>                                                                          IndexTable2                                                                              { get { return this.GetTable<IndexTable2>(); } }
 		                                           public ITable<TESTHANAODBC_IndexTable2>                                                             IndexTable3                                                                              { get { return this.GetTable<TESTHANAODBC_IndexTable2>(); } }
-		                                           public ITable<IndexTable2>                                                                          IndexTable4                                                                              { get { return this.GetTable<IndexTable2>(); } }
+		                                           public ITable<InheritanceChild>                                                                     InheritanceChildren                                                                      { get { return this.GetTable<InheritanceChild>(); } }
 		                                           public ITable<TESTHANAODBC_InheritanceChild>                                                        InheritanceChildren0                                                                     { get { return this.GetTable<TESTHANAODBC_InheritanceChild>(); } }
-		                                           public ITable<InheritanceChild>                                                                     InheritanceChildren1                                                                     { get { return this.GetTable<InheritanceChild>(); } }
-		                                           public ITable<TESTHANAODBC_InheritanceParent>                                                       InheritanceParents0                                                                      { get { return this.GetTable<TESTHANAODBC_InheritanceParent>(); } }
-		                                           public ITable<InheritanceParent>                                                                    InheritanceParents1                                                                      { get { return this.GetTable<InheritanceParent>(); } }
+		                                           public ITable<TESTHANAODBC_InheritanceParent>                                                       InheritanceParents                                                                       { get { return this.GetTable<TESTHANAODBC_InheritanceParent>(); } }
+		                                           public ITable<InheritanceParent>                                                                    InheritanceParents0                                                                      { get { return this.GetTable<InheritanceParent>(); } }
 		/// <summary>
 		/// Configuration information from inifiles
 		/// </summary>
@@ -215,8 +215,8 @@ namespace SapHanaDataContext
 		/// Information on the currently valid license (if any) installed on this system
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_LICENSE>                                                               Licenses                                                                                 { get { return this.GetTable<_SYS_TELEMETRY_LICENSE>(); } }
+		                                           public ITable<LinqDataType>                                                                         LinqDataTypes                                                                            { get { return this.GetTable<LinqDataType>(); } }
 		                                           public ITable<TESTHANAODBC_LinqDataType>                                                            LinqDataTypes0                                                                           { get { return this.GetTable<TESTHANAODBC_LinqDataType>(); } }
-		                                           public ITable<LinqDataType>                                                                         LinqDataTypes1                                                                           { get { return this.GetTable<LinqDataType>(); } }
 		/// <summary>
 		/// Log buffer statistics
 		/// </summary>
@@ -227,34 +227,34 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_TELEMETRY_LogSegment>                                                            LogSegments                                                                              { get { return this.GetTable<_SYS_TELEMETRY_LogSegment>(); } }
 		                                           public ITable<_SYS_LDB_LT0000000000000001>                                                          LT0000000000000001                                                                       { get { return this.GetTable<_SYS_LDB_LT0000000000000001>(); } }
 		                                           public ITable<_SYS_LDB_LT0000000000000002>                                                          LT0000000000000002                                                                       { get { return this.GetTable<_SYS_LDB_LT0000000000000002>(); } }
-		                                           public ITable<_SYS_TASK_MatchGroupInfo0>                                                            MatchGroupInfo0                                                                          { get { return this.GetTable<_SYS_TASK_MatchGroupInfo0>(); } }
+		                                           public ITable<_SYS_TASK_MatchGroupInfo>                                                             MatchGroupInfo                                                                           { get { return this.GetTable<_SYS_TASK_MatchGroupInfo>(); } }
 		/// <summary>
 		/// This table contains one row for each match group
 		/// </summary>
-		                                           public ITable<_SYS_TASK_MatchGroupInfo1>                                                            MatchGroupInfo1                                                                          { get { return this.GetTable<_SYS_TASK_MatchGroupInfo1>(); } }
+		                                           public ITable<_SYS_TASK_MatchGroupInfo0>                                                            MatchGroupInfo0                                                                          { get { return this.GetTable<_SYS_TASK_MatchGroupInfo0>(); } }
 		                                           public ITable<_SYS_TASK_MatchPolicies>                                                              MatchPolicies                                                                            { get { return this.GetTable<_SYS_TASK_MatchPolicies>(); } }
-		                                           public ITable<_SYS_TASK_MatchRecordInfo0>                                                           MatchRecordInfo0                                                                         { get { return this.GetTable<_SYS_TASK_MatchRecordInfo0>(); } }
+		                                           public ITable<_SYS_TASK_MatchRecordInfo>                                                            MatchRecordInfo                                                                          { get { return this.GetTable<_SYS_TASK_MatchRecordInfo>(); } }
 		/// <summary>
 		/// This table contains one row for each matching record per level
 		/// </summary>
-		                                           public ITable<_SYS_TASK_MatchRecordInfo1>                                                           MatchRecordInfo1                                                                         { get { return this.GetTable<_SYS_TASK_MatchRecordInfo1>(); } }
+		                                           public ITable<_SYS_TASK_MatchRecordInfo0>                                                           MatchRecordInfo0                                                                         { get { return this.GetTable<_SYS_TASK_MatchRecordInfo0>(); } }
 		                                           public ITable<_SYS_TASK_MatchRules>                                                                 MatchRules                                                                               { get { return this.GetTable<_SYS_TASK_MatchRules>(); } }
 		                                           public ITable<_SYS_TASK_MatchSourceInfo>                                                            MatchSourceInfo                                                                          { get { return this.GetTable<_SYS_TASK_MatchSourceInfo>(); } }
 		/// <summary>
 		/// This table contains counts of matches within and between data sources
 		/// </summary>
-		                                           public ITable<_SYS_TASK_MatchSourceStatistic>                                                       MatchSourceStatistics0                                                                   { get { return this.GetTable<_SYS_TASK_MatchSourceStatistic>(); } }
-		                                           public ITable<_SYS_TASK_MatchSourceStatistics>                                                      MatchSourceStatistics1                                                                   { get { return this.GetTable<_SYS_TASK_MatchSourceStatistics>(); } }
+		                                           public ITable<_SYS_TASK_MatchSourceStatistic>                                                       MatchSourceStatistics                                                                    { get { return this.GetTable<_SYS_TASK_MatchSourceStatistic>(); } }
+		                                           public ITable<_SYS_TASK_MatchSourceStatistics>                                                      MatchSourceStatistics0                                                                   { get { return this.GetTable<_SYS_TASK_MatchSourceStatistics>(); } }
 		/// <summary>
 		/// This table contains statistics regarding the run of the transformation operation
 		/// </summary>
-		                                           public ITable<_SYS_TASK_MatchStatistic>                                                             MatchStatistics0                                                                         { get { return this.GetTable<_SYS_TASK_MatchStatistic>(); } }
-		                                           public ITable<_SYS_TASK_MatchStatistics>                                                            MatchStatistics1                                                                         { get { return this.GetTable<_SYS_TASK_MatchStatistics>(); } }
-		                                           public ITable<_SYS_TASK_MatchTracing0>                                                              MatchTracing                                                                             { get { return this.GetTable<_SYS_TASK_MatchTracing0>(); } }
+		                                           public ITable<_SYS_TASK_MatchStatistic>                                                             MatchStatistics                                                                          { get { return this.GetTable<_SYS_TASK_MatchStatistic>(); } }
+		                                           public ITable<_SYS_TASK_MatchStatistics>                                                            MatchStatistics0                                                                         { get { return this.GetTable<_SYS_TASK_MatchStatistics>(); } }
+		                                           public ITable<_SYS_TASK_MatchTracing>                                                               MatchTracing                                                                             { get { return this.GetTable<_SYS_TASK_MatchTracing>(); } }
 		/// <summary>
 		/// This table contains one row for each match decision made during the matching process
 		/// </summary>
-		                                           public ITable<_SYS_TASK_MatchTracing1>                                                              MatchTracings                                                                            { get { return this.GetTable<_SYS_TASK_MatchTracing1>(); } }
+		                                           public ITable<_SYS_TASK_MatchTracing0>                                                              MatchTracings                                                                            { get { return this.GetTable<_SYS_TASK_MatchTracing0>(); } }
 		                                           public ITable<_SYS_EPM_MdsMetadata>                                                                 MdsMetadatas                                                                             { get { return this.GetTable<_SYS_EPM_MdsMetadata>(); } }
 		                                           public ITable<_SYS_EPM_MdsMetadataDocument>                                                         MdsMetadataDocuments                                                                     { get { return this.GetTable<_SYS_EPM_MdsMetadataDocument>(); } }
 		                                           public ITable<_SYS_EPM_ModelAdmin>                                                                  ModelAdmins                                                                              { get { return this.GetTable<_SYS_EPM_ModelAdmin>(); } }
@@ -265,39 +265,39 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_XS_OauthClientConfig>                                                            OauthClientConfigs                                                                       { get { return this.GetTable<_SYS_XS_OauthClientConfig>(); } }
 		                                           public ITable<_SYS_XS_OauthClientFlavor>                                                            OauthClientFlavors                                                                       { get { return this.GetTable<_SYS_XS_OauthClientFlavor>(); } }
 		                                           public ITable<_SYS_XS_OdataService>                                                                 OdataServices                                                                            { get { return this.GetTable<_SYS_XS_OdataService>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorDetail>                                                     OperatorDetails0                                                                         { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorDetail>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorDetails>                                                    OperatorDetails1                                                                         { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorDetails>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorSourceDetail>                                               OperatorSourceDetails0                                                                   { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorSourceDetail>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorSourceDetails>                                              OperatorSourceDetails1                                                                   { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorSourceDetails>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorStatistic>                                                  OperatorStatistics0                                                                      { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorStatistic>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_OperatorStatistics>                                                 OperatorStatistics1                                                                      { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorStatistics>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorDetail>                                                     OperatorDetails                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorDetail>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorDetails>                                                    OperatorDetails0                                                                         { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorDetails>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorSourceDetail>                                               OperatorSourceDetails                                                                    { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorSourceDetail>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorSourceDetails>                                              OperatorSourceDetails0                                                                   { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorSourceDetails>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorStatistic>                                                  OperatorStatistics                                                                       { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorStatistic>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_OperatorStatistics>                                                 OperatorStatistics0                                                                      { get { return this.GetTable<_SYS_SQL_ANALYZER_OperatorStatistics>(); } }
 		/// <summary>
 		/// Disposition specific memory object statistics. The statistics are calculated and reading them may take a while.
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_OutOfMemoryEvent>                                                      OutOfMemoryEvents                                                                        { get { return this.GetTable<_SYS_TELEMETRY_OutOfMemoryEvent>(); } }
-		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents0                                                                                 { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
-		                                           public ITable<Parent>                                                                               Parents1                                                                                 { get { return this.GetTable<Parent>(); } }
+		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents                                                                                  { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
+		                                           public ITable<Parent>                                                                               Parents0                                                                                 { get { return this.GetTable<Parent>(); } }
+		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews                                                                         { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
 		                                           public ITable<ParentChildView>                                                                      ParentChildViews0                                                                        { get { return this.GetTable<ParentChildView>(); } }
-		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews1                                                                        { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
+		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews                                                                              { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
 		                                           public ITable<ParentView>                                                                           ParentViews0                                                                             { get { return this.GetTable<ParentView>(); } }
-		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews1                                                                             { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
+		                                           public ITable<Patient>                                                                              Patients                                                                                 { get { return this.GetTable<Patient>(); } }
 		                                           public ITable<TESTHANAODBC_Patient>                                                                 Patients0                                                                                { get { return this.GetTable<TESTHANAODBC_Patient>(); } }
-		                                           public ITable<Patient>                                                                              Patients1                                                                                { get { return this.GetTable<Patient>(); } }
 		                                           public ITable<_SYS_TASK_PendingDropTasks>                                                           PendingDropTasks                                                                         { get { return this.GetTable<_SYS_TASK_PendingDropTasks>(); } }
-		                                           public ITable<Person>                                                                               People0                                                                                  { get { return this.GetTable<Person>(); } }
-		                                           public ITable<TESTHANAODBC_Person>                                                                  People1                                                                                  { get { return this.GetTable<TESTHANAODBC_Person>(); } }
+		                                           public ITable<Person>                                                                               People                                                                                   { get { return this.GetTable<Person>(); } }
+		                                           public ITable<TESTHANAODBC_Person>                                                                  People0                                                                                  { get { return this.GetTable<TESTHANAODBC_Person>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityConfig>                                              PlanStabilityConfig                                                                      { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityConfig>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>                                          PlanStabilityStatistics                                                                  { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistic>                                                      PlanStatistics0                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistic>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistics>                                                     PlanStatistics1                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistics>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistic>                                                      PlanStatistics                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistic>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistics>                                                     PlanStatistics0                                                                          { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistics>(); } }
 		                                           public ITable<_SYS_AFL_PluginError>                                                                 PluginErrors                                                                             { get { return this.GetTable<_SYS_AFL_PluginError>(); } }
 		                                           public ITable<_SYS_RT_PpAAlgorithm>                                                                 PpAAlgorithms                                                                            { get { return this.GetTable<_SYS_RT_PpAAlgorithm>(); } }
 		                                           public ITable<_SYS_RT_PpACha>                                                                       PpAChas                                                                                  { get { return this.GetTable<_SYS_RT_PpACha>(); } }
 		                                           public ITable<_SYS_RT_PpADatacontainer>                                                             PpADatacontainers                                                                        { get { return this.GetTable<_SYS_RT_PpADatacontainer>(); } }
 		                                           public ITable<_SYS_RT_PpAKyf>                                                                       PpAKyfs                                                                                  { get { return this.GetTable<_SYS_RT_PpAKyf>(); } }
 		                                           public ITable<_SYS_RT_PpASession>                                                                   PpASessions                                                                              { get { return this.GetTable<_SYS_RT_PpASession>(); } }
+		                                           public ITable<PrdGlobalEccCvMara>                                                                   PrdGlobalEccCvMaras                                                                      { get { return this.GetTable<PrdGlobalEccCvMara>(); } }
 		                                           public ITable<TESTHANAODBC_PrdGlobalEccCvMara>                                                      PrdGlobalEccCvMaras0                                                                     { get { return this.GetTable<TESTHANAODBC_PrdGlobalEccCvMara>(); } }
-		                                           public ITable<PrdGlobalEccCvMara>                                                                   PrdGlobalEccCvMaras1                                                                     { get { return this.GetTable<PrdGlobalEccCvMara>(); } }
 		                                           public ITable<_SYS_EPM_PublishGrant>                                                                PublishGrants                                                                            { get { return this.GetTable<_SYS_EPM_PublishGrant>(); } }
 		                                           public ITable<_SYS_EPM_PublishPrivilege>                                                            PublishPrivileges                                                                        { get { return this.GetTable<_SYS_EPM_PublishPrivilege>(); } }
 		                                           public ITable<_SYS_XS_RuntimeConfiguration>                                                         RuntimeConfigurations                                                                    { get { return this.GetTable<_SYS_XS_RuntimeConfiguration>(); } }
@@ -482,10 +482,10 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// This table contains messages generated by start task command
 		/// </summary>
-		                                           public ITable<_SYS_TASK_StartTaskMessage>                                                           StartTaskMessages0                                                                       { get { return this.GetTable<_SYS_TASK_StartTaskMessage>(); } }
-		                                           public ITable<_SYS_TASK_StartTaskMessages>                                                          StartTaskMessages1                                                                       { get { return this.GetTable<_SYS_TASK_StartTaskMessages>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_StatementStatistic>                                                 StatementStatistics0                                                                     { get { return this.GetTable<_SYS_SQL_ANALYZER_StatementStatistic>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_StatementStatistics>                                                StatementStatistics1                                                                     { get { return this.GetTable<_SYS_SQL_ANALYZER_StatementStatistics>(); } }
+		                                           public ITable<_SYS_TASK_StartTaskMessage>                                                           StartTaskMessages                                                                        { get { return this.GetTable<_SYS_TASK_StartTaskMessage>(); } }
+		                                           public ITable<_SYS_TASK_StartTaskMessages>                                                          StartTaskMessages0                                                                       { get { return this.GetTable<_SYS_TASK_StartTaskMessages>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_StatementStatistic>                                                 StatementStatistics                                                                      { get { return this.GetTable<_SYS_SQL_ANALYZER_StatementStatistic>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_StatementStatistics>                                                StatementStatistics0                                                                     { get { return this.GetTable<_SYS_SQL_ANALYZER_StatementStatistics>(); } }
 		                                           public ITable<_SYS_SECURITY_SysObjectPrivilege>                                                     SysObjectPrivileges                                                                      { get { return this.GetTable<_SYS_SECURITY_SysObjectPrivilege>(); } }
 		                                           public ITable<_SYS_SECURITY_SysPasswordBlacklist>                                                   SysPasswordBlacklists                                                                    { get { return this.GetTable<_SYS_SECURITY_SysPasswordBlacklist>(); } }
 		/// <summary>
@@ -493,51 +493,51 @@ namespace SapHanaDataContext
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_SystemOverview>                                                        SystemOverviews                                                                          { get { return this.GetTable<_SYS_TELEMETRY_SystemOverview>(); } }
 		                                           public ITable<_SYS_RT_TablePlacement>                                                               TablePlacements                                                                          { get { return this.GetTable<_SYS_RT_TablePlacement>(); } }
-		                                           public ITable<_SYS_TASK_TaskClientMapping0>                                                         TaskClientMapping                                                                        { get { return this.GetTable<_SYS_TASK_TaskClientMapping0>(); } }
+		                                           public ITable<_SYS_TASK_TaskClientMapping>                                                          TaskClientMapping                                                                        { get { return this.GetTable<_SYS_TASK_TaskClientMapping>(); } }
 		/// <summary>
 		/// Provides the client mapping when a task is created by the ABAP API
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskClientMapping1>                                                         TaskClientMappings                                                                       { get { return this.GetTable<_SYS_TASK_TaskClientMapping1>(); } }
+		                                           public ITable<_SYS_TASK_TaskClientMapping0>                                                         TaskClientMappings                                                                       { get { return this.GetTable<_SYS_TASK_TaskClientMapping0>(); } }
 		/// <summary>
 		/// Defines the columns present in a particular table
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskColumnDefinition>                                                       TaskColumnDefinitions0                                                                   { get { return this.GetTable<_SYS_TASK_TaskColumnDefinition>(); } }
-		                                           public ITable<_SYS_TASK_TaskColumnDefinitions>                                                      TaskColumnDefinitions1                                                                   { get { return this.GetTable<_SYS_TASK_TaskColumnDefinitions>(); } }
+		                                           public ITable<_SYS_TASK_TaskColumnDefinition>                                                       TaskColumnDefinitions                                                                    { get { return this.GetTable<_SYS_TASK_TaskColumnDefinition>(); } }
+		                                           public ITable<_SYS_TASK_TaskColumnDefinitions>                                                      TaskColumnDefinitions0                                                                   { get { return this.GetTable<_SYS_TASK_TaskColumnDefinitions>(); } }
 		/// <summary>
 		/// Task Execution Statistics.
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskExecution>                                                              TaskExecutions0                                                                          { get { return this.GetTable<_SYS_TASK_TaskExecution>(); } }
-		                                           public ITable<_SYS_TASK_TaskExecutions>                                                             TaskExecutions1                                                                          { get { return this.GetTable<_SYS_TASK_TaskExecutions>(); } }
-		                                           public ITable<_SYS_TASK_TaskLocalization0>                                                          TaskLocalization                                                                         { get { return this.GetTable<_SYS_TASK_TaskLocalization0>(); } }
+		                                           public ITable<_SYS_TASK_TaskExecution>                                                              TaskExecutions                                                                           { get { return this.GetTable<_SYS_TASK_TaskExecution>(); } }
+		                                           public ITable<_SYS_TASK_TaskExecutions>                                                             TaskExecutions0                                                                          { get { return this.GetTable<_SYS_TASK_TaskExecutions>(); } }
+		                                           public ITable<_SYS_TASK_TaskLocalization>                                                           TaskLocalization                                                                         { get { return this.GetTable<_SYS_TASK_TaskLocalization>(); } }
 		/// <summary>
 		/// Contains localized values for the task framework tables
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskLocalization1>                                                          TaskLocalizations                                                                        { get { return this.GetTable<_SYS_TASK_TaskLocalization1>(); } }
+		                                           public ITable<_SYS_TASK_TaskLocalization0>                                                          TaskLocalizations                                                                        { get { return this.GetTable<_SYS_TASK_TaskLocalization0>(); } }
 		/// <summary>
 		/// Contains all operations and details about those operations that exist for a given task
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskOperation>                                                              TaskOperations0                                                                          { get { return this.GetTable<_SYS_TASK_TaskOperation>(); } }
-		                                           public ITable<_SYS_TASK_TaskOperations>                                                             TaskOperations1                                                                          { get { return this.GetTable<_SYS_TASK_TaskOperations>(); } }
+		                                           public ITable<_SYS_TASK_TaskOperation>                                                              TaskOperations                                                                           { get { return this.GetTable<_SYS_TASK_TaskOperation>(); } }
+		                                           public ITable<_SYS_TASK_TaskOperations>                                                             TaskOperations0                                                                          { get { return this.GetTable<_SYS_TASK_TaskOperations>(); } }
 		/// <summary>
 		/// Task Operations Execution Statistics
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskOperationsExecution>                                                    TaskOperationsExecutions0                                                                { get { return this.GetTable<_SYS_TASK_TaskOperationsExecution>(); } }
-		                                           public ITable<_SYS_TASK_TaskOperationsExecutions>                                                   TaskOperationsExecutions1                                                                { get { return this.GetTable<_SYS_TASK_TaskOperationsExecutions>(); } }
+		                                           public ITable<_SYS_TASK_TaskOperationsExecution>                                                    TaskOperationsExecutions                                                                 { get { return this.GetTable<_SYS_TASK_TaskOperationsExecution>(); } }
+		                                           public ITable<_SYS_TASK_TaskOperationsExecutions>                                                   TaskOperationsExecutions0                                                                { get { return this.GetTable<_SYS_TASK_TaskOperationsExecutions>(); } }
 		/// <summary>
 		/// Task Partition Statistics.
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskPartitionExecution>                                                     TaskPartitionExecutions0                                                                 { get { return this.GetTable<_SYS_TASK_TaskPartitionExecution>(); } }
-		                                           public ITable<_SYS_TASK_TaskPartitionExecutions>                                                    TaskPartitionExecutions1                                                                 { get { return this.GetTable<_SYS_TASK_TaskPartitionExecutions>(); } }
+		                                           public ITable<_SYS_TASK_TaskPartitionExecution>                                                     TaskPartitionExecutions                                                                  { get { return this.GetTable<_SYS_TASK_TaskPartitionExecution>(); } }
+		                                           public ITable<_SYS_TASK_TaskPartitionExecutions>                                                    TaskPartitionExecutions0                                                                 { get { return this.GetTable<_SYS_TASK_TaskPartitionExecutions>(); } }
 		/// <summary>
 		/// Contains all of the tables used by the various side-effect producing operations
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskTableDefinition>                                                        TaskTableDefinitions0                                                                    { get { return this.GetTable<_SYS_TASK_TaskTableDefinition>(); } }
-		                                           public ITable<_SYS_TASK_TaskTableDefinitions>                                                       TaskTableDefinitions1                                                                    { get { return this.GetTable<_SYS_TASK_TaskTableDefinitions>(); } }
+		                                           public ITable<_SYS_TASK_TaskTableDefinition>                                                        TaskTableDefinitions                                                                     { get { return this.GetTable<_SYS_TASK_TaskTableDefinition>(); } }
+		                                           public ITable<_SYS_TASK_TaskTableDefinitions>                                                       TaskTableDefinitions0                                                                    { get { return this.GetTable<_SYS_TASK_TaskTableDefinitions>(); } }
 		/// <summary>
 		/// Defines the relationships (if any) between tables within an operation
 		/// </summary>
-		                                           public ITable<_SYS_TASK_TaskTableRelationship>                                                      TaskTableRelationships0                                                                  { get { return this.GetTable<_SYS_TASK_TaskTableRelationship>(); } }
-		                                           public ITable<_SYS_TASK_TaskTableRelationships>                                                     TaskTableRelationships1                                                                  { get { return this.GetTable<_SYS_TASK_TaskTableRelationships>(); } }
+		                                           public ITable<_SYS_TASK_TaskTableRelationship>                                                      TaskTableRelationships                                                                   { get { return this.GetTable<_SYS_TASK_TaskTableRelationship>(); } }
+		                                           public ITable<_SYS_TASK_TaskTableRelationships>                                                     TaskTableRelationships0                                                                  { get { return this.GetTable<_SYS_TASK_TaskTableRelationships>(); } }
 		/// <summary>
 		/// Last Telemetry Client Information
 		/// </summary>
@@ -551,12 +551,12 @@ namespace SapHanaDataContext
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_TelHanaUsage>                                                          TelHanaUsages                                                                            { get { return this.GetTable<_SYS_TELEMETRY_TelHanaUsage>(); } }
 		                                           public ITable<_SYS_EPM_TemporaryContainer>                                                          TemporaryContainers                                                                      { get { return this.GetTable<_SYS_EPM_TemporaryContainer>(); } }
+		                                           public ITable<TestIdentity>                                                                         TestIdentities                                                                           { get { return this.GetTable<TestIdentity>(); } }
 		                                           public ITable<TESTHANAODBC_TestIdentity>                                                            TestIdentities0                                                                          { get { return this.GetTable<TESTHANAODBC_TestIdentity>(); } }
-		                                           public ITable<TestIdentity>                                                                         TestIdentities1                                                                          { get { return this.GetTable<TestIdentity>(); } }
-		                                           public ITable<TESTHANAODBC_TestMerge1>                                                              TestMerge3                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge1>(); } }
-		                                           public ITable<TestMerge1>                                                                           TestMerge4                                                                               { get { return this.GetTable<TestMerge1>(); } }
-		                                           public ITable<TESTHANAODBC_TestMerge2>                                                              TestMerge5                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge2>(); } }
-		                                           public ITable<TestMerge2>                                                                           TestMerge6                                                                               { get { return this.GetTable<TestMerge2>(); } }
+		                                           public ITable<TestMerge1>                                                                           TestMerge1                                                                               { get { return this.GetTable<TestMerge1>(); } }
+		                                           public ITable<TESTHANAODBC_TestMerge1>                                                              TestMerge2                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge1>(); } }
+		                                           public ITable<TestMerge2>                                                                           TestMerge3                                                                               { get { return this.GetTable<TestMerge2>(); } }
+		                                           public ITable<TESTHANAODBC_TestMerge2>                                                              TestMerge4                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge2>(); } }
 		                                           public ITable<_SYS_RT_TiImportKey>                                                                  TiImportKeys                                                                             { get { return this.GetTable<_SYS_RT_TiImportKey>(); } }
 		                                           public ITable<_SYS_RT_UisAppsite>                                                                   UisAppsites                                                                              { get { return this.GetTable<_SYS_RT_UisAppsite>(); } }
 		                                           public ITable<_SYS_RT_UisAppsitePROPERTy>                                                           UisAppsiteProperties                                                                     { get { return this.GetTable<_SYS_RT_UisAppsitePROPERTy>(); } }
@@ -576,8 +576,8 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_UisWidgetTemplatePROPERTy>                                                    UisWidgetTemplateProperties                                                              { get { return this.GetTable<_SYS_RT_UisWidgetTemplatePROPERTy>(); } }
 		                                           public ITable<_SYS_XS_UsageMeasuringObject>                                                         UsageMeasuringObjects                                                                    { get { return this.GetTable<_SYS_XS_UsageMeasuringObject>(); } }
 		                                           public ITable<_SYS_XS_UsageStatistic>                                                               UsageStatistics                                                                          { get { return this.GetTable<_SYS_XS_UsageStatistic>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_VariableTrace0>                                                     VariableTrace                                                                            { get { return this.GetTable<_SYS_SQL_ANALYZER_VariableTrace0>(); } }
-		                                           public ITable<_SYS_SQL_ANALYZER_VariableTrace1>                                                     VariableTraces                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_VariableTrace1>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_VariableTrace>                                                      VariableTrace                                                                            { get { return this.GetTable<_SYS_SQL_ANALYZER_VariableTrace>(); } }
+		                                           public ITable<_SYS_SQL_ANALYZER_VariableTrace0>                                                     VariableTraces                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_VariableTrace0>(); } }
 		                                           public ITable<_SYS_EPM_VERSION>                                                                     VERSIONS                                                                                 { get { return this.GetTable<_SYS_EPM_VERSION>(); } }
 		                                           public ITable<_SYS_EPM_VersionPrivilege>                                                            VersionPrivileges                                                                        { get { return this.GetTable<_SYS_EPM_VersionPrivilege>(); } }
 		                                           public ITable<_SYS_EPM_VersionState>                                                                VersionStates                                                                            { get { return this.GetTable<_SYS_EPM_VersionState>(); } }
@@ -765,13 +765,13 @@ namespace SapHanaDataContext
 		#region GetParentByID
 
 		[Sql.TableFunction(Schema="TESTHANAODBC", Name="GetParentByID")]
-		public ITable<GetParentByIDResult0> GetParentByID0(int? ID)
+		public ITable<GetParentByIDResult> GetParentByID(int? ID)
 		{
-			return this.GetTable<GetParentByIDResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GetParentByIDResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				ID);
 		}
 
-		public partial class GetParentByIDResult0
+		public partial class GetParentByIDResult
 		{
 			public int? ParentID { get; set; }
 			public int? Value1   { get; set; }
@@ -782,13 +782,13 @@ namespace SapHanaDataContext
 		#region GetParentByID
 
 		[Sql.TableFunction(Schema="TESTHANA", Name="GetParentByID")]
-		public ITable<GetParentByIDResult1> GetParentByID1(int? ID)
+		public ITable<GetParentByIDResult0> GetParentByID0(int? ID)
 		{
-			return this.GetTable<GetParentByIDResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GetParentByIDResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				ID);
 		}
 
-		public partial class GetParentByIDResult1
+		public partial class GetParentByIDResult0
 		{
 			public int? ParentID { get; set; }
 			public int? Value1   { get; set; }
@@ -804,9 +804,7 @@ namespace SapHanaDataContext
 	{
 		[Column("ENTRY_ID"),          PrimaryKey,  NotNull] public long      EntryId          { get; set; } // BIGINT
 		[Column("QUERY_ID"),                       NotNull] public long      QueryId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("ABSTRACT_SQL_PLAN"),              NotNull] public string    AbstractSqlPlan  { get; set; } // NCLOB
-		#nullable enable
+		[Column("ABSTRACT_SQL_PLAN"),              NotNull] public string    AbstractSqlPlan  { get; set; } = null!; // NCLOB
 		[Column("RELATED_OBJECTS"),      Nullable         ] public string?   RelatedObjects   { get; set; } // NCLOB
 		[Column("APPLIED_MIGRATORS"),    Nullable         ] public string?   AppliedMigrators { get; set; } // NVARCHAR(5000)
 		[Column("IS_VALID"),                       NotNull] public byte      IsValid          { get; set; } // TINYINT
@@ -820,15 +818,9 @@ namespace SapHanaDataContext
 	public partial class _SYS_PLAN_STABILITY_AbstractSqlPlanQueries
 	{
 		[Column("QUERY_ID"),          PrimaryKey,  NotNull] public long      QueryId         { get; set; } // BIGINT
-		#nullable disable
-		[Column("STATEMENT_STRING"),               NotNull] public string    StatementString { get; set; } // NCLOB
-		#nullable enable
-		#nullable disable
-		[Column("SESSION_KEY"),                    NotNull] public string    SessionKey      { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column(),                                 NotNull] public string    LOCATION        { get; set; } // NVARCHAR(128)
-		#nullable enable
+		[Column("STATEMENT_STRING"),               NotNull] public string    StatementString { get; set; } = null!; // NCLOB
+		[Column("SESSION_KEY"),                    NotNull] public string    SessionKey      { get; set; } = null!; // NVARCHAR(5000)
+		[Column(),                                 NotNull] public string    LOCATION        { get; set; } = null!; // NVARCHAR(128)
 		[Column("VOLUME_ID"),                      NotNull] public int       VolumeId        { get; set; } // INTEGER
 		[Column("IS_ENABLED"),                     NotNull] public byte      IsEnabled       { get; set; } // TINYINT
 		[Column("LAST_ENABLE_TIME"),     Nullable         ] public DateTime? LastEnableTime  { get; set; } // TIMESTAMP
@@ -903,16 +895,16 @@ namespace SapHanaDataContext
 		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
 	}
 
-	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
-	public partial class AllTypesGeo
+	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
+	public partial class TESTHANAODBC_AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
 		[Column("stgeometryDataType"), Nullable            ] public object? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
-	public partial class TESTHANAODBC_AllTypesGeo
+	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
+	public partial class AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
@@ -925,18 +917,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_GROUP_MASTER_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_BestRecordGroupMasterStatistic
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),           NotNull    ] public string  SchemaName         { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),           NotNull    ] public string  SchemaName         { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),             NotNull    ] public string  TaskName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),             NotNull    ] public string  TaskName           { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -983,18 +971,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_RESULTS", IsView=true)]
 	public partial class _SYS_TASK_BestRecordResult
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -1039,12 +1023,10 @@ namespace SapHanaDataContext
 		/// The name that identifies each strategy listed in the strategy group
 		/// </summary>
 		[Column("STRATEGY_NAME"),          Nullable] public string? StrategyName      { get; set; } // NVARCHAR(256)
-		#nullable disable
 		/// <summary>
 		/// The name of the rule that updates one or more columns as it is defined in the best record configuration
 		/// </summary>
-		[Column("BEST_RECORD_RULE"),    NotNull    ] public string  BestRecordRule    { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("BEST_RECORD_RULE"),    NotNull    ] public string  BestRecordRule    { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the action that updates a column as it is defined in the best record configuration
 		/// </summary>
@@ -1073,9 +1055,7 @@ namespace SapHanaDataContext
 		[Column("SRC_COLUMN_ID"),     PrimaryKey(5), NotNull] public int     SrcColumnId     { get; set; } // INTEGER
 		[Column("STRATEGY_GROUP_ID"), PrimaryKey(6), NotNull] public int     StrategyGroupId { get; set; } // INTEGER
 		[Column("STRATEGY_ID"),       PrimaryKey(7), NotNull] public int     StrategyId      { get; set; } // INTEGER
-		#nullable disable
-		[Column("BEST_RECORD_RULE"),  PrimaryKey(8), NotNull] public string  BestRecordRule  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("BEST_RECORD_RULE"),  PrimaryKey(8), NotNull] public string  BestRecordRule  { get; set; } = null!; // NVARCHAR(256)
 		[Column("ACTION_NAME"),          Nullable           ] public string? ActionName      { get; set; } // NVARCHAR(256)
 		[Column("UPDATE_NUM"),        PrimaryKey(9), NotNull] public int     UpdateNum       { get; set; } // INTEGER
 		[Column("OPERATION_TYPE"),       Nullable           ] public char?   OperationType   { get; set; } // NVARCHAR(1)
@@ -1098,18 +1078,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_STRATEGIES", IsView=true)]
 	public partial class _SYS_TASK_BestRecordSTRATEGy
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -1201,62 +1177,30 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsAnnotation
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ANNOTATION_ASSIGNMENT")]
 	public partial class _SYS_RT_CdsAnnotationAssignment
 	{
 		[Column("imageId"),                    PrimaryKey(1), NotNull] public long     ImageId                   { get; set; } // BIGINT
-		#nullable disable
-		[Column("artifactName.schema"),        PrimaryKey(2), NotNull] public string   ArtifactNameSchema        { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("artifactName.name"),          PrimaryKey(3), NotNull] public string   ArtifactNameName          { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("artifactName.componentName"), PrimaryKey(4), NotNull] public string   ArtifactNameComponentName { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),                       PrimaryKey(5), NotNull] public string   Name                      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),           PrimaryKey(6), NotNull] public string   ExtensionPackage          { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("artifactName.schema"),        PrimaryKey(2), NotNull] public string   ArtifactNameSchema        { get; set; } = null!; // NVARCHAR(127)
+		[Column("artifactName.name"),          PrimaryKey(3), NotNull] public string   ArtifactNameName          { get; set; } = null!; // NVARCHAR(256)
+		[Column("artifactName.componentName"), PrimaryKey(4), NotNull] public string   ArtifactNameComponentName { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),                       PrimaryKey(5), NotNull] public string   Name                      { get; set; } = null!; // NVARCHAR(127)
+		[Column("extensionPackage"),           PrimaryKey(6), NotNull] public string   ExtensionPackage          { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                               NotNull] public DateTime ModifiedUtc               { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                                     NotNull] public string   State                     { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("format"),                                    NotNull] public string   Format                    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("value"),                                     NotNull] public string   Value                     { get; set; } // NCLOB
-		#nullable enable
-		#nullable disable
-		[Column("checked"),                                   NotNull] public string   @checked                  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                                     NotNull] public string   State                     { get; set; } = null!; // NVARCHAR(10)
+		[Column("format"),                                    NotNull] public string   Format                    { get; set; } = null!; // NVARCHAR(127)
+		[Column("value"),                                     NotNull] public string   Value                     { get; set; } = null!; // NCLOB
+		[Column("checked"),                                   NotNull] public string   @checked                  { get; set; } = null!; // NVARCHAR(127)
 		[Column("definition.schema"),             Nullable           ] public string?  DefinitionSchema          { get; set; } // NVARCHAR(127)
 		[Column("definition.name"),               Nullable           ] public string?  DefinitionName            { get; set; } // NVARCHAR(127)
 	}
@@ -1265,132 +1209,70 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsAnnotationValue
 	{
 		[Column("imageId"),               PrimaryKey(1), NotNull] public long     ImageId              { get; set; } // BIGINT
-		#nullable disable
-		[Column("artifactName.schema"),   PrimaryKey(2), NotNull] public string   ArtifactNameSchema   { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("artifactName.name"),     PrimaryKey(3), NotNull] public string   ArtifactNameName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("annotationName.schema"), PrimaryKey(4), NotNull] public string   AnnotationNameSchema { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("annotationName.name"),   PrimaryKey(5), NotNull] public string   AnnotationNameName   { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),      PrimaryKey(6), NotNull] public string   ExtensionPackage     { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("artifactName.schema"),   PrimaryKey(2), NotNull] public string   ArtifactNameSchema   { get; set; } = null!; // NVARCHAR(127)
+		[Column("artifactName.name"),     PrimaryKey(3), NotNull] public string   ArtifactNameName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("annotationName.schema"), PrimaryKey(4), NotNull] public string   AnnotationNameSchema { get; set; } = null!; // NVARCHAR(127)
+		[Column("annotationName.name"),   PrimaryKey(5), NotNull] public string   AnnotationNameName   { get; set; } = null!; // NVARCHAR(127)
+		[Column("extensionPackage"),      PrimaryKey(6), NotNull] public string   ExtensionPackage     { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                          NotNull] public DateTime ModifiedUtc          { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                                NotNull] public string   State                { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("valueTree"),                            NotNull] public string   ValueTree            { get; set; } // NCLOB
-		#nullable enable
+		[Column("state"),                                NotNull] public string   State                { get; set; } = null!; // NVARCHAR(10)
+		[Column("valueTree"),                            NotNull] public string   ValueTree            { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ARRAY")]
 	public partial class _SYS_RT_CdsArray
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ARTIFACT")]
 	public partial class _SYS_RT_CdsArtifact
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),      PrimaryKey(2), NotNull] public string   Schema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),        PrimaryKey(3), NotNull] public string   Name        { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),      PrimaryKey(2), NotNull] public string   Schema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),        PrimaryKey(3), NotNull] public string   Name        { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("kind"),                       NotNull] public string   Kind        { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                      NotNull] public string   State       { get; set; } = null!; // NVARCHAR(10)
+		[Column("kind"),                       NotNull] public string   Kind        { get; set; } = null!; // NVARCHAR(127)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ASPECT")]
 	public partial class _SYS_RT_CdsAspect
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
-		#nullable enable
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
+		[Column("definition"),                      NotNull] public string   Definition       { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ASSOCIATION")]
 	public partial class _SYS_RT_CdsAssociation
 	{
 		[Column("imageId"),                 PrimaryKey(1), NotNull] public long     ImageId                { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),                  PrimaryKey(2), NotNull] public string   Schema                 { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),                    PrimaryKey(3), NotNull] public string   Name                   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),                  PrimaryKey(2), NotNull] public string   Schema                 { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),                    PrimaryKey(3), NotNull] public string   Name                   { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                            NotNull] public DateTime ModifiedUtc            { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                                  NotNull] public string   State                  { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                       NotNull] public string   ExtensionPackage       { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("targetEntityName.schema"),                NotNull] public string   TargetEntityNameSchema { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("targetEntityName.name"),                  NotNull] public string   TargetEntityNameName   { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                                  NotNull] public string   State                  { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                       NotNull] public string   ExtensionPackage       { get; set; } = null!; // NVARCHAR(127)
+		[Column("targetEntityName.schema"),                NotNull] public string   TargetEntityNameSchema { get; set; } = null!; // NVARCHAR(127)
+		[Column("targetEntityName.name"),                  NotNull] public string   TargetEntityNameName   { get; set; } = null!; // NVARCHAR(127)
 		[Column("sourceCardinalityMax"),       Nullable           ] public int?     SourceCardinalityMax   { get; set; } // INTEGER
 		[Column("targetCardinalityMin"),       Nullable           ] public int?     TargetCardinalityMin   { get; set; } // INTEGER
 		[Column("targetCardinalityMax"),       Nullable           ] public int?     TargetCardinalityMax   { get; set; } // INTEGER
-		#nullable disable
-		[Column("viaEntityName.schema"),                   NotNull] public string   ViaEntityNameSchema    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("viaEntityName.name"),                     NotNull] public string   ViaEntityNameName      { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("viaEntityName.schema"),                   NotNull] public string   ViaEntityNameSchema    { get; set; } = null!; // NVARCHAR(127)
+		[Column("viaEntityName.name"),                     NotNull] public string   ViaEntityNameName      { get; set; } = null!; // NVARCHAR(127)
 		[Column("joinCondition"),              Nullable           ] public string?  JoinCondition          { get; set; } // NCLOB
 		[Column("associationKind"),            Nullable           ] public string?  AssociationKind        { get; set; } // NVARCHAR(127)
 	}
@@ -1399,28 +1281,14 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsConstant
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
 		[Column("value"),                Nullable           ] public string?  Value             { get; set; } // NVARCHAR(5000)
 		[Column("isEnumValue"),                      NotNull] public byte     IsEnumValue       { get; set; } // TINYINT
 	}
@@ -1429,72 +1297,38 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsDependency
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
-		#nullable disable
-		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } = null!; // NVARCHAR(127)
+		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } = null!; // NVARCHAR(127)
+		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } = null!; // NVARCHAR(127)
+		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column("state"),                      NotNull] public string   State       { get; set; } = null!; // NVARCHAR(10)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_DERIVED_TYPE")]
 	public partial class _SYS_RT_CdsDerivedType
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ENTITY")]
 	public partial class _SYS_RT_CdsEntity
 	{
 		[Column("imageId"),                PrimaryKey(1), NotNull] public long     ImageId               { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),                 PrimaryKey(2), NotNull] public string   Schema                { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),                   PrimaryKey(3), NotNull] public string   Name                  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),                 PrimaryKey(2), NotNull] public string   Schema                { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),                   PrimaryKey(3), NotNull] public string   Name                  { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                           NotNull] public DateTime ModifiedUtc           { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                                 NotNull] public string   State                 { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                      NotNull] public string   ExtensionPackage      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("series.kind"),                           NotNull] public string   SeriesKind            { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                                 NotNull] public string   State                 { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                      NotNull] public string   ExtensionPackage      { get; set; } = null!; // NVARCHAR(127)
+		[Column("series.kind"),                           NotNull] public string   SeriesKind            { get; set; } = null!; // NVARCHAR(127)
 		[Column("series.definition"),         Nullable           ] public string?  SeriesDefinition      { get; set; } // NCLOB
 		[Column("series.queryDefinition"),    Nullable           ] public string?  SeriesQueryDefinition { get; set; } // NCLOB
 	}
@@ -1503,154 +1337,82 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsEnum
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_EXPRESSION")]
 	public partial class _SYS_RT_CdsExpression
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
 		[Column("definition"),          Nullable           ] public string?  Definition       { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("kind"),                            NotNull] public string   Kind             { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("kind"),                            NotNull] public string   Kind             { get; set; } = null!; // NVARCHAR(127)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_EXT_PKG_DEP")]
 	public partial class _SYS_RT_CdsExtPkgDep
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
-		#nullable disable
-		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } = null!; // NVARCHAR(127)
+		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } = null!; // NVARCHAR(127)
+		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } = null!; // NVARCHAR(127)
+		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column("state"),                      NotNull] public string   State       { get; set; } = null!; // NVARCHAR(10)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_PARAMETER")]
 	public partial class _SYS_RT_CdsParameter
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("parameterName"),     PrimaryKey(4), NotNull] public string   ParameterName     { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(256)
+		[Column("parameterName"),     PrimaryKey(4), NotNull] public string   ParameterName     { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
 		[Column("parameterIndex"),                   NotNull] public int      ParameterIndex    { get; set; } // INTEGER
-		#nullable disable
-		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("passingMode"),                      NotNull] public string   PassingMode       { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } = null!; // NVARCHAR(256)
+		[Column("passingMode"),                      NotNull] public string   PassingMode       { get; set; } = null!; // NVARCHAR(127)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_RULE")]
 	public partial class _SYS_RT_CdsRule
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
-		#nullable enable
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
+		[Column("definition"),                      NotNull] public string   Definition       { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_SCALAR_TYPE")]
 	public partial class _SYS_RT_CdsScalarType
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                            NotNull] public string   State             { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } = null!; // NVARCHAR(127)
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
-		#nullable disable
-		[Column("primitiveTypeName"),                NotNull] public string   PrimitiveTypeName { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("primitiveTypeName"),                NotNull] public string   PrimitiveTypeName { get; set; } = null!; // NVARCHAR(127)
 		[Column("length"),               Nullable           ] public int?     Length            { get; set; } // INTEGER
 		[Column("precision"),            Nullable           ] public int?     Precision         { get; set; } // INTEGER
 		[Column("scale"),                Nullable           ] public int?     Scale             { get; set; } // INTEGER
@@ -1660,42 +1422,26 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsSourceCode
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("sourcecode"),                      NotNull] public string   Sourcecode       { get; set; } // NCLOB
-		#nullable enable
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
+		[Column("sourcecode"),                      NotNull] public string   Sourcecode       { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_STATISTICS")]
 	public partial class _SYS_RT_CdsStatistic
 	{
 		[Column("activationUtc"),   PrimaryKey(1), NotNull] public DateTime ActivationUtc   { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("connection"),      PrimaryKey(2), NotNull] public string   Connection      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("activationPhase"),                NotNull] public string   ActivationPhase { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("connection"),      PrimaryKey(2), NotNull] public string   Connection      { get; set; } = null!; // NVARCHAR(127)
+		[Column("activationPhase"),                NotNull] public string   ActivationPhase { get; set; } = null!; // NVARCHAR(127)
 		[Column("statementNo"),     PrimaryKey(3), NotNull] public int      StatementNo     { get; set; } // INTEGER
 		[Column("creationUtc"),     PrimaryKey(4), NotNull] public DateTime CreationUtc     { get; set; } // TIMESTAMP
 		[Column("executionUtc"),    PrimaryKey(5), NotNull] public DateTime ExecutionUtc    { get; set; } // TIMESTAMP
 		[Column("executionNo"),     PrimaryKey(6), NotNull] public int      ExecutionNo     { get; set; } // INTEGER
 		[Column("usecs"),                          NotNull] public int      Usecs           { get; set; } // INTEGER
-		#nullable disable
-		[Column("rawStatement"),                   NotNull] public string   RawStatement    { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column("rawStatement"),                   NotNull] public string   RawStatement    { get; set; } = null!; // NVARCHAR(5000)
 		[Column("execStatement"),      Nullable           ] public string?  ExecStatement   { get; set; } // NCLOB
 	}
 
@@ -1703,19 +1449,11 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsStructure
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(256)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
 		[Column("isAnonymous"),                     NotNull] public byte     IsAnonymous      { get; set; } // TINYINT
 	}
 
@@ -1723,32 +1461,16 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsStructureComponent
 	{
 		[Column("imageId"),            PrimaryKey(1), NotNull] public long     ImageId            { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),             PrimaryKey(2), NotNull] public string   Schema             { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),               PrimaryKey(3), NotNull] public string   Name               { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("componentName"),      PrimaryKey(4), NotNull] public string   ComponentName      { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),             PrimaryKey(2), NotNull] public string   Schema             { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),               PrimaryKey(3), NotNull] public string   Name               { get; set; } = null!; // NVARCHAR(256)
+		[Column("componentName"),      PrimaryKey(4), NotNull] public string   ComponentName      { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                       NotNull] public DateTime ModifiedUtc        { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                             NotNull] public string   State              { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                  NotNull] public string   ExtensionPackage   { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("state"),                             NotNull] public string   State              { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                  NotNull] public string   ExtensionPackage   { get; set; } = null!; // NVARCHAR(127)
 		[Column("componentIndex"),                    NotNull] public int      ComponentIndex     { get; set; } // INTEGER
-		#nullable disable
-		[Column("metaTableSelector"),                 NotNull] public string   MetaTableSelector  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.schema"),                     NotNull] public string   TargetSchema       { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("target.name"),                       NotNull] public string   TargetName         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("metaTableSelector"),                 NotNull] public string   MetaTableSelector  { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.schema"),                     NotNull] public string   TargetSchema       { get; set; } = null!; // NVARCHAR(127)
+		[Column("target.name"),                       NotNull] public string   TargetName         { get; set; } = null!; // NVARCHAR(256)
 		[Column("target.isNative"),                   NotNull] public byte     TargetIsNative     { get; set; } // TINYINT
 		[Column("isKey"),                             NotNull] public byte     IsKey              { get; set; } // TINYINT
 		[Column("isNullable"),                        NotNull] public byte     IsNullable         { get; set; } // TINYINT
@@ -1759,29 +1481,12 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsView
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
-		#nullable disable
-		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } = null!; // NVARCHAR(127)
+		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } = null!; // NVARCHAR(127)
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
-		#nullable enable
-	}
-
-	[Table(Schema="TESTHANAODBC", Name="Child")]
-	public partial class TESTHANAODBC_Child
-	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+		[Column("state"),                           NotNull] public string   State            { get; set; } = null!; // NVARCHAR(10)
+		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } = null!; // NVARCHAR(127)
+		[Column("definition"),                      NotNull] public string   Definition       { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="TESTHANA", Name="Child")]
@@ -1791,8 +1496,15 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
+	[Table(Schema="TESTHANAODBC", Name="Child")]
+	public partial class TESTHANAODBC_Child
+	{
+		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_ADDRESS_RECORD_INFO_")]
-	public partial class _SYS_TASK_CleanseAddressRecordInfo0
+	public partial class _SYS_TASK_CleanseAddressRecordInfo
 	{
 		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long    TaskExecutionId          { get; set; } // BIGINT
 		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int     OperationId              { get; set; } // INTEGER
@@ -1811,20 +1523,16 @@ namespace SapHanaDataContext
 	/// The table tells a user how well an address assigned and the type of address
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_ADDRESS_RECORD_INFO", IsView=true)]
-	public partial class _SYS_TASK_CleanseAddressRecordInfo1
+	public partial class _SYS_TASK_CleanseAddressRecordInfo0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -1872,27 +1580,19 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_CHANGE_INFO_")]
-	public partial class _SYS_TASK_CleanseChangeInfo0
+	public partial class _SYS_TASK_CleanseChangeInfo
 	{
 		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long    TaskExecutionId          { get; set; } // BIGINT
 		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int     OperationId              { get; set; } // INTEGER
 		[Column("TABLE_ID"),                      Nullable           ] public int?    TableId                  { get; set; } // INTEGER
 		[Column("ROW_ID"),                     PrimaryKey(3), NotNull] public long    RowId                    { get; set; } // BIGINT
-		#nullable disable
-		[Column("ENTITY_ID"),                  PrimaryKey(4), NotNull] public string  EntityId                 { get; set; } // NVARCHAR(12)
-		#nullable enable
+		[Column("ENTITY_ID"),                  PrimaryKey(4), NotNull] public string  EntityId                 { get; set; } = null!; // NVARCHAR(12)
 		[Column("ENTITY_INSTANCE"),            PrimaryKey(5), NotNull] public int     EntityInstance           { get; set; } // INTEGER
 		[Column("ENTITY_INSTANCE_OCCURRENCE"), PrimaryKey(6), NotNull] public int     EntityInstanceOccurrence { get; set; } // INTEGER
 		[Column("DATA_SOURCE"),                   Nullable           ] public string? DataSource               { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("COMPONENT_ID"),               PrimaryKey(7), NotNull] public string  ComponentId              { get; set; } // NVARCHAR(12)
-		#nullable enable
-		#nullable disable
-		[Column("COMPONENT_ELEMENT_ID"),       PrimaryKey(8), NotNull] public string  ComponentElementId       { get; set; } // NVARCHAR(12)
-		#nullable enable
-		#nullable disable
-		[Column("CHANGE_CATEGORY_ID"),         PrimaryKey(9), NotNull] public string  ChangeCategoryId         { get; set; } // NVARCHAR(12)
-		#nullable enable
+		[Column("COMPONENT_ID"),               PrimaryKey(7), NotNull] public string  ComponentId              { get; set; } = null!; // NVARCHAR(12)
+		[Column("COMPONENT_ELEMENT_ID"),       PrimaryKey(8), NotNull] public string  ComponentElementId       { get; set; } = null!; // NVARCHAR(12)
+		[Column("CHANGE_CATEGORY_ID"),         PrimaryKey(9), NotNull] public string  ChangeCategoryId         { get; set; } = null!; // NVARCHAR(12)
 		[Column("CHANGE_SIGNIFICANCE_ID"),        Nullable           ] public string? ChangeSignificanceId     { get; set; } // NVARCHAR(12)
 	}
 
@@ -1900,20 +1600,16 @@ namespace SapHanaDataContext
 	/// This table describes the changes made during the cleansing process
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_CHANGE_INFO", IsView=true)]
-	public partial class _SYS_TASK_CleanseChangeInfo1
+	public partial class _SYS_TASK_CleanseChangeInfo0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -1930,12 +1626,10 @@ namespace SapHanaDataContext
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
 		[Column("ROW_ID"),                     NotNull    ] public long    RowId                    { get; set; } // BIGINT
-		#nullable disable
 		/// <summary>
 		/// The ID describing the type of record that was processed
 		/// </summary>
-		[Column("ENTITY_ID"),                  NotNull    ] public string  EntityId                 { get; set; } // NVARCHAR(12)
-		#nullable enable
+		[Column("ENTITY_ID"),                  NotNull    ] public string  EntityId                 { get; set; } = null!; // NVARCHAR(12)
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
@@ -1948,21 +1642,15 @@ namespace SapHanaDataContext
 		/// The source where the data was produced
 		/// </summary>
 		[Column("DATA_SOURCE"),                   Nullable] public string? DataSource               { get; set; } // NVARCHAR(256)
-		#nullable disable
 		/// <summary>
 		/// Identification number that refers to data components
 		/// </summary>
-		[Column("COMPONENT_ID"),               NotNull    ] public string  ComponentId              { get; set; } // NVARCHAR(12)
-		#nullable enable
-		#nullable disable
+		[Column("COMPONENT_ID"),               NotNull    ] public string  ComponentId              { get; set; } = null!; // NVARCHAR(12)
 		/// <summary>
 		/// Identification number that refers to more granular elements within a component
 		/// </summary>
-		[Column("COMPONENT_ELEMENT_ID"),       NotNull    ] public string  ComponentElementId       { get; set; } // NVARCHAR(12)
-		#nullable enable
-		#nullable disable
-		[Column("CHANGE_CATEGORY_ID"),         NotNull    ] public string  ChangeCategoryId         { get; set; } // NVARCHAR(12)
-		#nullable enable
+		[Column("COMPONENT_ELEMENT_ID"),       NotNull    ] public string  ComponentElementId       { get; set; } = null!; // NVARCHAR(12)
+		[Column("CHANGE_CATEGORY_ID"),         NotNull    ] public string  ChangeCategoryId         { get; set; } = null!; // NVARCHAR(12)
 		/// <summary>
 		/// Identification number that refers to the significance of the change
 		/// </summary>
@@ -1970,7 +1658,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_COMPONENT_INFO_")]
-	public partial class _SYS_TASK_CleanseComponentInfo0
+	public partial class _SYS_TASK_CleanseComponentInfo
 	{
 		[Column("TASK_EXECUTION_ID"),            Nullable] public long?   TaskExecutionId           { get; set; } // BIGINT
 		[Column("OPERATION_ID"),                 Nullable] public int?    OperationId               { get; set; } // INTEGER
@@ -1995,20 +1683,16 @@ namespace SapHanaDataContext
 	/// This table identifies the location of parsed data elements in the input and output
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_COMPONENT_INFO", IsView=true)]
-	public partial class _SYS_TASK_CleanseComponentInfo1
+	public partial class _SYS_TASK_CleanseComponentInfo0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -2085,18 +1769,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_INFO_CODES", IsView=true)]
 	public partial class _SYS_TASK_CleanseInfoCode
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -2155,18 +1835,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_CleanseStatistic
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -2252,24 +1928,18 @@ namespace SapHanaDataContext
 		/// Maximum transmission interval in minute
 		/// </summary>
 		[Column("MAX_TRANSMISSION_INTERVAL"),           Nullable         ] public short?    MaxTransmissionInterval        { get; set; } // SMALLINT
-		#nullable disable
 		/// <summary>
 		/// System ID of the client
 		/// </summary>
-		[Column("CLIENT_SYSTEM_ID"),                              NotNull] public string    ClientSystemId                 { get; set; } // VARCHAR(3)
-		#nullable enable
-		#nullable disable
+		[Column("CLIENT_SYSTEM_ID"),                              NotNull] public string    ClientSystemId                 { get; set; } = null!; // VARCHAR(3)
 		/// <summary>
 		/// Database Name of the client
 		/// </summary>
-		[Column("CLIENT_DATABASE_NAME"),                          NotNull] public string    ClientDatabaseName             { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("CLIENT_DATABASE_NAME"),                          NotNull] public string    ClientDatabaseName             { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Hardware key of the client
 		/// </summary>
-		[Column("CLIENT_HARDWARE_KEY"),                           NotNull] public string    ClientHardwareKey              { get; set; } // VARCHAR(11)
-		#nullable enable
+		[Column("CLIENT_HARDWARE_KEY"),                           NotNull] public string    ClientHardwareKey              { get; set; } = null!; // VARCHAR(11)
 		/// <summary>
 		/// Private key of the client
 		/// </summary>
@@ -2294,18 +1964,14 @@ namespace SapHanaDataContext
 		/// Unique ID of telemetry collector
 		/// </summary>
 		[Column("COLLECTOR_ID"),                PrimaryKey, NotNull] public short  CollectorId               { get; set; } // SMALLINT
-		#nullable disable
 		/// <summary>
 		/// Name of telemetry collector
 		/// </summary>
-		[Column("COLLECTOR_NAME"),                          NotNull] public string CollectorName             { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("COLLECTOR_NAME"),                          NotNull] public string CollectorName             { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Status of telemetry collector
 		/// </summary>
-		[Column("COLLECTOR_STATUS"),                        NotNull] public object CollectorStatus           { get; set; } // BOOLEAN
-		#nullable enable
+		[Column("COLLECTOR_STATUS"),                        NotNull] public object CollectorStatus           { get; set; } = null!; // BOOLEAN
 		/// <summary>
 		/// Version of telemetry collector
 		/// </summary>
@@ -2415,21 +2081,15 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CURRENT_VERSIONS_")]
 	public partial class _SYS_TASK_CurrentVersions
 	{
-		#nullable disable
-		[Column("VERSION_ID"),  PrimaryKey,  NotNull] public string VersionId  { get; set; } // NVARCHAR(20)
-		#nullable enable
+		[Column("VERSION_ID"),  PrimaryKey,  NotNull] public string VersionId  { get; set; } = null!; // NVARCHAR(20)
 		[Column("VERSION_NUM"),    Nullable         ] public int?   VersionNum { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_XS", Name="DEBUG_PERMISSIONS")]
 	public partial class _SYS_XS_DebugPermission
 	{
-		#nullable disable
-		[Column, NotNull    ] public string   GRANTOR  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull    ] public string   GRANTEE  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull    ] public string   GRANTOR  { get; set; } = null!; // NVARCHAR(256)
+		[Column, NotNull    ] public string   GRANTEE  { get; set; } = null!; // NVARCHAR(256)
 		[Column, NotNull    ] public DateTime STARTING { get; set; } // TIMESTAMP
 		[Column, NotNull    ] public DateTime UNTIL    { get; set; } // TIMESTAMP
 		[Column,    Nullable] public string?  TOKEN    { get; set; } // NVARCHAR(32)
@@ -2438,19 +2098,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="DELETE_CONTAINERS")]
 	public partial class _SYS_EPM_DeleteContainer
 	{
-		#nullable disable
-		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                   PrimaryKey(4), NotNull] public int       VERSION        { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } = null!; // NVARCHAR(256)
 		[Column("TABLE_NAME"),          Nullable           ] public string?   TableName      { get; set; } // NVARCHAR(256)
 		[Column("LAST_CHANGE_TIME"),    Nullable           ] public DateTime? LastChangeTime { get; set; } // TIMESTAMP
 	}
@@ -2465,58 +2117,46 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Resource type like LOG, DATA, TRACE, DATA_BACKUP, LOG_BACKUP, CATALOG_BACKUP and ROOTKEY_BACKUP
 		/// </summary>
-		[Column("USAGE_TYPE"),  NotNull    ] public string   UsageType  { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column("USAGE_TYPE"),  NotNull    ] public string   UsageType  { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Size of used disk space in bytes
 		/// </summary>
 		[Column("USED_SIZE"),      Nullable] public long?    UsedSize   { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Doctor")]
-	public partial class TESTHANAODBC_Doctor
-	{
-		[PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // NVARCHAR(50)
-		#nullable enable
-
-		#region Associations
-
-		#nullable disable
-		/// <summary>
-		/// FK_Doctor_Person
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public TESTHANAODBC_Person Person { get; set; }
-
-		#nullable enable
-
-		#endregion
-	}
-
 	[Table(Schema="TESTHANA", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull] public string Taxonomy { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
+		public Person Person { get; set; } = null!;
 
-		#nullable enable
+		#endregion
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="Doctor")]
+	public partial class TESTHANAODBC_Doctor
+	{
+		[PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		public TESTHANAODBC_Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -2568,12 +2208,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="EPM_MODELS", IsView=true)]
 	public partial class _SYS_EPM_EpmModel
 	{
-		#nullable disable
-		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),        NotNull    ] public string    ModelName       { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),        NotNull    ] public string    ModelName       { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   COMMENTS        { get; set; } // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   CDATA           { get; set; } // NCLOB
 		[Column("LAST_CHANGED_TIME"),    Nullable] public DateTime? LastChangedTime { get; set; } // TIMESTAMP
@@ -2582,12 +2218,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="EPM_QUERY_SOURCES", IsView=true)]
 	public partial class _SYS_EPM_EpmQuerySource
 	{
-		#nullable disable
-		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("QUERY_SOURCE_NAME"), NotNull    ] public string    QuerySourceName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } = null!; // NVARCHAR(256)
+		[Column("QUERY_SOURCE_NAME"), NotNull    ] public string    QuerySourceName { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   COMMENTS        { get; set; } // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   CDATA           { get; set; } // NCLOB
 		[Column("LAST_CHANGED_TIME"),    Nullable] public DateTime? LastChangedTime { get; set; } // TIMESTAMP
@@ -2614,20 +2246,16 @@ namespace SapHanaDataContext
 	/// Enterprise Search configuration
 	/// </summary>
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_")]
-	public partial class _SYS_RT_EshModel0
+	public partial class _SYS_RT_EshModel
 	{
-		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
-		[Column("SCHEMA_NAME"),               PrimaryKey(1), NotNull] public string   SchemaName              { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),               PrimaryKey(1), NotNull] public string   SchemaName              { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View name
 		/// </summary>
-		[Column("VIEW_NAME"),                 PrimaryKey(2), NotNull] public string   ViewName                { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("VIEW_NAME"),                 PrimaryKey(2), NotNull] public string   ViewName                { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Repository package id
 		/// </summary>
@@ -2644,12 +2272,10 @@ namespace SapHanaDataContext
 		/// Timestamp of last change (UTC)
 		/// </summary>
 		[Column("LAST_CHANGED"),                             NotNull] public DateTime LastChanged             { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Enables CDS views for enterprise search
 		/// </summary>
-		[Column("ENTERPRISE_SEARCH_ENABLED"),                NotNull] public object   EnterpriseSearchEnabled { get; set; } // BOOLEAN
-		#nullable enable
+		[Column("ENTERPRISE_SEARCH_ENABLED"),                NotNull] public object   EnterpriseSearchEnabled { get; set; } = null!; // BOOLEAN
 		/// <summary>
 		/// Odata identifier
 		/// </summary>
@@ -2664,20 +2290,16 @@ namespace SapHanaDataContext
 	/// Enterprise Search configuration
 	/// </summary>
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL", IsView=true)]
-	public partial class _SYS_RT_EshModel1
+	public partial class _SYS_RT_EshModel0
 	{
-		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
-		[Column("SCHEMA_NAME"),               NotNull    ] public string   SchemaName              { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),               NotNull    ] public string   SchemaName              { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View name
 		/// </summary>
-		[Column("VIEW_NAME"),                 NotNull    ] public string   ViewName                { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("VIEW_NAME"),                 NotNull    ] public string   ViewName                { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Repository package id
 		/// </summary>
@@ -2694,12 +2316,10 @@ namespace SapHanaDataContext
 		/// Timestamp of last change (UTC)
 		/// </summary>
 		[Column("LAST_CHANGED"),              NotNull    ] public DateTime LastChanged             { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Enables CDS views for enterprise search
 		/// </summary>
-		[Column("ENTERPRISE_SEARCH_ENABLED"), NotNull    ] public object   EnterpriseSearchEnabled { get; set; } // BOOLEAN
-		#nullable enable
+		[Column("ENTERPRISE_SEARCH_ENABLED"), NotNull    ] public object   EnterpriseSearchEnabled { get; set; } = null!; // BOOLEAN
 		/// <summary>
 		/// Odata identifier
 		/// </summary>
@@ -2713,21 +2333,13 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_AUTH_")]
 	public partial class _SYS_RT_EshModelAuth
 	{
-		#nullable disable
-		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("VIEW_NAME"),        NotNull    ] public string  ViewName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                   NotNull    ] public string  CHECKID        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("VIEW_NAME"),        NotNull    ] public string  ViewName       { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                   NotNull    ] public string  CHECKID        { get; set; } = null!; // NVARCHAR(256)
 		[Column("AUTH_OBJCT"),          Nullable] public string? AuthObjct      { get; set; } // NVARCHAR(256)
 		[Column("AUTH_COLUMN_NAME"),    Nullable] public string? AuthColumnName { get; set; } // NVARCHAR(256)
 		[Column("VIEW_COLUMN_NAME"),    Nullable] public string? ViewColumnName { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                   NotNull    ] public string  TYPE           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   NotNull    ] public string  TYPE           { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                      Nullable] public string? VALUE          { get; set; } // NVARCHAR(256)
 	}
 
@@ -2735,76 +2347,56 @@ namespace SapHanaDataContext
 	/// Enterprise Search configuration properties
 	/// </summary>
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_PROPERTY_")]
-	public partial class _SYS_RT_EshModelProperty0
+	public partial class _SYS_RT_EshModelProperty
 	{
-		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
-		[Column("SCHEMA_NAME"), PrimaryKey(1), NotNull] public string SchemaName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"), PrimaryKey(1), NotNull] public string SchemaName { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View name
 		/// </summary>
-		[Column("VIEW_NAME"),   PrimaryKey(2), NotNull] public string ViewName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("VIEW_NAME"),   PrimaryKey(2), NotNull] public string ViewName   { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View column name
 		/// </summary>
-		[Column("COLUMN_NAME"), PrimaryKey(3), NotNull] public string ColumnName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("COLUMN_NAME"), PrimaryKey(3), NotNull] public string ColumnName { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Property name
 		/// </summary>
-		[Column(),              PrimaryKey(4), NotNull] public string PROPERTY   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column(),              PrimaryKey(4), NotNull] public string PROPERTY   { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Property value
 		/// </summary>
-		[Column(),                             NotNull] public string VALUE      { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column(),                             NotNull] public string VALUE      { get; set; } = null!; // NVARCHAR(5000)
 	}
 
 	/// <summary>
 	/// Enterprise Search configuration properties
 	/// </summary>
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_PROPERTY", IsView=true)]
-	public partial class _SYS_RT_EshModelProperty1
+	public partial class _SYS_RT_EshModelProperty0
 	{
-		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
-		[Column("SCHEMA_NAME"), NotNull] public string SchemaName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"), NotNull] public string SchemaName { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View name
 		/// </summary>
-		[Column("VIEW_NAME"),   NotNull] public string ViewName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("VIEW_NAME"),   NotNull] public string ViewName   { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// View column name
 		/// </summary>
-		[Column("COLUMN_NAME"), NotNull] public string ColumnName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("COLUMN_NAME"), NotNull] public string ColumnName { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Property name
 		/// </summary>
-		[Column(),              NotNull] public string PROPERTY   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column(),              NotNull] public string PROPERTY   { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Property value
 		/// </summary>
-		[Column(),              NotNull] public string VALUE      { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column(),              NotNull] public string VALUE      { get; set; } = null!; // NVARCHAR(5000)
 	}
 
 	/// <summary>
@@ -2849,18 +2441,14 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),    NotNull    ] public DateTime  SnapshotId    { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Component name (see M_FEATURES)
 		/// </summary>
-		[Column("COMPONENT_NAME"), NotNull    ] public string    ComponentName { get; set; } // VARCHAR(32)
-		#nullable enable
-		#nullable disable
+		[Column("COMPONENT_NAME"), NotNull    ] public string    ComponentName { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Feature name (see M_FEATURES)
 		/// </summary>
-		[Column("FEATURE_NAME"),   NotNull    ] public string    FeatureName   { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column("FEATURE_NAME"),   NotNull    ] public string    FeatureName   { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Counter tracking the number of times, the feature was used since the last start of the indexserver (e.g. number of accesses to any history table).
 		/// </summary>
@@ -2874,15 +2462,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_EXECUTION_COUNTS")]
 	public partial class _SYS_AFL_FunctionExecutionCount
 	{
-		#nullable disable
-		[Column("AREA_NAME"),       PrimaryKey(1), NotNull] public string    AreaName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("FUNCTION_NAME"),   PrimaryKey(2), NotNull] public string    FunctionName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                  PrimaryKey(3), NotNull] public string    HOST           { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column("AREA_NAME"),       PrimaryKey(1), NotNull] public string    AreaName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("FUNCTION_NAME"),   PrimaryKey(2), NotNull] public string    FunctionName   { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                  PrimaryKey(3), NotNull] public string    HOST           { get; set; } = null!; // VARCHAR(64)
 		[Column(),                  PrimaryKey(4), NotNull] public int       PORT           { get; set; } // INTEGER
 		[Column("EXECUTION_COUNT"),    Nullable           ] public long?     ExecutionCount { get; set; } // BIGINT
 		[Column("LAST_EXECUTION"),     Nullable           ] public DateTime? LastExecution  { get; set; } // TIMESTAMP
@@ -2891,9 +2473,7 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_EXECUTION_COUNTS_CONTROL")]
 	public partial class _SYS_AFL_FunctionExecutionCountsControl
 	{
-		#nullable disable
-		[PrimaryKey, NotNull    ] public string KEY   { get; set; } // VARCHAR(64)
-		#nullable enable
+		[PrimaryKey, NotNull    ] public string KEY   { get; set; } = null!; // VARCHAR(64)
 		[Column,        Nullable] public long?  VALUE { get; set; } // BIGINT
 	}
 
@@ -2967,18 +2547,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_INFO_CODES", IsView=true)]
 	public partial class _SYS_TASK_GeocodeInfoCode
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -3022,18 +2598,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_GeocodeStatistic
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -3065,16 +2637,16 @@ namespace SapHanaDataContext
 		[Column("NUM_ASSIGNED"),      Nullable] public long? NumAssigned     { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="GrandChild")]
-	public partial class TESTHANAODBC_GrandChild
+	[Table(Schema="TESTHANA", Name="GrandChild")]
+	public partial class GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID      { get; set; } // INTEGER
 		[Column, Nullable] public int? GrandChildID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="GrandChild")]
-	public partial class GrandChild
+	[Table(Schema="TESTHANAODBC", Name="GrandChild")]
+	public partial class TESTHANAODBC_GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID      { get; set; } // INTEGER
@@ -3095,18 +2667,14 @@ namespace SapHanaDataContext
 		/// HANA feature name
 		/// </summary>
 		[Column("0SM_FEAT"),       Nullable] public string?  _0smFeat   { get; set; } // NVARCHAR(256)
-		#nullable disable
 		/// <summary>
 		/// HANA feature type
 		/// </summary>
-		[Column("0SM_TYPE"),    NotNull    ] public string   _0smType   { get; set; } // VARCHAR(11)
-		#nullable enable
-		#nullable disable
+		[Column("0SM_TYPE"),    NotNull    ] public string   _0smType   { get; set; } = null!; // VARCHAR(11)
 		/// <summary>
 		/// HANA feature subtype
 		/// </summary>
-		[Column("0SM_SUBT"),    NotNull    ] public string   _0smSubt   { get; set; } // VARCHAR(18)
-		#nullable enable
+		[Column("0SM_SUBT"),    NotNull    ] public string   _0smSubt   { get; set; } = null!; // VARCHAR(18)
 		/// <summary>
 		/// HANA feature usage
 		/// </summary>
@@ -3135,12 +2703,10 @@ namespace SapHanaDataContext
 		/// Persistence Volume ID
 		/// </summary>
 		[Column("VOLUME_ID"),             NotNull    ] public int      VolumeId           { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// Allocator name
 		/// </summary>
-		[Column(),                        NotNull    ] public string   CATEGORY           { get; set; } // VARCHAR(128)
-		#nullable enable
+		[Column(),                        NotNull    ] public string   CATEGORY           { get; set; } = null!; // VARCHAR(128)
 		/// <summary>
 		/// Current size of this allocator
 		/// </summary>
@@ -3157,12 +2723,10 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Key
 		/// </summary>
-		[Column(),              NotNull    ] public string   KEY        { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column(),              NotNull    ] public string   KEY        { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Value
 		/// </summary>
@@ -3172,16 +2736,10 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="HTTP_DESTINATIONS")]
 	public partial class _SYS_XS_HttpDestination
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),               PrimaryKey(1), NotNull] public string  PackageId             { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),              PrimaryKey(2), NotNull] public string  ObjectName            { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),               PrimaryKey(1), NotNull] public string  PackageId             { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),              PrimaryKey(2), NotNull] public string  ObjectName            { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                              Nullable           ] public string? DESCRIPTION           { get; set; } // NVARCHAR(512)
-		#nullable disable
-		[Column(),                                          NotNull] public string  HOST                  { get; set; } // NVARCHAR(2048)
-		#nullable enable
+		[Column(),                                          NotNull] public string  HOST                  { get; set; } = null!; // NVARCHAR(2048)
 		[Column(),                                          NotNull] public int     PORT                  { get; set; } // INTEGER
 		[Column("PATH_PREFIX"),                 Nullable           ] public string? PathPrefix            { get; set; } // NVARCHAR(2048)
 		[Column("PROXY_TYPE"),                              NotNull] public byte    ProxyType             { get; set; } // TINYINT
@@ -3206,15 +2764,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_OBJECT")]
 	public partial class _SYS_RT_InaActiveObject
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),            PrimaryKey(1), NotNull] public string PackageId           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),           PrimaryKey(2), NotNull] public string ObjectName          { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),         PrimaryKey(3), NotNull] public string ObjectSuffix        { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PACKAGE_ID"),            PrimaryKey(1), NotNull] public string PackageId           { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),           PrimaryKey(2), NotNull] public string ObjectName          { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),         PrimaryKey(3), NotNull] public string ObjectSuffix        { get; set; } = null!; // NVARCHAR(255)
 		[Column("IS_SEARCH_SUPPORTED"),      Nullable           ] public char?  IsSearchSupported   { get; set; } // VARCHAR(1)
 		[Column("SCHEMA_VERSION_NUMBER"),    Nullable           ] public int?   SchemaVersionNumber { get; set; } // INTEGER
 	}
@@ -3222,21 +2774,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_OBJECT_PROPERTY")]
 	public partial class _SYS_RT_InaActiveObjectProperty
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
-		#nullable disable
-		[Column(),                PrimaryKey(4), NotNull] public string KEY          { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                PrimaryKey(5), NotNull] public string VALUE        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
+		[Column(),                PrimaryKey(4), NotNull] public string KEY          { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                PrimaryKey(5), NotNull] public string VALUE        { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_PERSPECTIVE_V", IsView=true)]
@@ -3263,25 +2805,6 @@ namespace SapHanaDataContext
 		[Column("SUMMARY_TEXT"),          Nullable] public string?   SummaryText         { get; set; } // NVARCHAR(4000)
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="IndexTable")]
-	public partial class TESTHANAODBC_IndexTable
-	{
-		[PrimaryKey(1), NotNull] public int PKField1    { get; set; } // INTEGER
-		[PrimaryKey(2), NotNull] public int PKField2    { get; set; } // INTEGER
-		[Column,        NotNull] public int UniqueField { get; set; } // INTEGER
-		[Column,        NotNull] public int IndexField  { get; set; } // INTEGER
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
-		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public TESTHANAODBC_IndexTable2? Patient { get; set; }
-
-		#endregion
-	}
-
 	[Table(Schema="TESTHANA", Name="IndexTable")]
 	public partial class IndexTable
 	{
@@ -3301,22 +2824,21 @@ namespace SapHanaDataContext
 		#endregion
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="IndexTable2")]
-	public partial class TESTHANAODBC_IndexTable2
+	[Table(Schema="TESTHANAODBC", Name="IndexTable")]
+	public partial class TESTHANAODBC_IndexTable
 	{
-		[PrimaryKey(1), NotNull] public int PKField1 { get; set; } // INTEGER
-		[PrimaryKey(2), NotNull] public int PKField2 { get; set; } // INTEGER
+		[PrimaryKey(1), NotNull] public int PKField1    { get; set; } // INTEGER
+		[PrimaryKey(2), NotNull] public int PKField2    { get; set; } // INTEGER
+		[Column,        NotNull] public int UniqueField { get; set; } // INTEGER
+		[Column,        NotNull] public int IndexField  { get; set; } // INTEGER
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
-		/// FK_Patient2_IndexTable
+		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public TESTHANAODBC_IndexTable Patient2IndexTable { get; set; }
-
-		#nullable enable
+		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public TESTHANAODBC_IndexTable2? Patient { get; set; }
 
 		#endregion
 	}
@@ -3329,20 +2851,34 @@ namespace SapHanaDataContext
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
 		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public IndexTable Patient2IndexTable { get; set; }
-
-		#nullable enable
+		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="InheritanceChild")]
-	public partial class TESTHANAODBC_InheritanceChild
+	[Table(Schema="TESTHANAODBC", Name="IndexTable2")]
+	public partial class TESTHANAODBC_IndexTable2
+	{
+		[PrimaryKey(1), NotNull] public int PKField1 { get; set; } // INTEGER
+		[PrimaryKey(2), NotNull] public int PKField2 { get; set; } // INTEGER
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable
+		/// </summary>
+		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		public TESTHANAODBC_IndexTable Patient2IndexTable { get; set; } = null!;
+
+		#endregion
+	}
+
+	[Table(Schema="TESTHANA", Name="InheritanceChild")]
+	public partial class InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
@@ -3350,8 +2886,8 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
-	[Table(Schema="TESTHANA", Name="InheritanceChild")]
-	public partial class InheritanceChild
+	[Table(Schema="TESTHANAODBC", Name="InheritanceChild")]
+	public partial class TESTHANAODBC_InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
@@ -3385,30 +2921,22 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Configuration file name
 		/// </summary>
-		[Column("FILE_NAME"),   NotNull    ] public string   FileName   { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("FILE_NAME"),   NotNull    ] public string   FileName   { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Configuration layer: DEFAULT, SYSTEM, HOST, DATABASE
 		/// </summary>
-		[Column("LAYER_NAME"),  NotNull    ] public string   LayerName  { get; set; } // VARCHAR(16)
-		#nullable enable
-		#nullable disable
+		[Column("LAYER_NAME"),  NotNull    ] public string   LayerName  { get; set; } = null!; // VARCHAR(16)
 		/// <summary>
 		/// Configuration section name
 		/// </summary>
-		[Column(),              NotNull    ] public string   SECTION    { get; set; } // VARCHAR(128)
-		#nullable enable
-		#nullable disable
+		[Column(),              NotNull    ] public string   SECTION    { get; set; } = null!; // VARCHAR(128)
 		/// <summary>
 		/// Configuration key name
 		/// </summary>
-		[Column(),              NotNull    ] public string   KEY        { get; set; } // VARCHAR(128)
-		#nullable enable
+		[Column(),              NotNull    ] public string   KEY        { get; set; } = null!; // VARCHAR(128)
 		/// <summary>
 		/// Configuration value
 		/// </summary>
@@ -3418,20 +2946,12 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="JOBS")]
 	public partial class _SYS_XS_JOB
 	{
-		#nullable disable
-		[Column(),                    PrimaryKey,  NotNull] public string    NAME             { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column(),                                 NotNull] public string    DESCRIPTION      { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column(),                                 NotNull] public string    ACTION           { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column(),                    PrimaryKey,  NotNull] public string    NAME             { get; set; } = null!; // NVARCHAR(512)
+		[Column(),                                 NotNull] public string    DESCRIPTION      { get; set; } = null!; // NVARCHAR(512)
+		[Column(),                                 NotNull] public string    ACTION           { get; set; } = null!; // NVARCHAR(512)
 		[Column(),                       Nullable         ] public string?   USER             { get; set; } // NVARCHAR(256)
 		[Column(),                       Nullable         ] public string?   LOCALE           { get; set; } // VARCHAR(64)
-		#nullable disable
-		[Column(),                                 NotNull] public string    STATUS           { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column(),                                 NotNull] public string    STATUS           { get; set; } = null!; // VARCHAR(16)
 		[Column("START_TIME"),           Nullable         ] public DateTime? StartTime        { get; set; } // TIMESTAMP
 		[Column("END_TIME"),             Nullable         ] public DateTime? EndTime          { get; set; } // TIMESTAMP
 		[Column("SESSION_TIMEOUT"),      Nullable         ] public int?      SessionTimeout   { get; set; } // INTEGER
@@ -3446,14 +2966,10 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="JOB_LOG")]
 	public partial class _SYS_XS_JobLog
 	{
-		#nullable disable
-		[Column(),                PrimaryKey(1), NotNull] public string    NAME         { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column(),                PrimaryKey(1), NotNull] public string    NAME         { get; set; } = null!; // NVARCHAR(512)
 		[Column(),                PrimaryKey(2), NotNull] public long      ID           { get; set; } // BIGINT
 		[Column("PLANNED_TIME"),  PrimaryKey(3), NotNull] public DateTime  PlannedTime  { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column(),                               NotNull] public string    STATUS       { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column(),                               NotNull] public string    STATUS       { get; set; } = null!; // VARCHAR(16)
 		[Column("ERROR_MESSAGE"),    Nullable           ] public string?   ErrorMessage { get; set; } // NVARCHAR(2048)
 		[Column("STARTED_AT"),       Nullable           ] public DateTime? StartedAt    { get; set; } // TIMESTAMP
 		[Column("FINISHED_AT"),      Nullable           ] public DateTime? FinishedAt   { get; set; } // TIMESTAMP
@@ -3469,18 +2985,12 @@ namespace SapHanaDataContext
 	public partial class _SYS_XS_JobSchedule
 	{
 		[Column(),             PrimaryKey,  NotNull] public long      ID          { get; set; } // BIGINT
-		#nullable disable
-		[Column("JOB_NAME"),                NotNull] public string    JobName     { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column(),                          NotNull] public string    XSCRON      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("JOB_NAME"),                NotNull] public string    JobName     { get; set; } = null!; // NVARCHAR(512)
+		[Column(),                          NotNull] public string    XSCRON      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                Nullable         ] public string?   DESCRIPTION { get; set; } // NVARCHAR(512)
 		[Column(),                Nullable         ] public string?   PARAMETER   { get; set; } // NCLOB
 		[Column(),                Nullable         ] public string?   ORIGIN      { get; set; } // VARCHAR(11)
-		#nullable disable
-		[Column(),                          NotNull] public string    STATUS      { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column(),                          NotNull] public string    STATUS      { get; set; } = null!; // VARCHAR(16)
 		[Column("CHANGED_BY"),    Nullable         ] public string?   ChangedBy   { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),    Nullable         ] public DateTime? ChangedAt   { get; set; } // TIMESTAMP
 	}
@@ -3488,27 +2998,17 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="JS_RECOMPILE_ISSUES")]
 	public partial class _SYS_XS_JsRecompileIssue
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string   PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string   ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string   ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string   PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string   ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string   ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
 		[Column(),                PrimaryKey(4), NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column(),                               NotNull] public string   MESSAGE      { get; set; } // NVARCHAR(2048)
-		#nullable enable
+		[Column(),                               NotNull] public string   MESSAGE      { get; set; } = null!; // NVARCHAR(2048)
 	}
 
 	[Table(Schema="_SYS_EPM", Name="LIBRARY_VERSION")]
 	public partial class _SYS_EPM_LibraryVersion
 	{
-		#nullable disable
-		[Column("LIBRARY_NAME"),  PrimaryKey,  NotNull] public string  LibraryName  { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column("LIBRARY_NAME"),  PrimaryKey,  NotNull] public string  LibraryName  { get; set; } = null!; // VARCHAR(32)
 		[Column(),                   Nullable         ] public string? VERSION      { get; set; } // VARCHAR(32)
 		[Column("MAJOR_VERSION"),    Nullable         ] public int?    MajorVersion { get; set; } // INTEGER
 		[Column("MINOR_VERSION"),    Nullable         ] public int?    MinorVersion { get; set; } // INTEGER
@@ -3607,8 +3107,8 @@ namespace SapHanaDataContext
 		[Column("LOCKED_DOWN"),        Nullable] public string?   LockedDown     { get; set; } // VARCHAR(5)
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="LinqDataTypes")]
-	public partial class TESTHANAODBC_LinqDataType
+	[Table(Schema="TESTHANA", Name="LinqDataTypes")]
+	public partial class LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
@@ -3623,8 +3123,8 @@ namespace SapHanaDataContext
 		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 
-	[Table(Schema="TESTHANA", Name="LinqDataTypes")]
-	public partial class LinqDataType
+	[Table(Schema="TESTHANAODBC", Name="LinqDataTypes")]
+	public partial class TESTHANAODBC_LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
@@ -3649,12 +3149,10 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),         NotNull    ] public DateTime SnapshotId        { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      NotNull    ] public string   HOST              { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column(),                      NotNull    ] public string   HOST              { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -3663,12 +3161,10 @@ namespace SapHanaDataContext
 		/// Persistence Volume ID
 		/// </summary>
 		[Column("VOLUME_ID"),           NotNull    ] public int      VolumeId          { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// Log mode
 		/// </summary>
-		[Column("LOG_MODE"),            NotNull    ] public string   LogMode           { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column("LOG_MODE"),            NotNull    ] public string   LogMode           { get; set; } = null!; // VARCHAR(16)
 		/// <summary>
 		/// Size of one log buffer in memory
 		/// </summary>
@@ -3713,12 +3209,10 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),         NotNull    ] public DateTime  SnapshotId        { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      NotNull    ] public string    HOST              { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column(),                      NotNull    ] public string    HOST              { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -3814,7 +3308,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_GROUP_INFO_")]
-	public partial class _SYS_TASK_MatchGroupInfo0
+	public partial class _SYS_TASK_MatchGroupInfo
 	{
 		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long  TaskExecutionId { get; set; } // BIGINT
 		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int   OperationId     { get; set; } // INTEGER
@@ -3829,20 +3323,16 @@ namespace SapHanaDataContext
 	/// This table contains one row for each match group
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="MATCH_GROUP_INFO", IsView=true)]
-	public partial class _SYS_TASK_MatchGroupInfo1
+	public partial class _SYS_TASK_MatchGroupInfo0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -3883,7 +3373,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_RECORD_INFO_")]
-	public partial class _SYS_TASK_MatchRecordInfo0
+	public partial class _SYS_TASK_MatchRecordInfo
 	{
 		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long TaskExecutionId { get; set; } // BIGINT
 		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int  OperationId     { get; set; } // INTEGER
@@ -3896,20 +3386,16 @@ namespace SapHanaDataContext
 	/// This table contains one row for each matching record per level
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="MATCH_RECORD_INFO", IsView=true)]
-	public partial class _SYS_TASK_MatchRecordInfo1
+	public partial class _SYS_TASK_MatchRecordInfo0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -3937,9 +3423,7 @@ namespace SapHanaDataContext
 	{
 		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
 		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
-		#nullable disable
-		[Column("RULE_ID"),           PrimaryKey(3), NotNull] public string  RuleId          { get; set; } // NVARCHAR(20)
-		#nullable enable
+		[Column("RULE_ID"),           PrimaryKey(3), NotNull] public string  RuleId          { get; set; } = null!; // NVARCHAR(20)
 		[Column("RULE_NAME"),            Nullable           ] public string? RuleName        { get; set; } // NVARCHAR(256)
 	}
 
@@ -3958,18 +3442,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_SOURCE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_MatchSourceStatistic
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -3997,12 +3477,8 @@ namespace SapHanaDataContext
 	{
 		[Column("TASK_EXECUTION_ID"),   PrimaryKey(1), NotNull] public long   TaskExecutionId   { get; set; } // BIGINT
 		[Column("OPERATION_ID"),        PrimaryKey(2), NotNull] public int    OperationId       { get; set; } // INTEGER
-		#nullable disable
-		[Column("SOURCE_ID"),           PrimaryKey(3), NotNull] public string SourceId          { get; set; } // NVARCHAR(12)
-		#nullable enable
-		#nullable disable
-		[Column("RELATED_SOURCE_ID"),   PrimaryKey(4), NotNull] public string RelatedSourceId   { get; set; } // NVARCHAR(12)
-		#nullable enable
+		[Column("SOURCE_ID"),           PrimaryKey(3), NotNull] public string SourceId          { get; set; } = null!; // NVARCHAR(12)
+		[Column("RELATED_SOURCE_ID"),   PrimaryKey(4), NotNull] public string RelatedSourceId   { get; set; } = null!; // NVARCHAR(12)
 		[Column("NUM_MATCH_DECISIONS"),    Nullable           ] public int?   NumMatchDecisions { get; set; } // INTEGER
 	}
 
@@ -4012,18 +3488,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_MatchStatistic
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),               NotNull    ] public string  SchemaName              { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),               NotNull    ] public string  SchemaName              { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                 NotNull    ] public string  TaskName                { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                 NotNull    ] public string  TaskName                { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -4090,7 +3562,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_TRACING_")]
-	public partial class _SYS_TASK_MatchTracing0
+	public partial class _SYS_TASK_MatchTracing
 	{
 		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
 		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
@@ -4107,20 +3579,16 @@ namespace SapHanaDataContext
 	/// This table contains one row for each match decision made during the matching process
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="MATCH_TRACING", IsView=true)]
-	public partial class _SYS_TASK_MatchTracing1
+	public partial class _SYS_TASK_MatchTracing0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
@@ -4162,12 +3630,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="MDS_METADATA")]
 	public partial class _SYS_EPM_MdsMetadata
 	{
-		#nullable disable
-		[Column("SCHEMA_NAME"),       PrimaryKey(1), NotNull] public string    SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),       PrimaryKey(2), NotNull] public string    ObjectName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SCHEMA_NAME"),       PrimaryKey(1), NotNull] public string    SchemaName      { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),       PrimaryKey(2), NotNull] public string    ObjectName      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                       Nullable           ] public string?   TYPE            { get; set; } // NVARCHAR(256)
 		[Column(),                       Nullable           ] public string?   JSON            { get; set; } // NCLOB
 		[Column("LAST_CHANGED_TIME"),    Nullable           ] public DateTime? LastChangedTime { get; set; } // TIMESTAMP
@@ -4176,12 +3640,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="MDS_METADATA_DOCUMENTS", IsView=true)]
 	public partial class _SYS_EPM_MdsMetadataDocument
 	{
-		#nullable disable
-		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),       NotNull    ] public string    ObjectName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),       NotNull    ] public string    ObjectName      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   TYPE            { get; set; } // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   JSON            { get; set; } // NCLOB
 		[Column("LAST_CHANGED_TIME"),    Nullable] public DateTime? LastChangedTime { get; set; } // TIMESTAMP
@@ -4196,15 +3656,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_ACCESS_TOKEN")]
 	public partial class _SYS_XS_OauthAccessToken
 	{
-		#nullable disable
-		[Column("CLIENT_PACKAGE"),   PrimaryKey(1), NotNull] public string    ClientPackage  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CLIENT_NAME"),      PrimaryKey(2), NotNull] public string    ClientName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                   PrimaryKey(3), NotNull] public string    USER           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("CLIENT_PACKAGE"),   PrimaryKey(1), NotNull] public string    ClientPackage  { get; set; } = null!; // NVARCHAR(256)
+		[Column("CLIENT_NAME"),      PrimaryKey(2), NotNull] public string    ClientName     { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                   PrimaryKey(3), NotNull] public string    USER           { get; set; } = null!; // NVARCHAR(256)
 		[Column("TOKEN_TYPE"),       PrimaryKey(4), NotNull] public byte      TokenType      { get; set; } // TINYINT
 		[Column("TOKEN_LIFETIME"),      Nullable           ] public int?      TokenLifetime  { get; set; } // INTEGER
 		[Column("TOKEN_GRANT_TIME"),    Nullable           ] public DateTime? TokenGrantTime { get; set; } // TIMESTAMP
@@ -4213,31 +3667,19 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_ACCESS_TOKEN_SCOPES")]
 	public partial class _SYS_XS_OauthAccessTokenScope
 	{
-		#nullable disable
-		[Column("CLIENT_PACKAGE"), PrimaryKey(1), NotNull] public string ClientPackage { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CLIENT_NAME"),    PrimaryKey(2), NotNull] public string ClientName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                 PrimaryKey(3), NotNull] public string USER          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("CLIENT_PACKAGE"), PrimaryKey(1), NotNull] public string ClientPackage { get; set; } = null!; // NVARCHAR(256)
+		[Column("CLIENT_NAME"),    PrimaryKey(2), NotNull] public string ClientName    { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                 PrimaryKey(3), NotNull] public string USER          { get; set; } = null!; // NVARCHAR(256)
 		[Column("TOKEN_TYPE"),     PrimaryKey(4), NotNull] public byte   TokenType     { get; set; } // TINYINT
-		#nullable disable
-		[Column(),                 PrimaryKey(5), NotNull] public string SCOPE         { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column(),                 PrimaryKey(5), NotNull] public string SCOPE         { get; set; } = null!; // NVARCHAR(512)
 		[Column("SCOPE_TYPE"),        Nullable           ] public byte?  ScopeType     { get; set; } // TINYINT
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_APP_CONFIG")]
 	public partial class _SYS_XS_OauthAppConfig
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string    PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string    ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string    PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string    ObjectName    { get; set; } = null!; // NVARCHAR(256)
 		[Column("CLIENT_PACKAGE"),    Nullable           ] public string?   ClientPackage { get; set; } // NVARCHAR(256)
 		[Column("CLIENT_NAME"),       Nullable           ] public string?   ClientName    { get; set; } // NVARCHAR(256)
 		[Column(),                    Nullable           ] public string?   DESCRIPTION   { get; set; } // NVARCHAR(512)
@@ -4248,15 +3690,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_APP_CONFIG_SCOPES")]
 	public partial class _SYS_XS_OauthAppConfigScope
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string  PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                 PrimaryKey(3), NotNull] public string  SCOPE         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string  PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                 PrimaryKey(3), NotNull] public string  SCOPE         { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                    Nullable           ] public byte?   MANDATORY     { get; set; } // TINYINT
 		[Column("CLIENT_PACKAGE"),    Nullable           ] public string? ClientPackage { get; set; } // NVARCHAR(256)
 		[Column("CLIENT_NAME"),       Nullable           ] public string? ClientName    { get; set; } // NVARCHAR(256)
@@ -4265,12 +3701,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_CLIENT_CONFIG")]
 	public partial class _SYS_XS_OauthClientConfig
 	{
-		#nullable disable
-		[Column("CLIENT_PACKAGE"),             PrimaryKey(1), NotNull] public string    ClientPackage            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CLIENT_NAME"),                PrimaryKey(2), NotNull] public string    ClientName               { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("CLIENT_PACKAGE"),             PrimaryKey(1), NotNull] public string    ClientPackage            { get; set; } = null!; // NVARCHAR(256)
+		[Column("CLIENT_NAME"),                PrimaryKey(2), NotNull] public string    ClientName               { get; set; } = null!; // NVARCHAR(256)
 		[Column("FLAVOR_PACKAGE"),                Nullable           ] public string?   FlavorPackage            { get; set; } // NVARCHAR(256)
 		[Column("FLAVOR_NAME"),                   Nullable           ] public string?   FlavorName               { get; set; } // NVARCHAR(256)
 		[Column("CLIENT_ID"),                     Nullable           ] public string?   ClientId                 { get; set; } // NVARCHAR(512)
@@ -4291,21 +3723,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_CLIENT_FLAVOR")]
 	public partial class _SYS_XS_OauthClientFlavor
 	{
-		#nullable disable
-		[Column("FLAVOR_PACKAGE"),  PrimaryKey(1), NotNull] public string    FlavorPackage  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("FLAVOR_NAME"),     PrimaryKey(2), NotNull] public string    FlavorName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("FLAVOR_STEP"),     PrimaryKey(3), NotNull] public string    FlavorStep     { get; set; } // NVARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column("PARAM_LOCATION"),  PrimaryKey(4), NotNull] public string    ParamLocation  { get; set; } // NVARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column("PARAM_NAME"),      PrimaryKey(5), NotNull] public string    ParamName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("FLAVOR_PACKAGE"),  PrimaryKey(1), NotNull] public string    FlavorPackage  { get; set; } = null!; // NVARCHAR(256)
+		[Column("FLAVOR_NAME"),     PrimaryKey(2), NotNull] public string    FlavorName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("FLAVOR_STEP"),     PrimaryKey(3), NotNull] public string    FlavorStep     { get; set; } = null!; // NVARCHAR(4)
+		[Column("PARAM_LOCATION"),  PrimaryKey(4), NotNull] public string    ParamLocation  { get; set; } = null!; // NVARCHAR(4)
+		[Column("PARAM_NAME"),      PrimaryKey(5), NotNull] public string    ParamName      { get; set; } = null!; // NVARCHAR(256)
 		[Column("PARAM_VALUE"),        Nullable           ] public string?   ParamValue     { get; set; } // NVARCHAR(2048)
 		[Column("VALUE_TYPE"),         Nullable           ] public string?   ValueType      { get; set; } // NVARCHAR(4)
 		[Column("PARAM_MANDATORY"),                NotNull] public byte      ParamMandatory { get; set; } // TINYINT
@@ -4316,19 +3738,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="ODATA_SERVICES", IsView=true)]
 	public partial class _SYS_XS_OdataService
 	{
-		#nullable disable
-		[Column(),                NotNull    ] public string   PACKAGE      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SERVICE_NAME"),  NotNull    ] public string   ServiceName  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                NotNull    ] public string   TYPE         { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column(),                NotNull    ] public string   PACKAGE      { get; set; } = null!; // NVARCHAR(256)
+		[Column("SERVICE_NAME"),  NotNull    ] public string   ServiceName  { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                NotNull    ] public string   TYPE         { get; set; } = null!; // NVARCHAR(255)
 		[Column("ACTIVATED_AT"),  NotNull    ] public DateTime ActivatedAt  { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("DELIVERY_UNIT"), NotNull    ] public string   DeliveryUnit { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("DELIVERY_UNIT"), NotNull    ] public string   DeliveryUnit { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                   Nullable] public string?  AUTHOR       { get; set; } // NVARCHAR(256)
 	}
 
@@ -4512,14 +3926,6 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="ParentChildView", IsView=true)]
-	public partial class ParentChildView
-	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="ParentChildView", IsView=true)]
 	public partial class TESTHANAODBC_ParentChildView
 	{
@@ -4528,11 +3934,12 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
-	public partial class ParentView
+	[Table(Schema="TESTHANA", Name="ParentChildView", IsView=true)]
+	public partial class ParentChildView
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
+		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANAODBC", Name="ParentView", IsView=true)]
@@ -4542,46 +3949,43 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Patient")]
-	public partial class TESTHANAODBC_Patient
+	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
+	public partial class ParentView
 	{
-		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // NVARCHAR(256)
-		#nullable enable
-
-		#region Associations
-
-		#nullable disable
-		/// <summary>
-		/// FK_Patient_Person
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public TESTHANAODBC_Person Person { get; set; }
-
-		#nullable enable
-
-		#endregion
+		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANA", Name="Patient")]
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull] public string Diagnosis { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // NVARCHAR(256)
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
+		public Person Person { get; set; } = null!;
 
-		#nullable enable
+		#endregion
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="Patient")]
+	public partial class TESTHANAODBC_Patient
+	{
+		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // NVARCHAR(256)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		public TESTHANAODBC_Person Person { get; set; } = null!;
 
 		#endregion
 	}
@@ -4596,12 +4000,8 @@ namespace SapHanaDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
 
@@ -4626,12 +4026,8 @@ namespace SapHanaDataContext
 	public partial class TESTHANAODBC_Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
 
@@ -4655,9 +4051,7 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_PLAN_STABILITY", Name="PLAN_STABILITY_CONFIG_")]
 	public partial class _SYS_PLAN_STABILITY_PlanStabilityConfig
 	{
-		#nullable disable
-		[Column(),                   NotNull    ] public string    ITEM           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   NotNull    ] public string    ITEM           { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                      Nullable] public string?   VALUE          { get; set; } // NVARCHAR(5000)
 		[Column(),                      Nullable] public string?   NOTES          { get; set; } // NVARCHAR(5000)
 		[Column("LAST_UPDATE_TIME"),    Nullable] public DateTime? LastUpdateTime { get; set; } // TIMESTAMP
@@ -4730,12 +4124,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="PP_A_ALGORITHM")]
 	public partial class _SYS_RT_PpAAlgorithm
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } = null!; // NVARCHAR(256)
 		[Column("PDC_NAME"),       Nullable           ] public string? PdcName     { get; set; } // NVARCHAR(256)
 		[Column("PDC_PACKAGE"),    Nullable           ] public string? PdcPackage  { get; set; } // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(256)
@@ -4744,12 +4134,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="PP_A_CHA")]
 	public partial class _SYS_RT_PpACha
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(256)
 		[Column("MSD_TABLE"),      Nullable           ] public string? MsdTable    { get; set; } // NVARCHAR(256)
 		[Column(),                 Nullable           ] public long?   DATATYPE    { get; set; } // BIGINT
@@ -4760,12 +4146,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="PP_A_DATACONTAINER")]
 	public partial class _SYS_RT_PpADatacontainer
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } = null!; // NVARCHAR(256)
 		[Column("FACT_TABLE"),     Nullable           ] public string? FactTable  { get; set; } // NVARCHAR(256)
 		[Column("READ_VIEW"),      Nullable           ] public string? ReadView   { get; set; } // NVARCHAR(256)
 	}
@@ -4773,12 +4155,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="PP_A_KYF")]
 	public partial class _SYS_RT_PpAKyf
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? DESCRIPTION   { get; set; } // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? UNITDIMENSION { get; set; } // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? CHARGEDUNIT   { get; set; } // NVARCHAR(256)
@@ -4790,27 +4168,21 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="PP_A_SESSION")]
 	public partial class _SYS_RT_PpASession
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } = null!; // NVARCHAR(256)
 		[Column(),              PrimaryKey(4), NotNull] public int     VERSION    { get; set; } // INTEGER
-		#nullable disable
-		[Column("READ_VIEW"),   PrimaryKey(3), NotNull] public string  ReadView   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("READ_VIEW"),   PrimaryKey(3), NotNull] public string  ReadView   { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                 Nullable           ] public string? USER       { get; set; } // NVARCHAR(256)
-	}
-
-	[Table(Schema="TESTHANAODBC", Name="prd.global.ecc/CV_MARA")]
-	public partial class TESTHANAODBC_PrdGlobalEccCvMara
-	{
-		[PrimaryKey, NotNull] public int Id { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANA", Name="prd.global.ecc/CV_MARA")]
 	public partial class PrdGlobalEccCvMara
+	{
+		[PrimaryKey, NotNull] public int Id { get; set; } // INTEGER
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="prd.global.ecc/CV_MARA")]
+	public partial class TESTHANAODBC_PrdGlobalEccCvMara
 	{
 		[PrimaryKey, NotNull] public int Id { get; set; } // INTEGER
 	}
@@ -4820,17 +4192,13 @@ namespace SapHanaDataContext
 	{
 		[Column(),                            Nullable           ] public string? NAME                 { get; set; } // NVARCHAR(256)
 		[Column(),                         PrimaryKey(1), NotNull] public long    ID                   { get; set; } // BIGINT
-		#nullable disable
-		[Column("PUBLISH_PRIVILEGE_NAME"), PrimaryKey(2), NotNull] public string  PublishPrivilegeName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PUBLISH_PRIVILEGE_NAME"), PrimaryKey(2), NotNull] public string  PublishPrivilegeName { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_EPM", Name="PUBLISH_PRIVILEGES")]
 	public partial class _SYS_EPM_PublishPrivilege
 	{
-		#nullable disable
-		[Column("PUBLISH_PRIVILEGE_NAME"), PrimaryKey,  NotNull] public string  PublishPrivilegeName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PUBLISH_PRIVILEGE_NAME"), PrimaryKey,  NotNull] public string  PublishPrivilegeName { get; set; } = null!; // NVARCHAR(256)
 		[Column("SCHEMA_NAME"),               Nullable         ] public string? SchemaName           { get; set; } // NVARCHAR(256)
 		[Column("OBJECT_NAME"),               Nullable         ] public string? ObjectName           { get; set; } // NVARCHAR(256)
 		[Column(),                            Nullable         ] public string? FILTER               { get; set; } // NCLOB
@@ -4839,12 +4207,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="RUNTIME_CONFIGURATION")]
 	public partial class _SYS_XS_RuntimeConfiguration
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"), PrimaryKey,  NotNull] public string    PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                          NotNull] public string    CONFIGURATION { get; set; } // NVARCHAR(2048)
-		#nullable enable
+		[Column("PACKAGE_ID"), PrimaryKey,  NotNull] public string    PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                          NotNull] public string    CONFIGURATION { get; set; } = null!; // NVARCHAR(2048)
 		[Column("CHANGED_BY"),    Nullable         ] public string?   ChangedBy     { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),    Nullable         ] public DateTime? ChangedAt     { get; set; } // TIMESTAMP
 	}
@@ -4852,29 +4216,17 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_DATA_ANONYMIZATION", Name="RUNTIME_DATA_")]
 	public partial class _SYS_DATA_ANONYMIZATION_RuntimeData
 	{
-		#nullable disable
-		[Column("ANONYMIZATION_ID"), PrimaryKey(1), NotNull] public string AnonymizationId { get; set; } // NVARCHAR(1024)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_KEY"),    PrimaryKey(2), NotNull] public string ParameterKey    { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_VALUE"),                 NotNull] public string ParameterValue  { get; set; } // NCLOB
-		#nullable enable
+		[Column("ANONYMIZATION_ID"), PrimaryKey(1), NotNull] public string AnonymizationId { get; set; } = null!; // NVARCHAR(1024)
+		[Column("PARAMETER_KEY"),    PrimaryKey(2), NotNull] public string ParameterKey    { get; set; } = null!; // VARCHAR(256)
+		[Column("PARAMETER_VALUE"),                 NotNull] public string ParameterValue  { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="_SYS_XS", Name="RUNTIME_JSON_EXTENSIONS")]
 	public partial class _SYS_XS_RuntimeJsonExtension
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
 		[Column(),                   Nullable           ] public string? CONTENT      { get; set; } // NVARCHAR(4096)
 		[Column(),                   Nullable           ] public string? DESCRIPTION  { get; set; } // NVARCHAR(512)
 	}
@@ -4882,53 +4234,31 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="RUNTIME_JSON_OBJECTS")]
 	public partial class _SYS_XS_RuntimeJsonObject
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
 		[Column(),                   Nullable           ] public string? CONTENT      { get; set; } // NVARCHAR(4096)
 	}
 
 	[Table(Schema="_SYS_XS", Name="SAML_PROVIDER_CONFIG")]
 	public partial class _SYS_XS_SamlProviderConfig
 	{
-		#nullable disable
-		[Column("SAML_PROVIDER"),       PrimaryKey(1), NotNull] public string  SamlProvider       { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SAML_PROVIDER"),       PrimaryKey(1), NotNull] public string  SamlProvider       { get; set; } = null!; // NVARCHAR(256)
 		[Column("PROFILE_TYPE"),        PrimaryKey(2), NotNull] public byte    ProfileType        { get; set; } // TINYINT
 		[Column("BINDING_TYPE"),        PrimaryKey(3), NotNull] public byte    BindingType        { get; set; } // TINYINT
-		#nullable disable
-		[Column("DESTINATION_PACKAGE"),                NotNull] public string  DestinationPackage { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("DESTINATION_NAME"),                   NotNull] public string  DestinationName    { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("DESTINATION_PACKAGE"),                NotNull] public string  DestinationPackage { get; set; } = null!; // NVARCHAR(256)
+		[Column("DESTINATION_NAME"),                   NotNull] public string  DestinationName    { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                         Nullable           ] public string? PATH               { get; set; } // NVARCHAR(2048)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_APPSITES_PROPERTIES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisAppsitesPropertiesView
 	{
-		#nullable disable
-		[Column(),             NotNull    ] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  NotNull    ] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string    DTYPE     { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),    NotNull    ] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             NotNull    ] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),  NotNull    ] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),             NotNull    ] public string    DTYPE     { get; set; } = null!; // VARCHAR(20)
+		[Column("SITE_ID"),    NotNull    ] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column(),             NotNull    ] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable] public string?   VALUE     { get; set; } // NCLOB
 		[Column("VALUE_TYPE"),    Nullable] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable] public int?      VERSION   { get; set; } // INTEGER
@@ -4940,15 +4270,9 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_APPSITES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisAppsitesView
 	{
-		#nullable disable
-		[Column(),            NotNull    ] public string  ID          { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"), NotNull    ] public string  TenantId    { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  DTYPE       { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column(),            NotNull    ] public string  ID          { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TENANT_ID"), NotNull    ] public string  TenantId    { get; set; } = null!; // VARCHAR(50)
+		[Column(),            NotNull    ] public string  DTYPE       { get; set; } = null!; // VARCHAR(20)
 		[Column(),               Nullable] public string? NAME        { get; set; } // NVARCHAR(300)
 		[Column(),               Nullable] public string? LAYOUT      { get; set; } // CLOB
 		[Column(),               Nullable] public string? DESCRIPTION { get; set; } // NVARCHAR(5000)
@@ -4957,18 +4281,10 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_PAGES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisPagesView
 	{
-		#nullable disable
-		[Column(),            NotNull    ] public string  ID       { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  DTYPE    { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),   NotNull    ] public string  SiteId   { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column(),            NotNull    ] public string  ID       { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } = null!; // VARCHAR(50)
+		[Column(),            NotNull    ] public string  DTYPE    { get; set; } = null!; // VARCHAR(20)
+		[Column("SITE_ID"),   NotNull    ] public string  SiteId   { get; set; } = null!; // NVARCHAR(2000)
 		[Column(),               Nullable] public string? NAME     { get; set; } // NVARCHAR(300)
 		[Column(),               Nullable] public string? LAYOUT   { get; set; } // CLOB
 		[Column("LAYOUT_ID"),    Nullable] public string? LayoutId { get; set; } // VARCHAR(50)
@@ -4978,73 +4294,39 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_PERMISSIONS_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisPermissionsView
 	{
-		#nullable disable
-		[Column("OBJECT_ID"),   NotNull    ] public string    ObjectId   { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_TYPE"), NotNull    ] public string    ObjectType { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("ROLE_ID"),     NotNull    ] public string    RoleId     { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    OPERATION  { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column("OBJECT_ID"),   NotNull    ] public string    ObjectId   { get; set; } = null!; // NVARCHAR(2000)
+		[Column("OBJECT_TYPE"), NotNull    ] public string    ObjectType { get; set; } = null!; // NVARCHAR(2000)
+		[Column("ROLE_ID"),     NotNull    ] public string    RoleId     { get; set; } = null!; // NVARCHAR(300)
+		[Column(),              NotNull    ] public string    OPERATION  { get; set; } = null!; // NVARCHAR(50)
 		[Column(),                 Nullable] public DateTime? CREATED    { get; set; } // TIMESTAMP
 		[Column(),                 Nullable] public DateTime? UPDATED    { get; set; } // TIMESTAMP
 		[Column(),                 Nullable] public int?      VERSION    { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              NotNull    ] public string    DTYPE      { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),   NotNull    ] public string    TenantId   { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    NAMESPACE  { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),              NotNull    ] public string    DTYPE      { get; set; } = null!; // NVARCHAR(50)
+		[Column("TENANT_ID"),   NotNull    ] public string    TenantId   { get; set; } = null!; // NVARCHAR(50)
+		[Column(),              NotNull    ] public string    NAMESPACE  { get; set; } = null!; // NVARCHAR(4000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_WIDGETS_PROPERTIES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisWidgetsPropertiesView
 	{
-		#nullable disable
-		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  ID       { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  KEY      { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } = null!; // VARCHAR(50)
+		[Column(),            NotNull    ] public string  ID       { get; set; } = null!; // VARCHAR(50)
+		[Column(),            NotNull    ] public string  KEY      { get; set; } = null!; // NVARCHAR(300)
 		[Column(),               Nullable] public string? VALUE    { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("SITE_ID"),   NotNull    ] public string  SiteId   { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  DTYPE    { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("WIDGET_ID"), NotNull    ] public string  WidgetId { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("SITE_ID"),   NotNull    ] public string  SiteId   { get; set; } = null!; // NVARCHAR(2000)
+		[Column(),            NotNull    ] public string  DTYPE    { get; set; } = null!; // VARCHAR(20)
+		[Column("WIDGET_ID"), NotNull    ] public string  WidgetId { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_WIDGETS_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisWidgetsView
 	{
-		#nullable disable
-		[Column("TENANT_ID"),               NotNull    ] public string  TenantId             { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                          NotNull    ] public string  ID                   { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                          NotNull    ] public string  DTYPE                { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column("TENANT_ID"),               NotNull    ] public string  TenantId             { get; set; } = null!; // VARCHAR(50)
+		[Column(),                          NotNull    ] public string  ID                   { get; set; } = null!; // VARCHAR(50)
+		[Column(),                          NotNull    ] public string  DTYPE                { get; set; } = null!; // VARCHAR(20)
 		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable] public string? WidgetTemplateListId { get; set; } // NVARCHAR(2000)
 		[Column("TEMPLATE_ID"),                Nullable] public string? TemplateId           { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("SITE_ID"),                 NotNull    ] public string  SiteId               { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("SITE_ID"),                 NotNull    ] public string  SiteId               { get; set; } = null!; // NVARCHAR(2000)
 		[Column("PARENT_ID"),                  Nullable] public string? ParentId             { get; set; } // VARCHAR(50)
 		[Column("LAYOUT_ID"),                  Nullable] public string? LayoutId             { get; set; } // VARCHAR(50)
 		[Column(),                             Nullable] public string? TYPE                 { get; set; } // NVARCHAR(300)
@@ -5053,12 +4335,8 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_WIDGET_TEMPLATE_LISTS_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisWidgetTemplateListsView
 	{
-		#nullable disable
-		[Column("TENANT_ID"),     NotNull    ] public string  TenantId     { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"), NotNull    ] public string  RepositoryId { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("TENANT_ID"),     NotNull    ] public string  TenantId     { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"), NotNull    ] public string  RepositoryId { get; set; } = null!; // NVARCHAR(2000)
 		[Column(),                   Nullable] public string? NAME         { get; set; } // NVARCHAR(300)
 		[Column(),                   Nullable] public string? TYPE         { get; set; } // VARCHAR(10)
 	}
@@ -5066,45 +4344,27 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_WIDGET_TEMPLATE_PROPERTIES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisWidgetTemplatePropertiesView
 	{
-		#nullable disable
-		[Column("TENANT_ID"),          NotNull    ] public string  TenantId         { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"),      NotNull    ] public string  RepositoryId     { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("WIDGET_TEMPLATE_ID"), NotNull    ] public string  WidgetTemplateId { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                     NotNull    ] public string  KEY              { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column("TENANT_ID"),          NotNull    ] public string  TenantId         { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"),      NotNull    ] public string  RepositoryId     { get; set; } = null!; // NVARCHAR(2000)
+		[Column("WIDGET_TEMPLATE_ID"), NotNull    ] public string  WidgetTemplateId { get; set; } = null!; // VARCHAR(50)
+		[Column(),                     NotNull    ] public string  KEY              { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                        Nullable] public string? VALUE            { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),                     NotNull    ] public string  ID               { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(),                     NotNull    ] public string  ID               { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db.admin::UIS_WIDGET_TEMPLATES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbAdminUisWidgetTemplatesView
 	{
-		#nullable disable
-		[Column("TENANT_ID"),     NotNull    ] public string  TenantId     { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"), NotNull    ] public string  RepositoryId { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column(),                NotNull    ] public string  ID           { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),     NotNull    ] public string  TenantId     { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"), NotNull    ] public string  RepositoryId { get; set; } = null!; // NVARCHAR(2000)
+		[Column(),                NotNull    ] public string  ID           { get; set; } = null!; // VARCHAR(50)
 		[Column(),                   Nullable] public string? TYPE         { get; set; } // NVARCHAR(300)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::CONFIGURATIONS")]
 	public partial class UIS_SapHanaUisDbConfiguration
 	{
-		#nullable disable
-		[PrimaryKey, NotNull    ] public string    KEY         { get; set; } // NVARCHAR(1000)
-		#nullable enable
+		[PrimaryKey, NotNull    ] public string    KEY         { get; set; } = null!; // NVARCHAR(1000)
 		[Column,        Nullable] public DateTime? CREATED     { get; set; } // TIMESTAMP
 		[Column,        Nullable] public DateTime? UPDATED     { get; set; } // TIMESTAMP
 		[Column,        Nullable] public string?   VERSION     { get; set; } // NVARCHAR(5000)
@@ -5117,20 +4377,14 @@ namespace SapHanaDataContext
 	{
 		[Column("PACKAGE_ID"),          Nullable] public string? PackageId       { get; set; } // NVARCHAR(2000)
 		[Column("OBJECT_NAME"),         Nullable] public string? ObjectName      { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } = null!; // VARCHAR(50)
 		[Column("TILE_NAME"),           Nullable] public string? TileName        { get; set; } // NVARCHAR(300)
 		[Column("TILE_URL"),            Nullable] public string? TileUrl         { get; set; } // NVARCHAR(5000)
 		[Column("TILE_THUMBNAIL"),      Nullable] public string? TileThumbnail   { get; set; } // CLOB
 		[Column("TILE_TYPE"),           Nullable] public string? TileType        { get; set; } // NVARCHAR(300)
 		[Column("TILE_DESCRIPTION"),    Nullable] public string? TileDescription { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::GET_USER_ROLES_VIEW", IsView=true)]
@@ -5143,36 +4397,26 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db::INTENT_ALIAS_MAPPING_V2")]
 	public partial class UIS_SapHanaUisDbIntentAliasMappingV2
 	{
-		#nullable disable
 		/// <summary>
 		/// The Intent ID
 		/// </summary>
-		[Column(),                  PrimaryKey,  NotNull] public string  ID             { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column(),                  PrimaryKey,  NotNull] public string  ID             { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// The Semantic Object part of the Intent
 		/// </summary>
-		[Column("SEMANTIC_OBJECT"),              NotNull] public string  SemanticObject { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column("SEMANTIC_OBJECT"),              NotNull] public string  SemanticObject { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// The Action part of the Intent
 		/// </summary>
-		[Column(),                               NotNull] public string  ACTION         { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column(),                               NotNull] public string  ACTION         { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// The Area part of the Alias
 		/// </summary>
-		[Column(),                               NotNull] public string  AREA           { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column(),                               NotNull] public string  AREA           { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Alias
 		/// </summary>
-		[Column(),                               NotNull] public string  ALIAS          { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column(),                               NotNull] public string  ALIAS          { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Optional. Used to link this mapping with specific Widget List Catalog
 		/// </summary>
@@ -5186,34 +4430,26 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db::NAVIGATION_TARGET")]
 	public partial class UIS_SapHanaUisDbNavigationTarget
 	{
-		#nullable disable
 		/// <summary>
 		/// Navigation target URI
 		/// </summary>
-		[Column(),                                        NotNull] public string  URI                   { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
+		[Column(),                                        NotNull] public string  URI                   { get; set; } = null!; // NVARCHAR(5000)
 		/// <summary>
 		/// Navigation object type
 		/// </summary>
-		[Column(),                                        NotNull] public string  TYPE                  { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column(),                                        NotNull] public string  TYPE                  { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Navigation target description
 		/// </summary>
 		[Column(),                            Nullable           ] public string? DESCRIPTION           { get; set; } // NVARCHAR(5000)
-		#nullable disable
 		/// <summary>
 		/// The Area part of the Alias
 		/// </summary>
-		[Column(),                         PrimaryKey(1), NotNull] public string  AREA                  { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column(),                         PrimaryKey(1), NotNull] public string  AREA                  { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Alias
 		/// </summary>
-		[Column(),                         PrimaryKey(2), NotNull] public string  ALIAS                 { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column(),                         PrimaryKey(2), NotNull] public string  ALIAS                 { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Navigation target title
 		/// </summary>
@@ -5231,107 +4467,67 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db::NAVIGATION_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbNavigationView
 	{
-		#nullable disable
-		[Column("TENANT_ID"),        NotNull    ] public string  TenantId         { get; set; } // VARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column("id"),               NotNull    ] public string  Id               { get; set; } // VARCHAR(129)
-		#nullable enable
-		#nullable disable
-		[Column("applicationType"),  NotNull    ] public string  ApplicationType  { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column("TENANT_ID"),        NotNull    ] public string  TenantId         { get; set; } = null!; // VARCHAR(4)
+		[Column("id"),               NotNull    ] public string  Id               { get; set; } = null!; // VARCHAR(129)
+		[Column("applicationType"),  NotNull    ] public string  ApplicationType  { get; set; } = null!; // VARCHAR(64)
 		[Column("applicationData"),     Nullable] public string? ApplicationData  { get; set; } // VARCHAR(512)
 		[Column("postParameters"),      Nullable] public string? PostParameters   { get; set; } // NVARCHAR(5000)
 		[Column("text"),                Nullable] public string? Text             { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("applicationAlias"), NotNull    ] public string  ApplicationAlias { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("semanticObject"),   NotNull    ] public string  SemanticObject   { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column("action"),           NotNull    ] public string  Action           { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column("applicationAlias"), NotNull    ] public string  ApplicationAlias { get; set; } = null!; // VARCHAR(256)
+		[Column("semanticObject"),   NotNull    ] public string  SemanticObject   { get; set; } = null!; // VARCHAR(64)
+		[Column("action"),           NotNull    ] public string  Action           { get; set; } = null!; // VARCHAR(64)
 		[Column("url"),                 Nullable] public string? Url              { get; set; } // NVARCHAR(5000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db.personalization::_UIS_USER_WIDGETS_TEMPORARY")]
 	public partial class UIS_SapHanaUisDbPersonalizationUisUserWidgetsTemporary
 	{
-		#nullable disable
-		[Column(),                          NotNull    ] public string  ID                   { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TEMPLATE_ID"),             NotNull    ] public string  TemplateId           { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column(),                          NotNull    ] public string  ID                   { get; set; } = null!; // VARCHAR(50)
+		[Column("TEMPLATE_ID"),             NotNull    ] public string  TemplateId           { get; set; } = null!; // NVARCHAR(5000)
 		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable] public string? WidgetTemplateListId { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("SITE_ID"),                 NotNull    ] public string  SiteId               { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("SITE_ID"),                 NotNull    ] public string  SiteId               { get; set; } = null!; // NVARCHAR(2000)
 		[Column("PARENT_ID"),                  Nullable] public string? ParentId             { get; set; } // VARCHAR(50)
-		#nullable disable
-		[Column("TENANT_ID"),               NotNull    ] public string  TenantId             { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),               NotNull    ] public string  TenantId             { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::SEMANTIC_OBJECTS")]
 	public partial class UIS_SapHanaUisDbSemanticObject
 	{
-		#nullable disable
 		/// <summary>
 		/// Semantic Object
 		/// </summary>
-		[Column("SEMANTIC_OBJECT"),      PrimaryKey, NotNull] public string SemanticObject     { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
+		[Column("SEMANTIC_OBJECT"),      PrimaryKey, NotNull] public string SemanticObject     { get; set; } = null!; // VARCHAR(64)
 		/// <summary>
 		/// Semantic Object Name
 		/// </summary>
-		[Column("SEMANTIC_OBJECT_NAME"),             NotNull] public string SemanticObjectName { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SEMANTIC_OBJECT_NAME"),             NotNull] public string SemanticObjectName { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Semantic Object Description
 		/// </summary>
-		[Column("SEMANTIC_OBJECT_DESC"),             NotNull] public string SemanticObjectDesc { get; set; } // VARCHAR(5000)
-		#nullable enable
+		[Column("SEMANTIC_OBJECT_DESC"),             NotNull] public string SemanticObjectDesc { get; set; } = null!; // VARCHAR(5000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::SEMANTIC_OBJECT_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbSemanticObjectView
 	{
-		#nullable disable
-		[Column("SEMANTIC_OBJECT"),      NotNull] public string SemanticObject     { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column("SEMANTIC_OBJECT_NAME"), NotNull] public string SemanticObjectName { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SEMANTIC_OBJECT_DESC"), NotNull] public string SemanticObjectDesc { get; set; } // VARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),            NotNull] public string TenantId           { get; set; } // VARCHAR(4)
-		#nullable enable
+		[Column("SEMANTIC_OBJECT"),      NotNull] public string SemanticObject     { get; set; } = null!; // VARCHAR(64)
+		[Column("SEMANTIC_OBJECT_NAME"), NotNull] public string SemanticObjectName { get; set; } = null!; // VARCHAR(256)
+		[Column("SEMANTIC_OBJECT_DESC"), NotNull] public string SemanticObjectDesc { get; set; } = null!; // VARCHAR(5000)
+		[Column("TENANT_ID"),            NotNull] public string TenantId           { get; set; } = null!; // VARCHAR(4)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::THEMES")]
 	public partial class UIS_SapHanaUisDbTheme
 	{
-		#nullable disable
-		[Column(),            PrimaryKey,  NotNull] public string  ID       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                         NotNull] public string  NAME     { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),            PrimaryKey,  NotNull] public string  ID       { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                         NotNull] public string  NAME     { get; set; } = null!; // NVARCHAR(256)
 		[Column("ROOT_PATH"),    Nullable         ] public string? RootPath { get; set; } // NVARCHAR(5000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_APPSITES_DATA_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisAppsitesDataView
 	{
-		#nullable disable
-		[Column("SITE_ID"),        NotNull    ] public string  SiteId       { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("SITE_ID"),        NotNull    ] public string  SiteId       { get; set; } = null!; // NVARCHAR(2000)
 		[Column("SITE_NAME"),         Nullable] public string? SiteName     { get; set; } // NVARCHAR(300)
 		[Column("SITE_LAYOUT"),       Nullable] public string? SiteLayout   { get; set; } // CLOB
 		[Column("PG_LAYOUT_ID"),      Nullable] public string? PgLayoutId   { get; set; } // VARCHAR(50)
@@ -5348,17 +4544,13 @@ namespace SapHanaDataContext
 		[Column("PARENT_PAGE_ID"),    Nullable] public string? ParentPageId { get; set; } // VARCHAR(50)
 		[Column("TEMPLATE_ID"),       Nullable] public string? TemplateId   { get; set; } // NVARCHAR(5000)
 		[Column(),                    Nullable] public string? TYPE         { get; set; } // NVARCHAR(300)
-		#nullable disable
-		[Column("TENANT_ID"),      NotNull    ] public string  TenantId     { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),      NotNull    ] public string  TenantId     { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_APPSITES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisAppsitesView
 	{
-		#nullable disable
-		[Column(),              NotNull    ] public string  ID          { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column(),              NotNull    ] public string  ID          { get; set; } = null!; // NVARCHAR(2000)
 		[Column("name"),           Nullable] public string? Name        { get; set; } // NVARCHAR(300)
 		[Column("description"),    Nullable] public string? Description { get; set; } // NVARCHAR(5000)
 		[Column("package_id"),     Nullable] public string? PackageId   { get; set; } // NVARCHAR(2000)
@@ -5368,26 +4560,16 @@ namespace SapHanaDataContext
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_CATALOGS")]
 	public partial class UIS_SapHanaUisDbUisCatalog
 	{
-		#nullable disable
-		[Column(),                      PrimaryKey,  NotNull] public string  ID                { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                                   NotNull] public string  NAME              { get; set; } // NVARCHAR(1000)
-		#nullable enable
+		[Column(),                      PrimaryKey,  NotNull] public string  ID                { get; set; } = null!; // VARCHAR(256)
+		[Column(),                                   NotNull] public string  NAME              { get; set; } = null!; // NVARCHAR(1000)
 		[Column(),                         Nullable         ] public string? DESCRIPTION       { get; set; } // NVARCHAR(5000)
 		[Column("CATALOG_PROPERTIES"),     Nullable         ] public string? CatalogProperties { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("ITEMS_SOURCE_SYSTEM"),              NotNull] public string  ItemsSourceSystem { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column("ITEM_TYPES"),                       NotNull] public string  ItemTypes         { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column("ITEMS_SOURCE_SYSTEM"),              NotNull] public string  ItemsSourceSystem { get; set; } = null!; // NVARCHAR(5000)
+		[Column("ITEM_TYPES"),                       NotNull] public string  ItemTypes         { get; set; } = null!; // NVARCHAR(5000)
 		[Column("ITEM_PROPERTIES"),        Nullable         ] public string? ItemProperties    { get; set; } // NVARCHAR(5000)
 		[Column("ITEM_ACTIONS"),           Nullable         ] public string? ItemActions       { get; set; } // NVARCHAR(5000)
 		[Column(),                         Nullable         ] public string? URI               { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),                                   NotNull] public string  TYPE              { get; set; } // VARCHAR(1000)
-		#nullable enable
+		[Column(),                                   NotNull] public string  TYPE              { get; set; } = null!; // VARCHAR(1000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_CATALOGS_TRANSLATION_VIEW", IsView=true)]
@@ -5395,27 +4577,17 @@ namespace SapHanaDataContext
 	{
 		[Column("PACKAGE_ID"),       Nullable] public string? PackageId    { get; set; } // NVARCHAR(2000)
 		[Column("OBJECT_NAME"),      Nullable] public string? ObjectName   { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), NotNull    ] public string  ObjectSuffix { get; set; } // VARCHAR(8)
-		#nullable enable
+		[Column("OBJECT_SUFFIX"), NotNull    ] public string  ObjectSuffix { get; set; } = null!; // VARCHAR(8)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_CATALOGS_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisCatalogsView
 	{
-		#nullable disable
-		[Column(),            NotNull    ] public string  ID       { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("name"),      NotNull    ] public string  Name     { get; set; } // NVARCHAR(1000)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  TYPE     { get; set; } // VARCHAR(1000)
-		#nullable enable
+		[Column(),            NotNull    ] public string  ID       { get; set; } = null!; // VARCHAR(256)
+		[Column("name"),      NotNull    ] public string  Name     { get; set; } = null!; // NVARCHAR(1000)
+		[Column(),            NotNull    ] public string  TYPE     { get; set; } = null!; // VARCHAR(1000)
 		[Column(),               Nullable] public string? URI      { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } // VARCHAR(4)
-		#nullable enable
+		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } = null!; // VARCHAR(4)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_FIORI_CATALOGS_VIEW", IsView=true)]
@@ -5423,118 +4595,68 @@ namespace SapHanaDataContext
 	{
 		[Column("PACKAGE_ID"),          Nullable] public string? PackageId       { get; set; } // NVARCHAR(2000)
 		[Column("OBJECT_NAME"),         Nullable] public string? ObjectName      { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } = null!; // VARCHAR(50)
 		[Column("CATALOG_NAME"),        Nullable] public string? CatalogName     { get; set; } // NVARCHAR(300)
 		[Column("TILE_NAME"),           Nullable] public string? TileName        { get; set; } // NVARCHAR(300)
 		[Column("TILE_URL"),            Nullable] public string? TileUrl         { get; set; } // NVARCHAR(5000)
 		[Column("TILE_THUMBNAIL"),      Nullable] public string? TileThumbnail   { get; set; } // CLOB
-		#nullable disable
-		[Column("TILE_TYPE"),        NotNull    ] public string  TileType        { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column("TILE_TYPE"),        NotNull    ] public string  TileType        { get; set; } = null!; // NVARCHAR(300)
 		[Column("TILE_DESCRIPTION"),    Nullable] public string? TileDescription { get; set; } // NVARCHAR(5000)
 		[Column(),                      Nullable] public string? KEY             { get; set; } // NVARCHAR(300)
 		[Column(),                      Nullable] public string? VALUE           { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } = null!; // NVARCHAR(2000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_INTENT_ALIAS_MAPPING_V2_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisIntentAliasMappingV2View
 	{
-		#nullable disable
-		[Column(),                  NotNull    ] public string  ID             { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column("SEMANTIC_OBJECT"), NotNull    ] public string  SemanticObject { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  ACTION         { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  AREA           { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  ALIAS          { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column(),                  NotNull    ] public string  ID             { get; set; } = null!; // VARCHAR(64)
+		[Column("SEMANTIC_OBJECT"), NotNull    ] public string  SemanticObject { get; set; } = null!; // VARCHAR(64)
+		[Column(),                  NotNull    ] public string  ACTION         { get; set; } = null!; // VARCHAR(64)
+		[Column(),                  NotNull    ] public string  AREA           { get; set; } = null!; // VARCHAR(64)
+		[Column(),                  NotNull    ] public string  ALIAS          { get; set; } = null!; // VARCHAR(256)
 		[Column(),                     Nullable] public string? CONTEXT        { get; set; } // NVARCHAR(5000)
 		[Column(),                     Nullable] public string? INFO           { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"),       NotNull    ] public string  TenantId       { get; set; } // VARCHAR(4)
-		#nullable enable
+		[Column("TENANT_ID"),       NotNull    ] public string  TenantId       { get; set; } = null!; // VARCHAR(4)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_NAVIGATION_TARGET_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisNavigationTargetView
 	{
-		#nullable disable
-		[Column(),                         NotNull    ] public string  URI                   { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column(),                         NotNull    ] public string  TYPE                  { get; set; } // VARCHAR(64)
-		#nullable enable
+		[Column(),                         NotNull    ] public string  URI                   { get; set; } = null!; // NVARCHAR(5000)
+		[Column(),                         NotNull    ] public string  TYPE                  { get; set; } = null!; // VARCHAR(64)
 		[Column(),                            Nullable] public string? DESCRIPTION           { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),                         NotNull    ] public string  AREA                  { get; set; } // VARCHAR(64)
-		#nullable enable
-		#nullable disable
-		[Column(),                         NotNull    ] public string  ALIAS                 { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column(),                         NotNull    ] public string  AREA                  { get; set; } = null!; // VARCHAR(64)
+		[Column(),                         NotNull    ] public string  ALIAS                 { get; set; } = null!; // VARCHAR(256)
 		[Column(),                            Nullable] public string? TITLE                 { get; set; } // NVARCHAR(256)
 		[Column("VIEW_NAME"),                 Nullable] public string? ViewName              { get; set; } // VARCHAR(512)
 		[Column("APPLICATION_PARAMETERS"),    Nullable] public string? ApplicationParameters { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"),              NotNull    ] public string  TenantId              { get; set; } // VARCHAR(4)
-		#nullable enable
+		[Column("TENANT_ID"),              NotNull    ] public string  TenantId              { get; set; } = null!; // VARCHAR(4)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::_UIS_PERMISSIONS")]
 	public partial class UIS_SapHanaUisDbUisPermission
 	{
-		#nullable disable
-		[Column("OBJECT_ID"),   PrimaryKey(3), NotNull] public string    ObjectId   { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_TYPE"), PrimaryKey(4), NotNull] public string    ObjectType { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("ROLE_ID"),     PrimaryKey(5), NotNull] public string    RoleId     { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column(),              PrimaryKey(6), NotNull] public string    OPERATION  { get; set; } // NVARCHAR(50)
-		#nullable enable
+		[Column("OBJECT_ID"),   PrimaryKey(3), NotNull] public string    ObjectId   { get; set; } = null!; // NVARCHAR(2000)
+		[Column("OBJECT_TYPE"), PrimaryKey(4), NotNull] public string    ObjectType { get; set; } = null!; // NVARCHAR(2000)
+		[Column("ROLE_ID"),     PrimaryKey(5), NotNull] public string    RoleId     { get; set; } = null!; // NVARCHAR(300)
+		[Column(),              PrimaryKey(6), NotNull] public string    OPERATION  { get; set; } = null!; // NVARCHAR(50)
 		[Column(),                 Nullable           ] public DateTime? CREATED    { get; set; } // TIMESTAMP
 		[Column(),                 Nullable           ] public DateTime? UPDATED    { get; set; } // TIMESTAMP
 		[Column(),                 Nullable           ] public int?      VERSION    { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              PrimaryKey(2), NotNull] public string    DTYPE      { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),   PrimaryKey(1), NotNull] public string    TenantId   { get; set; } // NVARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),              PrimaryKey(7), NotNull] public string    NAMESPACE  { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),              PrimaryKey(2), NotNull] public string    DTYPE      { get; set; } = null!; // NVARCHAR(50)
+		[Column("TENANT_ID"),   PrimaryKey(1), NotNull] public string    TenantId   { get; set; } = null!; // NVARCHAR(50)
+		[Column(),              PrimaryKey(7), NotNull] public string    NAMESPACE  { get; set; } = null!; // NVARCHAR(4000)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_THEMES_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisThemesView
 	{
-		#nullable disable
-		[Column(),            NotNull    ] public string  ID       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull    ] public string  NAME     { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),            NotNull    ] public string  ID       { get; set; } = null!; // NVARCHAR(256)
+		[Column(),            NotNull    ] public string  NAME     { get; set; } = null!; // NVARCHAR(256)
 		[Column("ROOT_PATH"),    Nullable] public string? RootPath { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } // VARCHAR(4)
-		#nullable enable
+		[Column("TENANT_ID"), NotNull    ] public string  TenantId { get; set; } = null!; // VARCHAR(4)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_TRANSLATION_VIEW", IsView=true)]
@@ -5542,23 +4664,17 @@ namespace SapHanaDataContext
 	{
 		[Column("PACKAGE_ID"),       Nullable] public string? PackageId    { get; set; } // NVARCHAR(2000)
 		[Column("OBJECT_NAME"),      Nullable] public string? ObjectName   { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), NotNull    ] public string  ObjectSuffix { get; set; } // VARCHAR(9)
-		#nullable enable
+		[Column("OBJECT_SUFFIX"), NotNull    ] public string  ObjectSuffix { get; set; } = null!; // VARCHAR(9)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_WIDGETS_VIEW", IsView=true)]
 	public partial class UIS_SapHanaUisDbUisWidgetsView
 	{
-		#nullable disable
-		[Column(),              NotNull    ] public string  ID          { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(),              NotNull    ] public string  ID          { get; set; } = null!; // VARCHAR(50)
 		[Column("name"),           Nullable] public string? Name        { get; set; } // NVARCHAR(300)
 		[Column("description"),    Nullable] public string? Description { get; set; } // NVARCHAR(5000)
 		[Column(),                 Nullable] public string? URI         { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("type"),        NotNull    ] public string  Type        { get; set; } // VARCHAR(6)
-		#nullable enable
+		[Column("type"),        NotNull    ] public string  Type        { get; set; } = null!; // VARCHAR(6)
 	}
 
 	[Table(Schema="UIS", Name="sap.hana.uis.db::UIS_WIDGET_TEMPLATES_VIEW", IsView=true)]
@@ -5566,20 +4682,14 @@ namespace SapHanaDataContext
 	{
 		[Column("PACKAGE_ID"),          Nullable] public string? PackageId       { get; set; } // NVARCHAR(2000)
 		[Column("OBJECT_NAME"),         Nullable] public string? ObjectName      { get; set; } // NVARCHAR(2000)
-		#nullable disable
-		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("REPOSITORY_ID"),    NotNull    ] public string  RepositoryId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TILE_ID"),          NotNull    ] public string  TileId          { get; set; } = null!; // VARCHAR(50)
 		[Column("TILE_NAME"),           Nullable] public string? TileName        { get; set; } // NVARCHAR(300)
 		[Column("TILE_URL"),            Nullable] public string? TileUrl         { get; set; } // NVARCHAR(5000)
 		[Column("TILE_THUMBNAIL"),      Nullable] public string? TileThumbnail   { get; set; } // CLOB
 		[Column("TILE_TYPE"),           Nullable] public string? TileType        { get; set; } // NVARCHAR(300)
 		[Column("TILE_DESCRIPTION"),    Nullable] public string? TileDescription { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),        NotNull    ] public string  TenantId        { get; set; } = null!; // VARCHAR(50)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.db::fetchAllRolesView", IsView=true)]
@@ -5598,43 +4708,33 @@ namespace SapHanaDataContext
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbDistinctId
 	{
 		[Column(),           NotNull] public long   ID      { get; set; } // BIGINT
-		#nullable disable
-		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } = null!; // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_LOG_ID", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbDistinctLogId
 	{
 		[Column(),           NotNull] public long   ID      { get; set; } // BIGINT
-		#nullable disable
-		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } = null!; // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_LOG_STATUS", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbDistinctLogStatus
 	{
-		#nullable disable
-		[Column, NotNull] public string STATUS { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column, NotNull] public string STATUS { get; set; } = null!; // VARCHAR(16)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_SCHEDULE_ID", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbDistinctScheduleId
 	{
 		[Column(),           NotNull] public long   ID      { get; set; } // BIGINT
-		#nullable disable
-		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column("JOB_NAME"), NotNull] public string JobName { get; set; } = null!; // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_SCHEDULE_STATUS", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbDistinctScheduleStatus
 	{
-		#nullable disable
-		[Column, NotNull] public string STATUS { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column, NotNull] public string STATUS { get; set; } = null!; // VARCHAR(16)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_USER", IsView=true)]
@@ -5646,36 +4746,20 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::JOBS", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbJob
 	{
-		#nullable disable
-		[Column(),                    NotNull    ] public string    NAME             { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column(),                    NotNull    ] public string    NAME             { get; set; } = null!; // NVARCHAR(512)
 		[Column("JOB_NAME"),             Nullable] public string?   JobName          { get; set; } // NVARCHAR(512)
 		[Column(),                       Nullable] public string?   PCKG             { get; set; } // NVARCHAR(512)
-		#nullable disable
-		[Column(),                    NotNull    ] public string    DESCRIPTION      { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column(),                    NotNull    ] public string    ACTION           { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column(),                    NotNull    ] public string    USER             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                    NotNull    ] public string    DESCRIPTION      { get; set; } = null!; // NVARCHAR(512)
+		[Column(),                    NotNull    ] public string    ACTION           { get; set; } = null!; // NVARCHAR(512)
+		[Column(),                    NotNull    ] public string    USER             { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                       Nullable] public string?   LOCALE           { get; set; } // VARCHAR(64)
-		#nullable disable
-		[Column(),                    NotNull    ] public string    STATUS           { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column(),                    NotNull    ] public string    STATUS           { get; set; } = null!; // VARCHAR(16)
 		[Column("START_TIME"),           Nullable] public DateTime? StartTime        { get; set; } // TIMESTAMP
 		[Column("END_TIME"),             Nullable] public DateTime? EndTime          { get; set; } // TIMESTAMP
 		[Column(),                       Nullable] public string?   LRSTATUS         { get; set; } // VARCHAR(16)
-		#nullable disable
-		[Column("DATE_FORMAT"),       NotNull    ] public string    DateFormat       { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column("TIME_FORMAT"),       NotNull    ] public string    TimeFormat       { get; set; } // NVARCHAR(5000)
-		#nullable enable
-		#nullable disable
-		[Column("DATE_TIME_FORMAT"),  NotNull    ] public string    DateTimeFormat   { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column("DATE_FORMAT"),       NotNull    ] public string    DateFormat       { get; set; } = null!; // NVARCHAR(5000)
+		[Column("TIME_FORMAT"),       NotNull    ] public string    TimeFormat       { get; set; } = null!; // NVARCHAR(5000)
+		[Column("DATE_TIME_FORMAT"),  NotNull    ] public string    DateTimeFormat   { get; set; } = null!; // NVARCHAR(5000)
 		[Column("SESSION_TIMEOUT"),      Nullable] public int?      SessionTimeout   { get; set; } // INTEGER
 		[Column("SIGNATURE_VERSION"),    Nullable] public int?      SignatureVersion { get; set; } // INTEGER
 		[Column("ACTIVATED_BY"),         Nullable] public string?   ActivatedBy      { get; set; } // NVARCHAR(256)
@@ -5742,40 +4826,26 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.OData::OwnerWorkspace", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseODataOwnerWorkspace
 	{
-		#nullable disable
-		[Column, NotNull] public string OWNER     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string WORKSPACE { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull] public string OWNER     { get; set; } = null!; // NVARCHAR(256)
+		[Column, NotNull] public string WORKSPACE { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.DTAccess::dtaa", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerDTAccessDtaa
 	{
-		#nullable disable
-		[Column, NotNull    ] public string  NAMESPACE  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull    ] public string  NAME       { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull    ] public string  NAMESPACE  { get; set; } = null!; // NVARCHAR(256)
+		[Column, NotNull    ] public string  NAME       { get; set; } = null!; // NVARCHAR(256)
 		[Column,    Nullable] public string? TYPE       { get; set; } // NVARCHAR(255)
 		[Column, NotNull    ] public int     VERSION    { get; set; } // INTEGER
-		#nullable disable
-		[Column, NotNull    ] public string  OWNER      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull    ] public string  OWNER      { get; set; } = null!; // NVARCHAR(256)
 		[Column,    Nullable] public string? DEFINITION { get; set; } // NVARCHAR(5000)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.DTAccess::dtai", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerDTAccessDtai
 	{
-		#nullable disable
-		[Column, NotNull    ] public string  NAMESPACE { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull    ] public string  NAME      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull    ] public string  NAMESPACE { get; set; } = null!; // NVARCHAR(256)
+		[Column, NotNull    ] public string  NAME      { get; set; } = null!; // NVARCHAR(256)
 		[Column,    Nullable] public string? TYPE      { get; set; } // NVARCHAR(255)
 	}
 
@@ -5784,12 +4854,8 @@ namespace SapHanaDataContext
 	{
 		[Column,    Nullable] public string? NAMESPACE { get; set; } // NVARCHAR(256)
 		[Column,    Nullable] public string? NAME      { get; set; } // NVARCHAR(769)
-		#nullable disable
-		[Column, NotNull    ] public string  TYPE      { get; set; } // VARCHAR(17)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull    ] public string  MODE      { get; set; } // VARCHAR(2)
-		#nullable enable
+		[Column, NotNull    ] public string  TYPE      { get; set; } = null!; // VARCHAR(17)
+		[Column, NotNull    ] public string  MODE      { get; set; } = null!; // VARCHAR(2)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency::CatalogAndRepositoryRoles", IsView=true)]
@@ -5797,12 +4863,8 @@ namespace SapHanaDataContext
 	{
 		[Column,    Nullable] public string? NAMESPACE { get; set; } // NVARCHAR(256)
 		[Column,    Nullable] public string? NAME      { get; set; } // NVARCHAR(514)
-		#nullable disable
-		[Column, NotNull    ] public string  TYPE      { get; set; } // VARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull    ] public string  MODE      { get; set; } // VARCHAR(2)
-		#nullable enable
+		[Column, NotNull    ] public string  TYPE      { get; set; } = null!; // VARCHAR(4)
+		[Column, NotNull    ] public string  MODE      { get; set; } = null!; // VARCHAR(2)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency::ExtensionWhitelist")]
@@ -5812,38 +4874,28 @@ namespace SapHanaDataContext
 		/// Extension Identifier
 		/// </summary>
 		[PrimaryKey, NotNull] public int    ExtensionID          { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// Extension Point Caller
 		/// </summary>
-		[Column,     NotNull] public string ExtensionPointCaller { get; set; } // VARCHAR(128)
-		#nullable enable
-		#nullable disable
+		[Column,     NotNull] public string ExtensionPointCaller { get; set; } = null!; // VARCHAR(128)
 		/// <summary>
 		/// Extension Point Mode
 		/// </summary>
-		[Column,     NotNull] public string ExtensionPointMode   { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
+		[Column,     NotNull] public string ExtensionPointMode   { get; set; } = null!; // VARCHAR(20)
 		/// <summary>
 		/// Extension Libname
 		/// </summary>
-		[Column,     NotNull] public string ExtensionLibName     { get; set; } // VARCHAR(60)
-		#nullable enable
-		#nullable disable
+		[Column,     NotNull] public string ExtensionLibName     { get; set; } = null!; // VARCHAR(60)
 		/// <summary>
 		/// Extension LibLocation
 		/// </summary>
-		[Column,     NotNull] public string ExtensionLibLocation { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column,     NotNull] public string ExtensionLibLocation { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency::RepositoryPackages", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerPersistencyRepositoryPackage
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),              NotNull    ] public string  PackageId             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),              NotNull    ] public string  PackageId             { get; set; } = null!; // NVARCHAR(256)
 		[Column("SRC_SYSTEM"),                 Nullable] public string? SrcSystem             { get; set; } // NVARCHAR(256)
 		[Column("SRC_TENANT"),                 Nullable] public string? SrcTenant             { get; set; } // VARCHAR(256)
 		[Column(),                             Nullable] public string? DESCRIPTION           { get; set; } // NVARCHAR(256)
@@ -5861,72 +4913,50 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency::SystemAndApplicationPrivileges", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerPersistencySystemAndApplicationPrivilege
 	{
-		#nullable disable
-		[Column, NotNull] public string NAME { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string TYPE { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column, NotNull] public string NAME { get; set; } = null!; // NVARCHAR(256)
+		[Column, NotNull] public string TYPE { get; set; } = null!; // VARCHAR(32)
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency.userpreferences::UserPreferences", IsView=true)]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerPersistencyUserpreferencesUserPreference
 	{
-		#nullable disable
-		[Column, NotNull] public string UserID       { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string Node         { get; set; } // NVARCHAR(160)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string UserSettings { get; set; } // NCLOB
-		#nullable enable
+		[Column, NotNull] public string UserID       { get; set; } = null!; // NVARCHAR(60)
+		[Column, NotNull] public string Node         { get; set; } = null!; // NVARCHAR(160)
+		[Column, NotNull] public string UserSettings { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="SAP_REST_API", Name="sap.hana.xs.dt.base.server.persistency.userpreferences::UserPreferencesIntern")]
 	public partial class SAP_REST_API_SapHanaXsDtBaseServerPersistencyUserpreferencesUserPreferencesIntern
 	{
-		#nullable disable
 		/// <summary>
 		/// User ID
 		/// </summary>
-		[PrimaryKey(1), NotNull] public string UserID       { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
+		[PrimaryKey(1), NotNull] public string UserID       { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// Node
 		/// </summary>
-		[PrimaryKey(2), NotNull] public string Node         { get; set; } // NVARCHAR(160)
-		#nullable enable
-		#nullable disable
+		[PrimaryKey(2), NotNull] public string Node         { get; set; } = null!; // NVARCHAR(160)
 		/// <summary>
 		/// User Context Object (JSON)
 		/// </summary>
-		[Column,        NotNull] public string UserSettings { get; set; } // NCLOB
-		#nullable enable
+		[Column,        NotNull] public string UserSettings { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.formLogin.profile.db::USER_PREFERENCES")]
 	public partial class HANA_XS_BASE_SapHanaXsFormLoginProfileDbUserPreference
 	{
-		#nullable disable
 		/// <summary>
 		/// Preferences key
 		/// </summary>
-		[Column(),            PrimaryKey, NotNull] public string KEY      { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
+		[Column(),            PrimaryKey, NotNull] public string KEY      { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Preferences value
 		/// </summary>
-		[Column(),                        NotNull] public string VALUE    { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
+		[Column(),                        NotNull] public string VALUE    { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Preferences item type
 		/// </summary>
-		[Column("ITEM_TYPE"),             NotNull] public string ItemType { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column("ITEM_TYPE"),             NotNull] public string ItemType { get; set; } = null!; // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.formLogin.profile.db::USER_PROFILE_VIEW", IsView=true)]
@@ -5942,18 +4972,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::ACTION_LOG")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbActionLog
 	{
-		#nullable disable
-		[Column("PROCESS_ID"), NotNull    ] public string   ProcessId { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"), NotNull    ] public string   ProcessId { get; set; } = null!; // NVARCHAR(90)
 		[Column("LOG_ID"),        Nullable] public string?  LogId     { get; set; } // NVARCHAR(60)
-		#nullable disable
-		[Column(),             NotNull    ] public string   USER      { get; set; } // NVARCHAR(40)
-		#nullable enable
+		[Column(),             NotNull    ] public string   USER      { get; set; } = null!; // NVARCHAR(40)
 		[Column(),             NotNull    ] public DateTime TIME      { get; set; } // TIMESTAMP
 		[Column(),                Nullable] public int?     RC        { get; set; } // INTEGER
-		#nullable disable
-		[Column(),             NotNull    ] public string   TYPE      { get; set; } // NVARCHAR(40)
-		#nullable enable
+		[Column(),             NotNull    ] public string   TYPE      { get; set; } = null!; // NVARCHAR(40)
 		[Column(),                Nullable] public string?  MESSAGE   { get; set; } // NVARCHAR(5000)
 		[Column(),                Nullable] public string?  SID       { get; set; } // NVARCHAR(256)
 		[Column(),                Nullable] public string?  HOST      { get; set; } // NVARCHAR(255)
@@ -5962,30 +4986,18 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::ACTIVATION_ERROR")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbActivationError
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),    NotNull    ] public string   ProcessId    { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),    NotNull    ] public string   ProcessId    { get; set; } = null!; // NVARCHAR(90)
 		/// <summary>
 		/// ['123', '1234',...]
 		/// </summary>
 		[Column("CONTENT_IDS"),      Nullable] public string?  ContentIds   { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("PACKAGE_ID"),    NotNull    ] public string   PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   NotNull    ] public string   ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), NotNull    ] public string   ObjectSuffix { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("ERROR_CODE"),    NotNull    ] public string   ErrorCode    { get; set; } // VARCHAR(10)
-		#nullable enable
+		[Column("PACKAGE_ID"),    NotNull    ] public string   PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   NotNull    ] public string   ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), NotNull    ] public string   ObjectSuffix { get; set; } = null!; // NVARCHAR(256)
+		[Column("ERROR_CODE"),    NotNull    ] public string   ErrorCode    { get; set; } = null!; // VARCHAR(10)
 		[Column(),                NotNull    ] public char     SEVERITY     { get; set; } // VARCHAR(1)
 		[Column("IS_IMPACTED"),      Nullable] public char?    IsImpacted   { get; set; } // VARCHAR(1)
-		#nullable disable
-		[Column(),                NotNull    ] public string   MESSAGE      { get; set; } // NVARCHAR(1000)
-		#nullable enable
+		[Column(),                NotNull    ] public string   MESSAGE      { get; set; } = null!; // NVARCHAR(1000)
 		[Column(),                   Nullable] public char?    MODE         { get; set; } // VARCHAR(1)
 		[Column(),                   Nullable] public string?  DETAILS      { get; set; } // NCLOB
 		[Column(),                NotNull    ] public DateTime TIME         { get; set; } // TIMESTAMP
@@ -5994,143 +5006,87 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONF_HISTORY")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbConfHistory
 	{
-		#nullable disable
-		[Column(),              NotNull    ] public string   ENTITY     { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string   NAME       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string   ACTION     { get; set; } // NVARCHAR(8)
-		#nullable enable
+		[Column(),              NotNull    ] public string   ENTITY     { get; set; } = null!; // NVARCHAR(30)
+		[Column(),              NotNull    ] public string   NAME       { get; set; } = null!; // NVARCHAR(256)
+		[Column(),              NotNull    ] public string   ACTION     { get; set; } = null!; // NVARCHAR(8)
 		[Column("NEW_VALUE"),      Nullable] public string?  NewValue   { get; set; } // NCLOB
-		#nullable disable
-		[Column("MODIFIED_BY"), NotNull    ] public string   ModifiedBy { get; set; } // NVARCHAR(40)
-		#nullable enable
+		[Column("MODIFIED_BY"), NotNull    ] public string   ModifiedBy { get; set; } = null!; // NVARCHAR(40)
 		[Column("MODIFIED_AT"), NotNull    ] public DateTime ModifiedAt { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONFIGURATION")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbConfiguration
 	{
-		#nullable disable
-		[PrimaryKey, NotNull] public string KEY   { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull] public string VALUE { get; set; } // NCLOB
-		#nullable enable
+		[PrimaryKey, NotNull] public string KEY   { get; set; } = null!; // NVARCHAR(30)
+		[Column,     NotNull] public string VALUE { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONFIGURATION_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_SapHanaXsLmDbConfigurationView
 	{
-		#nullable disable
-		[Column, NotNull] public string KEY   { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string VALUE { get; set; } // NCLOB
-		#nullable enable
+		[Column, NotNull] public string KEY   { get; set; } = null!; // NVARCHAR(30)
+		[Column, NotNull] public string VALUE { get; set; } = null!; // NCLOB
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTAINER_DETAILS")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContainerDetail
 	{
-		#nullable disable
-		[Column("CONTAINER_ID"), PrimaryKey(1), NotNull] public string ContainerId { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),               PrimaryKey(2), NotNull] public string NAME        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),               PrimaryKey(3), NotNull] public string VENDOR      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("CONTAINER_ID"), PrimaryKey(1), NotNull] public string ContainerId { get; set; } = null!; // NVARCHAR(60)
+		[Column(),               PrimaryKey(2), NotNull] public string NAME        { get; set; } = null!; // NVARCHAR(256)
+		[Column(),               PrimaryKey(3), NotNull] public string VENDOR      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// ['stack' | 'pd' | 'slm' |'du' | 'ldu']
 		/// </summary>
-		[Column(),               PrimaryKey(4), NotNull] public string TYPE        { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column(),               PrimaryKey(4), NotNull] public string TYPE        { get; set; } = null!; // NVARCHAR(10)
 		[Column("CONTENT_ID"),                  NotNull] public long   ContentId   { get; set; } // BIGINT
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTAINER_HEADER")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContainerHeader
 	{
-		#nullable disable
-		[Column("CONTAINER_ID"),   PrimaryKey, NotNull] public string   ContainerId   { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("CONTAINER_ID"),   PrimaryKey, NotNull] public string   ContainerId   { get; set; } = null!; // NVARCHAR(60)
 		[Column("CREATION_TIME"),              NotNull] public DateTime CreationTime  { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// ['PV' | 'SCV' | 'SCVS' | 'PM']
 		/// </summary>
-		[Column("CONTAINER_TYPE"),             NotNull] public string   ContainerType { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column(),                             NotNull] public string   DESCRIPTION   { get; set; } // NVARCHAR(1024)
-		#nullable enable
+		[Column("CONTAINER_TYPE"),             NotNull] public string   ContainerType { get; set; } = null!; // NVARCHAR(10)
+		[Column(),                             NotNull] public string   DESCRIPTION   { get; set; } = null!; // NVARCHAR(1024)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTAINER_INSTANCES_INTERNAL")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContainerInstancesInternal
 	{
-		#nullable disable
-		[Column("CONTAINER_ID"), PrimaryKey(1), NotNull] public string  ContainerId { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column("INSTANCE_ID"),  PrimaryKey(2), NotNull] public string  InstanceId  { get; set; } // NVARCHAR(3)
-		#nullable enable
+		[Column("CONTAINER_ID"), PrimaryKey(1), NotNull] public string  ContainerId { get; set; } = null!; // NVARCHAR(60)
+		[Column("INSTANCE_ID"),  PrimaryKey(2), NotNull] public string  InstanceId  { get; set; } = null!; // NVARCHAR(3)
 		[Column(),                  Nullable           ] public string? CAPTION     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTAINER_PV_INTERNAL")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContainerPvInternal
 	{
-		#nullable disable
-		[Column("CONTAINER_ID"), PrimaryKey,  NotNull] public string  ContainerId { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string  NAME        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string  VENDOR      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string  VERSION     { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("CONTAINER_ID"), PrimaryKey,  NotNull] public string  ContainerId { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                            NotNull] public string  NAME        { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                            NotNull] public string  VENDOR      { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                            NotNull] public string  VERSION     { get; set; } = null!; // NVARCHAR(256)
 		[Column("SAP_NOTE"),        Nullable         ] public string? SapNote     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTAINER_SCV_INTERNAL")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContainerScvInternal
 	{
-		#nullable disable
-		[Column("CONTAINER_ID"),  PrimaryKey(1), NotNull] public string ContainerId  { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                PrimaryKey(2), NotNull] public string NAME         { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                PrimaryKey(3), NotNull] public string VENDOR       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                               NotNull] public string VERSION      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("VERSION_SP"),                   NotNull] public string VersionSp    { get; set; } // NVARCHAR(16)
-		#nullable enable
-		#nullable disable
-		[Column("VERSION_PATCH"),                NotNull] public string VersionPatch { get; set; } // NVARCHAR(16)
-		#nullable enable
+		[Column("CONTAINER_ID"),  PrimaryKey(1), NotNull] public string ContainerId  { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                PrimaryKey(2), NotNull] public string NAME         { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                PrimaryKey(3), NotNull] public string VENDOR       { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                               NotNull] public string VERSION      { get; set; } = null!; // NVARCHAR(256)
+		[Column("VERSION_SP"),                   NotNull] public string VersionSp    { get; set; } = null!; // NVARCHAR(16)
+		[Column("VERSION_PATCH"),                NotNull] public string VersionPatch { get; set; } = null!; // NVARCHAR(16)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::CONTENT")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbContent
 	{
 		[Column("CONTENT_ID"), PrimaryKey, NotNull] public long   ContentId { get; set; } // BIGINT
-		#nullable disable
-		[Column(),                         NotNull] public byte[] CONTENT   { get; set; } // BLOB
-		#nullable enable
+		[Column(),                         NotNull] public byte[] CONTENT   { get; set; } = null!; // BLOB
 		[Column(),                         NotNull] public int    SIZE      { get; set; } // INTEGER
 	}
 
@@ -6138,26 +5094,16 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_SapHanaXsLmDbContentObject
 	{
 		[Column("CONTENT_ID"),    NotNull] public long   ContentId    { get; set; } // BIGINT
-		#nullable disable
-		[Column("PROCESS_ID"),    NotNull] public string ProcessId    { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),                NotNull] public string PACKAGE      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   NotNull] public string ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), NotNull] public string ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PROCESS_ID"),    NotNull] public string ProcessId    { get; set; } = null!; // NVARCHAR(90)
+		[Column(),                NotNull] public string PACKAGE      { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   NotNull] public string ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), NotNull] public string ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::IMPORTED_DU")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbImportedDu
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),  PrimaryKey(1), NotNull] public string   ProcessId  { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),  PrimaryKey(1), NotNull] public string   ProcessId  { get; set; } = null!; // NVARCHAR(90)
 		[Column("CONTENT_ID"),  PrimaryKey(2), NotNull] public long     ContentId  { get; set; } // BIGINT
 		[Column("IMPORTED_AT"),                NotNull] public DateTime ImportedAt { get; set; } // TIMESTAMP
 		[Column("IMPORT_TYPE"),    Nullable           ] public char?    ImportType { get; set; } // VARCHAR(1)
@@ -6166,12 +5112,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::INSTALLATION_CONTAINER_PV_VARIANT")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbInstallationContainerPvVariant
 	{
-		#nullable disable
 		/// <summary>
 		/// Container Id
 		/// </summary>
-		[Column("CONTAINER_ID"),                     NotNull] public string   ContainerId        { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("CONTAINER_ID"),                     NotNull] public string   ContainerId        { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// Instances JSON Object
 		/// </summary>
@@ -6181,12 +5125,10 @@ namespace SapHanaDataContext
 		/// </summary>
 		[Column(),                         Nullable         ] public string?  OPTIONS            { get; set; } // NVARCHAR(500)
 		[Column("CREATED_AT"),                       NotNull] public DateTime CreatedAt          { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Variant ID
 		/// </summary>
-		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string   VariantId          { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string   VariantId          { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// Description
 		/// </summary>
@@ -6200,12 +5142,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::INSTALLATION_CONTAINER_SCV_VARIANT")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbInstallationContainerScvVariant
 	{
-		#nullable disable
 		/// <summary>
 		/// Container Id
 		/// </summary>
-		[Column("CONTAINER_ID"),                     NotNull] public string   ContainerId        { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("CONTAINER_ID"),                     NotNull] public string   ContainerId        { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// Software Components JSON Object
 		/// </summary>
@@ -6215,12 +5155,10 @@ namespace SapHanaDataContext
 		/// </summary>
 		[Column(),                         Nullable         ] public string?  OPTIONS            { get; set; } // NVARCHAR(500)
 		[Column("CREATED_AT"),                       NotNull] public DateTime CreatedAt          { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Variant ID
 		/// </summary>
-		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string   VariantId          { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string   VariantId          { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// Description
 		/// </summary>
@@ -6234,9 +5172,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::LOG_SYNC")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbLogSync
 	{
-		#nullable disable
-		[Column("PROCESS_ID"), NotNull] public string ProcessId { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"), NotNull] public string ProcessId { get; set; } = null!; // NVARCHAR(90)
 		[Column("SYSTEM_ID"),  NotNull] public long   SystemId  { get; set; } // BIGINT
 		[Column(),             NotNull] public byte   RUNNING   { get; set; } // TINYINT
 	}
@@ -6244,16 +5180,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::PROCESS")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbProcess
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),     PrimaryKey,  NotNull] public string    ProcessId     { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),     PrimaryKey,  NotNull] public string    ProcessId     { get; set; } = null!; // NVARCHAR(90)
 		[Column("SRC_HOST"),          Nullable         ] public string?   SrcHost       { get; set; } // NVARCHAR(255)
 		[Column("SRC_SID"),           Nullable         ] public string?   SrcSid        { get; set; } // NVARCHAR(256)
 		[Column("TARGET_HOST"),       Nullable         ] public string?   TargetHost    { get; set; } // NVARCHAR(255)
 		[Column("TARGET_SID"),        Nullable         ] public string?   TargetSid     { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                              NotNull] public string    USER          { get; set; } // NVARCHAR(40)
-		#nullable enable
+		[Column(),                              NotNull] public string    USER          { get; set; } = null!; // NVARCHAR(40)
 		[Column("START_TIME"),                  NotNull] public DateTime  StartTime     { get; set; } // TIMESTAMP
 		[Column("END_TIME"),          Nullable         ] public DateTime? EndTime       { get; set; } // TIMESTAMP
 		[Column(),                    Nullable         ] public int?      RC            { get; set; } // INTEGER
@@ -6268,16 +5200,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::PROCESS_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_SapHanaXsLmDbProcessView
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),     NotNull    ] public string    ProcessId     { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),     NotNull    ] public string    ProcessId     { get; set; } = null!; // NVARCHAR(90)
 		[Column("SRC_HOST"),          Nullable] public string?   SrcHost       { get; set; } // NVARCHAR(255)
 		[Column("SRC_SID"),           Nullable] public string?   SrcSid        { get; set; } // NVARCHAR(256)
 		[Column("TARGET_HOST"),       Nullable] public string?   TargetHost    { get; set; } // NVARCHAR(255)
 		[Column("TARGET_SID"),        Nullable] public string?   TargetSid     { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                 NotNull    ] public string    USER          { get; set; } // NVARCHAR(40)
-		#nullable enable
+		[Column(),                 NotNull    ] public string    USER          { get; set; } = null!; // NVARCHAR(40)
 		[Column("START_TIME"),     NotNull    ] public DateTime  StartTime     { get; set; } // TIMESTAMP
 		[Column("END_TIME"),          Nullable] public DateTime? EndTime       { get; set; } // TIMESTAMP
 		[Column(),                    Nullable] public int?      RC            { get; set; } // INTEGER
@@ -6292,12 +5220,8 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::PRODUCTS", IsView=true)]
 	public partial class SAP_XS_LM_SapHanaXsLmDbProduct
 	{
-		#nullable disable
-		[Column(),                   NotNull    ] public string  NAME           { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column(),                   NotNull    ] public string  VENDOR         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   NotNull    ] public string  NAME           { get; set; } = null!; // NVARCHAR(30)
+		[Column(),                   NotNull    ] public string  VENDOR         { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                      Nullable] public string? VERSION        { get; set; } // NVARCHAR(30)
 		[Column("VERSION_SP"),          Nullable] public string? VersionSp      { get; set; } // NVARCHAR(16)
 		[Column(),                      Nullable] public string? CAPTION        { get; set; } // NVARCHAR(256)
@@ -6309,31 +5233,21 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::PRODUCTS_EXTENSION")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbProductsExtension
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(1), NotNull] public string  NAME      { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column(),             PrimaryKey(2), NotNull] public string  VENDOR    { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),             PrimaryKey(1), NotNull] public string  NAME      { get; set; } = null!; // NVARCHAR(30)
+		[Column(),             PrimaryKey(2), NotNull] public string  VENDOR    { get; set; } = null!; // NVARCHAR(256)
 		[Column("VERSION_SP"),    Nullable           ] public string? VersionSp { get; set; } // NVARCHAR(16)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::SLP_DEPLOY_TASKS", IsView=true)]
 	public partial class SAP_XS_LM_SapHanaXsLmDbSlpDeployTask
 	{
-		#nullable disable
-		[Column(),                  NotNull    ] public string  ID            { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[Column(),                  NotNull    ] public string  ID            { get; set; } = null!; // NVARCHAR(32)
 		[Column(),                     Nullable] public string? TYPE          { get; set; } // NVARCHAR(30)
 		[Column("TECH_NAME"),          Nullable] public string? TechName      { get; set; } // VARCHAR(33)
 		[Column(),                     Nullable] public string? STATUS        { get; set; } // VARCHAR(30)
 		[Column(),                     Nullable] public string? LOGS          { get; set; } // VARCHAR(30)
-		#nullable disable
-		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId     { get; set; } // VARCHAR(32)
-		#nullable enable
-		#nullable disable
-		[Column("TASK_ID"),         NotNull    ] public string  TaskId        { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId     { get; set; } = null!; // VARCHAR(32)
+		[Column("TASK_ID"),         NotNull    ] public string  TaskId        { get; set; } = null!; // NVARCHAR(32)
 		[Column(),                     Nullable] public string? FILEID        { get; set; } // NVARCHAR(32)
 		[Column(),                     Nullable] public string? FILEPATH      { get; set; } // NVARCHAR(256)
 		[Column(),                     Nullable] public string? FILENAME      { get; set; } // NVARCHAR(256)
@@ -6345,12 +5259,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::SLP_TASKS_EXT")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbSlpTasksExt
 	{
-		#nullable disable
 		/// <summary>
 		/// Task ID
 		/// </summary>
-		[Column("TASK_ID"),         PrimaryKey,  NotNull] public string  TaskId        { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[Column("TASK_ID"),         PrimaryKey,  NotNull] public string  TaskId        { get; set; } = null!; // NVARCHAR(32)
 		/// <summary>
 		/// File ID
 		/// </summary>
@@ -6413,12 +5325,8 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_SapHanaXsLmDbTransportContent
 	{
 		[Column("TRANSPORT_CONTENT_ID"), PrimaryKey,  NotNull] public long      TransportContentId { get; set; } // BIGINT
-		#nullable disable
-		[Column("DU_NAME"),                           NotNull] public string    DuName             { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("DU_VENDOR"),                         NotNull] public string    DuVendor           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("DU_NAME"),                           NotNull] public string    DuName             { get; set; } = null!; // NVARCHAR(256)
+		[Column("DU_VENDOR"),                         NotNull] public string    DuVendor           { get; set; } = null!; // NVARCHAR(256)
 		[Column("DU_VERSION"),              Nullable         ] public string?   DuVersion          { get; set; } // NVARCHAR(256)
 		[Column("DU_VERSION_SP"),           Nullable         ] public string?   DuVersionSp        { get; set; } // NVARCHAR(256)
 		[Column("DU_VERSION_PATCH"),        Nullable         ] public string?   DuVersionPatch     { get; set; } // NVARCHAR(256)
@@ -6437,22 +5345,14 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::TRANSPORTED_CHANGE")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbTransportedChange
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),          NotNull    ] public string    ProcessId         { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),          NotNull    ] public string    ProcessId         { get; set; } = null!; // NVARCHAR(90)
 		[Column(),                         Nullable] public string?   PACKAGE           { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("DU_NAME"),             NotNull    ] public string    DuName            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("DU_VENDOR"),           NotNull    ] public string    DuVendor          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("DU_NAME"),             NotNull    ] public string    DuName            { get; set; } = null!; // NVARCHAR(256)
+		[Column("DU_VENDOR"),           NotNull    ] public string    DuVendor          { get; set; } = null!; // NVARCHAR(256)
 		[Column("CHANGE_ID"),              Nullable] public int?      ChangeId          { get; set; } // INTEGER
 		[Column("CHANGE_RELEASE_TIME"),    Nullable] public DateTime? ChangeReleaseTime { get; set; } // TIMESTAMP
 		[Column("TRANSPORTED_BY"),         Nullable] public string?   TransportedBy     { get; set; } // NVARCHAR(8)
-		#nullable disable
-		[Column("SRC_SYSTEM"),          NotNull    ] public string    SrcSystem         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SRC_SYSTEM"),          NotNull    ] public string    SrcSystem         { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                         Nullable] public char?     RELEASED          { get; set; } // VARCHAR(1)
 	}
 
@@ -6478,12 +5378,8 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_SapHanaXsLmDbTransportRouteDu
 	{
 		[Column("TRANSPORT_ROUTE_ID"), PrimaryKey(1), NotNull] public long   TransportRouteId { get; set; } // BIGINT
-		#nullable disable
-		[Column(),                     PrimaryKey(2), NotNull] public string VENDOR           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                     PrimaryKey(3), NotNull] public string NAME             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                     PrimaryKey(2), NotNull] public string VENDOR           { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                     PrimaryKey(3), NotNull] public string NAME             { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::TRANSPORT_ROUTE_VIEW", IsView=true)]
@@ -6509,13 +5405,9 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::UPLOADED_FILE")]
 	public partial class SAP_XS_LM_SapHanaXsLmDbUploadedFile
 	{
-		#nullable disable
-		[Column("UPLOAD_ID"),   PrimaryKey(1), NotNull] public string    UploadId   { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("UPLOAD_ID"),   PrimaryKey(1), NotNull] public string    UploadId   { get; set; } = null!; // NVARCHAR(60)
 		[Column(),                 Nullable           ] public string?   DIRECTORY  { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                             NotNull] public string    FILENAME   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                             NotNull] public string    FILENAME   { get; set; } = null!; // NVARCHAR(256)
 		[Column("CONTENT_ID"),  PrimaryKey(2), NotNull] public long      ContentId  { get; set; } // BIGINT
 		[Column("UPLOAD_TIME"),    Nullable           ] public DateTime? UploadTime { get; set; } // TIMESTAMP
 	}
@@ -6523,22 +5415,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.installation::DELIVERY_UNITS_INST", IsView=true)]
 	public partial class SAP_XS_LM_SapHanaXsLmInstallationDeliveryUnitsInst
 	{
-		#nullable disable
-		[Column("SC_VENDOR"),           NotNull    ] public string    ScVendor          { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SC_NAME"),             NotNull    ] public string    ScName            { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("SC_VENDOR"),           NotNull    ] public string    ScVendor          { get; set; } = null!; // NVARCHAR(256)
+		[Column("SC_NAME"),             NotNull    ] public string    ScName            { get; set; } = null!; // NVARCHAR(256)
 		[Column("SC_TYPE"),                Nullable] public string?   ScType            { get; set; } // NVARCHAR(20)
-		#nullable disable
-		[Column("PRODUCT_VENDOR"),      NotNull    ] public string    ProductVendor     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("PRODUCT_NAME"),        NotNull    ] public string    ProductName       { get; set; } // NVARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column("PRODUCT_INSTANCE_ID"), NotNull    ] public string    ProductInstanceId { get; set; } // NVARCHAR(3)
-		#nullable enable
+		[Column("PRODUCT_VENDOR"),      NotNull    ] public string    ProductVendor     { get; set; } = null!; // NVARCHAR(256)
+		[Column("PRODUCT_NAME"),        NotNull    ] public string    ProductName       { get; set; } = null!; // NVARCHAR(30)
+		[Column("PRODUCT_INSTANCE_ID"), NotNull    ] public string    ProductInstanceId { get; set; } = null!; // NVARCHAR(3)
 		[Column("DELIVERY_UNIT"),          Nullable] public string?   DeliveryUnit      { get; set; } // NVARCHAR(256)
 		[Column(),                         Nullable] public string?   RESPONSIBLE       { get; set; } // NVARCHAR(256)
 		[Column(),                         Nullable] public string?   VERSION           { get; set; } // NVARCHAR(256)
@@ -6555,12 +5437,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.content.demo.db::DEMO_VARIANT_CONTAINER")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeContentDemoDbDemoVariantContainer
 	{
-		#nullable disable
 		/// <summary>
 		/// ID
 		/// </summary>
-		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string  VariantId          { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string  VariantId          { get; set; } = null!; // VARCHAR(60)
 		/// <summary>
 		/// 0 = public usable variant
 		/// </summary>
@@ -6569,32 +5449,22 @@ namespace SapHanaDataContext
 		/// Description
 		/// </summary>
 		[Column("VARIANT_DESCRIPTION"),    Nullable         ] public string? VariantDescription { get; set; } // VARCHAR(80)
-		#nullable disable
 		/// <summary>
 		/// Who sends Hello to the World
 		/// </summary>
-		[Column(),                                   NotNull] public string  Sender             { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
+		[Column(),                                   NotNull] public string  Sender             { get; set; } = null!; // NVARCHAR(60)
 		/// <summary>
 		/// The Message
 		/// </summary>
-		[Column(),                                   NotNull] public string  MessageToTheWorld  { get; set; } // NVARCHAR(200)
-		#nullable enable
+		[Column(),                                   NotNull] public string  MessageToTheWorld  { get; set; } = null!; // NVARCHAR(200)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_OBJECTS")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationObject
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string    PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string    ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string    ObjectSuffix { get; set; } // NVARCHAR(255)
-		#nullable enable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string    PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string    ObjectName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string    ObjectSuffix { get; set; } = null!; // NVARCHAR(255)
 		[Column("ACTIVATED_AT"),     Nullable           ] public DateTime? ActivatedAt  { get; set; } // TIMESTAMP
 		[Column("DELIVERY_UNIT"),    Nullable           ] public string?   DeliveryUnit { get; set; } // NVARCHAR(256)
 		[Column(),                   Nullable           ] public string?   VENDOR       { get; set; } // NVARCHAR(256)
@@ -6603,9 +5473,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_SCENARIO", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationScenario
 	{
-		#nullable disable
-		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } = null!; // VARCHAR(60)
 		[Column("VARIANT_TYPE"),        NotNull    ] public int       VariantType           { get; set; } // INTEGER
 		[Column("VARIANT_DESCRIPTION"),    Nullable] public string?   VariantDescription    { get; set; } // VARCHAR(80)
 		[Column("mode"),                   Nullable] public char?     Mode                  { get; set; } // VARCHAR(1)
@@ -6615,9 +5483,7 @@ namespace SapHanaDataContext
 		[Column(),                         Nullable] public string?   ScenarioID            { get; set; } // NVARCHAR(320)
 		[Column("PACKAGE_ID"),             Nullable] public string?   PackageId             { get; set; } // NVARCHAR(256)
 		[Column("OBJECT_NAME"),            Nullable] public string?   ObjectName            { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),       NotNull    ] public string    ObjectSuffix          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("OBJECT_SUFFIX"),       NotNull    ] public string    ObjectSuffix          { get; set; } = null!; // NVARCHAR(256)
 		[Column("DELIVERY_UNIT"),          Nullable] public string?   DeliveryUnit          { get; set; } // NVARCHAR(256)
 		[Column(),                         Nullable] public string?   VENDOR                { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),      Nullable] public DateTime? RepoActivatedAt       { get; set; } // TIMESTAMP
@@ -6635,9 +5501,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_SERVICE", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationService
 	{
-		#nullable disable
-		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } = null!; // VARCHAR(60)
 		[Column("VARIANT_TYPE"),        NotNull    ] public int       VariantType           { get; set; } // INTEGER
 		[Column("VARIANT_DESCRIPTION"),    Nullable] public string?   VariantDescription    { get; set; } // VARCHAR(80)
 		[Column("mode"),                   Nullable] public char?     Mode                  { get; set; } // VARCHAR(1)
@@ -6647,9 +5511,7 @@ namespace SapHanaDataContext
 		[Column(),                         Nullable] public string?   ScenarioID            { get; set; } // NVARCHAR(320)
 		[Column("PACKAGE_ID"),             Nullable] public string?   PackageId             { get; set; } // NVARCHAR(256)
 		[Column("OBJECT_NAME"),            Nullable] public string?   ObjectName            { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),       NotNull    ] public string    ObjectSuffix          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("OBJECT_SUFFIX"),       NotNull    ] public string    ObjectSuffix          { get; set; } = null!; // NVARCHAR(256)
 		[Column("DELIVERY_UNIT"),          Nullable] public string?   DeliveryUnit          { get; set; } // NVARCHAR(256)
 		[Column(),                         Nullable] public string?   VENDOR                { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),      Nullable] public DateTime? RepoActivatedAt       { get; set; } // TIMESTAMP
@@ -6667,18 +5529,14 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VALUE_BUFFER")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationValueBuffer
 	{
-		#nullable disable
-		[Column("ACTIVATION_KEY"), PrimaryKey,  NotNull] public string  ActivationKey { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column("ACTIVATION_KEY"), PrimaryKey,  NotNull] public string  ActivationKey { get; set; } = null!; // VARCHAR(256)
 		[Column(),                    Nullable         ] public string? VALUE         { get; set; } // NCLOB
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VARIANTS")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVariant
 	{
-		#nullable disable
-		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string    VariantId             { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          PrimaryKey,  NotNull] public string    VariantId             { get; set; } = null!; // VARCHAR(60)
 		/// <summary>
 		/// 0 = public usable variant
 		/// </summary>
@@ -6712,30 +5570,16 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_SCENARIO", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarScenario
 	{
-		#nullable disable
-		[Column(),                        NotNull    ] public string    ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),              NotNull    ] public string    ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                        NotNull    ] public string    SCOPE                { get; set; } // NVARCHAR(80)
-		#nullable enable
+		[Column(),                        NotNull    ] public string    ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),              NotNull    ] public string    ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                        NotNull    ] public string    SCOPE                { get; set; } = null!; // NVARCHAR(80)
 		[Column("EXTERNAL_INFO"),            Nullable] public string?   ExternalInfo         { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),           Nullable] public string?   BestPractices        { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string    TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string    TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string    TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string    TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
 		[Column(),                           Nullable] public int?      STATUS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PACKAGE_ID"),            NotNull    ] public string    PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),           NotNull    ] public string    ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),            NotNull    ] public string    PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),           NotNull    ] public string    ObjectName           { get; set; } = null!; // NVARCHAR(256)
 		[Column("OBJECT_SUFFIX"),            Nullable] public string?   ObjectSuffix         { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),        Nullable] public DateTime? RepoActivatedAt      { get; set; } // TIMESTAMP
 		[Column("ACTIVATED_AT"),             Nullable] public DateTime? ActivatedAt          { get; set; } // TIMESTAMP
@@ -6746,50 +5590,28 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_SCENARIO_PHASE", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarScenarioPhase
 	{
-		#nullable disable
-		[Column("SCENARIO_ID"),         NotNull    ] public string  ScenarioId        { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SCENARIO_ID"),         NotNull    ] public string  ScenarioId        { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                      NotNull    ] public int     POS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PHASE_ID"),            NotNull    ] public string  PhaseId           { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("PHASE_ID"),            NotNull    ] public string  PhaseId           { get; set; } = null!; // NVARCHAR(60)
 		[Column("EXTERNAL_INFO"),          Nullable] public string? ExternalInfo      { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),         Nullable] public string? BestPractices     { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"), NotNull    ] public string  TextIdDescription { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"), NotNull    ] public string  TextIdDisplayname { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column("TEXT_ID_DESCRIPTION"), NotNull    ] public string  TextIdDescription { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"), NotNull    ] public string  TextIdDisplayname { get; set; } = null!; // VARCHAR(320)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_SERVICE", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarService
 	{
-		#nullable disable
-		[Column(),                        NotNull    ] public string    ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),              NotNull    ] public string    ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),           NotNull    ] public string    ScenarioId           { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string    TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string    TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column(),                        NotNull    ] public string    ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),              NotNull    ] public string    ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column("SCENARIO_ID"),           NotNull    ] public string    ScenarioId           { get; set; } = null!; // NVARCHAR(320)
+		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string    TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string    TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
 		[Column("VAR_ODATA_SRV"),            Nullable] public string?   VarOdataSrv          { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),             Nullable] public string?   VarMaintUi           { get; set; } // NVARCHAR(2048)
 		[Column(),                           Nullable] public int?      STATUS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PACKAGE_ID"),            NotNull    ] public string    PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),           NotNull    ] public string    ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),            NotNull    ] public string    PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),           NotNull    ] public string    ObjectName           { get; set; } = null!; // NVARCHAR(256)
 		[Column("OBJECT_SUFFIX"),            Nullable] public string?   ObjectSuffix         { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),        Nullable] public DateTime? RepoActivatedAt      { get; set; } // TIMESTAMP
 		[Column("ACTIVATED_AT"),             Nullable] public DateTime? ActivatedAt          { get; set; } // TIMESTAMP
@@ -6800,35 +5622,17 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_SERVICE_STEP", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarServiceStep
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),            NotNull    ] public string  ServiceId            { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SERVICE_ID"),            NotNull    ] public string  ServiceId            { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                        NotNull    ] public int     POS                  { get; set; } // INTEGER
-		#nullable disable
-		[Column("STEP_ID"),               NotNull    ] public string  StepId               { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                        NotNull    ] public string  TYPE                 { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column("STEP_ID"),               NotNull    ] public string  StepId               { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                        NotNull    ] public string  TYPE                 { get; set; } = null!; // NVARCHAR(10)
 		[Column(),                           Nullable] public string? SCHEMA               { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),                        NotNull    ] public string  EXECUTABLE           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string  TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string  TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("PACKAGE_ID"),            NotNull    ] public string  PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),           NotNull    ] public string  ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),         NotNull    ] public string  ObjectSuffix         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  EXECUTABLE           { get; set; } = null!; // NVARCHAR(127)
+		[Column("TEXT_ID_DESCRIPTION"),   NotNull    ] public string  TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),   NotNull    ] public string  TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
+		[Column("PACKAGE_ID"),            NotNull    ] public string  PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),           NotNull    ] public string  ObjectName           { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),         NotNull    ] public string  ObjectSuffix         { get; set; } = null!; // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),          Nullable] public string? SubObjectName        { get; set; } // NVARCHAR(256)
 		[Column("APPLICATION_COMPONENT"),    Nullable] public string? ApplicationComponent { get; set; } // NVARCHAR(256)
 	}
@@ -6836,15 +5640,9 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_SERVICE_VARIANT", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarServiceVariant
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_SCHEMA"), NotNull    ] public string  VarContSchema { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_TABLE"),  NotNull    ] public string  VarContTable  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } = null!; // NVARCHAR(320)
+		[Column("VAR_CONT_SCHEMA"), NotNull    ] public string  VarContSchema { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_TABLE"),  NotNull    ] public string  VarContTable  { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                  NotNull    ] public int     TYPE          { get; set; } // INTEGER
 		[Column("PARAM_NAME"),         Nullable] public string? ParamName     { get; set; } // NVARCHAR(127)
 	}
@@ -6852,22 +5650,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_TEXT_REPOSITORY", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarTextRepository
 	{
-		#nullable disable
-		[Column(),                  NotNull    ] public string  ID            { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  LANG          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                  NotNull    ] public string  ID            { get; set; } = null!; // NVARCHAR(320)
+		[Column(),                  NotNull    ] public string  LANG          { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                     Nullable] public string? CONTENT       { get; set; } // NVARCHAR(4000)
-		#nullable disable
-		[Column("PACKAGE_ID"),      NotNull    ] public string  PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),     NotNull    ] public string  ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),   NotNull    ] public string  ObjectSuffix  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),      NotNull    ] public string  PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),     NotNull    ] public string  ObjectName    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),   NotNull    ] public string  ObjectSuffix  { get; set; } = null!; // NVARCHAR(256)
 		[Column("TEXT_ID"),            Nullable] public string? TextId        { get; set; } // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),    Nullable] public string? SubObjectName { get; set; } // NVARCHAR(256)
 	}
@@ -6875,9 +5663,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarView
 	{
-		#nullable disable
-		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          NotNull    ] public string    VariantId             { get; set; } = null!; // VARCHAR(60)
 		[Column("VARIANT_TYPE"),        NotNull    ] public int       VariantType           { get; set; } // INTEGER
 		[Column("VARIANT_DESCRIPTION"),    Nullable] public string?   VariantDescription    { get; set; } // VARCHAR(80)
 		[Column("mode"),                   Nullable] public char?     Mode                  { get; set; } // VARCHAR(1)
@@ -6905,32 +5691,22 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::ACTIVATION_VAR_XSSCRIPT_PARAMETERS", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbActivationVarXsscriptParameter
 	{
-		#nullable disable
-		[Column(),                    NotNull    ] public string  EXECUTABLE      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_NAME"),    NotNull    ] public string  ParameterName   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                    NotNull    ] public string  EXECUTABLE      { get; set; } = null!; // NVARCHAR(256)
+		[Column("PARAMETER_NAME"),    NotNull    ] public string  ParameterName   { get; set; } = null!; // NVARCHAR(256)
 		[Column("DATA_TYPE_NAME"),       Nullable] public string? DataTypeName    { get; set; } // VARCHAR(16)
 		[Column("TABLE_TYPE_SCHEMA"),    Nullable] public string? TableTypeSchema { get; set; } // NVARCHAR(256)
 		[Column("TABLE_TYPE_NAME"),      Nullable] public string? TableTypeName   { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("PARAMETER_TYPE"),    NotNull    ] public string  ParameterType   { get; set; } // VARCHAR(7)
-		#nullable enable
+		[Column("PARAMETER_TYPE"),    NotNull    ] public string  ParameterType   { get; set; } = null!; // VARCHAR(7)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::APPLICATION_VARIANTS")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbApplicationVariant
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),          PrimaryKey(1), NotNull] public string  ServiceId          { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
+		[Column("SERVICE_ID"),          PrimaryKey(1), NotNull] public string  ServiceId          { get; set; } = null!; // NVARCHAR(320)
 		/// <summary>
 		/// ID, allowed char [A-Za-z0-9_]
 		/// </summary>
-		[Column("VARIANT_ID"),          PrimaryKey(2), NotNull] public string  VariantId          { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("VARIANT_ID"),          PrimaryKey(2), NotNull] public string  VariantId          { get; set; } = null!; // VARCHAR(60)
 		/// <summary>
 		/// 0 = public usable variant
 		/// </summary>
@@ -6964,12 +5740,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::LOG")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbLog
 	{
-		#nullable disable
 		/// <summary>
 		/// GUID
 		/// </summary>
-		[Column(),               PrimaryKey(1), NotNull] public string   ID          { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[Column(),               PrimaryKey(1), NotNull] public string   ID          { get; set; } = null!; // NVARCHAR(32)
 		[Column("MSG_TS"),       PrimaryKey(2), NotNull] public DateTime MsgTs       { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),                    NotNull] public char     MsgType     { get; set; } // VARCHAR(1)
 		[Column("MSG_TEXT"),        Nullable           ] public string?  MsgText     { get; set; } // NVARCHAR(3072)
@@ -6982,9 +5756,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::LOG_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbLogView
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),     NotNull    ] public int      TaskPos     { get; set; } // INTEGER
 		[Column("MSG_TS"),       NotNull    ] public DateTime MsgTs       { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),     NotNull    ] public char     MsgType     { get; set; } // VARCHAR(1)
@@ -6993,21 +5765,15 @@ namespace SapHanaDataContext
 		[Column("DETAIL_LEVEL"),    Nullable] public int?     DetailLevel { get; set; } // INTEGER
 		[Column("EXT_LOG_ID"),      Nullable] public string?  ExtLogId    { get; set; } // NVARCHAR(127)
 		[Column("EXT_LOG_LINK"),    Nullable] public string?  ExtLogLink  { get; set; } // NVARCHAR(2048)
-		#nullable disable
-		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } = null!; // NVARCHAR(60)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcess
 	{
-		#nullable disable
-		[Column(),              PrimaryKey,  NotNull] public string    ID         { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column(),              PrimaryKey,  NotNull] public string    ID         { get; set; } = null!; // NVARCHAR(90)
 		[Column("SNAPSHOT_ID"),              NotNull] public int       SnapshotId { get; set; } // INTEGER
-		#nullable disable
-		[Column("SERVICE_ID"),               NotNull] public string    ServiceId  { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SERVICE_ID"),               NotNull] public string    ServiceId  { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                 Nullable         ] public int?      STATUS     { get; set; } // INTEGER
 		[Column("LAST_USER"),      Nullable         ] public string?   LastUser   { get; set; } // NVARCHAR(256)
 		[Column("START_TS"),       Nullable         ] public DateTime? StartTs    { get; set; } // TIMESTAMP
@@ -7019,9 +5785,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_LOG", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessLog
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),     NotNull    ] public int      TaskPos     { get; set; } // INTEGER
 		[Column("MSG_TS"),       NotNull    ] public DateTime MsgTs       { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),     NotNull    ] public char     MsgType     { get; set; } // VARCHAR(1)
@@ -7030,24 +5794,16 @@ namespace SapHanaDataContext
 		[Column("DETAIL_LEVEL"),    Nullable] public int?     DetailLevel { get; set; } // INTEGER
 		[Column("EXT_LOG_ID"),      Nullable] public string?  ExtLogId    { get; set; } // NVARCHAR(127)
 		[Column("EXT_LOG_LINK"),    Nullable] public string?  ExtLogLink  { get; set; } // NVARCHAR(2048)
-		#nullable disable
-		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } // VARCHAR(2)
-		#nullable enable
+		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } = null!; // VARCHAR(2)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_PARAMETER")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessParameter
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),      PrimaryKey(1), NotNull] public string  ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_TABLE"), PrimaryKey(2), NotNull] public string  ParameterTable { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PROCESS_ID"),      PrimaryKey(1), NotNull] public string  ProcessId      { get; set; } = null!; // NVARCHAR(90)
+		[Column("PARAMETER_TABLE"), PrimaryKey(2), NotNull] public string  ParameterTable { get; set; } = null!; // NVARCHAR(127)
 		[Column("TASK_POS"),        PrimaryKey(3), NotNull] public int     TaskPos        { get; set; } // INTEGER
-		#nullable disable
-		[Column("PARAMETER_NAME"),  PrimaryKey(4), NotNull] public string  ParameterName  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PARAMETER_NAME"),  PrimaryKey(4), NotNull] public string  ParameterName  { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                  PrimaryKey(5), NotNull] public int     ROW            { get; set; } // INTEGER
 		[Column("VALUE_DISPLAY"),      Nullable           ] public string? ValueDisplay   { get; set; } // NVARCHAR(5000)
 	}
@@ -7055,16 +5811,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_PARAMETER_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessParameterView
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_TABLE"), NotNull    ] public string  ParameterTable { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } = null!; // NVARCHAR(90)
+		[Column("PARAMETER_TABLE"), NotNull    ] public string  ParameterTable { get; set; } = null!; // NVARCHAR(127)
 		[Column("TASK_POS"),        NotNull    ] public int     TaskPos        { get; set; } // INTEGER
-		#nullable disable
-		[Column("PARAMETER_NAME"),  NotNull    ] public string  ParameterName  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PARAMETER_NAME"),  NotNull    ] public string  ParameterName  { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                  NotNull    ] public int     ROW            { get; set; } // INTEGER
 		[Column("PARAMETER_TYPE"),  NotNull    ] public int     ParameterType  { get; set; } // INTEGER
 		[Column("PARAMETER_TEXT"),     Nullable] public string? ParameterText  { get; set; } // NVARCHAR(255)
@@ -7076,9 +5826,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_SEMAPHORE")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessSemaphore
 	{
-		#nullable disable
-		[Column("PROCESS_ID"), PrimaryKey,  NotNull] public string    ProcessId { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"), PrimaryKey,  NotNull] public string    ProcessId { get; set; } = null!; // NVARCHAR(90)
 		/// <summary>
 		/// 0: Do not stop 1: Stop
 		/// </summary>
@@ -7091,30 +5839,16 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessService
 	{
 		[Column("SNAPSHOT_ID"),           PrimaryKey(1), NotNull] public int       SnapshotId           { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                        PrimaryKey(2), NotNull] public string    ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),                             NotNull] public string    ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),                          NotNull] public string    ScenarioId           { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string    TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string    TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column(),                        PrimaryKey(2), NotNull] public string    ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),                             NotNull] public string    ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column("SCENARIO_ID"),                          NotNull] public string    ScenarioId           { get; set; } = null!; // NVARCHAR(320)
+		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string    TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string    TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
 		[Column("VAR_ODATA_SRV"),            Nullable           ] public string?   VarOdataSrv          { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),             Nullable           ] public string?   VarMaintUi           { get; set; } // NVARCHAR(256)
 		[Column(),                           Nullable           ] public int?      STATUS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PACKAGE_ID"),                           NotNull] public string    PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                          NotNull] public string    ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),                           NotNull] public string    PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                          NotNull] public string    ObjectName           { get; set; } = null!; // NVARCHAR(256)
 		[Column("OBJECT_SUFFIX"),            Nullable           ] public string?   ObjectSuffix         { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),        Nullable           ] public DateTime? RepoActivatedAt      { get; set; } // TIMESTAMP
 		[Column("ACTIVATED_AT"),             Nullable           ] public DateTime? ActivatedAt          { get; set; } // TIMESTAMP
@@ -7126,35 +5860,17 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessServiceStep
 	{
 		[Column("SNAPSHOT_ID"),           PrimaryKey(1), NotNull] public int     SnapshotId           { get; set; } // INTEGER
-		#nullable disable
-		[Column("SERVICE_ID"),            PrimaryKey(2), NotNull] public string  ServiceId            { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SERVICE_ID"),            PrimaryKey(2), NotNull] public string  ServiceId            { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                        PrimaryKey(3), NotNull] public int     POS                  { get; set; } // INTEGER
-		#nullable disable
-		[Column("STEP_ID"),                              NotNull] public string  StepId               { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                                       NotNull] public string  TYPE                 { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column("STEP_ID"),                              NotNull] public string  StepId               { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                                       NotNull] public string  TYPE                 { get; set; } = null!; // NVARCHAR(10)
 		[Column(),                           Nullable           ] public string? SCHEMA               { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),                                       NotNull] public string  EXECUTABLE           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string  TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string  TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("PACKAGE_ID"),                           NotNull] public string  PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                          NotNull] public string  ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),                        NotNull] public string  ObjectSuffix         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                                       NotNull] public string  EXECUTABLE           { get; set; } = null!; // NVARCHAR(127)
+		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string  TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string  TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
+		[Column("PACKAGE_ID"),                           NotNull] public string  PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                          NotNull] public string  ObjectName           { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),                        NotNull] public string  ObjectSuffix         { get; set; } = null!; // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),          Nullable           ] public string? SubObjectName        { get; set; } // NVARCHAR(256)
 		[Column("APPLICATION_COMPONENT"),    Nullable           ] public string? ApplicationComponent { get; set; } // NVARCHAR(256)
 	}
@@ -7163,15 +5879,9 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessServiceVariant
 	{
 		[Column("SNAPSHOT_ID"),     PrimaryKey(1), NotNull] public int     SnapshotId     { get; set; } // INTEGER
-		#nullable disable
-		[Column("SERVICE_ID"),      PrimaryKey(2), NotNull] public string  ServiceId      { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_SCHEMA"), PrimaryKey(3), NotNull] public string  VarContSchema  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_TABLE"),  PrimaryKey(4), NotNull] public string  VarContTable   { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("SERVICE_ID"),      PrimaryKey(2), NotNull] public string  ServiceId      { get; set; } = null!; // NVARCHAR(320)
+		[Column("VAR_CONT_SCHEMA"), PrimaryKey(3), NotNull] public string  VarContSchema  { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_TABLE"),  PrimaryKey(4), NotNull] public string  VarContTable   { get; set; } = null!; // NVARCHAR(127)
 		/// <summary>
 		/// 1: Scalar Param 2: Table Type
 		/// </summary>
@@ -7180,25 +5890,17 @@ namespace SapHanaDataContext
 		/// Only for Table Type
 		/// </summary>
 		[Column("PARAM_NAME"),         Nullable           ] public string? ParamName      { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column("PARAMETER_TABLE"),                NotNull] public string  ParameterTable { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PARAMETER_TABLE"),                NotNull] public string  ParameterTable { get; set; } = null!; // NVARCHAR(127)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_TASK")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessTask
 	{
-		#nullable disable
-		[Column("PROCESS_ID"), PrimaryKey(1), NotNull] public string    ProcessId  { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"), PrimaryKey(1), NotNull] public string    ProcessId  { get; set; } = null!; // NVARCHAR(90)
 		[Column(),             PrimaryKey(2), NotNull] public int       POS        { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                            NotNull] public string    TYPE       { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column(),                            NotNull] public string    TYPE       { get; set; } = null!; // NVARCHAR(10)
 		[Column(),                Nullable           ] public string?   SCHEMA     { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),                            NotNull] public string    EXECUTABLE { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column(),                            NotNull] public string    EXECUTABLE { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                Nullable           ] public int?      STATUS     { get; set; } // INTEGER
 		[Column("LAST_USER"),     Nullable           ] public string?   LastUser   { get; set; } // NVARCHAR(256)
 		[Column("START_TS"),      Nullable           ] public DateTime? StartTs    { get; set; } // TIMESTAMP
@@ -7209,18 +5911,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_VARIABLE")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessVariable
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),      PrimaryKey(1), NotNull] public string  ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_TABLE"), PrimaryKey(2), NotNull] public string  ParameterTable { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_SCHEMA"),                NotNull] public string  VarContSchema  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_TABLE"),                 NotNull] public string  VarContTable   { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PROCESS_ID"),      PrimaryKey(1), NotNull] public string  ProcessId      { get; set; } = null!; // NVARCHAR(90)
+		[Column("PARAMETER_TABLE"), PrimaryKey(2), NotNull] public string  ParameterTable { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_SCHEMA"),                NotNull] public string  VarContSchema  { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_TABLE"),                 NotNull] public string  VarContTable   { get; set; } = null!; // NVARCHAR(127)
 		/// <summary>
 		/// 1: Scalar Param 2: Table Type
 		/// </summary>
@@ -7234,34 +5928,20 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_VARIABLE_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessVariableView
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_TABLE"), NotNull    ] public string  ParameterTable { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } = null!; // NVARCHAR(90)
+		[Column("PARAMETER_TABLE"), NotNull    ] public string  ParameterTable { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                  NotNull    ] public int     TYPE           { get; set; } // INTEGER
-		#nullable disable
-		[Column("PARAMETER_NAME"),  NotNull    ] public string  ParameterName  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PARAMETER_NAME"),  NotNull    ] public string  ParameterName  { get; set; } = null!; // NVARCHAR(256)
 		[Column("DATA_TYPE"),          Nullable] public string? DataType       { get; set; } // VARCHAR(16)
-		#nullable disable
-		[Column("IS_PRIMARY_KEY"),  NotNull    ] public string  IsPrimaryKey   { get; set; } // VARCHAR(5)
-		#nullable enable
+		[Column("IS_PRIMARY_KEY"),  NotNull    ] public string  IsPrimaryKey   { get; set; } = null!; // VARCHAR(5)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::PROCESS_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbProcessView
 	{
-		#nullable disable
-		[Column(),                NotNull    ] public string    ID          { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),                NotNull    ] public string    SERVICE     { get; set; } // NVARCHAR(329)
-		#nullable enable
-		#nullable disable
-		[Column("SERVICE_ID"),    NotNull    ] public string    ServiceId   { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column(),                NotNull    ] public string    ID          { get; set; } = null!; // NVARCHAR(90)
+		[Column(),                NotNull    ] public string    SERVICE     { get; set; } = null!; // NVARCHAR(329)
+		[Column("SERVICE_ID"),    NotNull    ] public string    ServiceId   { get; set; } = null!; // NVARCHAR(320)
 		[Column("VAR_ODATA_SRV"),    Nullable] public string?   VarOdataSrv { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),     Nullable] public string?   VarMaintUi  { get; set; } // NVARCHAR(256)
 		[Column("VARIANT_ID"),       Nullable] public string?   VariantId   { get; set; } // VARCHAR(60)
@@ -7273,24 +5953,16 @@ namespace SapHanaDataContext
 		[Column("LAST_USER"),        Nullable] public string?   LastUser    { get; set; } // NVARCHAR(256)
 		[Column("START_TS"),         Nullable] public DateTime? StartTs     { get; set; } // TIMESTAMP
 		[Column("END_TS"),           Nullable] public DateTime? EndTs       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column(),                NotNull    ] public string    DISPLAYNAME { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),                NotNull    ] public string    DISPLAYNAME { get; set; } = null!; // NVARCHAR(4000)
 		[Column(),                   Nullable] public string?   DESCRIPTION { get; set; } // NVARCHAR(4000)
 		[Column("LOG_TOTAL"),     NotNull    ] public long      LogTotal    { get; set; } // BIGINT
 		[Column("LOG_OK"),        NotNull    ] public long      LogOk       { get; set; } // BIGINT
 		[Column("LOG_ERROR"),     NotNull    ] public long      LogError    { get; set; } // BIGINT
 		[Column("LOG_WARNING"),   NotNull    ] public long      LogWarning  { get; set; } // BIGINT
 		[Column(),                   Nullable] public decimal?  PROGRESS    { get; set; } // DECIMAL(25, 6)
-		#nullable disable
-		[Column("ACTION_ID"),     NotNull    ] public string    ActionId    { get; set; } // VARCHAR(3)
-		#nullable enable
-		#nullable disable
-		[Column("METADATA_ID"),   NotNull    ] public string    MetadataId  { get; set; } // VARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column("SUPPORT_INFO"),  NotNull    ] public string    SupportInfo { get; set; } // NVARCHAR(313)
-		#nullable enable
+		[Column("ACTION_ID"),     NotNull    ] public string    ActionId    { get; set; } = null!; // VARCHAR(3)
+		[Column("METADATA_ID"),   NotNull    ] public string    MetadataId  { get; set; } = null!; // VARCHAR(4)
+		[Column("SUPPORT_INFO"),  NotNull    ] public string    SupportInfo { get; set; } = null!; // NVARCHAR(313)
 		[Column("SNAPSHOT_ID"),   NotNull    ] public int       SnapshotId  { get; set; } // INTEGER
 		[Column("LOG_ID"),           Nullable] public string?   LogId       { get; set; } // NVARCHAR(32)
 	}
@@ -7298,30 +5970,16 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SCENARIO")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbScenario
 	{
-		#nullable disable
-		[Column(),                        PrimaryKey,  NotNull] public string    ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),                           NotNull] public string    ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                                     NotNull] public string    SCOPE                { get; set; } // NVARCHAR(80)
-		#nullable enable
+		[Column(),                        PrimaryKey,  NotNull] public string    ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),                           NotNull] public string    ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                                     NotNull] public string    SCOPE                { get; set; } = null!; // NVARCHAR(80)
 		[Column("EXTERNAL_INFO"),            Nullable         ] public string?   ExternalInfo         { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),           Nullable         ] public string?   BestPractices        { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string    TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string    TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string    TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string    TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
 		[Column(),                           Nullable         ] public int?      STATUS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PACKAGE_ID"),                         NotNull] public string    PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                        NotNull] public string    ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),                         NotNull] public string    PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                        NotNull] public string    ObjectName           { get; set; } = null!; // NVARCHAR(256)
 		[Column("OBJECT_SUFFIX"),            Nullable         ] public string?   ObjectSuffix         { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),        Nullable         ] public DateTime? RepoActivatedAt      { get; set; } // TIMESTAMP
 		[Column("ACTIVATED_AT"),             Nullable         ] public DateTime? ActivatedAt          { get; set; } // TIMESTAMP
@@ -7332,33 +5990,21 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SCENARIO_PHASE")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbScenarioPhase
 	{
-		#nullable disable
-		[Column("SCENARIO_ID"),         PrimaryKey(1), NotNull] public string  ScenarioId        { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SCENARIO_ID"),         PrimaryKey(1), NotNull] public string  ScenarioId        { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                      PrimaryKey(2), NotNull] public int     POS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PHASE_ID"),                           NotNull] public string  PhaseId           { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("PHASE_ID"),                           NotNull] public string  PhaseId           { get; set; } = null!; // NVARCHAR(60)
 		[Column("EXTERNAL_INFO"),          Nullable           ] public string? ExternalInfo      { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),         Nullable           ] public string? BestPractices     { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string  TextIdDescription { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string  TextIdDisplayname { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string  TextIdDescription { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string  TextIdDisplayname { get; set; } = null!; // VARCHAR(320)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SCENARIO_PHASE_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbScenarioPhaseView
 	{
-		#nullable disable
-		[Column("SCENARIO_ID"),    NotNull    ] public string  ScenarioId    { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SCENARIO_ID"),    NotNull    ] public string  ScenarioId    { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                 NotNull    ] public int     POS           { get; set; } // INTEGER
-		#nullable disable
-		[Column("PHASE_ID"),       NotNull    ] public string  PhaseId       { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("PHASE_ID"),       NotNull    ] public string  PhaseId       { get; set; } = null!; // NVARCHAR(60)
 		[Column("EXTERNAL_INFO"),     Nullable] public string? ExternalInfo  { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),    Nullable] public string? BestPractices { get; set; } // NVARCHAR(256)
 		[Column(),                    Nullable] public string? DISPLAYNAME   { get; set; } // NVARCHAR(4000)
@@ -7368,51 +6014,29 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SCENARIO_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbScenarioView
 	{
-		#nullable disable
-		[Column(),                        NotNull    ] public string  ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),              NotNull    ] public string  ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                        NotNull    ] public string  SCOPE                { get; set; } // NVARCHAR(80)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),              NotNull    ] public string  ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                        NotNull    ] public string  SCOPE                { get; set; } = null!; // NVARCHAR(80)
 		[Column("EXTERNAL_INFO"),            Nullable] public string? ExternalInfo         { get; set; } // NVARCHAR(256)
 		[Column("BEST_PRACTICES"),           Nullable] public string? BestPractices        { get; set; } // NVARCHAR(256)
 		[Column("APPLICATION_COMPONENT"),    Nullable] public string? ApplicationComponent { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                        NotNull    ] public string  DISPLAYNAME          { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  DISPLAYNAME          { get; set; } = null!; // NVARCHAR(4000)
 		[Column(),                           Nullable] public string? DESCRIPTION          { get; set; } // NVARCHAR(4000)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbService
 	{
-		#nullable disable
-		[Column(),                        PrimaryKey,  NotNull] public string    ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),                           NotNull] public string    ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),                        NotNull] public string    ScenarioId           { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string    TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string    TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
+		[Column(),                        PrimaryKey,  NotNull] public string    ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),                           NotNull] public string    ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column("SCENARIO_ID"),                        NotNull] public string    ScenarioId           { get; set; } = null!; // NVARCHAR(320)
+		[Column("TEXT_ID_DESCRIPTION"),                NotNull] public string    TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                NotNull] public string    TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
 		[Column("VAR_ODATA_SRV"),            Nullable         ] public string?   VarOdataSrv          { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),             Nullable         ] public string?   VarMaintUi           { get; set; } // NVARCHAR(2048)
 		[Column(),                           Nullable         ] public int?      STATUS               { get; set; } // INTEGER
-		#nullable disable
-		[Column("PACKAGE_ID"),                         NotNull] public string    PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                        NotNull] public string    ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),                         NotNull] public string    PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                        NotNull] public string    ObjectName           { get; set; } = null!; // NVARCHAR(256)
 		[Column("OBJECT_SUFFIX"),            Nullable         ] public string?   ObjectSuffix         { get; set; } // NVARCHAR(256)
 		[Column("REPO_ACTIVATED_AT"),        Nullable         ] public DateTime? RepoActivatedAt      { get; set; } // TIMESTAMP
 		[Column("ACTIVATED_AT"),             Nullable         ] public DateTime? ActivatedAt          { get; set; } // TIMESTAMP
@@ -7433,50 +6057,30 @@ namespace SapHanaDataContext
 		[Column("VAR_ODATA_SRV"),                     Nullable] public string? VarOdataSrv                  { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),                      Nullable] public string? VarMaintUi                   { get; set; } // NVARCHAR(2048)
 		[Column("APPLICATION_COMPONENT"),             Nullable] public string? ApplicationComponent         { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                                 NotNull    ] public string  SLPPVERSION                  { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),                    NotNull    ] public string  ScenarioId                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_SHORT_ID"),              NotNull    ] public string  ScenarioShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column(),                                 NotNull    ] public string  SLPPVERSION                  { get; set; } = null!; // VARCHAR(5)
+		[Column("SCENARIO_ID"),                    NotNull    ] public string  ScenarioId                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SCENARIO_SHORT_ID"),              NotNull    ] public string  ScenarioShortId              { get; set; } = null!; // NVARCHAR(60)
 		[Column("FILTER_SCENARIO_SHORT_ID"),          Nullable] public string? FilterScenarioShortId        { get; set; } // NVARCHAR(60)
-		#nullable disable
-		[Column("SCENARIO_SCOPE"),                 NotNull    ] public string  ScenarioScope                { get; set; } // NVARCHAR(80)
-		#nullable enable
+		[Column("SCENARIO_SCOPE"),                 NotNull    ] public string  ScenarioScope                { get; set; } = null!; // NVARCHAR(80)
 		[Column("FILTER_SCENARIO_SCOPE"),             Nullable] public string? FilterScenarioScope          { get; set; } // NVARCHAR(80)
-		#nullable disable
-		[Column("SCENARIO_DISPLAYNAME"),           NotNull    ] public string  ScenarioDisplayname          { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column("SCENARIO_DISPLAYNAME"),           NotNull    ] public string  ScenarioDisplayname          { get; set; } = null!; // NVARCHAR(4000)
 		[Column("FILTER_SCENARIO_DISPLAYNAME"),       Nullable] public string? FilterScenarioDisplayname    { get; set; } // NVARCHAR(4000)
 		[Column("SCENARIO_DESCRIPTION"),              Nullable] public string? ScenarioDescription          { get; set; } // NVARCHAR(4000)
 		[Column("SCENARIO_EXTERNAL_INFO"),            Nullable] public string? ScenarioExternalInfo         { get; set; } // NVARCHAR(256)
 		[Column("SCENARIO_BEST_PRACTICES"),           Nullable] public string? ScenarioBestPractices        { get; set; } // NVARCHAR(256)
 		[Column("SCENARIO_APPLICATION_COMPONENT"),    Nullable] public string? ScenarioApplicationComponent { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("SUPPORT_INFO"),                   NotNull    ] public string  SupportInfo                  { get; set; } // NVARCHAR(450)
-		#nullable enable
+		[Column("SUPPORT_INFO"),                   NotNull    ] public string  SupportInfo                  { get; set; } = null!; // NVARCHAR(450)
 		[Column("PROC_ACTIVE"),                    NotNull    ] public long    ProcActive                   { get; set; } // BIGINT
 		[Column("ACTIVATION_STATE"),               NotNull    ] public char    ActivationState              { get; set; } // VARCHAR(1)
-		#nullable disable
-		[Column("ACTIVATION_VARIANT_ID"),          NotNull    ] public string  ActivationVariantId          { get; set; } // VARCHAR(60)
-		#nullable enable
+		[Column("ACTIVATION_VARIANT_ID"),          NotNull    ] public string  ActivationVariantId          { get; set; } = null!; // VARCHAR(60)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE_PARAMETER_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbServiceParameterView
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_SCHEMA"), NotNull    ] public string  VarContSchema { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_TABLE"),  NotNull    ] public string  VarContTable  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } = null!; // NVARCHAR(320)
+		[Column("VAR_CONT_SCHEMA"), NotNull    ] public string  VarContSchema { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_TABLE"),  NotNull    ] public string  VarContTable  { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                  NotNull    ] public int     TYPE          { get; set; } // INTEGER
 		[Column("PARAMETER_NAME"),     Nullable] public string? ParameterName { get; set; } // NVARCHAR(256)
 		[Column("DATA_TYPE"),          Nullable] public string? DataType      { get; set; } // NVARCHAR(127)
@@ -7485,25 +6089,15 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE_SCENARIO", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbServiceScenario
 	{
-		#nullable disable
-		[Column(),                                 NotNull    ] public string  ID                           { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),                       NotNull    ] public string  ShortId                      { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                                 NotNull    ] public string  DISPLAYNAME                  { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),                                 NotNull    ] public string  ID                           { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),                       NotNull    ] public string  ShortId                      { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                                 NotNull    ] public string  DISPLAYNAME                  { get; set; } = null!; // NVARCHAR(4000)
 		[Column(),                                    Nullable] public string? DESCRIPTION                  { get; set; } // NVARCHAR(4000)
 		[Column("VAR_ODATA_SRV"),                     Nullable] public string? VarOdataSrv                  { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),                      Nullable] public string? VarMaintUi                   { get; set; } // NVARCHAR(2048)
 		[Column("APPLICATION_COMPONENT"),             Nullable] public string? ApplicationComponent         { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                                 NotNull    ] public string  SLPPVERSION                  { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),                    NotNull    ] public string  ScenarioId                   { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column(),                                 NotNull    ] public string  SLPPVERSION                  { get; set; } = null!; // VARCHAR(5)
+		[Column("SCENARIO_ID"),                    NotNull    ] public string  ScenarioId                   { get; set; } = null!; // NVARCHAR(320)
 		[Column("SCENARIO_SHORT_ID"),                 Nullable] public string? ScenarioShortId              { get; set; } // NVARCHAR(60)
 		[Column("SCENARIO_SCOPE"),                    Nullable] public string? ScenarioScope                { get; set; } // NVARCHAR(80)
 		[Column("SCENARIO_DISPLAYNAME"),              Nullable] public string? ScenarioDisplayname          { get; set; } // NVARCHAR(4000)
@@ -7511,44 +6105,24 @@ namespace SapHanaDataContext
 		[Column("SCENARIO_EXTERNAL_INFO"),            Nullable] public string? ScenarioExternalInfo         { get; set; } // NVARCHAR(256)
 		[Column("SCENARIO_BEST_PRACTICES"),           Nullable] public string? ScenarioBestPractices        { get; set; } // NVARCHAR(256)
 		[Column("SCENARIO_APPLICATION_COMPONENT"),    Nullable] public string? ScenarioApplicationComponent { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("SUPPORT_INFO"),                   NotNull    ] public string  SupportInfo                  { get; set; } // NVARCHAR(450)
-		#nullable enable
+		[Column("SUPPORT_INFO"),                   NotNull    ] public string  SupportInfo                  { get; set; } = null!; // NVARCHAR(450)
 		[Column("PROC_ACTIVE"),                    NotNull    ] public long    ProcActive                   { get; set; } // BIGINT
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE_STEP")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbServiceStep
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),            PrimaryKey(1), NotNull] public string  ServiceId            { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SERVICE_ID"),            PrimaryKey(1), NotNull] public string  ServiceId            { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                        PrimaryKey(2), NotNull] public int     POS                  { get; set; } // INTEGER
-		#nullable disable
-		[Column("STEP_ID"),                              NotNull] public string  StepId               { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                                       NotNull] public string  TYPE                 { get; set; } // NVARCHAR(10)
-		#nullable enable
+		[Column("STEP_ID"),                              NotNull] public string  StepId               { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                                       NotNull] public string  TYPE                 { get; set; } = null!; // NVARCHAR(10)
 		[Column(),                           Nullable           ] public string? SCHEMA               { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),                                       NotNull] public string  EXECUTABLE           { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string  TextIdDescription    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string  TextIdDisplayname    { get; set; } // VARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("PACKAGE_ID"),                           NotNull] public string  PackageId            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                          NotNull] public string  ObjectName           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),                        NotNull] public string  ObjectSuffix         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                                       NotNull] public string  EXECUTABLE           { get; set; } = null!; // NVARCHAR(127)
+		[Column("TEXT_ID_DESCRIPTION"),                  NotNull] public string  TextIdDescription    { get; set; } = null!; // VARCHAR(320)
+		[Column("TEXT_ID_DISPLAYNAME"),                  NotNull] public string  TextIdDisplayname    { get; set; } = null!; // VARCHAR(320)
+		[Column("PACKAGE_ID"),                           NotNull] public string  PackageId            { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                          NotNull] public string  ObjectName           { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),                        NotNull] public string  ObjectSuffix         { get; set; } = null!; // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),          Nullable           ] public string? SubObjectName        { get; set; } // NVARCHAR(256)
 		[Column("APPLICATION_COMPONENT"),    Nullable           ] public string? ApplicationComponent { get; set; } // NVARCHAR(256)
 	}
@@ -7556,15 +6130,9 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE_VARIANT")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbServiceVariant
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),      PrimaryKey(1), NotNull] public string  ServiceId     { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_SCHEMA"), PrimaryKey(2), NotNull] public string  VarContSchema { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("VAR_CONT_TABLE"),  PrimaryKey(3), NotNull] public string  VarContTable  { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("SERVICE_ID"),      PrimaryKey(1), NotNull] public string  ServiceId     { get; set; } = null!; // NVARCHAR(320)
+		[Column("VAR_CONT_SCHEMA"), PrimaryKey(2), NotNull] public string  VarContSchema { get; set; } = null!; // NVARCHAR(127)
+		[Column("VAR_CONT_TABLE"),  PrimaryKey(3), NotNull] public string  VarContTable  { get; set; } = null!; // NVARCHAR(127)
 		/// <summary>
 		/// 1: Scalar Param 2: Table Type
 		/// </summary>
@@ -7578,69 +6146,37 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SERVICE_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbServiceView
 	{
-		#nullable disable
-		[Column(),                        NotNull    ] public string  ID                   { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column("SHORT_ID"),              NotNull    ] public string  ShortId              { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column("SCENARIO_ID"),           NotNull    ] public string  ScenarioId           { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  ID                   { get; set; } = null!; // NVARCHAR(320)
+		[Column("SHORT_ID"),              NotNull    ] public string  ShortId              { get; set; } = null!; // NVARCHAR(60)
+		[Column("SCENARIO_ID"),           NotNull    ] public string  ScenarioId           { get; set; } = null!; // NVARCHAR(320)
 		[Column("VAR_ODATA_SRV"),            Nullable] public string? VarOdataSrv          { get; set; } // NVARCHAR(256)
 		[Column("VAR_MAINT_UI"),             Nullable] public string? VarMaintUi           { get; set; } // NVARCHAR(2048)
 		[Column("APPLICATION_COMPONENT"),    Nullable] public string? ApplicationComponent { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                        NotNull    ] public string  DISPLAYNAME          { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  DISPLAYNAME          { get; set; } = null!; // NVARCHAR(4000)
 		[Column(),                           Nullable] public string? DESCRIPTION          { get; set; } // NVARCHAR(4000)
-		#nullable disable
-		[Column(),                        NotNull    ] public string  PROCESSES            { get; set; } // VARCHAR(9)
-		#nullable enable
-		#nullable disable
-		[Column(),                        NotNull    ] public string  SLPPVERSION          { get; set; } // VARCHAR(5)
-		#nullable enable
+		[Column(),                        NotNull    ] public string  PROCESSES            { get; set; } = null!; // VARCHAR(9)
+		[Column(),                        NotNull    ] public string  SLPPVERSION          { get; set; } = null!; // VARCHAR(5)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_ACTION_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpActionView
 	{
-		#nullable disable
-		[Column(),              NotNull] public string ID          { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column("ACTION_TYPE"), NotNull] public string ActionType  { get; set; } // VARCHAR(17)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull] public string INDIALOG    { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull] public string DISPLAYNAME { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull] public string DESCRIPTION { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column("ACTION_ID"),   NotNull] public string ActionId    { get; set; } // VARCHAR(3)
-		#nullable enable
+		[Column(),              NotNull] public string ID          { get; set; } = null!; // VARCHAR(6)
+		[Column("ACTION_TYPE"), NotNull] public string ActionType  { get; set; } = null!; // VARCHAR(17)
+		[Column(),              NotNull] public string INDIALOG    { get; set; } = null!; // VARCHAR(5)
+		[Column(),              NotNull] public string DISPLAYNAME { get; set; } = null!; // VARCHAR(6)
+		[Column(),              NotNull] public string DESCRIPTION { get; set; } = null!; // VARCHAR(6)
+		[Column("ACTION_ID"),   NotNull] public string ActionId    { get; set; } = null!; // VARCHAR(3)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_BREAKPOINT_CURRENT_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpBreakpointCurrentView
 	{
 		[Column(),                Nullable] public string? ID          { get; set; } // NVARCHAR(101)
-		#nullable disable
-		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  EXECUTABLE  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  ENABLED     { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  STATUS      { get; set; } // VARCHAR(24)
-		#nullable enable
+		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId   { get; set; } = null!; // NVARCHAR(90)
+		[Column(),             NotNull    ] public string  EXECUTABLE  { get; set; } = null!; // NVARCHAR(127)
+		[Column(),             NotNull    ] public string  ENABLED     { get; set; } = null!; // VARCHAR(5)
+		[Column(),             NotNull    ] public string  STATUS      { get; set; } = null!; // VARCHAR(24)
 		[Column(),                Nullable] public string? DISPLAYNAME { get; set; } // NVARCHAR(4000)
 		[Column(),                Nullable] public string? DESCRIPTION { get; set; } // NVARCHAR(4000)
 	}
@@ -7649,18 +6185,10 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpBreakpointView
 	{
 		[Column(),                Nullable] public string? ID          { get; set; } // NVARCHAR(101)
-		#nullable disable
-		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  EXECUTABLE  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  ENABLED     { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  STATUS      { get; set; } // VARCHAR(24)
-		#nullable enable
+		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId   { get; set; } = null!; // NVARCHAR(90)
+		[Column(),             NotNull    ] public string  EXECUTABLE  { get; set; } = null!; // NVARCHAR(127)
+		[Column(),             NotNull    ] public string  ENABLED     { get; set; } = null!; // VARCHAR(5)
+		[Column(),             NotNull    ] public string  STATUS      { get; set; } = null!; // VARCHAR(24)
 		[Column(),                Nullable] public string? DISPLAYNAME { get; set; } // NVARCHAR(4000)
 		[Column(),                Nullable] public string? DESCRIPTION { get; set; } // NVARCHAR(4000)
 	}
@@ -7669,50 +6197,28 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpConfigView
 	{
 		[Column(),                Nullable] public string? ID        { get; set; } // NVARCHAR(347)
-		#nullable disable
-		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  NAME      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  TYPE      { get; set; } // VARCHAR(25)
-		#nullable enable
+		[Column("PROCESS_ID"), NotNull    ] public string  ProcessId { get; set; } = null!; // NVARCHAR(90)
+		[Column(),             NotNull    ] public string  NAME      { get; set; } = null!; // NVARCHAR(256)
+		[Column(),             NotNull    ] public string  TYPE      { get; set; } = null!; // VARCHAR(25)
 		[Column(),             NotNull    ] public char    DEFAULT   { get; set; } // VARCHAR(1)
-		#nullable disable
-		[Column(),             NotNull    ] public string  REQUIRED  { get; set; } // VARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  SECURE    { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column(),             NotNull    ] public string  VALUE     { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column(),             NotNull    ] public string  REQUIRED  { get; set; } = null!; // VARCHAR(4)
+		[Column(),             NotNull    ] public string  SECURE    { get; set; } = null!; // VARCHAR(5)
+		[Column(),             NotNull    ] public string  VALUE     { get; set; } = null!; // NVARCHAR(5000)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_DIALOG_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpDialogView
 	{
-		#nullable disable
-		[Column(),            NotNull] public string ID          { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string DISPLAYNAME { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string DESCRIPTION { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column("ACTION_ID"), NotNull] public string ActionId    { get; set; } // VARCHAR(3)
-		#nullable enable
+		[Column(),            NotNull] public string ID          { get; set; } = null!; // VARCHAR(6)
+		[Column(),            NotNull] public string DISPLAYNAME { get; set; } = null!; // VARCHAR(6)
+		[Column(),            NotNull] public string DESCRIPTION { get; set; } = null!; // VARCHAR(6)
+		[Column("ACTION_ID"), NotNull] public string ActionId    { get; set; } = null!; // VARCHAR(3)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_LOG_CONTENT_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpLogContentView
 	{
-		#nullable disable
-		[Column(),               NotNull    ] public string   ID         { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column(),               NotNull    ] public string   ID         { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),     NotNull    ] public int      TaskPos    { get; set; } // INTEGER
 		[Column("MSG_TS"),       NotNull    ] public DateTime MsgTs      { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),     NotNull    ] public char     MsgType    { get; set; } // VARCHAR(1)
@@ -7726,68 +6232,38 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpLogView
 	{
 		[Column(),                     Nullable] public string?   ID             { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("PROCESS_ID"),      NotNull    ] public string    ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string    NAME           { get; set; } // VARCHAR(14)
-		#nullable enable
+		[Column("PROCESS_ID"),      NotNull    ] public string    ProcessId      { get; set; } = null!; // NVARCHAR(90)
+		[Column(),                  NotNull    ] public string    NAME           { get; set; } = null!; // VARCHAR(14)
 		[Column("MSG_TS"),             Nullable] public DateTime? MsgTs          { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column(),                  NotNull    ] public string    FORMAT         { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column(),                  NotNull    ] public string    FORMAT         { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                     Nullable] public string?   LOGCONTENT     { get; set; } // NVARCHAR(2048)
 		[Column("SLPP_LOGCONTENT"),    Nullable] public string?   SlppLogcontent { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),                  NotNull    ] public string    DISPLAYNAME    { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string    DESCRIPTION    { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column(),                  NotNull    ] public string    DISPLAYNAME    { get; set; } = null!; // VARCHAR(20)
+		[Column(),                  NotNull    ] public string    DESCRIPTION    { get; set; } = null!; // VARCHAR(20)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_METADATA_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpMetadataView
 	{
-		#nullable disable
-		[Column, NotNull] public string ID          { get; set; } // VARCHAR(4)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string SLPPVERSION { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column, NotNull] public string SLMPVERSION { get; set; } // VARCHAR(5)
-		#nullable enable
+		[Column, NotNull] public string ID          { get; set; } = null!; // VARCHAR(4)
+		[Column, NotNull] public string SLPPVERSION { get; set; } = null!; // VARCHAR(5)
+		[Column, NotNull] public string SLMPVERSION { get; set; } = null!; // VARCHAR(5)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_MONITOR_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpMonitorView
 	{
 		[Column(),                 Nullable] public string?   ID          { get; set; } // NVARCHAR(101)
-		#nullable disable
-		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column(),              NotNull    ] public int       POS         { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              NotNull    ] public string    TYPE        { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } // VARCHAR(26)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    PARENT      { get; set; } // NVARCHAR(100)
-		#nullable enable
-		#nullable disable
-		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    TYPE        { get; set; } = null!; // NVARCHAR(10)
+		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } = null!; // VARCHAR(26)
+		[Column(),              NotNull    ] public string    PARENT      { get; set; } = null!; // NVARCHAR(100)
+		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public decimal?  PROGRESS    { get; set; } // DECIMAL(25, 6)
 		[Column(),                 Nullable] public string?   SCHEMA      { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } = null!; // NVARCHAR(127)
+		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public int?      STATUS      { get; set; } // INTEGER
 		[Column("TOOL_STATUS"),    Nullable] public int?      ToolStatus  { get; set; } // INTEGER
 		[Column("SLPP_STATUS"),    Nullable] public string?   SlppStatus  { get; set; } // VARCHAR(30)
@@ -7806,52 +6282,30 @@ namespace SapHanaDataContext
 		[Column(),               Nullable] public string? DESCRIPTION { get; set; } // VARCHAR(309)
 		[Column(),               Nullable] public string? DISPLAYNAME { get; set; } // VARCHAR(32)
 		[Column(),               Nullable] public string? INFO        { get; set; } // VARCHAR(64)
-		#nullable disable
-		[Column("ACTION_ID"), NotNull    ] public string  ActionId    { get; set; } // VARCHAR(3)
-		#nullable enable
+		[Column("ACTION_ID"), NotNull    ] public string  ActionId    { get; set; } = null!; // VARCHAR(3)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_ROADMAP_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpRoadmapView
 	{
-		#nullable disable
-		[Column(),              NotNull    ] public string    ID          { get; set; } // NVARCHAR(101)
-		#nullable enable
-		#nullable disable
-		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column(),              NotNull    ] public string    ID          { get; set; } = null!; // NVARCHAR(101)
+		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column(),              NotNull    ] public int       POS         { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              NotNull    ] public string    TYPE        { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } // VARCHAR(26)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    PARENT      { get; set; } // NVARCHAR(100)
-		#nullable enable
-		#nullable disable
-		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    TYPE        { get; set; } = null!; // NVARCHAR(10)
+		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } = null!; // VARCHAR(26)
+		[Column(),              NotNull    ] public string    PARENT      { get; set; } = null!; // NVARCHAR(100)
+		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public decimal?  PROGRESS    { get; set; } // DECIMAL(25, 6)
-		#nullable disable
-		[Column(),              NotNull    ] public string    SCHEMA      { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    SCHEMA      { get; set; } = null!; // NVARCHAR(127)
+		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } = null!; // NVARCHAR(127)
+		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public int?      STATUS      { get; set; } // INTEGER
 		[Column("TOOL_STATUS"),    Nullable] public int?      ToolStatus  { get; set; } // INTEGER
 		[Column("SLPP_STATUS"),    Nullable] public string?   SlppStatus  { get; set; } // VARCHAR(30)
 		[Column("LAST_USER"),      Nullable] public string?   LastUser    { get; set; } // NVARCHAR(256)
 		[Column("START_TS"),       Nullable] public DateTime? StartTs     { get; set; } // TIMESTAMP
 		[Column("END_TS"),         Nullable] public DateTime? EndTs       { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column(),              NotNull    ] public string    DISPLAYNAME { get; set; } // NVARCHAR(4000)
-		#nullable enable
+		[Column(),              NotNull    ] public string    DISPLAYNAME { get; set; } = null!; // NVARCHAR(4000)
 		[Column(),                 Nullable] public string?   DESCRIPTION { get; set; } // NVARCHAR(4000)
 	}
 
@@ -7859,80 +6313,42 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpTasklogView
 	{
 		[Column(),                     Nullable] public string? ID             { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),      NotNull    ] public string  ProcessId      { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),        NotNull    ] public int     TaskPos        { get; set; } // INTEGER
-		#nullable disable
-		[Column("STEP_ID"),         NotNull    ] public string  StepId         { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  NAME           { get; set; } // VARCHAR(11)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  FORMAT         { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("STEP_ID"),         NotNull    ] public string  StepId         { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                  NotNull    ] public string  NAME           { get; set; } = null!; // VARCHAR(11)
+		[Column(),                  NotNull    ] public string  FORMAT         { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                     Nullable] public string? LOGCONTENT     { get; set; } // NVARCHAR(2048)
 		[Column("SLPP_LOGCONTENT"),    Nullable] public string? SlppLogcontent { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),                  NotNull    ] public string  DISPLAYNAME    { get; set; } // VARCHAR(18)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  DESCRIPTION    { get; set; } // VARCHAR(18)
-		#nullable enable
+		[Column(),                  NotNull    ] public string  DISPLAYNAME    { get; set; } = null!; // VARCHAR(18)
+		[Column(),                  NotNull    ] public string  DESCRIPTION    { get; set; } = null!; // VARCHAR(18)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::SLP_VERSION_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbSlpVersionView
 	{
-		#nullable disable
-		[Column(),            NotNull] public string ID          { get; set; } // VARCHAR(11)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string COMPONENT   { get; set; } // VARCHAR(11)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string VERSION     { get; set; } // VARCHAR(5)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string DESCRIPTION { get; set; } // VARCHAR(19)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string DISPLAYNAME { get; set; } // VARCHAR(19)
-		#nullable enable
-		#nullable disable
-		[Column("ACTION_ID"), NotNull] public string ActionId    { get; set; } // VARCHAR(3)
-		#nullable enable
+		[Column(),            NotNull] public string ID          { get; set; } = null!; // VARCHAR(11)
+		[Column(),            NotNull] public string COMPONENT   { get; set; } = null!; // VARCHAR(11)
+		[Column(),            NotNull] public string VERSION     { get; set; } = null!; // VARCHAR(5)
+		[Column(),            NotNull] public string DESCRIPTION { get; set; } = null!; // VARCHAR(19)
+		[Column(),            NotNull] public string DISPLAYNAME { get; set; } = null!; // VARCHAR(19)
+		[Column("ACTION_ID"), NotNull] public string ActionId    { get; set; } = null!; // VARCHAR(3)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::STEP_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbStepView
 	{
-		#nullable disable
-		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } // NVARCHAR(320)
-		#nullable enable
+		[Column("SERVICE_ID"),      NotNull    ] public string  ServiceId     { get; set; } = null!; // NVARCHAR(320)
 		[Column(),                  NotNull    ] public int     POS           { get; set; } // INTEGER
-		#nullable disable
-		[Column("STEP_ID"),         NotNull    ] public string  StepId        { get; set; } // NVARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  TYPE          { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column(),                  NotNull    ] public string  EXECUTABLE    { get; set; } // NVARCHAR(127)
-		#nullable enable
+		[Column("STEP_ID"),         NotNull    ] public string  StepId        { get; set; } = null!; // NVARCHAR(60)
+		[Column(),                  NotNull    ] public string  TYPE          { get; set; } = null!; // NVARCHAR(10)
+		[Column(),                  NotNull    ] public string  EXECUTABLE    { get; set; } = null!; // NVARCHAR(127)
 		[Column(),                     Nullable] public string? SCHEMA        { get; set; } // NVARCHAR(127)
 		[Column(),                     Nullable] public string? DISPLAYNAME   { get; set; } // NVARCHAR(4000)
 		[Column(),                     Nullable] public string? DESCRIPTION   { get; set; } // NVARCHAR(4000)
-		#nullable disable
-		[Column("PACKAGE_ID"),      NotNull    ] public string  PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),     NotNull    ] public string  ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),   NotNull    ] public string  ObjectSuffix  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),      NotNull    ] public string  PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),     NotNull    ] public string  ObjectName    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),   NotNull    ] public string  ObjectSuffix  { get; set; } = null!; // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),    Nullable] public string? SubObjectName { get; set; } // NVARCHAR(256)
 	}
 
@@ -7940,30 +6356,16 @@ namespace SapHanaDataContext
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbTasklistView
 	{
 		[Column(),                 Nullable] public string?   ID          { get; set; } // NVARCHAR(101)
-		#nullable disable
-		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column(),              NotNull    ] public int       POS         { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              NotNull    ] public string    TYPE        { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } // VARCHAR(26)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    PARENT      { get; set; } // NVARCHAR(100)
-		#nullable enable
-		#nullable disable
-		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    TYPE        { get; set; } = null!; // NVARCHAR(10)
+		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType    { get; set; } = null!; // VARCHAR(26)
+		[Column(),              NotNull    ] public string    PARENT      { get; set; } = null!; // NVARCHAR(100)
+		[Column("PARENT_ID"),   NotNull    ] public string    ParentId    { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public decimal?  PROGRESS    { get; set; } // DECIMAL(25, 6)
 		[Column(),                 Nullable] public string?   SCHEMA      { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } // NVARCHAR(91)
-		#nullable enable
+		[Column(),              NotNull    ] public string    EXECUTABLE  { get; set; } = null!; // NVARCHAR(127)
+		[Column("STEP_ID"),     NotNull    ] public string    StepId      { get; set; } = null!; // NVARCHAR(91)
 		[Column(),                 Nullable] public int?      STATUS      { get; set; } // INTEGER
 		[Column("TOOL_STATUS"),    Nullable] public int?      ToolStatus  { get; set; } // INTEGER
 		[Column("SLPP_STATUS"),    Nullable] public string?   SlppStatus  { get; set; } // VARCHAR(30)
@@ -7977,9 +6379,7 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::TASK_LOG", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbTaskLog
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),     NotNull    ] public int      TaskPos     { get; set; } // INTEGER
 		[Column("MSG_TS"),       NotNull    ] public DateTime MsgTs       { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),     NotNull    ] public char     MsgType     { get; set; } // VARCHAR(1)
@@ -7988,17 +6388,13 @@ namespace SapHanaDataContext
 		[Column("DETAIL_LEVEL"),    Nullable] public int?     DetailLevel { get; set; } // INTEGER
 		[Column("EXT_LOG_ID"),      Nullable] public string?  ExtLogId    { get; set; } // NVARCHAR(127)
 		[Column("EXT_LOG_LINK"),    Nullable] public string?  ExtLogLink  { get; set; } // NVARCHAR(2048)
-		#nullable disable
-		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } = null!; // NVARCHAR(60)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::TASK_LOG_F", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbTaskLogF
 	{
-		#nullable disable
-		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),   NotNull    ] public string   ProcessId   { get; set; } = null!; // NVARCHAR(90)
 		[Column("TASK_POS"),     NotNull    ] public int      TaskPos     { get; set; } // INTEGER
 		[Column("MSG_TS"),       NotNull    ] public DateTime MsgTs       { get; set; } // TIMESTAMP
 		[Column("MSG_TYPE"),     NotNull    ] public char     MsgType     { get; set; } // VARCHAR(1)
@@ -8007,40 +6403,24 @@ namespace SapHanaDataContext
 		[Column("DETAIL_LEVEL"),    Nullable] public int?     DetailLevel { get; set; } // INTEGER
 		[Column("EXT_LOG_ID"),      Nullable] public string?  ExtLogId    { get; set; } // NVARCHAR(127)
 		[Column("EXT_LOG_LINK"),    Nullable] public string?  ExtLogLink  { get; set; } // NVARCHAR(2048)
-		#nullable disable
-		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column("STEP_ID"),      NotNull    ] public string   StepId      { get; set; } = null!; // NVARCHAR(60)
 	}
 
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::TASK_VIEW", IsView=true)]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbTaskView
 	{
 		[Column(),                 Nullable] public string?   ID            { get; set; } // NVARCHAR(101)
-		#nullable disable
-		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId     { get; set; } // NVARCHAR(90)
-		#nullable enable
+		[Column("PROCESS_ID"),  NotNull    ] public string    ProcessId     { get; set; } = null!; // NVARCHAR(90)
 		[Column(),              NotNull    ] public int       POS           { get; set; } // INTEGER
-		#nullable disable
-		[Column(),              NotNull    ] public string    TYPE          { get; set; } // NVARCHAR(10)
-		#nullable enable
-		#nullable disable
-		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType      { get; set; } // VARCHAR(18)
-		#nullable enable
+		[Column(),              NotNull    ] public string    TYPE          { get; set; } = null!; // NVARCHAR(10)
+		[Column("SLPP_TYPE"),   NotNull    ] public string    SlppType      { get; set; } = null!; // VARCHAR(18)
 		[Column(),              NotNull    ] public char      PARENT        { get; set; } // VARCHAR(1)
 		[Column("PARENT_ID"),   NotNull    ] public char      ParentId      { get; set; } // VARCHAR(1)
-		#nullable disable
-		[Column(),              NotNull    ] public string    PROGRESS      { get; set; } // VARCHAR(2)
-		#nullable enable
+		[Column(),              NotNull    ] public string    PROGRESS      { get; set; } = null!; // VARCHAR(2)
 		[Column(),                 Nullable] public string?   SCHEMA        { get; set; } // NVARCHAR(127)
-		#nullable disable
-		[Column(),              NotNull    ] public string    EXECUTABLE    { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column(),              NotNull    ] public string    TECHNICALNAME { get; set; } // NVARCHAR(127)
-		#nullable enable
-		#nullable disable
-		[Column("STEP_ID"),     NotNull    ] public string    StepId        { get; set; } // NVARCHAR(60)
-		#nullable enable
+		[Column(),              NotNull    ] public string    EXECUTABLE    { get; set; } = null!; // NVARCHAR(127)
+		[Column(),              NotNull    ] public string    TECHNICALNAME { get; set; } = null!; // NVARCHAR(127)
+		[Column("STEP_ID"),     NotNull    ] public string    StepId        { get; set; } = null!; // NVARCHAR(60)
 		[Column(),                 Nullable] public int?      STATUS        { get; set; } // INTEGER
 		[Column("TOOL_STATUS"),    Nullable] public int?      ToolStatus    { get; set; } // INTEGER
 		[Column("SLPP_STATUS"),    Nullable] public string?   SlppStatus    { get; set; } // VARCHAR(30)
@@ -8058,22 +6438,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::TEXT_REPOSITORY")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbTextRepository
 	{
-		#nullable disable
-		[Column(),                  PrimaryKey(1), NotNull] public string  ID            { get; set; } // NVARCHAR(320)
-		#nullable enable
-		#nullable disable
-		[Column(),                  PrimaryKey(2), NotNull] public string  LANG          { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                  PrimaryKey(1), NotNull] public string  ID            { get; set; } = null!; // NVARCHAR(320)
+		[Column(),                  PrimaryKey(2), NotNull] public string  LANG          { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                     Nullable           ] public string? CONTENT       { get; set; } // NVARCHAR(4000)
-		#nullable disable
-		[Column("PACKAGE_ID"),                     NotNull] public string  PackageId     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                    NotNull] public string  ObjectName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_SUFFIX"),                  NotNull] public string  ObjectSuffix  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),                     NotNull] public string  PackageId     { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                    NotNull] public string  ObjectName    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_SUFFIX"),                  NotNull] public string  ObjectSuffix  { get; set; } = null!; // NVARCHAR(256)
 		[Column("TEXT_ID"),            Nullable           ] public string? TextId        { get; set; } // NVARCHAR(256)
 		[Column("SUB_OBJECT_NAME"),    Nullable           ] public string? SubObjectName { get; set; } // NVARCHAR(256)
 	}
@@ -8081,18 +6451,12 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM_PE", Name="sap.hana.xs.lm.pe.db::XSSCRIPT_PARAMETERS")]
 	public partial class SAP_XS_LM_PE_SapHanaXsLmPeDbXsscriptParameter
 	{
-		#nullable disable
-		[Column(),                    PrimaryKey(1), NotNull] public string  EXECUTABLE      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("PARAMETER_NAME"),    PrimaryKey(2), NotNull] public string  ParameterName   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                    PrimaryKey(1), NotNull] public string  EXECUTABLE      { get; set; } = null!; // NVARCHAR(256)
+		[Column("PARAMETER_NAME"),    PrimaryKey(2), NotNull] public string  ParameterName   { get; set; } = null!; // NVARCHAR(256)
 		[Column("DATA_TYPE_NAME"),       Nullable           ] public string? DataTypeName    { get; set; } // VARCHAR(16)
 		[Column("TABLE_TYPE_SCHEMA"),    Nullable           ] public string? TableTypeSchema { get; set; } // NVARCHAR(256)
 		[Column("TABLE_TYPE_NAME"),      Nullable           ] public string? TableTypeName   { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column("PARAMETER_TYPE"),                   NotNull] public string  ParameterType   { get; set; } // VARCHAR(7)
-		#nullable enable
+		[Column("PARAMETER_TYPE"),                   NotNull] public string  ParameterType   { get; set; } = null!; // VARCHAR(7)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.slp::FILES")]
@@ -8135,18 +6499,14 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.slp::LOGS")]
 	public partial class SAP_XS_LM_SapHanaXsLmSlpLog
 	{
-		#nullable disable
 		/// <summary>
 		/// Unique identifier of the log
 		/// </summary>
-		[Column(),                PrimaryKey(1), NotNull] public string   ID           { get; set; } // VARCHAR(75)
-		#nullable enable
-		#nullable disable
+		[Column(),                PrimaryKey(1), NotNull] public string   ID           { get; set; } = null!; // VARCHAR(75)
 		/// <summary>
 		/// Log collection ID
 		/// </summary>
-		[Column("COLLECTION_ID"), PrimaryKey(2), NotNull] public string   CollectionId { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column("COLLECTION_ID"), PrimaryKey(2), NotNull] public string   CollectionId { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Last modification of the log
 		/// </summary>
@@ -8185,12 +6545,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.slp::PROCESSES")]
 	public partial class SAP_XS_LM_SapHanaXsLmSlpProcess
 	{
-		#nullable disable
 		/// <summary>
 		/// Process ID
 		/// </summary>
-		[PrimaryKey, NotNull    ] public string  ID          { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[PrimaryKey, NotNull    ] public string  ID          { get; set; } = null!; // NVARCHAR(32)
 		/// <summary>
 		/// Description
 		/// </summary>
@@ -8212,12 +6570,10 @@ namespace SapHanaDataContext
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.slp::TASKS")]
 	public partial class SAP_XS_LM_SapHanaXsLmSlpTask
 	{
-		#nullable disable
 		/// <summary>
 		/// Task ID
 		/// </summary>
-		[Column(),             PrimaryKey,  NotNull] public string  ID        { get; set; } // NVARCHAR(32)
-		#nullable enable
+		[Column(),             PrimaryKey,  NotNull] public string  ID        { get; set; } = null!; // NVARCHAR(32)
 		/// <summary>
 		/// The type of the task
 		/// </summary>
@@ -8234,32 +6590,20 @@ namespace SapHanaDataContext
 		/// Reference to a resource containing log element
 		/// </summary>
 		[Column(),                Nullable         ] public string? LOGS      { get; set; } // VARCHAR(30)
-		#nullable disable
 		/// <summary>
 		/// Unique identifier of the process
 		/// </summary>
-		[Column("PROCESS_ID"),              NotNull] public string  ProcessId { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column("PROCESS_ID"),              NotNull] public string  ProcessId { get; set; } = null!; // VARCHAR(32)
 	}
 
 	[Table(Schema="SAP_XS_USAGE", Name="sap.hana.xs.lm.usage.db::SUSAGE")]
 	public partial class SAP_XS_USAGE_SapHanaXsLmUsageDbSusage
 	{
-		#nullable disable
-		[Column(),                 PrimaryKey(1), NotNull] public string  PPMSPV        { get; set; } // VARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                 PrimaryKey(2), NotNull] public string  FEATURE       { get; set; } // VARCHAR(60)
-		#nullable enable
-		#nullable disable
-		[Column(),                 PrimaryKey(3), NotNull] public string  TYPE          { get; set; } // VARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column(),                 PrimaryKey(4), NotNull] public string  SUBTYPE       { get; set; } // VARCHAR(30)
-		#nullable enable
-		#nullable disable
-		[Column("CALENDAR_MONTH"), PrimaryKey(5), NotNull] public string  CalendarMonth { get; set; } // NVARCHAR(6)
-		#nullable enable
+		[Column(),                 PrimaryKey(1), NotNull] public string  PPMSPV        { get; set; } = null!; // VARCHAR(60)
+		[Column(),                 PrimaryKey(2), NotNull] public string  FEATURE       { get; set; } = null!; // VARCHAR(60)
+		[Column(),                 PrimaryKey(3), NotNull] public string  TYPE          { get; set; } = null!; // VARCHAR(30)
+		[Column(),                 PrimaryKey(4), NotNull] public string  SUBTYPE       { get; set; } = null!; // VARCHAR(30)
+		[Column("CALENDAR_MONTH"), PrimaryKey(5), NotNull] public string  CalendarMonth { get; set; } = null!; // NVARCHAR(6)
 		[Column(),                    Nullable           ] public double? TRAFFIC       { get; set; } // DOUBLE
 		[Column(),                    Nullable           ] public double? NORM          { get; set; } // DOUBLE
 	}
@@ -8267,18 +6611,14 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.admin.db::ACCESS_LISTS")]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceAdminDbAccessList
 	{
-		#nullable disable
 		/// <summary>
 		/// Access List Item
 		/// </summary>
-		[Column(),                 PrimaryKey,  NotNull] public string ITEM          { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
+		[Column(),                 PrimaryKey,  NotNull] public string ITEM          { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Access list Item Type
 		/// </summary>
-		[Column("ITEM_TYPE"),                   NotNull] public string ItemType      { get; set; } // NVARCHAR(512)
-		#nullable enable
+		[Column("ITEM_TYPE"),                   NotNull] public string ItemType      { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Blacklisted Status
 		/// </summary>
@@ -8288,24 +6628,18 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.admin.db::USS_EMAIL_TEMPLATES")]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceAdminDbUssEmailTemplate
 	{
-		#nullable disable
 		/// <summary>
 		/// Template ID
 		/// </summary>
-		[Column("TEMPLATE_ID"),      PrimaryKey, NotNull] public string TemplateId      { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
+		[Column("TEMPLATE_ID"),      PrimaryKey, NotNull] public string TemplateId      { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Email Subject
 		/// </summary>
-		[Column("TEMPLATE_SUBJECT"),             NotNull] public string TemplateSubject { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
+		[Column("TEMPLATE_SUBJECT"),             NotNull] public string TemplateSubject { get; set; } = null!; // NVARCHAR(512)
 		/// <summary>
 		/// Email Body
 		/// </summary>
-		[Column("TEMPLATE_BODY"),                NotNull] public string TemplateBody    { get; set; } // NVARCHAR(1024)
-		#nullable enable
+		[Column("TEMPLATE_BODY"),                NotNull] public string TemplateBody    { get; set; } = null!; // NVARCHAR(1024)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.admin.db::USS_REQUESTS_VIEW", IsView=true)]
@@ -8330,39 +6664,31 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.user.db::SECURITY_QUESTIONS")]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceUserDbSecurityQuestion
 	{
-		#nullable disable
 		/// <summary>
 		/// Unique ID for the Secret Question
 		/// </summary>
-		[Column("QUESTION_ID"),          PrimaryKey, NotNull] public string QuestionId          { get; set; } // VARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("QUESTION_ID"),          PrimaryKey, NotNull] public string QuestionId          { get; set; } = null!; // VARCHAR(256)
 		/// <summary>
 		/// Question Description
 		/// </summary>
-		[Column("QUESTION_DESCRIPTION"),             NotNull] public string QuestionDescription { get; set; } // VARCHAR(256)
-		#nullable enable
+		[Column("QUESTION_DESCRIPTION"),             NotNull] public string QuestionDescription { get; set; } = null!; // VARCHAR(256)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.user.db::USER_REQUESTS")]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceUserDbUserRequest
 	{
-		#nullable disable
 		/// <summary>
 		/// Username
 		/// </summary>
-		[Column("USER_NAME"),        PrimaryKey,  NotNull] public string  UserName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),        PrimaryKey,  NotNull] public string  UserName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// No of User requests attempted by the same email address
 		/// </summary>
 		[Column("REQUEST_ATTEMPTS"),              NotNull] public decimal RequestAttempts { get; set; } // DECIMAL(10, 0)
-		#nullable disable
 		/// <summary>
 		/// Origin location
 		/// </summary>
-		[Column("ORIGIN_LOCATION"),               NotNull] public string  OriginLocation  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("ORIGIN_LOCATION"),               NotNull] public string  OriginLocation  { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Status of the self service request
 		/// </summary>
@@ -8372,19 +6698,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="SAVED_CONTAINERS")]
 	public partial class _SYS_EPM_SavedContainer
 	{
-		#nullable disable
-		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                   PrimaryKey(4), NotNull] public int       VERSION        { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } = null!; // NVARCHAR(256)
 		[Column("TABLE_NAME"),          Nullable           ] public string?   TableName      { get; set; } // NVARCHAR(256)
 		[Column("LAST_CHANGE_TIME"),    Nullable           ] public DateTime? LastChangeTime { get; set; } // TIMESTAMP
 	}
@@ -8392,9 +6710,7 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="SCHEMAVERSION")]
 	public partial class _SYS_EPM_SCHEMAVERSION
 	{
-		#nullable disable
-		[Column("SCHEMA_TYPE"),       PrimaryKey,  NotNull] public string  SchemaType      { get; set; } // NVARCHAR(16)
-		#nullable enable
+		[Column("SCHEMA_TYPE"),       PrimaryKey,  NotNull] public string  SchemaType      { get; set; } = null!; // NVARCHAR(16)
 		[Column("DB_SCHEMA_RELEASE"),    Nullable         ] public string? DbSchemaRelease { get; set; } // NVARCHAR(16)
 		[Column("DB_SCHEMA_VERSION"),    Nullable         ] public int?    DbSchemaVersion { get; set; } // INTEGER
 		[Column("IS_CONSISTENT"),                  NotNull] public byte    IsConsistent    { get; set; } // TINYINT
@@ -8416,27 +6732,17 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="SECURE_STORE")]
 	public partial class _SYS_XS_SecureStore
 	{
-		#nullable disable
-		[Column("STORE_ID"),   PrimaryKey(1), NotNull] public string StoreId   { get; set; } // NVARCHAR(530)
-		#nullable enable
+		[Column("STORE_ID"),   PrimaryKey(1), NotNull] public string StoreId   { get; set; } = null!; // NVARCHAR(530)
 		[Column("USER_ID"),    PrimaryKey(2), NotNull] public long   UserId    { get; set; } // BIGINT
-		#nullable disable
-		[Column("DATA_ID"),    PrimaryKey(3), NotNull] public string DataId    { get; set; } // NVARCHAR(1024)
-		#nullable enable
-		#nullable disable
-		[Column("DATA_VALUE"),                NotNull] public byte[] DataValue { get; set; } // VARBINARY(5000)
-		#nullable enable
+		[Column("DATA_ID"),    PrimaryKey(3), NotNull] public string DataId    { get; set; } = null!; // NVARCHAR(1024)
+		[Column("DATA_VALUE"),                NotNull] public byte[] DataValue { get; set; } = null!; // VARBINARY(5000)
 	}
 
 	[Table(Schema="_SYS_XS", Name="SECURE_STORE_LIST")]
 	public partial class _SYS_XS_SecureStoreList
 	{
-		#nullable disable
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId  { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName { get; set; } = null!; // NVARCHAR(256)
 		[Column("IS_ACTIVE"),                  NotNull] public byte   IsActive   { get; set; } // TINYINT
 	}
 
@@ -8446,12 +6752,10 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TELEMETRY", Name="SERVER")]
 	public partial class _SYS_TELEMETRY_SERVER
 	{
-		#nullable disable
 		/// <summary>
 		/// Telemetry central server URL.
 		/// </summary>
-		[Column("SERVER_URL"), NotNull] public string ServerUrl { get; set; } // VARCHAR(2083)
-		#nullable enable
+		[Column("SERVER_URL"), NotNull] public string ServerUrl { get; set; } = null!; // VARCHAR(2083)
 	}
 
 	/// <summary>
@@ -8464,12 +6768,10 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),                      NotNull    ] public DateTime SnapshotId                   { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Service name
 		/// </summary>
-		[Column("SERVICE_NAME"),                     NotNull    ] public string   ServiceName                  { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column("SERVICE_NAME"),                     NotNull    ] public string   ServiceName                  { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Virtual memory size (operating system perspective)
 		/// </summary>
@@ -8535,25 +6837,15 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="SQL_CONNECTIONS")]
 	public partial class _SYS_XS_SqlConnection
 	{
-		#nullable disable
-		[Column(),                 PrimaryKey,  NotNull] public string    NAME         { get; set; } // NVARCHAR(512)
-		#nullable enable
-		#nullable disable
-		[Column("PACKAGE_ID"),                  NotNull] public string    PackageId    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("OBJECT_NAME"),                 NotNull] public string    ObjectName   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                 PrimaryKey,  NotNull] public string    NAME         { get; set; } = null!; // NVARCHAR(512)
+		[Column("PACKAGE_ID"),                  NotNull] public string    PackageId    { get; set; } = null!; // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                 NotNull] public string    ObjectName   { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                    Nullable         ] public string?   USERNAME     { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                              NotNull] public string    DESCRIPTION  { get; set; } // NVARCHAR(2048)
-		#nullable enable
+		[Column(),                              NotNull] public string    DESCRIPTION  { get; set; } = null!; // NVARCHAR(2048)
 		[Column("ASSIGNED_BY"),       Nullable         ] public string?   AssignedBy   { get; set; } // NVARCHAR(256)
 		[Column("ASSIGNED_AT"),       Nullable         ] public DateTime? AssignedAt   { get; set; } // TIMESTAMP
 		[Column("AUTO_USER_ROLE"),    Nullable         ] public string?   AutoUserRole { get; set; } // NVARCHAR(256)
-		#nullable disable
-		[Column(),                              NotNull] public string    STATUS       { get; set; } // VARCHAR(16)
-		#nullable enable
+		[Column(),                              NotNull] public string    STATUS       { get; set; } = null!; // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -8566,18 +6858,14 @@ namespace SapHanaDataContext
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
 		[Column("TASK_EXECUTION_ID"), NotNull    ] public long      TaskExecutionId { get; set; } // BIGINT
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string    TaskName        { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),         NotNull    ] public string    TaskName        { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the operation producing the message
 		/// </summary>
@@ -8662,26 +6950,16 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_SECURITY", Name="_SYS_OBJECT_PRIVILEGES")]
 	public partial class _SYS_SECURITY_SysObjectPrivilege
 	{
-		#nullable disable
-		[Column("OBJECT_TYPE"), PrimaryKey(1), NotNull] public string ObjectType { get; set; } // VARCHAR(32)
-		#nullable enable
-		#nullable disable
-		[Column(),              PrimaryKey(2), NotNull] public string PRIVILEGE  { get; set; } // VARCHAR(40)
-		#nullable enable
+		[Column("OBJECT_TYPE"), PrimaryKey(1), NotNull] public string ObjectType { get; set; } = null!; // VARCHAR(32)
+		[Column(),              PrimaryKey(2), NotNull] public string PRIVILEGE  { get; set; } = null!; // VARCHAR(40)
 	}
 
 	[Table(Schema="_SYS_SECURITY", Name="_SYS_PASSWORD_BLACKLIST")]
 	public partial class _SYS_SECURITY_SysPasswordBlacklist
 	{
-		#nullable disable
-		[Column("BLACKLIST_TERM"),         PrimaryKey(3), NotNull] public string BlacklistTerm        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CHECK_PARTIAL_PASSWORD"), PrimaryKey(1), NotNull] public string CheckPartialPassword { get; set; } // VARCHAR(6)
-		#nullable enable
-		#nullable disable
-		[Column("CHECK_CASE_SENSITIVE"),   PrimaryKey(2), NotNull] public string CheckCaseSensitive   { get; set; } // VARCHAR(6)
-		#nullable enable
+		[Column("BLACKLIST_TERM"),         PrimaryKey(3), NotNull] public string BlacklistTerm        { get; set; } = null!; // NVARCHAR(256)
+		[Column("CHECK_PARTIAL_PASSWORD"), PrimaryKey(1), NotNull] public string CheckPartialPassword { get; set; } = null!; // VARCHAR(6)
+		[Column("CHECK_CASE_SENSITIVE"),   PrimaryKey(2), NotNull] public string CheckCaseSensitive   { get; set; } = null!; // VARCHAR(6)
 	}
 
 	/// <summary>
@@ -8694,18 +6972,14 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
-		#nullable disable
 		/// <summary>
 		/// Section name
 		/// </summary>
-		[Column(),              NotNull    ] public string   SECTION    { get; set; } // VARCHAR(16)
-		#nullable enable
-		#nullable disable
+		[Column(),              NotNull    ] public string   SECTION    { get; set; } = null!; // VARCHAR(16)
 		/// <summary>
 		/// Key name in section
 		/// </summary>
-		[Column(),              NotNull    ] public string   NAME       { get; set; } // VARCHAR(32)
-		#nullable enable
+		[Column(),              NotNull    ] public string   NAME       { get; set; } = null!; // VARCHAR(32)
 		/// <summary>
 		/// Status value: OK, ERROR, WARNING or empty for info items
 		/// </summary>
@@ -8723,7 +6997,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_CLIENT_MAPPING_")]
-	public partial class _SYS_TASK_TaskClientMapping0
+	public partial class _SYS_TASK_TaskClientMapping
 	{
 		[Column("TASK_OID"), PrimaryKey,  NotNull] public long    TaskOid { get; set; } // BIGINT
 		[Column(),              Nullable         ] public string? CLIENT  { get; set; } // NVARCHAR(128)
@@ -8733,20 +7007,16 @@ namespace SapHanaDataContext
 	/// Provides the client mapping when a task is created by the ABAP API
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="TASK_CLIENT_MAPPING", IsView=true)]
-	public partial class _SYS_TASK_TaskClientMapping1
+	public partial class _SYS_TASK_TaskClientMapping0
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"), NotNull    ] public string  SchemaName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"), NotNull    ] public string  SchemaName { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),   NotNull    ] public string  TaskName   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),   NotNull    ] public string  TaskName   { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The client name that created the task by the ABAP API
 		/// </summary>
@@ -8759,18 +7029,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_COLUMN_DEFINITIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskColumnDefinition
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),    NotNull    ] public string  SchemaName    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),    NotNull    ] public string  SchemaName    { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),      NotNull    ] public string  TaskName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),      NotNull    ] public string  TaskName      { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
@@ -8814,18 +7080,14 @@ namespace SapHanaDataContext
 		/// Internal port
 		/// </summary>
 		[Column(),                              Nullable] public int?      PORT                  { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// Schema name used in the task
 		/// </summary>
-		[Column("SCHEMA_NAME"),              NotNull    ] public string    SchemaName            { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),              NotNull    ] public string    SchemaName            { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                NotNull    ] public string    TaskName              { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),                NotNull    ] public string    TaskName              { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Connection Identifier
 		/// </summary>
@@ -8929,12 +7191,10 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_LOCALIZATION_")]
-	public partial class _SYS_TASK_TaskLocalization0
+	public partial class _SYS_TASK_TaskLocalization
 	{
 		[Column("LOC_TYPE_ID"), PrimaryKey(1), NotNull] public int     LocTypeId   { get; set; } // INTEGER
-		#nullable disable
-		[Column("LOC_ID"),      PrimaryKey(2), NotNull] public string  LocId       { get; set; } // NVARCHAR(64)
-		#nullable enable
+		[Column("LOC_ID"),      PrimaryKey(2), NotNull] public string  LocId       { get; set; } = null!; // NVARCHAR(64)
 		[Column(),              PrimaryKey(3), NotNull] public char    LANGUAGE    { get; set; } // NVARCHAR(1)
 		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(1024)
 	}
@@ -8943,18 +7203,16 @@ namespace SapHanaDataContext
 	/// Contains localized values for the task framework tables
 	/// </summary>
 	[Table(Schema="_SYS_TASK", Name="TASK_LOCALIZATION", IsView=true)]
-	public partial class _SYS_TASK_TaskLocalization1
+	public partial class _SYS_TASK_TaskLocalization0
 	{
 		/// <summary>
 		/// The ID of the type of entity being localized
 		/// </summary>
 		[Column("LOC_TYPE_ID"), NotNull    ] public int     LocTypeId   { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// The ID of the entity being localized
 		/// </summary>
-		[Column("LOC_ID"),      NotNull    ] public string  LocId       { get; set; } // NVARCHAR(64)
-		#nullable enable
+		[Column("LOC_ID"),      NotNull    ] public string  LocId       { get; set; } = null!; // NVARCHAR(64)
 		/// <summary>
 		/// The one character code of the localized language
 		/// </summary>
@@ -8971,18 +7229,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_OPERATIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskOperation
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),        NotNull    ] public string  TaskName       { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),        NotNull    ] public string  TaskName       { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
@@ -9047,12 +7301,10 @@ namespace SapHanaDataContext
 		/// Type of operation
 		/// </summary>
 		[Column("OPERATION_TYPE"),                Nullable] public string?   OperationType            { get; set; } // NVARCHAR(128)
-		#nullable disable
 		/// <summary>
 		/// Internal name of operation
 		/// </summary>
-		[Column("OPERATION_NAME"),             NotNull    ] public string    OperationName            { get; set; } // NVARCHAR(128)
-		#nullable enable
+		[Column("OPERATION_NAME"),             NotNull    ] public string    OperationName            { get; set; } = null!; // NVARCHAR(128)
 		/// <summary>
 		/// Start time of operation
 		/// </summary>
@@ -9092,9 +7344,7 @@ namespace SapHanaDataContext
 		[Column("TRANSACTION_ID"),                Nullable           ] public int?      TransactionId            { get; set; } // INTEGER
 		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long      TaskExecutionId          { get; set; } // BIGINT
 		[Column("PARTITION_ID"),               PrimaryKey(2), NotNull] public int       PartitionId              { get; set; } // INTEGER
-		#nullable disable
-		[Column("OPERATION_NAME"),             PrimaryKey(3), NotNull] public string    OperationName            { get; set; } // NVARCHAR(128)
-		#nullable enable
+		[Column("OPERATION_NAME"),             PrimaryKey(3), NotNull] public string    OperationName            { get; set; } = null!; // NVARCHAR(128)
 		[Column("CURRENT_OPERATION"),             Nullable           ] public string?   CurrentOperation         { get; set; } // NVARCHAR(128)
 		[Column("OPERATION_TYPE"),                Nullable           ] public string?   OperationType            { get; set; } // NVARCHAR(128)
 		[Column("START_TIME"),                    Nullable           ] public DateTime? StartTime                { get; set; } // TIMESTAMP
@@ -9119,18 +7369,14 @@ namespace SapHanaDataContext
 		/// Internal port
 		/// </summary>
 		[Column(),                            Nullable] public int?      PORT                 { get; set; } // INTEGER
-		#nullable disable
 		/// <summary>
 		/// Schema name of the task
 		/// </summary>
-		[Column("SCHEMA_NAME"),            NotNull    ] public string    SchemaName           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),            NotNull    ] public string    SchemaName           { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Name of the task
 		/// </summary>
-		[Column("TASK_NAME"),              NotNull    ] public string    TaskName             { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),              NotNull    ] public string    TaskName             { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Connection Identifier
 		/// </summary>
@@ -9201,18 +7447,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_DEFINITIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskTableDefinition
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),          NotNull    ] public string  SchemaName         { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),          NotNull    ] public string  SchemaName         { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),            NotNull    ] public string  TaskName           { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),            NotNull    ] public string  TaskName           { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
@@ -9262,18 +7504,14 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_RELATIONSHIPS", IsView=true)]
 	public partial class _SYS_TASK_TaskTableRelationship
 	{
-		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
@@ -9286,18 +7524,14 @@ namespace SapHanaDataContext
 		/// The name of the table with which the "TABLE NAME" table is related
 		/// </summary>
 		[Column("RELATED_TABLE_NAME"),    Nullable] public string? RelatedTableName { get; set; } // NVARCHAR(128)
-		#nullable disable
 		/// <summary>
 		/// The name of the column in the "TABLE_NAME" table that relates to the "TO_ATTRIBUTE"
 		/// </summary>
-		[Column("FROM_ATTRIBUTE"),     NotNull    ] public string  FromAttribute    { get; set; } // NVARCHAR(128)
-		#nullable enable
-		#nullable disable
+		[Column("FROM_ATTRIBUTE"),     NotNull    ] public string  FromAttribute    { get; set; } = null!; // NVARCHAR(128)
 		/// <summary>
 		/// The name of the column in the "RELATED_TABLE_NAME" that relates to the "FROM_ATTRIBUTE"
 		/// </summary>
-		[Column("TO_ATTRIBUTE"),       NotNull    ] public string  ToAttribute      { get; set; } // NVARCHAR(128)
-		#nullable enable
+		[Column("TO_ATTRIBUTE"),       NotNull    ] public string  ToAttribute      { get; set; } = null!; // NVARCHAR(128)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_RELATIONSHIPS_")]
@@ -9307,12 +7541,8 @@ namespace SapHanaDataContext
 		[Column("OPERATION_ID"),     PrimaryKey(2), NotNull] public int    OperationId    { get; set; } // INTEGER
 		[Column("TABLE_ID"),         PrimaryKey(3), NotNull] public int    TableId        { get; set; } // INTEGER
 		[Column("RELATED_TABLE_ID"), PrimaryKey(4), NotNull] public int    RelatedTableId { get; set; } // INTEGER
-		#nullable disable
-		[Column("FROM_ATTRIBUTE"),   PrimaryKey(5), NotNull] public string FromAttribute  { get; set; } // NVARCHAR(128)
-		#nullable enable
-		#nullable disable
-		[Column("TO_ATTRIBUTE"),     PrimaryKey(6), NotNull] public string ToAttribute    { get; set; } // NVARCHAR(128)
-		#nullable enable
+		[Column("FROM_ATTRIBUTE"),   PrimaryKey(5), NotNull] public string FromAttribute  { get; set; } = null!; // NVARCHAR(128)
+		[Column("TO_ATTRIBUTE"),     PrimaryKey(6), NotNull] public string ToAttribute    { get; set; } = null!; // NVARCHAR(128)
 	}
 
 	/// <summary>
@@ -9349,24 +7579,18 @@ namespace SapHanaDataContext
 		/// Maximum transmission interval in minute
 		/// </summary>
 		[Column("MAX_TRANSMISSION_INTERVAL"),           Nullable] public short?    MaxTransmissionInterval        { get; set; } // SMALLINT
-		#nullable disable
 		/// <summary>
 		/// System ID of the client
 		/// </summary>
-		[Column("CLIENT_SYSTEM_ID"),                 NotNull    ] public string    ClientSystemId                 { get; set; } // VARCHAR(3)
-		#nullable enable
-		#nullable disable
+		[Column("CLIENT_SYSTEM_ID"),                 NotNull    ] public string    ClientSystemId                 { get; set; } = null!; // VARCHAR(3)
 		/// <summary>
 		/// Database Name of the client
 		/// </summary>
-		[Column("CLIENT_DATABASE_NAME"),             NotNull    ] public string    ClientDatabaseName             { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
+		[Column("CLIENT_DATABASE_NAME"),             NotNull    ] public string    ClientDatabaseName             { get; set; } = null!; // NVARCHAR(256)
 		/// <summary>
 		/// Hardware key of the client
 		/// </summary>
-		[Column("CLIENT_HARDWARE_KEY"),              NotNull    ] public string    ClientHardwareKey              { get; set; } // VARCHAR(11)
-		#nullable enable
+		[Column("CLIENT_HARDWARE_KEY"),              NotNull    ] public string    ClientHardwareKey              { get; set; } = null!; // VARCHAR(11)
 		/// <summary>
 		/// Private key of the client
 		/// </summary>
@@ -9387,22 +7611,18 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TELEMETRY", Name="TELEMETRY_INIFILE", IsView=true)]
 	public partial class _SYS_TELEMETRY_TelemetryInifile
 	{
-		#nullable disable
 		/// <summary>
 		/// Configuration key name
 		/// </summary>
-		[Column("INI_KEY"),        NotNull    ] public string  IniKey       { get; set; } // VARCHAR(128)
-		#nullable enable
+		[Column("INI_KEY"),        NotNull    ] public string  IniKey       { get; set; } = null!; // VARCHAR(128)
 		/// <summary>
 		/// Configuration layer: DEFAULT, SYSTEM, HOST, DATABASE
 		/// </summary>
 		[Column("INI_LAYER_NAME"),    Nullable] public string? IniLayerName { get; set; } // VARCHAR(16)
-		#nullable disable
 		/// <summary>
 		/// Configuration value
 		/// </summary>
-		[Column("INI_VALUE"),      NotNull    ] public string  IniValue     { get; set; } // VARCHAR(3)
-		#nullable enable
+		[Column("INI_VALUE"),      NotNull    ] public string  IniValue     { get; set; } = null!; // VARCHAR(3)
 	}
 
 	/// <summary>
@@ -9423,18 +7643,14 @@ namespace SapHanaDataContext
 		/// HANA feature name
 		/// </summary>
 		[Column("0SM_FEAT"),            Nullable] public string?   _0smFeat        { get; set; } // NVARCHAR(256)
-		#nullable disable
 		/// <summary>
 		/// HANA feature type
 		/// </summary>
-		[Column("0SM_TYPE"),         NotNull    ] public string    _0smType        { get; set; } // VARCHAR(11)
-		#nullable enable
-		#nullable disable
+		[Column("0SM_TYPE"),         NotNull    ] public string    _0smType        { get; set; } = null!; // VARCHAR(11)
 		/// <summary>
 		/// HANA feature subtype
 		/// </summary>
-		[Column("0SM_SUBT"),         NotNull    ] public string    _0smSubt        { get; set; } // VARCHAR(18)
-		#nullable enable
+		[Column("0SM_SUBT"),         NotNull    ] public string    _0smSubt        { get; set; } = null!; // VARCHAR(18)
 		/// <summary>
 		/// HANA feature usage
 		/// </summary>
@@ -9448,27 +7664,13 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="TEMPORARY_CONTAINERS")]
 	public partial class _SYS_EPM_TemporaryContainer
 	{
-		#nullable disable
-		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                   PrimaryKey(4), NotNull] public int       VERSION        { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                   PrimaryKey(5), NotNull] public string    CONTAINER      { get; set; } = null!; // NVARCHAR(256)
 		[Column("TABLE_NAME"),          Nullable           ] public string?   TableName      { get; set; } // NVARCHAR(256)
 		[Column("LAST_CHANGE_TIME"),    Nullable           ] public DateTime? LastChangeTime { get; set; } // TIMESTAMP
-	}
-
-	[Table(Schema="TESTHANAODBC", Name="TestIdentity")]
-	public partial class TESTHANAODBC_TestIdentity
-	{
-		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANA", Name="TestIdentity")]
@@ -9477,31 +7679,10 @@ namespace SapHanaDataContext
 		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="TestMerge1")]
-	public partial class TESTHANAODBC_TestMerge1
+	[Table(Schema="TESTHANAODBC", Name="TestIdentity")]
+	public partial class TESTHANAODBC_TestIdentity
 	{
-		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field2          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field3          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field4          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
-		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
-		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
-		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
-		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
-		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
-		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
-		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
-		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
-		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
-		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
-		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
-		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
+		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANA", Name="TestMerge1")]
@@ -9531,8 +7712,8 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="TestMerge2")]
-	public partial class TESTHANAODBC_TestMerge2
+	[Table(Schema="TESTHANAODBC", Name="TestMerge1")]
+	public partial class TESTHANAODBC_TestMerge1
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
 		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
@@ -9585,57 +7766,58 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
+	[Table(Schema="TESTHANAODBC", Name="TestMerge2")]
+	public partial class TESTHANAODBC_TestMerge2
+	{
+		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field2          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field3          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field4          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
+		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
+		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
+		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
+		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
+		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
+	}
+
 	[Table(Schema="_SYS_RT", Name="TI_IMPORT_KEYS")]
 	public partial class _SYS_RT_TiImportKey
 	{
-		#nullable disable
-		[Column("TABLE_SCHEMA"),    PrimaryKey(1),  NotNull] public string TableSchema   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("TABLE_NAME"),      PrimaryKey(2),  NotNull] public string TableName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("TI_PACKAGE"),      PrimaryKey(3),  NotNull] public string TiPackage     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("TI_NAME"),         PrimaryKey(4),  NotNull] public string TiName        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("TI_TYPE"),         PrimaryKey(5),  NotNull] public string TiType        { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CSV_PACKAGE"),     PrimaryKey(6),  NotNull] public string CsvPackage    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CSV_NAME"),        PrimaryKey(7),  NotNull] public string CsvName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("CSV_FILEEXT"),     PrimaryKey(8),  NotNull] public string CsvFileext    { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("KEY_COLUMN_NAME"), PrimaryKey(9),  NotNull] public string KeyColumnName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("KEY_VALUE"),       PrimaryKey(10), NotNull] public string KeyValue      { get; set; } // NVARCHAR(5000)
-		#nullable enable
+		[Column("TABLE_SCHEMA"),    PrimaryKey(1),  NotNull] public string TableSchema   { get; set; } = null!; // NVARCHAR(256)
+		[Column("TABLE_NAME"),      PrimaryKey(2),  NotNull] public string TableName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("TI_PACKAGE"),      PrimaryKey(3),  NotNull] public string TiPackage     { get; set; } = null!; // NVARCHAR(256)
+		[Column("TI_NAME"),         PrimaryKey(4),  NotNull] public string TiName        { get; set; } = null!; // NVARCHAR(256)
+		[Column("TI_TYPE"),         PrimaryKey(5),  NotNull] public string TiType        { get; set; } = null!; // NVARCHAR(256)
+		[Column("CSV_PACKAGE"),     PrimaryKey(6),  NotNull] public string CsvPackage    { get; set; } = null!; // NVARCHAR(256)
+		[Column("CSV_NAME"),        PrimaryKey(7),  NotNull] public string CsvName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("CSV_FILEEXT"),     PrimaryKey(8),  NotNull] public string CsvFileext    { get; set; } = null!; // NVARCHAR(256)
+		[Column("KEY_COLUMN_NAME"), PrimaryKey(9),  NotNull] public string KeyColumnName { get; set; } = null!; // NVARCHAR(256)
+		[Column("KEY_VALUE"),       PrimaryKey(10), NotNull] public string KeyValue      { get; set; } = null!; // NVARCHAR(5000)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_APPSITES")]
 	public partial class _SYS_RT_UisAppsite
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(3), NotNull] public string    ID          { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column(),             PrimaryKey(3), NotNull] public string    ID          { get; set; } = null!; // NVARCHAR(2000)
 		[Column(),                Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
 		[Column(),                Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId    { get; set; } = null!; // VARCHAR(50)
 		[Column(),                Nullable           ] public string?   ALIAS       { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE       { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE       { get; set; } = null!; // VARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION     { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED     { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED     { get; set; } // TIMESTAMP
@@ -9646,21 +7828,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_APPSITE_PROPERTIES")]
 	public partial class _SYS_RT_UisAppsitePROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(4), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             PrimaryKey(4), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } = null!; // VARCHAR(20)
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column(),                            NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NCLOB
 		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
@@ -9673,35 +7845,19 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_UisAuditLog
 	{
 		[Column(),            NotNull] public DateTime TIMESTAMP { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column("USER_NAME"), NotNull] public string   UserName  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string   HOST      { get; set; } // NVARCHAR(2048)
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string   MESSAGE   { get; set; } // NCLOB
-		#nullable enable
-		#nullable disable
-		[Column(),            NotNull] public string   STATUS    { get; set; } // VARCHAR(128)
-		#nullable enable
+		[Column("USER_NAME"), NotNull] public string   UserName  { get; set; } = null!; // NVARCHAR(256)
+		[Column(),            NotNull] public string   HOST      { get; set; } = null!; // NVARCHAR(2048)
+		[Column(),            NotNull] public string   MESSAGE   { get; set; } = null!; // NCLOB
+		[Column(),            NotNull] public string   STATUS    { get; set; } = null!; // VARCHAR(128)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_PAGES")]
 	public partial class _SYS_RT_UisPage
 	{
-		#nullable disable
-		[Column(),                    PrimaryKey(4), NotNull] public string    ID              { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),         PrimaryKey(1), NotNull] public string    TenantId        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                    PrimaryKey(2), NotNull] public string    DTYPE           { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),           PrimaryKey(3), NotNull] public string    SiteId          { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column(),                    PrimaryKey(4), NotNull] public string    ID              { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),         PrimaryKey(1), NotNull] public string    TenantId        { get; set; } = null!; // VARCHAR(50)
+		[Column(),                    PrimaryKey(2), NotNull] public string    DTYPE           { get; set; } = null!; // VARCHAR(20)
+		[Column("SITE_ID"),           PrimaryKey(3), NotNull] public string    SiteId          { get; set; } = null!; // NVARCHAR(2000)
 		[Column("PARENT_ID"),            Nullable           ] public string?   ParentId        { get; set; } // VARCHAR(50)
 		[Column(),                       Nullable           ] public string?   NAME            { get; set; } // NVARCHAR(300)
 		[Column(),                       Nullable           ] public string?   DESCRIPTION     { get; set; } // NVARCHAR(5000)
@@ -9718,24 +7874,12 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_PAGE_PROPERTIES")]
 	public partial class _SYS_RT_UisPagePROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } = null!; // VARCHAR(50)
+		[Column(),                            NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } = null!; // VARCHAR(20)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
 		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
@@ -9747,15 +7891,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_APPSITES")]
 	public partial class _SYS_RT_UisUserAppsite
 	{
-		#nullable disable
-		[Column(),            PrimaryKey(3), NotNull] public string    ID          { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(),            PrimaryKey(3), NotNull] public string    ID          { get; set; } = null!; // NVARCHAR(2000)
+		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } = null!; // NVARCHAR(300)
+		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } = null!; // VARCHAR(50)
 		[Column(),               Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
 		[Column(),               Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
 		[Column(),               Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
@@ -9768,21 +7906,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_APPSITE_PROPERTIES")]
 	public partial class _SYS_RT_UisUserAppsitePROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column(),             PrimaryKey(4), NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } = null!; // NVARCHAR(300)
+		[Column(),             PrimaryKey(4), NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NCLOB
 		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
@@ -9793,23 +7921,15 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_PAGES")]
 	public partial class _SYS_RT_UisUserPage
 	{
-		#nullable disable
-		[Column(),            PrimaryKey(4), NotNull] public string    ID          { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),            PrimaryKey(4), NotNull] public string    ID          { get; set; } = null!; // VARCHAR(50)
+		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } = null!; // NVARCHAR(300)
 		[Column(),               Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
 		[Column(),               Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
 		[Column(),               Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
 		[Column("LAYOUT_ID"),    Nullable           ] public string?   LayoutId    { get; set; } // VARCHAR(50)
 		[Column("PARENT_ID"),    Nullable           ] public string?   ParentId    { get; set; } // VARCHAR(50)
-		#nullable disable
-		[Column("SITE_ID"),   PrimaryKey(3), NotNull] public string    SiteId      { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("SITE_ID"),   PrimaryKey(3), NotNull] public string    SiteId      { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } = null!; // VARCHAR(50)
 		[Column(),               Nullable           ] public int?      VERSION     { get; set; } // INTEGER
 		[Column(),               Nullable           ] public string?   ALIAS       { get; set; } // NVARCHAR(5000)
 		[Column(),               Nullable           ] public DateTime? CREATED     { get; set; } // TIMESTAMP
@@ -9819,24 +7939,12 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_PAGE_PROPERTIES")]
 	public partial class _SYS_RT_UisUserPagePROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } = null!; // VARCHAR(50)
+		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } = null!; // NVARCHAR(300)
+		[Column(),                            NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
 		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
@@ -9847,12 +7955,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_WIDGETS")]
 	public partial class _SYS_RT_UisUserWidget
 	{
-		#nullable disable
-		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"),               PrimaryKey(2), NotNull] public string    UserName             { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } = null!; // VARCHAR(50)
+		[Column("USER_NAME"),               PrimaryKey(2), NotNull] public string    UserName             { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                             Nullable           ] public string?   NAME                 { get; set; } // NVARCHAR(300)
 		[Column(),                             Nullable           ] public string?   DESCRIPTION          { get; set; } // NVARCHAR(5000)
 		[Column(),                             Nullable           ] public string?   SRC                  { get; set; } // VARCHAR(5000)
@@ -9861,13 +7965,9 @@ namespace SapHanaDataContext
 		[Column("TEMPLATE_ID"),                Nullable           ] public string?   TemplateId           { get; set; } // NVARCHAR(5000)
 		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string?   WidgetTemplateListId { get; set; } // NVARCHAR(2000)
 		[Column(),                             Nullable           ] public string?   TYPE                 { get; set; } // NVARCHAR(300)
-		#nullable disable
-		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } = null!; // NVARCHAR(2000)
 		[Column("LAYOUT_ID"),                  Nullable           ] public string?   LayoutId             { get; set; } // VARCHAR(50)
-		#nullable disable
-		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } = null!; // VARCHAR(50)
 		[Column("PARENT_ID"),                  Nullable           ] public string?   ParentId             { get; set; } // VARCHAR(50)
 		[Column(),                             Nullable           ] public int?      VERSION              { get; set; } // INTEGER
 		[Column(),                             Nullable           ] public DateTime? CREATED              { get; set; } // TIMESTAMP
@@ -9876,25 +7976,13 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_WIDGET_PROPERTIES")]
 	public partial class _SYS_RT_UisUserWidgetPROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
-		#nullable enable
-		#nullable disable
-		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } = null!; // NVARCHAR(300)
+		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),                            NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
@@ -9904,9 +7992,7 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGETS")]
 	public partial class _SYS_RT_UisWidget
 	{
-		#nullable disable
-		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } // VARCHAR(50)
-		#nullable enable
+		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } = null!; // VARCHAR(50)
 		[Column(),                             Nullable           ] public string?   NAME                 { get; set; } // NVARCHAR(300)
 		[Column(),                             Nullable           ] public string?   DESCRIPTION          { get; set; } // NVARCHAR(5000)
 		[Column(),                             Nullable           ] public string?   SRC                  { get; set; } // VARCHAR(5000)
@@ -9914,15 +8000,9 @@ namespace SapHanaDataContext
 		[Column("TEMPLATE_ID"),                Nullable           ] public string?   TemplateId           { get; set; } // NVARCHAR(5000)
 		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string?   WidgetTemplateListId { get; set; } // NVARCHAR(2000)
 		[Column(),                             Nullable           ] public string?   TYPE                 { get; set; } // NVARCHAR(300)
-		#nullable disable
-		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                          PrimaryKey(2), NotNull] public string    DTYPE                { get; set; } // VARCHAR(20)
-		#nullable enable
-		#nullable disable
-		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } = null!; // VARCHAR(50)
+		[Column(),                          PrimaryKey(2), NotNull] public string    DTYPE                { get; set; } = null!; // VARCHAR(20)
+		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } = null!; // NVARCHAR(2000)
 		[Column("PARENT_ID"),                  Nullable           ] public string?   ParentId             { get; set; } // VARCHAR(50)
 		[Column("LAYOUT_ID"),                  Nullable           ] public string?   LayoutId             { get; set; } // VARCHAR(50)
 		[Column(),                             Nullable           ] public int?      VERSION              { get; set; } // INTEGER
@@ -9934,25 +8014,13 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_PROPERTIES")]
 	public partial class _SYS_RT_UisWidgetPROPERTy
 	{
-		#nullable disable
-		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } = null!; // VARCHAR(50)
+		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),                            NotNull] public string    KEY       { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
-		#nullable disable
-		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
-		#nullable enable
+		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } = null!; // NVARCHAR(2000)
+		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } = null!; // VARCHAR(50)
+		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } = null!; // VARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
@@ -9963,15 +8031,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATES")]
 	public partial class _SYS_RT_UisWidgetTemplate
 	{
-		#nullable disable
-		[Column(),                PrimaryKey(3), NotNull] public string    ID           { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string    TenantId     { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string    RepositoryId { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column(),                PrimaryKey(3), NotNull] public string    ID           { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string    TenantId     { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string    RepositoryId { get; set; } = null!; // NVARCHAR(2000)
 		[Column(),                   Nullable           ] public string?   NAME         { get; set; } // NVARCHAR(300)
 		[Column(),                   Nullable           ] public string?   DESCRIPTION  { get; set; } // NVARCHAR(5000)
 		[Column(),                   Nullable           ] public string?   SPECXMLURL   { get; set; } // NVARCHAR(5000)
@@ -9987,12 +8049,8 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATE_LISTS")]
 	public partial class _SYS_RT_UisWidgetTemplateList
 	{
-		#nullable disable
-		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string  TenantId     { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string  RepositoryId { get; set; } // NVARCHAR(2000)
-		#nullable enable
+		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string  TenantId     { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string  RepositoryId { get; set; } = null!; // NVARCHAR(2000)
 		[Column(),                   Nullable           ] public string? NAME         { get; set; } // NVARCHAR(300)
 		[Column(),                   Nullable           ] public string? TYPE         { get; set; } // VARCHAR(10)
 		[Column(),                   Nullable           ] public int?    VERSION      { get; set; } // INTEGER
@@ -10001,21 +8059,11 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATE_PROPERTIES")]
 	public partial class _SYS_RT_UisWidgetTemplatePROPERTy
 	{
-		#nullable disable
-		[Column(),                     PrimaryKey(5), NotNull] public string  ID               { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("TENANT_ID"),          PrimaryKey(1), NotNull] public string  TenantId         { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column("REPOSITORY_ID"),      PrimaryKey(2), NotNull] public string  RepositoryId     { get; set; } // NVARCHAR(2000)
-		#nullable enable
-		#nullable disable
-		[Column("WIDGET_TEMPLATE_ID"), PrimaryKey(3), NotNull] public string  WidgetTemplateId { get; set; } // VARCHAR(50)
-		#nullable enable
-		#nullable disable
-		[Column(),                     PrimaryKey(4), NotNull] public string  KEY              { get; set; } // NVARCHAR(300)
-		#nullable enable
+		[Column(),                     PrimaryKey(5), NotNull] public string  ID               { get; set; } = null!; // VARCHAR(50)
+		[Column("TENANT_ID"),          PrimaryKey(1), NotNull] public string  TenantId         { get; set; } = null!; // VARCHAR(50)
+		[Column("REPOSITORY_ID"),      PrimaryKey(2), NotNull] public string  RepositoryId     { get; set; } = null!; // NVARCHAR(2000)
+		[Column("WIDGET_TEMPLATE_ID"), PrimaryKey(3), NotNull] public string  WidgetTemplateId { get; set; } = null!; // VARCHAR(50)
+		[Column(),                     PrimaryKey(4), NotNull] public string  KEY              { get; set; } = null!; // NVARCHAR(300)
 		[Column(),                        Nullable           ] public string? VALUE            { get; set; } // NVARCHAR(5000)
 		[Column("VALUE_TYPE"),            Nullable           ] public string? ValueType        { get; set; } // NVARCHAR(20)
 		[Column(),                        Nullable           ] public int?    VERSION          { get; set; } // INTEGER
@@ -10024,26 +8072,20 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="USAGE_MEASURING_OBJECTS")]
 	public partial class _SYS_XS_UsageMeasuringObject
 	{
-		#nullable disable
-		[PrimaryKey(1), NotNull] public string APP  { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[PrimaryKey(2), NotNull] public string NAME { get; set; } // NVARCHAR(1024)
-		#nullable enable
+		[PrimaryKey(1), NotNull] public string APP  { get; set; } = null!; // NVARCHAR(256)
+		[PrimaryKey(2), NotNull] public string NAME { get; set; } = null!; // NVARCHAR(1024)
 	}
 
 	[Table(Schema="_SYS_XS", Name="USAGE_STATISTICS")]
 	public partial class _SYS_XS_UsageStatistic
 	{
-		#nullable disable
-		[Column("APPLICATION_NAME"), NotNull] public string   ApplicationName { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("APPLICATION_NAME"), NotNull] public string   ApplicationName { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                   NotNull] public DateTime UNTIL           { get; set; } // TIMESTAMP
 		[Column(),                   NotNull] public long     COUNTER         { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="VARIABLE_TRACE_")]
-	public partial class _SYS_SQL_ANALYZER_VariableTrace0
+	public partial class _SYS_SQL_ANALYZER_VariableTrace
 	{
 		[Column("USER_NAME"),              Nullable] public string? UserName             { get; set; } // NVARCHAR(256)
 		[Column("STATEMENT_EXECUTION_ID"), Nullable] public string? StatementExecutionId { get; set; } // VARCHAR(32)
@@ -10057,7 +8099,7 @@ namespace SapHanaDataContext
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="VARIABLE_TRACE", IsView=true)]
-	public partial class _SYS_SQL_ANALYZER_VariableTrace1
+	public partial class _SYS_SQL_ANALYZER_VariableTrace0
 	{
 		[Column("USER_NAME"),              Nullable] public string? UserName             { get; set; } // NVARCHAR(256)
 		[Column("STATEMENT_EXECUTION_ID"), Nullable] public string? StatementExecutionId { get; set; } // VARCHAR(32)
@@ -10073,15 +8115,9 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="VERSIONS")]
 	public partial class _SYS_EPM_VERSION
 	{
-		#nullable disable
-		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string    UserName       { get; set; } = null!; // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),      PrimaryKey(2), NotNull] public string    SchemaName     { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),       PrimaryKey(3), NotNull] public string    ModelName      { get; set; } = null!; // NVARCHAR(256)
 		[Column("VERSION"),          PrimaryKey(4), NotNull] public int       VERSIONColumn  { get; set; } // INTEGER
 		[Column(),                      Nullable           ] public string?   COMMENTS       { get; set; } // NVARCHAR(1024)
 		[Column("VOLUME_ID"),           Nullable           ] public int?      VolumeId       { get; set; } // INTEGER
@@ -10097,42 +8133,22 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_EPM", Name="VERSION_PRIVILEGES")]
 	public partial class _SYS_EPM_VersionPrivilege
 	{
-		#nullable disable
-		[Column(),                      PrimaryKey(1), NotNull] public string GRANTOR           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_SCHEMA"),        PrimaryKey(2), NotNull] public string ModelSchema       { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),          PrimaryKey(3), NotNull] public string ModelName         { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("QUERY_SOURCE_SCHEMA"), PrimaryKey(4), NotNull] public string QuerySourceSchema { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("QUERY_SOURCE_NAME"),   PrimaryKey(5), NotNull] public string QuerySourceName   { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                      PrimaryKey(1), NotNull] public string GRANTOR           { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_SCHEMA"),        PrimaryKey(2), NotNull] public string ModelSchema       { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),          PrimaryKey(3), NotNull] public string ModelName         { get; set; } = null!; // NVARCHAR(256)
+		[Column("QUERY_SOURCE_SCHEMA"), PrimaryKey(4), NotNull] public string QuerySourceSchema { get; set; } = null!; // NVARCHAR(256)
+		[Column("QUERY_SOURCE_NAME"),   PrimaryKey(5), NotNull] public string QuerySourceName   { get; set; } = null!; // NVARCHAR(256)
 		[Column(),                      PrimaryKey(6), NotNull] public int    VERSION           { get; set; } // INTEGER
-		#nullable disable
-		[Column(),                      PrimaryKey(7), NotNull] public string GRANTEE           { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column(),                      PrimaryKey(8), NotNull] public string PRIVILEGE         { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column(),                      PrimaryKey(7), NotNull] public string GRANTEE           { get; set; } = null!; // NVARCHAR(256)
+		[Column(),                      PrimaryKey(8), NotNull] public string PRIVILEGE         { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_EPM", Name="VERSION_STATES")]
 	public partial class _SYS_EPM_VersionState
 	{
-		#nullable disable
-		[Column("USER_NAME"),   PrimaryKey(1), NotNull] public string  UserName   { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("SCHEMA_NAME"), PrimaryKey(2), NotNull] public string  SchemaName { get; set; } // NVARCHAR(256)
-		#nullable enable
-		#nullable disable
-		[Column("MODEL_NAME"),  PrimaryKey(3), NotNull] public string  ModelName  { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column("USER_NAME"),   PrimaryKey(1), NotNull] public string  UserName   { get; set; } = null!; // NVARCHAR(256)
+		[Column("SCHEMA_NAME"), PrimaryKey(2), NotNull] public string  SchemaName { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),  PrimaryKey(3), NotNull] public string  ModelName  { get; set; } = null!; // NVARCHAR(256)
 		[Column(),              PrimaryKey(4), NotNull] public int     VERSION    { get; set; } // INTEGER
 		[Column("TABLE_NAME"),     Nullable           ] public string? TableName  { get; set; } // NVARCHAR(256)
 	}
@@ -10140,14 +8156,10 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="XSJS_USAGE")]
 	public partial class _SYS_XS_XsjsUsage
 	{
-		#nullable disable
-		[Column, NotNull] public string   FEATURE   { get; set; } // NVARCHAR(1024)
-		#nullable enable
+		[Column, NotNull] public string   FEATURE   { get; set; } = null!; // NVARCHAR(1024)
 		[Column, NotNull] public double   TRAFFIC   { get; set; } // DOUBLE
 		[Column, NotNull] public DateTime TIMESTAMP { get; set; } // TIMESTAMP
-		#nullable disable
-		[Column, NotNull] public string   APP       { get; set; } // NVARCHAR(256)
-		#nullable enable
+		[Column, NotNull] public string   APP       { get; set; } = null!; // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_BIC", Name="sap.hana.uis.db/GET_NAVIGATION_TARGET_DATA", IsView=true)]
@@ -10750,149 +8762,262 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPCONSTRAINTFROMTABLE
+		#region PersonDelete
 
-		public static int DROPCONSTRAINTFROMTABLE0(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		public static int PersonDelete(this HXEDB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
+		}
+
+		#endregion
+
+		#region PatientSelectAll
+
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
+		}
+
+		public partial class PatientSelectAllResult
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region PatientSelectByName
+
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region OutRefTest
+
+		public static int OutRefTest(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
+				new DataParameter("ID",             ID,             DataType.Int32),
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
+				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region OutRefEnumTest
+
+		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
 		}
 
 		#endregion
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<PersonSelectByKeyResult0> PersonSelectByKey0(this HXEDB dataConnection, int? ID)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this HXEDB dataConnection, int? ID)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
 				new DataParameter("ID", ID, DataType.Int32));
 		}
 
-		public partial class PersonSelectByKeyResult0
+		public partial class PersonSelectByKeyResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANAODBC\".\"Person_SelectAll\"");
+			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANAODBC\".\"Person_SelectAll\"");
 		}
 
-		public partial class PersonSelectAllResult0
+		public partial class PersonSelectAllResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANAODBC\".\"Person_SelectByName\"",
+			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANAODBC\".\"Person_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
 
-		public partial class PersonSelectByNameResult0
+		public partial class PersonSelectByNameResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANAODBC\".\"Person_SelectListByName\"",
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANAODBC\".\"Person_SelectListByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
 
-		public partial class PersonSelectListByNameResult0
+		public partial class PersonSelectListByNameResult
 		{
 			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
 
-		#region DuplicateColumnNames
+		#region DROPEXISTINGTABLE
 
-		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this HXEDB dataConnection)
+		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult0
-				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANAODBC\".\"DuplicateColumnNames\"");
-		}
-
-		public partial class DuplicateColumnNamesResult0
-		{
-			               public int?    id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
-		}
-
-		#endregion
-
-		#region DROPEXISTINGVIEW
-
-		public static int DROPEXISTINGVIEW0(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
 				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region PersonInsert
+
+		public static int PersonInsert(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert\"",
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonInsertOutputParameter
+
+		public static int PersonInsertOutputParameter(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region DROPEXISTINGFUNCTION
+
+		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
+		}
+
+		#endregion
+
+		#region PersonInsertOutputParameter
+
+		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region AddIssue792Record
+
+		public static int AddIssue792Record(this HXEDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
 		}
 
 		#endregion
@@ -12669,21 +10794,93 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PatientSelectAll
+		#region SelectImplicitColumn
 
-		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANA\".\"Patient_SelectAll\"");
+			return dataConnection.QueryProc<SelectImplicitColumnResult>("\"TESTHANA\".\"SelectImplicitColumn\"");
 		}
 
-		public partial class PatientSelectAllResult0
+		public partial class SelectImplicitColumnResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
+			[Column("123")] public int? _123 { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectByKey
+
+		public static IEnumerable<PersonSelectByKeyResult0> PersonSelectByKey0(this HXEDB dataConnection, int? ID)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANA\".\"Person_SelectByKey\"",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
 			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANA\".\"Person_SelectAll\"");
+		}
+
+		public partial class PersonSelectAllResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectByName
+
+		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANA\".\"Person_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANA\".\"Person_SelectListByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectListByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
@@ -12692,7 +10889,7 @@ namespace SapHanaDataContext
 
 		public static int PersonInsert0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
 				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
@@ -12701,29 +10898,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonInsertOutputParameter
-
-		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region PersonUpdate
 
 		public static int PersonUpdate0(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Update\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
 				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
@@ -12733,40 +10912,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonDelete
-
-		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, DataType.Int32));
-		}
-
-		#endregion
-
-		#region PatientSelectAll
-
-		public static IEnumerable<PatientSelectAllResult1> PatientSelectAll1(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectAllResult1>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
-		}
-
-		public partial class PatientSelectAllResult1
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
 		#region PatientSelectByName
 
 		public static IEnumerable<PatientSelectByNameResult0> PatientSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
+			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANA\".\"Patient_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
@@ -12783,41 +10933,25 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region OutRefTest
+		#region PrdGlobalEccCvMARAproc
 
-		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this HXEDB dataConnection)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
-				new DataParameter("ID",             ID,             DataType.Int32),
-				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var ms = dataConnection.MappingSchema;
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
 		}
 
-		#endregion
-
-		#region OutRefEnumTest
-
-		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public partial class PrdGlobalEccCvMARAprocResult
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
@@ -12836,112 +10970,25 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPCONSTRAINTFROMTABLE
+		#region DuplicateColumnNames
 
-		public static int DROPCONSTRAINTFROMTABLE1(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this HXEDB dataConnection)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new DuplicateColumnNamesResult
+				{
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANAODBC\".\"DuplicateColumnNames\"");
 		}
 
-		#endregion
-
-		#region PatientSelectByName
-
-		public static IEnumerable<PatientSelectByNameResult1> PatientSelectByName1(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public partial class DuplicateColumnNamesResult
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult1>("\"TESTHANA\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectByNameResult1
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region SelectImplicitColumn
-
-		public static IEnumerable<SelectImplicitColumnResult1> SelectImplicitColumn1(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<SelectImplicitColumnResult1>("\"TESTHANA\".\"SelectImplicitColumn\"");
-		}
-
-		public partial class SelectImplicitColumnResult1
-		{
-			[Column("123")] public int? _123 { get; set; }
-		}
-
-		#endregion
-
-		#region AflpmEraser
-
-		public static int AflpmEraser(this HXEDB dataConnection, string? PROC)
-		{
-			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
-				new DataParameter("PROC", PROC, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE0(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGPROCEDURE
-
-		public static int DROPEXISTINGPROCEDURE0(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
-		}
-
-		#endregion
-
-		#region AfllangWrapperProcedureDrop
-
-		public static int AfllangWrapperProcedureDrop(this HXEDB dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
-		{
-			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
-				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
-				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region AflpmOnlineRegistrationCleanup
-
-		public static int AflpmOnlineRegistrationCleanup(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
-		}
-
-		#endregion
-
-		#region DROPEXISTINGFUNCTION
-
-		public static int DROPEXISTINGFUNCTION0(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
@@ -12978,20 +11025,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE1(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE1(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
@@ -13000,20 +11036,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGFUNCTION
-
-		public static int DROPEXISTINGFUNCTION1(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
-		}
-
-		#endregion
-
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW1(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
@@ -13022,155 +11047,107 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonSelectByKey
+		#region DROPCONSTRAINTFROMTABLE
 
-		public static IEnumerable<PersonSelectByKeyResult1> PersonSelectByKey1(this HXEDB dataConnection, int? ID)
+		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult1>("\"TESTHANA\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, DataType.Int32));
-		}
-
-		public partial class PersonSelectByKeyResult1
-		{
-			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
-			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonSelectAll
+		#region AflpmEraser
 
-		public static IEnumerable<PersonSelectAllResult1> PersonSelectAll1(this HXEDB dataConnection)
+		public static int AflpmEraser(this HXEDB dataConnection, string? PROC)
 		{
-			return dataConnection.QueryProc<PersonSelectAllResult1>("\"TESTHANA\".\"Person_SelectAll\"");
-		}
-
-		public partial class PersonSelectAllResult1
-		{
-			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
-			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
+				new DataParameter("PROC", PROC, DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonSelectByName
+		#region AfllangWrapperProcedureDrop
 
-		public static IEnumerable<PersonSelectByNameResult1> PersonSelectByName1(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static int AfllangWrapperProcedureDrop(this HXEDB dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult1>("\"TESTHANA\".\"Person_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectByNameResult1
-		{
-			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
-			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
+				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
+				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
 		}
 
 		#endregion
 
-		#region PersonSelectListByName
+		#region AflpmOnlineRegistrationCleanup
 
-		public static IEnumerable<PersonSelectListByNameResult1> PersonSelectListByName1(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static int AflpmOnlineRegistrationCleanup(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult1>("\"TESTHANA\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectListByNameResult1
-		{
-			public int     PersonID   { get; set; }
-			#nullable disable
-			public string  FirstName  { get; set; }
-			#nullable enable
-			#nullable disable
-			public string  LastName   { get; set; }
-			#nullable enable
-			public string? MiddleName { get; set; }
-			#nullable disable
-			public string  Gender     { get; set; }
-			#nullable enable
+			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
 		}
 
 		#endregion
 
-		#region PersonInsert
+		#region DROPEXISTINGTABLE
 
-		public static int PersonInsert1(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int DROPEXISTINGTABLE0(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonInsertOutputParameter
+		#region DROPEXISTINGPROCEDURE
 
-		public static int PersonInsertOutputParameter1(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static int DROPEXISTINGPROCEDURE0(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
+				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonUpdate
+		#region DROPEXISTINGFUNCTION
 
-		public static int PersonUpdate1(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int DROPEXISTINGFUNCTION0(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGVIEW
+
+		public static int DROPEXISTINGVIEW0(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPCONSTRAINTFROMTABLE
+
+		public static int DROPCONSTRAINTFROMTABLE0(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
 		}
 
 		#endregion
 
 		#region PersonDelete
 
-		public static int PersonDelete1(this HXEDB dataConnection, int? PERSONID)
+		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
 				new DataParameter("PERSONID", PERSONID, DataType.Int32));
@@ -13178,9 +11155,28 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PatientSelectAll
+
+		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANA\".\"Patient_SelectAll\"");
+		}
+
+		public partial class PatientSelectAllResult0
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
 		#region OutRefTest
 
-		public static int OutRefTest1(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -13202,7 +11198,7 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest1(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
 				new DataParameter("STR",            STR,            DataType.VarChar),
@@ -13219,12 +11215,12 @@ namespace SapHanaDataContext
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult1> DuplicateColumnNames1(this HXEDB dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this HXEDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
 			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult1
+				new DuplicateColumnNamesResult0
 				{
 					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
@@ -13232,39 +11228,7 @@ namespace SapHanaDataContext
 				"\"TESTHANA\".\"DuplicateColumnNames\"");
 		}
 
-		public partial class DuplicateColumnNamesResult1
-		{
-			               public int?    id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
-		}
-
-		#endregion
-
-		#region AddIssue792Record
-
-		public static int AddIssue792Record1(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
-		}
-
-		#endregion
-
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult1> PrdGlobalEccCvMARAproc1(this HXEDB dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult1
-				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult1
+		public partial class DuplicateColumnNamesResult0
 		{
 			               public int?    id      { get; set; }
 			[Column("id")] public string? Column2 { get; set; }
@@ -13312,13 +11276,13 @@ namespace SapHanaDataContext
 				t.ID == ID);
 		}
 
-		public static AllTypesGeo Find(this ITable<AllTypesGeo> table, int ID)
+		public static TESTHANAODBC_AllTypesGeo Find(this ITable<TESTHANAODBC_AllTypesGeo> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTHANAODBC_AllTypesGeo Find(this ITable<TESTHANAODBC_AllTypesGeo> table, int ID)
+		public static AllTypesGeo Find(this ITable<AllTypesGeo> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -13553,7 +11517,7 @@ namespace SapHanaDataContext
 				t.Name    == Name);
 		}
 
-		public static _SYS_TASK_CleanseAddressRecordInfo0 Find(this ITable<_SYS_TASK_CleanseAddressRecordInfo0> table, long TaskExecutionId, int OperationId, int TableId, long RowId, int EntityInstance, int EntityInstanceOccurrence)
+		public static _SYS_TASK_CleanseAddressRecordInfo Find(this ITable<_SYS_TASK_CleanseAddressRecordInfo> table, long TaskExecutionId, int OperationId, int TableId, long RowId, int EntityInstance, int EntityInstanceOccurrence)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskExecutionId          == TaskExecutionId &&
@@ -13564,7 +11528,7 @@ namespace SapHanaDataContext
 				t.EntityInstanceOccurrence == EntityInstanceOccurrence);
 		}
 
-		public static _SYS_TASK_CleanseChangeInfo0 Find(this ITable<_SYS_TASK_CleanseChangeInfo0> table, long TaskExecutionId, int OperationId, long RowId, string EntityId, int EntityInstance, int EntityInstanceOccurrence, string ComponentId, string ComponentElementId, string ChangeCategoryId)
+		public static _SYS_TASK_CleanseChangeInfo Find(this ITable<_SYS_TASK_CleanseChangeInfo> table, long TaskExecutionId, int OperationId, long RowId, string EntityId, int EntityInstance, int EntityInstanceOccurrence, string ComponentId, string ComponentElementId, string ChangeCategoryId)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskExecutionId          == TaskExecutionId          &&
@@ -13606,26 +11570,26 @@ namespace SapHanaDataContext
 				t.CONTAINER  == CONTAINER);
 		}
 
-		public static TESTHANAODBC_Doctor Find(this ITable<TESTHANAODBC_Doctor> table, int PersonID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
-		}
-
 		public static Doctor Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static _SYS_RT_EshModel0 Find(this ITable<_SYS_RT_EshModel0> table, string SchemaName, string ViewName)
+		public static TESTHANAODBC_Doctor Find(this ITable<TESTHANAODBC_Doctor> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static _SYS_RT_EshModel Find(this ITable<_SYS_RT_EshModel> table, string SchemaName, string ViewName)
 		{
 			return table.FirstOrDefault(t =>
 				t.SchemaName == SchemaName &&
 				t.ViewName   == ViewName);
 		}
 
-		public static _SYS_RT_EshModelProperty0 Find(this ITable<_SYS_RT_EshModelProperty0> table, string SchemaName, string ViewName, string ColumnName, string PROPERTY)
+		public static _SYS_RT_EshModelProperty Find(this ITable<_SYS_RT_EshModelProperty> table, string SchemaName, string ViewName, string ColumnName, string PROPERTY)
 		{
 			return table.FirstOrDefault(t =>
 				t.SchemaName == SchemaName &&
@@ -13683,13 +11647,6 @@ namespace SapHanaDataContext
 				t.VALUE        == VALUE);
 		}
 
-		public static TESTHANAODBC_IndexTable Find(this ITable<TESTHANAODBC_IndexTable> table, int PKField1, int PKField2)
-		{
-			return table.FirstOrDefault(t =>
-				t.PKField1 == PKField1 &&
-				t.PKField2 == PKField2);
-		}
-
 		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
@@ -13697,7 +11654,7 @@ namespace SapHanaDataContext
 				t.PKField2 == PKField2);
 		}
 
-		public static TESTHANAODBC_IndexTable2 Find(this ITable<TESTHANAODBC_IndexTable2> table, int PKField1, int PKField2)
+		public static TESTHANAODBC_IndexTable Find(this ITable<TESTHANAODBC_IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
@@ -13711,13 +11668,20 @@ namespace SapHanaDataContext
 				t.PKField2 == PKField2);
 		}
 
-		public static TESTHANAODBC_InheritanceChild Find(this ITable<TESTHANAODBC_InheritanceChild> table, int InheritanceChildId)
+		public static TESTHANAODBC_IndexTable2 Find(this ITable<TESTHANAODBC_IndexTable2> table, int PKField1, int PKField2)
+		{
+			return table.FirstOrDefault(t =>
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
+		}
+
+		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static TESTHANAODBC_InheritanceChild Find(this ITable<TESTHANAODBC_InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
@@ -13770,7 +11734,7 @@ namespace SapHanaDataContext
 				t.LibraryName == LibraryName);
 		}
 
-		public static _SYS_TASK_MatchGroupInfo0 Find(this ITable<_SYS_TASK_MatchGroupInfo0> table, long TaskExecutionId, int OperationId, int GroupId)
+		public static _SYS_TASK_MatchGroupInfo Find(this ITable<_SYS_TASK_MatchGroupInfo> table, long TaskExecutionId, int OperationId, int GroupId)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskExecutionId == TaskExecutionId &&
@@ -13786,7 +11750,7 @@ namespace SapHanaDataContext
 				t.PolicyId        == PolicyId);
 		}
 
-		public static _SYS_TASK_MatchRecordInfo0 Find(this ITable<_SYS_TASK_MatchRecordInfo0> table, long TaskExecutionId, int OperationId, int TableId, long RowId)
+		public static _SYS_TASK_MatchRecordInfo Find(this ITable<_SYS_TASK_MatchRecordInfo> table, long TaskExecutionId, int OperationId, int TableId, long RowId)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskExecutionId == TaskExecutionId &&
@@ -13827,7 +11791,7 @@ namespace SapHanaDataContext
 				t.OperationId     == OperationId);
 		}
 
-		public static _SYS_TASK_MatchTracing0 Find(this ITable<_SYS_TASK_MatchTracing0> table, long TaskExecutionId, int OperationId, int TableId, long RowId, int RelatedTableId, long RelatedRowId)
+		public static _SYS_TASK_MatchTracing Find(this ITable<_SYS_TASK_MatchTracing> table, long TaskExecutionId, int OperationId, int TableId, long RowId, int RelatedTableId, long RelatedRowId)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskExecutionId == TaskExecutionId &&
@@ -13902,13 +11866,13 @@ namespace SapHanaDataContext
 				t.ParamName     == ParamName);
 		}
 
-		public static TESTHANAODBC_Patient Find(this ITable<TESTHANAODBC_Patient> table, int PersonID)
+		public static Patient Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static TESTHANAODBC_Patient Find(this ITable<TESTHANAODBC_Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
@@ -13969,13 +11933,13 @@ namespace SapHanaDataContext
 				t.ReadView   == ReadView);
 		}
 
-		public static TESTHANAODBC_PrdGlobalEccCvMara Find(this ITable<TESTHANAODBC_PrdGlobalEccCvMara> table, int Id)
+		public static PrdGlobalEccCvMara Find(this ITable<PrdGlobalEccCvMara> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static PrdGlobalEccCvMara Find(this ITable<PrdGlobalEccCvMara> table, int Id)
+		public static TESTHANAODBC_PrdGlobalEccCvMara Find(this ITable<TESTHANAODBC_PrdGlobalEccCvMara> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -14477,7 +12441,7 @@ namespace SapHanaDataContext
 				t.CheckCaseSensitive   == CheckCaseSensitive);
 		}
 
-		public static _SYS_TASK_TaskClientMapping0 Find(this ITable<_SYS_TASK_TaskClientMapping0> table, long TaskOid)
+		public static _SYS_TASK_TaskClientMapping Find(this ITable<_SYS_TASK_TaskClientMapping> table, long TaskOid)
 		{
 			return table.FirstOrDefault(t =>
 				t.TaskOid == TaskOid);
@@ -14499,7 +12463,7 @@ namespace SapHanaDataContext
 				t.TaskExecutionId == TaskExecutionId);
 		}
 
-		public static _SYS_TASK_TaskLocalization0 Find(this ITable<_SYS_TASK_TaskLocalization0> table, int LocTypeId, string LocId, char LANGUAGE)
+		public static _SYS_TASK_TaskLocalization Find(this ITable<_SYS_TASK_TaskLocalization> table, int LocTypeId, string LocId, char LANGUAGE)
 		{
 			return table.FirstOrDefault(t =>
 				t.LocTypeId == LocTypeId &&
@@ -14559,22 +12523,16 @@ namespace SapHanaDataContext
 				t.CONTAINER  == CONTAINER);
 		}
 
-		public static TESTHANAODBC_TestIdentity Find(this ITable<TESTHANAODBC_TestIdentity> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTHANAODBC_TestMerge1 Find(this ITable<TESTHANAODBC_TestMerge1> table, int Id)
+		public static TESTHANAODBC_TestIdentity Find(this ITable<TESTHANAODBC_TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t.Id == Id);
+				t.ID == ID);
 		}
 
 		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
@@ -14583,13 +12541,19 @@ namespace SapHanaDataContext
 				t.Id == Id);
 		}
 
-		public static TESTHANAODBC_TestMerge2 Find(this ITable<TESTHANAODBC_TestMerge2> table, int Id)
+		public static TESTHANAODBC_TestMerge1 Find(this ITable<TESTHANAODBC_TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
 		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TESTHANAODBC_TestMerge2 Find(this ITable<TESTHANAODBC_TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -14786,5 +12750,4 @@ namespace SapHanaDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

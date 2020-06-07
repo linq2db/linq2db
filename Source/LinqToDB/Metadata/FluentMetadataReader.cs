@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,8 +20,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			List<Attribute> attrs;
-			if (_types.TryGetValue(type, out attrs))
+			if (_types.TryGetValue(type, out var attrs))
 				return attrs.OfType<T>().ToArray();
 
 			if (!inherit)
@@ -69,7 +67,7 @@ namespace LinqToDB.Metadata
 
 			foreach(var p in parents)
 			{
-				var pattrs = GetAttributes<T>(p.Type, p.Member, inherit);
+				var pattrs = GetAttributes<T>(p.Type, p.Member!, inherit);
 				if (pattrs.Length > 0)
 					return pattrs;
 			}

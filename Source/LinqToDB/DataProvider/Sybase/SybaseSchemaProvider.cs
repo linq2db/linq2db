@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Sybase
 		// sybase provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -73,7 +73,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 SELECT
@@ -118,7 +118,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			const string baseSql = @"
 SELECT
@@ -180,7 +180,7 @@ WHERE
 			}
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// otherwise GetSchema will throw AseException
 			if (dataConnection.Transaction != null)

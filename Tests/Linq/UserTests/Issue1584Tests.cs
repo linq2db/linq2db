@@ -21,7 +21,7 @@ namespace Tests.Playground
 		}
 		private class RateCharges
 		{
-		    public RateEntry RateEntry { get; set; }
+		    public RateEntry? RateEntry { get; set; }
 		    public decimal FlatRate { get; set; }
 		    public decimal MinRate { get; set; }
 		    public decimal VariableRate { get; set; }
@@ -37,7 +37,7 @@ namespace Tests.Playground
 		    public short TI_LineOrder { get; set; }
 		    public DateTime TI_RateStartDate { get; set; }
 		    public DateTime? TI_RateEndDate { get; set; }
-		    public string TI_RX_NKCurrency { get; set; }
+		    public string? TI_RX_NKCurrency { get; set; }
 		    public int TI_Frequency { get; set; }
 		    public Guid? TI_OH_Supplier { get; set; }
 		    public Guid? TI_OH_TransportProvider { get; set; }
@@ -45,54 +45,54 @@ namespace Tests.Playground
 		    public Guid? TI_OH_Consignee { get; set; }
 		    public Guid? TI_OA_CartagePickupAddressOverride { get; set; }
 		    public Guid? TI_OA_CartageDeliveryAddressOverride { get; set; }
-		    public string TI_CartagePickupAddressPostCode { get; set; }
-		    public string TI_CartageDeliveryAddressPostCode { get; set; }
-		    public string TI_RS_NKServiceLevel_NI { get; set; }
-		    public string TI_OriginLRC { get; set; }
-		    public string TI_DestinationLRC { get; set; }
-		    public string TI_ViaLRC { get; set; }
-		    public string TI_PageHeading { get; set; }
-		    public string TI_PageOpeningText { get; set; }
-		    public string TI_PageClosingText { get; set; }
+		    public string? TI_CartagePickupAddressPostCode { get; set; }
+		    public string? TI_CartageDeliveryAddressPostCode { get; set; }
+		    public string? TI_RS_NKServiceLevel_NI { get; set; }
+		    public string? TI_OriginLRC { get; set; }
+		    public string? TI_DestinationLRC { get; set; }
+		    public string? TI_ViaLRC { get; set; }
+		    public string? TI_PageHeading { get; set; }
+		    public string? TI_PageOpeningText { get; set; }
+		    public string? TI_PageClosingText { get; set; }
 		    public Guid? TI_OH_AgentOverride { get; set; }
 		    public Guid? TI_ParentID { get; set; }
-		    public string TI_QuotePageIncoTerm { get; set; }
-		    public string TI_BuyersConsolRateMode { get; set; }
+		    public string? TI_QuotePageIncoTerm { get; set; }
+		    public string? TI_BuyersConsolRateMode { get; set; }
 		    public DateTime? TI_SystemCreateTimeUtc { get; set; }
-		    public string TI_SystemCreateUser { get; set; }
+		    public string? TI_SystemCreateUser { get; set; }
 		    public DateTime? TI_SystemLastEditTimeUtc { get; set; }
-		    public string TI_SystemLastEditUser { get; set; }
+		    public string? TI_SystemLastEditUser { get; set; }
 		    public Guid TI_TH { get; set; }
 		    public Guid? TI_RC { get; set; }
-		    public string TI_ContractNumber { get; set; }
-		    public string TI_PL_NKCarrierServiceLevel { get; set; }
+		    public string? TI_ContractNumber { get; set; }
+		    public string? TI_PL_NKCarrierServiceLevel { get; set; }
 		    public Guid? TI_TZ_OriginZone { get; set; }
 		    public Guid? TI_TZ_DestinationZone { get; set; }
 		    public bool TI_IsValid { get; set; }
 		    public bool TI_IsCrossTrade { get; set; }
 		    public bool TI_DataChecked { get; set; }
 		    public bool TI_MatchContainerRateClass { get; set; }
-		    public string TI_TransitTime { get; set; }
-		    public string TI_FrequencyUnit { get; set; }
+		    public string? TI_TransitTime { get; set; }
+		    public string? TI_FrequencyUnit { get; set; }
 
 		    [ColumnAlias(nameof(TI_Mode)), Column(IsColumn = false)]
 		    public TransportType? TI_ModeTT { get; set; }
 
-		    public string TI_Mode { get; set; }
-		    public string TI_RH_NKCommodityCode { get; set; }
-		    public string TI_RateCategory { get; set; }
+		    public string? TI_Mode { get; set; }
+		    public string? TI_RH_NKCommodityCode { get; set; }
+		    public string? TI_RateCategory { get; set; }
 
 		    [ColumnAlias(nameof(TI_RateCategory)), Column(IsColumn = false)]
 		    public TransportType? TI_RateCategoryTT { get; set; }
 
 		    public Guid? TI_FromID { get; set; }
-		    public string TI_FromTableCode { get; set; }
+		    public string? TI_FromTableCode { get; set; }
 		    public Guid? TI_ToId { get; set; }
-		    public string TI_ToTableCode { get; set; }
+		    public string? TI_ToTableCode { get; set; }
 		    public Guid? TI_OH_ControllingCustomer { get; set; }
 		    public Guid TI_GC_Publisher { get; set; }
 		    public bool TI_IsTact { get; set; }
-		    public string TI_ParentTableCode { get; set; }
+		    public string? TI_ParentTableCode { get; set; }
 		    public int TI_RateKey { get; set; }
 
 		    [ExpressionMethod(nameof(GetModeExpression))]
@@ -128,7 +128,7 @@ namespace Tests.Playground
 		{
 		    public Guid TM_PK { get; set; }
 		    public byte TM_LineOrder { get; set; }
-		    public string TM_Type { get; set; }
+		    public string? TM_Type { get; set; }
 		    public decimal TM_Value { get; set; }
 		    public Guid TM_TL { get; set; }
 		}
@@ -157,7 +157,7 @@ namespace Tests.Playground
 					}).AsCte("rateCost");
 
 				var query = from rateEntry in db.GetTable<RateEntry>()
-					from c in cte.InnerJoin(c => c.RateEntry.TI_PK == rateEntry.TI_PK)
+					from c in cte.InnerJoin(c => c.RateEntry!.TI_PK == rateEntry.TI_PK)
 					select new
 					{
 						RateEntry = rateEntry,

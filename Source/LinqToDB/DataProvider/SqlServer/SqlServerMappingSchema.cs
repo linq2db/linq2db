@@ -60,8 +60,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlServerTypes.Configure(this);
 
-			SetValueToSqlConverter(typeof(String),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, null, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));

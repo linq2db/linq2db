@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
 			public bool BoolValue;
 			public Guid GuidValue;
-			public Binary BinaryValue;
+			public Binary? BinaryValue;
 			public short SmallIntValue;
 		}
 
@@ -38,8 +38,9 @@ namespace Tests.UserTests
 
 				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
+				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
+				Assert.True(DbType.Date == ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType
+					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]).DbType);
 			}
 		}
 
@@ -55,8 +56,9 @@ namespace Tests.UserTests
 
 				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
+				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
+				Assert.True(DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[0]).DbType
+					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]).DbType);
 			}
 		}
 	}

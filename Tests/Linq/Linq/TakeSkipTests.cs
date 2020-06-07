@@ -93,7 +93,7 @@ namespace Tests.Linq
 					db.Child.Take(5).Count());
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip1([DataSources] string context)
 		{
@@ -101,7 +101,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(3), db.Child.Skip(3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip2([DataSources] string context)
 		{
@@ -111,7 +111,7 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip3([DataSources] string context)
 		{
@@ -121,7 +121,7 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip4([DataSources] string context)
 		{
@@ -133,7 +133,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip5([DataSources] string context)
 		{
@@ -143,7 +143,7 @@ namespace Tests.Linq
 					db.Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip6([DataSources] string context)
 		{
@@ -151,7 +151,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(3), db.Child.Skip(() => 3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Skip7([DataSources] string context)
 		{
@@ -165,7 +165,7 @@ namespace Tests.Linq
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -174,7 +174,8 @@ namespace Tests.Linq
 					db.Child.Skip(2).Count());
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake1([DataSources] string context)
 		{
@@ -186,7 +187,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake2([DataSources] string context)
 		{
@@ -198,7 +200,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake3([DataSources] string context)
 		{
@@ -210,22 +213,123 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(
-			Configurations = new[]
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake21([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
 			{
-				ProviderName.DB2,
-				TestProvName.AllOracle,
-				ProviderName.SqlServer2005,
-				ProviderName.SqlServer2008
-			},
-			SkipForNonLinqService = true,
-			Details = "SELECT * query")]
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake22([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
+		[Test]
+		public void SkipTake23([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake31([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 5;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
+				
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake32([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip = 2;
+				var take = 7;
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[Repeat(2)] // needed for providers with positional parameters with skip parameter first
+		[Test]
+		public void SkipTake33([DataSources(false)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.InlineParameters = inline;
+				var skip1 = 1;
+				var skip2 = 2;
+				var take = 7;
+				var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
+						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
+					Assert.True(db.Command.Parameters.Count == 0);
+				else
+					Assert.True(db.Command.Parameters.Count > 0);
+			}
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
 			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -236,7 +340,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipTake5([DataSources] string context)
 		{
@@ -278,10 +382,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTake6([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -293,10 +398,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTakeCount([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Access)]
+			TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -305,7 +411,7 @@ namespace Tests.Linq
 					db.Child.Skip(2).Take(5).Count());
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void SkipFirst([DataSources] string context)
 		{
@@ -320,17 +426,17 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
-		public void ElementAt1([DataSources] string context)
+		public void ElementAt1([DataSources] string context, [Values(2, 3)] int at)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).ElementAt(3),
-					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3));
+					(from p in    Parent where p.ParentID > 1 select p).ElementAt(at),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(at));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAt2([DataSources] string context)
 		{
@@ -341,7 +447,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public async Task ElementAt2Async([DataSources] string context)
 		{
@@ -352,7 +458,7 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAtDefault1([DataSources] string context)
 		{
@@ -362,7 +468,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(3));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAtDefault2([DataSources] string context)
 		{
@@ -370,7 +476,7 @@ namespace Tests.Linq
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAtDefault3([DataSources] string context)
 		{
@@ -381,7 +487,7 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public async Task ElementAtDefault3Async([DataSources] string context)
 		{
@@ -392,7 +498,7 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAtDefault4([DataSources] string context)
 		{
@@ -401,7 +507,7 @@ namespace Tests.Linq
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { TestProvName.AllOracle, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ElementAtDefault5([DataSources] string context)
 		{
@@ -412,7 +518,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(true, ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -427,7 +533,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -518,10 +624,10 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "BatchId", CanBeNull = false)]
-			public List<Confirmation> Confirmations { get; set; }
+			public List<Confirmation> Confirmations { get; set; } = null!;
 		}
 
 		public class Confirmation
@@ -580,7 +686,7 @@ namespace Tests.Linq
 		class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			protected bool Equals(TakeSkipClass other)
 			{
@@ -591,7 +697,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((TakeSkipClass)obj);
 			}
 

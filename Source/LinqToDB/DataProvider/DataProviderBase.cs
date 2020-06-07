@@ -161,6 +161,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
+		protected void SetToType<TP, T, TF>(string dataTypeName, Expression<Func<TP, int, T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected virtual string? NormalizeTypeName(string? typeName)
 		{
 			return typeName;
@@ -170,7 +175,7 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);

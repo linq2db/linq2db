@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -16,14 +15,13 @@ namespace LinqToDB.DataProvider.Informix
 		static void SetQueryParameter(IQueryElement element)
 		{
 			if (element is SqlParameter p)
-				// enforce binary as parameters
-				if (p.Type.SystemType == typeof(byte[]) || p.Type.SystemType == typeof(Binary))
-					p.IsQueryParameter = true;
+			{
 				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
 				// intervals explicitly
-				else if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
+				if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
 						&& p.Type.DataType != DataType.Int64)
 					p.IsQueryParameter = false;
+			}
 		}
 
 		static void ClearQueryParameter(IQueryElement element)
@@ -32,16 +30,15 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
+			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
-			// ERROR [42000] [Informix .NET provider][Informix]A syntax error has occurred.
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
-			// whould be better if our insert AST had no SelectQuery when it is not used...
 			if (!ignore)
 				new QueryVisitor().VisitAll(statement, e =>
 				{
@@ -49,7 +46,7 @@ namespace LinqToDB.DataProvider.Informix
 						new QueryVisitor().VisitAll(select, ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(statement, inlineParameters);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

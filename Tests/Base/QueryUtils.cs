@@ -17,6 +17,14 @@ namespace Tests
 			return info.Queries.Single().Statement;
 		}
 
+		public static int GetPreamblesCount<T>(this IQueryable<T> query)
+		{
+			var eq = (IExpressionQuery)query;
+			var expression = eq.Expression;
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
+			return info.PreamblesCount();
+		}
+
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)
 		{
 			return query.GetStatement().SelectQuery!;

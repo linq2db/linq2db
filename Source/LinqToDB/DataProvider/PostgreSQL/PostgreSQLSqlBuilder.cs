@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
-		public override string Convert(string value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
@@ -144,16 +144,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
-							return value;
+							return sb.Append(value);
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote)
-							return '"' + value + '"';
-
-						if (IsReserved(value))
-							return '"' + value + '"';
-
-						if (value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
-							return '"' + value + '"';
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+							|| IsReserved(value)
+							|| value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							return sb.Append('"').Append(value).Append('"');
 					}
 
 					break;
@@ -161,13 +157,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return ":" + value;
+					return sb.Append(':').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					return (value.Length > 0 && value[0] == ':')? value.Substring(1): value;
+					return (value.Length > 0 && value[0] == ':')
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -225,11 +223,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable);
+					var name     = ConvertInline(attr.SequenceName, ConvertType.NameToQueryTable);
 					var server   = GetTableServerName(table);
 					var database = GetTableDatabaseName(table);
 					var schema   = attr.Schema != null
-						? Convert(attr.Schema, ConvertType.NameToSchema)
+						? ConvertInline(attr.Schema, ConvertType.NameToSchema)
 						: GetTableSchemaName(table);
 
 					var sb = new StringBuilder();
@@ -333,5 +331,35 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
+
+		protected override void BuildReturningSubclause(SqlStatement statement)
+		{
+			var output = statement.GetOutputClause();
+			if (output != null)
+			{
+				StringBuilder
+					.AppendLine("RETURNING");
+
+				++Indent;
+
+				bool first = true;
+				foreach (var oi in output.OutputItems)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+
+					BuildExpression(oi.Expression!);
+				}
+
+				StringBuilder
+					.AppendLine();
+
+				--Indent;
+			}
+		}
+
 	}
 }

@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlMergeStatement : SqlStatement
 	{
-		private static string TargetAlias = "Target";
+		private const string TargetAlias = "Target";
 
 		public SqlMergeStatement(SqlTable target)
 		{

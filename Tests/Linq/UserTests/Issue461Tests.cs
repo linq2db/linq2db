@@ -30,7 +30,7 @@ namespace Tests.UserTests
 
 			public int ParentId;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var vh = obj as ValueHolder;
 				if (vh == null)
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 
 		public class ValueValueHolder
 		{
-			public ValueHolder Child;
+			public ValueHolder? Child;
 
 			public override bool Equals(object obj)
 			{
@@ -73,7 +73,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
@@ -109,7 +123,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
@@ -147,7 +175,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
@@ -183,7 +225,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query",
+			Configurations = new[]
+			{
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.PostgreSQL92,
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			})]
 		[Test]
 		public void SelectToTypeTest2([DataSources] string context)
 		{

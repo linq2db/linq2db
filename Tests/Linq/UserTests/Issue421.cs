@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.Oracle)]
 			[Column(DataType = DataType.Blob, Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
 			[Column(                          Configuration = ProviderName.Informix,   DbType = "byte")]
-			public byte[] BlobValue;
+			public byte[]? BlobValue;
 		}
 
 		[Test]
@@ -37,7 +37,7 @@ namespace Tests.UserTests
 
 				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
 
 				db.GetTable<BlobClass>()
 					.Where(_ => _.Id == 1)
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 
 				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 
 				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
 
 				db.GetTable<BlobClass>()
 					.Where(_ => _.Id == 1)
@@ -75,7 +75,7 @@ namespace Tests.UserTests
 
 				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 			}
 		}
 
@@ -92,13 +92,13 @@ namespace Tests.UserTests
 
 				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
 
 				e.BlobValue = new byte[] {3, 2, 1};
 
 				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 			}
 		}
 
@@ -118,13 +118,13 @@ namespace Tests.UserTests
 
 				var v = table.First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
 
 				e.BlobValue = new byte[] { 3, 2, 1 };
 
 				v = table.First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 			}
 		}
 	}

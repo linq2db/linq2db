@@ -2,27 +2,30 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Expressions
 {
 	class GetItemExpression : Expression
 	{
-		public GetItemExpression(Expression expression)
+		public GetItemExpression(Expression expression, MappingSchema mappingSchema)
 		{
 			Expression = expression;
-			_type      = expression.Type.GetGenericArguments()[0];
+			_type       = EagerLoading.GetEnumerableElementType(expression.Type, mappingSchema);
 		}
 
 		readonly Type       _type;
 
 		public          Expression     Expression { get; }
-		public override Type           Type       { get { return _type;                    } }
-		public override ExpressionType NodeType   { get { return ExpressionType.Extension; } }
-		public override bool           CanReduce  { get { return true;                     } }
+		public override Type           Type       => _type;
+		public override ExpressionType NodeType   => ExpressionType.Extension;
+		public override bool           CanReduce  => true;
 
 		public override Expression Reduce()
 		{
-			var mi = MemberHelper.MethodOf(() => Enumerable.First<string>(null));
-			var gi = mi.GetGenericMethodDefinition().MakeGenericMethod(_type);
+			var gi = Methods.Enumerable.First.MakeGenericMethod(_type);
 
 			return Call(null, gi, Expression);
 		}

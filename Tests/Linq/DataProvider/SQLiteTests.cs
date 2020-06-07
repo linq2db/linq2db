@@ -16,6 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
 
 	using Model;
@@ -37,12 +38,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName))!;
 			object expectedValue = value;
 
 			if (convertToString)
@@ -116,7 +117,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var result = conn.Select(() => Cast(expectedValue, sqlType));
+				var result = conn.Select(() => Cast(expectedValue, sqlType))!;
 
 				// sqlite floating point parser doesn't restore roundtrip values properly
 				// and also deviation could differ for different versions of engine
@@ -340,7 +341,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -419,8 +420,6 @@ namespace Tests.DataProvider
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				//TODO this test fails in Core because provider can read Int64 from string column
-
 				Assert.That(conn.Execute<string>     ("SELECT  @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>("SELECT  @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
@@ -472,7 +471,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -541,7 +540,7 @@ namespace Tests.DataProvider
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s  = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
-				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);
 
 				Assert.AreEqual(1,                   table.ForeignKeys                   .Count);
@@ -564,7 +563,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.30.1";
+					expectedVersion = "3.31.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET46

@@ -60,10 +60,10 @@ namespace LinqToDB.Linq
 				IDataContext dataContext, T obj,
 				string? tableName, string? serverName, string? databaseName, string? schemaName)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type)
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null)!;
+				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -82,10 +82,10 @@ namespace LinqToDB.Linq
 				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				CancellationToken token)
 			{
-				if (Equals(default(T)!, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj!, dataContext);
 				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type)
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return (int)result!;
 			}

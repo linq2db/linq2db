@@ -83,7 +83,6 @@ namespace LinqToDB.Mapping
 			set => ServerName = value;
 		}
 
-		// TODO: V2: remove?
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
@@ -147,6 +146,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
+		public Delegate? QueryFilterFunc { get; private set; }
+
 		void Init()
 		{
 			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
@@ -166,6 +167,12 @@ namespace LinqToDB.Mapping
 
 				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
+			}
+
+			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
+			if (qf != null)
+			{
+				QueryFilterFunc = qf.FilterFunc;
 			}
 
 			InitializeDynamicColumnsAccessors();

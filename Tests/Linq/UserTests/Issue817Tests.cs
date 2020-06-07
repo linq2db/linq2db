@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -36,7 +36,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer,
+				TestProvName.AllSqlServer2008Minus,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,
@@ -57,7 +57,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer,
+				TestProvName.AllSqlServer2008Minus,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,
@@ -86,7 +86,7 @@ namespace Tests.UserTests
 		[ActiveIssue(
 			Configurations = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer,
+				TestProvName.AllSqlServer2008Minus,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,

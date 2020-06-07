@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -11,11 +10,11 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets column name.
 		/// </summary>
-		public string      ColumnName           { get; set; }
+		public string      ColumnName           { get; set; } = null!;
 		/// <summary>
 		/// Gets db-specific column type.
 		/// </summary>
-		public string      ColumnType           { get; set; }
+		public string?     ColumnType           { get; set; }
 		/// <summary>
 		/// Gets flag indicating that it is nullable column.
 		/// </summary>
@@ -35,24 +34,24 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets column description.
 		/// </summary>
-		public string      Description          { get; set; }
+		public string?     Description          { get; set; }
 
 		/// <summary>
 		/// Gets C# friendly column name.
 		/// </summary>
-		public string      MemberName           { get; set; }
+		public string      MemberName           { get; set; } = null!;
 		/// <summary>
 		/// Gets .net column type as a string.
 		/// </summary>
-		public string      MemberType           { get; set; }
+		public string      MemberType           { get; set; } = null!;
 		/// <summary>
 		/// Gets provider-specific .net column type as a string.
 		/// </summary>
-		public string      ProviderSpecificType { get; set; }
+		public string?     ProviderSpecificType { get; set; }
 		/// <summary>
 		/// Gets .net column type.
 		/// </summary>
-		public Type        SystemType           { get; set; }
+		public Type        SystemType           { get; set; } = null!;
 		/// <summary>
 		/// Gets column type as <see cref="DataType"/> enumeration value.
 		/// </summary>
@@ -81,6 +80,6 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets column owner schema.
 		/// </summary>
-		public TableSchema Table;
+		public TableSchema Table = null!;
 	}
 }

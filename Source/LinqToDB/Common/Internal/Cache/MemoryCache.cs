@@ -1,10 +1,10 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -109,7 +109,7 @@ namespace LinqToDB.Common.Internal.Cache
                 throw new InvalidOperationException($"Cache entry must specify a value for {nameof(entry.Size)} when {nameof(_options.SizeLimit)} is set.");
             }
 
-            var utcNow = _options.Clock.UtcNow;
+            var utcNow = _options.Clock!.UtcNow;
 
             DateTimeOffset? absoluteExpiration = null;
             if (entry._absoluteExpirationRelativeToNow.HasValue)
@@ -135,7 +135,7 @@ namespace LinqToDB.Common.Internal.Cache
             // Initialize the last access timestamp at the time the entry is added
             entry.LastAccessed = utcNow;
 
-            if (_entries.TryGetValue(entry.Key, out CacheEntry priorEntry))
+            if (_entries.TryGetValue(entry.Key, out CacheEntry? priorEntry))
             {
                 priorEntry.SetExpired(EvictionReason.Replaced);
             }
@@ -161,7 +161,7 @@ namespace LinqToDB.Common.Internal.Cache
                         if (_options.SizeLimit.HasValue)
                         {
                             // The prior entry was removed, decrease the by the prior entry's size
-                            Interlocked.Add(ref _cacheSize, -priorEntry.Size.Value);
+                            Interlocked.Add(ref _cacheSize, -priorEntry.Size!.Value);
                         }
                     }
                     else
@@ -182,7 +182,7 @@ namespace LinqToDB.Common.Internal.Cache
                     if (_options.SizeLimit.HasValue)
                     {
                         // Entry could not be added, reset cache size
-                        Interlocked.Add(ref _cacheSize, -entry.Size.Value);
+                        Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
                     }
                     entry.SetExpired(EvictionReason.Replaced);
                     entry.InvokeEvictionCallbacks();
@@ -214,14 +214,14 @@ namespace LinqToDB.Common.Internal.Cache
         }
 
         /// <inheritdoc />
-        public bool TryGetValue(object key, out object result)
+        public bool TryGetValue(object key, [MaybeNullWhen(false)] out object? result)
         {
             ValidateCacheKey(key);
 
             CheckDisposed();
 
             result = null;
-            var utcNow = _options.Clock.UtcNow;
+            var utcNow = _options.Clock!.UtcNow;
             var found = false;
 
             if (_entries.TryGetValue(key, out CacheEntry entry))
@@ -263,7 +263,7 @@ namespace LinqToDB.Common.Internal.Cache
             {
                 if (_options.SizeLimit.HasValue)
                 {
-                    Interlocked.Add(ref _cacheSize, -entry.Size.Value);
+                    Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
                 }
 
                 entry.SetExpired(EvictionReason.Removed);
@@ -279,7 +279,7 @@ namespace LinqToDB.Common.Internal.Cache
             {
                 if (_options.SizeLimit.HasValue)
                 {
-                    Interlocked.Add(ref _cacheSize, -entry.Size.Value);
+                    Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
                 }
                 entry.InvokeEvictionCallbacks();
             }
@@ -296,7 +296,7 @@ namespace LinqToDB.Common.Internal.Cache
         // If sufficient time has elapsed then a scan is initiated on a background task.
         private void StartScanForExpiredItems()
         {
-            var now = _options.Clock.UtcNow;
+            var now = _options.Clock!.UtcNow;
             if (_options.ExpirationScanFrequency < now - _lastExpirationScan)
             {
                 _lastExpirationScan = now;
@@ -307,7 +307,7 @@ namespace LinqToDB.Common.Internal.Cache
 
         private static void ScanForExpiredItems(MemoryCache cache)
         {
-            var now = cache._options.Clock.UtcNow;
+            var now = cache._options.Clock!.UtcNow;
             foreach (var entry in cache._entries.Values)
             {
                 if (entry.CheckExpired(now))
@@ -328,7 +328,7 @@ namespace LinqToDB.Common.Internal.Cache
             for (var i = 0; i < 100; i++)
             {
                 var sizeRead = Interlocked.Read(ref _cacheSize);
-                newSize = sizeRead + entry.Size.Value;
+                newSize = sizeRead + entry.Size!.Value;
 
                 if (newSize < 0 || newSize > _options.SizeLimit)
                 {
@@ -362,7 +362,7 @@ namespace LinqToDB.Common.Internal.Cache
             var lowWatermark = cache._options.SizeLimit * (1 - cache._options.CompactionPercentage);
             if (currentSize > lowWatermark)
             {
-                cache.Compact(currentSize - (long)lowWatermark, entry => entry.Size.Value);
+                cache.Compact(currentSize - (long)lowWatermark, entry => entry.Size!.Value);
             }
 
 //            cache._logger.LogDebug($"Overcapacity compaction executed. New size {Interlocked.Read(ref cache._cacheSize)}");
@@ -390,7 +390,7 @@ namespace LinqToDB.Common.Internal.Cache
             long removedSize = 0;
 
             // Sort items by expired & priority status
-            var now = _options.Clock.UtcNow;
+            var now = _options.Clock!.UtcNow;
             foreach (var entry in _entries.Values)
             {
                 if (entry.CheckExpired(now))

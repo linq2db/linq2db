@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
@@ -262,7 +262,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			var data = dataConnection.Query(
 				rd => new
@@ -343,7 +343,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -412,7 +412,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string? GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
 			switch (dataType)
 			{
@@ -533,7 +533,7 @@ SELECT	r.ROUTINE_CATALOG,
 			}
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd =>

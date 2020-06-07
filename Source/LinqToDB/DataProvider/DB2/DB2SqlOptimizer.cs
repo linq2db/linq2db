@@ -12,24 +12,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		static void SetQueryParameter(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-
-				if (p.Type.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
-					p.IsQueryParameter = true;
-			}
-		}
-
-		public override SqlStatement Finalize(SqlStatement statement)
-		{
-			new QueryVisitor().Visit(statement, SetQueryParameter);
-
-			return base.Finalize(statement);
-		}
-
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			switch (statement.QueryType)

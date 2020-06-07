@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 	/// <see cref="IEquatable{T}"/> collection.
 	/// 
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
-	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
+	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
@@ -105,7 +105,7 @@ namespace LinqToDB.Mapping
 		public Expression?  QueryExpression       { get; set; }
 
 		/// <summary>
-		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
+		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
 		public string?      Storage             { get; set; }
@@ -118,27 +118,23 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool         CanBeNull           { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public string?      KeyName             { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public string?      BackReferenceName   { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public bool         IsBackReference     { get; set; }
 
-		// TODO: V2 - remove?
 		/// <summary>
-		/// This property is not used by linq2db.
+		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public Relationship Relationship        { get; set; }
 

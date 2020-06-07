@@ -66,10 +66,10 @@ namespace LinqToDB.DataProvider
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
-				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer),
-				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase),
-				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema),
-											  sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable))
+				serverName   == null ? null : sqlBuilder.ConvertInline(serverName,   ConvertType.NameToServer    ),
+				databaseName == null ? null : sqlBuilder.ConvertInline(databaseName, ConvertType.NameToDatabase  ),
+				schemaName   == null ? null : sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema    ),
+											  sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable))
 			.ToString();
 		}
 
@@ -80,12 +80,11 @@ namespace LinqToDB.DataProvider
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
-			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
+			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					DataConnection = dataConnection,
 					CommandText    = commandText(),
 					StartTime      = now,
 				});
@@ -95,12 +94,11 @@ namespace LinqToDB.DataProvider
 			{
 				var count = action();
 
-				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = dataConnection,
 						CommandText     = commandText(),
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
@@ -110,12 +108,11 @@ namespace LinqToDB.DataProvider
 			}
 			catch (Exception ex)
 			{
-				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
+				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						DataConnection = dataConnection,
 						CommandText    = commandText(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
@@ -144,11 +141,13 @@ namespace LinqToDB.DataProvider
 				.Append("(");
 
 			foreach (var column in helper.Columns)
+			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t")
-					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-					.Append(",");
+					.Append("\t");
+				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+				helper.StringBuilder.Append(",");
+			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
@@ -203,11 +202,13 @@ namespace LinqToDB.DataProvider
 				.Append("(");
 
 			foreach (var column in helper.Columns)
+			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t")
-					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-					.Append(",");
+					.Append("\t");
+				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+				helper.StringBuilder.Append(",");
+			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
@@ -253,11 +254,13 @@ namespace LinqToDB.DataProvider
 				.Append("(");
 
 			foreach (var column in helper.Columns)
+			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t")
-					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-					.Append(",");
+					.Append("\t");
+				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
+				helper.StringBuilder.Append(",");
+			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder

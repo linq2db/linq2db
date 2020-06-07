@@ -1,12 +1,10 @@
-﻿#nullable disable
-using System;
-using System.Threading;
+﻿using System.Threading;
 
 namespace LinqToDB.Tools.EntityServices
 {
 	public class EntityMapEntry<T>
 	{
-		public T Entity { get; internal set; }
+		public T Entity { get; internal set; } = default!;
 
 		private int _dbCount;
 		public  int  DBCount => _dbCount;

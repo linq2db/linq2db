@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
+using Tests.Playground;
 
 namespace Tests.Linq
 {
@@ -28,6 +30,8 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
+			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
+				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
@@ -46,7 +50,53 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
-		
+
+		[Flags]
+		public enum FlagsEnum
+		{
+			None = 0,
+
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+
+			All = Flag1 | Flag2 | Flag3
+		}
+
+		[Table]
+		class MappingTestClass
+		{
+			[Column] public int       Id    { get; set; }
+			[Column] public int       Value { get; set; }
+			[Column] public FlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		{
+			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
+				{
+					Id = i,
+					Value = i * 10,
+					Flags = (FlagsEnum)(i & (int)FlagsEnum.All)
+				})
+				.ToArray();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query = from t in table
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				var expected = from t in data
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				AreEqualWithComparer(expected, query);
+			}
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
@@ -88,7 +138,7 @@ namespace Tests.Linq
 			return (_count4Expression ?? (_count4Expression = Count4Expression().Compile()))(p, id, n);
 		}
 
-		static Func<Parent,int,int,int> _count4Expression;
+		static Func<Parent,int,int,int>? _count4Expression;
 
 		static Expression<Func<Parent,int,int,int>> Count4Expression()
 		{
@@ -112,7 +162,7 @@ namespace Tests.Linq
 			return (_count5Expression ?? (_count5Expression = Count5Expression().Compile()))(db, p, n);
 		}
 
-		static Func<ITestDataContext,Parent,int,int> _count5Expression;
+		static Func<ITestDataContext,Parent,int,int>? _count5Expression;
 
 		static Expression<Func<ITestDataContext,Parent,int,int>> Count5Expression()
 		{
@@ -136,7 +186,7 @@ namespace Tests.Linq
 			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
 		}
 
-		static Func<ITable<Child>,Parent,int> _count6Expression;
+		static Func<ITable<Child>,Parent,int>? _count6Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int>> Count6Expression()
 		{
@@ -158,7 +208,7 @@ namespace Tests.Linq
 			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
 		}
 
-		static Func<ITable<Child>,Parent,int,int> _count7Expression;
+		static Func<ITable<Child>,Parent,int,int>? _count7Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int,int>> Count7Expression()
 		{
@@ -301,12 +351,12 @@ namespace Tests.Linq
 		class TestClass<T>
 		{
 			[ExpressionMethod(nameof(GetBoolExpression3))]
-			public static bool GetBool3(Parent obj)
+			public static bool GetBool3(Parent? obj)
 			{
 				throw new InvalidOperationException();
 			}
 
-			static Expression<Func<Parent,bool>> GetBoolExpression3()
+			static Expression<Func<Parent?,bool>> GetBoolExpression3()
 			{
 				return obj => obj != null;
 			}
@@ -737,10 +787,10 @@ namespace Tests.Linq
 		[LinqToDB.Mapping.Table("AllTypes")]
 		class AllTypes
 		{
-			[LinqToDB.Mapping.Column] public int    ID              { get; set; }
-			[LinqToDB.Mapping.Column] public int?   intDataType     { get; set; }
-			[LinqToDB.Mapping.Column] public string varcharDataType { get; set; }
-			[LinqToDB.Mapping.Column] public string char20DataType  { get; set; }
+			[LinqToDB.Mapping.Column] public int     ID              { get; set; }
+			[LinqToDB.Mapping.Column] public int?    intDataType     { get; set; }
+			[LinqToDB.Mapping.Column] public string? varcharDataType { get; set; }
+			[LinqToDB.Mapping.Column] public string? char20DataType  { get; set; }
 		}
 
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
@@ -750,7 +800,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(Func2Expr))]
-		public static int? FirstIfNullOrSecondAsNumber(string value, string intValue)
+		public static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
 		{
 			throw new InvalidOperationException();
 		}
@@ -771,8 +821,8 @@ namespace Tests.Linq
 	{
 		public class LeftJoinInfo<TOuter,TInner>
 		{
-			public TOuter Outer;
-			public TInner Inner;
+			public TOuter Outer = default!;
+			public TInner Inner = default!;
 		}
 
 		[ExpressionMethod(nameof(LeftJoinImpl))]

@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -26,10 +27,13 @@ namespace LinqToDB.Linq.Builder
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
 			new TableBuilder               (),
+			new IgnoreFiltersBuilder       (),
+			new ContextRefBuilder          (),
 			new SelectBuilder              (),
 			new SelectManyBuilder          (),
 			new WhereBuilder               (),
 			new OrderByBuilder             (),
+			new RemoveOrderByBuilder       (),
 			new GroupByBuilder             (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
@@ -95,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 		private  bool                              _reorder;
 		readonly Dictionary<Expression,Expression> _expressionAccessors;
 		private  HashSet<Expression>?              _subQueryExpressions;
-		readonly HashSet<Expression>?              _visitedExpressions;
+		readonly ExpressionTreeOptimizationContext  _optimizationContext;
 
 		public readonly List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
@@ -120,10 +124,10 @@ namespace LinqToDB.Linq.Builder
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
 
-			_visitedExpressions  = new HashSet<Expression>();
+			_optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 			Expression           = ConvertExpressionTree(expression);
-			_visitedExpressions  = null;
-
+			_optimizationContext.ClearVisitedCache();
+			
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
@@ -166,6 +170,8 @@ namespace LinqToDB.Linq.Builder
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
 			sequence.BuildQuery((Query<T>)_query, param);
+
+			_query.SetPreambles(_preambles);
 
 			return (Query<T>)_query;
 		}
@@ -302,185 +308,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertParameters
 
-		internal static Expression AggregateExpression(Expression expression)
-		{
-			return expression.Transform(expr =>
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Or      :
-					case ExpressionType.And     :
-					case ExpressionType.OrElse  :
-					case ExpressionType.AndAlso :
-						{
-							var stack  = new Stack<Expression>();
-							var items  = new List<Expression>();
-							var binary = (BinaryExpression) expr;
-
-							stack.Push(binary.Right);
-							stack.Push(binary.Left);
-							while (stack.Count > 0)
-							{
-								var item = stack.Pop();
-								if (item.NodeType == expr.NodeType)
-								{
-									binary  = (BinaryExpression) item;
-									stack.Push(binary.Right);
-									stack.Push(binary.Left);
-								}
-								else
-									items.Add(item);
-							}
-
-							if (items.Count > 3)
-							{
-								// having N items will lead to NxM recursive calls in expression visitors and
-								// will result in stack overflow on relatively small numbers (~1000 items).
-								// To fix it we will rebalance condition tree here which will result in
-								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
-								//
-								// E.g. we have condition A OR B OR C OR D OR E
-								// as an expression tree it represented as tree with depth 5
-								//   OR
-								// A    OR
-								//    B    OR
-								//       C    OR
-								//          D    E
-								// for rebalanced tree it will have depth 4
-								//                  OR
-								//        OR
-								//   OR        OR        OR
-								// A    B    C    D    E    F
-								// Not much on small numbers, but huge improvement on bigger numbers
-								while (items.Count != 1)
-								{
-									items = CompactTree(items, expr.NodeType);
-								}
-
-								return items[0];
-							}
-							break;
-						}
-				}
-
-				return expr;
-			});
-		}
-
-		private static List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
-		{
-			var result = new List<Expression>();
-
-			// traverse list from left to right to preserve calculation order
-			for (var i = 0; i < items.Count; i += 2)
-			{
-				if (i + 1 == items.Count)
-				{
-					// last non-paired item
-					result.Add(items[i]);
-				}
-				else
-				{
-					result.Add(Expression.MakeBinary(nodeType, items[i], items[i + 1]));
-				}
-			}
-
-			return result;
-		}
-
-		internal static Expression ExpandExpression(Expression expression)
-		{
-			if (Configuration.Linq.UseBinaryAggregateExpression)
-				expression = AggregateExpression(expression);
-
-			return expression.Transform(expr =>
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)expr;
-
-							List<Expression>? newArgs = null;
-							for (var index = 0; index < mc.Arguments.Count; index++)
-							{
-								var arg = mc.Arguments[index];
-								Expression? newArg = null;
-								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
-								{
-									var argUnwrapped = arg.Unwrap();
-									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
-									    argUnwrapped.NodeType == ExpressionType.Call)
-									{
-										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
-											newArg = ExpandExpression(lambda);
-									}
-								}
-
-								if (newArg == null)
-									newArgs?.Add(arg);
-								else
-								{
-									if (newArgs == null)
-										newArgs = new List<Expression>(mc.Arguments.Take(index));
-									newArgs.Add(newArg);
-								}
-							}
-
-							if (newArgs != null)
-							{
-								mc = mc.Update(mc.Object, newArgs);
-							}
-
-
-							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-							{
-								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-								{
-									return ExpandExpression(lambda);
-								}
-							}
-
-							return mc;
-						}
-
-					case ExpressionType.Invoke:
-						{
-							var invocation = (InvocationExpression)expr;
-							if (invocation.Expression.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression)invocation.Expression;
-								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-								{
-									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-									{
-										var map = new Dictionary<Expression, Expression>();
-										for (int i = 0; i < invocation.Arguments.Count; i++)
-										{
-											map.Add(lambda.Parameters[i], invocation.Arguments[i]);
-										}
-
-										var newBody = lambda.Body.Transform(se =>
-										{
-											if (se.NodeType == ExpressionType.Parameter &&
-											    map.TryGetValue(se, out var newExpr))
-												return newExpr;
-											return se;
-										});
-
-										return ExpandExpression(newBody);
-									}
-								}
-							}
-							break;
-						}
-				}
-
-				return expr;
-			});
-		}
-
 		Expression ConvertParameters(Expression expression)
 		{
 			return expression.Transform(expr =>
@@ -512,138 +339,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region ExposeExpression
 
-		Expression ExposeExpression(Expression expression)
+		public Expression ExposeExpression(Expression expression)
 		{
-			var result = expression.Transform(expr =>
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-						{
-							var me = (MemberExpression)expr;
-
-							if (me.Member.IsNullableHasValueMember())
-							{
-								var obj = ExposeExpression(me.Expression);
-								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
-							}
-
-							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType, me.Member, out var alias);
-
-							if (l != null)
-							{
-								var body  = l.Body.Unwrap();
-								var parms = l.Parameters.ToDictionary(p => p);
-								var ex    = body.Transform(wpi =>
-								{
-									if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
-									{
-										if (wpi.Type.IsSameOrParentOf(me.Expression!.Type))
-										{
-											return me.Expression;
-										}
-
-										if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-										{
-											if (DataContextParam.Type != wpi.Type)
-												return Expression.Convert(DataContextParam, wpi.Type);
-											return DataContextParam;
-										}
-
-										throw new LinqToDBException($"Can't convert {wpi} to expression.");
-									}
-
-									return wpi;
-								});
-
-								if (ex.Type != expr.Type)
-									ex = new ChangeTypeExpression(ex, expr.Type);
-								ex = ExposeExpression(ex);
-								RegisterAlias(ex, alias!);
-								return ex;
-							}
-
-							break;
-						}
-
-					case ExpressionType.Convert:
-						{
-							var ex = (UnaryExpression)expr;
-							if (ex.Method != null)
-							{
-								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method, out var alias);
-								if (l != null)
-								{
-									var exposed = l.GetBody(ex.Operand);
-									exposed = ExposeExpression(exposed);
-									RegisterAlias(exposed, alias!);
-									return exposed;
-								}
-							}
-							break;
-						}
-
-					case ExpressionType.Constant :
-						{
-							var c = (ConstantExpression)expr;
-
-							// Fix Mono behaviour.
-							//
-							//if (c.Value is IExpressionQuery)
-							//	return ((IQueryable)c.Value).Expression;
-
-							if (c.Value is IQueryable queryable && !(queryable is ITable))
-							{
-								var e = queryable.Expression;
-
-								if (!_visitedExpressions!.Contains(e))
-								{
-									_visitedExpressions!.Add(e);
-									return ExposeExpression(e);
-								}
-							}
-
-							break;
-						}
-
-					case ExpressionType.Invoke:
-						{
-							var invocation = (InvocationExpression)expr;
-							if (invocation.Expression.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression)invocation.Expression;
-								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-								{
-									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
-									{
-										var map = new Dictionary<Expression, Expression>();
-										for (int i = 0; i < invocation.Arguments.Count; i++)
-										{
-											map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-										}
-
-										var newBody = lambds.Body.Transform(se =>
-										{
-											if (se.NodeType == ExpressionType.Parameter &&
-											    map.TryGetValue(se, out var newExpr))
-												return newExpr;
-											return se;
-										});
-
-										return ExposeExpression(newBody);
-									}
-								}
-							}
-							break;
-						}
-
-				}
-
-				return expr;
-			});
-
-			RelocateAlias(expression, result);
+			var result = _optimizationContext.ExposeExpression(expression);
 			return result;
 		}
 
@@ -659,22 +357,35 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
+		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
+		{
+			expression.Visit(e =>
+			{
+				if (e.NodeType == ExpressionType.Lambda)
+				{
+					foundParameters.AddRange(((LambdaExpression)e).Parameters);
+				}
+			});
+		}
+
 		Expression OptimizeExpression(Expression expression)
 		{
 			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			expr = ExposeExpression(expression);
-			expr = expr.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
+			var currentParameters = new HashSet<ParameterExpression>();
+			CollectLambdaParameters(expression, currentParameters);
+			expr = expr.Transform(e => OptimizeExpressionImpl(e, currentParameters));
 
 			_optimizedExpressions[expression] = expr;
 
-			RelocateAlias(expression, expr);
+			_optimizationContext.RelocateAlias(expression, expr);
 
 			return expr;
 		}
 
-		TransformInfo OptimizeExpressionImpl(Expression expr)
+		TransformInfo OptimizeExpressionImpl(Expression expr, HashSet<ParameterExpression> currentParameters)
 		{
 			switch (expr.NodeType)
 			{
@@ -709,7 +420,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var ex = ConvertIQueryable(expr);
+							var ex = ConvertIQueryable(expr, currentParameters);
 
 							if (!ReferenceEquals(ex, expr))
 								return new TransformInfo(ConvertExpressionTree(ex));
@@ -757,27 +468,27 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
+						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
 
-							if (l != null)
-							{
-								var optimized = OptimizeExpression(ConvertMethod(call, l));
-								RegisterAlias(optimized, alias!);
-								return new TransformInfo(optimized);
-							}
+						if (l != null)
+						{
+							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							_optimizationContext.RegisterAlias(optimized, alias!);
+							return new TransformInfo(optimized);
+						}
 
-							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
-							{
-								var attr = GetTableFunctionAttribute(call.Method);
+						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
+						{
+							var attr = GetTableFunctionAttribute(call.Method);
 
 							if (attr == null && !call.IsQueryable())
-								{
-									var ex = ConvertIQueryable(expr);
+							{
+								var ex = ConvertIQueryable(expr, currentParameters);
 
-									if (!ReferenceEquals(ex, expr))
-										return new TransformInfo(ConvertExpressionTree(ex));
-								}
+								if (!ReferenceEquals(ex, expr))
+									return new TransformInfo(ConvertExpressionTree(ex));
 							}
+						}
 
 						return new TransformInfo(ConvertSubquery(expr));
 					}
@@ -788,41 +499,7 @@ namespace LinqToDB.Linq.Builder
 
 		LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
 		{
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
-
-			if (attr != null)
-			{
-				alias = attr.Alias ?? mi.Name;
-				if (attr.Expression != null)
-					return attr.Expression;
-
-				if (!string.IsNullOrEmpty(attr.MethodName))
-				{
-					Expression expr;
-
-					if (mi is MethodInfo method && method.IsGenericMethod)
-					{
-						var args  = method.GetGenericArguments();
-						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
-
-						expr = Expression.Call(
-							mi.DeclaringType,
-							name,
-							name != attr.MethodName ? Array<Type>.Empty : args);
-					}
-					else
-					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
-					}
-
-					var evaluated = (LambdaExpression?)expr.EvaluateExpression();
-					return evaluated;
-				}
-			}
-
-			alias = null;
-			return null;
+			return _optimizationContext.ConvertMethodExpression(type, mi, out alias);
 		}
 
 		Expression ConvertSubquery(Expression expr)
@@ -957,9 +634,9 @@ namespace LinqToDB.Linq.Builder
 					Expression ex = parm;
 
 					for (var j = i; j < exprs.Count - 1; j++)
-						ex = Expression.PropertyOrField(ex, "p");
+						ex = ExpressionHelper.PropertyOrField(ex, "p");
 
-					ex = Expression.PropertyOrField(ex, "ex");
+					ex = ExpressionHelper.PropertyOrField(ex, "ex");
 
 					dic.Add(exprs[i], ex);
 
@@ -968,13 +645,9 @@ namespace LinqToDB.Linq.Builder
 					_subQueryExpressions.Add(ex);
 				}
 
-				var newBody = lbody.Transform(ex =>
-				{
-					Expression e;
-					return dic.TryGetValue(ex, out e) ? e : ex;
-				});
+				var newBody = lbody.Transform(ex => dic.TryGetValue(ex, out var e) ? e : ex);
 
-				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => Expression.PropertyOrField(c, "p"));
+				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 
 				newBody   = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
 				predicate = Expression.Lambda(newBody, parm);
@@ -1001,7 +674,7 @@ namespace LinqToDB.Linq.Builder
 					methodInfo = methodInfo.MakeGenericMethod(expr.Type, lparam.Type);
 					method     = Expression.Call(methodInfo, method,
 						Expression.Lambda(
-							exprs.Aggregate((Expression)parameter, (current,_) => Expression.PropertyOrField(current, "p")),
+							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
 				}
 			}
@@ -1205,7 +878,7 @@ namespace LinqToDB.Linq.Builder
 						Expression obj = elemArg!;
 
 						if (_wrapInSubQuery)
-							obj = Expression.PropertyOrField(elemArg, "Element");
+							obj = ExpressionHelper.PropertyOrField(elemArg!, "Element");
 
 						if (_elementSelector == null)
 							return obj;
@@ -1217,7 +890,7 @@ namespace LinqToDB.Linq.Builder
 						return _resultSelector!.Body.Transform(e =>
 						{
 							if (ReferenceEquals(e, _resultSelector.Parameters[0]))
-								return Expression.PropertyOrField(resArg, "Key");
+								return ExpressionHelper.PropertyOrField(resArg!, "Key");
 
 							if (ReferenceEquals(e, _resultSelector.Parameters[1]))
 								return resArg!;
@@ -1573,31 +1246,68 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertIQueryable
 
-		Expression ConvertIQueryable(Expression expression)
+		Expression ConvertIQueryable(Expression expression, HashSet<ParameterExpression> currentParameters)
 		{
+			bool HasParamatersDefined(Expression testedExpression, IEnumerable<ParameterExpression> allowed)
+			{
+				var current = new HashSet<ParameterExpression>(allowed);
+				var result  = null == testedExpression.Find(e =>
+				{
+					if (e is LambdaExpression lambda)
+					{
+						// allow parameters, declared inside expr
+						foreach (var param in lambda.Parameters)
+							current.Add(param);
+					}
+					else if (e is ParameterExpression pe)
+						return !current.Contains(pe);
+
+					return false;
+				});
+
+				return result;
+			}
+
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
 				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
-				var allowedParameters = new HashSet<ParameterExpression>() { p };
+				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
-				if (null != expr.Find(e => {
-					if (e is LambdaExpression lambda)
+				var parameters = new[] { p };
+				if (!HasParamatersDefined(expr, parameters))
+				{
+					// trying to evaluate Querybale method.
+					if (expression.NodeType == ExpressionType.Call && HasParamatersDefined(expr, parameters.Concat(allowedParameters)))
 					{
-						// allow parameters, declared inside expr
-						foreach (var param in lambda.Parameters)
-							allowedParameters.Add(param);
+						var callExpression = (MethodCallExpression)expression;
+						var firstArgument  = callExpression.Arguments[0];
+						if (typeof(IQueryable<>).IsSameOrParentOf(firstArgument.Type))
+						{
+							var elementType =
+								EagerLoading.GetEnumerableElementType(firstArgument.Type, MappingSchema);
+
+							var fakeQuery = ExpressionQueryImpl.CreateQuery(elementType, DataContext, null);
+
+							callExpression = callExpression.Update(callExpression.Object,
+								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
+							if (CanBeCompiled(callExpression))
+							{
+								var appliedQuery  = callExpression.EvaluateExpression() as IQueryable;
+								if (appliedQuery == null)
+									throw new LinqToDBException($"Method call '{expression}' returned null value.");
+								var newExpression = appliedQuery.Expression.Transform(e =>
+									e == fakeQuery.Expression ? firstArgument : e);
+								return newExpression;
+							}
+						}
 					}
-					else if (e is ParameterExpression pe)
-						return !allowedParameters.Contains(pe);
-
-					return false;
-				}))
 					return expression;
+				}
 
-				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });
+				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), parameters);
 				var n    = _query.AddQueryableAccessors(expression, l);
 
 				_expressionAccessors.TryGetValue(expression, out var accessor);
@@ -1606,7 +1316,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						Expression.Constant(_query),
 						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						new[] { Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)) });
+						Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
 
 				var qex = _query.GetIQueryable(n, expression);
 
@@ -1684,6 +1394,13 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
+		public Expression AddQueryableMemberAccessors(AccessorMember memberInfo, IDataContext dataContext,
+			Func<MemberInfo, IDataContext, Expression> qe)
+		{
+			return _query.AddQueryableMemberAccessors(memberInfo.MemberInfo, dataContext, qe);
+		}
+
+
 		#endregion
 
 		#region Helpers
@@ -1717,11 +1434,11 @@ namespace LinqToDB.Linq.Builder
 		/// Gets Expression.Equal if <paramref name="left"/> and <paramref name="right"/> expression types are not same
 		/// <paramref name="right"/> would be converted to <paramref name="left"/>
 		/// </summary>
-		/// <param name="mappringSchema"></param>
+		/// <param name="mappingSchema"></param>
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		internal static BinaryExpression Equal(MappingSchema mappringSchema, Expression left, Expression right)
+		internal static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
@@ -1731,8 +1448,8 @@ namespace LinqToDB.Linq.Builder
 					left = Expression.Convert(left, right.Type);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
-					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
+					var rightConvert = ConvertBuilder.GetConverter(mappingSchema, right.Type, left. Type);
+					var leftConvert  = ConvertBuilder.GetConverter(mappingSchema, left. Type, right.Type);
 
 					var leftIsPrimitive  = left. Type.IsPrimitive;
 					var rightIsPrimitive = right.Type.IsPrimitive;

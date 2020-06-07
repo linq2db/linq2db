@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
+					static string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
 					{
 						if (aliases.Contains(expression))
 							return aliases[expression].FirstOrDefault();
@@ -291,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 
 							expr = Expression.New(
 								nctor.Constructor,
-								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
+								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
 								members);
 
 							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
@@ -334,12 +334,21 @@ namespace LinqToDB.Linq.Builder
 										var assignment1 = (MemberAssignment)binding;
 										var assignment2 = (MemberAssignment)foundBinding;
 
-										if (!assignment1.Expression.EqualsTo(assignment2.Expression, accessorDic, null) || 
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.DataContext, accessorDic, null, null) || 
 										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;
 											break;
 										}
+
+										// is is parameters, we have to select
+										if (assignment1.Expression.NodeType == ExpressionType.MemberAccess
+										    && assignment1.Expression.GetRootObject(Builder.MappingSchema)?.NodeType == ExpressionType.Constant)
+										{
+											needsRewrite = true;
+											break;
+										}
+
 									}
 								}
 							}
@@ -380,7 +389,14 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var ret = _sequence1.BuildExpression(expression, level, enforceServerSide);
+				if (_sequence1.IsExpression(expression, level, RequestFor.Association).Result
+				 || _sequence2.IsExpression(expression, level, RequestFor.Association).Result)
+				{
+					throw new LinqException(
+						"Associations with Concat/Union or other Set operations are not supported.");
+				}
+
+				var ret   = _sequence1.BuildExpression(expression, level, enforceServerSide);
 
 				//if (level == 1)
 				//	_sequence2.BuildExpression(expression, level);

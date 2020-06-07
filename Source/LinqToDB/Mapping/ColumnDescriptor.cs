@@ -82,7 +82,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var expr = Expression.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
 				StorageType = expr.Type;
 				StorageInfo = expr.Member;
 			}
@@ -416,7 +416,7 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema with conversion information.</param>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual object GetValue(MappingSchema mappingSchema, object obj)
+		public virtual object? GetValue(MappingSchema mappingSchema, object obj)
 		{
 			if (_getter == null)
 			{
@@ -433,7 +433,7 @@ namespace LinqToDB.Mapping
 					getterExpr = Expression.Block(new[] { variable },
 						Expression.Assign(variable, expr.GetBody(getterExpr)),
 						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
-							Expression.PropertyOrField(variable, "Value"), Expression.Constant(null))
+							ExpressionHelper.PropertyOrField(variable, "Value"), Expression.Constant(null))
 					);
 				}
 				else

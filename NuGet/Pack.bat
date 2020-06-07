@@ -5,6 +5,7 @@ cd NuGet
 del *.nupkg
 
 ..\Redist\NuGet Pack linq2db.nuspec
+..\Redist\NuGet Pack linq2db.AspNet.nuspec
 ..\Redist\NuGet Pack linq2db.Tools.nuspec
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec

@@ -6,10 +6,15 @@
 		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
 		<TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<OutputType>Exe</OutputType>
-		<Nullable>disable</Nullable>
 		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+		<PackageReference Include="Npgsql" Version="4.0.10" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
+	  <Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />
 	</ItemGroup>
 </Project>

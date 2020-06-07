@@ -12,6 +12,7 @@ namespace Tests.DataProvider
 {
 	using System.Data.Linq;
 	using System.Diagnostics;
+	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.DataProvider.Informix;
 	using LinqToDB.Mapping;
 	using Model;
@@ -21,11 +22,12 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = TestProvName.AllInformix;
 
-		public InformixTests()
+		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
-			PassNullSql  = null;
-			PassValueSql = "SELECT ID FROM {1} WHERE {0} = ?";
+			paramCount = 1;
+			return null;
 		}
+		protected override string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = ?";
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
@@ -134,16 +136,16 @@ namespace Tests.DataProvider
 			[Column] public double?   floatDataType    { get; set; }
 			[Column] public bool?     boolDataType     { get; set; }
 			[Column] public char?     charDataType     { get; set; }
-			[Column] public string    char20DataType   { get; set; }
-			[Column] public string    varcharDataType  { get; set; }
-			[Column] public string    ncharDataType    { get; set; }
-			[Column] public string    nvarcharDataType { get; set; }
-			[Column] public string    lvarcharDataType { get; set; }
-			[Column] public string    textDataType     { get; set; }
+			[Column] public string?   char20DataType   { get; set; }
+			[Column] public string?   varcharDataType  { get; set; }
+			[Column] public string?   ncharDataType    { get; set; }
+			[Column] public string?   nvarcharDataType { get; set; }
+			[Column] public string?   lvarcharDataType { get; set; }
+			[Column] public string?   textDataType     { get; set; }
 			[Column] public DateTime? dateDataType     { get; set; }
 			[Column] public DateTime? datetimeDataType { get; set; }
 			[Column] public TimeSpan? intervalDataType { get; set; }
-			[Column] public byte[]    byteDataType     { get; set; }
+			[Column] public byte[]?   byteDataType     { get; set; }
 		}
 
 		static readonly AllType[] _allTypeses =
@@ -189,11 +191,11 @@ namespace Tests.DataProvider
 			[Column] public DateTime? DateTimeValue2;
 			[Column] public bool?     BoolValue;
 			[Column] public Guid?     GuidValue;
-			[Column] public Binary    BinaryValue;
+			[Column] public Binary?   BinaryValue;
 			[Column] public short?    SmallIntValue;
 			[Column] public int?      IntValue;
 			[Column] public long?     BigIntValue;
-			[Column] public string    StringValue;
+			[Column] public string?   StringValue;
 		}
 
 		[Test]
@@ -293,7 +295,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

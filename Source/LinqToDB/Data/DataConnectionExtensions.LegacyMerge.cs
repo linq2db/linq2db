@@ -1,11 +1,11 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -44,14 +44,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
+			string?                  tableName    = null,
+			string?                  databaseName = null,
+			string?                  schemaName   = null,
+			string?                  serverName   = null
 		)
 			where T : class
 		{
@@ -74,14 +75,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
+			string?                  tableName    = null,
+			string?                  databaseName = null,
+			string?                  schemaName   = null,
+			string?                  serverName   = null
 		)
 			where T : class
 		{
@@ -104,14 +106,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			bool                delete,
 			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null,
-			string              serverName   = null
+			string?             tableName    = null,
+			string?             databaseName = null,
+			string?             schemaName   = null,
+			string?             serverName   = null
 		)
 			where T : class
 		{
@@ -131,13 +134,14 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null,
-			string              serverName   = null
+			string?             tableName    = null,
+			string?             databaseName = null,
+			string?             schemaName   = null,
+			string?             serverName   = null
 		)
 			where T : class
 		{
@@ -160,14 +164,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
+			string?                  tableName    = null,
+			string?                  databaseName = null,
+			string?                  schemaName   = null,
+			string?                  serverName   = null
 		)
 			where T : class
 		{
@@ -211,14 +216,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
+			string?                  tableName    = null,
+			string?                  databaseName = null,
+			string?                  schemaName   = null,
+			string?                  serverName   = null
 		)
 			where T : class
 		{
@@ -265,14 +271,15 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			bool           delete,
 			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null,
-			string         serverName   = null
+			string?        tableName    = null,
+			string?        databaseName = null,
+			string?        schemaName   = null,
+			string?        serverName   = null
 		)
 			where T : class
 		{
@@ -294,7 +301,7 @@ namespace LinqToDB.Data
 				.Using(source)
 				.OnTargetKey();
 
-			Linq.IMergeable<T, T> merge = null;
+			Linq.IMergeable<T, T>? merge = null;
 			if (withUpdate) merge = query.UpdateWhenMatched();
 			                merge = (merge ?? query).InsertWhenNotMatched();
 			if (delete)     merge = merge.DeleteWhenNotMatchedBySource();
@@ -315,13 +322,14 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null,
-			string         serverName   = null
+			string?        tableName    = null,
+			string?        databaseName = null,
+			string?        schemaName   = null,
+			string?        serverName   = null
 		)
 			where T : class
 		{
@@ -368,14 +376,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			string                   serverName        = null,
+			string?                  tableName         = null,
+			string?                  databaseName      = null,
+			string?                  schemaName        = null,
+			string?                  serverName        = null,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -399,14 +408,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			string                   serverName        = null,
+			string?                  tableName         = null,
+			string?                  databaseName      = null,
+			string?                  schemaName        = null,
+			string?                  serverName        = null,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -430,14 +440,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
 			bool                delete,
 			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			string              serverName        = null,
+			string?             tableName         = null,
+			string?             databaseName      = null,
+			string?             schemaName        = null,
+			string?             serverName        = null,
 			CancellationToken   cancellationToken = default)
 			where T : class
 		{
@@ -458,13 +469,14 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			string              serverName        = null,
+			string?             tableName         = null,
+			string?             databaseName      = null,
+			string?             schemaName        = null,
+			string?             serverName        = null,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -488,14 +500,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			string                   serverName        = null,
+			string?                  tableName         = null,
+			string?                  databaseName      = null,
+			string?                  schemaName        = null,
+			string?                  serverName        = null,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -540,14 +553,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			string                   serverName        = null,
+			string?                  tableName         = null,
+			string?                  databaseName      = null,
+			string?                  schemaName        = null,
+			string?                  serverName        = null,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -556,7 +570,7 @@ namespace LinqToDB.Data
 			var withUpdate = MergeWithUpdate(table);
 
 			if (!source.Any())
-				return Task.FromResult(0);
+				return TaskCache.Zero;
 
 			var target = table;
 			if (tableName    != null) target = target.TableName   (tableName);
@@ -595,14 +609,15 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
 			bool              delete,
 			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			string            serverName        = null,
+			string?           tableName         = null,
+			string?           databaseName      = null,
+			string?           schemaName        = null,
+			string?           serverName        = null,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -611,7 +626,7 @@ namespace LinqToDB.Data
 			var withUpdate = MergeWithUpdate(table);
 
 			if (!source.Any())
-				return Task.FromResult(0);
+				return TaskCache.Zero;
 
 			var target = table;
 			if (tableName    != null) target = target.TableName   (tableName);
@@ -624,7 +639,7 @@ namespace LinqToDB.Data
 				.Using(source)
 				.OnTargetKey();
 
-			Linq.IMergeable<T, T> merge = null;
+			Linq.IMergeable<T, T>? merge = null;
 			if (withUpdate) merge = query.UpdateWhenMatched();
 			                merge = (merge ?? query).InsertWhenNotMatched();
 			if (delete)     merge = merge.DeleteWhenNotMatchedBySource();
@@ -646,13 +661,14 @@ namespace LinqToDB.Data
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
+		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
 			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			string            serverName        = null,
+			string?           tableName         = null,
+			string?           databaseName      = null,
+			string?           schemaName        = null,
+			string?           serverName        = null,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -661,7 +677,7 @@ namespace LinqToDB.Data
 			var withUpdate = MergeWithUpdate(table);
 
 			if (!source.Any())
-				return Task.FromResult(0);
+				return TaskCache.Zero;
 
 			var target = table;
 			if (tableName    != null) target = target.TableName   (tableName);

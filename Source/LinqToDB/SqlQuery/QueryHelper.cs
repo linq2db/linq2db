@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
@@ -9,6 +10,54 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryHelper
 	{
+
+		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
+		{
+			return null != new QueryVisitor().Find(testedRoot, e => e == element);
+		}
+
+		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependencyFound = false;
+
+			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			{
+				if (dependencyFound)
+					return false;
+
+				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+					return false;
+
+				if (e is ISqlTableSource source && onSources.Contains(source))
+				{
+					dependencyFound = true;
+					return false;
+				}
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+						{
+							var c = (SqlColumn) e;
+							if (onSources.Contains(c.Parent!))
+								dependencyFound = true;
+							break;
+						}
+					case QueryElementType.SqlField :
+						{
+							var f = (SqlField) e;
+							if (onSources.Contains(f.Table!))
+								dependencyFound = true;
+							break;
+						}
+				}
+
+				return !dependencyFound;
+			});
+
+			return dependencyFound;
+		}
+
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
@@ -142,19 +191,20 @@ namespace LinqToDB.SqlQuery
 
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
-			foreach (var join in tableSource.Joins)
-			{
-				yield return @join.Table;
-
-				if (@join.Table.Source is SelectQuery q)
+			if (tableSource.Source is SelectQuery q)
 				{
 					foreach (var ts in EnumerateAccessibleSources(q))
 						yield return ts;
 				}
+			else 
+				yield return tableSource.Source;
 
-				foreach (var source in EnumerateAccessibleSources(@join.Table))
+			foreach (var join in tableSource.Joins)
+			{
+				foreach (var source in EnumerateAccessibleSources(join.Table))
 					yield return source;
 			}
+
 		}
 
 		/// <summary>
@@ -164,14 +214,10 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SelectQuery selectQuery)
 		{
+			yield return selectQuery;
+
 			foreach (var tableSource in selectQuery.Select.From.Tables)
 			{
-				yield return tableSource;
-
-				if (tableSource.Source is SelectQuery subQuery)
-					foreach (var s in EnumerateAccessibleSources(subQuery))
-						yield return s;
-
 				foreach (var source in EnumerateAccessibleSources(tableSource))
 					yield return source;
 			}
@@ -217,6 +263,27 @@ namespace LinqToDB.SqlQuery
 				.OfType<SqlTableSource>()
 				.Select(ts => ts.Source)
 				.OfType<SqlTable>();
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.From.Tables.SelectMany(t => EnumerateJoins(t));
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SqlTableSource tableSource)
+		{
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				yield return tableSourceJoin;	
+			}
+
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				foreach (var subJoin in EnumerateJoins(tableSourceJoin.Table))
+				{
+					yield return subJoin;
+				}
+			}
 		}
 
 
@@ -564,8 +631,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			var visitor = new QueryVisitor();
-			statement = visitor.ConvertImmutable(statement, element =>
+			statement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (!(element is SelectQuery q))
 					return element;
@@ -604,8 +670,8 @@ namespace LinqToDB.SqlQuery
 						subQuery.Select.Columns.Insert(index, subColumn);
 					}
 
-					visitor.VisitedElements.Remove(column);
-					visitor.VisitedElements.Add(column, subColumn);
+					// replace
+					visitor.VisitedElements[column] = subColumn;
 				}
 
 				return subQuery;
@@ -649,7 +715,7 @@ namespace LinqToDB.SqlQuery
 		public static TStatement WrapQuery<TStatement>(
 			TStatement             statement,
 			Func<SelectQuery, int> wrapTest,
-			Action<SelectQuery[]>  onWrap)
+			Action<IReadOnlyList<SelectQuery>> onWrap)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -657,8 +723,7 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var visitor = new QueryVisitor();
-			var newStatement = visitor.ConvertImmutable(statement, element =>
+			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
 			{
 				if (element is SelectQuery query)
 				{
@@ -693,27 +758,22 @@ namespace LinqToDB.SqlQuery
 						}
 
 						// correct mapping
-						visitor.VisitedElements.Remove(prevColumn);
-						visitor.VisitedElements.Add(prevColumn, newColumn);
+						visitor.VisitedElements[prevColumn] = newColumn;
 					}
 
-					onWrap(queries.ToArray());
+					onWrap(queries);
 
-					var levelTables = QueryHelper.EnumerateLevelTables(query).ToArray();
+					var levelTables = EnumerateLevelTables(query).ToArray();
 					var resultQuery = queries[0];
 					foreach (var table in levelTables)
 					{
 						correctedTables.Add(table, resultQuery);
 					}
 
-					var toMap = levelTables
-						.SelectMany(t => t.Fields.Values)
-						.ToArray();
+					var toMap = levelTables.SelectMany(t => t.Fields.Values);
 
 					foreach (var field in toMap)
-					{
 						visitor.VisitedElements.Remove(field);
-					}
 
 					return resultQuery;
 				} 
@@ -846,27 +906,40 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
+		public static object? EvaluateExpression(this ISqlExpression expr)
 		{
-			for (int i = 0; i < searchCondition.Conditions.Count; i++)
+			switch (expr.ElementType)
 			{
-				var visitor      = new QueryVisitor();
-				var newCondition = visitor.ConvertImmutable(searchCondition.Conditions[i], e =>
-				{
-					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
+				case QueryElementType.SqlValue           : return ((SqlValue)expr).Value;
+				case QueryElementType.SqlParameter       : return ((SqlParameter)expr).Value;
+				case QueryElementType.SqlBinaryExpression:
 					{
-						if (visitor.ParentElement?.ElementType != QueryElementType.Column)
+						var binary = (SqlBinaryExpression)expr;
+						dynamic? left  = binary.Expr1.EvaluateExpression();
+						dynamic? right = binary.Expr2.EvaluateExpression();
+						if (left == null || right == null)
+							return null;
+						switch (binary.Operation)
 						{
-							var column = NeedColumnForExpression(selectQuery, (ISqlExpression)e, false);
-							if (column != null)
-								return column;
+							case "+": return left + right;
+							case "-": return left - right;
+							case "*": return left * right;
+							case "/": return left / right;
+							case "%": return left * right;
+							case "^": return left ^ right;
+							case "&": return left & right;
+							default:
+								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
 						}
 					}
 
-					return e;
-				});
-
-				searchCondition.Conditions[i] = newCondition;
+				default:
+					{
+						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+							.ToString();
+						throw new NotImplementedException(
+							$"Not implemented evaluation of '{expr.ElementType}': '{str}'.");
+					}
 			}
 		}
 	}

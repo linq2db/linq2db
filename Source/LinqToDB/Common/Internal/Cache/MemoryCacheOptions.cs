@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -11,7 +10,7 @@ namespace LinqToDB.Common.Internal.Cache
         private long? _sizeLimit;
         private double _compactionPercentage = 0.05;
 
-        public ISystemClock Clock { get; set; }
+        public ISystemClock? Clock { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum length of time between successive scans for expired items.

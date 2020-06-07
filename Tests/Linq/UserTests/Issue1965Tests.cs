@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			[Column]
 			public int Id {get; set;}
 			[Column]
-			public string Name {get; set;}
+			public string? Name {get; set;}
 			[Column]
 			public int Age {get; set;}
 		}
@@ -33,7 +33,7 @@ namespace Tests.UserTests
 //			public Person PersonData {get; set;}
 	
 			[Association(QueryExpressionMethod = nameof(Chipcard_Person), CanBeNull = true)]
-			public Issue1965Person PersonData {get; set;}
+			public Issue1965Person? PersonData {get; set;}
 	
 			public static Expression<Func<Chipcard, IDataContext, IQueryable<Issue1965Person>>> Chipcard_Person()
 			{

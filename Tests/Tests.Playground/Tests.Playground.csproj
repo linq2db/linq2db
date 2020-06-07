@@ -2,8 +2,8 @@
 	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
 
 	<PropertyGroup>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
-		<Nullable>disable</Nullable>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
 

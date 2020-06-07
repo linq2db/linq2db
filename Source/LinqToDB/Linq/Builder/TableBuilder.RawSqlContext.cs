@@ -32,8 +32,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mc = (MethodCallExpression)formatArg;
 
-				format    = (string)mc.Arguments[0].EvaluateExpression()!;
-				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
+				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
+				{
+					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					arguments = mc.Arguments.Skip(1).ToArray();
+				}
+				else
+				{
+					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
+				}
 			}
 			else
 			{
@@ -41,8 +49,22 @@ namespace LinqToDB.Linq.Builder
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
-					format = formattable.Format;
-					arguments = formattable.GetArguments().Select(Expression.Constant);
+					format    = formattable.Format;
+
+					arguments = formattable.GetArguments().Select((a, i) =>
+					{
+						var type = a?.GetType() ?? typeof(object);
+
+						if (typeof(ISqlExpression).IsAssignableFrom(type))
+							return Expression.Constant(a);
+
+						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, Expression.Constant(i));
+
+						if (type != typeof(object))
+							expr = Expression.Convert(expr, type);
+
+						return expr;
+					});
 				}
 				else
 #endif
@@ -53,11 +75,25 @@ namespace LinqToDB.Linq.Builder
 					var arrayExpr = parametersArg!;
 
 					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
+					{
 						arguments = ((NewArrayExpression)arrayExpr).Expressions;
+					}
 					else
 					{
 						var array = (object[])arrayExpr.EvaluateExpression()!;
-						arguments = array.Select(Expression.Constant);
+						arguments = array.Select((a, i) =>
+						{
+							var type = a?.GetType() ?? typeof(object);
+
+							if (typeof(ISqlExpression).IsAssignableFrom(type))
+								return Expression.Constant(a);
+
+							Expression expr = Expression.ArrayIndex(arrayExpr, Expression.Constant(i));
+							if (type != typeof(object))
+								expr = Expression.Convert(expr, type);
+
+							return expr;
+						});
 					}
 				}
 			}

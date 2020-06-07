@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -153,7 +153,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE /*+ append */ INTO TestMerge1 Target"));
+				Assert.True(db.LastQuery!.Contains("MERGE /*+ append */ INTO TestMerge1 Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -186,7 +186,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
+				Assert.True(db.LastQuery!.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 

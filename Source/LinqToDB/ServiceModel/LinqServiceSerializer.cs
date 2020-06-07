@@ -18,7 +18,7 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
 		{
 			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, queryHints);
 		}
@@ -588,7 +588,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
@@ -811,7 +811,7 @@ namespace LinqToDB.ServiceModel
 								Builder.Append(" -");
 							else
 							{
-								Append(elem.SequenceAttributes!.Length);
+								Append(elem.SequenceAttributes.Length);
 
 								foreach (var a in elem.SequenceAttributes)
 								{
@@ -1140,6 +1140,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
+							Append(elem.Output);
 							Append(elem.Parameters);
 
 							break;
@@ -1228,7 +1229,14 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
-					case QueryElementType.GroupByClause : Append(((SqlGroupByClause)e).Items);           break;
+					case QueryElementType.GroupByClause :
+						{
+							Append((int)((SqlGroupByClause)e).GroupingType);
+							Append(((SqlGroupByClause)e).Items);
+							break;
+						}
+
+					case QueryElementType.GroupingSet   : Append(((SqlGroupingSet)e).Items);             break;
 					case QueryElementType.OrderByClause : Append(((SqlOrderByClause)e).Items);           break;
 
 					case QueryElementType.OrderByItem :
@@ -1307,6 +1315,26 @@ namespace LinqToDB.ServiceModel
 						{
 							break;
 						};
+
+					case QueryElementType.OutputClause:
+						{
+							var elem = (SqlOutputClause)e;
+
+							// actually only InsertedTable implemented now
+							Append(elem.SourceTable);
+							Append(elem.DeletedTable);
+							Append(elem.InsertedTable);
+							Append(elem.OutputTable);
+
+							if (elem.HasOutputItems)
+								Append(elem.OutputItems);
+							else
+								Builder.Append(" -");
+
+							Append(elem.OutputQuery);
+
+							break;
+						}
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -1884,9 +1912,10 @@ namespace LinqToDB.ServiceModel
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
+							var output      = Read<SqlOutputClause>();
 							var parameters  = ReadArray<SqlParameter>();
 
-							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert};
+							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert, Output = output };
 							_statement.Parameters.AddRange(parameters);
 							((SqlInsertStatement)_statement).With = with;
 
@@ -1991,7 +2020,8 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
-					case QueryElementType.GroupByClause : obj = new SqlGroupByClause(ReadArray<ISqlExpression>()!);                break;
+					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
+					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet(ReadArray<ISqlExpression>()!);                  break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
 
 					case QueryElementType.OrderByItem :
@@ -2071,6 +2101,33 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlAliasPlaceholder :
 						{
 							obj = new SqlAliasPlaceholder();
+							break;
+						}
+
+					case QueryElementType.OutputClause:
+						{
+
+							var source   = Read<SqlTable>()!;
+							var deleted  = Read<SqlTable>()!;
+							var inserted = Read<SqlTable>()!;
+							var output   = Read<SqlTable>()!;
+							var items    = ReadArray<SqlSetExpression>()!;
+							var query    = Read<SelectQuery>();
+
+							var c = new SqlOutputClause()
+							{
+								SourceTable   = source,
+								DeletedTable  = deleted,
+								InsertedTable = inserted,
+								OutputTable   = output,
+								OutputQuery   = query
+							};
+
+							if (items.Length > 0)
+								c.OutputItems.AddRange(items);
+
+							obj = c;
+
 							break;
 						}
 
@@ -2165,8 +2222,8 @@ namespace LinqToDB.ServiceModel
 
 				NextLine();
 
-				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString();              NextLine(); }
-				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString()); NextLine(); }
+				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString()!;              NextLine(); }
+				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString())!; NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)
 				{

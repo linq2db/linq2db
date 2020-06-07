@@ -6,8 +6,6 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<!--https://github.com/dotnet/project-system/issues/1358-->
-		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +14,7 @@
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
+		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,6 +32,16 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Common\Internal\MutableTuple.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+		</None>
 
 		<Compile Remove="Compatibility\**\*.cs" />
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
@@ -69,7 +77,6 @@
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
 		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
 
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 	</ItemGroup>
@@ -77,5 +84,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<Compile Remove="DataProvider\SapHana\SapHanaDataProvider.cs" />
 		<Compile Remove="DataProvider\SapHana\SapHanaBulkCopy.cs" />
+
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 </Project>

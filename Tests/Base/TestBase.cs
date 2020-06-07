@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -28,6 +27,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
@@ -172,7 +172,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(DefaultProvider))
+			if (!DefaultProvider.IsNullOrEmpty())
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if NETCOREAPP2_1
@@ -193,7 +193,7 @@ namespace Tests
 #endif
 		}
 
-		protected static string GetFilePath(string basePath, string findFileName)
+		protected static string? GetFilePath(string basePath, string findFileName)
 		{
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
@@ -215,18 +215,18 @@ namespace Tests
 		}
 
 #if !NETCOREAPP2_1
-		const  int         IP        = 22654;
-		static bool        _isHostOpen;
-		static LinqService _service;
-		static object      _syncRoot = new object();
+		const  int          IP        = 22654;
+		static bool         _isHostOpen;
+		static LinqService? _service;
+		static object       _syncRoot = new object();
 #endif
 
-		static void OpenHost(MappingSchema ms)
+		static void OpenHost(MappingSchema? ms)
 		{
 #if !NETCOREAPP2_1
 			if (_isHostOpen)
 			{
-				_service.MappingSchema = ms;
+				_service!.MappingSchema = ms;
 				return;
 			}
 
@@ -235,7 +235,7 @@ namespace Tests
 			{
 				if (_isHostOpen)
 				{
-					_service.MappingSchema = ms;
+					_service!.MappingSchema = ms;
 					return;
 				}
 
@@ -264,15 +264,8 @@ namespace Tests
 #endif
 		}
 
-		public class UserProviderInfo
-		{
-			public string Name;
-			public string ConnectionString1;
-			public string ProviderName;
-		}
-
 		public static readonly HashSet<string> UserProviders;
-		public static readonly string DefaultProvider;
+		public static readonly string? DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
@@ -285,6 +278,7 @@ namespace Tests
 #endif
 			ProviderName.SqlCe,
 			ProviderName.Access,
+			ProviderName.AccessOdbc,
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
 			ProviderName.SQLiteClassic,
@@ -317,7 +311,7 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		};
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -376,7 +370,7 @@ namespace Tests
 			TestPerson(1, "John", persons);
 		}
 
-		private   List<LinqDataTypes>       _types;
+		private   List<LinqDataTypes>?      _types;
 		protected IEnumerable<LinqDataTypes> Types
 		{
 			get
@@ -390,8 +384,8 @@ namespace Tests
 			}
 		}
 
-		private   List<LinqDataTypes2> _types2;
-		protected List<LinqDataTypes2>  Types2
+		private   List<LinqDataTypes2>? _types2;
+		protected List<LinqDataTypes2>   Types2
 		{
 			get
 			{
@@ -406,8 +400,8 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
-		private   List<Person>       _person;
-		protected IEnumerable<Person> Person
+		private   List<Person>?       _person;
+		protected IEnumerable<Person>  Person
 		{
 			get
 			{
@@ -425,8 +419,8 @@ namespace Tests
 			}
 		}
 
-		private   List<Patient> _patient;
-		protected List<Patient>  Patient
+		private   List<Patient>? _patient;
+		protected List<Patient>   Patient
 		{
 			get
 			{
@@ -444,8 +438,8 @@ namespace Tests
 			}
 		}
 
-		private   List<Doctor> _doctor;
-		protected List<Doctor>  Doctor
+		private   List<Doctor>? _doctor;
+		protected List<Doctor>   Doctor
 		{
 			get
 			{
@@ -462,7 +456,7 @@ namespace Tests
 
 		#region Parent/Child Model
 
-		private   List<Parent>       _parent;
+		private   List<Parent>?      _parent;
 		protected IEnumerable<Parent> Parent
 		{
 			get
@@ -488,7 +482,7 @@ namespace Tests
 			}
 		}
 
-		private   List<Parent1>       _parent1;
+		private   List<Parent1>?      _parent1;
 		protected IEnumerable<Parent1> Parent1
 		{
 			get
@@ -500,8 +494,8 @@ namespace Tests
 			}
 		}
 
-		private   List<Parent4> _parent4;
-		protected List<Parent4>  Parent4
+		private   List<Parent4>? _parent4;
+		protected List<Parent4>   Parent4
 		{
 			get
 			{
@@ -509,8 +503,8 @@ namespace Tests
 			}
 		}
 
-		private   List<Parent5> _parent5;
-		protected List<Parent5>  Parent5
+		private   List<Parent5>? _parent5;
+		protected List<Parent5>   Parent5
 		{
 			get
 			{
@@ -526,7 +520,7 @@ namespace Tests
 			}
 		}
 
-		private   List<ParentInheritanceBase>       _parentInheritance;
+		private   List<ParentInheritanceBase>?      _parentInheritance;
 		protected IEnumerable<ParentInheritanceBase> ParentInheritance
 		{
 			get
@@ -542,8 +536,8 @@ namespace Tests
 			}
 		}
 
-		private   List<ParentInheritanceValue> _parentInheritanceValue;
-		protected List<ParentInheritanceValue>  ParentInheritanceValue
+		private   List<ParentInheritanceValue>? _parentInheritanceValue;
+		protected List<ParentInheritanceValue>   ParentInheritanceValue
 		{
 			get
 			{
@@ -552,8 +546,8 @@ namespace Tests
 			}
 		}
 
-		private   List<ParentInheritance1> _parentInheritance1;
-		protected List<ParentInheritance1> ParentInheritance1
+		private   List<ParentInheritance1>? _parentInheritance1;
+		protected List<ParentInheritance1>  ParentInheritance1
 		{
 			get
 			{
@@ -562,8 +556,8 @@ namespace Tests
 			}
 		}
 
-		private   List<ParentInheritanceBase4> _parentInheritance4;
-		protected List<ParentInheritanceBase4>  ParentInheritance4
+		private   List<ParentInheritanceBase4>? _parentInheritance4;
+		protected List<ParentInheritanceBase4>   ParentInheritance4
 		{
 			get
 			{
@@ -576,7 +570,7 @@ namespace Tests
 			}
 		}
 
-		protected List<Child>       _child;
+		protected List<Child>?      _child;
 		protected IEnumerable<Child> Child
 		{
 			get
@@ -603,7 +597,7 @@ namespace Tests
 			}
 		}
 
-		private   List<GrandChild>       _grandChild;
+		private   List<GrandChild>?      _grandChild;
 		protected IEnumerable<GrandChild> GrandChild
 		{
 			get
@@ -623,7 +617,7 @@ namespace Tests
 			}
 		}
 
-		private   List<GrandChild1>       _grandChild1;
+		private   List<GrandChild1>?      _grandChild1;
 		protected IEnumerable<GrandChild1> GrandChild1
 		{
 			get
@@ -649,8 +643,8 @@ namespace Tests
 
 		#region Inheritance Parent/Child Model
 
-		private   List<InheritanceParentBase> _inheritanceParent;
-		protected List<InheritanceParentBase>  InheritanceParent
+		private   List<InheritanceParentBase>? _inheritanceParent;
+		protected List<InheritanceParentBase>   InheritanceParent
 		{
 			get
 			{
@@ -665,8 +659,8 @@ namespace Tests
 			}
 		}
 
-		private   List<InheritanceChildBase> _inheritanceChild;
-		protected List<InheritanceChildBase>  InheritanceChild
+		private   List<InheritanceChildBase>? _inheritanceChild;
+		protected List<InheritanceChildBase>   InheritanceChild
 		{
 			get
 			{
@@ -699,8 +693,8 @@ namespace Tests
 				_context = context;
 			}
 
-			private List<Northwind.Category> _category;
-			public List<Northwind.Category> Category
+			private List<Northwind.Category>? _category;
+			public List<Northwind.Category>    Category
 			{
 				get
 				{
@@ -712,8 +706,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Customer> _customer;
-			public List<Northwind.Customer> Customer
+			private List<Northwind.Customer>? _customer;
+			public List<Northwind.Customer>    Customer
 			{
 				get
 				{
@@ -731,8 +725,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Employee> _employee;
-			public List<Northwind.Employee> Employee
+			private List<Northwind.Employee>? _employee;
+			public List<Northwind.Employee>    Employee
 			{
 				get
 				{
@@ -755,8 +749,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.EmployeeTerritory> _employeeTerritory;
-			public List<Northwind.EmployeeTerritory> EmployeeTerritory
+			private List<Northwind.EmployeeTerritory>? _employeeTerritory;
+			public List<Northwind.EmployeeTerritory>    EmployeeTerritory
 			{
 				get
 				{
@@ -768,8 +762,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.OrderDetail> _orderDetail;
-			public List<Northwind.OrderDetail> OrderDetail
+			private List<Northwind.OrderDetail>? _orderDetail;
+			public List<Northwind.OrderDetail>    OrderDetail
 			{
 				get
 				{
@@ -781,8 +775,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Order> _order;
-			public List<Northwind.Order> Order
+			private List<Northwind.Order>? _order;
+			public List<Northwind.Order>    Order
 			{
 				get
 				{
@@ -803,8 +797,8 @@ namespace Tests
 				}
 			}
 
-			private IEnumerable<Northwind.Product> _product;
-			public IEnumerable<Northwind.Product> Product
+			private IEnumerable<Northwind.Product>? _product;
+			public IEnumerable<Northwind.Product>    Product
 			{
 				get
 				{
@@ -818,8 +812,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.ActiveProduct> _activeProduct;
-			public List<Northwind.ActiveProduct> ActiveProduct
+			private List<Northwind.ActiveProduct>? _activeProduct;
+			public List<Northwind.ActiveProduct>    ActiveProduct
 			{
 				get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
 			}
@@ -829,8 +823,8 @@ namespace Tests
 				get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
 			}
 
-			private List<Northwind.Region> _region;
-			public List<Northwind.Region> Region
+			private List<Northwind.Region>? _region;
+			public List<Northwind.Region>    Region
 			{
 				get
 				{
@@ -842,8 +836,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Shipper> _shipper;
-			public List<Northwind.Shipper> Shipper
+			private List<Northwind.Shipper>? _shipper;
+			public List<Northwind.Shipper>    Shipper
 			{
 				get
 				{
@@ -855,8 +849,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Supplier> _supplier;
-			public List<Northwind.Supplier> Supplier
+			private List<Northwind.Supplier>? _supplier;
+			public List<Northwind.Supplier>    Supplier
 			{
 				get
 				{
@@ -868,8 +862,8 @@ namespace Tests
 				}
 			}
 
-			private List<Northwind.Territory> _territory;
-			public List<Northwind.Territory> Territory
+			private List<Northwind.Territory>? _territory;
+			public List<Northwind.Territory>    Territory
 			{
 				get
 				{
@@ -959,7 +953,7 @@ namespace Tests
 			IEnumerable<T> expected,
 			IEnumerable<T> result,
 			IEqualityComparer<T> comparer,
-			Func<IEnumerable<T>, IEnumerable<T>> sort,
+			Func<IEnumerable<T>, IEnumerable<T>>? sort,
 			bool allowEmpty = false)
 		{
 			var resultList   = result.Select(fixSelector).ToList();
@@ -1050,7 +1044,37 @@ namespace Tests
 			return DataCache<LinqDataTypes>.Get(context);
 		}
 
-		protected string GetProviderName(string context, out bool isLinqService)
+		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		{
+			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
+		}
+
+		public static string GetTempTableName(string tableName, string context)
+		{
+			var finalTableName = tableName;
+			switch (GetProviderName(context, out var _))
+			{
+				case TestProvName.SqlAzure:
+				case ProviderName.SqlServer:
+				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2005:
+				case ProviderName.SqlServer2008:
+				case ProviderName.SqlServer2012:
+				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
+					{
+						if (!tableName.StartsWith("#"))
+							finalTableName = "#" + tableName;
+						break;
+					}
+				default:
+					throw new NotImplementedException();
+			}
+
+			return finalTableName;
+		}
+
+		protected static string GetProviderName(string context, out bool isLinqService)
 		{
 			isLinqService = context.EndsWith(".LinqService");
 			return context.Replace(".LinqService", "");
@@ -1159,6 +1183,96 @@ namespace Tests
 		}
 	}
 
+	public class PreloadGroups : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.PreloadGroups;
+
+		public PreloadGroups(bool enable)
+		{
+			Configuration.Linq.PreloadGroups = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.PreloadGroups = _oldValue;
+		}
+	}
+
+	public class GenerateExpressionTest : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.GenerateExpressionTest;
+
+		public GenerateExpressionTest(bool enable)
+		{
+			Configuration.Linq.GenerateExpressionTest = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GenerateExpressionTest = _oldValue;
+		}
+	}
+
+	public class DoNotClearOrderBys : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.DoNotClearOrderBys;
+
+		public DoNotClearOrderBys(bool enable)
+		{
+			Configuration.Linq.DoNotClearOrderBys = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.DoNotClearOrderBys = _oldValue;
+		}
+	}
+
+	public class UseBinaryAggregateExpression : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.UseBinaryAggregateExpression;
+
+		public UseBinaryAggregateExpression(bool enable)
+		{
+			Configuration.Linq.UseBinaryAggregateExpression = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.UseBinaryAggregateExpression = _oldValue;
+		}
+	}
+
+	public class GenerateFinalAliases : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Sql.GenerateFinalAliases;
+
+		public GenerateFinalAliases(bool enable)
+		{
+			Configuration.Sql.GenerateFinalAliases = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Sql.GenerateFinalAliases = _oldValue;
+		}
+	}
+
+	public class SerializeAssemblyQualifiedName : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.LinqService.SerializeAssemblyQualifiedName;
+
+		public SerializeAssemblyQualifiedName(bool enable)
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = _oldValue;
+		}
+	}
+
 	public class DisableLogging : IDisposable
 	{
 		private TraceSwitch _traceSwitch;
@@ -1177,14 +1291,16 @@ namespace Tests
 
 	public class DisableQueryCache : IDisposable
 	{
-		public DisableQueryCache()
+		private readonly bool _oldValue = Configuration.Linq.DisableQueryCache;
+
+		public DisableQueryCache(bool value = true)
 		{
-			Configuration.Linq.DisableQueryCache = true;
+			Configuration.Linq.DisableQueryCache = value;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.DisableQueryCache = false;
+			Configuration.Linq.DisableQueryCache = _oldValue;
 		}
 	}
 

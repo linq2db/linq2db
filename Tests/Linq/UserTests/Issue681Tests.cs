@@ -34,9 +34,9 @@ namespace Tests.UserTests
 			var throws             = false;
 			var throwsSqlException = false;
 
-			string serverName;
-			string schemaName;
-			string dbName;
+			string? serverName;
+			string? schemaName;
+			string? dbName;
 
 			using (var db = GetDataContext(context))
 			{
@@ -80,9 +80,9 @@ namespace Tests.UserTests
 
 				var table = db.GetTable<TestTable>();
 
-				if (withServer)   table = table.ServerName  (serverName);
-				if (withDatabase) table = table.DatabaseName(dbName);
-				if (withSchema)   table = table.SchemaName  (schemaName);
+				if (withServer)   table = table.ServerName  (serverName!);
+				if (withDatabase) table = table.DatabaseName(dbName!);
+				if (withSchema)   table = table.SchemaName  (schemaName!);
 
 				if (throws && context.Contains(".LinqService"))
 				{

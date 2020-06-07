@@ -165,12 +165,22 @@ namespace LinqToDB.Linq.Builder
 				switch (flags)
 				{
 					case ConvertFlags.Field :
-						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent!.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql!), Sql = Sql!, }
-						});
+							var result = _index ??= new[]
+							{
+								new SqlInfo
+								{
+									Query = Parent!.SelectQuery, 
+									Index = Parent.SelectQuery.Select.Add(Sql!),
+									Sql = Sql!,
+								}
+							};
+
+							return result;
+						}
 				}
 
+				
 				throw new InvalidOperationException();
 			}
 

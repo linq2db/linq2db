@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Collections.Generic;
+	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
 	using LinqToDB.Tools.Comparers;
 	using Model;
@@ -36,12 +37,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName))!;
 			object expectedValue = value;
 
 			if (convertToString)
@@ -118,7 +119,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
@@ -345,7 +346,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")),      Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")),      Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)),         Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)),        Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }),   Is.EqualTo("1"));
 			}
 		}
@@ -506,7 +507,7 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -562,7 +563,6 @@ namespace Tests.DataProvider
 			public DateTime? DateTimeN { get; set; }
 		}
 
-		[ActiveIssue(730, SkipForNonLinqService = true)]
 		[Test]
 		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
 		{
@@ -621,9 +621,9 @@ namespace Tests.DataProvider
 			Issue1707 fixRecord(Issue1707 record)
 			{
 				record.Time   = fixTime(record.Time);
-				record.TimeN  = fixTime(record.TimeN.Value);
+				record.TimeN  = fixTime(record.TimeN!.Value);
 				record.Time2  = new DateTime() + fixTime(record.Time2 - start);
-				record.Time2N = new DateTime() + fixTime(record.Time2N.Value - start);
+				record.Time2N = new DateTime() + fixTime(record.Time2N!.Value - start);
 
 				return record;
 			}
@@ -661,16 +661,16 @@ namespace Tests.DataProvider
 			[Column] public DateTime? dateDataType           { get; set; }
 			[Column] public TimeSpan? timeDataType           { get; set; }
 			[Column] public char?     charDataType           { get; set; }
-			[Column] public string    char20DataType         { get; set; }
-			[Column] public string    varcharDataType        { get; set; }
-			[Column] public string    textDataType           { get; set; }
+			[Column] public string?   char20DataType         { get; set; }
+			[Column] public string?   varcharDataType        { get; set; }
+			[Column] public string?   textDataType           { get; set; }
 			[Column] public char?     ncharDataType          { get; set; }
-			[Column] public string    nvarcharDataType       { get; set; }
-			[Column] public string    ntextDataType          { get; set; }
-			[Column] public byte[]    binaryDataType         { get; set; }
-			[Column] public byte[]    varbinaryDataType      { get; set; }
-			[Column] public byte[]    imageDataType          { get; set; }
-			[Column] public byte[]    timestampDataType      { get; set; }
+			[Column] public string?   nvarcharDataType       { get; set; }
+			[Column] public string?   ntextDataType          { get; set; }
+			[Column] public byte[]?   binaryDataType         { get; set; }
+			[Column] public byte[]?   varbinaryDataType      { get; set; }
+			[Column] public byte[]?   imageDataType          { get; set; }
+			[Column] public byte[]?   timestampDataType      { get; set; }
 		}
 
 		static readonly AllType[] _allTypeses =
@@ -725,11 +725,11 @@ namespace Tests.DataProvider
 			[Column] public DateTime? DateTimeValue2;
 			[Column] public bool      BoolValue;
 			[Column] public Guid?     GuidValue;
-			[Column] public Binary    BinaryValue;
+			[Column] public Binary?   BinaryValue;
 			[Column] public short?    SmallIntValue;
 			[Column] public int?      IntValue;
 			[Column] public long?     BigIntValue;
-			[Column] public string    StringValue;
+			[Column] public string?   StringValue;
 		}
 
 		[Test]
@@ -827,7 +827,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test, bool hasBitBug)
+		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test, bool hasBitBug)
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

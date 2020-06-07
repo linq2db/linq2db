@@ -1,8 +1,12 @@
-# LINQ to DB
+## LINQ to DB
 
-[![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
-[![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
+<img align="right" alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" >
+
+[![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
+
+[![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/3/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
+
+[![StackOverflow questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -12,13 +16,18 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
+
+Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
+
+
 ## Standout Features
 
  - Rich Querying API:
    - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
    - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
    - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
-   - [Windowing/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+   - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
    - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
  - Extensibility:
    - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
@@ -27,23 +36,31 @@ Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](htt
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
 
-T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md).
+[Release Notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
 
-[Releases and Roadmap](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap).
+### Related linq2db and 3rd-party projects
+- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
+- [linq2db.AspNet](https://github.com/linq2db/linq2db.AspNet) (adds support for linq2db configuration within ASP.NET Core applications)
+- [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
+- [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
+- [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
+- [ASP.NET CORE 3 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-3)
+- [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
+
+
+Notable open-source users:
+- [nopCommerce](https://github.com/nopSolutions/nopCommerce) (starting from v4.30) - popular open-source e-commerce solution
+- [OdataToEntity](https://github.com/voronov-maxim/OdataToEntity) - library to create OData service from database context
+- [SunEngine](https://github.com/sunengine/SunEngine) - site, blog and forum engine
+
+Unmantained projects:
+- [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using linq2db
+- [IdentityServer4.LinqToDB](https://github.com/linq2db/IdentityServer4.LinqToDB) - IdentityServer4 persistence layer using linq2db
+
 
 ## How to help the project
 
 No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
-
-## Project Build Status
-
-[![Build Status](https://dev.azure.com/linq2db/linq2db/_apis/build/status/linq2db.linq2db?branchName=master)](https://dev.azure.com/linq2db/linq2db/_build/latest?definitionId=1&branchName=master)
-
-## Feeds
-
-* NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
-* Nightly [![Azure DevOps](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
-  * feed `https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json` ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
 ## Let's get started
 

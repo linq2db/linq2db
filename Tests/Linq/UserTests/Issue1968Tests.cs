@@ -18,11 +18,11 @@ namespace Tests.UserTests
 			}
 
 			[Column] public int Id { get; set; }
-			[Column] public string Name { get; set; }
-			[Column] public string Location { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public string? Location { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = nameof(Faculty.UniversityId), CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public ICollection<Faculty> Faculties { get; set; }
+			public ICollection<Faculty> Faculties { get; set; } = null!;
 
 			public static Expression<Func<University, IDataContext, IQueryable<Subject>>> Expression()
 			{
@@ -31,42 +31,41 @@ namespace Tests.UserTests
 			}
 
 			[Association(QueryExpressionMethod = nameof(Expression))]
-			public ICollection<Subject> Subjects { get; set; }
+			public ICollection<Subject> Subjects { get; set; } = null!;
 		}
 
 		public class Faculty
 		{
 			[Column] public int Id { get; set; }
-			[Column] public string Code { get; set; }
-			[Column] public string FacultyName { get; set; }
-			[Column] public string Direction { get; set; }
+			[Column] public string? Code { get; set; }
+			[Column] public string? FacultyName { get; set; }
+			[Column] public string? Direction { get; set; }
 			[Column] public int Grant { get; set; }
 			[Column] public int Contract { get; set; }
 			[Column] public int? UniversityId { get; set; }
 
 			[Association(ThisKey = "UniversityId", OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne, BackReferenceName = "Faculties")]
-			public University University { get; set; }
+			public University? University { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "FacultyId", CanBeNull = true, Relationship = Relationship.OneToOne, IsBackReference = true)]
-			public Subject Subject { get; set; }
+			public Subject? Subject { get; set; }
 		}
 
 		public class Subject
 		{
 			[Column] public int SubjectId { get; set; }
-			[Column] public string FirstSubject { get; set; }
-			[Column] public string SecondSubject { get; set; }
-			[Column] public string ThirdSubject { get; set; }
+			[Column] public string? FirstSubject { get; set; }
+			[Column] public string? SecondSubject { get; set; }
+			[Column] public string? ThirdSubject { get; set; }
 			[Column] public int? FacultyId { get; set; }
 
 			[Association(ThisKey = "FacultyId", OtherKey = "Id", CanBeNull = false, Relationship = Relationship.ManyToOne, BackReferenceName = "Subjects")]
-			public Faculty Faculty { get; set; }
+			public Faculty Faculty { get; set; } = null!;
 		}
 
 		// https://stackoverflow.com/questions/58738542
-		[ActiveIssue(1968)]
 		[Test]
-		public void Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue1968Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -101,7 +100,13 @@ namespace Tests.UserTests
 					ThirdSubject = "third"
 				});
 
-				db.GetTable<University>().LoadWith(x => x.Faculties).LoadWith(m => m.Subjects).ToList();
+				var result = db.GetTable<University>()
+					.LoadWith(x => x.Faculties)
+					.LoadWith(m => m.Subjects).ToList();
+
+				Assert.That(result.Count,              Is.EqualTo(1));
+				Assert.That(result[0].Faculties.Count, Is.EqualTo(1));
+				Assert.That(result[0].Subjects.Count,  Is.EqualTo(1));
 			}
 		}
 	}

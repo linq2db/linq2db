@@ -8,7 +8,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
-	using System.Diagnostics.CodeAnalysis;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -114,14 +113,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
@@ -130,14 +129,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -145,14 +144,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).Single();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)
@@ -167,14 +166,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T)!;
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)
@@ -213,6 +212,7 @@ namespace LinqToDB.Linq.Builder
 				if (_checkNullIndex < 0)
 				{
 					_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
+					SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
 
@@ -255,8 +255,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
+						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
 						    idx = Parent.ConvertToParentIndex(idx, Parent);

@@ -19,10 +19,10 @@ namespace Tests.xUpdate
 			[Column("PersonID"), Identity, PrimaryKey] public int ID;
 
 			[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = false)]
-			public TestJoinPatient Patient;
+			public TestJoinPatient Patient = null!;
 
 			[Association(QueryExpressionMethod = nameof(Query), CanBeNull = false)]
-			public TestJoinPatient PatientQuery;
+			public TestJoinPatient PatientQuery = null!;
 
 			static Expression<Func<TestJoinPerson, IDataContext, IQueryable<TestJoinPatient>>> Query
 				=> (t, ctx) => ctx.GetTable<TestJoinPatient>().Where(p => p.PersonID == t.ID);
@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 		public class TestJoinPatient
 		{
 			[PrimaryKey] public int    PersonID;
-			[Column]     public string Diagnosis;
+			[Column]     public string Diagnosis = null!;
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
@@ -47,7 +47,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.GetTable<TestJoinPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -107,7 +107,7 @@ namespace Tests.xUpdate
 				var cnt = db.GetTable<TestJoinPerson>()
 					.Merge()
 					// inner join performed in source
-					.Using(db.GetTable<TestJoinPerson>().Select(p => new { p.ID, p.Patient.Diagnosis }))
+					.Using(db.GetTable<TestJoinPerson>().Select(p => new { p.ID, p.Patient!.Diagnosis }))
 					.On((t, s) => t.ID == s.ID)
 					.DeleteWhenMatchedAnd((t, s) => s.Diagnosis != "sick")
 					.Merge();
@@ -131,8 +131,8 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.GetTable<TestJoinPerson>())
 					// inner join still performed in source
-					.On((t, s) => t.ID == s.ID && s.Patient.Diagnosis != null)
-					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.On((t, s) => t.ID == s.ID && s.Patient!.Diagnosis != null)
+					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
 					.Merge();
 
 				Assert.AreEqual(1, cnt);
@@ -155,7 +155,7 @@ namespace Tests.xUpdate
 					.Using(db.GetTable<TestJoinPerson>())
 					.On((t, s) => t.ID == s.ID)
 					// // inner join promoted to outer join
-					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
 					.Merge();
 
 				Assert.AreEqual(5, cnt);
@@ -174,7 +174,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -241,9 +241,9 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new Person()
 					{
-						FirstName = s.Patient.Diagnosis,
+						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
 						Gender = Gender.Unknown
 					})
@@ -292,7 +292,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatched(s => new Person()
 					{
-						FirstName = s.Patient.Diagnosis,
+						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
 						Gender = Gender.Unknown
 					})
@@ -336,7 +336,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new Person()
 					{
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
@@ -382,8 +382,8 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID
-							&& t.Patient.Diagnosis.Contains("very")
-							&& s.Patient.Diagnosis.Contains("sick"))
+							&& t.Patient!.Diagnosis.Contains("very")
+							&& s.Patient!.Diagnosis.Contains("sick"))
 					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "R.I.P."
@@ -430,8 +430,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatched((t, s) => new Person()
 					{
-						MiddleName = "first " + s.Patient.Diagnosis,
-						LastName = "last " + t.Patient.Diagnosis
+						MiddleName = "first " + s.Patient!.Diagnosis,
+						LastName = "last " + t.Patient!.Diagnosis
 					})
 					.Merge();
 
@@ -472,7 +472,7 @@ namespace Tests.xUpdate
 						t => new Person()
 						{
 							FirstName = "Updated",
-							LastName = t.Patient.Diagnosis
+							LastName = t.Patient!.Person.Patient!.Diagnosis
 						})
 					.Merge();
 
@@ -510,7 +510,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
-					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"),
+					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"),
 						t => new Person()
 						{
 							FirstName = "Updated"
@@ -556,7 +556,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
-						(t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
+						(t, s) => s.Patient!.Diagnosis == t.Patient!.Diagnosis && t.Patient!.Diagnosis.Contains("very"),
 						(t, s) => new Person()
 						{
 							LastName = "Updated"
@@ -597,7 +597,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -665,10 +665,10 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick"),
+						s => s.Patient!.Diagnosis.Contains("sick"),
 						s => new Person()
 						{
-							FirstName = s.Patient.Diagnosis,
+							FirstName = s.Patient!.Diagnosis,
 							LastName = "Inserted 2",
 							Gender = Gender.Unknown
 						})
@@ -717,7 +717,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatched(s => new Person()
 					{
-						FirstName = s.Patient.Diagnosis,
+						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
 						Gender = Gender.Unknown
 					})
@@ -762,7 +762,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient.Diagnosis.Contains("sick"),
+						s => s.Patient!.Diagnosis.Contains("sick"),
 						s => new Person()
 						{
 							FirstName = "Inserted 1",
@@ -809,8 +809,8 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID
-							&& t.Patient.Diagnosis.Contains("very")
-							&& s.Patient.Diagnosis.Contains("sick"))
+							&& t.Patient!.Diagnosis.Contains("very")
+							&& s.Patient!.Diagnosis.Contains("sick"))
 					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "R.I.P."
@@ -857,8 +857,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatched((t, s) => new Person()
 					{
-						MiddleName = "first " + s.Patient.Diagnosis,
-						LastName = "last " + t.Patient.Diagnosis
+						MiddleName = "first " + s.Patient!.Diagnosis,
+						LastName = "last " + t.Patient!.Diagnosis
 					})
 					.Merge();
 
@@ -900,7 +900,7 @@ namespace Tests.xUpdate
 						t => new Person()
 						{
 							FirstName = "Updated",
-							LastName = t.Patient.Diagnosis
+							LastName = t.Patient!.Diagnosis
 						})
 					.Merge();
 
@@ -939,7 +939,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
-						t => t.Patient.Diagnosis.Contains("very"),
+						t => t.Patient!.Diagnosis.Contains("very"),
 						t => new Person()
 						{
 							FirstName = "Updated"
@@ -985,7 +985,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
-						(t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
+						(t, s) => s.Patient!.Diagnosis.Contains("very") && t.Patient!.Diagnosis.Contains("very"),
 						(t, s) => new Person()
 						{
 							MiddleName = "Updated"
@@ -1066,7 +1066,7 @@ namespace Tests.xUpdate
 						{
 							LastName = s.LastName
 						},
-						(t, s) => s.Patient.Diagnosis == "very sick" && t.Patient.Diagnosis == "very sick")
+						(t, s) => s.Patient!.Diagnosis == "very sick" && t.Patient!.Diagnosis == "very sick")
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -1101,7 +1101,7 @@ namespace Tests.xUpdate
 						{
 							LastName = s.FirstName
 						},
-						(t, s) => s.Patient.Diagnosis == "very sick" && t.Patient.Diagnosis == "very sick")
+						(t, s) => s.Patient!.Diagnosis == "very sick" && t.Patient!.Diagnosis == "very sick")
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();

@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter);
+			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
 
@@ -81,7 +81,9 @@ namespace LinqToDB.DataProvider
 					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
 						column.DataType, column.DbType)
 					{
-						Size = column.Length
+						Size      = column.Length,
+						Precision = column.Precision,
+						Scale     = column.Scale
 					});
 				}
 
