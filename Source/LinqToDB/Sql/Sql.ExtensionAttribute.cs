@@ -167,7 +167,8 @@ namespace LinqToDB
 
 			public int ChainPrecedence { get; set; }
 
-			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, bool isAggregate,
+			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, bool isAggregate, 
+				bool isPure,
 				bool? canBeNull, params SqlExtensionParam[] parameters)
 			{
 				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -180,12 +181,13 @@ namespace LinqToDB
 				Precedence      = precedence;
 				ChainPrecedence = chainPrecedence;
 				IsAggregate     = isAggregate;
+				IsPure          = isPure;
 				CanBeNull       = canBeNull;
 				NamedParameters = parameters.ToLookup(p => p.Name ?? string.Empty).ToDictionary(p => p.Key, p => p.ToList());
 			}
 
 			public SqlExtension(string expr, params SqlExtensionParam[] parameters)
-				: this(null, expr, SqlQuery.Precedence.Unknown, 0, false, true, parameters)
+				: this(null, expr, SqlQuery.Precedence.Unknown, 0, false, true, true, parameters)
 			{
 			}
 
@@ -193,6 +195,7 @@ namespace LinqToDB
 			public string Expr        { get; set; }
 			public int    Precedence  { get; set; }
 			public bool   IsAggregate { get; set; }
+			public bool   IsPure      { get; set; }
 			public bool?  CanBeNull   { get; set; }
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
@@ -355,7 +358,7 @@ namespace LinqToDB
 
 				public ISqlExpression ConvertToSqlExpression(int precedence)
 				{
-					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.IsAggregate, Extension.CanBeNull, IsNullableType.Undefined);
+					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.IsAggregate, Extension.IsPure, Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
 				public ISqlExpression ConvertExpressionToSql(Expression expression)
@@ -605,7 +608,7 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, _canBeNull);
+				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsPure, _canBeNull);
 
 				SqlExtensionParam? result = null;
 
@@ -690,7 +693,7 @@ namespace LinqToDB
 			}
 
 			public static SqlExpression BuildSqlExpression(SqlExtension root, Type? systemType, int precedence,
-				bool isAggregate, bool? canBeNull, IsNullableType isNullable)
+				bool isAggregate, bool isPure, bool? canBeNull, IsNullableType isNullable)
 			{
 				var sb             = new StringBuilder();
 				var resolvedParams = new Dictionary<SqlExtensionParam, string>();
@@ -753,7 +756,7 @@ namespace LinqToDB
 				};
 
 				var expr          = ResolveExpressionValues(root.Expr, valueProvider);
-				var sqlExpression = new SqlExpression(systemType, expr, precedence, isAggregate, newParams.ToArray());
+				var sqlExpression = new SqlExpression(systemType, expr, precedence, isAggregate, isPure, newParams.ToArray());
 				if (!canBeNull.HasValue)
 					canBeNull = root.CanBeNull;
 
@@ -805,6 +808,7 @@ namespace LinqToDB
 
 				// calculating that extension is aggregate
 				var isAggregate = ordered.Any(c => c.Extension!.IsAggregate);
+				var isPure      = ordered.All(c => c.Extension!.IsPure);
 
 				// add parameters in reverse order
 				for (int i = chain.Count - 1; i >= 0; i--)
@@ -816,7 +820,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence, isAggregate, mainExtension.CanBeNull, IsNullable);
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence, isAggregate, isPure, mainExtension.CanBeNull, IsNullable);
 
 				return res;
 			}

@@ -261,11 +261,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var n = SelectQuery.Select.Add(idx.Sql);
 
-						return new SqlInfo(idx.MemberChain)
-						{
-							Sql   = SelectQuery.Select.Columns[n],
-							Index = n
-						};
+						return new SqlInfo(idx.MemberChain, SelectQuery.Select.Columns[n], n);
 					})
 					.ToArray();
 			}

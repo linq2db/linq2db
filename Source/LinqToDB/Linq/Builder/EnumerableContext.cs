@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 				if (Parent != null)
 					query = Parent.SelectQuery;
 
-				return new[] { new SqlInfo { Query = query, Sql = sql } };
+				return new[] { new SqlInfo(sql, query) };
 			}
 
 			switch (flags)
@@ -121,11 +121,7 @@ namespace LinqToDB.Linq.Builder
 									}
 									return new[]
 									{
-										new SqlInfo(column.MemberInfo)
-										{
-											Sql = newField,
-											Query = SelectQuery
-										}
+										new SqlInfo(column.MemberInfo, newField, SelectQuery)
 									};
 
 								}
@@ -144,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = ConvertToSql(expression, level, flags);
 
 			if (sql[0].Index < 0)
-				sql[0].Index = sql[0].Query!.Select.Add(sql[0].Sql);
+				sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
 
 			return sql;
 		}

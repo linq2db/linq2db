@@ -28,7 +28,7 @@ namespace LinqToDB.SqlQuery
 		public object GetValue(object obj, int index)
 		{
 			var p  = _parameters[index];
-			var mi = p.MemberChain[p.MemberChain.Count - 1];
+			var mi = p.MemberChain[p.MemberChain.Length - 1];
 
 			if (!_getters.TryGetValue(index, out var getter))
 			{

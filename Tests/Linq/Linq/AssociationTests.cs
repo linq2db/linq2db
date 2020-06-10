@@ -890,9 +890,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
-						.Select(c => c.ChildID),
+						.Select(c => c!.ChildID),
 					db.GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
-						.Select(c => c.ChildID));
+						.Select(c => c!.ChildID));
 		}
 
 

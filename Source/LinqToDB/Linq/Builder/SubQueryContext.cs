@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 
 			var result = indexes
-				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index]))
 				.ToArray();
 
 			return result;
@@ -58,13 +58,9 @@ namespace LinqToDB.Linq.Builder
 		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			return ConvertToSql(expression, level, flags)
-				.Select(idx =>
-				{
-					idx.Query = SelectQuery;
-					idx.Index = GetIndex((SqlColumn)idx.Sql);
-
-					return idx;
-				})
+				.Select(idx => idx
+					.WithQuery(SelectQuery)
+					.WithIndex(GetIndex((SqlColumn)idx.Sql)))
 				.ToArray();
 		}
 

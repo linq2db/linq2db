@@ -20,7 +20,7 @@ namespace Tests.Linq
 			[Column] [PrimaryKey] public int Id2    { get; set; }
 			[Column] public string? Value { get; set; }
 
-			[Column] public byte[] ByteValues        { get; set; }
+			[Column] public byte[]? ByteValues        { get; set; }
 
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
 			public List<DetailClass> Details { get; set; } = null!;
@@ -794,7 +794,7 @@ namespace Tests.Linq
 			using (var master = db.CreateLocalTable(masterRecords))
 			{
 				var query1 = master.Select(e => new { e.Id1, e.Value, e.ByteValues });
-				var query2 = master.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+				var query2 = master.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
 
 				var concated = query1.Concat(query2);
 
@@ -808,7 +808,7 @@ namespace Tests.Linq
 				var result = query.ToArray(); 
 
 				var equery1 = masterRecords.Select(e => new { e.Id1, e.Value, e.ByteValues });
-				var equery2 = masterRecords.Select(e => new { e.Id1, Value = "Str", e.ByteValues });
+				var equery2 = masterRecords.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
 
 				var econcated = equery1.Concat(equery2);
 
