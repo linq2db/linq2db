@@ -548,7 +548,7 @@ namespace LinqToDB.Linq.Builder
 				if (sqlInfo.MemberChain.Count == 0 && sqlInfo.Sql.SystemType == forExpr.Type)
 				{
 					var parentIdx      = exprCtx.ConvertToParentIndex(sqlInfo.Index, exprCtx);
-					var forCompilation = exprCtx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx);
+					var forCompilation = exprCtx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx, sqlInfo.Sql);
 					yield return new KeyInfo
 					{
 						Original       = forExpr,
@@ -591,7 +591,7 @@ namespace LinqToDB.Linq.Builder
 				if (forSelect != null)
 				{
 					var parentIdx      = exprCtx.ConvertToParentIndex(sqlInfo.Index, exprCtx);
-					var forCompilation = exprCtx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx);
+					var forCompilation = exprCtx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx, sqlInfo.Sql);
 
 					yield return new KeyInfo
 					{
@@ -619,8 +619,8 @@ namespace LinqToDB.Linq.Builder
 				var sqlInfo = sql[0];
 				if (sqlInfo.MemberChain.Count == 0 && sqlInfo.Sql.SystemType == obj.Type)
 				{
-					var parentIdx = ctx.ConvertToParentIndex(sqlInfo.Index, ctx);
-					var forCompilation = ctx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx);
+					var parentIdx      = ctx.ConvertToParentIndex(sqlInfo.Index, ctx);
+					var forCompilation = ctx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx, sqlInfo.Sql);
 					yield return new KeyInfo
 					{
 						Original = forExpr ?? obj,
@@ -639,7 +639,7 @@ namespace LinqToDB.Linq.Builder
 				if (forSelect != null)
 				{
 					var parentIdx = ctx.ConvertToParentIndex(sqlInfo.Index, ctx);
-					var forCompilation = ctx.Builder.BuildSql(sqlInfo.Sql.SystemType!, parentIdx);
+					var forCompilation = ctx.Builder.BuildSql(sqlInfo.Sql.SystemType!, parentIdx, sqlInfo.Sql);
 
 					yield return new KeyInfo
 					{

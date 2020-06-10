@@ -25,6 +25,7 @@ namespace LinqToDB.Mapping
 		/// <param name="memberAccessor">Column mapping member accessor.</param>
 		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor)
 		{
+			MappingSchema  = mappingSchema;
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
 
@@ -125,6 +126,12 @@ namespace LinqToDB.Mapping
 			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
 
+			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (vc != null)
+			{
+				ValueConverter = vc.ValueConverter;
+			}
+
 			if (defaultCanBeNull && IsIdentity)
 				CanBeNull = false;
 
@@ -199,6 +206,11 @@ namespace LinqToDB.Mapping
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
 		}
+
+		/// <summary>
+		/// Gets MappingSchema for current ColumnDescriptor
+		/// </summary>
+		public MappingSchema  MappingSchema   { get; }
 
 		/// <summary>
 		/// Gets column mapping member accessor.
@@ -407,52 +419,152 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SequenceNameAttribute? SequenceName { get; }
 
+		/// <summary>
+		/// Gets value converter for specific column.
+		/// </summary>
+		public IValueConverter? ValueConverter  { get; }
+
+		LambdaExpression? _getterValueLambda;
+		LambdaExpression? _getterParameterLambda;
+		Func<object,DataParameter?>? _getterParameter;
 		Func<object,object>? _getter;
 
-		// TODO: passing mapping schema to generate converter in combination with converter caching looks wrong
+		/// <summary>
+		/// Returns Lambda for extracting column value, converted to database type, from entity object.
+		/// </summary>
+		/// <returns>Returns column value, converted to database type.</returns>
+		public LambdaExpression GetDbValueLambda()
+		{
+			if (_getterValueLambda != null)
+				return _getterValueLambda;
+
+			var paramGetter = GetDbParamLambda();
+
+			if (typeof(DataParameter).IsSameOrParentOf(paramGetter.Body.Type))
+			{
+				var param = Expression.Parameter(typeof(DataParameter), "p");
+				var convertExpression = Expression.Lambda(ExpressionHelper.PropertyOrField(param, "Value"), param);
+				convertExpression = MappingSchema.AddNullCheck(convertExpression);
+				paramGetter =
+					Expression.Lambda(InternalExtensions.ApplyLambdaToExpression(convertExpression, paramGetter.Body),
+						paramGetter.Parameters);
+			}
+
+			_getterValueLambda = paramGetter;
+			return _getterValueLambda;
+		}
+
+		/// <summary>
+		/// Returns Lambda for extracting column value or parameter, converted to database type, from entity object.
+		/// </summary>
+		/// <returns>Returns column value, converted to database type.</returns>
+		public LambdaExpression GetDbParamLambda()
+		{
+			if (_getterParameterLambda != null)
+				return _getterParameterLambda;
+
+			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
+			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+
+			if (ValueConverter != null)
+			{
+				getterExpr = InternalExtensions.ApplyLambdaToExpression(MappingSchema.AddNullCheck(ValueConverter.ToProviderExpression), getterExpr);
+			}
+
+			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)))
+			{
+				var convertLambda = MappingSchema.GetConvertExpression(
+					new DbDataType(getterExpr.Type, DataType, DbType, Length),
+					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault: false);
+
+				if (convertLambda != null)
+				{
+					getterExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, getterExpr);
+				}
+				else if (getterExpr.Type.IsEnum)
+				{
+					var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, getterExpr.Type);
+					if (type != null)
+					{
+						var enumConverter = MappingSchema.GetConvertExpression(getterExpr.Type, type)!;
+						getterExpr = InternalExtensions.ApplyLambdaToExpression(enumConverter, getterExpr);
+					}
+				}
+			}
+
+			_getterParameterLambda = Expression.Lambda(getterExpr, objParam);
+			return _getterParameterLambda;
+		}
+
+		public DbDataType GetDbDataType()
+		{
+			var sytemType = MemberType;
+			if (ValueConverter != null)
+				sytemType = ValueConverter.ToProviderExpression.Body.Type;
+
+			var dataType = DataType;
+			if (dataType == DataType.Undefined)
+				dataType = MappingSchema.GetDataType(sytemType).Type.DataType;
+
+			return new DbDataType(sytemType, dataType, DbType, Length, Precision, Scale);
+		}
+
 		/// <summary>
 		/// Extracts column value, converted to database type, from entity object.
 		/// </summary>
-		/// <param name="mappingSchema">Mapping schema with conversion information.</param>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual object? GetValue(MappingSchema mappingSchema, object obj)
+		public virtual object? GetValue(object obj)
 		{
 			if (_getter == null)
 			{
-				var objParam   = Expression.Parameter(typeof(object), "obj");
-				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
+				var objParam      = Expression.Parameter(typeof(object), "obj");
+				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
 
-				var expr = mappingSchema.GetConvertExpression(
-					new DbDataType(MemberType, DataType, DbType, Length), 
-					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault : false);
+				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
-				if (expr != null)
-				{
-					var variable = Expression.Variable(typeof(DataParameter), "p");
-					getterExpr = Expression.Block(new[] { variable },
-						Expression.Assign(variable, expr.GetBody(getterExpr)),
-						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
-							ExpressionHelper.PropertyOrField(variable, "Value"), Expression.Constant(null))
-					);
-				}
-				else
-				{
-					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, MemberType);
-
-					if (type != null)
-					{
-						expr = mappingSchema.GetConvertExpression(MemberType, type)!;
-						getterExpr = expr.GetBody(getterExpr);
-					}
-				}
-
-				var getter = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
-
-				_getter = getter.Compile();
+				var getterLambda = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+				_getter = getterLambda.Compile();
 			}
 
 			return _getter(obj);
 		}
+
+
+		private static ConstructorInfo _dataParameterConstructor =
+			MemberHelper.ConstructorOf(() => new DataParameter("", null, DataType.Undefined, ""));
+
+		/// <summary>
+		/// Extracts column value, converted to database type, from entity object.
+		/// </summary>
+		/// <param name="obj">Entity object to extract column value from.</param>
+		/// <returns>Returns column value, converted to database type.</returns>
+		public virtual DataParameter? GetValueParameter(object obj)
+		{
+			if (_getterParameter == null)
+			{
+				var objParam      = Expression.Parameter(typeof(object), "obj");
+				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
+
+				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbParamLambda(), objExpression);
+				if (!typeof(DataParameter).IsSameOrParentOf(getterExpr.Type))
+				{
+					var replaceParam = Expression.Parameter(getterExpr.Type);
+					var dataParamExpr =
+						Expression.Lambda(
+							Expression.New(_dataParameterConstructor, Expression.Constant("p"), replaceParam,
+								Expression.Constant(DataType), Expression.Constant(DbType)),
+							replaceParam);
+
+					getterExpr = InternalExtensions.ApplyLambdaToExpression(dataParamExpr, getterExpr);
+				}
+
+				var getterLambda = Expression.Lambda<Func<object,DataParameter?>>(getterExpr, objParam);
+				_getterParameter = getterLambda.Compile();
+			}
+
+			return _getterParameter(obj);
+		}
+
 	}
 }

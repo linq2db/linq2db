@@ -175,15 +175,19 @@ namespace LinqToDB
 					data = builder.GetExpression("selector");
 
 				// https://github.com/linq2db/linq2db/issues/1765
-				var field = QueryHelper.GetUnderlyingField(data);
-				if (field != null && field.Type!.Value.DataType != DataType.Undefined)
+				var descriptor = QueryHelper.GetColumnDescriptor(data);
+				if (descriptor != null)
 				{
-					var separator = builder.GetExpression("separator");
+					var dbDataType = descriptor.GetDbDataType();
+					if (dbDataType.DataType != DataType.Undefined)
+					{
+						var separator = builder.GetExpression("separator");
 
-					if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
-						value.ValueType = value.ValueType.WithDataType(field.Type!.Value.DataType);
-					else if (separator is SqlParameter parameter && parameter.Type.DataType == DataType.Undefined)
-						parameter.Type  = parameter.Type.WithDataType(field.Type!.Value.DataType);
+						if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
+							value.ValueType = value.ValueType.WithDataType(dbDataType.DataType);
+						else if (separator is SqlParameter parameter && parameter.Type.DataType == DataType.Undefined)
+							parameter.Type = parameter.Type.WithDataType(dbDataType.DataType);
+					}
 				}
 			}
 		}

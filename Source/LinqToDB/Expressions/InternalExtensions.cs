@@ -1436,5 +1436,24 @@ namespace LinqToDB.Expressions
 			return optimized;
 		}
 
+		public static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)
+		{
+			// Replace multiple parameters with single variable or single parameter with the reader expression.
+			//
+			if (convertLambda.Body.GetCount(e => e == convertLambda.Parameters[0]) > 1)
+			{
+				var variable = Expression.Variable(expression.Type);
+				var assign   = Expression.Assign(variable, expression);
+
+				expression = Expression.Block(new[] { variable }, assign, convertLambda.GetBody(variable));
+			}
+			else
+			{
+				expression = convertLambda.GetBody(expression);
+			}
+
+			return expression;
+		}
+	
 	}
 }

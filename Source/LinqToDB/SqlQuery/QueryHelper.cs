@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -58,6 +60,44 @@ namespace LinqToDB.SqlQuery
 			return dependencyFound;
 		}
 
+		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
+		{
+			return GetColumnDescriptor(expr)?.ValueConverter;
+		}
+		
+		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return null;
+			
+			switch (expr.ElementType)
+			{
+				case QueryElementType.Column:
+					{
+						return GetColumnDescriptor(((SqlColumn)expr).Expression);
+					}
+				case QueryElementType.SqlField:
+					{
+						return ((SqlField)expr).ColumnDescriptor;
+					}
+				case QueryElementType.SqlExpression:
+					{
+						var sqlExpr = (SqlExpression)expr;
+						if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
+							return GetColumnDescriptor(sqlExpr.Parameters[0]);
+						break;
+					}
+				case QueryElementType.SqlQuery:
+					{
+						var query = (SelectQuery)expr;
+						if (query.Select.Columns.Count == 1)
+							return GetColumnDescriptor(query.Select.Columns[0]);
+						break;
+					}
+			}
+			return null;
+		}
+		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);

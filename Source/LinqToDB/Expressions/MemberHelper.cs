@@ -82,6 +82,11 @@ namespace LinqToDB.Expressions
 			return GetMemberInfo(func);
 		}
 
+		public static MemberInfo MemberOf<T, TMember>(Expression<Func<T,TMember>> func)
+		{
+			return GetMemberInfo(func);
+		}
+
 		public static FieldInfo FieldOf<T>(Expression<Func<T,object?>> func)
 		{
 			return (FieldInfo)GetMemberInfo(func);

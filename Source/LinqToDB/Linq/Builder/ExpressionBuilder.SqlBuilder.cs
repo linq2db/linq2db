@@ -743,7 +743,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression);
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
@@ -758,7 +758,7 @@ namespace LinqToDB.Linq.Builder
 					return BuildConstant(expression);
 
 				if (CanBeCompiled(expression))
-					return BuildParameter(expression).SqlParameter;
+					return BuildParameter(expression, columnDescriptor).SqlParameter;
 			}
 
 			if (unwrap)
@@ -1241,7 +1241,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal readonly Dictionary<Expression,ParameterAccessor> _parameters = new Dictionary<Expression,ParameterAccessor>();
 
-		public readonly HashSet<Expression> AsParameters = new HashSet<Expression>();
+		public readonly List<Tuple<Expression, ColumnDescriptor?>> AsParameters = new List<Tuple<Expression, ColumnDescriptor?>>();
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
@@ -1256,7 +1256,8 @@ namespace LinqToDB.Linq.Builder
 			InPredicate
 		}
 
-		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
+		ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor,
+			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			if (_parameters.TryGetValue(expr, out var p))
 				return p;
@@ -1275,13 +1276,26 @@ namespace LinqToDB.Linq.Builder
 
 				if (buildParameterType != BuildParameterType.InPredicate)
 				{
+					if (columnDescriptor != null)
+					{
+						newExpr.DataType = columnDescriptor.GetDbDataType();
+						if (columnDescriptor.ValueConverter != null)
+						{
+							newExpr.ValueExpression = InternalExtensions.ApplyLambdaToExpression(
+								MappingSchema.AddNullCheck(columnDescriptor.ValueConverter.ToProviderExpression), newExpr.ValueExpression);
+
+							newExpr.DataType = newExpr.DataType.WithSystemType(newExpr.ValueExpression.Type);
+						}
+						newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
+					}
+					
 					convertExpr = MappingSchema.GetConvertExpression(
 						newExpr.DataType,
 						newExpr.DataType.WithSystemType(typeof(DataParameter)), createDefault: false);
 
 					if (convertExpr != null)
 					{
-						var body = convertExpr.GetBody(newExpr.ValueExpression);
+						var body = InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression);
 
 						newExpr.ValueExpression      = ExpressionHelper.Property(body, nameof(DataParameter.Value));
 						newExpr.DbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
@@ -1327,7 +1341,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)expr;
 
-					if (!expr.Type.IsConstantable(false) || AsParameters.Contains(c))
+					if (!expr.Type.IsConstantable(false) || AsParameters.Any(p => p.Item1 == c))
 					{
 						if (expressionAccessors.TryGetValue(expr, out var val))
 						{
@@ -1358,6 +1372,26 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								setName(ma.Member.Name);
+							}
+							else
+							{
+								var columnDescriptor = AsParameters.FirstOrDefault(p => p.Item1 == c)?.Item2;
+
+								if (columnDescriptor != null)
+								{
+									result.DataType = columnDescriptor.GetDbDataType();
+
+									if (columnDescriptor.ValueConverter != null)
+									{
+										expr = InternalExtensions.ApplyLambdaToExpression(
+											columnDescriptor.ValueConverter.ToProviderExpression, expr);
+										result.DataType = result.DataType.WithSystemType(expr.Type);
+									}
+
+									result.DbDataTypeExpression = Expression.Constant(result.DataType);
+
+									setName(columnDescriptor.MemberName);
+								}
 							}
 						}
 					}
@@ -1572,9 +1606,19 @@ namespace LinqToDB.Linq.Builder
 					return p;
 			}
 
-			var l = ConvertToSql(context, left);
-			var r = ConvertToSql(context, right, true);
-
+			ISqlExpression l;
+			ISqlExpression r;
+			if (context?.IsExpression(left, 0, RequestFor.Field).Result == true)
+			{
+				l = ConvertToSql(context, left);
+				r = ConvertToSql(context, right, true, QueryHelper.GetColumnDescriptor(l));
+			}
+			else
+			{
+				r = ConvertToSql(context, right, true);
+				l = ConvertToSql(context, left, false, QueryHelper.GetColumnDescriptor(r));
+			}
+			
 			var lValue = l as SqlValue;
 			var rValue = r as SqlValue;
 
@@ -2057,6 +2101,12 @@ namespace LinqToDB.Linq.Builder
 			return p.SqlParameter;
 		}
 
+		ColumnDescriptor? GetMemberDescriptor(MemberInfo member)
+		{
+			var ed = MappingSchema.GetEntityDescriptor(member.DeclaringType);
+			return ed.Columns.FirstOrDefault(c => c.MemberInfo == member);
+		}
+
 		DbDataType GetMemberDataType(MemberInfo member)
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
@@ -2192,7 +2242,7 @@ namespace LinqToDB.Linq.Builder
 					if (defaultType != null)
 					{
 						var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType)!;
-						accessorExpression = enumMapExpr.GetBody(accessorExpression);
+						accessorExpression = InternalExtensions.ApplyLambdaToExpression(enumMapExpr, accessorExpression);
 					}
 				}
 			}
@@ -2240,11 +2290,11 @@ namespace LinqToDB.Linq.Builder
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
-				new [] { expressionParam, dataContextParam, parametersParam });
+				expressionParam, dataContextParam, parametersParam);
 
 			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,DbDataType>>(
 				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
-				new [] { expressionParam, dataContextParam, parametersParam });
+				expressionParam, dataContextParam, parametersParam);
 
 			return new ParameterAccessor
 			(
@@ -2340,7 +2390,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr))
 					{
-						var p = BuildParameter(arr, BuildParameterType.InPredicate).SqlParameter;
+						var p = BuildParameter(arr, null, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
 						return new SqlPredicate.InList(expr, false, p);
 					}

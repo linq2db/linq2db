@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = Builder.BuildSql(_returnType, FieldIndex);
+				var expr   = Builder.BuildSql(_returnType, FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -121,10 +121,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(_returnType, index);
+				return Builder.BuildSql(_returnType, index, info.Sql);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

@@ -19,9 +19,7 @@ namespace LinqToDB.DataProvider
 			_dataConnection      = dataConnection;
 			_columns             = columns;
 			_enumerator          = collection.GetEnumerator();
-			_columnTypes         = _columns
-				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? _dataConnection.DataProvider.MappingSchema.GetDataType(c.MemberType).Type.DataType : c.DataType, c.DbType, c.Length))
-				.ToArray();
+			_columnTypes         = _columns.Select(c => c.GetDbDataType()).ToArray();
 			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
@@ -62,9 +60,9 @@ namespace LinqToDB.DataProvider
 
 		public override object? GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_dataConnection.MappingSchema, _enumerator.Current);
+			var value = _columns[i].GetValue(_enumerator.Current);
 
-				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
+			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
 			return _valueConverter.Value;
 		}
@@ -76,7 +74,7 @@ namespace LinqToDB.DataProvider
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(_dataConnection.MappingSchema, obj);
+				var value = _columns[it].GetValue(obj);
 				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}

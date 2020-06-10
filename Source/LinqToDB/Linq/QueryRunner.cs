@@ -137,7 +137,7 @@ namespace LinqToDB.Linq
 					return (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e =>
 					{
 						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, newVariable!, context);
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context);
 
 						return replaceVariable(e);
 					});
@@ -499,25 +499,34 @@ namespace LinqToDB.Linq
 					ReflectionHelper.Constant.Value),
 				type);
 
-			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
+			var descriptor    = field.ColumnDescriptor;
+			var dbValueLambda = descriptor.GetDbParamLambda();
+			getter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
-			var dbDataType = new DbDataType(field.Type!.Value.SystemType, DataType.Undefined, null, field.Type!.Value.Length, null, null);
-			Expression dbDataTypeExpression = Expression.Constant(dbDataType);
+			var systemType = getter.Type;
 
-			var convertExpression = dataContext.MappingSchema.GetConvertExpression(
-				field.Type!.Value,
-				field.Type!.Value.WithSystemType(typeof(DataParameter)),
-				createDefault: false);
+			Expression valueGetter;
+			Expression dbDataTypeExpression;
+			LambdaExpression? convertExpression = null;
 
-			if (convertExpression != null)
+			if (typeof(DataParameter).IsSameOrParentOf(systemType))
 			{
-				var body             = convertExpression.GetBody(getter);
-				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
+				valueGetter          = ExpressionHelper.Property(getter, nameof(DataParameter.Value));
+				dbDataTypeExpression = ExpressionHelper.Property(getter, nameof(DataParameter.DbDataType));
+				convertExpression    = dbValueLambda;
+			}
+			else
+			{
+				valueGetter = getter;
+
+				var dbDataType = new DbDataType(systemType, descriptor.DataType, descriptor.DbType,
+					descriptor.Length ?? field.Type!.Value.Length, descriptor.Precision, descriptor.Scale);
+
+				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dbDataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'), expr: convertExpression);
+				dataContext, valueGetter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}

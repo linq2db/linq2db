@@ -123,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 					if (IsExpression(expr, level, RequestFor.Object).Result)
 						return Builder.BuildExpression(this, expr, enforceServerSide);
 
-					return Builder.BuildSql(expr.Type, idx);
+					return Builder.BuildSql(expr.Type, idx, info[0].Sql);
 				}
 			}
 
@@ -153,13 +153,13 @@ namespace LinqToDB.Linq.Builder
 							var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
 							var idx = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
-							return Builder.BuildSql(expression.Type, idx);
+							return Builder.BuildSql(expression.Type, idx, info.Sql);
 						}
 
 				return ProcessScalar(
 					expression,
 					level,
-					(ctx, ex, l) => ctx.BuildExpression(ex, l, enforceServerSide),
+					(ctx, ex, l) => ctx!.BuildExpression(ex, l, enforceServerSide),
 					() => GetSequence(expression, level)!.BuildExpression(null, 0, enforceServerSide), true);
 			}
 			else
@@ -238,7 +238,7 @@ namespace LinqToDB.Linq.Builder
 										var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
 										var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
-										return Builder.BuildSql(expression.Type, idx);
+										return Builder.BuildSql(expression.Type, idx, info.Sql);
 									}
 								}
 
@@ -334,7 +334,7 @@ namespace LinqToDB.Linq.Builder
 							return ProcessScalar(
 								expression,
 								level,
-								(ctx, ex, l) => ctx.ConvertToSql(ex, l, flags),
+								(ctx, ex, l) => ctx!.ConvertToSql(ex, l, flags),
 								() => new[] { new SqlInfo { Sql = Builder.ConvertToSql(this, expression) } }, true);
 						}
 				}
@@ -549,7 +549,7 @@ namespace LinqToDB.Linq.Builder
 						return ProcessScalar(
 							expression,
 							level,
-							(ctx, ex, l) => ctx.ConvertToIndex(ex, l, flags),
+							(ctx, ex, l) => ctx!.ConvertToIndex(ex, l, flags),
 							() => GetSequence(expression, level)!.ConvertToIndex(expression, level + 1, flags), true);
 				}
 			}
@@ -722,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 						return ProcessScalar(
 							expression,
 							level,
-							(ctx, ex, l) => ctx.IsExpression(ex, l, requestFlag),
+							(ctx, ex, l) => ctx == null ? IsExpressionResult.False : ctx.IsExpression(ex, l, requestFlag),
 							() => new IsExpressionResult(requestFlag == RequestFor.Expression), false);
 					default                     : return IsExpressionResult.False;
 				}
@@ -868,7 +868,7 @@ namespace LinqToDB.Linq.Builder
 				return ProcessScalar(
 					expression,
 					level,
-					(ctx, ex, l) => ctx.GetContext(ex, l, buildInfo),
+					(ctx, ex, l) => ctx!.GetContext(ex, l, buildInfo),
 					() => throw new NotImplementedException(), true);
 			}
 			else
@@ -1000,7 +1000,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext,Expression?,int,T> action, Func<T> defaultAction, bool throwOnError)
+		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext?,Expression?,int,T> action, Func<T> defaultAction, bool throwOnError)
 		{
 			if (level == 0)
 			{

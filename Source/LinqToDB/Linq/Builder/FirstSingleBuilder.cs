@@ -263,7 +263,7 @@ namespace LinqToDB.Linq.Builder
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
 						    idx = Parent.ConvertToParentIndex(idx, Parent);
-						return Builder.BuildSql(_methodCall.Type, idx);
+						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
 					}
 
 					return null!; // ???

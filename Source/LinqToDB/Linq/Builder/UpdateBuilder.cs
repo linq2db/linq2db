@@ -448,8 +448,8 @@ namespace LinqToDB.Linq.Builder
 			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
-			if (!update.Type.IsConstantable(false) && !builder.AsParameters.Contains(update))
-				builder.AsParameters.Add(update);
+			if (!update.Type.IsConstantable(false) && builder.AsParameters.All(p => p.Item1 != update))
+				builder.AsParameters.Add(Tuple.Create(update, QueryHelper.GetColumnDescriptor(columnSql)));
 
 
 			var expr = builder.ConvertToSql(select, update);
