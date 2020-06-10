@@ -174,15 +174,11 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		static Expression? ConstructMemberPath(List<AccessorMember> memberPath, Expression ob, bool throwOnError)
+		static Expression? ConstructMemberPath(IEnumerable<AccessorMember> memberPath, Expression ob, bool throwOnError)
 		{
-			if (memberPath.Count == 0)
-				return null;
-
 			Expression result = ob;
-			for (int i = 0; i < memberPath.Count; i++)
+			foreach (var memberInfo in memberPath)
 			{
-				var memberInfo = memberPath[i];
 				if (result.Type != memberInfo.MemberInfo.DeclaringType)
 				{
 					if (throwOnError)
@@ -201,18 +197,17 @@ namespace LinqToDB.Linq.Builder
 					result = Expression.MakeMemberAccess(result, memberInfo.MemberInfo);
 			}
 
+			if (result == ob)
+				return null;
+
 			return result;
 		}
 
-		static Expression? ConstructMemberPath(List<MemberInfo> memberPath, Expression ob, bool throwOnError)
+		static Expression? ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
-			if (memberPath.Count == 0)
-				return null;
-
 			Expression result = ob;
-			for (int i = 0; i < memberPath.Count; i++)
+			foreach (var memberInfo in memberPath)
 			{
-				var memberInfo = memberPath[i];
 				if (!memberInfo.DeclaringType.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
@@ -221,6 +216,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				result = Expression.MakeMemberAccess(result, memberInfo);
 			}
+
+			if (result == ob)
+				return null;
 
 			return result;
 		}
@@ -545,7 +543,7 @@ namespace LinqToDB.Linq.Builder
 			if (sql.Length == 1)
 			{
 				var sqlInfo = sql[0];
-				if (sqlInfo.MemberChain.Count == 0 && sqlInfo.Sql.SystemType == forExpr.Type)
+				if (sqlInfo.MemberChain.Length == 0 && sqlInfo.Sql.SystemType == forExpr.Type)
 				{
 					var parentIdx      = exprCtx.ConvertToParentIndex(sqlInfo.Index, exprCtx);
 					var forCompilation = exprCtx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx, sqlInfo.Sql);
@@ -617,7 +615,7 @@ namespace LinqToDB.Linq.Builder
 			if (sql.Length == 1)
 			{
 				var sqlInfo = sql[0];
-				if (sqlInfo.MemberChain.Count == 0 && sqlInfo.Sql.SystemType == obj.Type)
+				if (sqlInfo.MemberChain.Length == 0 && sqlInfo.Sql.SystemType == obj.Type)
 				{
 					var parentIdx      = ctx.ConvertToParentIndex(sqlInfo.Index, ctx);
 					var forCompilation = ctx.Builder.BuildSql(sqlInfo.Sql.SystemType, parentIdx, sqlInfo.Sql);

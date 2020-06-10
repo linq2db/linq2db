@@ -298,10 +298,10 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in sqlInfo)
 				{
-					if (info.MemberChain.Count == 0)
+					if (info.MemberChain.Length == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.MemberChain.Count != 1)
+					if (info.MemberChain.Length != 1)
 						throw new InvalidOperationException();
 
 					var member = info.MemberChain[0];

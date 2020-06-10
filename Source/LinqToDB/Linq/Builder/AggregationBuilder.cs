@@ -169,12 +169,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var result = _index ??= new[]
 							{
-								new SqlInfo
-								{
-									Query = Parent!.SelectQuery, 
-									Index = Parent.SelectQuery.Select.Add(Sql!),
-									Sql = Sql!,
-								}
+								new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
 							};
 
 							return result;

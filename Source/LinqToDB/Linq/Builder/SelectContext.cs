@@ -307,7 +307,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (e.Method.DeclaringType == typeof(Enumerable) && !typeof(IGrouping<,>).IsSameOrParentOf(e.Arguments[0].Type))
 				{
-					return new[] { new SqlInfo { Sql = Builder.SubQueryToSql(this, e) } };
+					return new[] { new SqlInfo(Builder.SubQueryToSql(this, e)) };
 				}
 			}
 
@@ -335,7 +335,7 @@ namespace LinqToDB.Linq.Builder
 								expression,
 								level,
 								(ctx, ex, l) => ctx!.ConvertToSql(ex, l, flags),
-								() => new[] { new SqlInfo { Sql = Builder.ConvertToSql(this, expression) } }, true);
+								() => new[] { new SqlInfo(Builder.ConvertToSql(this, expression)) }, true);
 						}
 				}
 			}
@@ -461,8 +461,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression.Sql is SqlSearchCondition)
 			{
-				expression.Sql = Builder.Convert(
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)));
+				expression = expression.WithSql(Builder.Convert(
+					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false))));
 			}
 
 			return expression;
@@ -490,12 +490,7 @@ namespace LinqToDB.Linq.Builder
 
 						var index = SelectQuery.Select.Add(i.Query!.Select.Columns[i.Index]);
 
-						return new SqlInfo(i.MemberChain)
-						{
-							Query = SelectQuery,
-							Index = index,
-							Sql   = SelectQuery.Select.Columns[index]
-						};
+						return new SqlInfo(i.MemberChain, SelectQuery.Select.Columns[index], SelectQuery, index);
 					})
 					.ToArray();
 
@@ -532,8 +527,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						idx = ConvertToSql(null, 0, flags);
 
-						foreach (var info in idx)
-							SetInfo(info, null);
+						for (var i = 0; i < idx.Length; i++)
+						{
+							idx[i] = SetInfo(idx[i], null);
+						}
 
 						_memberIndex.Add(key, idx);
 					}
@@ -590,8 +587,10 @@ namespace LinqToDB.Linq.Builder
 							{
 								var idx = Builder.ConvertExpressions(this, expression!, flags);
 
-								foreach (var info in idx)
-									SetInfo(info, null);
+								for (var i = 0; i < idx.Length; i++)
+								{
+									idx[i] = SetInfo(idx[i], null);
+								}
 
 								return idx;
 							}
@@ -613,8 +612,10 @@ namespace LinqToDB.Linq.Builder
 												if (flags == ConvertFlags.Field && idx.Length != 1)
 													throw new InvalidOperationException();
 
-												foreach (var info in idx)
-													SetInfo(info, member.Item1);
+												for (var i = 0; i < idx.Length; i++)
+												{
+													idx[i] = SetInfo(idx[i], member.Item1);
+												}
 
 												_memberIndex.Add(member, idx);
 											}
@@ -647,18 +648,20 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		void SetInfo(SqlInfo info, MemberInfo? member)
+		SqlInfo SetInfo(SqlInfo info, MemberInfo? member)
 		{
-			info.Query = SelectQuery;
+			info = info.WithQuery(SelectQuery);
 
 			if (info.Sql == SelectQuery)
-				info.Index = SelectQuery.Select.Columns.Count - 1;
+				info = info.WithIndex(SelectQuery.Select.Columns.Count - 1);
 			else
 			{
-				info.Index = SelectQuery.Select.Add(info.Sql);
+				info = info.WithIndex(SelectQuery.Select.Add(info.Sql));
 				if (member != null)
 					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
 			}
+
+			return info;
 		}
 
 		#endregion

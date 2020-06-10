@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -19,10 +19,11 @@ namespace LinqToDB.SqlQuery
 			Precedence  = precedence;
 			Parameters  = parameters;
 			IsAggregate = isAggregate;
+			IsPure      = isPure;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, parameters)
+			: this(systemType, expr, precedence, false, true, parameters)
 		{
 		}
 
@@ -46,6 +47,7 @@ namespace LinqToDB.SqlQuery
 		public int              Precedence  { get; }
 		public ISqlExpression[] Parameters  { get; }
 		public bool             IsAggregate { get; }
+		public bool             IsPure      { get; }
 
 		#region Overrides
 

@@ -274,7 +274,7 @@ namespace LinqToDB.Linq
 							});
 
 						// always create copy
-						var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
+						var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, expr.IsPure, newExpressions.ToArray());
 						// force re-entrance
 						visitor.VisitedElements[expr] = null;
 						return newExpression;
