@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 						result = result.Select(s =>
 							{
 								var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
-								return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery);
+								return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery, idx);
 							})
 							.ToArray();
 					}

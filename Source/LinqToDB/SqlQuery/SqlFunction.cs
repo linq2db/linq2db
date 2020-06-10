@@ -12,8 +12,8 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isIdempotent, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, isIdempotent, SqlQuery.Precedence.Primary, parameters)
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, parameters)
 		{
 		}
 
@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 		
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isIdempotent, int precedence, params ISqlExpression[] parameters)
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
@@ -37,19 +37,19 @@ namespace LinqToDB.SqlQuery
 			foreach (var p in parameters)
 				if (p == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType   = systemType;
-			Name         = name;
-			Precedence   = precedence;
-			IsAggregate  = isAggregate;
-			IsIdempotent = isIdempotent;
-			Parameters   = parameters;
+			SystemType  = systemType;
+			Name        = name;
+			Precedence  = precedence;
+			IsAggregate = isAggregate;
+			IsPure      = isPure;
+			Parameters  = parameters;
 		}
 
 		public Type             SystemType   { get; }
 		public string           Name         { get; }
 		public int              Precedence   { get; }
 		public bool             IsAggregate  { get; }
-		public bool             IsIdempotent { get; }
+		public bool             IsPure       { get; }
 		public ISqlExpression[] Parameters   { get; }
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }

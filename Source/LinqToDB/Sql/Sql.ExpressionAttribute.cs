@@ -30,9 +30,9 @@ namespace LinqToDB
 			/// <param name="expression">The SQL expression. Use {0},{1}... for parameters given to the method call.</param>
 			public ExpressionAttribute(string? expression)
 			{
-				Expression   = expression;
-				Precedence   = SqlQuery.Precedence.Primary;
-				IsIdempotent = true;
+				Expression = expression;
+				Precedence = SqlQuery.Precedence.Primary;
+				IsPure     = true;
 			}
 
 			/// <summary>
@@ -44,10 +44,10 @@ namespace LinqToDB
 			/// being passed into the function.</param>
 			public ExpressionAttribute(string expression, params int[] argIndices)
 			{
-				Expression   = expression;
-				ArgIndices   = argIndices;
-				Precedence   = SqlQuery.Precedence.Primary;
-				IsIdempotent = true;
+				Expression = expression;
+				ArgIndices = argIndices;
+				Precedence = SqlQuery.Precedence.Primary;
+				IsPure     = true;
 			}
 
 			/// <summary>
@@ -62,7 +62,7 @@ namespace LinqToDB
 				Configuration = configuration;
 				Expression    = expression;
 				Precedence    = SqlQuery.Precedence.Primary;
-				IsIdempotent  = true;
+				IsPure        = true;
 			}
 
 			/// <summary>
@@ -80,7 +80,7 @@ namespace LinqToDB
 				Expression    = expression;
 				ArgIndices    = argIndices;
 				Precedence    = SqlQuery.Precedence.Primary;
-				IsIdempotent  = true;
+				IsPure        = true;
 			}
 
 			/// <summary>
@@ -134,15 +134,15 @@ namespace LinqToDB
 			/// </summary>
 			public bool           IsAggregate      { get; set; }
 			/// <summary>
-			/// If <c>true</c>, it notifies SQL Optimizer that expression is idempotent if the same values/parameters are used. It gives optimizer additional information how to simplify query.
-			/// For example ORDER BY IdempotentFunction("Str") can be removed because idempotent function uses constant value.
+			/// If <c>true</c>, it notifies SQL Optimizer that expression returns same result if the same values/parameters are used. It gives optimizer additional information how to simplify query.
+			/// For example ORDER BY PureFunction("Str") can be removed because PureFunction function uses constant value.
 			/// <example>
-			/// For example Random function is NOT Idempotent function because it returns different result all time.
-			/// But expression <see cref="Sql.CurrentTimestamp"/> is idempotent in case of executed query.
+			/// For example Random function is NOT Pure function because it returns different result all time.
+			/// But expression <see cref="Sql.CurrentTimestamp"/> is Pure in case of executed query.
 			/// <see cref="Sql.DateAdd(LinqToDB.Sql.DateParts,System.Nullable{double},System.Nullable{System.DateTime})"/> is also idempotent function because it returns the same result with the same parameters.  
 			/// </example>
 			/// </summary>
-			public bool           IsIdempotent      { get; set; }
+			public bool           IsPure          { get; set; }
 			/// <summary>
 			/// Used to determine whether the return type should be treated as
 			/// something that can be null If CanBeNull is not explicitly set.
@@ -228,7 +228,7 @@ namespace LinqToDB
 				var sqlExpressions = ConvertArgs(member, args);
 
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence,
-					IsAggregate, IsIdempotent, sqlExpressions)
+					IsAggregate, IsPure, sqlExpressions)
 				{
 					CanBeNull = GetCanBeNull(sqlExpressions)
 				};

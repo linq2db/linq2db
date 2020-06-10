@@ -158,13 +158,13 @@ namespace LinqToDB.SqlQuery
 					if (e.ElementType == QueryElementType.SqlExpression)
 					{
 						var sqlExpr = (SqlExpression) e;
-						return !sqlExpr.IsIdempotent || sqlExpr.IsAggregate;
+						return !sqlExpr.IsPure || sqlExpr.IsAggregate;
 					}
 					
 					if (e.ElementType == QueryElementType.SqlFunction)
 					{
 						var sqlFunc = (SqlFunction) e;
-						return !sqlFunc.IsIdempotent || sqlFunc.IsAggregate;
+						return !sqlFunc.IsPure || sqlFunc.IsAggregate;
 					}
 
 					return e.ElementType.In(QueryElementType.SqlField,
