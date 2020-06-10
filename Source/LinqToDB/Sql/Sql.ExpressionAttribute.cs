@@ -139,7 +139,7 @@ namespace LinqToDB
 			/// <example>
 			/// For example Random function is NOT Pure function because it returns different result all time.
 			/// But expression <see cref="Sql.CurrentTimestamp"/> is Pure in case of executed query.
-			/// <see cref="Sql.DateAdd(LinqToDB.Sql.DateParts,System.Nullable{double},System.Nullable{System.DateTime})"/> is also idempotent function because it returns the same result with the same parameters.  
+			/// <see cref="Sql.DateAdd(LinqToDB.Sql.DateParts,System.Nullable{double},System.Nullable{System.DateTime})"/> is also Pure function because it returns the same result with the same parameters.  
 			/// </example>
 			/// </summary>
 			public bool           IsPure          { get; set; }
