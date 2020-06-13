@@ -14,13 +14,47 @@ namespace LinqToDB
 	public partial class LinqExtensions
 	{
 		/// <summary>
-		/// Provides support for queryable LoadWith/ThenLoad chaining operators.
+		/// Specifies associations, that should be loaded for each loaded record from current table.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// Some usage examples:
+		/// <code>
+		/// // loads records from Table1 with Reference association loaded for each Table1 record
+		/// db.Table1.LoadWithAsTable(r => r.Reference);
+		///
+		/// // loads records from Table1 with Reference1 association loaded for each Table1 record
+		/// // loads records from Reference2 association for each loaded Reference1 record
+		/// db.Table1.LoadWithAsTable(r => r.Reference1.Reference2);
+		///
+		/// // loads records from Table1 with References collection association loaded for each Table1 record
+		/// db.Table1.LoadWithAsTable(r => r.References);
+		///
+		/// // loads records from Table1 with Reference1 collection association loaded for each Table1 record
+		/// // loads records from Reference2 collection association for each loaded Reference1 record
+		/// // loads records from Reference3 association for each loaded Reference2 record
+		/// // note that a way you access collection association record (by index, using First() method) doesn't affect
+		/// // query results and always select all records
+		/// db.Table1.LoadWithAsTable(r => r.References1[0].References2.First().Reference3);
+		/// </code>
 		/// </summary>
-		/// <typeparam name="TEntity">The entity type.</typeparam>
-		/// <typeparam name="TProperty">The property type.</typeparam>
-		// ReSharper disable once UnusedTypeParameter
-		public interface ILoadWithQueryable<out TEntity, out TProperty> : IQueryable<TEntity>, IAsyncEnumerable<TEntity>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="selector">Association selection expression.</param>
+		/// <returns>Table-like query source.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> LoadWithAsTable<T>(
+			                this ITable<T> table,
+			[InstantHandle] Expression<Func<T,object>> selector)
 		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(LoadWithAsTable, table, selector),
+				new[] { table.Expression, Expression.Quote(selector) });
+
+			return table;
 		}
 
 		class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>
