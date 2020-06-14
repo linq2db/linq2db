@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using System.Collections.Concurrent;
-	using System.Data.SqlTypes;
 	using System.Diagnostics;
 	using System.Diagnostics.CodeAnalysis;
 	using Async;
@@ -54,8 +53,6 @@ namespace LinqToDB.Linq
 			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
 			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ConcurrentDictionary<Type, ReaderMapperInfo>();
 
-			public IQueryRunner? QueryRunner;
-
 			class ReaderMapperInfo
 			{
 				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
@@ -71,9 +68,7 @@ namespace LinqToDB.Linq
 				{
 					var mapperExpression = TransformMapperExpression(context, dataReader, dataReaderType, false);
 
-					var qr = QueryRunner;
-					if (qr != null)
-						qr.MapperExpression = mapperExpression;
+					queryRunner.MapperExpression = mapperExpression;
 
 					var mapper = mapperExpression.Compile();
 					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
@@ -98,9 +93,7 @@ namespace LinqToDB.Linq
 							context.GetTraceSwitch().DisplayName,
 							TraceLevel.Error);
 
-					var qr = QueryRunner;
-					if (qr != null)
-						qr.MapperExpression = mapperInfo.MapperExpression;
+					queryRunner.MapperExpression = mapperInfo.MapperExpression;
 
 					var expression = TransformMapperExpression(context, dataReader, dataReaderType, true);
 
@@ -616,23 +609,14 @@ namespace LinqToDB.Linq
 			int          queryNumber)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
-			try
+			using (var dr = runner.ExecuteReader())
 			{
-				mapper.QueryRunner = runner;
-
-				using (var dr = runner.ExecuteReader())
+				while (dr.Read())
 				{
-					while (dr.Read())
-					{
-						var value = mapper.Map(dataContext, runner, dr);
-						runner.RowsCount++;
-						yield return value;
-					}
+					var value = mapper.Map(dataContext, runner, dr);
+					runner.RowsCount++;
+					yield return value;
 				}
-			}
-			finally
-			{
-				mapper.QueryRunner = null;
 			}
 		}
 
@@ -651,30 +635,21 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
-				try
+				using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					mapper.QueryRunner = runner;
+					var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
 
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						{}
+
+					var take = takeAction?.Invoke(expression, dataContext, ps) ?? int.MaxValue;
+
+					while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
-
-						while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-							{}
-
-						var take = takeAction?.Invoke(expression, dataContext, ps) ?? int.MaxValue;
-
-						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-						{
-							runner.RowsCount++;
-							if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
-								break;
-						}
+						runner.RowsCount++;
+						if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
+							break;
 					}
-				}
-				finally
-				{
-					mapper.QueryRunner = null;
 				}
 			}
 		}
@@ -725,8 +700,6 @@ namespace LinqToDB.Linq
 				{
 					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps, _preambles);
 
-					_mapper.QueryRunner = _queryRunner;
-
 					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_expression, _dataContext, _ps) ?? 0;
@@ -757,7 +730,7 @@ namespace LinqToDB.Linq
 				_queryRunner?.Dispose();
 				_dataReader ?.Dispose();
 
-				_mapper.QueryRunner = _queryRunner = null;
+				_queryRunner = null;
 			}
 		}
 
@@ -942,10 +915,7 @@ namespace LinqToDB.Linq
 			object?[]?     preambles)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
-			try
 			{
-				mapper.QueryRunner = runner;
-
 				using (var dr = runner.ExecuteReader())
 				{
 					while (dr.Read())
@@ -957,10 +927,6 @@ namespace LinqToDB.Linq
 				}
 
 				return Array<T>.Empty.First();
-			}
-			finally
-			{
-				mapper.QueryRunner = null;
 			}
 		}
 
@@ -975,27 +941,18 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
-				try
+				using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					mapper.QueryRunner = runner;
-
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-						{
-							runner.RowsCount++;
+						runner.RowsCount++;
 
-							var item = mapper.Map(dataContext, runner, dr.DataReader);
+						var item = mapper.Map(dataContext, runner, dr.DataReader);
 
-							return dataContext.MappingSchema.ChangeTypeTo<T>(item);
-						}
-
-						return Array<T>.Empty.First();
+						return dataContext.MappingSchema.ChangeTypeTo<T>(item);
 					}
-				}
-				finally
-				{
-					mapper.QueryRunner = null;
+
+					return Array<T>.Empty.First();
 				}
 			}
 		}
