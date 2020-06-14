@@ -65,9 +65,17 @@ namespace LinqToDB.Linq.Builder
 				// handle situation when order by uses complex field
 			    
 			    var isComplex = false;
+
 			    foreach (var sqlInfo in sql)
 			    {
+				    // immutable expressions will be removed later
+				    //
+					var isImmutable = QueryHelper.IsImmutable(sqlInfo.Sql);
+					if (isImmutable)
+						continue;
+					
 					// possible we have to extend this list
+					//
 				    isComplex = null != new QueryVisitor().Find(sqlInfo.Sql, 
 					                e => e.ElementType == QueryElementType.SqlQuery);
 				    if (isComplex)
@@ -87,6 +95,11 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var expr in sql)
 			{
+				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
+				//
+				if (QueryHelper.IsImmutable(expr.Sql))
+					continue;
+			
 				var e = builder.ConvertSearchCondition(expr.Sql);
 				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
 			}

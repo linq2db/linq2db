@@ -152,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
 
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
-			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);
+			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element, builder.IsGroupingGuardDisabled);
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 
@@ -224,13 +224,16 @@ namespace LinqToDB.Linq.Builder
 				Type           groupingType,
 				IBuildContext  sequence,
 				KeyContext     key,
-				SelectContext  element)
+				SelectContext  element,
+				bool           isGroupingGuardDisabled)
 				: base(parent, sequence, null)
 			{
 				_sequenceExpr = sequenceExpr;
 				_key          = key;
 				_element      = element;
 				_groupingType = groupingType;
+
+				_isGroupingGuardDisabled = isGroupingGuardDisabled;
 
 				key.Parent = this;
 			}
@@ -239,6 +242,7 @@ namespace LinqToDB.Linq.Builder
 			readonly KeyContext    _key;
 			readonly SelectContext _element;
 			readonly Type          _groupingType;
+			readonly bool          _isGroupingGuardDisabled;
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
@@ -303,14 +307,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetGrouping(GroupByContext context)
 				{
-					if (Configuration.Linq.GuardGrouping)
+					if (Configuration.Linq.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
 						if (context._element.Lambda.Parameters.Count == 1 &&
 							context._element.Body == context._element.Lambda.Parameters[0])
 						{
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
-								"Set Configuration.Linq.GuardGrouping = false to disable this check."
+								"Set Configuration.Linq.GuardGrouping = false to disable this check.\n" +
+								"Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().\n" +
+								"NOTE! By disabling this guard you accept additional Database Connection(s) to the server for processing such requests."
 							)
 							{
 								HelpLink = "https://github.com/linq2db/linq2db/issues/365"
@@ -604,9 +610,10 @@ namespace LinqToDB.Linq.Builder
 					if (flags == ConvertFlags.Field && !_key.IsScalar)
 						return _element.ConvertToSql(null, 0, flags);
 					var keys = _key.ConvertToSql(null, 0, flags);
-					foreach (var key in keys)
+					for (var i = 0; i < keys.Length; i++)
 					{
-						key.MemberChain.Add(_keyProperty!);
+						var key = keys[i];
+						keys[i] = key.AppendMember(_keyProperty!);
 					}
 
 					return keys;
@@ -624,7 +631,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 								{
-									return new[] { new SqlInfo { Sql = ConvertEnumerable(e) } };
+									return new[] { new SqlInfo(ConvertEnumerable(e)) };
 								}
 
 								break;
@@ -674,10 +681,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					info = ConvertToSql(expression, level, flags);
 
-					foreach (var item in info)
+					for (var i = 0; i < info.Length; i++)
 					{
-						item.Query = SelectQuery;
-						item.Index = SelectQuery.Select.Add(item.Sql);
+						var item = info[i];
+						info[i] = item
+							.WithQuery(SelectQuery)
+							.WithIndex(SelectQuery.Select.Add(item.Sql));
 					}
 				}
 

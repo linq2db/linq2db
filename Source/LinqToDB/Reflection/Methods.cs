@@ -37,6 +37,9 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo SelectManySimple     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SelectMany(a => new int[0]));
 			public static readonly MethodInfo SelectManyProjection = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SelectMany(a => new int[0], (m, d) => d));
+
+			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 		}
 
 		public static class Queryable
@@ -62,11 +65,16 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo SelectManySimple     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectMany(a => new int[0]));
 			public static readonly MethodInfo SelectManyProjection = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectMany(a => new int[0], (m, d) => d));
+
+			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 		}
 
 		public static class LinqToDB
 		{
 			public static readonly MethodInfo GetTable    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.GetTable<object>());
+
+			public static readonly MethodInfo LoadWithAsTable       = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.LoadWithAsTable(e => e.Single2));
 
 			public static readonly MethodInfo LoadWith              = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2));
 			public static readonly MethodInfo LoadWithSingleFilter  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2, eq => eq.Where(e => e.Value2 == 1)));
@@ -83,6 +91,7 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo RemoveOrderBy       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
 			public static readonly MethodInfo IgnoreFilters       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
+			public static readonly MethodInfo DisableGuard        = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
 
 			public static class Table
 			{
@@ -223,38 +232,37 @@ namespace LinqToDB.Reflection
 			{
 				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());
 			}
-
-
-			#region LoadWith/ThenLoad helper classes
-
-			#pragma warning disable 649
-
-			abstract class LW1
-			{
-				public int   Value1;
-
-				public LW2   Single2 = null!;
-				public LW2[] Many2   = null!;
-			}
-
-			abstract class LW2
-			{
-				public int   Value2;
-
-				public LW3   Single3 = null!;
-				public LW3[] Many3   = null!;
-				
-			}
-
-			abstract class LW3
-			{
-				public int Value3;
-			}
-
-			#pragma warning restore 649
-
-			#endregion
-
 		}
+
+		#region Method definition helper classes
+
+		#pragma warning disable 649
+
+		abstract class LW1
+		{
+			public int   Value1;
+
+			public LW2   Single2 = null!;
+			public LW2[] Many2   = null!;
+		}
+
+		abstract class LW2
+		{
+			public int   Value2;
+
+			public LW3   Single3 = null!;
+			public LW3[] Many3   = null!;
+				
+		}
+
+		abstract class LW3
+		{
+			public int Value3;
+		}
+
+		#pragma warning restore 649
+
+		#endregion
+
 	}
 }

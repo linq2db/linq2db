@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Data;
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -461,5 +461,83 @@ namespace Tests.Linq
 				Assert.AreEqual(3, q.AsEnumerable().Count());
 			}
 		}
+
+
+		[Test]
+		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var param = 2;
+				var query =
+					from ch in db.Child
+					orderby "1" descending, param - 2
+					select ch;
+
+				query.ToArray();
+
+				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
+			}
+		}
+
+		[Test]
+		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var param = 2;
+				var query =
+					from ch in db.Child
+					orderby Sql.ToNullable((int)Sql.Abs(1)!) descending, Sql.ToNullable((int)Sql.Abs(param + 1)!)
+					select ch;
+
+				query.ToArray();
+
+				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
+			}
+		}
+
+		[Test]
+		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var param = 2;
+
+				var query =
+					from ch in db.Child
+					orderby Sql.ToNullable((int)Sql.Abs(1)!) descending, Sql.ToNullable((int)Sql.Abs(param + 1)!)
+					select new { ch.ChildID, ch.ParentID, OrderElement = (int?)param };
+
+				query.AsSubQuery().OrderBy(c => c.OrderElement).ToArray();
+
+				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
+			}
+		}
+
+		[Test]
+		public void OrderByUnionImmutable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var param = 2;
+
+				var query1 =
+					from ch in db.Child
+					orderby Sql.ToNullable((int)Sql.Abs(1)!) descending, Sql.ToNullable((int)Sql.Abs(param)!)
+					select new { ch.ChildID, ch.ParentID, OrderElement = Sql.ToNullable((int)Sql.Abs(1)!) };
+
+				var query2 =
+					from ch in db.Child
+					orderby "1" descending, param
+					select new { ch.ChildID, ch.ParentID, OrderElement = (int?)param };
+
+				var result = query1.Concat(query2).OrderBy(c => c.OrderElement)
+					.ToArray();
+
+				Assert.That(db.LastQuery, Does.Contain("ORDER BY"));
+			}
+		}
+
 	}
 }

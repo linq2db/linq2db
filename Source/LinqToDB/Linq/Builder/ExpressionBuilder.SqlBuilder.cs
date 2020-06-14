@@ -686,7 +686,7 @@ namespace LinqToDB.Linq.Builder
 									return info;
 								}
 
-								return new[] { new SqlInfo { Sql = subQueryContextInfo.Context.SelectQuery } };
+								return new[] { new SqlInfo (subQueryContextInfo.Context.SelectQuery) };
 							}
 						}
 						break;
@@ -698,7 +698,7 @@ namespace LinqToDB.Linq.Builder
 			if (ctx != null && ctx.IsExpression(expression, 0, RequestFor.Object).Result)
 				return ctx.ConvertToSql(expression, 0, queryConvertFlag);
 
-			return new[] { new SqlInfo { Sql = ConvertToSql(context, expression) } };
+			return new[] { new SqlInfo(ConvertToSql(context, expression)) };
 		}
 
 		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression)
@@ -1916,7 +1916,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				isNull = right is ConstantExpression expression && expression.Value == null;
-				lcols  = lmembers.Select(m => new SqlInfo(m.Key) { Sql = ConvertToSql(leftContext, m.Value) }).ToArray();
+				lcols  = lmembers.Select(m => new SqlInfo(m.Key, ConvertToSql(leftContext, m.Value))).ToArray();
 			}
 			else
 			{
@@ -1958,12 +1958,12 @@ namespace LinqToDB.Linq.Builder
 					continue;
 				}
 
-				if (lcol.MemberChain.Count == 0)
+				if (lcol.MemberChain.Length == 0)
 					throw new InvalidOperationException();
 
 				ISqlExpression? rcol = null;
 
-				var lmember = lcol.MemberChain[lcol.MemberChain.Count - 1];
+				var lmember = lcol.MemberChain[lcol.MemberChain.Length - 1];
 
 				if (sr)
 				{
@@ -2313,7 +2313,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = ConvertExpressions(context, arg, ConvertFlags.Key);
 
-				if (sql.Length == 1 && sql[0].MemberChain.Count == 0)
+				if (sql.Length == 1 && sql[0].MemberChain.Length == 0)
 					expr = sql[0].Sql;
 				else
 					expr = new ObjectSqlExpression(MappingSchema, sql);
@@ -3288,6 +3288,12 @@ namespace LinqToDB.Linq.Builder
 
 			_ = _disabledFilters.Pop();
 		}
+
+		#endregion
+
+		#region Grouping Guard
+
+		public bool IsGroupingGuardDisabled { get; set; }
 
 		#endregion
 	}

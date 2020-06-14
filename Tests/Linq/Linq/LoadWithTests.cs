@@ -32,12 +32,43 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithAsTable1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.Child.LoadWithAsTable(p => p.Parent)
+					select t;
+
+				var ch = q.First();
+
+				Assert.IsNotNull(ch.Parent);
+			}
+		}
+
+		[Test]
 		public void LoadWith2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q =
 					from t in db.GrandChild.LoadWith(p => p.Child!.Parent)
+					select t;
+
+				var ch = q.First();
+
+				Assert.IsNotNull(ch.Child);
+				Assert.IsNotNull(ch.Child!.Parent);
+			}
+		}
+
+		[Test]
+		public void LoadWithAsTable2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.GrandChild.LoadWithAsTable(p => p.Child!.Parent)
 					select t;
 
 				var ch = q.First();
@@ -58,6 +89,29 @@ namespace Tests.Linq
 
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
+					select new
+					{
+						p.GrandChildren.Count,
+						p
+					};
+
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
+
+				Assert.IsNotNull(ch);
+			}
+		}
+
+		[Test]
+		public void LoadWithAsTable3([DataSources] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
+					t => ImmutableList.Create(t.ToArray()));
+
+				var q =
+					from p in db.Parent.LoadWithAsTable(p => p.Children3)
 					select new
 					{
 						p.GrandChildren.Count,
