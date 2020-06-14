@@ -113,14 +113,14 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			internal BulkCopyAdapter(
 				Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
-				Func<int, string, string?, MySqlBulkCopyColumnMapping>             bulkCopyColumnMappingCreator)
+				Func<int, string, MySqlBulkCopyColumnMapping>                      bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
 			public Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
-			public Func<int, string, string?, MySqlBulkCopyColumnMapping>             CreateColumnMapping { get; }
+			public Func<int, string, MySqlBulkCopyColumnMapping>                      CreateColumnMapping { get; }
 		}
 
 		public static MySqlProviderAdapter GetInstance(string name)
@@ -262,6 +262,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
+			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
+
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
 				var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
@@ -286,15 +288,13 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
 
 				BulkCopyAdapter? bulkCopy = null;
-				var bulkCopyType          = assembly.GetType($"{ClientNamespace}.MySqlBulkCopy", false);
 
-				// v 0.66.0 renamed RowsCopied event to MySqlRowsCopied and I don't see a reason to support bulk copy in 0.65.0
-				var supportsBulkCopy = bulkCopyType != null && bulkCopyType.GetEvent("MySqlRowsCopied") != null;
-				if (supportsBulkCopy)
+				if (assembly.GetName().Version >= MinBulkCopyVersion)
 				{
-					var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventHandler", true);
-					var bulkCopyColumnMappingType           = assembly.GetType($"{ClientNamespace}.MySqlBulkCopyColumnMapping" , true);
-					var rowsCopiedEventArgsType             = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventArgs"   , true);
+					var bulkCopyType                   = assembly.GetType($"{ClientNamespace}.MySqlBulkCopy", true);
+					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventHandler", true);
+					var bulkCopyColumnMappingType      = assembly.GetType($"{ClientNamespace}.MySqlBulkCopyColumnMapping" , true);
+					var rowsCopiedEventArgsType        = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventArgs"   , true);
 
 					typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
 					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
@@ -304,7 +304,7 @@ namespace LinqToDB.DataProvider.MySql
 
 					bulkCopy = new BulkCopyAdapter(
 						typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
-						typeMapper.BuildWrappedFactory((int source, string destination, string? expression   ) => new MySqlBulkCopyColumnMapping(source, destination, expression)));
+						typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
 				}
 				else
 					typeMapper.FinalizeMappings();

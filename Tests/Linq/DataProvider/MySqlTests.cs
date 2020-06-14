@@ -23,6 +23,7 @@ using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.DataProvider.MySql;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 	using System.Collections;
@@ -262,7 +263,19 @@ namespace Tests.DataProvider
 		}
 
 		[Table("AllTypes")]
-		public partial class AllType
+		public partial class AllType : AllTypeBaseProviderSpecific
+		{
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
+		}
+
+		// excludes year columns, as they doesn't supported by native bulk copy
+		[Table("AllTypesNoYear")]
+		public partial class AllTypeBaseProviderSpecific
 		{
 			[IgnoreComparison]
 			[PrimaryKey, Identity] public int       ID                  { get; set; } // int(11)
@@ -279,12 +292,6 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public DateTime? datetimeDataType    { get; set; } // datetime
 			[Column,     Nullable] public DateTime? timestampDataType   { get; set; } // timestamp
 			[Column,     Nullable] public TimeSpan? timeDataType        { get; set; } // time
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
 			[Column,     Nullable] public char?     charDataType        { get; set; } // char(1)
 			[Column,     Nullable] public string?   varcharDataType     { get; set; } // varchar(20)
 			[Column,     Nullable] public string?   textDataType        { get; set; } // text
@@ -313,7 +320,7 @@ namespace Tests.DataProvider
 				try
 				{
 					var source = Enumerable.Range(0, records).Select(n =>
-							new AllType
+							new AllType()
 							{
 								ID                  = 2000 + n,
 								bigintDataType      = 3000 + n,
@@ -345,24 +352,42 @@ namespace Tests.DataProvider
 							}).ToList();
 
 					// 25000 works for provider-specific, 30000 fails
-					conn.BulkCopy(
-						new BulkCopyOptions { MaxBatchSize = batchSize, BulkCopyType = bulkCopyType },
-						source);
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
 
-					var result = conn.GetTable<AllType>().OrderBy(_ => _.ID).Where(_ => _.varcharDataType == "_btest");
+					if (isNativeCopy)
+					{
+						conn.BulkCopy<AllTypeBaseProviderSpecific>(
+							new BulkCopyOptions { MaxBatchSize = batchSize, BulkCopyType = bulkCopyType },
+							source);
+						var result = conn.GetTable<AllTypeBaseProviderSpecific>().OrderBy(_ => _.ID).Where(_ => _.varcharDataType == "_btest");
 
-					// compare only 10 records
-					// as we don't compare all, we must ensure we inserted all records
-					Assert.AreEqual(source.Count(), result.Count());
-					AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
+						// compare only 10 records
+						// as we don't compare all, we must ensure we inserted all records
+						Assert.AreEqual(source.Count(), result.Count());
+						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
+					}
+					else
+					{
+						conn.BulkCopy(
+							new BulkCopyOptions { MaxBatchSize = batchSize, BulkCopyType = bulkCopyType },
+							source);
+						var result = conn.GetTable<AllType>().OrderBy(_ => _.ID).Where(_ => _.varcharDataType == "_btest");
 
+						// compare only 10 records
+						// as we don't compare all, we must ensure we inserted all records
+						Assert.AreEqual(source.Count(), result.Count());
+						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
+					}
 				}
 				finally
 				{
 					if (transaction != null)
 						transaction.Rollback();
 					else
+					{
 						conn.GetTable<AllType>().Delete(_ => _.varcharDataType == "_btest");
+						conn.GetTable<AllTypeBaseProviderSpecific>().Delete(_ => _.varcharDataType == "_btest");
+					}
 				}
 			}
 		}
@@ -397,10 +422,10 @@ namespace Tests.DataProvider
 				db.Execute("SET GLOBAL local_infile=ON");
 		}
 
-		[Table("needs escaping")]
+		[Table("NeedS.esca Pin`g")]
 		class BinaryTypes
 		{
-			[Column("needs escaping", IsPrimaryKey = true)] public int Id { get; set; }
+			[Column("ne.eds `escaPing", IsPrimaryKey = true)] public int Id { get; set; }
 
 			[Column(DbType = "bit(64)", DataType = DataType.BitArray)] public ulong?    Bit_1 { get; set; }
 			[Column(DbType = "bit(63)", DataType = DataType.BitArray)] public long?     Bit_2 { get; set; }

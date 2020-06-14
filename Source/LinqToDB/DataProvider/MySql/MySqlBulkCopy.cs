@@ -57,30 +57,10 @@ namespace LinqToDB.DataProvider.MySql
 
 					var tableName = GetTableName(sb, options, table);
 
-					// MySqlConnector espects unescaped table and column names (but in expression it should be escaped)
-					bc.DestinationTableName = GetTableName(sb, options, table, false);
+					bc.DestinationTableName = GetTableName(sb, options, table);
 
-					var variables = 0;
 					for (var i = 0; i < columns.Count; i++)
-					{
-						string columnName  = columns[i].ColumnName;
-						string? expression = null;
-
-						if (columns[i].DataType == DataType.Binary
-							|| columns[i].DataType == DataType.VarBinary
-							|| columns[i].DataType == DataType.Blob
-							|| columns[i].DataType == DataType.BitArray
-							|| columns[i].MemberType == typeof(byte[])
-							|| columns[i].MemberType == typeof(Binary)
-							|| columns[i].MemberType == typeof(BitArray))
-						{
-							columnName = $"@var{variables}";
-							variables++;
-							expression = $"{sb.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)} = UNHEX({columnName})";
-						}
-
-						bc.AddColumnMapping(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columnName, expression));
-					}
+						bc.AddColumnMapping(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
 
 					// emulate missing BatchSize property
 					// this is needed, because MySql fails on big batches, so users should be able to limit batch size
