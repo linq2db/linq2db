@@ -8,17 +8,25 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		protected readonly SqlServerDataProvider? Provider;
+
+		protected SqlServerSqlBuilder(
+			SqlServerDataProvider? provider,
+			MappingSchema          mappingSchema,
+			ISqlOptimizer          sqlOptimizer,
+			SqlProviderFlags       sqlProviderFlags)
+			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+			Provider = provider;
 		}
 
-		protected virtual  bool BuildAlternativeSql => true;
+		protected virtual  bool BuildAlternativeSql => false;
 
-		protected override string FirstFormat(SelectQuery selectQuery)
+		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
@@ -41,16 +49,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (insertClause.WithIdentity)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
 					AppendOutputTableVariable(insertClause.Into)
-						.Append(" TABLE (")
-						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-						.Append(" ");
+						.Append(" TABLE (");
+					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+					StringBuilder.Append(" ");
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
 							.AppendLine(")")
@@ -65,34 +73,109 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (insertClause.WithIdentity)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
-						.Append("OUTPUT [INSERTED].")
-						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-						.AppendLine();
+						.Append("OUTPUT [INSERTED].");
+					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+					StringBuilder.AppendLine();
 					AppendIndent()
 						.Append("INTO ");
 					AppendOutputTableVariable(insertClause.Into)
 						.AppendLine();
 				}
 			}
+			else 
+			{
+				var output = statement.GetOutputClause();
+				if (output != null && output.HasOutputItems)
+				{
+					AppendIndent()
+						.AppendLine("OUTPUT");
+
+					if (output.InsertedTable != null)
+						output.InsertedTable.PhysicalName = "INSERTED";
+
+					if (output.DeletedTable != null)
+						output.DeletedTable.PhysicalName = "DELETED";
+
+					++Indent;
+
+					bool first = true;
+					foreach (var oi in output.OutputItems)
+					{
+						if (!first)
+							StringBuilder.Append(',').AppendLine();
+						first = false;
+
+						AppendIndent();
+
+						BuildExpression(oi.Expression!);
+					}
+
+					if (output.OutputItems.Count > 0)
+					{
+						StringBuilder
+							.AppendLine();
+					}
+
+					--Indent;
+
+					if (output.OutputQuery != null)
+					{
+						BuildColumns(output.OutputQuery);
+					}
+
+					if (output.OutputTable != null)
+					{
+						AppendIndent()
+							.Append("INTO ")
+							.Append(GetTablePhysicalName(output.OutputTable))
+							.AppendLine();
+
+						AppendIndent()
+							.AppendLine("(");
+
+						++Indent;
+
+						var firstColumn = true;
+						foreach (var oi in output.OutputItems)
+						{
+							if (!firstColumn)
+								StringBuilder.Append(',').AppendLine();
+							firstColumn = false;
+
+							AppendIndent();
+
+							BuildExpression(oi.Column, false, true);
+						}
+
+						StringBuilder
+							.AppendLine();
+
+						--Indent;
+
+						AppendIndent()
+							.AppendLine(")");
+					}
+				}
+			}
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into.GetIdentityField();
+			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();
 				AppendIndent()
-					.Append("SELECT ")
-					.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
-					.Append(" FROM ");
+					.Append("SELECT ");
+				Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.Append(" FROM ");
 				AppendOutputTableVariable(insertClause.Into)
 					.AppendLine();
 			}
@@ -128,10 +211,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
-			StringBuilder
-				.Append(" ")
-				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
-				.AppendLine();
+			StringBuilder.Append(" ");
+			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -143,10 +225,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);
 			else
-				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
+				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -168,77 +250,88 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
-			if (predicate.Expr2 is SqlValue)
+			if (predicate.Expr2 is SqlValue sqlValue)
 			{
-				var value = ((SqlValue)predicate.Expr2).Value;
+				var value = sqlValue.Value;
 
 				if (value != null)
 				{
-					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var text  = value.ToString();
 					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter)
-			{
-				var p = ((SqlParameter)predicate.Expr2);
+			else if (predicate.Expr2 is SqlParameter p)
 				p.ReplaceLike = predicate.IsSqlLike != true;
-			}
 
 			base.BuildLikePredicate(predicate);
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override StringBuilder BuildTableName(StringBuilder sb,
+			string? server,
+			string? database,
+			string? schema,
+			string table)
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			if (server   != null && server  .Length == 0) server   = null;
+			if (database != null && database.Length == 0) database = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
+
+			if(server != null)
+			{
+				// all components required for linked-server syntax by SQL server
+				if (database == null || schema == null)
+					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+
+				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
+			}
+			else if(database != null)
+			{
+				if (schema == null) sb.Append(database).Append("..");
+				else sb.Append(database).Append(".").Append(schema).Append(".");
+			}
+			else if (schema != null) sb.Append(schema).Append(".");
+
+			return sb.Append(table);
+		}
+
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					return SqlServerTools.QuoteIdentifier(sb, value);
 
-						return SqlServerTools.QuoteIdentifier(name);
-					}
-
+				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-
-//						if (name.IndexOf('.') > 0)
-//							value = string.Join("].[", name.Split('.'));
-
-						return SqlServerTools.QuoteIdentifier(name);
-					}
-
-					break;
+					return SqlServerTools.QuoteIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-					break;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -265,9 +358,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
+			var table = dropTable.Table!;
 
-			if (table.PhysicalName.StartsWith("#"))
+			if (table.PhysicalName!.StartsWith("#"))
 			{
 				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
@@ -291,17 +384,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(Max)");
 						return;
 					}
@@ -310,10 +403,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Length == null || type.Length > 8000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 8000 || type.Type.Length < 1)
 					{
 						StringBuilder
-							.Append(type.DataType)
+							.Append(type.Type.DataType)
 							.Append("(Max)");
 						return;
 					}
@@ -323,42 +416,68 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime2:
 				case DataType.DateTimeOffset:
 				case DataType.Time:
-					StringBuilder.Append(type.DataType);
+					StringBuilder.Append(type.Type.DataType);
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Precision != null && type.Precision != 7)
+					if (type.Type.Precision != null && type.Type.Precision != 7)
 					{
-						StringBuilder.Append('(').Append(type.Precision).Append(')');
+						StringBuilder.Append('(').Append(type.Type.Precision).Append(')');
 					}
 					return;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string GetTypeName(IDbDataParameter parameter)
+		protected override string? GetTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetTypeName(param);
+			}
+
+			return base.GetTypeName(parameter);
 		}
 
-#if !NETSTANDARD1_6
-		protected override string GetUdtTypeName(IDbDataParameter parameter)
+		protected override string? GetUdtTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
-		}
-#endif
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetUdtTypeName(param);
+			}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+			return base.GetUdtTypeName(parameter);
+		}
+
+		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
+			if (Provider != null)
+			{
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				if (param != null)
+					return Provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+			if (truncateTable.ResetIdentity || truncateTable.Table!.Fields.Values.All(f => !f.IsIdentity))
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");
+		}
+
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		{
+			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			BuildTableName(table, true, false);
+			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 	}
 }

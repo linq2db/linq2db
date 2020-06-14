@@ -1,16 +1,65 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
-using JetBrains.Annotations;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
+	using LinqToDB.Tools;
 
 	public static class QueryHelper
 	{
-		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement> ignore = null)
+
+		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
+		{
+			return null != new QueryVisitor().Find(testedRoot, e => e == element);
+		}
+
+		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependencyFound = false;
+
+			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			{
+				if (dependencyFound)
+					return false;
+
+				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+					return false;
+
+				if (e is ISqlTableSource source && onSources.Contains(source))
+				{
+					dependencyFound = true;
+					return false;
+				}
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+						{
+							var c = (SqlColumn) e;
+							if (onSources.Contains(c.Parent!))
+								dependencyFound = true;
+							break;
+						}
+					case QueryElementType.SqlField :
+						{
+							var f = (SqlField) e;
+							if (onSources.Contains(f.Table!))
+								dependencyFound = true;
+							break;
+						}
+				}
+
+				return !dependencyFound;
+			});
+
+			return dependencyFound;
+		}
+
+		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
@@ -25,20 +74,104 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column :
 						{
 							var c = (SqlColumn) e;
-							if (hash.Contains(c.Parent))
+							if (hash.Contains(c.Parent!))
 								found.Add(c);
 							break;
 						}
 					case QueryElementType.SqlField :
 						{
 							var f = (SqlField) e;
-							if (hash.Contains(f.Table))
+							if (hash.Contains(f.Table!))
 								found.Add(f);
 							break;
 						}
 				}
 				return true;
 			});
+		}
+
+		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
+		{
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
+			{
+				var argExpression = sqlExpression.Parameters[0] as SqlExpression;
+				if (argExpression != null)
+					return IsTransitiveExpression(argExpression);
+				return true;
+			}
+
+			return false;
+		}
+
+		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression)
+		{
+			if (!IsTransitiveExpression(sqlExpression))
+				return sqlExpression;
+
+			if (sqlExpression.Parameters[0] is SqlExpression subExpr)
+				return GetUnderlyingExpressionValue(subExpr);
+
+			return sqlExpression.Parameters[0];
+		}
+	
+		/// <summary>
+		/// Returns true if it is anything except Field or Column.
+		/// </summary>
+		/// <param name="expr">Tested expression</param>
+		/// <returns>true if tested expression is not a Field or Column</returns>
+		public static bool IsExpression(ISqlExpression expr)
+		{
+			if (expr.ElementType == QueryElementType.SqlExpression)
+			{
+				var sqlExpression = (SqlExpression) expr;
+				expr = GetUnderlyingExpressionValue(sqlExpression);
+			}
+			return expr.ElementType.NotIn(QueryElementType.Column, QueryElementType.SqlField);
+		}
+			
+		/// <summary>
+		/// Returns <c>true</c> if tested expression can be constant or immutable value based on parameters.
+		/// </summary>
+		/// <param name="expr">Tested expression.</param>
+		/// <returns></returns>
+		public static bool IsImmutable(ISqlExpression expr)
+		{
+			var result = null == new QueryVisitor()
+				.Find(expr, e =>
+				{
+					// Constants and Parameters do not changes during query execution 
+					if (e.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter))
+						return false;
+
+					if (e.ElementType == QueryElementType.Column)
+					{
+						var sqlColumn = (SqlColumn) e;
+						
+						// We can not guarantee order here
+						if (sqlColumn.Parent != null && sqlColumn.Parent.SetOperators.Count > 0)
+							return true;
+						
+						// column can be generated from subquery which can reference to Immutable expression
+						return !IsImmutable(sqlColumn.Expression);
+					}
+
+					if (e.ElementType == QueryElementType.SqlExpression)
+					{
+						var sqlExpr = (SqlExpression) e;
+						return !sqlExpr.IsPure || sqlExpr.IsAggregate;
+					}
+					
+					if (e.ElementType == QueryElementType.SqlFunction)
+					{
+						var sqlFunc = (SqlFunction) e;
+						return !sqlFunc.IsPure || sqlFunc.IsAggregate;
+					}
+
+					return e.ElementType.In(QueryElementType.SqlField,
+						QueryElementType.SelectClause);
+				});
+
+			return result;
 		}
 
 		public static SelectQuery RootQuery(this SelectQuery query)
@@ -50,10 +183,10 @@ namespace LinqToDB.SqlQuery
 			return query;
 		}
 
-		public static SqlJoinedTable FindJoin(this SelectQuery query,
+		public static SqlJoinedTable? FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
-			return QueryVisitor.Find(query, e =>
+			return new QueryVisitor().Find(query, e =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{
@@ -95,6 +228,94 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		/// <summary>
+		/// Ensures that expression is not A OR B but (A OR B)
+		/// Function makes all needed manipulations for that
+		/// </summary>
+		/// <param name="searchCondition"></param>
+		public static SqlSearchCondition EnsureConjunction(this SqlSearchCondition searchCondition)
+		{
+			if (searchCondition.Conditions.Count > 0 && searchCondition.Precedence < Precedence.LogicalConjunction)
+			{
+				var sc1 = new SqlSearchCondition();
+
+				sc1.Conditions.AddRange(searchCondition.Conditions);
+
+				searchCondition.Conditions.Clear();
+				searchCondition.Conditions.Add(new SqlCondition(false, sc1));
+			}
+
+			return searchCondition;
+		}
+
+		/// <summary>
+		/// Ensures that expression is not A OR B but (A OR B)
+		/// Function makes all needed manipulations for that
+		/// </summary>
+		/// <param name="whereClause"></param>
+		public static SqlWhereClause EnsureConjunction(this SqlWhereClause whereClause)
+		{
+			whereClause.SearchCondition.EnsureConjunction();
+			return whereClause;
+		}
+
+		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
+		{
+			var result =
+				table1                 != null
+				&& table2              != null
+				&& table1.ObjectType   == table2.ObjectType
+				&& table1.Database     == table2.Database
+				&& table1.Server       == table2.Server
+				&& table1.Schema       == table2.Schema
+				&& table1.Name         == table2.Name
+				&& table1.PhysicalName == table2.PhysicalName;
+
+			return result;
+		}
+
+		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
+		{
+			if (tableSource.Source is SelectQuery q)
+				{
+					foreach (var ts in EnumerateAccessibleSources(q))
+						yield return ts;
+				}
+			else 
+				yield return tableSource.Source;
+
+			foreach (var join in tableSource.Joins)
+			{
+				foreach (var source in EnumerateAccessibleSources(join.Table))
+					yield return source;
+			}
+
+		}
+
+		/// <summary>
+		/// Enumerates table sources recursively based on joins
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <returns></returns>
+		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SelectQuery selectQuery)
+		{
+			yield return selectQuery;
+
+			foreach (var tableSource in selectQuery.Select.From.Tables)
+			{
+				foreach (var source in EnumerateAccessibleSources(tableSource))
+					yield return source;
+			}
+		}
+
+		public static IEnumerable<SqlTable> EnumerateAccessibleTables(SelectQuery selectQuery)
+		{
+			return EnumerateAccessibleSources(selectQuery)
+				.OfType<SqlTableSource>()
+				.Select(ts => ts.Source)
+				.OfType<SqlTable>();
+		}
+
 		public static IEnumerable<ISqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
 		{
 			foreach (var j in tableSource.Joins)
@@ -120,6 +341,36 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
+
+		public static IEnumerable<SqlTable> EnumerateLevelTables(SelectQuery selectQuery)
+		{
+			return EnumerateLevelSources(selectQuery)
+				.OfType<SqlTableSource>()
+				.Select(ts => ts.Source)
+				.OfType<SqlTable>();
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.From.Tables.SelectMany(t => EnumerateJoins(t));
+		}
+
+		public static IEnumerable<SqlJoinedTable> EnumerateJoins(SqlTableSource tableSource)
+		{
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				yield return tableSourceJoin;	
+			}
+
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				foreach (var subJoin in EnumerateJoins(tableSourceJoin.Table))
+				{
+					yield return subJoin;
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
@@ -148,7 +399,7 @@ namespace LinqToDB.SqlQuery
 						!nonProjecting.Contains(oi.Expression)
 							? oi
 							: new SqlOrderByItem(
-								new SqlFunction(oi.Expression.SystemType, oi.IsDescending ? "Min" : "Max", true, oi.Expression),
+								new SqlFunction(oi.Expression.SystemType!, oi.IsDescending ? "Min" : "Max", true, oi.Expression),
 								oi.IsDescending))
 					.ToList();
 
@@ -176,7 +427,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="flags"></param>
 		/// <param name="information"></param>
 		/// <returns></returns>
-		public static bool CanRemoveOrderBy([NotNull] SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
+		public static bool CanRemoveOrderBy(SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
@@ -230,7 +481,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="selectQuery"></param>
 		/// <param name="information"></param>
 		/// <returns></returns>
-		public static bool TryRemoveDistinct([NotNull] SelectQuery selectQuery, QueryInformation information)
+		public static bool TryRemoveDistinct(SelectQuery selectQuery, QueryInformation information)
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
@@ -249,7 +500,7 @@ namespace LinqToDB.SqlQuery
 
 							if (selectQuery.Select.SkipValue == null && selectQuery.Select.TakeValue == null)
 							{
-								// we can sefely remove DISTINCT
+								// we can safely remove DISTINCT
 								selectQuery.Select.IsDistinct = false;
 								selectQuery.Select.Columns.Clear();
 								return true;
@@ -262,12 +513,42 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 		/// <summary>
+		/// Transforms
+		///   SELECT * FROM A
+		///     INNER JOIN B ON A.ID = B.ID
+		/// to
+		///   SELECT * FROM A, B
+		///   WHERE A.ID = B.ID
+		/// </summary>
+		/// <param name="selectQuery">Input SelectQuery.</param>
+		/// <returns>The same query instance.</returns>
+		public static SelectQuery TransformInnerJoinsToWhere(this SelectQuery selectQuery)
+		{
+			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
+			{
+				if (tableSource.Joins.All(j => j.JoinType == JoinType.Inner))
+				{
+					while (tableSource.Joins.Count > 0)
+					{
+						// consider to remove join and simplify query
+						var join = tableSource.Joins[0];
+						selectQuery.Where.ConcatSearchCondition(@join.Condition);
+						selectQuery.From.Tables.Add(@join.Table);
+						tableSource.Joins.RemoveAt(0);
+					}
+				}
+			}
+
+			return selectQuery;
+		}
+
+		/// <summary>
 		/// Returns SqlField from specific expression. Usually from SqlColumn.
 		/// Complex expressions ignored.
 		/// </summary>
 		/// <param name="expression"></param>
 		/// <returns>Field instance associated with expression</returns>
-		public static SqlField GetUnderlyingField(ISqlExpression expression)
+		public static SqlField? GetUnderlyingField(ISqlExpression expression)
 		{
 			switch (expression)
 			{
@@ -276,10 +557,11 @@ namespace LinqToDB.SqlQuery
 				case SqlColumn column:
 					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
 			}
+
 			return null;
 		}
 
-		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField? GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
@@ -296,6 +578,54 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
+		{
+			var compare = new SqlCondition(false, new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2));
+
+			if (field1.CanBeNull && field2.CanBeNull)
+			{
+				var isNull1 = new SqlCondition(false, new SqlPredicate.IsNull(field1, false));
+				var isNull2 = new SqlCondition(false, new SqlPredicate.IsNull(field2, false));
+				var nulls = new SqlSearchCondition(isNull1, isNull2);
+				compare.IsOr = true;
+				compare = new SqlCondition(false, new SqlSearchCondition(compare, new SqlCondition(false, nulls)));
+			}
+
+			return compare;
+		}
+
+		/// <summary>
+		/// Retrieves which sources are used in the <paramref name="root"/>expression
+		/// </summary>
+		/// <param name="root">Expression to analyze.</param>
+		/// <param name="foundSources">Output container for detected sources/</param>
+		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
+		{
+			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
+
+			new QueryVisitor().Visit(root, e =>
+			{
+				if (e is ISqlTableSource source)
+					foundSources.Add(source);
+				else
+					switch (e.ElementType)
+					{
+						case QueryElementType.Column:
+						{
+							var c = (SqlColumn) e;
+							foundSources.Add(c.Parent!);
+							break;
+						}
+						case QueryElementType.SqlField:
+						{
+							var f = (SqlField) e;
+							foundSources.Add(f.Table!);
+							break;
+						}
+					}
+			});
+		}
+
 		/// <summary>
 		/// Returns correct column or field according to nesting.
 		/// </summary>
@@ -303,11 +633,11 @@ namespace LinqToDB.SqlQuery
 		/// <param name="forExpression">Expression that has to be enveloped by column.</param>
 		/// <param name="inProjection">If 'true', function ensures that column is created. If 'false' it may return Field if it fits to nesting level.</param>
 		/// <returns>Returns Column of Field according to its nesting level. May return null if expression is not valid for <paramref name="selectQuery"/></returns>
-		public static ISqlExpression NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
+		public static ISqlExpression? NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
 		{
 			var field = GetUnderlyingField(forExpression);
 
-			SqlColumn column = null;
+			SqlColumn? column = null;
 
 			if (inProjection)
 			{
@@ -336,7 +666,7 @@ namespace LinqToDB.SqlQuery
 				if (tableToCompare != null && tableToCompare == table)
 				{
 					if (inProjection)
-						return selectQuery.Select.AddNewColumn(field);
+						return selectQuery.Select.AddNewColumn(field!);
 					return field;
 				}
 			}
@@ -356,18 +686,298 @@ namespace LinqToDB.SqlQuery
 			return column;
 		}
 
-		public static bool IsEqualTables(SqlTable table1, SqlTable table2)
+		public static bool ValidateTable(SelectQuery selectQuery,  ISqlTableSource table)
 		{
-			var result =
-				   table1              != null
-				&& table2              != null
-				&& table1.ObjectType   == table2.ObjectType
-				&& table1.Database     == table2.Database
-				&& table1.Schema       == table2.Schema
-				&& table1.Name         == table2.Name
-				&& table1.PhysicalName == table2.PhysicalName;
+			var compared = new HashSet<SqlTable>();
 
-			return result;
+			foreach (var t in EnumerateAccessibleTables(selectQuery))
+			{
+				// infinite recursion can be here. Usually it indicates that query malformed.
+				if (compared.Contains(t))
+					return false;
+
+				if (t == table)
+					return true;
+
+				compared.Add(t);
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Removes not needed subqueries nesting. Very simple algorithm.
+		/// </summary>
+		/// <typeparam name="TStatement"></typeparam>
+		/// <param name="statement">Statement which may contain queries that needs optimization</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
+		public static TStatement OptimizeSubqueries<TStatement>(TStatement statement)
+			where TStatement : SqlStatement
+		{
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+
+			statement = ConvertVisitor.Convert(statement, (visitor, element) =>
+			{
+				if (!(element is SelectQuery q))
+					return element;
+
+				if (!q.IsSimple || q.HasSetOperators)
+					return q;
+					
+				if (q.Select.From.Tables.Count != 1)
+					return q;
+
+				var tableSource = q.Select.From.Tables[0];
+				if (tableSource.Joins.Count > 0 || !(q.Select.From.Tables[0].Source is SelectQuery subQuery))
+					return q;
+
+				// column list should be equal
+				if (subQuery.HasSetOperators || q.Select.Columns.Count != subQuery.Select.Columns.Count)
+					return q;
+
+				for (var index = 0; index < q.Select.Columns.Count; index++)
+				{
+					var column = q.Select.Columns[index];
+					var idx = subQuery.Select.Columns.FindIndex(c => c.Equals(column.Expression));
+					if (idx < 0)
+						return q;
+				}
+
+				// correct column order
+				for (var index = 0; index < q.Select.Columns.Count; index++)
+				{
+					var column = q.Select.Columns[index];
+					var idx = subQuery.Select.Columns.FindIndex(c => c.Equals(column.Expression));
+					var subColumn = subQuery.Select.Columns[idx];
+					if (idx != index)
+					{
+						subQuery.Select.Columns.RemoveAt(idx);
+						subQuery.Select.Columns.Insert(index, subColumn);
+					}
+
+					// replace
+					visitor.VisitedElements[column] = subColumn;
+				}
+
+				return subQuery;
+
+			});
+
+			return statement;
+		}
+
+		/// <summary>
+		/// Wraps tested query in subquery(s).
+		/// Keeps columns count the same. After modification statement is equivalent semantically.
+		/// <code>
+		/// --before
+		/// SELECT c1, c2           -- QA
+		/// FROM A
+		/// -- after (with 2 subqueries)
+		/// SELECT C.c1, C.c2       -- QC
+		/// FROM (
+		///   SELECT B.c1, B.c2     -- QB
+		///   FROM (
+		///     SELECT c1, c2       -- QA
+		///     FROM A
+		///        ) B
+		///   FROM 
+		///      ) C
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TStatement"></typeparam>
+		/// <param name="statement">Statement which may contain tested query</param>
+		/// <param name="wrapTest">Delegate for testing which query needs to be enveloped.
+		/// Result of delegate call tells how many subqueries needed.
+		/// 0 - no changes
+		/// 1 - one subquery
+		/// N - N subqueries
+		/// </param>
+		/// <param name="onWrap">
+		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
+		/// </param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
+		public static TStatement WrapQuery<TStatement>(
+			TStatement             statement,
+			Func<SelectQuery, int> wrapTest,
+			Action<IReadOnlyList<SelectQuery>> onWrap)
+			where TStatement : SqlStatement
+		{
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			if (wrapTest  == null) throw new ArgumentNullException(nameof(wrapTest));
+			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
+
+			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
+			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
+			{
+				if (element is SelectQuery query)
+				{
+					var ec = wrapTest(query);
+					if (ec <= 0)
+						return element;
+
+					var queries = new List<SelectQuery>();
+					for (int i = 0; i < ec; i++)
+					{
+						var newQuery = new SelectQuery
+						{
+							IsParameterDependent = query.IsParameterDependent,
+							ParentSelect         = query.ParentSelect
+						};
+						queries.Add(newQuery);
+					}
+
+					queries.Add(query);
+
+					for (int i = queries.Count - 2; i >= 0; i--)
+					{
+						queries[i].From.Table(queries[i + 1]);
+					}
+
+					foreach (var prevColumn in query.Select.Columns)
+					{
+						var newColumn = prevColumn;
+						for (int ic = ec - 1; ic >= 0; ic--)
+						{
+							newColumn = queries[ic].Select.AddNewColumn(newColumn);
+						}
+
+						// correct mapping
+						visitor.VisitedElements[prevColumn] = newColumn;
+					}
+
+					onWrap(queries);
+
+					var levelTables = EnumerateLevelTables(query).ToArray();
+					var resultQuery = queries[0];
+					foreach (var table in levelTables)
+					{
+						correctedTables.Add(table, resultQuery);
+					}
+
+					var toMap = levelTables.SelectMany(t => t.Fields.Values);
+
+					foreach (var field in toMap)
+						visitor.VisitedElements.Remove(field);
+
+					return resultQuery;
+				} 
+				
+				if (element is SqlField f && f.Table != null && correctedTables.TryGetValue(f.Table, out var levelQuery))
+				{
+					return NeedColumnForExpression(levelQuery, f, false)!;
+				} 
+
+				return element;
+			});
+
+			return newStatement;
+		}
+
+		/// <summary>
+		/// Wraps <paramref name="queryToWrap"/> by another select.
+		/// Keeps columns count the same. After modification statement is equivalent symantically.
+		/// <code>
+		/// --before
+		/// SELECT c1, c2
+		/// FROM A
+		/// -- after
+		/// SELECT B.c1, B.c2 
+		/// FROM (
+		///   SELECT c1, c2
+		///   FROM A
+		///      ) B
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TStatement"></typeparam>
+		/// <param name="statement">Statement which may contain tested query</param>
+		/// <param name="queryToWrap">Tells which select query needs enveloping</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
+		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap)
+			where TStatement : SqlStatement
+		{
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+
+			return WrapQuery(statement, q => q == queryToWrap, (q1, q2) => { });
+		}
+
+		/// <summary>
+		/// Wraps queries by another select.
+		/// Keeps columns count the same. After modification statement is equivalent symantically.
+		/// </summary>
+		/// <typeparam name="TStatement"></typeparam>
+		/// <param name="statement"></param>
+		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
+		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
+		public static TStatement WrapQuery<TStatement>(
+			TStatement                       statement,
+			Func<SelectQuery, bool>          wrapTest,
+			Action<SelectQuery, SelectQuery> onWrap)
+			where TStatement : SqlStatement
+		{
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
+			if (onWrap == null)    throw new ArgumentNullException(nameof(onWrap));
+
+			return WrapQuery(statement, q => wrapTest(q) ? 1 : 0, queries => onWrap(queries[0], queries[1]));
+		}
+
+		/// <summary>
+		/// Helper function for moving Ordering up in select tree.
+		/// </summary>
+		/// <param name="queries">Array of queries</param>
+		public static void MoveOrderByUp(params SelectQuery[] queries)
+		{
+			// move order up if possible
+			for (int qi = queries.Length - 2; qi >= 0; qi--)
+			{
+				var prevQuery = queries[qi + 1];
+				if (prevQuery.Select.OrderBy.IsEmpty || prevQuery.Select.TakeValue != null || prevQuery.Select.SkipValue != null)
+					continue;
+
+				var currentQuery = queries[qi];
+
+				for (var index = 0; index < prevQuery.Select.OrderBy.Items.Count; index++)
+				{
+					var item = prevQuery.Select.OrderBy.Items[index];
+					var foundColumn = prevQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
+					if (foundColumn != null)
+					{
+						currentQuery.OrderBy.Items.Add(new SqlOrderByItem(foundColumn, item.IsDescending));
+						prevQuery.OrderBy.Items.RemoveAt(index--);
+					}
+				}
+			}
+		}
+
+		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
+		{
+			if (expression    == null) throw new ArgumentNullException(nameof(expression));
+			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+
+			const string pattern = @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
+
+			var str = Regex.Replace(expression, pattern, match =>
+			{
+				string open   = match.Groups["open"].Value;
+				string key    = match.Groups["key"].Value;
+
+				//string close  = match.Groups["close"].Value;
+				//string format = match.Groups["format"].Value;
+
+				if (open.Length % 2 == 0)
+					return match.Value;
+
+				if (!int.TryParse(key, out var idx))
+					return match.Value;
+
+				var newIndex = transformFunc(idx);
+
+				return $"{{{newIndex}}}";
+			});
+
+			return str;
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)
@@ -381,27 +991,40 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static void CorrectSearchConditionNesting(SelectQuery selectQuery, SqlSearchCondition searchCondition)
+		public static object? EvaluateExpression(this ISqlExpression expr)
 		{
-			for (int i = 0; i < searchCondition.Conditions.Count; i++)
+			switch (expr.ElementType)
 			{
-				var visitor      = new QueryVisitor();
-				var newCondition = visitor.Convert(searchCondition.Conditions[i], e =>
-				{
-					if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
+				case QueryElementType.SqlValue           : return ((SqlValue)expr).Value;
+				case QueryElementType.SqlParameter       : return ((SqlParameter)expr).Value;
+				case QueryElementType.SqlBinaryExpression:
 					{
-						if (visitor.ParentElement?.ElementType != QueryElementType.Column)
+						var binary = (SqlBinaryExpression)expr;
+						dynamic? left  = binary.Expr1.EvaluateExpression();
+						dynamic? right = binary.Expr2.EvaluateExpression();
+						if (left == null || right == null)
+							return null;
+						switch (binary.Operation)
 						{
-							var column = NeedColumnForExpression(selectQuery, (ISqlExpression)e, false);
-							if (column != null)
-								return column;
+							case "+": return left + right;
+							case "-": return left - right;
+							case "*": return left * right;
+							case "/": return left / right;
+							case "%": return left * right;
+							case "^": return left ^ right;
+							case "&": return left & right;
+							default:
+								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
 						}
 					}
 
-					return e;
-				});
-
-				searchCondition.Conditions[i] = newCondition;
+				default:
+					{
+						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+							.ToString();
+						throw new NotImplementedException(
+							$"Not implemented evaluation of '{expr.ElementType}': '{str}'.");
+					}
 			}
 		}
 	}

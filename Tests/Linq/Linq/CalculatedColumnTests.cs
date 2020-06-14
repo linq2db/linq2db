@@ -16,14 +16,14 @@ namespace Tests.Linq
 		[Table(Name="Person")]
 		public class PersonCalculated
 		{
-			[Column, PrimaryKey,  Identity] public int    PersonID   { get; set; } // INTEGER
-			[Column, NotNull              ] public string FirstName  { get; set; }
-			[Column, NotNull              ] public string LastName   { get; set; }
-			[Column,    Nullable          ] public string MiddleName { get; set; } // VARCHAR(50)
-			[Column, NotNull              ] public char   Gender     { get; set; } // CHARACTER(1)
+			[Column, PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
+			[Column, NotNull              ] public string  FirstName  { get; set; } = null!;
+			[Column, NotNull              ] public string  LastName   { get; set; } = null!;
+			[Column,    Nullable          ] public string? MiddleName { get; set; } // VARCHAR(50)
+			[Column, NotNull              ] public char    Gender     { get; set; } // CHARACTER(1)
 
 			[ExpressionMethod(nameof(GetFullNameExpr), IsColumn = true)]
-			public string FullName { get; set; }
+			public string FullName { get; set; } = null!;
 
 			static Expression<Func<PersonCalculated, string>> GetFullNameExpr()
 			{
@@ -31,7 +31,7 @@ namespace Tests.Linq
 			}
 
 			[ExpressionMethod(nameof(GetAsSqlFullNameExpr), IsColumn = true)]
-			public string AsSqlFullName { get; set; }
+			public string AsSqlFullName { get; set; } = null!;
 
 			static Expression<Func<PersonCalculated, string>> GetAsSqlFullNameExpr()
 			{
@@ -53,11 +53,11 @@ namespace Tests.Linq
 		public class DoctorCalculated
 		{
 			[Column, PrimaryKey, Identity] public int    PersonID { get; set; } // Long
-			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } // text(50)
+			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } = null!; // text(50)
 
 			// Many association for test
-			[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull = false, KeyName="PersonDoctor", BackReferenceName="PersonDoctor")]
-			public IEnumerable<PersonCalculated> PersonDoctor { get; set; }
+			[Association(ThisKey = "PersonID", OtherKey = "PersonID", CanBeNull = false, KeyName = "PersonDoctor", BackReferenceName = "PersonDoctor")]
+			public IEnumerable<PersonCalculated> PersonDoctor { get; set; } = null!;
 		}
 
 		[Test]

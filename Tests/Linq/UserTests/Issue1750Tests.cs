@@ -1,12 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Common;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -23,8 +18,8 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				// Arrange
-				var childrenIn = (int[])null;
-				var grandChildIn = GrandChild.Select(x => x.ParentID).Distinct().ToArray();					
+				var childrenIn = (int[]?)null;
+				var grandChildIn = GrandChild.Select(x => x.ParentID).Distinct().ToArray();
 
 				// Act
 				var query = from p in db.Parent

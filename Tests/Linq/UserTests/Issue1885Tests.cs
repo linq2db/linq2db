@@ -12,21 +12,21 @@ namespace Tests.UserTests
 		public class User
 		{
 			public int Id { get; set; }
-			public Testing Data { get; set; }
+			public Testing? Data { get; set; }
 		}
 
 		public class Testing
 		{
 			[NotColumn]
-			public int[] Ids { get; set; }
+			public int[]? Ids { get; set; }
 
 			[Column]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 		}
 
 		public class Model
 		{
-			public string Data { get; set; }
+			public string? Data { get; set; }
 		}
 
 		[Test]

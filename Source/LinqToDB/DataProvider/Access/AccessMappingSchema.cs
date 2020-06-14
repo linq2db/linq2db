@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Globalization;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -25,8 +24,8 @@ namespace LinqToDB.DataProvider.Access
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 		}
@@ -65,6 +64,24 @@ namespace LinqToDB.DataProvider.Access
 				"#{0:yyyy-MM-dd HH:mm:ss}#";
 
 			stringBuilder.AppendFormat(format, value);
+		}
+
+		internal static readonly AccessMappingSchema Instance = new AccessMappingSchema();
+
+		public class OleDbMappingSchema : MappingSchema
+		{
+			public OleDbMappingSchema()
+				: base(ProviderName.Access, Instance)
+			{
+			}
+		}
+
+		public class ODBCMappingSchema : MappingSchema
+		{
+			public ODBCMappingSchema()
+				: base(ProviderName.AccessOdbc, Instance)
+			{
+			}
 		}
 	}
 }

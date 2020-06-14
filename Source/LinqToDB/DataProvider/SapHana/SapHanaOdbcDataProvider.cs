@@ -1,40 +1,39 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
-using System.Data.Odbc;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
-	public class SapHanaOdbcDataProvider : DataProviderBase
+	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
 		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHana, new SapHanaMappingSchema())
+			: this(ProviderName.SapHanaOdbc, MappingSchemaInstance)
 		{
 		}
 
 		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
 		{
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported = true;
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
+			//supported flags
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//then replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported = true;
-			SqlProviderFlags.IsTakeSupported           = true;
-
-			//testing
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
+			SqlProviderFlags.IsTakeSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported     = false;
@@ -44,25 +43,12 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public override string ConnectionNamespace => typeof(OdbcConnection).Namespace;
-		public override Type   DataReaderType      => typeof(OdbcDataReader);
-
-		public override bool IsCompatibleConnection(IDbConnection connection)
-		{
-			return typeof(OdbcConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
-		}
-
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
-		{
-			return new OdbcConnection(connectionString);
-		}
-
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaOdbcSchemaProvider();
 		}
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
@@ -75,7 +61,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new SapHanaOdbcSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -99,7 +85,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -116,25 +102,29 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		public override IDisposable ExecuteScope(DataConnection dataConnection)
+		{
+			// shame!
+			return new InvariantCultureRegion();
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
+
 			switch (dataType.DataType)
 			{
-				case DataType.Boolean:
-					parameter.DbType = DbType.Byte;
-					return;
-				case DataType.Date:
-					((OdbcParameter)parameter).OdbcType = OdbcType.Date;
-					return;
-				case DataType.DateTime2: ((OdbcParameter)parameter).OdbcType = OdbcType.DateTime;
-					return;
+				case DataType.Boolean  : parameter.DbType = DbType.Byte;     return;
+				case DataType.DateTime2: parameter.DbType = DbType.DateTime; return;
 			}
-			base.SetParameterType(parameter, dataType);
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
+
+		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
 	}
 }

@@ -31,9 +31,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					var isTableResult = res.Context!.IsExpression(null, 0, RequestFor.Table);
+					if (!isTableResult.Result)
+						throw new LinqException("Can not retrieve Table context from association.");
+
+					var atc = (TableBuilder.TableContext)isTableResult.Context!;
 					deleteStatement.Table = atc.SqlTable;
 				}
 				else
@@ -53,15 +57,15 @@ namespace LinqToDB.Linq.Builder
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
 
 		class DeleteContext : SequenceContextBase
 		{
-			public DeleteContext(IBuildContext parent, IBuildContext sequence)
+			public DeleteContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 			}
@@ -71,27 +75,27 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

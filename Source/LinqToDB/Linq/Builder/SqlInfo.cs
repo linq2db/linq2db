@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -10,50 +10,97 @@ namespace LinqToDB.Linq.Builder
 
 	public class SqlInfo
 	{
-		public ISqlExpression   Sql;
-		public SelectQuery      Query;
-		public int              Index = -1;
-		public readonly List<MemberInfo> MemberChain = new List<MemberInfo>();
+		public readonly ISqlExpression   Sql;
+		public readonly SelectQuery?     Query;
+		public readonly int              Index;
 
-		public SqlInfo()
+		public readonly MemberInfo[]     MemberChain;
+
+		public SqlInfo(MemberInfo[] mi, ISqlExpression sql, SelectQuery? query = null, int index = -1)
+		{
+			MemberChain = mi;
+			Sql   = sql;
+			Query = query;
+			Index = index;
+		}
+
+		public SqlInfo(ISqlExpression sql, SelectQuery? query = null, int index = -1): this(Array<MemberInfo>.Empty, sql, query, index)
 		{
 		}
 
-		public SqlInfo(MemberInfo mi)
+		public SqlInfo(MemberInfo mi, ISqlExpression sql, SelectQuery? query = null, int index = -1) : this(new[] { mi }, sql, query, index)
 		{
-			MemberChain.Add(mi);
 		}
 
-		public SqlInfo(IEnumerable<MemberInfo> mi)
+		public SqlInfo(IEnumerable<MemberInfo> mi, ISqlExpression sql, SelectQuery? query = null, int index = -1) : this(mi.ToArray(), sql, query, index)
 		{
-			MemberChain.AddRange(mi);
 		}
 
-		public SqlInfo Clone()
+		public SqlInfo(IEnumerable<MemberInfo> mi, ISqlExpression sql, int index) : this(mi, sql, null, index)
 		{
-			return new SqlInfo(MemberChain) { Sql = Sql, Query = Query, Index = Index };
 		}
 
+
+		//TODO: possibly remove and update usages
 		public SqlInfo Clone(MemberInfo mi)
 		{
-			var info = Clone();
+			if (MemberChain.Length == 0 || MemberChain[0] != mi)
+				return new SqlInfo(new [] {mi}.Concat(MemberChain), Sql, Query, Index);
 
-			if (MemberChain.Count == 0 || MemberChain[0] != mi)
-				info.MemberChain.Insert(0, mi);
-
-			return info;
+			return this;
 		}
 
 		public bool CompareMembers(SqlInfo info)
 		{
-			return MemberChain.Count == info.MemberChain.Count && !MemberChain.Where((t,i) => !t.EqualsTo(info.MemberChain[i])).Any();
+			return MemberChain.Length == info.MemberChain.Length &&
+			       !MemberChain.Where((t, i) => !t.EqualsTo(info.MemberChain[i])).Any();
 		}
 
 		public bool CompareLastMember(SqlInfo info)
 		{
 			return
-				MemberChain.Count > 0 && info.MemberChain.Count > 0 &&
-				MemberChain[MemberChain.Count - 1].EqualsTo(info.MemberChain[info.MemberChain.Count - 1]);
+				MemberChain.Length > 0 && info.MemberChain.Length > 0 &&
+				MemberChain[MemberChain.Length - 1].EqualsTo(info.MemberChain[info.MemberChain.Length - 1]);
 		}
+
+		public SqlInfo AppendMember(MemberInfo mi)
+		{
+			if (MemberChain.Length == 0)
+				return WithMember(mi);
+
+			return WithMembers(Array<MemberInfo>.Append(MemberChain, mi));
+		}
+
+		public SqlInfo WithMembers(IEnumerable<MemberInfo> mi)
+		{
+			return new SqlInfo(mi, Sql, Query, Index);
+		}
+
+		public SqlInfo WithMember(MemberInfo mi)
+		{
+			return new SqlInfo(mi, Sql, Query, Index);
+		}
+
+		public SqlInfo WithSql(ISqlExpression sql)
+		{
+			if (Sql == sql)
+				return this;
+			return new SqlInfo(MemberChain, sql, Query, Index);
+		}
+
+		public SqlInfo WithIndex(int index)
+		{
+			if (index == Index)
+				return this;
+			return new SqlInfo(MemberChain, Sql, Query, index);
+		}
+
+		public SqlInfo WithQuery(SelectQuery? query)
+		{
+			if (Query == query)
+				return this;
+			return new SqlInfo(MemberChain, Sql, query, Index);
+		}
+
 	}
 }

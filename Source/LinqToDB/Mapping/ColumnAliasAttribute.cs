@@ -2,7 +2,6 @@
 
 namespace LinqToDB.Mapping
 {
-	// TODO: V2 - why it allows Class and Interface as target?
 	// TODO: right now we can reference other aliases and create a loop, that will lead to stack overflow exception
 	// We should detect loops or disalow aliases to aliases.
 	/// <summary>
@@ -13,7 +12,7 @@ namespace LinqToDB.Mapping
 	/// - you can define alias to another alias property or field and potentially create loop.
 	/// </summary>
 	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
+		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
 	public class ColumnAliasAttribute : Attribute
 	{
@@ -38,11 +37,11 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of target property or field.
 		/// </summary>
-		public string MemberName { get; set; }
+		public string? MemberName { get; set; }
 	}
 }

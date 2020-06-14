@@ -145,9 +145,9 @@ CREATE TABLE LinqDataTypes
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime
--- SKIP MySql BEGIN
+-- SKIP MySql55 BEGIN
 	(3)
--- SKIP MySql END
+-- SKIP MySql55 END
 	,
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
@@ -192,16 +192,16 @@ CREATE TABLE AllTypes
 	timestampDataType   timestamp                    NULL,
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
--- SKIP MySql57 BEGIN
--- SKIP MySqlConnector BEGIN
-	year2DataType       year(2)                      NULL,
--- SKIP MySql57 END
--- SKIP MySqlConnector END
 -- SKIP MySql BEGIN
+-- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
-	year2DataType       year(4)                      NULL,
+	year2DataType       year(2)                      NULL,
 -- SKIP MySql END
+-- SKIP MySqlConnector END
 -- SKIP MariaDB END
+-- SKIP MySql55 BEGIN
+	year2DataType       year(4)                      NULL,
+-- SKIP MySql55 END
 	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,
@@ -466,11 +466,11 @@ CREATE TABLE FullTextIndexTest (
 	FULLTEXT idx_field1 (TestField1),
 	FULLTEXT idx_field2 (TestField2)
 )
--- SKIP MySql57 BEGIN
+-- SKIP MySql BEGIN
 -- SKIP MariaDB BEGIN
 -- SKIP MySqlConnector BEGIN
 	ENGINE=MyISAM
--- SKIP MySql57 END
+-- SKIP MySql END
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
 ;
@@ -478,4 +478,11 @@ GO
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('record not found', 'empty');
+GO
+DROP TABLE IF EXISTS Issue1993
+GO
+CREATE TABLE Issue1993 (
+	id			INTEGER UNSIGNED	NOT NULL   AUTO_INCREMENT,
+	description	VARCHAR(100)		NULL,
+PRIMARY KEY(id));
 GO

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -22,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -38,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public ISqlOptimizer SqlOptimizer;
-			public Action        SetParameters;
+			public ISqlOptimizer? SqlOptimizer;
+			public Action?        SetParameters;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -48,9 +47,9 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 
 				SqlOptimizer  = query.SqlOptimizer;
-				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
+				SetParameters = () => QueryRunner.SetParameters(query, query.Expression!, null, null, 0);
 
-				query.GetElement = (db, expr, ps) => this;
+				query.GetElement = (db, expr, ps, preambles) => this;
 			}
 		}
 	}

@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -15,8 +17,8 @@ namespace Tests.Linq
 		[Test]
 		public void Simple1([DataSources] string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
-
+			using (new PreloadGroups(true))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
@@ -45,8 +47,8 @@ namespace Tests.Linq
 		[Test]
 		public void Simple2([DataSources] string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
-
+			using (new PreloadGroups(false))
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -165,6 +167,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple10([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from ch in    Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
@@ -254,15 +257,15 @@ namespace Tests.Linq
 
 		class GroupByInfo
 		{
-			public GroupByInfo Prev;
-			public object      Field;
+			public GroupByInfo? Prev;
+			public object?      Field;
 
 			public override bool Equals(object obj)
 			{
 				return Equals(obj as GroupByInfo);
 			}
 
-			public bool Equals(GroupByInfo other)
+			public bool Equals(GroupByInfo? other)
 			{
 				if (ReferenceEquals(null, other)) return false;
 				if (ReferenceEquals(this, other)) return true;
@@ -645,13 +648,17 @@ namespace Tests.Linq
 		public void Sum3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from ch in Child
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					select g.Key.Children.Sum(p => p.ChildID),
 					from ch in db.Child
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					select g.Key.Children.Sum(p => p.ChildID));
+			}
 		}
 
 		[Test]
@@ -1012,7 +1019,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation102([DataSources(ProviderName.Informix)] string context)
+		public void GroupByAssociation102([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1029,7 +1036,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1047,7 +1054,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed.*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed.*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1071,7 +1078,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix) /* Can be fixed. */]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix) /* Can be fixed. */]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1153,7 +1160,7 @@ namespace Tests.Linq
 					select g.Key
 					,
 					from p in db.Parent
-					group p by p.Children.Average(c => c.ParentID) > 3 into g
+					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
 					select g.Key);
 		}
 
@@ -1310,7 +1317,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1326,7 +1333,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1463,7 +1470,7 @@ namespace Tests.Linq
 
 				const string fieldName = "LastName";
 
-				var lastQuery  = db.LastQuery;
+				var lastQuery  = db.LastQuery!;
 				var groupByPos = lastQuery.IndexOf("GROUP BY");
 				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
 
@@ -1546,7 +1553,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerQuery([DataSources(ProviderName.SqlCe, ProviderName.SapHana)] string context)
+		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1671,7 +1678,7 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					from t in Types2
-					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
@@ -1679,7 +1686,7 @@ namespace Tests.Linq
 						month = grp.Key.Month
 					},
 					from t in db.Types2
-					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
@@ -1696,19 +1703,19 @@ namespace Tests.Linq
 			{
 				AreEqual(
 					from t in Types2
-					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
-						year  = grp.Key.Date.Value.Year,
+						year  = grp.Key.Date!.Value.Year,
 						month = grp.Key.Date.Value.Month
 					},
 					from t in db.Types2
-					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
 					select new
 					{
 						Total = grp.Sum(_ => _.MoneyValue),
-						year  = grp.Key.Date.Value.Year,
+						year  = grp.Key.Date!.Value.Year,
 						month = grp.Key.Date.Value.Month
 					});
 			}
@@ -1735,13 +1742,13 @@ namespace Tests.Linq
 					group t by t.ParentID into grp
 					select new
 					{
-						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+						Value = grp.Sum(c => c.Parent!.Value1 ?? 0)
 					},
 					from t in db.Child
 					group t by t.ParentID into grp
 					select new
 					{
-						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+						Value = grp.Sum(c => c.Parent!.Value1 ?? 0)
 					});
 			}
 		}
@@ -1749,6 +1756,7 @@ namespace Tests.Linq
 		[Test]
 		public void FirstGroupBy([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
@@ -1809,7 +1817,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCustomEntity2([DataSources(ProviderName.Informix, TestProvName.AllSybase)] string context)
+		public void GroupByCustomEntity2([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			var rand = new Random().Next(5);
 
@@ -1863,29 +1871,42 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy2([DataSources(ProviderName.Access)] string context)
+		public void JoinGroupBy2([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
 					from c in Child
-					from g in c.Parent.Children
+					from g in c.Parent!.Children
 					group g by g.ParentID into gc
 					select gc.Key
 					,
 					from c in db.Child
-					from g in c.Parent.Children
+					from g in c.Parent!.Children
 					group g by g.ParentID into gc
 					select gc.Key
 				);
 			}
 		}
 
+		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
+		{
+			Assert.Throws<LinqToDBException>(() =>
+			{
+				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+
+			Assert.DoesNotThrow(() =>
+			{
+				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+		}
+
 		[Test]
-		public void GroupByGuard([DataSources] string context)
+		public void GroupByGuard([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using(new AllowMultipleQuery())
-			using(new GuardGrouping())
+			using(new GuardGrouping(true))
 			using (var db = GetDataContext(context))
 			{
 				// group on client
@@ -1910,20 +1931,8 @@ namespace Tests.Linq
 				)
 				.ToDictionary(_ => _.Key);
 
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					// group on server
-					db.Person
-						.GroupBy(_ => _.Gender)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
-
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					db.Person
-						.GroupBy(_ => _)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
+				CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
+				CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
 				Assert.Throws<LinqToDBException>(() =>
 				{
@@ -1931,6 +1940,15 @@ namespace Tests.Linq
 						.GroupBy(_ => _)
 						.ToList();
 				});
+
+				Assert.DoesNotThrow(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.DisableGuard()
+						.ToList();
+				});
+
 			}
 		}
 
@@ -1953,6 +1971,208 @@ namespace Tests.Linq
 						y = _.Average(r => r.ParentID)
 					})
 					.ToList();
+			}
+		}
+
+		[Table("Stone")]
+		public class Stone
+		{
+			[PrimaryKey, Identity] public int     Id           { get; set; } // int
+			[Column, NotNull     ] public string  Name         { get; set; } = null!; // nvarchar(256)
+			[Column, Nullable    ] public bool?   Enabled      { get; set; } // bit
+			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
+		}
+
+		[Test]
+		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Stone>())
+			{
+				db.Insert(new Stone() { Id = 1, Name = "group1", Enabled = true, ImageFullUrl = "123" });
+				db.Insert(new Stone() { Id = 2, Name = "group1", Enabled = true, ImageFullUrl = "123" });
+				db.Insert(new Stone() { Id = 3, Name = "group2", Enabled = true, ImageFullUrl = "123" });
+
+				IQueryable<Stone> stones;
+				stones = from s in db.GetTable<Stone>() where s.Enabled == true select s;
+
+				stones = from s in stones
+						 where !s.Name.StartsWith("level - ") && s.ImageFullUrl!.Length > 0
+						 group s by s.Name
+							  into sG
+						 select sG.First();
+
+				var list = stones.ToList();
+			}
+		}
+
+		[Table]
+		class Issue680Table
+		{
+			[Column] public DateTime TimeStamp;
+		}
+
+		[ActiveIssue(680)]
+		[Test]
+		public void Issue680Test([DataSources(false)] string context)
+		{
+			using (var db    = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<Issue680Table>())
+			{
+				var result = (from record in table
+							  group record by record.TimeStamp into g
+							  select new
+							  {
+								  res = g.Count(r => r.TimeStamp > DateTime.Now),
+							  }).ToList();
+
+				var index = db.LastQuery!.IndexOf("SELECT");
+				Assert.AreNotEqual(-1, index);
+				index = db.LastQuery.IndexOf("SELECT", index + 1);
+				Assert.AreEqual(-1, index);
+			}
+		}
+
+		// check why firebird and access fails on generated sql
+		// FirebirdSql.Data.Common.IscException : arithmetic exception, numeric overflow, or string truncation string right truncation
+		//
+		// OleDbException : IErrorInfo.GetDescription failed with E_FAIL(0x80004005).
+		// Access issue could be related to reserved words but I don't see anything suspicious in failed query
+		// https://support.microsoft.com/en-us/office/learn-about-access-reserved-words-and-symbols-ae9d9ada-3255-4b12-91a9-f855bdd9c5a2?ocmsassetid=ha010030643&correlationid=13c0f607-b794-4387-b8d9-bdffce04d996&ui=en-us&rs=en-us&ad=us
+		[ActiveIssue(Configurations = new[] { TestProvName.AllFirebird, TestProvName.AllAccess })]
+		[Test]
+		public void Issue434Test1([DataSources] string context)
+		{
+			var input = "test";
+
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
+				{
+					Name = re.FirstName,
+					Roles = ri.ToList().Select(p => p.Diagnosis)
+				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
+			}
+		}
+
+		[Test]
+		public void Issue434Test2([DataSources] string context)
+		{
+			using (new AllowMultipleQuery(true))
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
+				{
+					Name = re.FirstName,
+					Roles = ri.ToList().Select(p => p.Diagnosis)
+				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
+			}
+		}
+
+		[Table(Name = "Issue913Test")]
+		public class Instrument
+		{
+			[Column, PrimaryKey, NotNull] public int InstrumentID { get; set; } // int
+			[Column(Length = 1), Nullable] public TradingStatus? TradingStatus { get; set; } // char(1)
+
+			public static readonly Instrument[] Data = new[]
+			{
+				new Instrument() { InstrumentID = 1 },
+				new Instrument() { InstrumentID = 2, TradingStatus = GroupByTests.TradingStatus.Active },
+				new Instrument() { InstrumentID = 3, TradingStatus = GroupByTests.TradingStatus.Delisted }
+			};
+		}
+
+		public enum TradingStatus
+		{
+			[MapValue("A")] Active,
+			[MapValue("D")] Delisted,
+		}
+
+		[ActiveIssue(913)]
+		[Test]
+		public void Issue913Test([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Instrument.Data))
+			{
+				var q = from i in table
+					group i by new
+					{
+						IsDelisted = i.TradingStatus == TradingStatus.Delisted
+					}
+					into g
+						select new
+						{
+							g.Key.IsDelisted,
+							Count = g.Count(),
+						};
+
+				var x = q.ToList().OrderBy(_ => _.Count).ToArray();
+
+				Assert.AreEqual(2, x.Length);
+				Assert.True(x[0].IsDelisted);
+				Assert.AreEqual(1, x[0].Count);
+				Assert.False(x[1].IsDelisted);
+				Assert.AreEqual(2, x[1].Count);
+			}
+		}
+
+		class Issue1078Table
+		{
+			[Identity]
+			public int UserID { get; set; }
+			[Column, NotNull]
+			public int SiteID { get; set; }
+			[Column, NotNull]
+			public string Username { get; set; } = null!;
+			[Column, NotNull]
+			public bool Active { get; set; }
+		}
+
+		[ActiveIssue(1078)]
+		[Test]
+		public void Issue1078Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1078Table>())
+			{
+				var query =
+					from u in table
+					group u.Active ? 1 : 0 by u.SiteID into grp
+					select new
+					{
+						SiteID   = grp.Key,
+						Total    = grp.Count(),
+						Inactive = grp.Count(_ => _ == 0)
+					};
+
+				query.ToList();
+			}
+		}
+
+		class Issue1192Table
+		{
+			public int IdId { get; internal set; }
+			public int MyOtherId { get; internal set; }
+			public int Status { get; internal set; }
+		}
+
+		[Test]
+		public void Issue1198Test([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1192Table>())
+			{
+				var stats = (from t in table
+							 where t.MyOtherId == 12
+							 group t by 1 into g
+							 select new
+							 {
+								 MyGroupedCount = g.Count(i => i.Status == 3),
+							 }).FirstOrDefault();
 			}
 		}
 	}

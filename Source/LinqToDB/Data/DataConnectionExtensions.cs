@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +12,7 @@ namespace LinqToDB.Data
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static class DataConnectionExtensions
+	public static partial class DataConnectionExtensions
 	{
 		#region SetCommand
 
@@ -69,7 +67,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Database command wrapper.</returns>
-		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, object parameters)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, object? parameters)
 		{
 			return new CommandInfo(dataConnection, commandText, parameters);
 		}
@@ -160,7 +158,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(objectReader);
 		}
@@ -299,7 +297,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader);
 		}
@@ -323,7 +321,7 @@ namespace LinqToDB.Data
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters, CancellationToken cancellationToken)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -346,7 +344,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader);
 		}
@@ -370,7 +368,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -905,7 +903,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query<T>();
 		}
@@ -1089,7 +1087,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, string sql, object parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
 		}
@@ -1112,7 +1110,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
 		}
@@ -1134,7 +1132,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, string sql, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
 		}
@@ -1157,7 +1155,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
@@ -1197,7 +1195,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(template);
 		}
@@ -1282,7 +1280,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, object parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
 		}
@@ -1306,7 +1304,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
 		}
@@ -1329,7 +1327,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
 		}
@@ -1353,7 +1351,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
@@ -1434,7 +1432,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
-		public static int Execute(this DataConnection connection, string sql, object parameters)
+		public static int Execute(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Execute();
 		}
@@ -1503,7 +1501,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
-		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, object parameters)
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteAsync();
 		}
@@ -1525,7 +1523,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
-		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteAsync(cancellationToken);
 		}
@@ -1657,7 +1655,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
-		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
+		public static T Execute<T>(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Execute<T>();
 		}
@@ -1796,7 +1794,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
-		public static Task<T> ExecuteAsync<T>(this DataConnection connection, string sql, object parameters)
+		public static Task<T> ExecuteAsync<T>(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteAsync<T>();
 		}
@@ -1819,7 +1817,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
-		public static Task<T> ExecuteAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object parameters)
+		public static Task<T> ExecuteAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteAsync<T>(cancellationToken);
 		}
@@ -1951,7 +1949,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Data reader object.</returns>
-		public static DataReader ExecuteReader(this DataConnection connection, string sql, object parameters)
+		public static DataReader ExecuteReader(this DataConnection connection, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteReader();
 		}
@@ -1991,7 +1989,7 @@ namespace LinqToDB.Data
 		/// <param name="options">Operation options.</param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
-		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
@@ -2006,7 +2004,7 @@ namespace LinqToDB.Data
 		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
-		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
@@ -2024,7 +2022,7 @@ namespace LinqToDB.Data
 		/// <param name="dataConnection">Database connection.</param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
-		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, IEnumerable<T> source)
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
@@ -2043,7 +2041,7 @@ namespace LinqToDB.Data
 		/// <param name="options">Operation options.</param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
-		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -2086,524 +2084,6 @@ namespace LinqToDB.Data
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.BulkCopy(table, new BulkCopyOptions(), source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection      dataConnection,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection      dataConnection,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only for with Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection dataConnection,
-			bool                delete,
-			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection dataConnection,
-			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T>           table,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T>           table,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T> table,
-			bool           delete,
-			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T> table,
-			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(
-				dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source, tableName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			bool                delete,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source, tableName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source, tableName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			bool              delete,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source,
-				tableName    ?? table.TableName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
 		}
 
 		#endregion

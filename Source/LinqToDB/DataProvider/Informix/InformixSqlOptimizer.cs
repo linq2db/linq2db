@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -15,38 +14,43 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void SetQueryParameter(IQueryElement element)
 		{
-			if (element.ElementType == QueryElementType.SqlParameter)
+			if (element is SqlParameter p)
 			{
-				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
+				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
+				// intervals explicitly
+				if ((p.Type.SystemType == typeof(TimeSpan) || p.Type.SystemType == typeof(TimeSpan?))
+						&& p.Type.DataType != DataType.Int64)
 					p.IsQueryParameter = false;
 			}
 		}
 
-		static void EnforceBinaryParameters(IQueryElement element)
+		static void ClearQueryParameter(IQueryElement element)
 		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
-					p.IsQueryParameter = true;
-			}
+			if (element is SqlParameter p && p.IsQueryParameter)
+				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
-			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
+			// TODO: test if it works and enable support with type-cast like it is done for Firebird
+			// Informix doesn't support parameters in select list
+			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
+			if (!ignore)
+				new QueryVisitor().VisitAll(statement, e =>
+				{
+					if (e is SqlSelectClause select)
+						new QueryVisitor().VisitAll(select, ClearQueryParameter);
+				});
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement, inlineParameters);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
@@ -105,7 +109,7 @@ namespace LinqToDB.DataProvider.Informix
 									}
 
 								case TypeCode.UInt64:
-									if (func.Parameters[1].SystemType.IsFloatType())
+									if (func.Parameters[1].SystemType!.IsFloatType())
 										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
 									break;
 

@@ -31,9 +31,8 @@ namespace LinqToDB.Async
 		/// <summary>
 		/// Closes current connection asynchonously.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
-		Task CloseAsync(CancellationToken cancellationToken = default);
+		Task CloseAsync();
 
 		/// <summary>
 		/// Opens current connection asynchonously.
@@ -43,6 +42,12 @@ namespace LinqToDB.Async
 		Task OpenAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
+		/// Disposes current connection asynchonously.
+		/// </summary>
+		/// <returns>Async operation task.</returns>
+		Task DisposeAsync();
+
+		/// <summary>
 		/// Gets underlying connection instance.
 		/// </summary>
 		IDbConnection Connection { get; }
@@ -50,6 +55,6 @@ namespace LinqToDB.Async
 		/// <summary>
 		/// Returns cloned connection instance, if underlying provider support cloning or null otherwise.
 		/// </summary>
-		IAsyncDbConnection TryClone();
+		IAsyncDbConnection? TryClone();
 	}
 }

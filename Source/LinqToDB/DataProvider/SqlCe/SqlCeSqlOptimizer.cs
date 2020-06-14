@@ -12,31 +12,13 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
-			var selectQuery = statement.SelectQuery;
-			if (selectQuery != null)
-				new QueryVisitor().Visit(selectQuery.Select, element =>
-				{
-					if (element.ElementType == QueryElementType.SqlParameter)
-					{
-						var p = (SqlParameter)element;
-						if (p.SystemType == null || p.SystemType.IsScalar(false))
-						{
-							p.IsQueryParameter = false;
-
-							selectQuery.IsParameterDependent = true;
-						}
-					}
-				});
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
 					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					statement.SelectQuery.From.Tables[0].Alias = "$";
+					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
@@ -44,40 +26,55 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			if (selectQuery != null)
-				CorrectSkip(selectQuery);
+			statement = CorrectSkipAndColumns(statement);
 
 			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		public static SqlStatement CorrectSkipAndColumns(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
+			new QueryVisitor().Visit(statement, e =>
 			{
-				if (e is SelectQuery q && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				switch (e.ElementType)
 				{
-					if (q.Select.Columns.Count == 0)
-					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
+					case QueryElementType.SqlQuery:
 						{
-							q.Select.AddNew(key);
+							var q = (SelectQuery)e;
+
+							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+							{
+								if (q.Select.Columns.Count == 0)
+								{
+									var source = q.Select.From.Tables[0].Source;
+									var keys   = source.GetKeys(true);
+
+									foreach (var key in keys)
+									{
+										q.Select.AddNew(key);
+									}
+								}
+
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
+
+								if (q.OrderBy.IsEmpty)
+								{
+									throw new LinqToDBException("Order by required for Skip operation.");
+								}
+							}
+
+							// looks like SqlCE do not allow '*' for grouped records
+							if (!q.GroupBy.IsEmpty && q.Select.Columns.Count == 0)
+							{
+								q.Select.Add(new SqlValue(1));
+							}
+
+							break;
 						}
-					}
-
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
-
-					if (q.OrderBy.IsEmpty)
-					{
-						throw new LinqToDBException("Order by required for Skip operation.");
-					}
 				}
-				return e;
-			}
-			);
+			});
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -101,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					switch (be.Operation)
 					{
 						case "%":
-							return be.Expr1.SystemType.IsIntegerType()?
+							return be.Expr1.SystemType!.IsIntegerType()?
 								be :
 								new SqlBinaryExpression(
 									typeof(int),
@@ -120,7 +117,7 @@ namespace LinqToDB.DataProvider.SqlCe
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
 								case TypeCode.UInt64 :
-									if (func.Parameters[1].SystemType.IsFloatType())
+									if (func.Parameters[1].SystemType!.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
@@ -132,7 +129,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									break;
 
 								case TypeCode.DateTime :
-									var type1 = func.Parameters[1].SystemType.ToUnderlying();
+									var type1 = func.Parameters[1].SystemType!.ToUnderlying();
 
 									if (IsTimeDataType(func.Parameters[0]))
 									{

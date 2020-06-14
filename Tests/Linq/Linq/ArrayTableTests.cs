@@ -12,7 +12,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		public void ApplyJoinArray(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)]
 			string context)
 		{
 			var doe = "Doe";
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
@@ -63,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray2([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray2([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray3([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray3([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 
@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray4([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray4([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 			var arr = new[] {"Janet", "Doe", "John", doe};
@@ -144,7 +144,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray5([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinArray5([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			var doe = "Doe";
 
@@ -170,7 +170,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray6([DataSources(ProviderName.Access, TestProvName.AllPostgreSQLLess10)] string context)
+		public void InnerJoinArray6([DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQLLess10)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -192,7 +192,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("PosgreSql needs type for literals. We have to rewise literals generation.")]
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL)]
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -216,7 +216,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Details = "It is more complicated and needs analysis")]
 		[Test]
-		public void InnerJoinClassArray([DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)] string context)
+		public void InnerJoinClassArray([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

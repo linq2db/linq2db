@@ -5,8 +5,6 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.SqlQuery;
 
-using static LinqToDB.ProviderName;
-
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -46,7 +44,7 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -79,7 +77,7 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -112,7 +110,7 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -328,7 +326,7 @@ namespace Tests.Linq
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracle))]
-		public static int? DatePart(this Sql.ISqlExtension ext, Sql.DateParts part, [ExprParameter] DateTime? date)
+		public static int? DatePart(this Sql.ISqlExtension? ext, Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
 				return null;
@@ -445,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(Informix, TestProvName.AllMySql, Access, SapHana)] string context)
+		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

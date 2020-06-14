@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new AccessDataProvider();
+			return AccessTools.GetDataProvider();
 		}
 	}
 }

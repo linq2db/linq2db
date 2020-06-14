@@ -62,13 +62,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns column value reader expression.
 		/// </summary>
-		/// <param name="mappingSchema">Current mapping schema.</param>
 		/// <param name="reader">Data reader instance.</param>
 		/// <param name="idx">Column index.</param>
 		/// <param name="readerExpression">Data reader accessor expression.</param>
 		/// <param name="toType">Expected value type.</param>
 		/// <returns>Column read expression.</returns>
-		Expression          GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression          GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType);
 		/// <summary>
 		/// Returns true, of data reader column could contain <see cref="DBNull"/> value.
 		/// </summary>
@@ -91,7 +90,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Event, triggered before context connection closed using <see cref="Close"/> method.
 		/// </summary>
-		event EventHandler  OnClosing;
+		event EventHandler?  OnClosing;
 
 		/// <summary>
 		/// Returns query runner service for current context.
@@ -100,7 +99,8 @@ namespace LinqToDB
 		/// <param name="queryNumber">Index of query in query batch.</param>
 		/// <param name="expression">Query results mapping expression.</param>
 		/// <param name="parameters">Query parameters.</param>
+		/// <param name="preambles">Query preambles</param>
 		/// <returns>Query runner service.</returns>
-		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters);
+		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
 	}
 }

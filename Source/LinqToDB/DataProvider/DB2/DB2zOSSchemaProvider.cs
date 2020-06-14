@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,6 +9,10 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
+		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
+		{
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new List<DataTypeInfo>
@@ -45,16 +48,16 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
-		List<PrimaryKeyInfo> _primaryKeys;
+		List<PrimaryKeyInfo>? _primaryKeys;
 
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return _primaryKeys = dataConnection.Query(
 				rd => new PrimaryKeyInfo
 				{
 					TableID        = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
-					PrimaryKeyName = rd.ToString(2),
-					ColumnName     = rd.ToString(3),
+					PrimaryKeyName = rd.ToString(2)!,
+					ColumnName     = rd.ToString(3)!,
 					Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
 				},@"
 					SELECT
@@ -75,7 +78,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var sql = @"
 				SELECT
@@ -99,7 +102,7 @@ namespace LinqToDB.DataProvider.DB2
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-						Name        = rd.ToString(2),
+						Name        = rd.ToString(2)!,
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int> (rd[7]),
@@ -120,8 +123,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if ((size  ?? 0) > 0) ci.Precision = (int?)size.Value;
-					if ((scale ?? 0) > 0) ci.Scale     = scale;
+					if (size  > 0) ci.Precision = (int)size;
+					if (scale > 0) ci.Scale     = scale;
 					break;
 
 				case "DBCLOB"                    :
@@ -144,7 +147,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return
 			(
@@ -198,7 +201,7 @@ namespace LinqToDB.DataProvider.DB2
 				.Query(rd =>
 				{
 					var schema     = rd.ToString(0);
-					var name       = rd.ToString(1);
+					var name       = rd.ToString(1)!;
 					var isFunction = rd.ToString(2) == "F";
 
 					return new ProcedureInfo
@@ -222,7 +225,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd =>

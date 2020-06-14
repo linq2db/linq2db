@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -33,26 +32,28 @@ namespace LinqToDB.Linq.Builder
 			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
 
 		public class DefaultIfEmptyContext : SequenceContextBase
 		{
-			public DefaultIfEmptyContext(IBuildContext parent, IBuildContext sequence, Expression defaultValue)
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
 				: base(parent, sequence, null)
 			{
 				_defaultValue = defaultValue;
 			}
 
-			private readonly Expression _defaultValue;
+			private readonly Expression? _defaultValue;
 
 			public bool Disabled { get; set; }
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
 				if (!Disabled && expression == null)
@@ -65,7 +66,10 @@ namespace LinqToDB.Linq.Builder
 					var idx = q.DefaultIfEmpty(-1).First();
 
 					if (idx == -1)
+					{
 						idx = SelectQuery.Select.Add(new SqlValue((int?)1));
+						SelectQuery.Select.Columns[idx].RawAlias = "is_empty";
+					}
 
 					var n = ConvertToParentIndex(idx, this);
 
@@ -109,23 +113,27 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToSql(expression, level, flags);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.ConvertToIndex(expression, level, flags);
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.GetContext(expression, level, buildInfo);
 			}
 		}

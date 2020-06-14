@@ -7,40 +7,43 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Async;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
-			var ctx = new DataContext(context);
-
-			ctx.GetTable<Person>().ToList();
-
-			ctx.KeepConnectionAlive = true;
-
-			ctx.GetTable<Person>().ToList();
-			ctx.GetTable<Person>().ToList();
-
-			ctx.KeepConnectionAlive = false;
-
-			using (var tran = new DataContextTransaction(ctx))
+			using (var ctx = new DataContext(context))
 			{
 				ctx.GetTable<Person>().ToList();
 
-				tran.BeginTransaction();
+				ctx.KeepConnectionAlive = true;
 
 				ctx.GetTable<Person>().ToList();
 				ctx.GetTable<Person>().ToList();
 
-				tran.CommitTransaction();
+				ctx.KeepConnectionAlive = false;
+
+				using (var tran = new DataContextTransaction(ctx))
+				{
+					ctx.GetTable<Person>().ToList();
+
+					tran.BeginTransaction();
+
+					ctx.GetTable<Person>().ToList();
+					ctx.GetTable<Person>().ToList();
+
+					tran.CommitTransaction();
+				}
 			}
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -64,12 +67,13 @@ namespace Tests.Linq
 			}
 		}
 
+		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, ProviderName.Access, ProviderName.SapHanaOdbc)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString));
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString!));
 			}
 
 		}
@@ -88,7 +92,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))
+			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
 				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
 				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);
@@ -103,22 +107,22 @@ namespace Tests.Linq
 		[Test]
 		public void LoopTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			var db = new DataContext(context);
-			for (int i = 0; i < 1000; i++)
-			{
-				var items1 = db.GetTable<Child>().ToArray();
-			}
+			using (var db = new DataContext(context))
+				for (int i = 0; i < 1000; i++)
+				{
+					var items1 = db.GetTable<Child>().ToArray();
+				}
 		}
 
 		// sdanyliv: Disabled other providers for performance purposes
 		[Test]
 		public async Task LoopTestAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			var db = new DataContext(context);
-			for (int i = 0; i < 1000; i++)
-			{
-				var items1 = await db.GetTable<Child>().ToArrayAsync();
-			}
+			using (var db = new DataContext(context))
+				for (int i = 0; i < 1000; i++)
+				{
+					var items1 = await db.GetTable<Child>().ToArrayAsync();
+				}
 		}
 
 		// sdanyliv: Disabled other providers for performance purposes
@@ -127,8 +131,10 @@ namespace Tests.Linq
 		{
 			for (int i = 0; i < 1000; i++)
 			{
-				var db     = new DataContext(context);
-				var items1 = db.GetTable<Child>().ToArray();
+				using (var db = new DataContext(context))
+				{
+					var items1 = db.GetTable<Child>().ToArray();
+				}
 			}
 		}
 
@@ -138,28 +144,95 @@ namespace Tests.Linq
 		{
 			for (int i = 0; i < 1000; i++)
 			{
-				var db     = new DataContext(context);
-				var items1 = await db.GetTable<Child>().ToArrayAsync();
+				using (var db = new DataContext(context))
+				{
+					var items1 = await db.GetTable<Child>().ToArrayAsync();
+				}
 			}
 		}
 
 		[Test]
 		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			var db = new DataContext(context);
+			using (var db = new DataContext(context))
+			{
 
-			db.CommandTimeout = 10;
-			var dataConnection = db.GetDataConnection();
-			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(10));
+				db.CommandTimeout = 10;
+				var dataConnection = db.GetDataConnection();
+				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(10));
 
-			db.CommandTimeout = -10;
-			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(-1));
+				db.CommandTimeout = -10;
+				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(-1));
 
-			db.CommandTimeout = 11;
-			var record = db.GetTable<Child>().First();
+				db.CommandTimeout = 11;
+				var record = db.GetTable<Child>().First();
 
-			dataConnection = db.GetDataConnection();
-			Assert.That(dataConnection.CommandTimeout, Is.EqualTo(11));
+				dataConnection = db.GetDataConnection();
+				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(11));
+			}
+		}
+
+		[Test]
+		public void TestCreateConnection([DataSources(false)] string context)
+		{
+			using (var db = new NewDataContext(context))
+			{
+				Assert.AreEqual(0, db.CreateCalled);
+				using (db.GetDataConnection())
+				{
+					Assert.AreEqual(1, db.CreateCalled);
+					using (db.GetDataConnection())
+					{
+						Assert.AreEqual(1, db.CreateCalled);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCloneConnection([DataSources(false)] string context)
+		{
+			using (var db = new NewDataContext(context))
+			{
+				Assert.AreEqual(0, db.CloneCalled);
+				using (new NewDataContext(context))
+				{
+					using (((IDataContext)db).Clone(true))
+					{
+						Assert.False(db.IsMarsEnabled);
+						Assert.AreEqual(0, db.CloneCalled);
+
+						using (db.GetDataConnection())
+						{
+							using (((IDataContext)db).Clone(true))
+								Assert.AreEqual(db.IsMarsEnabled ? 1 : 0, db.CloneCalled);
+						}
+					}
+				}
+			}
+		}
+
+		class NewDataContext : DataContext
+		{
+			public NewDataContext(string context)
+				: base(context)
+			{
+			}
+
+			public int CreateCalled;
+			public int CloneCalled;
+
+			protected override DataConnection CreateDataConnection()
+			{
+				CreateCalled++;
+				return base.CreateDataConnection();
+			}
+
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, IAsyncDbTransaction? dbTransaction, IAsyncDbConnection? dbConnection)
+			{
+				CloneCalled++;
+				return base.CloneDataConnection(currentConnection, dbTransaction, dbConnection);
+			}
 		}
 
 	}

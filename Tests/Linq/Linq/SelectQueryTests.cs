@@ -15,9 +15,9 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
-		public void UnionTest([DataSources(ProviderName.Access)] string context)
+		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -43,9 +43,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
-		public void SubQueryTest([DataSources(ProviderName.Access)] string context)
+		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
@@ -80,7 +80,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinTest([DataSources(ProviderName.Access)] string context)
+		public void JoinTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
@@ -113,7 +113,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinScalarTest([DataSources(ProviderName.Access)] string context)
+		public void JoinScalarTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))

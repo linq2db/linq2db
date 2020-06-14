@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
 
-		private SqlUpdateClause _update;
+		private SqlUpdateClause? _update;
 
 		public SqlUpdateClause Update
 		{
@@ -24,14 +24,21 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			sb.AppendLine("UPDATE");
+
 			((IQueryElement)Update).ToString(sb, dic);
+
+			sb.AppendLine();
+
+			SelectQuery.ToString(sb, dic);
+
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			With?.Walk(options, func);
-			((ISqlExpressionWalkable)_update)?.Walk(options, func);
+			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
@@ -61,12 +68,49 @@ namespace LinqToDB.SqlQuery
 				yield return _update;
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
-			if (_update?.Table == table)
-				return table;
+			var result = SelectQuery.GetTableSource(table);
 
-			return SelectQuery.GetTableSource(table);
+			if (result != null)
+				return result;
+
+			if (table == _update?.Table)
+				return _update.Table;
+
+			if (Update != null)
+			{
+				foreach (var item in Update.Items)
+				{
+					if (item.Expression is SelectQuery q)
+					{
+						result = q.GetTableSource(table);
+						if (result != null)
+							return result;
+					}
+
+				}
+			}
+
+			return result;
+		}
+
+		public override bool IsDependedOn(SqlTable table)
+		{
+			// do not allow to optimize out Update table
+			if (Update == null)
+				return false;
+
+			return null != new QueryVisitor().Find(Update, e =>
+			{
+				switch (e)
+				{
+					case SqlTable t: return QueryHelper.IsEqualTables(t, table);
+					case SqlField f: return QueryHelper.IsEqualTables(f.Table as SqlTable, table);
+				}
+
+				return false;
+			});
 		}
 
 	}

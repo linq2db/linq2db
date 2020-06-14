@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -8,8 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests
 	{
 		[Test]
@@ -17,29 +14,36 @@ namespace Tests.xUpdate
 		{
 			var batchSize = 2500;
 
-			switch (context)
+			switch (GetProviderName(context, out var _))
 			{
 				// ASE: you may need to increase memory procedure cache sizes like that:
 				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
 				// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-				case ProviderName.Sybase       :
-				case ProviderName.SybaseManaged: batchSize = 500; break;
+				case ProviderName.Sybase         :
+				case ProviderName.SybaseManaged  : batchSize = 500; break;
 
 				// hard limit around 100 records
 				// also big queries could kill connection with server
-				case ProviderName.Firebird     : batchSize = 100; break;
+				case ProviderName.Firebird       : batchSize = 100; break;
 
 				// hard limit around 250 records
-				case TestProvName.Firebird3    : batchSize = 250; break;
+				case TestProvName.Firebird3      : batchSize = 250; break;
 
 				// takes too long
-				case ProviderName.Informix     : batchSize = 500; break;
+				case ProviderName.Informix       : batchSize = 500; break;
+				case ProviderName.InformixDB2    : batchSize = 500; break;
 
-				// big query makes Oracle to heavy eat memory
-				// this will affect other servers
-				case ProviderName.OracleManaged:
-				case ProviderName.Oracle       :
-				case ProviderName.OracleNative : batchSize = 100; break;
+				// original 2500 actually works, but sometimes fails with
+				// "cannot allocate enough memory: please check traces for further information"
+				// as HANA virtual machine is PITA to configure, we just use smaller data set
+				case ProviderName.SapHanaNative  : batchSize = 1000; break;
+				case ProviderName.SapHanaOdbc    : batchSize = 1000; break;
+
+				// big batches leads to a lot of memory use by oracle, which could mess with testing environment
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native :
+				case ProviderName.OracleManaged  :
+				case ProviderName.OracleNative   : batchSize = 100; break;
 			}
 
 			RunTest(context, batchSize);
@@ -47,7 +51,7 @@ namespace Tests.xUpdate
 
 		private void RunTest(string context, int size)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 

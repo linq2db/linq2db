@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TesSqlQueryDependent(
+		public void TestSqlQueryDependent(
 			[Values(
 				"MIN",
 				"MAX",

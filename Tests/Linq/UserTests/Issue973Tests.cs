@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -38,7 +39,7 @@ namespace Tests.UserTests
 
 			foreach (var value in values)
 			{
-				var param = new SqlParameter(value?.GetType() ?? typeof(object), parameterName, value);
+				var param = new SqlParameter(new DbDataType(value?.GetType() ?? typeof(object)), parameterName, value);
 				builder.AddParameter("values", param);
 			}
 		}
@@ -55,13 +56,13 @@ namespace Tests.UserTests
 		/// <param name="values">The values.</param>
 		/// <returns></returns>
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
 		{
 			return values.Contains(field);
 		}
 
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
 		{
 			return values.Contains(field);
 		}

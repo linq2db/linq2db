@@ -17,8 +17,8 @@ namespace Tests.xUpdate
 		class TestTable
 		{
 			public int       ID;
-			public string    Field1;
-			public string    Field2;
+			public string?   Field1;
+			public string?   Field2;
 			public DateTime? CreatedOn;
 		}
 
@@ -244,14 +244,14 @@ namespace Tests.xUpdate
 		}
 		public class aa : base_aa
 		{
-			public int    bb { get; set; }
-			public string cc { get; set; }
+			public int     bb { get; set; }
+			public string? cc { get; set; }
 		}
 
 		public class qq
 		{
-			public int bb { get; set; }
-			public string cc { get; set; }
+			public int     bb { get; set; }
+			public string? cc { get; set; }
 		}
 
 		[Test]

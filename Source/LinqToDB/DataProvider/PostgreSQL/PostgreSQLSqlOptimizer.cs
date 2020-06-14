@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
 	using SqlProvider;
@@ -12,16 +10,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement, inlineParameters);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdateFrom((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Common
 {
 	public static class Utils
 	{
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, string defaultName = "t", StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>                   items,
+			IEnumerable<string>?             staticNames,
+			Func<T, string?>                 nameFunc,
+			Action<T, string, ISet<string>?> nameSetter,
+			string                           defaultName = "t",
+			StringComparer?                  comparer    = null)
 		{
 			if (items      == null) throw new ArgumentNullException(nameof(items));
 			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
@@ -18,26 +21,37 @@ namespace LinqToDB.Common
 			MakeUniqueNames(items, staticNames, nameFunc, nameSetter, t =>
 			{
 				var name = nameFunc(t);
-				return string.IsNullOrEmpty(name) ? defaultName : name;
-			});
+				return string.IsNullOrEmpty(name) ? defaultName : name!;
+			}, comparer);
 		}
 
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>                   items,
+			IEnumerable<string>?             staticNames,
+			Func<T, string?>                 nameFunc,
+			Action<T, string, ISet<string>?> nameSetter,
+			Func<T, string?>                 defaultName,
+			StringComparer?                  comparer = null)
 		{
 			if (staticNames != null)
 			{
 				var staticHash = new HashSet<string>(staticNames, comparer);
-				MakeUniqueNames(items, n => !staticHash.Contains(n), nameFunc, nameSetter, defaultName, comparer);
+				MakeUniqueNames(items, null, (n, a) => !staticHash.Contains(n), nameFunc, nameSetter, defaultName, comparer);
 			}
 			else
 			{
-				MakeUniqueNames(items, n => true, nameFunc, nameSetter, defaultName, comparer);
+				MakeUniqueNames(items, null, (n, a) => true, nameFunc, nameSetter, defaultName, comparer);
 			}
 		}
 
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, [NotNull] Func<string, bool> validatorFunc, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
+		public static void MakeUniqueNames<T>(
+			IEnumerable<T>                    items,
+			ISet<string>?                     namesParameter,
+			Func<string, ISet<string>?, bool> validatorFunc,
+			Func<T, string?>                  nameFunc,
+			Action<T, string, ISet<string>?>  nameSetter,
+			Func<T, string?>                  defaultName,
+			StringComparer?                   comparer = null)
 		{
 			if (items         == null) throw new ArgumentNullException(nameof(items));
 			if (validatorFunc == null) throw new ArgumentNullException(nameof(validatorFunc));
@@ -45,66 +59,64 @@ namespace LinqToDB.Common
 			if (nameSetter    == null) throw new ArgumentNullException(nameof(nameSetter));
 			if (defaultName   == null) throw new ArgumentNullException(nameof(defaultName));
 
-			var duplicates = items.ToLookup(i => nameFunc(i) ?? string.Empty, comparer);
+			HashSet<string>?         currentNames    = null;
+			Dictionary<string, int>? currentCounters = null;
 
-			if (duplicates.Count == 0)
-				return;
-
-			var currentNames    = new HashSet<string>(comparer);
-			var currentCounters = new Dictionary<string, int>(comparer);
-
-			foreach (var pair in duplicates)
+			foreach (var item in items)
 			{
-				var groupItems = pair.ToArray();
-
-				if (pair.Key != string.Empty && groupItems.Length == 1 && !currentNames.Contains(pair.Key) && validatorFunc(pair.Key))
+				var name = nameFunc(item);
+				if (!name.IsNullOrEmpty() && currentNames?.Contains(name) != true && validatorFunc(name, namesParameter))
 				{
-					currentNames.Add(pair.Key);
-					nameSetter(groupItems[0], pair.Key);
+					if (currentNames == null)
+						currentNames = new HashSet<string>(comparer);
+					currentNames.Add(name);
+					nameSetter(item, name, namesParameter);
 					continue;
 				}
 
-				foreach (var groupItem in groupItems)
+				if (currentNames == null)
+					currentNames = new HashSet<string>(comparer);
+				if (currentCounters == null)
+					currentCounters = new Dictionary<string, int>(comparer);
+
+				name = defaultName(item);
+
+				if (name.IsNullOrEmpty())
+					name = nameFunc(item);
+				if (name.IsNullOrEmpty())
+					name = "t";
+
+				var digitCount = 0;
+				while (char.IsDigit(name[name.Length - 1 - digitCount]))
 				{
-					var name = defaultName(groupItem);
-
-					if (name.IsNullOrEmpty())
-						name = nameFunc(groupItem);
-					if (name.IsNullOrEmpty())
-						name = "t";
-
-					var digitCount = 0;
-					while (char.IsDigit(name[name.Length - 1 - digitCount]))
-					{
-						++digitCount;
-					}
-
-					var startDigit = 0;
-					if (digitCount > 0)
-					{
-						digitCount = Math.Min(6, digitCount);
-						var prevName = name;
-						name = name.Remove(name.Length - digitCount);
-
-						if (!currentCounters.TryGetValue(name, out startDigit))
-						{
-							startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
-						}
-					}
-
-					string newName;
-					do
-					{
-						newName = name + startDigit;
-						++startDigit;
-					} while (duplicates.Contains(newName) || currentNames.Contains(newName) || !validatorFunc(newName));
-
-					nameSetter(groupItem, newName);
-					currentNames.Add(newName);
-
-					currentCounters.Remove(name);
-					currentCounters.Add(name, startDigit);
+					++digitCount;
 				}
+
+				var startDigit = 0;
+				if (digitCount > 0)
+				{
+					digitCount = Math.Min(6, digitCount);
+					var prevName = name;
+					name = name.Remove(name.Length - digitCount);
+
+					if (!currentCounters.TryGetValue(name, out startDigit))
+					{
+						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
+					}
+				}
+
+				string newName;
+				do
+				{
+					newName = name + startDigit;
+					++startDigit;
+				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
+
+				nameSetter(item, newName, namesParameter);
+				currentNames.Add(newName);
+
+				currentCounters.Remove(name);
+				currentCounters.Add(name, startDigit);
 			}
 		}
 	}

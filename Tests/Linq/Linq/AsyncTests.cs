@@ -17,12 +17,12 @@ namespace Tests.Linq
 	public class AsyncTests : TestBase
 	{
 		[Test]
-		public void Test([DataSources(false)] string context)
+		public async Task Test([DataSources(false)] string context)
 		{
-			TestImpl(context);
+			await TestImpl(context);
 		}
 
-		async void TestImpl(string context)
+		async Task TestImpl(string context)
 		{
 			Test1(context);
 
@@ -44,12 +44,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestForEach([DataSources(false)] string context)
+		public async Task TestForEach([DataSources(false)] string context)
 		{
-			TestForEachImpl(context);
+			await TestForEachImpl(context);
 		}
 
-		async void TestForEachImpl(string context)
+		async Task TestForEachImpl(string context)
 		{
 			using (var db = GetDataContext(context + ".LinqService"))
 			{
@@ -62,16 +62,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExecute1([DataSources(false)] string context)
+		public async Task TestExecute1([DataSources(false)] string context)
 		{
-			TestExecute1Impl(context);
+			await TestExecute1Impl(context);
 		}
 
-		async void TestExecute1Impl(string context)
+		async Task TestExecute1Impl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+				conn.InlineParameters = true;
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
 
@@ -84,7 +88,11 @@ namespace Tests.Linq
 		{
 			using (var conn = new TestDataConnection(context))
 			{
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+				conn.InlineParameters = true;
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
@@ -93,16 +101,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryToArray([DataSources(false)] string context)
+		public async Task TestQueryToArray([DataSources(false)] string context)
 		{
-			TestQueryToArrayImpl(context);
+			await TestQueryToArrayImpl(context);
 		}
 
-		async void TestQueryToArrayImpl(string context)
+		async Task TestQueryToArrayImpl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+				conn.InlineParameters = true;
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("-- Access")));
 
 				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
@@ -152,6 +164,10 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[]
+		{ 
+			ProviderName.DB2
+		})]
 		[Test]
 		public async Task TakeSkipTest([DataSources] string context)
 		{

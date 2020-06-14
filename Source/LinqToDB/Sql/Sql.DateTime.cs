@@ -32,7 +32,7 @@ namespace LinqToDB
 			/// Primitive (each 7 days counted as week) numbering schema: DB2, Oracle databases;
 			/// SQLite numbering logic cannot be classified by human being.
 			/// </summary>
-			Week        =  5,
+			Week =  5,
 			WeekDay     =  6,
 			Hour        =  7,
 			Minute      =  8,
@@ -81,7 +81,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -114,7 +114,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -147,7 +147,7 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr = null;
+				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
@@ -261,14 +261,14 @@ namespace LinqToDB
 							var param = builder.GetExpression("date");
 							builder.ResultExpression = builder.Inc(
 								builder.Sub<int>(
-									new SqlFunction(null, "Mdy",
-										new SqlFunction(null, "Month", param),
-										new SqlFunction(null, "Day", param),
-										new SqlFunction(null, "Year", param)),
-									new SqlFunction(null, "Mdy",
+									new SqlFunction(typeof(DateTime?), "Mdy",
+										new SqlFunction(typeof(int?), "Month", param),
+										new SqlFunction(typeof(int?), "Day",   param),
+										new SqlFunction(typeof(int?), "Year",  param)),
+									new SqlFunction(typeof(DateTime?), "Mdy",
 										new SqlValue(1),
 										new SqlValue(1),
-										new SqlFunction(null, "Year", param)))
+										new SqlFunction(typeof(int?), "Year", param)))
 							);
 							return;
 						}
@@ -439,7 +439,7 @@ namespace LinqToDB
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
 		}
@@ -718,7 +718,7 @@ namespace LinqToDB
 				{
 					case Sql.DateParts.Quarter   :
 						part   = DateParts.Month;
-						number = builder.Mul(number, 3);
+						number  = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
@@ -883,12 +883,42 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderPostgreSql : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				string expStr;
+				switch (part)
+				{
+					case DateParts.Year:        expStr = "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))";    break;
+					case DateParts.Month:       
+						expStr = "((DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date)))"; 
+						break;
+					case DateParts.Week:        expStr = "TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)";   break;
+					case DateParts.Day:         expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400";  break;
+					case DateParts.Hour:        expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600";   break;
+					case DateParts.Minute:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60";     break;
+					case DateParts.Second:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))";          break;
+					case DateParts.Millisecond: expStr = "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)";  break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
 		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

@@ -1,0 +1,16 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			// Access with ACE OLE DB provider
+			"Access"
+		],
+		"Connections": {
+			"Access": {
+				"ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"
+			},
+			"Access.Data": {
+				"ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"
+			}
+		}
+	}
+}

@@ -1,4 +1,3 @@
-using System;
 using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,31 +28,22 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets an assembly qualified type name of this data provider.
 		/// </summary>
-		public string TypeName
-		{
-			get { return (string)base[_propTypeName]; }
-		}
+		public string TypeName => (string)base[_propTypeName];
 
 		/// <summary>
 		/// Gets a name of this data provider.
 		/// If not set, <see cref="DataProviderBase.Name"/> is used.
 		/// </summary>
-		public string Name
-		{
-			get { return (string)base[_propName]; }
-		}
+		public string Name => (string)base[_propName];
 
 		/// <summary>
 		/// Gets a value indicating whether the provider is default.
 		/// </summary>
-		public bool Default
-		{
-			get { return (bool)base[_propDefault]; }
-		}
+		public bool Default => (bool)base[_propDefault];
 
 		IEnumerable<NamedValue> IDataProviderSettings.Attributes
 		{
-			get { return Attributes.AllKeys.Select(e => new NamedValue() {Name = e, Value = Attributes[e]}); }
+			get => Attributes.AllKeys.Select(e => new NamedValue() { Name = e, Value = Attributes[e] });
 		}
 	}
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -9,6 +8,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{
+		public SqlServer2000SchemaProvider(SqlServerDataProvider provider)
+			: base(provider)
+		{
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"
@@ -24,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ColumnInfo>(@"
 				SELECT
@@ -64,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT

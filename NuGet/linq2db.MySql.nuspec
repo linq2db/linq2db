@@ -11,17 +11,17 @@
 		</summary>
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="MySql.Data" version="6.10.6" />
-			<dependency id="linq2db"    version="2.6.0"  />
+			<dependency id="MySql.Data" version="8.0.20" />
+			<dependency id="linq2db"    version="3.0.0"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"         target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\MySql.Data.dll"          target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\BouncyCastle.Crypto.dll" target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"         target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\MySql.Data.dll"             target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\BouncyCastle.Crypto.dll"    target="tools" />
 
 		<file src="MySql\linq2db.MySql.props"                                target="build" />
 		

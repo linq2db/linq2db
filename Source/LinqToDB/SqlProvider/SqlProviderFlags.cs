@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Data;
+using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlQuery;
 	using System.Collections.Generic;
+	using SqlQuery;
 
 	public class SqlProviderFlags
 	{
+		public bool        IsSybaseBuggyGroupBy           { get; set; }
+
 		public bool        IsParameterOrderDependent      { get; set; }
 		public bool        AcceptsTakeAsParameter         { get; set; }
 		public bool        AcceptsTakeAsParameterIfSkip   { get; set; }
@@ -24,8 +28,6 @@ namespace LinqToDB.SqlProvider
 		public bool        IsGroupByExpressionSupported   { get; set; }
 		public int         MaxInListValuesCount           { get; set; }
 		public bool        IsUpdateSetTableAliasSupported { get; set; }
-		public bool        IsSybaseBuggyGroupBy           { get; set; }
-		//public IsTakeHints GetIsTakeHintsSupported        { get; set; }
 		public TakeHints?  TakeHintsSupported             { get; set; }
 
 		/// <summary>
@@ -71,6 +73,16 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsCountDistinctSupported              { get; set; }
 
+		/// <summary>
+		/// Provider supports
+		/// <code>
+		/// UPDATE A
+		/// SET ...
+		/// FROM B
+		/// </code> syntax
+		/// </summary>
+		public bool IsUpdateFromSupported                 { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -90,8 +102,89 @@ namespace LinqToDB.SqlProvider
 		}
 
 		/// <summary>
+		/// Used when there is query which needs several additional database request for completing query.
+		/// Default is <see cref="IsolationLevel.RepeatableRead"/>
+		/// </summary>
+		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
+
+		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
 		public List<string> CustomFlags { get; } = new List<string>();
+
+		#region Equality
+		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
+		// with different flags
+		// https://github.com/linq2db/linq2db/issues/1445
+		public override int GetHashCode()
+		{
+			return IsSybaseBuggyGroupBy                        .GetHashCode()
+				^ IsParameterOrderDependent                    .GetHashCode()
+				^ AcceptsTakeAsParameter                       .GetHashCode()
+				^ AcceptsTakeAsParameterIfSkip                 .GetHashCode()
+				^ IsTakeSupported                              .GetHashCode()
+				^ IsSkipSupported                              .GetHashCode()
+				^ IsSkipSupportedIfTake                        .GetHashCode()
+				^ IsSubQueryTakeSupported                      .GetHashCode()
+				^ IsSubQueryColumnSupported                    .GetHashCode()
+				^ IsSubQueryOrderBySupported                   .GetHashCode()
+				^ IsCountSubQuerySupported                     .GetHashCode()
+				^ IsIdentityParameterRequired                  .GetHashCode()
+				^ IsApplyJoinSupported                         .GetHashCode()
+				^ IsInsertOrUpdateSupported                    .GetHashCode()
+				^ CanCombineParameters                         .GetHashCode()
+				^ IsGroupByExpressionSupported                 .GetHashCode()
+				^ MaxInListValuesCount                         .GetHashCode()
+				^ IsUpdateSetTableAliasSupported               .GetHashCode()
+				^ (TakeHintsSupported?                         .GetHashCode() ?? 0)
+				^ IsCrossJoinSupported                         .GetHashCode()
+				^ IsInnerJoinAsCrossSupported                  .GetHashCode()
+				^ IsCommonTableExpressionsSupported            .GetHashCode()
+				^ IsDistinctOrderBySupported                   .GetHashCode()
+				^ IsOrderByAggregateFunctionsSupported         .GetHashCode()
+				^ IsAllSetOperationsSupported                  .GetHashCode()
+				^ IsDistinctSetOperationsSupported             .GetHashCode()
+				^ IsCountDistinctSupported                     .GetHashCode()
+				^ IsUpdateFromSupported                        .GetHashCode()
+				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
+	}
+
+		public override bool Equals(object obj)
+		{
+			return obj is SqlProviderFlags other
+				&& IsSybaseBuggyGroupBy                 == other.IsSybaseBuggyGroupBy
+				&& IsParameterOrderDependent            == other.IsParameterOrderDependent
+				&& AcceptsTakeAsParameter               == other.AcceptsTakeAsParameter
+				&& AcceptsTakeAsParameterIfSkip         == other.AcceptsTakeAsParameterIfSkip
+				&& IsTakeSupported                      == other.IsTakeSupported
+				&& IsSkipSupported                      == other.IsSkipSupported
+				&& IsSkipSupportedIfTake                == other.IsSkipSupportedIfTake
+				&& IsSubQueryTakeSupported              == other.IsSubQueryTakeSupported
+				&& IsSubQueryColumnSupported            == other.IsSubQueryColumnSupported
+				&& IsSubQueryOrderBySupported           == other.IsSubQueryOrderBySupported
+				&& IsCountSubQuerySupported             == other.IsCountSubQuerySupported
+				&& IsIdentityParameterRequired          == other.IsIdentityParameterRequired
+				&& IsApplyJoinSupported                 == other.IsApplyJoinSupported
+				&& IsInsertOrUpdateSupported            == other.IsInsertOrUpdateSupported
+				&& CanCombineParameters                 == other.CanCombineParameters
+				&& IsGroupByExpressionSupported         == other.IsGroupByExpressionSupported
+				&& MaxInListValuesCount                 == other.MaxInListValuesCount
+				&& IsUpdateSetTableAliasSupported       == other.IsUpdateSetTableAliasSupported
+				&& TakeHintsSupported                   == other.TakeHintsSupported
+				&& IsCrossJoinSupported                 == other.IsCrossJoinSupported
+				&& IsInnerJoinAsCrossSupported          == other.IsInnerJoinAsCrossSupported
+				&& IsCommonTableExpressionsSupported    == other.IsCommonTableExpressionsSupported
+				&& IsDistinctOrderBySupported           == other.IsDistinctOrderBySupported
+				&& IsOrderByAggregateFunctionsSupported == other.IsOrderByAggregateFunctionsSupported
+				&& IsAllSetOperationsSupported          == other.IsAllSetOperationsSupported
+				&& IsDistinctSetOperationsSupported     == other.IsDistinctSetOperationsSupported
+				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
+				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
+				// CustomFlags as List wasn't best idea
+				&& CustomFlags.Count                    == other.CustomFlags.Count
+				&& (CustomFlags.Count                   == 0
+					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
+		}
+		#endregion
 	}
 }

@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace LinqToDB.Expressions
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
-        public virtual int GetHashCode(Expression obj)
+        public virtual int GetHashCode(Expression? obj)
         {
             if (obj == null)
             {
@@ -302,9 +303,9 @@ namespace LinqToDB.Expressions
 
         private sealed class ExpressionComparer
         {
-            private ScopedDictionary<ParameterExpression, ParameterExpression> _parameterScope;
+            private ScopedDictionary<ParameterExpression, ParameterExpression>? _parameterScope;
 
-            public bool Compare(Expression a, Expression b)
+            public bool Compare(Expression? a, Expression? b)
             {
                 if (a == b)
                 {
@@ -461,7 +462,7 @@ namespace LinqToDB.Expressions
                 {
                     if (_parameterScope.TryGetValue(a, out var mapped))
                     {
-                        return mapped.Name == b.Name
+                        return mapped!.Name == b.Name
                                && mapped.Type == b.Type;
                     }
                 }
@@ -521,7 +522,7 @@ namespace LinqToDB.Expressions
                    && CompareExpressionList(a.Arguments, b.Arguments)
                    && CompareMemberList(a.Members, b.Members);
 
-            private bool CompareExpressionList(IReadOnlyList<Expression> a, IReadOnlyList<Expression> b)
+            private bool CompareExpressionList(IReadOnlyList<Expression>? a, IReadOnlyList<Expression>? b)
             {
                 if (Equals(a, b))
                 {
@@ -550,7 +551,7 @@ namespace LinqToDB.Expressions
                 return true;
             }
 
-            private static bool CompareMemberList(IReadOnlyList<MemberInfo> a, IReadOnlyList<MemberInfo> b)
+            private static bool CompareMemberList(IReadOnlyList<MemberInfo>? a, IReadOnlyList<MemberInfo>? b)
             {
                 if (ReferenceEquals(a, b))
                 {
@@ -617,7 +618,7 @@ namespace LinqToDB.Expressions
                 => Compare(a.NewExpression, b.NewExpression)
                    && CompareBindingList(a.Bindings, b.Bindings);
 
-            private bool CompareBindingList(IReadOnlyList<MemberBinding> a, IReadOnlyList<MemberBinding> b)
+            private bool CompareBindingList(IReadOnlyList<MemberBinding>? a, IReadOnlyList<MemberBinding>? b)
             {
                 if (ReferenceEquals(a, b))
                 {
@@ -646,7 +647,7 @@ namespace LinqToDB.Expressions
                 return true;
             }
 
-            private bool CompareBinding(MemberBinding a, MemberBinding b)
+            private bool CompareBinding(MemberBinding? a, MemberBinding? b)
             {
                 if (a == b)
                 {
@@ -698,7 +699,7 @@ namespace LinqToDB.Expressions
                 => Compare(a.NewExpression, b.NewExpression)
                    && CompareElementInitList(a.Initializers, b.Initializers);
 
-            private bool CompareElementInitList(IReadOnlyList<ElementInit> a, IReadOnlyList<ElementInit> b)
+            private bool CompareElementInitList(IReadOnlyList<ElementInit>? a, IReadOnlyList<ElementInit>? b)
             {
                 if (ReferenceEquals(a, b))
                 {
@@ -733,10 +734,10 @@ namespace LinqToDB.Expressions
 
             private class ScopedDictionary<TKey, TValue>
             {
-                private readonly ScopedDictionary<TKey, TValue> _previous;
+                private readonly ScopedDictionary<TKey, TValue>? _previous;
                 private readonly Dictionary<TKey, TValue> _map;
 
-                public ScopedDictionary(ScopedDictionary<TKey, TValue> previous)
+                public ScopedDictionary(ScopedDictionary<TKey, TValue>? previous)
                 {
                     _previous = previous;
                     _map = new Dictionary<TKey, TValue>();
@@ -744,9 +745,9 @@ namespace LinqToDB.Expressions
 
                 public void Add(TKey key, TValue value) => _map.Add(key, value);
 
-                public bool TryGetValue(TKey key, out TValue value)
+                public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
                 {
-                    for (var scope = this; scope != null; scope = scope._previous)
+                    for (var scope = this; scope != null; scope = scope._previous!)
                     {
                         if (scope._map.TryGetValue(key, out value))
                         {

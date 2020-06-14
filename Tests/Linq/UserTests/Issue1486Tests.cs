@@ -56,35 +56,25 @@ namespace Tests.UserTests
 		public void TestConnectionStringCopy(
 			[DataSources(
 				false,
-#if NETSTANDARD1_6
-				TestProvName.AllMySqlData,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSqlServer,
-#endif
 				ProviderName.MySqlConnector,
 				TestProvName.AllOracle,
-				ProviderName.SapHana)]
-					string context,
-			[Values]
-					bool providerSpecific)
+				TestProvName.AllSapHana)]
+					string context)
 		{
 			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new IssueDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 
-		[ActiveIssue("AvoidSpecificDataProviderAPI support missing", Configuration = TestProvName.AllOracle)]
 		[Test]
-		public void TestFactory([DataSources(false)] string context, [Values] bool providerSpecific)
+		public void TestFactory([DataSources(false)] string context)
 		{
 			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new FactoryDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 	}

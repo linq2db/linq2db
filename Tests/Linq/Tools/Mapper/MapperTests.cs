@@ -34,8 +34,8 @@ namespace Tests.Tools.Mapper
 				return this;
 			}
 
-			public TFrom From;
-			public TTo   To;
+			public TFrom From = default!;
+			public TTo   To   = default!;
 		}
 
 		class TestMap {}
@@ -125,21 +125,21 @@ namespace Tests.Tools.Mapper
 
 		class Dest
 		{
-			public int    Field1;
-			public float  Field3;
-			public int    Field4;
-			public int?   Field6;
-			public int    Field7;
-			public int    Field8;
-			public int    Field9;
-			public string Field10;
-			public int    Field11;
-			public int    Field12;
-			public int    Field13;
-			public int    Field14;
-			public Gender Field15;
-			public string Field16;
-			public Enum2  Field17;
+			public int     Field1;
+			public float   Field3;
+			public int     Field4;
+			public int?    Field6;
+			public int     Field7;
+			public int     Field8;
+			public int     Field9;
+			public string? Field10;
+			public int     Field11;
+			public int     Field12;
+			public int     Field13;
+			public int     Field14;
+			public Gender  Field15;
+			public string? Field16;
+			public Enum2   Field17;
 		}
 
 		class Source
@@ -153,7 +153,7 @@ namespace Tests.Tools.Mapper
 			public decimal? Field9  = 9m;
 			public int      Field10 = 10;
 			public string   Field11 = "11";
-			public string   Field12 { get; set; }
+			public string?  Field12 { get; set; }
 			public int?     Field13;
 			public decimal? Field14;
 			public string   Field15 = "F";
@@ -191,12 +191,12 @@ namespace Tests.Tools.Mapper
 		[Explicit, Test]
 		public void PerfTest()
 		{
-			var map = new MapperBuilder<Source,Dest>()
-				.MapMember(_ => _.Field3,  _ => _.Field2)
-				.MapMember(_ => _.Field4,  _ => _.Field5)
-				.MapMember(_ => _.Field12, _ => _.Field12 != null ? int.Parse(_.Field12) : 12)
-				.MapMember(_ => _.Field13, _ => _.Field13 ?? 13)
-				.MapMember(_ => _.Field14, _ => _.Field14 ?? 14)
+			var map = new MapperBuilder<Source,Dest?>()
+				.MapMember(_ => _!.Field3,  _ => _.Field2)
+				.MapMember(_ => _!.Field4,  _ => _.Field5)
+				.MapMember(_ => _!.Field12, _ => _.Field12 != null ? int.Parse(_.Field12) : 12)
+				.MapMember(_ => _!.Field13, _ => _.Field13 ?? 13)
+				.MapMember(_ => _!.Field14, _ => _.Field14 ?? 14)
 				.GetMapper();
 
 			var src  = new Source();
@@ -325,8 +325,8 @@ namespace Tests.Tools.Mapper
 			Assert.That(map.To.Class.Field, Is.EqualTo(map.From.Class.Field));
 		}
 
-		class Class5 { public Class1 Class1 = new Class1(); public Class1 Class2; }
-		class Class6 { public Class2 Class1 = new Class2(); public Class2 Class2 = null; }
+		class Class5 { public Class1 Class1 = new Class1(); public Class1? Class2; }
+		class Class6 { public Class2 Class1 = new Class2(); public Class2? Class2 = null; }
 
 		[Test]
 		public void MapInnerObject2([Values] bool useAction)
@@ -356,10 +356,10 @@ namespace Tests.Tools.Mapper
 			Assert.That(map.To.Class2, Is.Not.SameAs(map.To.Class1));
 		}
 
-		class Class7  { public Class9  Class; }
-		class Class8  { public Class10 Class = null; }
-		class Class9  { public Class7  Class = new Class7(); }
-		class Class10 { public Class8  Class = new Class8(); }
+		class Class7  { public Class9?  Class; }
+		class Class8  { public Class10? Class = null; }
+		class Class9  { public Class7   Class = new Class7(); }
+		class Class10 { public Class8   Class = new Class8(); }
 
 		[Test]
 		public void SelfReference1([Values] bool useAction)
@@ -393,10 +393,10 @@ namespace Tests.Tools.Mapper
 		class Cl1 {}
 		class Cl2 { public Cl1 Class1 = new Cl1(); }
 		class Cl3 { public Cl1 Class1 = new Cl1(); }
-		class Cl4 { public Cl1 Class1 = new Cl1(); public Cl2 Class2 = new Cl2(); public Cl3 Class3 = new Cl3(); }
-		class Cl21 { public Cl1 Class1; }
-		class Cl31 { public Cl1 Class1; }
-		class Cl41 { public Cl1 Class1; public Cl21 Class2; public Cl31 Class3; }
+		class Cl4 { public Cl1 Class1 = new Cl1(); public Cl2? Class2 = new Cl2(); public Cl3 Class3 = new Cl3(); }
+		class Cl21 { public Cl1? Class1; }
+		class Cl31 { public Cl1? Class1; }
+		class Cl41 { public Cl1? Class1; public Cl21? Class2; public Cl31? Class3; }
 
 		[Test]
 		public void SelfReference3([Values] bool useAction)
@@ -442,8 +442,8 @@ namespace Tests.Tools.Mapper
 			Assert.That(map.To.Class, Is.SameAs(src.Class));
 		}
 
-		class Class15 { public List<Class1> List = new List<Class1> { new Class1(), new Class1() }; }
-		class Class16 { public List<Class2> List = null; }
+		class Class15 { public List<Class1>  List = new List<Class1> { new Class1(), new Class1() }; }
+		class Class16 { public List<Class2>? List = null; }
 
 		[Test]
 		public void ObjectList([Values] bool useAction)
@@ -455,25 +455,25 @@ namespace Tests.Tools.Mapper
 			var map = new MapHelper<Class15,Class16>().Map(useAction, src, m => m
 				.SetProcessCrossReferences(true));
 
-			Assert.That(map.To.List.Count, Is.EqualTo(3));
-			Assert.That(map.To.List[0],    Is.Not.Null);
-			Assert.That(map.To.List[1],    Is.Not.Null);
-			Assert.That(map.To.List[2],    Is.Not.Null);
-			Assert.That(map.To.List[0],    Is.Not.SameAs(map.To.List[1]));
-			Assert.That(map.To.List[0],    Is.    SameAs(map.To.List[2]));
+			Assert.That(map.To.List!.Count, Is.EqualTo(3));
+			Assert.That(map.To.List[0],     Is.Not.Null);
+			Assert.That(map.To.List[1],     Is.Not.Null);
+			Assert.That(map.To.List[2],     Is.Not.Null);
+			Assert.That(map.To.List[0],     Is.Not.SameAs(map.To.List[1]));
+			Assert.That(map.To.List[0],     Is.    SameAs(map.To.List[2]));
 		}
 
 		[Test]
 		public void ScalarList()
 		{
-			var mapper = Map.GetMapper<List<int>,IList<string>>();
-			var dest   = mapper.Map(new List<int> { 1, 2, 3 });
+			var mapper = Map.GetMapper<List<int>,IList<string>?>();
+			var dest   = mapper.Map(new List<int> { 1, 2, 3 })!;
 
 			Assert.AreEqual("1", dest[0]);
 			Assert.AreEqual("2", dest[1]);
 			Assert.AreEqual("3", dest[2]);
 
-			dest = mapper.Map(new List<int> { 1, 2, 3}, null);
+			dest = mapper.Map(new List<int> { 1, 2, 3}, null)!;
 
 			Assert.AreEqual("1", dest[0]);
 			Assert.AreEqual("2", dest[1]);
@@ -483,14 +483,14 @@ namespace Tests.Tools.Mapper
 		[Test]
 		public void ScalarArray()
 		{
-			var mapper = Map.GetMapper<int[],string[]>();
-			var dest   = mapper.Map(new[] { 1, 2, 3 });
+			var mapper = Map.GetMapper<int[],string[]?>();
+			var dest   = mapper.Map(new[] { 1, 2, 3 })!;
 
 			Assert.AreEqual("1", dest[0]);
 			Assert.AreEqual("2", dest[1]);
 			Assert.AreEqual("3", dest[2]);
 
-			dest   = mapper.Map(new[] { 1, 2, 3 }, null);
+			dest   = mapper.Map(new[] { 1, 2, 3 }, null)!;
 
 			Assert.AreEqual("1", dest[0]);
 			Assert.AreEqual("2", dest[1]);
@@ -511,7 +511,7 @@ namespace Tests.Tools.Mapper
 			}
 		}
 
-		class Class18 { public Class9[] Arr = null; }
+		class Class18 { public Class9[]? Arr = null; }
 
 		[Test]
 		public void ObjectArray1([Values] bool useAction)
@@ -519,7 +519,7 @@ namespace Tests.Tools.Mapper
 			var mapper = new MapHelper<Class17,Class18>().Map(useAction, new Class17(), m =>
 				m.SetProcessCrossReferences(true));
 
-			Assert.That(mapper.To.Arr.Length, Is.EqualTo(3));
+			Assert.That(mapper.To.Arr!.Length, Is.EqualTo(3));
 			Assert.That(mapper.To.Arr[0], Is.Not.Null);
 			Assert.That(mapper.To.Arr[1], Is.Not.Null);
 			Assert.That(mapper.To.Arr[2], Is.Not.Null);
@@ -538,7 +538,7 @@ namespace Tests.Tools.Mapper
 			var mapper = new MapHelper<Class19,Class18>().Map(useAction, new Class19(), m =>
 				m.SetProcessCrossReferences(true));
 
-			Assert.That(mapper.To.Arr.Length, Is.EqualTo(3));
+			Assert.That(mapper.To.Arr!.Length, Is.EqualTo(3));
 			Assert.That(mapper.To.Arr[0], Is.Not.Null);
 			Assert.That(mapper.To.Arr[1], Is.Not.Null);
 			Assert.That(mapper.To.Arr[2], Is.Not.Null);
@@ -546,8 +546,8 @@ namespace Tests.Tools.Mapper
 			Assert.That(mapper.To.Arr[0], Is.SameAs(mapper.To.Arr[2]));
 		}
 
-		class Class20 { public Source Class1 = new Source(); public Source Class2; }
-		class Class21 { public Dest   Class1 = null;         public Dest   Class2 = null; }
+		class Class20 { public Source Class1 = new Source(); public Source? Class2; }
+		class Class21 { public Dest?  Class1 = null;         public Dest?   Class2 = null; }
 
 		[Test]
 		public void NoCrossRef([Values] bool useAction)
@@ -564,8 +564,6 @@ namespace Tests.Tools.Mapper
 			Assert.That(mapper.To.Class2, Is.Not.Null);
 			Assert.That(mapper.To.Class1, Is.Not.SameAs(mapper.To.Class2));
 		}
-
-#if !NETSTANDARD1_6
 
 		class Object3
 		{
@@ -589,11 +587,9 @@ namespace Tests.Tools.Mapper
 			}
 		}
 
-#endif
-
 		class RTest1
 		{
-			public List<RTest1> Depends { get; set; }
+			public List<RTest1>? Depends { get; set; }
 		}
 
 		[Test]
@@ -606,7 +602,7 @@ namespace Tests.Tools.Mapper
 
 		public class RTest2
 		{
-			public RTest2[] Depends { get; set; }
+			public RTest2[]? Depends { get; set; }
 		}
 
 		[Test]
@@ -619,7 +615,7 @@ namespace Tests.Tools.Mapper
 
 		class ByteTestClass
 		{
-			public byte[] Image { get; set; }
+			public byte[]? Image { get; set; }
 		}
 
 		[Test]
@@ -632,18 +628,18 @@ namespace Tests.Tools.Mapper
 
 		class RClass1
 		{
-			public RClass2 Class2;
+			public RClass2? Class2;
 		}
 
 		class RClass2
 		{
-			public List<RClass3> List;
+			public List<RClass3>? List;
 		}
 
 		class RClass3
 		{
-			public RClass1 Class1;
-			public RClass2 Class2;
+			public RClass1? Class1;
+			public RClass2? Class2;
 		}
 
 		[Test]
@@ -667,7 +663,7 @@ namespace Tests.Tools.Mapper
 
 			Assert.That(mapper.To,                       Is.Not.Null);
 			Assert.That(mapper.To.Class2,                Is.Not.Null);
-			Assert.That(mapper.To.Class2.List.Count,     Is.EqualTo(2));
+			Assert.That(mapper.To.Class2!.List!.Count,   Is.EqualTo(2));
 			Assert.That(mapper.To.Class2.List[0],        Is.Not.Null);
 			Assert.That(mapper.To.Class2.List[1],        Is.Not.Null);
 			Assert.That(mapper.To.Class2.List[0].Class1, Is.Not.Null);

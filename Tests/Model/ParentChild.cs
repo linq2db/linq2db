@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-#if !NOIMMUTABLE
 using System.Collections.Immutable;
-#endif
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
@@ -28,13 +25,13 @@ namespace Tests.Model
 		public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children;
+		public List<Child> Children = null!;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<GrandChild> GrandChildren;
+		public List<GrandChild> GrandChildren = null!;
 
 		[Association(ThisKey = "ParentID, Value1", OtherKey = "ParentID, Value1")]
-		public Parent ParentTest;
+		public Parent? ParentTest;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public IEnumerable<Child> Children2
@@ -43,11 +40,7 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-#if !NOIMMUTABLE
-		public ImmutableList<Child> Children3;
-#else
-		public List<Child> Children3;
-#endif
+		public ImmutableList<Child> Children3 = null!;
 
 		public override bool Equals(object obj)
 		{
@@ -73,22 +66,22 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
-		public LinqDataTypes Types;
+		public LinqDataTypes? Types;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "ChildrenPredicate", CanBeNull = true)]
-		public List<Child> ChildrenX { get; set; }
+		public List<Child> ChildrenX { get; set; } = null!;
 
 		static Expression<Func<Parent, Child, bool>> ChildrenPredicate =>
 			(t, m) => Math.Abs(m.ChildID) > 3;
 
-		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "GrandChildrenPredicate" , CanBeNull = true)]
-		public List<GrandChild> GrandChildrenX { get; set; }
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "GrandChildrenPredicate", CanBeNull = true)]
+		public List<GrandChild> GrandChildrenX { get; set; } = null!;
 
 		static Expression<Func<Parent,GrandChild, bool>> GrandChildrenPredicate =>
 			(t, m) => m.ChildID > 22;
 
 		[ExpressionMethod("GrandChildren2Impl")]
-		public IEnumerable<GrandChild> GrandChildren2 { get; set; }
+		public IEnumerable<GrandChild> GrandChildren2 { get; set; } = null!;
 
 		static Expression<Func<Parent,ITestDataContext,IEnumerable<GrandChild>>> GrandChildren2Impl()
 		{
@@ -120,29 +113,29 @@ namespace Tests.Model
 		[PrimaryKey] public int ChildID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public Parent  Parent;
+		public Parent?  Parent;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false)]
-		public Parent1 Parent1;
+		public Parent1? Parent1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID2", CanBeNull = false)]
-		public Parent3 ParentID2;
+		public Parent3? ParentID2;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public List<GrandChild> GrandChildren;
+		public List<GrandChild> GrandChildren = null!;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID", CanBeNull = false)]
-		public List<GrandChild> GrandChildren1;
+		public List<GrandChild> GrandChildren1 = null!;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public GrandChild[] GrandChildren2;
+		public GrandChild[] GrandChildren2 = null!;
 
 		public override bool Equals(object obj)
 		{
 			return Equals(obj as Child);
 		}
 
-		public bool Equals(Child other)
+		public bool Equals(Child? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -168,7 +161,7 @@ namespace Tests.Model
 		public int? GrandChildID;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public Child Child;
+		public Child? Child;
 
 		public override bool Equals(object obj)
 		{
@@ -286,7 +279,7 @@ namespace Tests.Model
 		public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
-		public List<Parent5> Children;
+		public List<Parent5> Children = null!;
 
 		public override bool Equals(object obj)
 		{
@@ -303,7 +296,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ (int)Value1; }
+			unchecked { return (ParentID * 397) ^ (int)Value1!; }
 		}
 
 		public int CompareTo(object obj)
@@ -323,7 +316,7 @@ namespace Tests.Model
 		[Column]     public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children;
+		public List<Child> Children = null!;
 
 		public override bool Equals(object obj)
 		{
@@ -357,10 +350,10 @@ namespace Tests.Model
 		public int? GrandChildID;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public Child Child;
+		public Child? Child;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false)]
-		public Parent1 Parent;
+		public Parent1? Parent;
 
 		public override bool Equals(object obj)
 		{
@@ -407,7 +400,7 @@ namespace Tests.Model
 		public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children;
+		public List<Child> Children = null!;
 
 		public override bool Equals(object obj)
 		{
@@ -493,7 +486,7 @@ namespace Tests.Model
 		[Column(IsPrimaryKey=true)] public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children;
+		public List<Child> Children = null!;
 	}
 
 	public class ParentInheritance12 : ParentInheritanceBase2
@@ -515,7 +508,7 @@ namespace Tests.Model
 		public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children;
+		public List<Child> Children = null!;
 	}
 
 	public class ParentInheritance13 : ParentInheritanceBase3

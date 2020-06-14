@@ -8,7 +8,6 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using Expressions;
-	using Extensions;
 	using JetBrains.Annotations;
 	using Mapping;
 
@@ -86,8 +85,7 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression GetConverter(Type from, Type to)
 		{
-			LambdaExpression l;
-			_expressions.TryGetValue(new { from, to }, out l);
+			_expressions.TryGetValue(new { from, to }, out var l);
 			return l;
 		}
 
@@ -100,29 +98,28 @@ namespace LinqToDB.Common
 		/// <param name="conversionType">Target conversion type.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
 		/// <returns>Converted value.</returns>
-		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
+		public static object? ChangeType(object? value, Type conversionType, MappingSchema? mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
 					DefaultValue.GetValue(conversionType) :
 					mappingSchema.GetDefaultValue(conversionType);
 
-			if (value.GetType() == conversionType)
+			var from = value.GetType();
+			if (from == conversionType)
 				return value;
 
-			var from = value.GetType();
 			var to   = conversionType;
 			var key  = new { from, to };
 
 			var converters = mappingSchema == null ? _converters : mappingSchema.Converters;
 
-			Func<object,object> l;
-
-			if (!converters.TryGetValue(key, out l))
+			if (!converters.TryGetValue(key, out var l))
 			{
-				var li =
-					ConvertInfo.Default.Get   (               value.GetType(), to) ??
-					ConvertInfo.Default.Create(mappingSchema, value.GetType(), to);
+				var li = mappingSchema != null
+					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true)!
+					: (ConvertInfo.Default.Get    (from, to) ??
+						ConvertInfo.Default.Create(mappingSchema, from, to));
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
@@ -133,7 +130,7 @@ namespace LinqToDB.Common
 						b.Transform(e =>
 							e == ps[0] ?
 								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ? 
+							IsDefaultValuePlaceHolder(e) ?
 								new DefaultValueExpression(mappingSchema, e.Type) :
 								e),
 						typeof(object)),
@@ -159,12 +156,12 @@ namespace LinqToDB.Common
 		/// <param name="value">Value to convert.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
 		/// <returns>Converted value.</returns>
-		public static T ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
+		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
 					DefaultValue<T>.Value :
-					(T)mappingSchema.GetDefaultValue(typeof(T));
+					(T)mappingSchema.GetDefaultValue(typeof(T))!;
 
 			if (value.GetType() == typeof(T))
 				return (T)value;
@@ -172,9 +169,7 @@ namespace LinqToDB.Common
 			var from = value.GetType();
 			var to   = typeof(T);
 
-			Func<object,T> l;
-
-			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
+			if (!ExprHolder<T>.Converters.TryGetValue(from, out var l))
 			{
 				var li = ConvertInfo.Default.Get(from, to) ?? ConvertInfo.Default.Create(mappingSchema, from, to);
 				var b  = li.CheckNullLambda.Body;
@@ -212,7 +207,7 @@ namespace LinqToDB.Common
 
 			if (me != null)
 			{
-				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericTypeEx())
+				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}
 
@@ -225,7 +220,7 @@ namespace LinqToDB.Common
 		/// <param name="mappingSchema">Current mapping schema</param>
 		/// <param name="enumType">Enumeration type.</param>
 		/// <returns>Underlying mapping type.</returns>
-		public static Type GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
+		public static Type? GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
 		{
 			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);
 		}

@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Expression = Expression.Walk(options, func);
+			Expression = Expression.Walk(options, func)!;
 		}
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)

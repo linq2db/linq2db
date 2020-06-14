@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace Tests.UserTests
 {
-#if !NETSTANDARD1_6
 	/// <summary>
 	/// Note that tests below do only following:
 	/// - check if procedure schema works as it is or it executes procedures for real and should be wrapped in transaction and rolled back
@@ -22,13 +21,9 @@ namespace Tests.UserTests
 	///
 	/// Summary on tests below:
 	/// 1. SQL CE and SQLite excluded, as they don't support stored procedures
-	/// 2. SAP HANA 2 provider schema calls are slow and cannot be automated as provider shows c++ assert messagebox from time
-	///    to time or hang. Clicking "No" in message box leads to successfull run.
-	///    This issue exists for all SAPHANA2 schema tests.
-	///    File 'd:\703\w\c3eyx5mf7a\src\interfaces\ado.net\impl\command_imp.cpp' at line #637
-	/// 3. Following providers execute procedures for real: Sybase, MySQL (5.6, 5.7, MariaDB)
-	/// 4. Following providers miss procedures schema load so wasn't really tested yet: PostgreSQL, Informix
-	/// 5. Following providers doesn't support transactions during schema load:
+	/// 2. Following providers execute procedures for real: Sybase, MySQL/MariaDB
+	/// 3. Following providers miss procedures schema load so wasn't really tested yet: PostgreSQL, Informix
+	/// 4. Following providers doesn't support transactions during schema load:
 	///    Sybase (The 'CREATE TABLE' command is not allowed within a multi-statement transaction in the 'tempdb' database.)
 	///    DB2, MSSQL (Execute requires the command to have a transaction object when the connection assigned to the command is in a pending local transaction.  The Transaction property of the command has not been initialized)
 	///    see also: https://social.msdn.microsoft.com/Forums/en-US/b4a458d0-65bd-40fb-bc60-c7ed8e94517f/sqlconnectiongetschema-exceptions-when-in-a-transaction?forum=adodotnetdataproviders
@@ -40,7 +35,7 @@ namespace Tests.UserTests
 		public class AllTypes
 		{
 			[Column("CHAR20DATATYPE", Configuration = ProviderName.DB2)]
-			public string char20DataType;
+			public string? char20DataType;
 		}
 
 		[Test]
@@ -48,7 +43,7 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix)]
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -59,9 +54,11 @@ namespace Tests.UserTests
 
 				try
 				{
-					var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+					var schemaName = TestUtils.GetSchemaName(db);
+					var schema     = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 					{
-						GetTables = false
+						GetTables       = false,
+						IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 					}));
 
 					var recordsAfter = db.GetTable<AllTypes>().Count();
@@ -86,9 +83,10 @@ namespace Tests.UserTests
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
+			ProviderName.Access,
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllSqlServer)]
@@ -101,9 +99,11 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				var schemaName = TestUtils.GetSchemaName(db);
+				var schema     = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
-					GetTables = false
+					GetTables       = false,
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				}));
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();
@@ -159,5 +159,4 @@ namespace Tests.UserTests
 			}
 		}
 	}
-#endif
 }

@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -19,10 +19,11 @@ namespace LinqToDB.SqlQuery
 			Precedence  = precedence;
 			Parameters  = parameters;
 			IsAggregate = isAggregate;
+			IsPure      = isPure;
 		}
 
-		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, expr, precedence, false, true, parameters)
 		{
 		}
 
@@ -31,7 +32,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlExpression(Type systemType, string expr, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, params ISqlExpression[] parameters)
 			: this(systemType, expr, SqlQuery.Precedence.Unknown, parameters)
 		{
 		}
@@ -41,11 +42,12 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type             SystemType  { get; }
+		public Type?            SystemType  { get; }
 		public string           Expr        { get; }
 		public int              Precedence  { get; }
 		public ISqlExpression[] Parameters  { get; }
 		public bool             IsAggregate { get; }
+		public bool             IsPure      { get; }
 
 		#region Overrides
 
@@ -65,7 +67,7 @@ namespace LinqToDB.SqlQuery
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func);
+				Parameters[i] = Parameters[i].Walk(options, func)!;
 
 			return func(this);
 		}
@@ -102,6 +104,19 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+
+		public override int GetHashCode()
+		{
+			var hashCode = Expr.GetHashCode();
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			return hashCode;
+		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

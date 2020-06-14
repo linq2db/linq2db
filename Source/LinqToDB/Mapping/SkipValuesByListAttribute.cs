@@ -15,14 +15,14 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets collection with values to skip.
 		/// </summary>
-		protected HashSet<object> Values { get; set; }
+		protected HashSet<object?> Values { get; set; }
 
-		protected SkipValuesByListAttribute(IEnumerable<object> values)
+		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{
 			if (values == null)
 				throw new ArgumentNullException(nameof(values));
 
-			Values = new HashSet<object>(values);
+			Values = new HashSet<object?>(values);
 		}
 
 		/// <summary>
@@ -34,7 +34,7 @@ namespace LinqToDB.Mapping
 		/// <returns><c>true</c> if object should be skipped for the operation.</returns>
 		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 		{
-			return Values?.Contains(columnDescriptor.MemberAccessor.Getter(obj)) ?? false;
+			return Values?.Contains(columnDescriptor.MemberAccessor.Getter!(obj)) ?? false;
 		}
 	}
 }

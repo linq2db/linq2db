@@ -64,7 +64,6 @@ INSERT INTO "Doctor" ("PersonID", "Taxonomy") VALUES (1, 'Psychiatry')
 GO
 
 
--- FkTest
 DROP TABLE MasterTable
 GO
 

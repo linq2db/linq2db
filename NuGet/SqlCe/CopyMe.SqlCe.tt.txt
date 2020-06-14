@@ -43,8 +43,12 @@
 
 	NamespaceName = "DataModels";
 
+	// to configure GetSchemaOptions properties, add them here, before load metadata call
+
 	LoadSqlCeMetadata(@"C:\Data", "MyDatabase.sdf");
 //	LoadSqlCeMetadata(string connectionString);
+
+	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
 
 	GenerateModel();
 #>

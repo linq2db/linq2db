@@ -1,7 +1,7 @@
 <#@ assembly name="System.Data"        #>
 <#@ import namespace="System.Data"     #>
 <#@ import namespace="LinqToDB.Data"   #>
-<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text"     #>
 <#@ include file="DataModel.ttinclude" #>
 <#
 	if (BaseDataContextClass == null)
@@ -242,6 +242,7 @@ void GenerateTypesFromMetadata()
 
 		var tableAttrs = new List<string>();
 
+		if (ServerName   != null) tableAttrs.Add("Server="    + ToStringLiteral(ServerName));
 		if (DatabaseName != null) tableAttrs.Add("Database="  + ToStringLiteral(DatabaseName));
 		if (t.Schema     != null) tableAttrs.Add("Schema="    + ToStringLiteral(t.Schema));
 
@@ -726,6 +727,7 @@ void GenerateTypesFromMetadata()
 			{
 				var tableAttrs = new List<string>();
 
+				if (ServerName   != null) tableAttrs.Add("Server="   + ToStringLiteral(ServerName));
 				if (DatabaseName != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
 				if (p.Schema     != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
 
@@ -805,9 +807,10 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.ConvertInline(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.ConvertInline(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.ConvertInline(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.ConvertInline(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
 				spName = ToStringLiteral(spName);
@@ -1017,7 +1020,7 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 		members,
 		reservedNames,
 		m => m is Table tbl ? (tbl.Schema != null && (PrefixTableMappingForDefaultSchema || !tbl.IsDefaultSchema) && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
-		(m, newName) =>
+		(m, newName, _) =>
 		{
 			if (m is TypeBase t)
 				t.Name = newName;

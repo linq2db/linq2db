@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -37,6 +38,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class ScalarSelectContext : IBuildContext
 		{
 			public ScalarSelectContext(ExpressionBuilder builder)
@@ -52,10 +54,10 @@ namespace LinqToDB.Linq.Builder
 #endif
 
 			public ExpressionBuilder Builder     { get; }
-			public Expression        Expression  { get; set; }
-			public SelectQuery       SelectQuery { get; set; }
-			public SqlStatement      Statement   { get; set; }
-			public IBuildContext     Parent      { get; set; }
+			public Expression?       Expression  { get; set; }
+			public SelectQuery       SelectQuery { get; set; } = null!;
+			public SqlStatement?     Statement   { get; set; }
+			public IBuildContext?    Parent      { get; set; }
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -65,10 +67,10 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null)
-					expression = ((LambdaExpression)Expression).Body.Unwrap();
+					expression = ((LambdaExpression)Expression!).Body.Unwrap();
 
 				switch (expression.NodeType)
 				{
@@ -94,17 +96,17 @@ namespace LinqToDB.Linq.Builder
 
 			}
 
-			public SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				switch (requestFlag)
 				{
@@ -113,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
@@ -127,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public ISqlExpression GetSubQuery(IBuildContext context)
+			public ISqlExpression? GetSubQuery(IBuildContext context)
 			{
 				return null;
 			}

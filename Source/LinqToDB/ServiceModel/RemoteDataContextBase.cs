@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -19,12 +18,12 @@ namespace LinqToDB.ServiceModel
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext, IEntityServices
 	{
-		public string Configuration { get; set; }
+		public string? Configuration { get; set; }
 
 		class ConfigurationInfo
 		{
-			public LinqServiceInfo LinqServiceInfo;
-			public MappingSchema   MappingSchema;
+			public LinqServiceInfo LinqServiceInfo = null!;
+			public MappingSchema   MappingSchema   = null!;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
@@ -37,7 +36,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		ConfigurationInfo _configurationInfo;
+		ConfigurationInfo? _configurationInfo;
 
 		ConfigurationInfo GetConfigurationInfo()
 		{
@@ -49,21 +48,8 @@ namespace LinqToDB.ServiceModel
 				{
 					var info = client.GetInfo(Configuration);
 
-					MappingSchema ms;
-
-					if (string.IsNullOrEmpty(info.MappingSchemaType))
-					{
-						ms = new MappingSchema(
-							info.ConfigurationList
-								.Select(c => ContextIDPrefix + "." + c).Concat(new[] { ContextIDPrefix }).Concat(info.ConfigurationList)
-								.Select(c => new MappingSchema(c)).     Concat(new[] { MappingSchema.Default })
-								.ToArray());
-					}
-					else
-					{
-						var type = Type.GetType(info.MappingSchemaType);
-						ms = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
-					}
+					var type = Type.GetType(info.MappingSchemaType);
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 
 					_configurationInfo = new ConfigurationInfo
 					{
@@ -84,29 +70,39 @@ namespace LinqToDB.ServiceModel
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
-		string             _contextID;
+		string?            _contextID;
 		string IDataContext.ContextID =>
 			_contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]);
 
-		private MappingSchema _mappingSchema;
-		public  MappingSchema  MappingSchema
+		private MappingSchema? _mappingSchema;
+		public  MappingSchema   MappingSchema
 		{
 			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
-			set => _mappingSchema = value;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private  MappingSchema? _serializationMappingSchema;
+		internal MappingSchema   SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(MappingSchema));
 		}
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
 
 
-		private List<string> _queryHints;
-		public  List<string>  QueryHints => _queryHints ?? (_queryHints = new List<string>());
+		private List<string>? _queryHints;
+		public  List<string>   QueryHints => _queryHints ?? (_queryHints = new List<string>());
 
-		private List<string> _nextQueryHints;
-		public  List<string>  NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
+		private List<string>? _nextQueryHints;
+		public  List<string>   NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
 
-		private        Type _sqlProviderType;
-		public virtual Type  SqlProviderType
+		private        Type? _sqlProviderType;
+		public virtual Type   SqlProviderType
 		{
 			get
 			{
@@ -122,8 +118,8 @@ namespace LinqToDB.ServiceModel
 			set => _sqlProviderType = value;
 		}
 
-		private        Type _sqlOptimizerType;
-		public virtual Type  SqlOptimizerType
+		private        Type? _sqlOptimizerType;
+		public virtual Type   SqlOptimizerType
 		{
 			get
 			{
@@ -143,7 +139,7 @@ namespace LinqToDB.ServiceModel
 
 		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
-		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
@@ -184,9 +180,9 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		static readonly Dictionary<Type,Func<ISqlBuilder>> _sqlBuilders = new Dictionary<Type, Func<ISqlBuilder>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>>();
 
-		Func<ISqlBuilder> _createSqlProvider;
+		Func<ISqlBuilder>? _createSqlProvider;
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
@@ -195,24 +191,25 @@ namespace LinqToDB.ServiceModel
 				if (_createSqlProvider == null)
 				{
 					var type = SqlProviderType;
+					var key  = Tuple.Create(type, ((IDataContext)this).SqlProviderFlags);
 
-					if (!_sqlBuilders.TryGetValue(type, out _createSqlProvider))
-						lock (_sqlProviderType)
-							if (!_sqlBuilders.TryGetValue(type, out _createSqlProvider))
-								_sqlBuilders.Add(type, _createSqlProvider =
+					if (!_sqlBuilders.TryGetValue(key, out _createSqlProvider))
+						lock (_sqlProviderType!)
+							if (!_sqlBuilders.TryGetValue(key, out _createSqlProvider))
+								_sqlBuilders.Add(key, _createSqlProvider =
 									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
+												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
-												typeof(SqlProviderFlags),
-												typeof(ValueToSqlConverter)
+												typeof(SqlProviderFlags)
 											}),
 											new Expression[]
 											{
+												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
-												Expression.Constant(((IDataContext)this).SqlProviderFlags),
-												Expression.Constant(((IDataContext)this).MappingSchema.ValueToSqlConverter)
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)
 											})).Compile());
 				}
 
@@ -220,9 +217,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		static readonly Dictionary<Type,Func<ISqlOptimizer>> _sqlOptimizers = new Dictionary<Type,Func<ISqlOptimizer>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>>();
 
-		Func<ISqlOptimizer> _getSqlOptimizer;
+		Func<ISqlOptimizer>? _getSqlOptimizer;
 
 		public Func<ISqlOptimizer> GetSqlOptimizer
 		{
@@ -231,14 +228,15 @@ namespace LinqToDB.ServiceModel
 				if (_getSqlOptimizer == null)
 				{
 					var type = SqlOptimizerType;
+					var key  = Tuple.Create(type, ((IDataContext)this).SqlProviderFlags);
 
-					if (!_sqlOptimizers.TryGetValue(type, out _getSqlOptimizer))
-						lock (_sqlOptimizerType)
-							if (!_sqlOptimizers.TryGetValue(type, out _getSqlOptimizer))
-								_sqlOptimizers.Add(type, _getSqlOptimizer =
+					if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
+						lock (_sqlOptimizerType!)
+							if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
+								_sqlOptimizers.Add(key, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
 												typeof(SqlProviderFlags)
 											}),
@@ -252,8 +250,8 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		List<string> _queryBatch;
-		int          _batchCounter;
+		List<string>? _queryBatch;
+		int           _batchCounter;
 
 		public void BeginBatch()
 		{
@@ -276,7 +274,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
 					client.ExecuteBatch(Configuration, data);
 				}
 				finally
@@ -300,7 +298,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
 					await client.ExecuteBatchAsync(Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				finally
@@ -318,10 +316,10 @@ namespace LinqToDB.ServiceModel
 			return Clone();
 		}
 
-		public event EventHandler OnClosing;
+		public event EventHandler? OnClosing;
 
 		/// <inheritdoc/>
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		protected bool Disposed { get; private set; }
 

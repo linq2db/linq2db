@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-using JNotNull = JetBrains.Annotations.NotNullAttribute;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
@@ -30,17 +31,17 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
-			[JNotNull] Type       type,
-			[JNotNull] MemberInfo memberInfo,
-			           string[]   thisKey,
-			           string[]   otherKey,
-			           string     expressionPredicate,
-			           Expression predicate,
-			           string     expressionQueryMethod,
-			           Expression expressionQuery,
-			           string     storage,
-			           bool       canBeNull,
-					   string     aliasName)
+			Type        type,
+			MemberInfo  memberInfo,
+			string[]    thisKey,
+			string[]    otherKey,
+			string?     expressionPredicate,
+			Expression? predicate,
+			string?     expressionQueryMethod,
+			Expression? expressionQuery,
+			string?     storage,
+			bool        canBeNull,
+			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
@@ -70,54 +71,109 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets association member (field, property or method).
 		/// </summary>
-		public MemberInfo MemberInfo          { get; set; }
+		public MemberInfo  MemberInfo          { get; set; }
 		/// <summary>
 		/// Gets or sets list of names of from (this) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]   ThisKey             { get; set; }
+		public string[]    ThisKey             { get; set; }
 		/// <summary>
 		/// Gets or sets list of names of to (other) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]   OtherKey            { get; set; }
+		public string[]    OtherKey            { get; set; }
 		/// <summary>
 		/// Gets or sets optional predicate expression source property or method.
 		/// </summary>
-		public string     ExpressionPredicate { get; set; }
+		public string?     ExpressionPredicate { get; set; }
 		/// <summary>
 		/// Gets or sets optional query method source property or method.
 		/// </summary>
-		public string     ExpressionQueryMethod { get; set; }
+		public string?     ExpressionQueryMethod { get; set; }
 		/// <summary>
 		/// Gets or sets optional query expression.
 		/// </summary>
-		public Expression ExpressionQuery     { get; set; }
+		public Expression? ExpressionQuery     { get; set; }
 		/// <summary>
 		/// Gets or sets optional predicate expression.
 		/// </summary>
-		public Expression Predicate           { get; set; }
+		public Expression? Predicate           { get; set; }
 		/// <summary>
 		/// Gets or sets optional association value storage field or property name. Used with LoadWith.
 		/// </summary>
-		public string     Storage             { get; set; }
+		public string?     Storage             { get; set; }
 		/// <summary>
 		/// Gets or sets join type, generated for current association.
 		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
 		/// </summary>
-		public bool       CanBeNull           { get; set; }
+		public bool        CanBeNull           { get; set; }
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string     AliasName           { get; set; }
+		public string? AliasName           { get; set; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.
 		/// </summary>
 		/// <param name="keys">Comma-separated (spaces allowed) list of association key column members.</param>
 		/// <returns>Returns array with names of association key column members.</returns>
-		public static string[] ParseKeys(string keys)
+		public static string[] ParseKeys(string? keys)
 		{
 			return keys?.Replace(" ", "").Split(',') ?? Array<string>.Empty;
 		}
+
+		/// <summary>
+		/// Generates table alias for association.
+		/// </summary>
+		/// <returns>Generated alias.</returns>
+		public string GenerateAlias()
+		{
+			if (!AliasName.IsNullOrEmpty())
+				return AliasName;
+
+			if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+
+			return string.Empty;
+		}
+
+		public bool IsList
+		{
+			get
+			{
+				var type = MemberInfo.GetMemberType();
+				return typeof(IEnumerable).IsSameOrParentOf(type);
+			}
+		}
+
+		public Type GetElementType(MappingSchema mappingSchema)
+		{
+			var type = MemberInfo.GetMemberType();
+			return EagerLoading.GetEnumerableElementType(type, mappingSchema);
+		}
+
+		public Type GetParentElementType()
+		{
+			if (MemberInfo.MemberType == MemberTypes.Method)
+			{
+				var methodInfo = (MethodInfo)MemberInfo;
+				if (methodInfo.IsStatic)
+				{
+					var pms = methodInfo.GetParameters();
+					if (pms.Length > 0)
+					{
+						return pms[0].ParameterType;
+					}
+				}
+				else
+				{
+					return methodInfo.DeclaringType;
+				}
+
+				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+			}
+
+			return MemberInfo.DeclaringType;
+		}
+
 
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
@@ -126,12 +182,12 @@ namespace LinqToDB.Mapping
 		/// <param name="objectType">Type of object associated with expression predicate</param>
 		/// <returns><c>null</c> of association has no custom predicate expression or predicate expression, specified
 		/// by <see cref="ExpressionPredicate"/> member.</returns>
-		public LambdaExpression GetPredicate(Type parentType, Type objectType)
+		public LambdaExpression? GetPredicate(Type parentType, Type objectType)
 		{
 			if (Predicate == null && string.IsNullOrEmpty(ExpressionPredicate))
 				return null;
 
-			Expression predicate = null;
+			Expression? predicate = null;
 
 			var type = MemberInfo.DeclaringType;
 
@@ -140,7 +196,7 @@ namespace LinqToDB.Mapping
 
 			if (!string.IsNullOrEmpty(ExpressionPredicate))
 			{
-				var members = type.GetStaticMembersEx(ExpressionPredicate);
+				var members = type.GetStaticMembersEx(ExpressionPredicate!);
 
 				if (members.Length == 0)
 					throw new LinqToDBException($"Static member '{ExpressionPredicate}' for type '{type.Name}' not found");
@@ -204,6 +260,12 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
+
+		public bool HasQueryMethod()
+		{
+			return ExpressionQuery != null || !ExpressionQueryMethod.IsNullOrEmpty();
+		}
+
 		/// <summary>
 		/// Loads query method expression from <see cref="ExpressionQueryMethod"/> member.
 		/// </summary>
@@ -211,25 +273,25 @@ namespace LinqToDB.Mapping
 		/// <param name="objectType">Type of object associated with query method expression</param>
 		/// <returns><c>null</c> of association has no custom query method expression or query method expression, specified
 		/// by <see cref="ExpressionQueryMethod"/> member.</returns>
-		public LambdaExpression GetQueryMethod(Type parentType, Type objectType)
+		public LambdaExpression? GetQueryMethod(Type parentType, Type objectType)
 		{
-			if (ExpressionQuery == null && ExpressionQueryMethod.IsNullOrEmpty())
+			if (!HasQueryMethod())
 				return null;
 
-			Expression queryExpression = null;
+			Expression queryExpression;
 
 			var type = MemberInfo.DeclaringType;
 
 			if (type == null)
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
-			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
+			if (!ExpressionQueryMethod.IsNullOrEmpty())
 				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod);
 			else
-				queryExpression = ExpressionQuery;
+				queryExpression = ExpressionQuery!;
 
 			var lambda = queryExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (lambda == null || lambda.Parameters.Count < 1)
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.Name}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
@@ -239,9 +301,6 @@ namespace LinqToDB.Mapping
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
 				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
-
-			if (typeof(IDataContext) != lambda.Parameters[1].Type)
-				throw new LinqToDBException("Second parameter of expression predicate should be 'IDataContext'");
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))

@@ -32,10 +32,10 @@ namespace LinqToDB.Linq
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the exception is thrown.</param>
-		/// <param name="args">An System.Object array containing zero or more objects to format.</param>
+		/// <param name="args">An <see cref="System.Object"/> array containing zero or more objects to format.</param>
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]
-		public LinqException(string message, params object[] args)
+		public LinqException(string message, params object?[] args)
 			: base(string.Format(message, args))
 		{
 		}
@@ -64,8 +64,6 @@ namespace LinqToDB.Linq
 		{
 		}
 
-#if !NETSTANDARD1_6
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqException"/> class
 		/// with serialized data.
@@ -80,8 +78,6 @@ namespace LinqToDB.Linq
 			: base(info, context)
 		{
 		}
-
-#endif
 	}
 }
 

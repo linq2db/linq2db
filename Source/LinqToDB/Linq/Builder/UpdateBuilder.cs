@@ -9,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Tools;
 
 	class UpdateBuilder : MethodCallBuilder
 	{
@@ -89,14 +90,16 @@ namespace LinqToDB.Linq.Builder
 							{
 								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 								//
-								var body      = expression.Body;
-								var level     = body.GetLevel();
+								var body  = expression.Body;
+								var level = body.GetLevel(builder.MappingSchema);
+
+
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 								if (tableInfo.Result == false)
 									throw new LinqException("Expression '{0}' must be a table.", body);
 
-								into = tableInfo.Context;
+								into = tableInfo.Context!;
 							}
 							else
 							{
@@ -106,8 +109,8 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery)
-								.ResolveWeakJoins(new List<ISqlTableSource>());
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+								.ResolveWeakJoins();
 							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(
@@ -121,9 +124,9 @@ namespace LinqToDB.Linq.Builder
 							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							foreach (var item in updateStatement.Update.Items)
-								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression));
+								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
 
-							updateStatement.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
+							updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
 						}
 
 						break;
@@ -139,10 +142,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					sequence.Statement.RequireUpdateClause().Table = atc.SqlTable;
+					var atc = res.Context!.IsExpression(null, 0, RequestFor.Table);
+					if (atc.Result && atc.Context is TableBuilder.TableContext tableContext)
+					{
+						ctx.Statement!.RequireUpdateClause().Table = tableContext.SqlTable;
+					}
 				}
 				else
 				{
@@ -152,15 +158,15 @@ namespace LinqToDB.Linq.Builder
 					{
 						var tc = (TableBuilder.TableContext)res.Context;
 
-						if (sequence.Statement.SelectQuery.From.Tables.Count == 0 || sequence.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							sequence.Statement.RequireUpdateClause().Table = tc.SqlTable;
+						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
+							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
 					}
 				}
 			}
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -170,14 +176,25 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		internal static void BuildSetter(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			LambdaExpression setter,
+			IBuildContext into,
+			List<SqlSetExpression> items,
+			IBuildContext sequence)
+		{
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
+		}
+
+		internal static void BuildSetterWithContext(
 			ExpressionBuilder      builder,
 			BuildInfo              buildInfo,
 			LambdaExpression       setter,
 			IBuildContext          into,
 			List<SqlSetExpression> items,
-			IBuildContext          sequence)
+			params IBuildContext[] sequences)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
+			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
 
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
@@ -186,13 +203,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (expr.ElementType == QueryElementType.SqlParameter)
 				{
-					var parm = (SqlParameter)expr;
-					var field = column[0].Sql is SqlField sqlField
-						? sqlField
-						: (SqlField)((SqlColumn)column[0].Sql).Expression;
+					var parm  = (SqlParameter)expr;
+					var field = QueryHelper.GetUnderlyingField(column[0].Sql);
 
-					if (parm.DataType == DataType.Undefined)
-						parm.DataType = field.DataType;
+					if (parm.Type.DataType == DataType.Undefined)
+						parm.Type = parm.Type.WithDataType(field!.Type!.Value.DataType);
 				}
 
 				items.Add(new SqlSetExpression(column[0].Sql, expr));
@@ -262,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
-				var p  = sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildNew(ex, bodyPath);
 
@@ -271,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
 			{
 				var ex = (MemberInitExpression)bodyExpr;
-				var p  = sequence.Parent;
+				var p  = sequences[0].Parent;
 
 				BuildMemberInit(ex, bodyPath);
 
@@ -283,10 +298,10 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in sqlInfo)
 				{
-					if (info.MemberChain.Count == 0)
+					if (info.MemberChain.Length == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.MemberChain.Count != 1)
+					if (info.MemberChain.Length != 1)
 						throw new InvalidOperationException();
 
 					var member = info.MemberChain[0];
@@ -339,8 +354,8 @@ namespace LinqToDB.Linq.Builder
 								? sqlField
 								: (SqlField)((SqlColumn)column[0].Sql).Expression;
 
-							if (parm.DataType == DataType.Undefined)
-								parm.DataType = field.DataType;
+							if (parm.Type.DataType == DataType.Undefined)
+								parm.Type = parm.Type.WithDataType(field.Type!.Value.DataType);
 						}
 
 						items.Add(new SqlSetExpression(column[0].Sql, expr));
@@ -356,54 +371,28 @@ namespace LinqToDB.Linq.Builder
 			BuildInfo                       buildInfo,
 			LambdaExpression                extract,
 			LambdaExpression                update,
-			IBuildContext                   select,
-			SqlTable                        table,
+			IBuildContext                   fieldsContext,
+			IBuildContext                   valuesContext,
+			SqlTable?                       table,
 			List<SqlSetExpression> items)
 		{
-			var member = MemberHelper.GetMemberInfo(extract.Body);
-
+			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var rootObject = ext.GetRootObject(builder.MappingSchema);
+			var sp    = fieldsContext.Parent;
+			var ctx   = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
+			var sql   = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
+			var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+			builder.ReplaceParent(ctx, sp);
 
-			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-				throw new LinqException("Member expression expected for the 'Set' statement.");
+			if (sql.Length != 1)
+				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
-			var body = ext is MemberExpression mex ? mex : Expression.MakeMemberAccess(rootObject, member);
+			var column = table != null && field != null ? table[field.Name] : sql[0].Sql;
 
-			if (member is MethodInfo)
-				member = ((MethodInfo)member).GetPropertyInfo();
-
-			var members = body.GetMembers();
-			var name    = members
-				.Skip(1)
-				.Select(ex =>
-				{
-					if (!(ex is MemberExpression me))
-						return null;
-
-					var m = me.Member;
-
-					if (m is MethodInfo)
-						m = ((MethodInfo)m).GetPropertyInfo();
-
-					return m;
-				})
-				.Where(m => m != null && !m.IsNullableValueMember())
-				.Select(m => m.Name)
-				.Aggregate((s1,s2) => s1 + "." + s2);
-
-			if (table != null && !table.Fields.ContainsKey(name))
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, name);
-
-			var column = table != null ?
-				table.Fields[name] :
-				select.ConvertToSql(
-					body, 1, ConvertFlags.Field)[0].Sql;
-					//Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member), 1, ConvertFlags.Field)[0].Sql;
-			var sp     = select.Parent;
-			var ctx    = new ExpressionContext(buildInfo.Parent, select, update);
-			var expr   = builder.ConvertToSqlExpression(ctx, update.Body);
+			sp       = valuesContext.Parent;
+			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
+			var expr = builder.ConvertToSqlExpression(ctx, update.Body);
 
 			builder.ReplaceParent(ctx, sp);
 
@@ -412,7 +401,6 @@ namespace LinqToDB.Linq.Builder
 
 		internal static void ParseSet(
 			ExpressionBuilder               builder,
-			BuildInfo                       buildInfo,
 			LambdaExpression                extract,
 			Expression                      update,
 			IBuildContext                   select,
@@ -457,10 +445,10 @@ namespace LinqToDB.Linq.Builder
 
 			var memberType = member.GetMemberType().ToNullableUnderlying();
 			var updateType = update.Type.ToNullableUnderlying();
-			if (memberType.IsEnumEx() && updateType != memberType)
+			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
-			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
+			if (!update.Type.IsConstantable(false) && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
 
@@ -475,7 +463,7 @@ namespace LinqToDB.Linq.Builder
 
 		class UpdateContext : SequenceContextBase
 		{
-			public UpdateContext(IBuildContext parent, IBuildContext sequence)
+			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 			}
@@ -485,27 +473,27 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
@@ -526,28 +514,39 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-					sequence = new SubQueryContext(sequence);
+				//if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+				//	sequence = new SubQueryContext(sequence);
 
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var update   =                   methodCall.Arguments[2].Unwrap();
+				var update   =  methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
 
 				var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 				sequence.Statement  = updateStatement;
 
-				if (update.NodeType == ExpressionType.Lambda)
+				if (update == null)
+				{
+					// we have first lambda as whole update field part
+					var sp     = sequence.Parent;
+					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
+					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body);
+
+					builder.ReplaceParent(ctx, sp);
+
+					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
+				}
+				else if (update.NodeType == ExpressionType.Lambda)
 					ParseSet(
 						builder,
 						buildInfo,
 						extract,
 						(LambdaExpression)update,
 						sequence,
+						sequence,
 						updateStatement.Update.Table,
 						updateStatement.Update.Items);
 				else
 					ParseSet(
 						builder,
-						buildInfo,
 						extract,
 						update,
 						sequence,
@@ -556,8 +555,8 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-			protected override SequenceConvertInfo Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+			protected override SequenceConvertInfo? Convert(
+				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 			{
 				return null;
 			}

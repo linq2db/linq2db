@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Schema;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -12,6 +10,28 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Update : return CorrectMySqlUpdate((SqlUpdateStatement)statement);
+				default               : return statement;
+			}
+		}
+
+		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
+		{
+			if (statement.SelectQuery.Select.SkipValue != null)
+				throw new LinqToDBException("MySql does not support Skip in update query");
+
+			statement = CorrectUpdateTable(statement);
+
+			if (!statement.SelectQuery.OrderBy.IsEmpty)
+				statement.SelectQuery.OrderBy.Items.Clear();
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -77,7 +97,7 @@ namespace LinqToDB.DataProvider.MySql
 								return ex;
 						}
 
-						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType.ToUnderlying() == typeof(decimal))
+						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType!.ToUnderlying() == typeof(decimal))
 							return func.Parameters[1];
 
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);

@@ -8,12 +8,13 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Common;
 
 	[PublicAPI]
 	public class IdentityMap : IDisposable
 	{
-		public IdentityMap([NotNull] IDataContext dataContext)
+		public IdentityMap(IDataContext dataContext)
 		{
 			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			_dataContext.OnEntityCreated += OnEntityCreated;
@@ -22,7 +23,6 @@ namespace LinqToDB.Tools.EntityServices
 		readonly IDataContext                          _dataContext;
 		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ConcurrentDictionary<Type,IEntityMap>();
 
-		[NotNull]
 		IEntityMap GetOrAddEntityMap(Type entityType)
 		{
 			return _entityMapDic.GetOrAdd(
@@ -35,35 +35,31 @@ namespace LinqToDB.Tools.EntityServices
 			GetOrAddEntityMap(args.Entity.GetType()).MapEntity(args);
 		}
 
-		[NotNull]
 		public IEnumerable GetEntities(Type entityType)
 		{
 			return GetOrAddEntityMap(entityType).GetEntities();
 		}
 
-		[NotNull]
 		public IEnumerable<T> GetEntities<T>()
 			where T : class
 		{
 			return GetEntityMap<T>().Entities?.Values.Select(e => e.Entity) ?? Array<T>.Empty;
 		}
 
-		[NotNull]
 		public IEnumerable<EntityMapEntry<T>> GetEntityEntries<T>()
 			where T : class
 		{
 			return GetEntityMap<T>().Entities?.Values ?? Array<EntityMapEntry<T>>.Empty;
 		}
 
-		[NotNull]
 		public EntityMap<T> GetEntityMap<T>()
 			where T : class
 		{
 			return (EntityMap<T>)GetOrAddEntityMap(typeof(T));
 		}
 
-		[CanBeNull]
-		public T GetEntity<T>([NotNull] object key)
+		[return: MaybeNull]
+		public T GetEntity<T>(object key)
 			where T : class, new()
 		{
 			return GetEntityMap<T>().GetEntity(_dataContext, key);

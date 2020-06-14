@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace LinqToDB.Reflection
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using Expressions;
 	using Extensions;
@@ -17,13 +18,13 @@ namespace LinqToDB.Reflection
 			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
 				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
 
-		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor ed)
+		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{
 			TypeAccessor = typeAccessor;
 
 			if (memberName.IndexOf('.') < 0)
 			{
-				SetSimple(Expression.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
+				SetSimple(ExpressionHelper.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
 			}
 			else
 			{
@@ -36,7 +37,7 @@ namespace LinqToDB.Reflection
 				var expr     = (Expression)objParam;
 				var infos    = members.Select(m =>
 				{
-					expr = Expression.PropertyOrField(expr, m);
+					expr = ExpressionHelper.PropertyOrField(expr, m);
 					return new
 					{
 						member = ((MemberExpression)expr).Member,
@@ -49,7 +50,7 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClassEx() || info.type.IsNullable());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
 
 				// Build getter.
 				//
@@ -66,7 +67,7 @@ namespace LinqToDB.Reflection
 							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
-							if (next.Type.IsClassEx() || next.Type.IsNullable())
+							if (next.Type.IsClass || next.Type.IsNullable())
 							{
 								var local = Expression.Variable(next.Type);
 
@@ -100,7 +101,7 @@ namespace LinqToDB.Reflection
 				// Build setter.
 				//
 				{
-					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethodEx(true) == null);
+					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
 
 					var valueParam = Expression.Parameter(Type, "value");
 
@@ -122,7 +123,7 @@ namespace LinqToDB.Reflection
 								}
 								else
 								{
-									if (next.Type.IsClassEx() || next.Type.IsNullable())
+									if (next.Type.IsClass || next.Type.IsNullable())
 									{
 										var local = Expression.Variable(next.Type);
 
@@ -176,7 +177,7 @@ namespace LinqToDB.Reflection
 			SetExpressions();
 		}
 
-		public MemberAccessor(TypeAccessor typeAccessor, MemberInfo memberInfo, EntityDescriptor ed)
+		public MemberAccessor(TypeAccessor typeAccessor, MemberInfo memberInfo, EntityDescriptor? ed)
 		{
 			TypeAccessor = typeAccessor;
 
@@ -184,15 +185,15 @@ namespace LinqToDB.Reflection
 			SetExpressions();
 		}
 
-		void SetSimple(MemberInfo memberInfo, EntityDescriptor ed)
+		void SetSimple(MemberInfo memberInfo, EntityDescriptor? ed)
 		{
 			MemberInfo = memberInfo;
 			Type       = MemberInfo is PropertyInfo propertyInfo ? propertyInfo.PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			if (memberInfo is PropertyInfo info)
 			{
-				HasGetter = info.GetGetMethodEx(true) != null;
-				HasSetter = info.GetSetMethodEx(true) != null;
+				HasGetter = info.GetGetMethod(true) != null;
+				HasSetter = info.GetSetMethod(true) != null;
 			}
 			else
 			{
@@ -289,7 +290,7 @@ namespace LinqToDB.Reflection
 		{
 			var objParam   = Expression.Parameter(typeof(object), "obj");
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
-			var getter     = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
 			Getter = getter.Compile();
 
@@ -300,13 +301,13 @@ namespace LinqToDB.Reflection
 				var setterExpr = SetterExpression.GetBody(
 					Expression.Convert(objParam, TypeAccessor.Type),
 					Expression.Convert(valueParam, Type));
-				var setter = Expression.Lambda<Action<object, object>>(setterExpr, objParam, valueParam);
+				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 
 				Setter = setter.Compile();
 			}
 		}
 
-		static MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
+		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
@@ -315,16 +316,16 @@ namespace LinqToDB.Reflection
 
 		#region Public Properties
 
-		public MemberInfo            MemberInfo       { get; private set; }
-		public TypeAccessor          TypeAccessor     { get; private set; }
-		public bool                  HasGetter        { get; private set; }
-		public bool                  HasSetter        { get; private set; }
-		public Type                  Type             { get; private set; }
-		public bool                  IsComplex        { get; private set; }
-		public LambdaExpression      GetterExpression { get; private set; }
-		public LambdaExpression      SetterExpression { get; private set; }
-		public Func  <object,object> Getter           { get; private set; }
-		public Action<object,object> Setter           { get; private set; }
+		public MemberInfo              MemberInfo       { get; private set; } = null!;
+		public TypeAccessor            TypeAccessor     { get; private set; }
+		public bool                    HasGetter        { get; private set; }
+		public bool                    HasSetter        { get; private set; }
+		public Type                    Type             { get; private set; } = null!;
+		public bool                    IsComplex        { get; private set; }
+		public LambdaExpression        GetterExpression { get; private set; } = null!;
+		public LambdaExpression?       SetterExpression { get; private set; }
+		public Func  <object,object?>? Getter           { get; private set; }
+		public Action<object,object?>? Setter           { get; private set; }
 
 		public string Name
 		{
@@ -335,31 +336,24 @@ namespace LinqToDB.Reflection
 
 		#region Public Methods
 
+		[return: MaybeNull]
 		public T GetAttribute<T>() where T : Attribute
 		{
-			var attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
-
-#if NETSTANDARD1_6
-			attrs = attrs.Cast<T>().ToArray();
-#endif
+			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
 			return attrs.Length > 0? (T)attrs[0]: null;
 		}
 
-		public T[] GetAttributes<T>() where T : Attribute
+		public T[]? GetAttributes<T>() where T : Attribute
 		{
-			Array attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
-
-#if NETSTANDARD1_6
-			attrs = attrs.Cast<T>().ToArray();
-#endif
+			Array attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
 			return attrs.Length > 0? (T[])attrs: null;
 		}
 
-		public object[] GetAttributes()
+		public object[]? GetAttributes()
 		{
-			var attrs = MemberInfo.GetCustomAttributesEx(true);
+			var attrs = MemberInfo.GetCustomAttributes(true);
 
 			return attrs.Length > 0? attrs: null;
 		}
@@ -373,14 +367,14 @@ namespace LinqToDB.Reflection
 
 		#region Set/Get Value
 
-		public virtual object GetValue(object o)
+		public virtual object? GetValue(object o)
 		{
-			return Getter(o);
+			return Getter!(o);
 		}
 
-		public virtual void SetValue(object o, object value)
+		public virtual void SetValue(object o, object? value)
 		{
-			Setter(o, value);
+			Setter!(o, value);
 		}
 
 		#endregion

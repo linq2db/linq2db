@@ -5,11 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -25,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			static string GetDataTypeText(SqlDataType type)
 			{
-				switch (type.DataType)
+				switch (type.Type.DataType)
 				{
 					case DataType.DateTime   : return "timestamp";
 					case DataType.DateTime2  : return "timestamp";
@@ -35,8 +33,8 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Byte       : return "Number(3)";
 					case DataType.Money      : return "Number(19,4)";
 					case DataType.SmallMoney : return "Number(10,4)";
-					case DataType.NVarChar   : return "VarChar2(" + (type.Length ?? 100) + ")";
-					case DataType.NChar      : return "Char2(" + (type.Length ?? 100) + ")";
+					case DataType.NVarChar   : return "VarChar2(" + (type.Type.Length ?? 100) + ")";
+					case DataType.NChar      : return "Char2(" + (type.Type.Length ?? 100) + ")";
 					case DataType.Double     : return "Float";
 					case DataType.Single     : return "Real";
 					case DataType.UInt16     : return "Int";
@@ -46,12 +44,12 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Boolean    : return "Bit";
 				}
 
-				var text = !string.IsNullOrEmpty(type.DbType) ? type.DbType : type.DataType.ToString();
+				var text = !string.IsNullOrEmpty(type.Type.DbType) ? type.Type.DbType! : type.Type.DataType.ToString();
 
-				if (type.Length > 0)
-					text += "(" + type.Length + ")";
-				else if (type.Precision > 0)
-					text += "(" + type.Precision + "," + type.Scale + ")";
+				if (type.Type.Length > 0)
+					text += "(" + type.Type.Length + ")";
+				else if (type.Type.Precision > 0)
+					text += "(" + type.Type.Precision + "," + type.Type.Scale + ")";
 
 				return text;
 			}
@@ -79,7 +77,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			internal static Func<object,string> GetXmlConverter(MappingSchema mappingSchema, SqlTable sqlTable)
 			{
-				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
+				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType!);
 
 				return o => ValueConverter(
 					ed.Columns.Select<ColumnDescriptor,Action<StringBuilder,object>>(c =>
@@ -112,26 +110,27 @@ namespace LinqToDB.DataProvider.Oracle
 			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				var arg = sqlArgs.ElementAt(1);
-				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType);
+				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
 
-				if (arg is SqlParameter)
+				if (arg is SqlParameter p)
 				{
 					var exp = expArgs.ElementAt(1).Unwrap();
 
-					if (exp is ConstantExpression)
+					// TODO: ValueConverter contract nullability violations
+					if (exp is ConstantExpression constExpr)
 					{
-						if (((ConstantExpression)exp).Value is Func<string>)
+						if (constExpr.Value is Func<string>)
 						{
-							((SqlParameter)arg).ValueConverter = l => ((Func<string>)l)();
+							p.ValueConverter = l => ((Func<string>)l!)();
 						}
 						else
 						{
-							((SqlParameter)arg).ValueConverter = GetXmlConverter(mappingSchema, table);
+							p.ValueConverter = GetXmlConverter(mappingSchema, table)!;
 						}
 					}
 					else if (exp is LambdaExpression)
 					{
-						((SqlParameter)arg).ValueConverter = l => ((Func<string>)l)();
+						p.ValueConverter = l => ((Func<string>)l!)();
 					}
 				}
 
@@ -141,7 +140,7 @@ namespace LinqToDB.DataProvider.Oracle
 						string.IsNullOrEmpty(c.DbType) ?
 							GetDataTypeText(
 								new SqlDataType(
-									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).DataType : c.DataType,
+									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
 									c.MemberType,
 									c.Length,
 									c.Precision,
@@ -169,9 +168,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
-		private static MethodInfo OracleXmlTableIEnumerableT;
-		private static MethodInfo OracleXmlTableString;
-		private static MethodInfo OracleXmlTableFuncString;
+		private static readonly MethodInfo OracleXmlTableIEnumerableT = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static readonly MethodInfo OracleXmlTableString       = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
+		private static readonly MethodInfo OracleXmlTableFuncString   = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)

@@ -4,7 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -14,11 +13,11 @@ namespace Tests.Linq
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType, 
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner,
+			SqlJoinType                   joinType, 
+			Func<TOuter, TInner, bool>    predicate,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -50,12 +49,12 @@ namespace Tests.Linq
 		}
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
-			                                SqlJoinType                   joinType,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
-			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>      outer,
+			IEnumerable<TInner>           inner, 
+			SqlJoinType                   joinType,
+			Func<TOuter, TKey>            outerKeySelector,
+			Func<TInner, TKey>            innerKeySelector,
+			Func<TOuter, TInner, TResult> resultSelector)
 		{
 			if (outer            == null) throw new ArgumentNullException(nameof(outer));
 			if (inner            == null) throw new ArgumentNullException(nameof(inner));
@@ -86,7 +85,7 @@ namespace Tests.Linq
 							res.AddRange(pair1.Join(keys2[pair1.Key], outerKeySelector, innerKeySelector, resultSelector));
 							continue;
 						}
-						res.AddRange(pair1.Select(r => resultSelector(r, default)));
+						res.AddRange(pair1.Select(r => resultSelector(r, default!)));
 					}
 
 					foreach (var pair2 in keys2)
@@ -95,7 +94,7 @@ namespace Tests.Linq
 						{
 							continue;
 						}
-						res.AddRange(pair2.Select(r => resultSelector(default, r)));
+						res.AddRange(pair2.Select(r => resultSelector(default!, r)));
 					}
 
 					return res;
@@ -218,16 +217,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoin9([DataSources(ProviderName.Access)] string context)
+		public void InnerJoin9([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from g in GrandChild
-					join p in Parent4 on g.Child.ParentID equals p.ParentID
+					join p in Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g,
 					from g in db.GrandChild
-					join p in db.Parent4 on g.Child.ParentID equals p.ParentID
+					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
 					where g.ParentID < 10 && p.Value1 == TypeValue.Value3
 					select g);
 		}
@@ -265,6 +264,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin2([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -289,6 +289,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin3([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 = Parent
@@ -324,6 +325,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin4([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -357,16 +359,24 @@ namespace Tests.Linq
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First()
-					,
-					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First());
+			{
+				var expectedQuery = from p in Parent
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var actualQuery = from p in db.Parent
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					orderby p.ParentID
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var expected = expectedQuery.ToArray(); 
+				var actual   = actualQuery.ToArray(); 
+
+				AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
@@ -380,7 +390,7 @@ namespace Tests.Linq
 					from p in db.Parent
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
-					select new { p1 = lj1, p2 = lj1.First() }
+					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
 				var expected =
@@ -388,7 +398,7 @@ namespace Tests.Linq
 					from p in Parent
 						join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
-					select new { p1 = lj1, p2 = lj1.First() }
+					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
 				Assert.AreEqual(expected.Count, result.Count);
@@ -415,6 +425,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin53([DataSources] string context)
 		{
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -450,6 +461,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -485,6 +497,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -523,15 +536,17 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					join c in Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() }
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() }
 					,
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() });
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() });
 		}
 
+		// Access has strange order strategy
+		// Informix move constant column value from left-joined subquery to top level even for null records
 		[Test]
-		public void GroupJoin9([DataSources] string context)
+		public void GroupJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +651,8 @@ namespace Tests.Linq
 						.SelectMany(
 							a => a.y.DefaultIfEmpty(),
 							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						));
+						)
+					);
 		}
 
 		[Test]
@@ -825,7 +841,6 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[ActiveIssue(577)]
 		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
@@ -876,7 +891,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin1([DataSources(ProviderName.Access)] string context)
+		public void ReferenceJoin1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -885,7 +900,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin2([DataSources(ProviderName.Access)] string context)
+		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -898,7 +913,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinByAnonymousTest([DataSources(ProviderName.Access)] string context)
+		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1013,7 +1028,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from ch in db.Child
-					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
+					from p in new Model.Functions(db).GetParentByID(ch.Parent!.ParentID)
 					select p;
 
 				var _ = q.ToList();
@@ -1091,7 +1106,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void JoinSubQueryCount([DataSources(
-			ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+			TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.SqlServer2000)]
 			string context)
 		{
 			var n = 1;
@@ -1395,7 +1410,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount1([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1416,7 +1431,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount2([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1439,7 +1454,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount3([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1462,7 +1477,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount4([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1486,7 +1501,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount5([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1509,7 +1524,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithBothFilters([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1544,7 +1559,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithBothFiltersAlternative([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1579,7 +1594,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1626,7 +1641,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1672,7 +1687,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1716,7 +1731,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1763,7 +1778,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithoutConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1809,7 +1824,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1973,7 +1988,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2015,7 +2030,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2056,7 +2071,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2099,7 +2114,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2127,7 +2142,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-			public IEnumerable<Tag> TagFactIdIds { get; set; }
+			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
 			{
@@ -2141,8 +2156,8 @@ namespace Tests.Linq
 		public partial class Tag
 		{
 			[PrimaryKey]      public int    Id     { get; set; }
-			[Column]          public int   FactId { get; set; }
-			[Column, NotNull] public string Name   { get; set; }
+			[Column]          public int    FactId { get; set; }
+			[Column, NotNull] public string Name   { get; set; } = null!;
 
 			public static readonly Tag[] Data = new[]
 			{
@@ -2415,7 +2430,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection1([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2442,7 +2457,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection2([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2469,7 +2484,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection3([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2495,7 +2510,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection4([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.Access,
+			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2660,7 +2675,7 @@ namespace Tests.Linq
 			[Column("inIdMain")]         public int InIdMain { get; set; }
 
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
-			public StMain Main { get; set; }
+			public StMain Main { get; set; } = null!;
 
 			public static StVersion[] Data = new StVersion[]
 			{
@@ -2729,5 +2744,159 @@ namespace Tests.Linq
 				q.ToList();
 			}
 		}
+
+		#region issue 1455
+		public class Alert
+		{
+			public string?   AlertKey     { get; set; }
+			public string?   AlertCode    { get; set; }
+			public DateTime? CreationDate { get { return DateTime.Today; } }
+		}
+		public class AuditAlert : Alert
+		{
+			public DateTime? TransactionDate { get; set; }
+		}
+		public class Trade
+		{
+			public int     DealId       { get; set; }
+			public int     ParcelId     { get; set; }
+			public string? CounterParty { get; set; }
+		}
+		public class Nomin
+		{
+			public int     CargoId              { get; set; }
+			public int     DeliveryId           { get; set; }
+			public string? DeliveryCounterParty { get; set; }
+		}
+		public class Flat
+		{
+			public string?   AlertKey             { get; set; }
+			public string?   AlertCode            { get; set; }
+			public int?      CargoId              { get; set; }
+			public int?      DeliveryId           { get; set; }
+			public string?   DeliveryCounterParty { get; set; }
+			public int?      DealId               { get; set; }
+			public int?      ParcelId             { get; set; }
+			public string?   CounterParty         { get; set; }
+			public DateTime? TransactionDate      { get; set; }
+		}
+
+		[ActiveIssue(1455)]
+		[Test]
+		public void Issue1455Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 u.nomin.DeliveryCounterParty!.Contains(cpty)
+						 ||
+						 u.trade.CounterParty!.Contains(cpty)
+						 ||
+						 u.al.alert.AlertCode!.Contains(cpty)
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+
+		[Test]
+		public void Issue1455Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<AuditAlert>())
+			using (db.CreateLocalTable<Trade>())
+			using (db.CreateLocalTable<Nomin>())
+			using (db.CreateLocalTable<Flat>())
+			{
+				var queryAudit = from al in db.GetTable<Alert>()
+								 from au in db.GetTable<AuditAlert>()
+									.Where(au1 => au1.AlertKey == al.AlertKey && au1.AlertCode == au1.AlertCode).DefaultIfEmpty()
+								 group au.TransactionDate by al into al_group
+								 select new { alert = al_group.Key, LastUpdate = al_group.Max() ?? al_group.Key.CreationDate };
+
+				var ungrouped =
+					from al in queryAudit
+					from trade in db.GetTable<Trade>()
+						.Where(trade1 => al.alert.AlertKey == trade1.DealId.ToString()).DefaultIfEmpty()
+					from nomin in db.GetTable<Nomin>()
+						.Where(nomin1 => al.alert.AlertKey == nomin1.CargoId.ToString()).DefaultIfEmpty()
+					select new { al, nomin, trade };
+
+				string cpty = "C";
+
+				if (!string.IsNullOrWhiteSpace(cpty))
+					ungrouped = ungrouped
+					.Where(u =>
+						 Sql.Like(u.nomin.DeliveryCounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.trade.CounterParty, $"%{cpty}%")
+						 ||
+						 Sql.Like(u.al.alert.AlertCode, $"%{cpty}%")
+						 );
+
+				var query =
+					from u in ungrouped
+					group new { u.nomin, u.trade, u.al.LastUpdate } by u.al.alert into al_group
+					select new { alert = al_group.Key, first = al_group.FirstOrDefault() };
+				var extract = query.ToArray();
+
+				extract
+					.Select(sql => new Flat()
+					{
+						AlertCode            = sql.alert.AlertCode,
+						AlertKey             = sql.alert.AlertKey,
+						TransactionDate      = sql.first?.LastUpdate,
+						CargoId              = sql.first?.nomin?.CargoId,
+						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
+						DealId               = sql.first?.trade?.DealId,
+						ParcelId             = sql.first?.trade?.ParcelId,
+						CounterParty         = sql.first?.trade?.CounterParty
+					}).ToArray();
+			}
+		}
+		#endregion
 	}
 }
