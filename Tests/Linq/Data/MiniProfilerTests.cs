@@ -429,13 +429,13 @@ namespace Tests.Data
 				{
 					db.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
-						Enumerable.Range(0, 1000).Select(n => new ALLTYPE() { ID = 2000 + n }));
+						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
 
 					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
 				}
 				finally
 				{
-					db.GetTable<ALLTYPE>().Delete(p => p.ID >= 2000);
+					db.GetTable<MySqlTests.AllTypeBaseProviderSpecific>().Delete(p => p.ID >= 2000);
 				}
 
 				// just check schema (no api used)
