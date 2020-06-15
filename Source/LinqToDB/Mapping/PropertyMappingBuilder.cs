@@ -2,14 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
+using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
 	using Expressions;
 	using Extensions;
 	using SqlQuery;
-	using System.Collections.Generic;
+	using Common;
 
 	/// <summary>
 	/// Column or association fluent mapping builder.
@@ -89,18 +89,18 @@ namespace LinqToDB.Mapping
 		/// Adds association mapping to current column's entity.
 		/// </summary>
 		/// <typeparam name="TOther">Association member type.</typeparam>
-		/// <typeparam name="ID1">This association side key type.</typeparam>
-		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <typeparam name="TThisKey">This association side key type.</typeparam>
+		/// <typeparam name="TOtherKey">Other association side key type.</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns association mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, TOther> Association<TOther, ID1, ID2>(
-			Expression<Func<TEntity, TOther>> prop,
-			Expression<Func<TEntity, ID1>>    thisKey,
-			Expression<Func<TOther, ID2>>     otherKey,
-			bool                              canBeNull = true)
+		public PropertyMappingBuilder<TEntity, TOther> Association<TOther, TThisKey, TOtherKey>(
+			Expression<Func<TEntity, TOther>>   prop,
+			Expression<Func<TEntity, TThisKey>> thisKey,
+			Expression<Func<TOther, TOtherKey>> otherKey,
+			bool                                canBeNull = true)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -109,18 +109,18 @@ namespace LinqToDB.Mapping
 		/// Adds association mapping to current column's entity.
 		/// </summary>
 		/// <typeparam name="TPropElement">Association member type.</typeparam>
-		/// <typeparam name="ID1">This association side key type.</typeparam>
-		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <typeparam name="TThisKey">This association side key type.</typeparam>
+		/// <typeparam name="TOtherKey">Other association side key type.</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, IEnumerable<TPropElement>> Association<TPropElement, ID1, ID2>(
+		public PropertyMappingBuilder<TEntity, IEnumerable<TPropElement>> Association<TPropElement, TThisKey, TOtherKey>(
 			Expression<Func<TEntity, IEnumerable<TPropElement>>> prop,
-			Expression<Func<TEntity, ID1>>                       thisKey,
-			Expression<Func<TPropElement, ID2>>                  otherKey,
-			bool                                canBeNull = true)
+			Expression<Func<TEntity, TThisKey>>                  thisKey,
+			Expression<Func<TPropElement, TOtherKey>>            otherKey,
+			bool                                                 canBeNull = true)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -136,7 +136,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>> prop,
 			Expression<Func<TEntity, TOther, bool>>        predicate,
-			bool                                     canBeNull = true)
+			bool                                           canBeNull = true)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -152,7 +152,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>       prop,
 			Expression<Func<TEntity, TOther, bool>> predicate,
-			bool                              canBeNull = true)
+			bool                                    canBeNull = true)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -168,7 +168,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>>              prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                     canBeNull = true)
+			bool                                                        canBeNull = true)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -182,9 +182,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
-			Expression<Func<TEntity, TOther>>       prop,
+			Expression<Func<TEntity, TOther>>                           prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                              canBeNull = true)
+			bool                                                        canBeNull = true)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -464,14 +464,26 @@ namespace LinqToDB.Mapping
 			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}
 
-		public PropertyMappingBuilder<TEntity, TProperty> HasConversionFunc<TProvider>(Func<TProperty, TProvider> toProvider, Func<TProvider, TProperty> toModel)
+		/// <summary>
+		///     Configures the property so that the property value is converted to the given type before
+		///     writing to the database and converted back when reading from the database.
+		/// </summary>
+		/// <typeparam name="TProvider"> The type to convert to and from. </typeparam>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> HasConversionFunc<TProvider>(Func<TProperty, TProvider> toProvider, Func<TProvider, TProperty> toModel, bool handlesNulls = false)
 		{
-			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverter<TProperty, TProvider>(toProvider, toModel) });
+			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverterFunc<TProperty, TProvider>(toProvider, toModel, handlesNulls) });
 		}
 
-		public PropertyMappingBuilder<TEntity, TProperty> HasConversion<TProvider>(Expression<Func<TProperty, TProvider>> toProvider, Expression<Func<TProvider, TProperty>> toModel)
+		/// <summary>
+		///     Configures the property so that the property value is converted to the given type before
+		///     writing to the database and converted back when reading from the database.
+		/// </summary>
+		/// <typeparam name="TProvider"> The type to convert to and from. </typeparam>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> HasConversion<TProvider>(Expression<Func<TProperty, TProvider>> toProvider, Expression<Func<TProvider, TProperty>> toModel, bool handlesNulls = false)
 		{
-			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverter<TProperty, TProvider>(toProvider, toModel) });
+			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverter<TProperty, TProvider>(toProvider, toModel, handlesNulls) });
 		}
 	}
 }

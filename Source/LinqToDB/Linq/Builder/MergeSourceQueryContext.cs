@@ -37,8 +37,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			if (expression.GetLevelExpression(Builder.MappingSchema, level) is ContextRefExpression refExpression && refExpression.BuildContext == this)
-				++level;
+			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
 
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)

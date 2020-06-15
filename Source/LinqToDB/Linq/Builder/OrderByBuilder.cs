@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 				var sparent = sequence.Parent;
 				var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
 				var body    = lambda.Body.Unwrap();
-				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key);
+				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key, null);
 
 				builder.ReplaceParent(order, sparent);
 

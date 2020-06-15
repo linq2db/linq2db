@@ -443,52 +443,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal static ParameterAccessor GetParameterFromMethod(int argIndex, Type objType, IDataContext dataContext, SqlField field, ParameterExpression parametersParam, ParameterExpression dataContextParam)
-		{
-			var exprParam = Expression.Parameter(typeof(Expression), "expr");
-
-			var argAccess = Expression.MakeIndex(
-				ExpressionHelper.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
-				typeof(ReadOnlyCollection<Expression>).GetProperty("Item"),
-				new[] { Expression.Constant(argIndex) });
-
-			var objectAccess = Expression.Convert(
-				Expression.Call(null,
-					MemberHelper.MethodOf(() => InternalExtensions.EvaluateExpression(null)), argAccess),
-				objType);
-
-			Expression getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(objectAccess);
-
-			var dbDataType = new DbDataType(field.Type!.Value.SystemType, DataType.Undefined, null, field.Type!.Value.Length, null, null);
-			Expression dbDataTypeExpression = Expression.Constant(dbDataType);
-
-			var convertExpression = dataContext.MappingSchema.GetConvertExpression(
-				field.Type!.Value,
-				field.Type!.Value.WithSystemType(typeof(DataParameter)),
-				createDefault: false);
-
-			if (convertExpression != null)
-			{
-				var body             = convertExpression.GetBody(getter);
-				getter               = ExpressionHelper.Property(body, nameof(DataParameter.Value));
-				dbDataTypeExpression = ExpressionHelper.Property(body, nameof(DataParameter.DbDataType));
-			}
-
-			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext,
-				getter,
-				dbDataTypeExpression,
-				getter,
-				exprParam,
-				parametersParam,
-				dataContextParam, 
-				field.Name.Replace('.', '_'),
-				expr: convertExpression);
-
-			return param;
-		}
-
-
 		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
 		{
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
@@ -501,32 +455,27 @@ namespace LinqToDB.Linq
 
 			var descriptor    = field.ColumnDescriptor;
 			var dbValueLambda = descriptor.GetDbParamLambda();
-			getter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
-			var systemType = getter.Type;
+			Expression? valueGetter;
+			Expression? dbDataTypeExpression;
 
-			Expression valueGetter;
-			Expression dbDataTypeExpression;
-			LambdaExpression? convertExpression = null;
+			valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
-			if (typeof(DataParameter).IsSameOrParentOf(systemType))
+			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
-				valueGetter          = ExpressionHelper.Property(getter, nameof(DataParameter.Value));
-				dbDataTypeExpression = ExpressionHelper.Property(getter, nameof(DataParameter.DbDataType));
-				convertExpression    = dbValueLambda;
+				dbDataTypeExpression = Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType));
+				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
 			}
 			else
 			{
-				valueGetter = getter;
-
-				var dbDataType = new DbDataType(systemType, descriptor.DataType, descriptor.DbType,
-					descriptor.Length ?? field.Type!.Value.Length, descriptor.Precision, descriptor.Scale);
+				var dbDataType = field.ColumnDescriptor.GetDbDataType();
+				dbDataType = dbDataType.WithSystemType(valueGetter.Type);
 
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, valueGetter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'), expr: convertExpression);
+				dataContext, valueGetter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'));
 
 			return param;
 		}

@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var valueExpr = Expression.Constant(value, column.MemberType);
-											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr);
+											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
 
 											if (expr is SqlParameter p)
 											{

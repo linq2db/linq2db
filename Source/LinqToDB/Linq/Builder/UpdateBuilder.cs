@@ -198,19 +198,20 @@ namespace LinqToDB.Linq.Builder
 
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
-				var column = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
-				var expr   = builder.ConvertToSqlExpression(ctx, expression);
+				var column     = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
+				var columnExpr = column[0].Sql;
+				var expr       = builder.ConvertToSqlExpression(ctx, expression, QueryHelper.GetColumnDescriptor(columnExpr));
 
 				if (expr.ElementType == QueryElementType.SqlParameter)
 				{
 					var parm  = (SqlParameter)expr;
-					var field = QueryHelper.GetUnderlyingField(column[0].Sql);
+					var field = QueryHelper.GetUnderlyingField(columnExpr);
 
 					if (parm.Type.DataType == DataType.Undefined)
 						parm.Type = parm.Type.WithDataType(field!.Type!.Value.DataType);
 				}
 
-				items.Add(new SqlSetExpression(column[0].Sql, expr));
+				items.Add(new SqlSetExpression(columnExpr, expr));
 			}
 
 			void BuildNew(NewExpression expression, Expression path)
@@ -344,21 +345,22 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-						var expr   = builder.ConvertToSqlExpression(ctx, ma.Expression);
+						var column     = into.ConvertToSql(pe, 1, ConvertFlags.Field);
+						var columnExpr = column[0].Sql;
+						var expr       = builder.ConvertToSqlExpression(ctx, ma.Expression, QueryHelper.GetColumnDescriptor(columnExpr));
 
 						if (expr.ElementType == QueryElementType.SqlParameter)
 						{
 							var parm  = (SqlParameter)expr;
-							var field = column[0].Sql is SqlField sqlField
+							var field = columnExpr is SqlField sqlField
 								? sqlField
-								: (SqlField)((SqlColumn)column[0].Sql).Expression;
+								: (SqlField)((SqlColumn)columnExpr).Expression;
 
 							if (parm.Type.DataType == DataType.Undefined)
 								parm.Type = parm.Type.WithDataType(field.Type!.Value.DataType);
 						}
 
-						items.Add(new SqlSetExpression(column[0].Sql, expr));
+						items.Add(new SqlSetExpression(columnExpr, expr));
 					}
 				}
 				else
@@ -392,7 +394,7 @@ namespace LinqToDB.Linq.Builder
 
 			sp       = valuesContext.Parent;
 			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			var expr = builder.ConvertToSqlExpression(ctx, update.Body);
+			var expr = builder.ConvertToSqlExpression(ctx, update.Body, QueryHelper.GetColumnDescriptor(column));
 
 			builder.ReplaceParent(ctx, sp);
 
@@ -402,7 +404,8 @@ namespace LinqToDB.Linq.Builder
 		internal static void ParseSet(
 			ExpressionBuilder               builder,
 			LambdaExpression                extract,
-			Expression                      update,
+			MethodCallExpression            updateMethod,
+			int                             valueIndex,
 			IBuildContext                   select,
 			List<SqlSetExpression> items)
 		{
@@ -443,18 +446,11 @@ namespace LinqToDB.Linq.Builder
 				columnSql = column[0].Sql;
 			}
 
-			var memberType = member.GetMemberType().ToNullableUnderlying();
-			var updateType = update.Type.ToNullableUnderlying();
-			if (memberType.IsEnum && updateType != memberType)
-				update = Expression.Convert(update, member.GetMemberType());
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
 
-			if (!update.Type.IsConstantable(false) && builder.AsParameters.All(p => p.Item1 != update))
-				builder.AsParameters.Add(Tuple.Create(update, QueryHelper.GetColumnDescriptor(columnSql)));
+			var p = builder.BuildParameterFromArgument(updateMethod, valueIndex, columnDescriptor);
 
-
-			var expr = builder.ConvertToSql(select, update);
-
-			items.Add(new SqlSetExpression(columnSql, expr));
+			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
 		}
 
 		#endregion
@@ -528,7 +524,7 @@ namespace LinqToDB.Linq.Builder
 					// we have first lambda as whole update field part
 					var sp     = sequence.Parent;
 					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
-					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body);
+					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null);
 
 					builder.ReplaceParent(ctx, sp);
 
@@ -548,7 +544,8 @@ namespace LinqToDB.Linq.Builder
 					ParseSet(
 						builder,
 						extract,
-						update,
+						methodCall,
+						2,
 						sequence,
 						updateStatement.Update.Items);
 

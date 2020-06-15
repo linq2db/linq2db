@@ -4,12 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using Expressions;
+	using Extensions;
+	using Reflection;
+
 	/// <summary>
 	/// Fluent mapping entity builder.
 	/// </summary>
@@ -205,7 +206,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> Property<TProperty>(Expression<Func<TEntity,TProperty>> func)
 		{
-			return (new PropertyMappingBuilder<TEntity, TProperty>(this, func)).IsColumn();
+			return new PropertyMappingBuilder<TEntity, TProperty>(this, func).IsColumn();
 		}
 
 		/// <summary>
@@ -222,18 +223,18 @@ namespace LinqToDB.Mapping
 		/// Adds association mapping to current entity.
 		/// </summary>
 		/// <typeparam name="TProperty">Association member type.</typeparam>
-		/// <typeparam name="ID1">This association side key type.</typeparam>
-		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <typeparam name="TThisKey">This association side key type.</typeparam>
+		/// <typeparam name="TOtherKey">Other association side key type.</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, TProperty> Association<TProperty, ID1, ID2>(
+		public PropertyMappingBuilder<TEntity, TProperty> Association<TProperty, TThisKey, TOtherKey>(
 			Expression<Func<TEntity, TProperty>>   prop,
-			Expression<Func<TEntity, ID1>> thisKey,
-			Expression<Func<TProperty, ID2>> otherKey,
-			bool                     canBeNull = true)
+			Expression<Func<TEntity, TThisKey>>    thisKey,
+			Expression<Func<TProperty, TOtherKey>> otherKey,
+			bool                                   canBeNull = true)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -249,18 +250,18 @@ namespace LinqToDB.Mapping
 		/// Adds association mapping to current entity.
 		/// </summary>
 		/// <typeparam name="TPropElement">Association member type.</typeparam>
-		/// <typeparam name="ID1">This association side key type.</typeparam>
-		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <typeparam name="TThisKey">This association side key type.</typeparam>
+		/// <typeparam name="TOtherKey">Other association side key type.</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, IEnumerable<TPropElement>> Association<TPropElement, ID1, ID2>(
+		public PropertyMappingBuilder<TEntity, IEnumerable<TPropElement>> Association<TPropElement, TThisKey, TOtherKey>(
 			Expression<Func<TEntity, IEnumerable<TPropElement>>> prop,
-			Expression<Func<TEntity, ID1>>            thisKey,
-			Expression<Func<TPropElement, ID2>> otherKey,
-			bool                                canBeNull = true)
+			Expression<Func<TEntity, TThisKey>>                  thisKey,
+			Expression<Func<TPropElement, TOtherKey>>            otherKey,
+			bool                                                 canBeNull = true)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -283,7 +284,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>> prop,
 			Expression<Func<TEntity, TOther, bool>>        predicate,
-			bool                                     canBeNull = true)
+			bool                                           canBeNull = true)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -302,7 +303,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>       prop,
 			Expression<Func<TEntity, TOther, bool>> predicate,
-			bool                              canBeNull = true)
+			bool                                    canBeNull = true)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -321,7 +322,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>>              prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                     canBeNull = true)
+			bool                                                        canBeNull = true)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
@@ -338,9 +339,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
-			Expression<Func<TEntity, TOther>>       prop,
+			Expression<Func<TEntity, TOther>>                           prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                              canBeNull = true)
+			bool                                                        canBeNull = true)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));

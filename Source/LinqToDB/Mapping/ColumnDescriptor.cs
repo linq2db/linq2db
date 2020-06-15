@@ -465,35 +465,63 @@ namespace LinqToDB.Mapping
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+			var dbDataType = GetDbDataType();
 
-			if (ValueConverter != null)
+			getterExpr = ApplyConversions(getterExpr, dbDataType);
+
+			_getterParameterLambda = Expression.Lambda(getterExpr, objParam);
+			return _getterParameterLambda;
+		}
+
+		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter)
+		{
+			if (valueConverter != null)
 			{
-				getterExpr = InternalExtensions.ApplyLambdaToExpression(MappingSchema.AddNullCheck(ValueConverter.ToProviderExpression), getterExpr);
+				var toProvider = valueConverter.ToProviderExpression;
+				if (!valueConverter.HandlesNulls)
+					toProvider = mappingSchema.AddNullCheck(toProvider);
+				getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 			}
 
 			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)))
 			{
-				var convertLambda = MappingSchema.GetConvertExpression(
-					new DbDataType(getterExpr.Type, DataType, DbType, Length),
-					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault: false);
+				var convertLambda = mappingSchema.GetConvertExpression(
+					dbDataType.WithSystemType(getterExpr.Type),
+					dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
 
 				if (convertLambda != null)
 				{
 					getterExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, getterExpr);
 				}
-				else if (getterExpr.Type.IsEnum)
+				else
 				{
-					var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, getterExpr.Type);
-					if (type != null)
+					if (valueConverter == null)
 					{
-						var enumConverter = MappingSchema.GetConvertExpression(getterExpr.Type, type)!;
-						getterExpr = InternalExtensions.ApplyLambdaToExpression(enumConverter, getterExpr);
+						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
+						if (type != null)
+						{
+							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type)!;
+							getterExpr = InternalExtensions.ApplyLambdaToExpression(enumConverter, getterExpr);
+
+							convertLambda = mappingSchema.GetConvertExpression(
+								dbDataType.WithSystemType(getterExpr.Type),
+								dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+
+							if (convertLambda != null)
+							{
+								getterExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, getterExpr);
+							}
+						}
 					}
 				}
 			}
 
-			_getterParameterLambda = Expression.Lambda(getterExpr, objParam);
-			return _getterParameterLambda;
+			return getterExpr;
+		}
+
+		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType)
+		{
+			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter);
 		}
 
 		public DbDataType GetDbDataType()

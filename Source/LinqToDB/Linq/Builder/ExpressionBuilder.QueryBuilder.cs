@@ -549,7 +549,8 @@ namespace LinqToDB.Linq.Builder
 
 		Expression BuildSql(IBuildContext context, Expression expression, string? alias)
 		{
-			var sqlex = ConvertToSqlExpression(context, expression);
+			//TODO: Check that we can pass column descriptor here
+			var sqlex = ConvertToSqlExpression(context, expression, null);
 			var idx   = context.SelectQuery.Select.Add(sqlex);
 
 			if (alias != null)

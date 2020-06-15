@@ -105,25 +105,20 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			if (toType.IsEnum)
-			{
-				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType)!;
-
-				if (mapType != ex.Type)
-				{
-					// Use only defined convert
-					var econv = mappingSchema.GetConvertExpression(ex.Type, type,    false, false) ??
-						        mappingSchema.GetConvertExpression(ex.Type, mapType, false)!;
-
-					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
-				}
-			}
-
 			if (converter != null)
 			{
 				// we have to prepare read expression to conversion
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
+				
+				if (converter.HandlesNulls)
+				{
+					ex = Condition(
+						Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),
+						Constant(mappingSchema.GetDefaultValue(expectedType), expectedType),
+						ex);
+				}
+
 				if (expectedType != ex.Type)
 				{
 					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
@@ -136,13 +131,29 @@ namespace LinqToDB.Expressions
 				}
 					
 			}
+			else if (toType.IsEnum)
+			{
+				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType)!;
+
+				if (mapType != ex.Type)
+				{
+					// Use only defined convert
+					var econv = mappingSchema.GetConvertExpression(ex.Type, type,    false, false) ??
+					            mappingSchema.GetConvertExpression(ex.Type, mapType, false)!;
+
+					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
+				}
+			}
+
 
 			ex = ConvertExpressionToType(ex, type, mappingSchema)!;
 
 			// Add check null expression.
+			// If converter handles nulls, do not provide IsNull check
 			// Note: Oracle may return wrong IsDBNullAllowed, so added additional check toType != type, that means nullable type
 			//
-			if (toType != type || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true))
+			if (converter?.HandlesNulls != true &&
+			    (toType != type || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
 					Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),

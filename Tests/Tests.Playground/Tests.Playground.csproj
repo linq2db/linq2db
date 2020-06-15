@@ -9,22 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\StringFunctionsTests.cs" Link="StringFunctionsTests.cs" />
-		<Compile Include="..\Linq\Update\InsertTests.cs">
-		  <Link>InsertTests.cs</Link>
-		</Compile>
-		<Compile Include="..\Linq\Update\UpdateFromTests.cs">
-		  <Link>UpdateFromTests.cs</Link>
-		</Compile>
-		<Compile Include="..\Linq\Update\UpdateTests.cs">
-		  <Link>UpdateTests.cs</Link>
-		</Compile>
-		<Compile Include="..\Linq\UserTests\ConverterInsertTests.cs" Link="ConverterInsertTests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1373Tests.cs" Link="Issue1373Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1760Tests.cs" Link="Issue1760Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue488Tests.cs" Link="Issue488Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue533Tests.cs" Link="Issue533Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue693Tests.cs" Link="Issue693Tests.cs" />
 	</ItemGroup>
 
 </Project>

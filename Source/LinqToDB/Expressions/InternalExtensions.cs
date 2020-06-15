@@ -1440,7 +1440,7 @@ namespace LinqToDB.Expressions
 		{
 			// Replace multiple parameters with single variable or single parameter with the reader expression.
 			//
-			if (convertLambda.Body.GetCount(e => e == convertLambda.Parameters[0]) > 1)
+			if (expression.NodeType != ExpressionType.Parameter && convertLambda.Body.GetCount(e => e == convertLambda.Parameters[0]) > 1)
 			{
 				var variable = Expression.Variable(expression.Type);
 				var assign   = Expression.Assign(variable, expression);
