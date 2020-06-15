@@ -381,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 													member, levelExpression == expression, levelExpression.Type, expression);
 
 												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType);
-												var descriptor = ed.Columns.FirstOrDefault(c => c.MemberInfo == member);
+												var descriptor = ed.FindColumnDescriptor(member);
 
 												sql = ConvertExpressions(memberExpression, flags, descriptor)
 													.Select(si => si.Clone(member)).ToArray();
@@ -404,7 +404,7 @@ namespace LinqToDB.Linq.Builder
 														if (mex is MemberExpression ma)
 														{
 															var ed = Builder.MappingSchema.GetEntityDescriptor(ma.Expression.Type);
-															descriptor = ed.Columns.FirstOrDefault(c => c.MemberInfo == ma.Member);
+															descriptor = ed.FindColumnDescriptor(ma.Member);
 														}
 														return ConvertExpressions(buildExpression, flags, descriptor);
 													default:
@@ -455,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
 			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType);
-			var descriptor = ed.Columns.FirstOrDefault(c => c.MemberInfo == member);
+			var descriptor = ed.FindColumnDescriptor(member);
 
 			return ConvertExpressions(expression, flags, descriptor)
 				.Select(si => si.Clone(member))

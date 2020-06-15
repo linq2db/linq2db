@@ -126,12 +126,6 @@ namespace LinqToDB.Mapping
 			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
 
-			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-			if (vc != null)
-			{
-				ValueConverter = vc.ValueConverter;
-			}
-
 			if (defaultCanBeNull && IsIdentity)
 				CanBeNull = false;
 
@@ -204,6 +198,12 @@ namespace LinqToDB.Mapping
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
+			}
+
+			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (vc != null)
+			{
+				ValueConverter = vc.GetValueConverter(this);
 			}
 		}
 

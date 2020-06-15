@@ -7,26 +7,24 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	public class ValueConverterAttribute : Attribute
 	{
-		private IValueConverter? _valueConverter;
-
 		/// <summary>
 		/// ValueConverter for mapping Database Values to Model values.
 		/// </summary>
-		public IValueConverter? ValueConverter
+		public IValueConverter? ValueConverter { get; set; }
+
+		/// <summary>
+		/// Returns <see cref="IValueConverter"/> for specific column.
+		/// </summary>
+		public virtual IValueConverter? GetValueConverter(ColumnDescriptor columnDescriptor)
 		{
-			get
-			{
-				if (_valueConverter != null)
-					return _valueConverter;
+			if (ValueConverter != null)
+				return ValueConverter;
 
-				if (ConverterType == null)
-					return null;
+			if (ConverterType == null)
+				return null;
 
-				var dynamicConverter = (IValueConverter)TypeAccessor.GetAccessor(ConverterType).CreateInstance();
-				return dynamicConverter;
-			}
-
-			set => _valueConverter = value;
+			var dynamicConverter = (IValueConverter)TypeAccessor.GetAccessor(ConverterType).CreateInstance();
+			return dynamicConverter;
 		}
 
 		/// <summary>

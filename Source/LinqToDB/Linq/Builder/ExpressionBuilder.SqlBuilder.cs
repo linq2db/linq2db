@@ -644,7 +644,7 @@ namespace LinqToDB.Linq.Builder
 								if (mi is MethodInfo)
 									mi = ((MethodInfo)mi).GetPropertyInfo();
 
-								var descriptor = ed.Columns.FirstOrDefault(c => c.MemberInfo == mi);
+								var descriptor = ed.FindColumnDescriptor(mi);
 
 								return ConvertExpressions(context, arg, queryConvertFlag, descriptor).Select(si => si.Clone(mi));
 							})
@@ -670,7 +670,7 @@ namespace LinqToDB.Linq.Builder
 								if (mi is MethodInfo)
 									mi = ((MethodInfo)mi).GetPropertyInfo();
 
-								var descriptor = ed.Columns.FirstOrDefault(c => c.MemberInfo == mi);
+								var descriptor = ed.FindColumnDescriptor(mi);
 
 								return ConvertExpressions(context, a.Expression, queryConvertFlag, descriptor).Select(si => si.Clone(mi));
 							})
@@ -2211,12 +2211,6 @@ namespace LinqToDB.Linq.Builder
 			AddCurrentSqlParameter(p);
 
 			return p.SqlParameter;
-		}
-
-		ColumnDescriptor? GetMemberDescriptor(MemberInfo member)
-		{
-			var ed = MappingSchema.GetEntityDescriptor(member.DeclaringType);
-			return ed.Columns.FirstOrDefault(c => c.MemberInfo == member);
 		}
 
 		DbDataType GetMemberDataType(MemberInfo member)
