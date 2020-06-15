@@ -597,7 +597,7 @@ namespace LinqToDB.Mapping
 
 		public EntityMappingBuilder<TEntity> DynamicPropertyAccessors(
 			Expression<Func<TEntity, string, object, object>> getter,
-			Expression<Action<TEntity, string, object>> setter)
+			Expression<Action<TEntity, string, object>>       setter)
 		{
 			_builder.HasAttribute(
 				typeof(TEntity),
@@ -689,12 +689,12 @@ namespace LinqToDB.Mapping
 
 		internal EntityMappingBuilder<TEntity> SetAttribute<TProperty, TA>(
 			Expression<Func<TEntity,TProperty>> func,
-			bool                        processNewExpression,
-			Func<bool,TA>               getNew,
-			Action<bool,TA>             modifyExisting,
-			Func<TA,string?>            configGetter,
-			Func<TA,TA>?                overrideAttribute = null,
-			Func<IEnumerable<TA>, TA>?  existingGetter    = null
+			bool                                processNewExpression,
+			Func<bool,TA>                       getNew,
+			Action<bool,TA>                     modifyExisting,
+			Func<TA,string?>                    configGetter,
+			Func<TA,TA>?                        overrideAttribute = null,
+			Func<IEnumerable<TA>, TA>?          existingGetter    = null
 			)
 			where TA : Attribute
 		{

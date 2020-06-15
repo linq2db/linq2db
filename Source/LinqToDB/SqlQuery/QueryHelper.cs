@@ -3,13 +3,13 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
-	using LinqToDB.Tools;
+	using Tools;
+	using Common;
+	using Mapping;
 
 	public static class QueryHelper
 	{
@@ -61,11 +61,21 @@ namespace LinqToDB.SqlQuery
 			return dependencyFound;
 		}
 
+		/// <summary>
+		/// Returns <see cref="IValueConverter"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <returns>Associated converter or <c>null</c>.</returns>
 		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
 		{
 			return GetColumnDescriptor(expr)?.ValueConverter;
 		}
 		
+		/// <summary>
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <returns>Associated column descriptor or <c>null</c>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
 			if (expr == null)

@@ -424,15 +424,31 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
 
-		LambdaExpression? _getterValueLambda;
-		LambdaExpression? _getterParameterLambda;
-		Func<object,DataParameter?>? _getterParameter;
+		LambdaExpression?    _getterValueLambda;
+		LambdaExpression?    _getterParameterLambda;
 		Func<object,object>? _getter;
+
+		/// <summary>
+		/// Returns DbDataType for current column.
+		/// </summary>
+		/// <returns></returns>
+		public DbDataType GetDbDataType()
+		{
+			var sytemType = MemberType;
+			if (ValueConverter != null)
+				sytemType = ValueConverter.ToProviderExpression.Body.Type;
+
+			var dataType = DataType;
+			if (dataType == DataType.Undefined)
+				dataType = MappingSchema.GetDataType(sytemType).Type.DataType;
+
+			return new DbDataType(sytemType, dataType, DbType, Length, Precision, Scale);
+		}
 
 		/// <summary>
 		/// Returns Lambda for extracting column value, converted to database type, from entity object.
 		/// </summary>
-		/// <returns>Returns column value, converted to database type.</returns>
+		/// <returns>Returns Lambda which extracts member value to database type.</returns>
 		public LambdaExpression GetDbValueLambda()
 		{
 			if (_getterValueLambda != null)
@@ -455,9 +471,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns Lambda for extracting column value or parameter, converted to database type, from entity object.
+		/// Returns Lambda for extracting column value, converted to database type or <see cref="DataParameter"/>, from entity object.
 		/// </summary>
-		/// <returns>Returns column value, converted to database type.</returns>
+		/// <returns>Returns Lambda which extracts member value to database type or <see cref="DataParameter"/>.</returns>
 		public LambdaExpression GetDbParamLambda()
 		{
 			if (_getterParameterLambda != null)
@@ -473,6 +489,14 @@ namespace LinqToDB.Mapping
 			return _getterParameterLambda;
 		}
 
+		/// <summary>
+		/// Helper function for applying all needed conversions for converting value to database type.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema.</param>
+		/// <param name="getterExpr">Expression which returns value which has to be converted.</param>
+		/// <param name="dbDataType">Database type.</param>
+		/// <param name="valueConverter">Optional <see cref="IValueConverter"/></param>
+		/// <returns>Expression with applied conversions.</returns>
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter)
 		{
 			if (valueConverter != null)
@@ -519,22 +543,15 @@ namespace LinqToDB.Mapping
 			return getterExpr;
 		}
 
+		/// <summary>
+		/// Helper function for applying all needed conversions for converting value to database type.
+		/// </summary>
+		/// <param name="getterExpr">Expression which returns value which has to be converted.</param>
+		/// <param name="dbDataType">Database type.</param>
+		/// <returns>Expression with applied conversions.</returns>
 		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType)
 		{
 			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter);
-		}
-
-		public DbDataType GetDbDataType()
-		{
-			var sytemType = MemberType;
-			if (ValueConverter != null)
-				sytemType = ValueConverter.ToProviderExpression.Body.Type;
-
-			var dataType = DataType;
-			if (dataType == DataType.Undefined)
-				dataType = MappingSchema.GetDataType(sytemType).Type.DataType;
-
-			return new DbDataType(sytemType, dataType, DbType, Length, Precision, Scale);
 		}
 
 		/// <summary>
@@ -557,42 +574,5 @@ namespace LinqToDB.Mapping
 
 			return _getter(obj);
 		}
-
-
-		private static ConstructorInfo _dataParameterConstructor =
-			MemberHelper.ConstructorOf(() => new DataParameter("", null, DataType.Undefined, ""));
-
-		/// <summary>
-		/// Extracts column value, converted to database type, from entity object.
-		/// </summary>
-		/// <param name="obj">Entity object to extract column value from.</param>
-		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual DataParameter? GetValueParameter(object obj)
-		{
-			if (_getterParameter == null)
-			{
-				var objParam      = Expression.Parameter(typeof(object), "obj");
-				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
-
-				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbParamLambda(), objExpression);
-				if (!typeof(DataParameter).IsSameOrParentOf(getterExpr.Type))
-				{
-					var replaceParam = Expression.Parameter(getterExpr.Type);
-					var dataParamExpr =
-						Expression.Lambda(
-							Expression.New(_dataParameterConstructor, Expression.Constant("p"), replaceParam,
-								Expression.Constant(DataType), Expression.Constant(DbType)),
-							replaceParam);
-
-					getterExpr = InternalExtensions.ApplyLambdaToExpression(dataParamExpr, getterExpr);
-				}
-
-				var getterLambda = Expression.Lambda<Func<object,DataParameter?>>(getterExpr, objParam);
-				_getterParameter = getterLambda.Compile();
-			}
-
-			return _getterParameter(obj);
-		}
-
 	}
 }
