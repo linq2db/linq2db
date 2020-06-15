@@ -310,7 +310,8 @@ namespace Tests.Linq
 					Id = 2, 
 					Value1 = JToken.Parse("{ some: \"updated2}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "updated2" } },
-					EnumWithNull = EnumValue.Value2
+					EnumWithNull = EnumValue.Value2,
+					EnumWithNullDeclarative = EnumValue.Value2
 				};
 
 				db.Update(toUpdate2);
@@ -328,7 +329,8 @@ namespace Tests.Linq
 					Id = 3, 
 					Value1 = null,
 					Value2 = null,
-					EnumWithNull = EnumValue.Null 
+					EnumWithNull = EnumValue.Null, 
+					EnumWithNullDeclarative = EnumValue.Null, 
 				};
 				db.Update(toUpdate3);
 
