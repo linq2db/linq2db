@@ -1240,6 +1240,13 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression GetExpression(Expression expression, Expression levelExpression, Expression memberExpression)
 		{
+			if (memberExpression is MemberExpression me)
+			{
+				//TODO: Why do we need such quirks with grouping?
+				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType) && memberExpression.Type == expression.Type)
+					return memberExpression;
+			}
+
 			return !ReferenceEquals(levelExpression, expression) ?
 				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
 				memberExpression;
