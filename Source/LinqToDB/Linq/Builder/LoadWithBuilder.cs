@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith", "ThenLoad");
+			return methodCall.IsQueryable("LoadWith", "ThenLoad", "LoadWithAsTable");
 		}
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)

@@ -3419,5 +3419,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		#region Grouping Guard
+
+		public bool IsGroupingGuardDisabled { get; set; }
+
+		#endregion
 	}
 }

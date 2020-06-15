@@ -80,6 +80,7 @@ namespace LinqToDB.Linq.Builder
 			new ContextParser              (),
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
+			new DisableGroupingGuardBuilder(),
 			new HasUniqueKeyBuilder        (),
 		};
 
