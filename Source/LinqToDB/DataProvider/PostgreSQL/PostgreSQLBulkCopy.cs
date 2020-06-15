@@ -48,10 +48,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
 				var currentCount = 0;
 
-				var key = new { Type = typeof(T), options.KeepIdentity, ed };
-				var rowWriter = (Action<MappingSchema, NpgsqlProviderAdapter.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
+				var key = new { Type = typeof(T), options.KeepIdentity, ed, dataConnection.MappingSchema.ConfigurationID };
+				var rowWriter = (Action<NpgsqlProviderAdapter.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
 					key,
-					_ => _provider.Adapter.CreateBinaryImportRowWriter<T>(_provider, sqlBuilder, columns, dataConnection.MappingSchema));
+					_ => _provider.Adapter.CreateBinaryImportRowWriter<T>(_provider, sqlBuilder, columns));
 
 				var useComplete = _provider.Adapter.BinaryImporterHasComplete;
 				var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					foreach (var item in source)
 					{
-						rowWriter(dataConnection.MappingSchema, writer, columns, item);
+						rowWriter(writer, columns, item);
 
 						currentCount++;
 						rowsCopied.RowsCopied++;
