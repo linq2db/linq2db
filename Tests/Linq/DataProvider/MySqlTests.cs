@@ -308,7 +308,7 @@ namespace Tests.DataProvider
 		{
 			// was 100_000 but it was slow and also Visual Studio (16.5) went banana for no reason
 			const int records = 1000;
-			const int batchSize= 500; // 50000 / 25000 (provider-specific)
+			const int batchSize = 500; // 50000 / 25000 (provider-specific)
 
 			using (var conn = new DataConnection(context))
 			{
@@ -351,7 +351,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					// 25000 works for provider-specific, 30000 fails
+					// 20060 works for provider-specific, 20061 fails
 					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
 
 					if (isNativeCopy)
