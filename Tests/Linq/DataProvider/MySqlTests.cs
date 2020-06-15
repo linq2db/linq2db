@@ -416,7 +416,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
-		private static void EnableNativeBulk(DataConnection db, string context)
+		public static void EnableNativeBulk(DataConnection db, string context)
 		{
 			if (context == ProviderName.MySqlConnector)
 				db.Execute("SET GLOBAL local_infile=ON");

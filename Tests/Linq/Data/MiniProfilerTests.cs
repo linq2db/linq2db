@@ -427,6 +427,7 @@ namespace Tests.Data
 				// bulk copy
 				try
 				{
+					MySqlTests.EnableNativeBulk(db, context);
 					db.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
