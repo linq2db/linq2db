@@ -1301,7 +1301,7 @@ namespace LinqToDB.Linq.Builder
 		public ParameterAccessor BuildParameterFromArgumentProperty(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor columnDescriptor,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, columnDescriptor);
+			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, null);
 
 			valueAccessor = Expression.MakeMemberAccess(valueAccessor, columnDescriptor.MemberInfo);
 
