@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider
 		{
 			var value = _columns[i].GetValue(_dataConnection.MappingSchema, _enumerator.Current);
 
-				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
+			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
 			return _valueConverter.Value;
 		}

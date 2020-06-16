@@ -3,7 +3,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System;
+	using System.Collections;
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Mapping;
 	using SqlQuery;
 
@@ -21,6 +24,17 @@ namespace LinqToDB.DataProvider.MySql
 			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+
+			// both providers doesn't support BitArray directly and map bit fields to ulong by default
+			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? (ulong?)null :GetBits(ba), DataType.UInt64), false);
+		}
+
+		static ulong GetBits(BitArray ba)
+		{
+			// mysql supports bit(64) max, so we use 8 bytes
+			var data = new byte[8];
+			ba.CopyTo(data, 0);
+			return BitConverter.ToUInt64(data, 0);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

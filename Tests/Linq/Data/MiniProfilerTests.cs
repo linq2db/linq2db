@@ -424,6 +424,21 @@ namespace Tests.Data
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
 				Assert.True    (trace.Contains("DECLARE @p Byte "));
 
+				// bulk copy
+				try
+				{
+					MySqlTests.EnableNativeBulk(db, context);
+					db.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
+
+					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+				}
+				finally
+				{
+					db.GetTable<MySqlTests.AllTypeBaseProviderSpecific>().Delete(p => p.ID >= 2000);
+				}
+
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 			}

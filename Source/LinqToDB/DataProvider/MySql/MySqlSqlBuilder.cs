@@ -375,18 +375,12 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					if (value.Length > 0 && value[0] == '`')
-						return sb.Append(value);
-					return sb.Append('`').Append(value).Append('`');
-
-				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToSchema     :
-				case ConvertType.NameToQueryTable :
-					if (value.Length > 0 && value[0] == '`')
-						return sb.Append(value);
-
-					if (value.IndexOf('.') > 0)
-						value = string.Join("`.`", value.Split('.'));
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
+				case ConvertType.NameToQueryTable     :
+					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
+					if (value.Contains('`'))
+						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');
 			}

@@ -54,7 +54,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,int> GetGetHashCodeFunc<T>()
-			=> GetGetHashCodeFunc<T>(TypeAccessor.GetAccessor<T>().Members);
+			=> GetGetHashCodeFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(m => m.GetAttribute<IgnoreComparisonAttribute>() == null));
 
 		static readonly int _randomSeed = new Random(unchecked((int)DateTime.Now.Ticks)).Next();
 

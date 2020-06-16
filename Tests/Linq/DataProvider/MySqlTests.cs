@@ -23,7 +23,10 @@ using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.DataProvider.MySql;
+	using LinqToDB.Tools.Comparers;
 	using Model;
+	using System.Collections;
 	using System.Collections.Generic;
 	using System.Data;
 	using System.Diagnostics;
@@ -259,9 +262,22 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("alltypes")]
-		public partial class AllType
+		[Table("AllTypes")]
+		public partial class AllType : AllTypeBaseProviderSpecific
 		{
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
+			[IgnoreComparison]
+			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
+		}
+
+		// excludes year columns, as they doesn't supported by native bulk copy
+		[Table("AllTypesNoYear")]
+		public partial class AllTypeBaseProviderSpecific
+		{
+			[IgnoreComparison]
 			[PrimaryKey, Identity] public int       ID                  { get; set; } // int(11)
 			[Column,     Nullable] public long?     bigintDataType      { get; set; } // bigint(20)
 			[Column,     Nullable] public short?    smallintDataType    { get; set; } // smallint(6)
@@ -276,9 +292,6 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public DateTime? datetimeDataType    { get; set; } // datetime
 			[Column,     Nullable] public DateTime? timestampDataType   { get; set; } // timestamp
 			[Column,     Nullable] public TimeSpan? timeDataType        { get; set; } // time
-			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
-			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
-			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
 			[Column,     Nullable] public char?     charDataType        { get; set; } // char(1)
 			[Column,     Nullable] public string?   varcharDataType     { get; set; } // varchar(20)
 			[Column,     Nullable] public string?   textDataType        { get; set; } // text
@@ -291,73 +304,204 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public uint?     intUnsignedDataType { get; set; } // int(10) unsigned
 		}
 
-		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
+		void BulkCopyTest(string context, BulkCopyType bulkCopyType, bool withTransaction)
 		{
+			// was 100_000 but it was slow and also Visual Studio (16.5) went banana for no reason
+			const int records = 1000;
+			const int batchSize = 500; // 50000 / 25000 (provider-specific)
+
 			using (var conn = new DataConnection(context))
 			{
-				conn.BeginTransaction();
+				EnableNativeBulk(conn, context);
+				DataConnectionTransaction? transaction = null;
+				if (withTransaction)
+					transaction = conn.BeginTransaction();
 
-				conn.BulkCopy(new BulkCopyOptions { MaxBatchSize = 50000, BulkCopyType = bulkCopyType },
-					Enumerable.Range(0, 100000).Select(n =>
-						new AllType
-						{
-							ID                  = 2000 + n,
-							bigintDataType      = 3000 + n,
-							smallintDataType    = (short)(4000 + n),
-							tinyintDataType     = (sbyte)(5000 + n),
-							mediumintDataType   = 6000 + n,
-							intDataType         = 7000 + n,
-							numericDataType     = 8000 + n,
-							decimalDataType     = 9000 + n,
-							doubleDataType      = 8800 + n,
-							floatDataType       = 7700 + n,
-							dateDataType        = DateTime.Now,
-							datetimeDataType    = DateTime.Now,
-							timestampDataType   = null,
-							timeDataType        = null,
-							yearDataType        = (1000 + n) % 100,
-							year2DataType       = (1000 + n) % 100,
-							year4DataType       = null,
-							charDataType        = 'A',
-							varcharDataType     = "",
-							textDataType        = "",
-							binaryDataType      = null,
-							varbinaryDataType   = null,
-							blobDataType        = new byte[] { 1, 2, 3 },
-							bitDataType         = null,
-							enumDataType        = "Green",
-							setDataType         = "one",
-							intUnsignedDataType = (uint)(5000 + n),
-						}));
+				try
+				{
+					var source = Enumerable.Range(0, records).Select(n =>
+							new AllType()
+							{
+								ID                  = 2000 + n,
+								bigintDataType      = 3000 + n,
+								smallintDataType    = (short)(4000 + n),
+								tinyintDataType     = (sbyte)(5000 + n),
+								mediumintDataType   = 6000 + n,
+								intDataType         = 7000 + n,
+								numericDataType     = 8000 + n,
+								decimalDataType     = 9000 + n,
+								doubleDataType      = 8800 + n,
+								floatDataType       = 7700 + n,
+								dateDataType        = DateTime.Now.Date,
+								datetimeDataType    = TestUtils.StripMilliseconds(DateTime.Now, true),
+								timestampDataType   = TestUtils.StripMilliseconds(DateTime.Now, true),
+								timeDataType        = TestUtils.StripMilliseconds(DateTime.Now, true).TimeOfDay,
+								yearDataType        = (1000 + n) % 100,
+								year2DataType       = (1000 + n) % 100,
+								year4DataType       = (1000 + n) % 100,
+								charDataType        = 'A',
+								varcharDataType     = "_btest",
+								textDataType        = "test",
+								binaryDataType      = new byte[] { 6, 15, 4 },
+								varbinaryDataType   = new byte[] { 123, 22 },
+								blobDataType        = new byte[] { 1, 2, 3 },
+								bitDataType         = 7,
+								enumDataType        = "Green",
+								setDataType         = "one",
+								intUnsignedDataType = (uint)(5000 + n),
+							}).ToList();
 
-				//var list = conn.GetTable<ALLTYPE>().ToList();
+					// 20060 works for provider-specific, 20061 fails
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
 
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+					if (isNativeCopy)
+					{
+						conn.BulkCopy<AllTypeBaseProviderSpecific>(
+							new BulkCopyOptions { MaxBatchSize = batchSize, BulkCopyType = bulkCopyType },
+							source);
+						var result = conn.GetTable<AllTypeBaseProviderSpecific>().OrderBy(_ => _.ID).Where(_ => _.varcharDataType == "_btest");
+
+						// compare only 10 records
+						// as we don't compare all, we must ensure we inserted all records
+						Assert.AreEqual(source.Count(), result.Count());
+						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
+					}
+					else
+					{
+						conn.BulkCopy(
+							new BulkCopyOptions { MaxBatchSize = batchSize, BulkCopyType = bulkCopyType },
+							source);
+						var result = conn.GetTable<AllType>().OrderBy(_ => _.ID).Where(_ => _.varcharDataType == "_btest");
+
+						// compare only 10 records
+						// as we don't compare all, we must ensure we inserted all records
+						Assert.AreEqual(source.Count(), result.Count());
+						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
+					}
+				}
+				finally
+				{
+					if (transaction != null)
+						transaction.Rollback();
+					else
+					{
+						conn.GetTable<AllType>().Delete(_ => _.varcharDataType == "_btest");
+						conn.GetTable<AllTypeBaseProviderSpecific>().Delete(_ => _.varcharDataType == "_btest");
+					}
+				}
 			}
 		}
 
-		[Test, Explicit("It works too long.")]
-		public void BulkCopyMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context)
+		[Test]
+		public void BulkCopyMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool withTransaction)
 		{
-			BulkCopyTest(context, BulkCopyType.MultipleRows);
+			BulkCopyTest(context, BulkCopyType.MultipleRows, withTransaction);
 		}
 
-		[Test, Explicit("It works too long.")]
+		[Test]
 		public void BulkCopyRetrieveSequencesMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, Explicit("It works too long.")]
-		public void BulkCopyProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context)
+		[Test]
+		public void BulkCopyProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool withTransaction)
 		{
-			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
+			BulkCopyTest(context, BulkCopyType.ProviderSpecific, withTransaction);
 		}
 
-		[Test, Explicit("It works too long.")]
+		[Test]
 		public void BulkCopyRetrieveSequencesProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
+		}
+
+		public static void EnableNativeBulk(DataConnection db, string context)
+		{
+			if (context == ProviderName.MySqlConnector)
+				db.Execute("SET GLOBAL local_infile=ON");
+		}
+
+		[Table("NeedS.esca Pin`g")]
+		class BinaryTypes
+		{
+			[Column("ne.eds `escaPing", IsPrimaryKey = true)] public int Id { get; set; }
+
+			[Column(DbType = "bit(64)", DataType = DataType.BitArray)] public ulong?    Bit_1 { get; set; }
+			[Column(DbType = "bit(63)", DataType = DataType.BitArray)] public long?     Bit_2 { get; set; }
+			[Column(DbType = "bit(64)")                              ] public BitArray? Bit_3 { get; set; }
+			[Column(DbType = "bit(30)", DataType = DataType.BitArray)] public uint?     Bit_4 { get; set; }
+			[Column(DbType = "bit(1)" , DataType = DataType.BitArray)] public bool?     Bit_5 { get; set; }
+			[Column("needs escaping2", DbType = "bit(1)")            ] public BitArray? Bit_6 { get; set; }
+
+			[Column(DbType = "binary(3)")                                  ] public byte[]? Binary_1     { get; set; }
+			[Column(DbType = "binary(3)")                                  ] public Binary? Binary_2     { get; set; }
+			[Column(DbType = "binary(3)"   , DataType = DataType.Binary)   ] public byte[]? Binary_3     { get; set; }
+			[Column(DbType = "binary(3)"   , DataType = DataType.Binary)   ] public Binary? Binary_4     { get; set; }
+			[Column(DbType = "varbinary(3)", DataType = DataType.VarBinary)] public byte[]? VarBinary_1  { get; set; }
+			[Column(DbType = "varbinary(3)", DataType = DataType.VarBinary)] public Binary? VarBinary_2  { get; set; }
+			[Column(DbType = "blob"        , DataType = DataType.Blob)     ] public byte[]? Blob_1       { get; set; }
+			[Column(DbType = "blob"        , DataType = DataType.Blob)     ] public Binary? Blob_2       { get; set; }
+			[Column(DbType = "tinyblob"    , DataType = DataType.Blob)     ] public byte[]? TinyBlob_1   { get; set; }
+			[Column(DbType = "tinyblob"    , DataType = DataType.Blob)     ] public Binary? TinyBlob_2   { get; set; }
+			[Column(DbType = "mediumblob"  , DataType = DataType.Blob)     ] public byte[]? MediumBlob_1 { get; set; }
+			[Column(DbType = "mediumblob"  , DataType = DataType.Blob)     ] public Binary? MediumBlob_2 { get; set; }
+			[Column(DbType = "longblob"    , DataType = DataType.Blob)     ] public byte[]? LongBlob_1   { get; set; }
+			[Column(DbType = "longblob"    , DataType = DataType.Blob)     ] public Binary? LongBlob_2   { get; set; }
+		}
+
+		// this test tests binary and bit types, that require special handling by MySqlConnector bulk copy
+		[Test]
+		public void BulkCopyBinaryAndBitTypes([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
+		{
+			using (var db    = new DataConnection(context))
+			using (var table = db.CreateLocalTable<BinaryTypes>())
+			{
+				EnableNativeBulk(db, context);
+
+
+				// just to make assert work, as we receive 64 bits from server in ulong value
+				var bit1 = new BitArray(64);
+				bit1.Set(0, true);
+
+				var data = new BinaryTypes[]
+				{
+					new BinaryTypes() { Id = 1 },
+					new BinaryTypes()
+					{
+						Id = 2,
+
+						Bit_1 = 0xFFFFFFFFFFFFFFFF,
+						Bit_2 = 0x7FFFFFFFFFFFFFFF,
+						Bit_3 = new BitArray(BitConverter.GetBytes(0xFFFFFFFFFFFFFFFF)),
+						Bit_4 = 0x3FFFFFFF,
+						Bit_5 = true,
+						Bit_6 = bit1,
+
+						Binary_1     = new byte[] { 1, 2, 3},
+						Binary_2     = new Binary(new byte[] { 4, 5, 6 }),
+						Binary_3     = new byte[] { 7, 8, 9 },
+						Binary_4     = new Binary(new byte[] { 10, 11, 12 }),
+						VarBinary_1  = new byte[] { 13, 14, 15 },
+						VarBinary_2  = new Binary(new byte[] { 16, 17, 18 }),
+						Blob_1       = new byte[] { 19, 20, 21 },
+						Blob_2       = new Binary(new byte[] { 22, 23, 24 }),
+						TinyBlob_1   = new byte[] { 25, 26, 27 },
+						TinyBlob_2   = new Binary(new byte[] { 28, 29, 30 }),
+						MediumBlob_1 = new byte[] { 31, 32, 33 },
+						MediumBlob_2 = new Binary(new byte[] { 34, 35, 36 }),
+						LongBlob_1   = new byte[] { 37, 38, 39 },
+						LongBlob_2   = new Binary(new byte[] { 40, 41, 42 }),
+					},
+				};
+
+				db.BulkCopy(new BulkCopyOptions { BulkCopyType = bulkCopyType }, data);
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(data.Length, res.Length);
+
+				AreEqual(data, res, ComparerBuilder.GetEqualityComparer<BinaryTypes>());
+			}
 		}
 
 		[Test]
@@ -367,16 +511,17 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
+					EnableNativeBulk(db, context);
 					db.BulkCopy(
 						new BulkCopyOptions { BulkCopyType = bulkCopyType },
 						Enumerable.Range(0, 10).Select(n =>
 						new LinqDataTypes
 						{
-							ID = 4000 + n,
-							MoneyValue = 1000m + n,
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
 							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-							BoolValue = true,
-							GuidValue = Guid.NewGuid(),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
 							SmallIntValue = (short)n
 						}));
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
@@ -388,28 +533,30 @@ namespace Tests.DataProvider
 		{
 			var data = new[]
 			{
-				new Doctor { Taxonomy = "Neurologist"},
-				new Doctor { Taxonomy = "Sports Medicine"},
-				new Doctor { Taxonomy = "Optometrist"},
-				new Doctor { Taxonomy = "Pediatrics" },
-				new Doctor { Taxonomy = "Psychiatry" }
+				new Person { FirstName = "Neurologist"    , LastName = "test" },
+				new Person { FirstName = "Sports Medicine", LastName = "test" },
+				new Person { FirstName = "Optometrist"    , LastName = "test" },
+				new Person { FirstName = "Pediatrics"     , LastName = "test"  },
+				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
+				EnableNativeBulk(db, context);
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize = 5,
-					//RetrieveSequence = true,
 					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
-					NotifyAfter  = 3,
+					NotifyAfter = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
+
 				db.BulkCopy(options, data.RetrieveIdentity(db));
 
 				foreach (var d in data)
-					Assert.That(d.PersonID, Is.GreaterThan(0));
+					Assert.That(d.ID, Is.GreaterThan(0));
 			}
 		}
 
