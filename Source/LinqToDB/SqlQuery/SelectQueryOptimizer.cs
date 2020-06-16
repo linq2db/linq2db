@@ -12,10 +12,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
-			_flags        = flags;
-			_selectQuery  = selectQuery;
+			_flags       = flags;
+			_selectQuery = selectQuery;
 			_rootElement  = rootElement;
-			_level        = level;
+			_level       = level;
 			_dependencies = dependencies;
 		}
 
@@ -452,15 +452,15 @@ namespace LinqToDB.SqlQuery
 		private void OptimizeGroupBy()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
-			{
+		{
 				// Remove constants. 
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
-				{
+			{
 					if (QueryHelper.IsConstant(_selectQuery.GroupBy.Items[i]))
-					{
+				{
 						if (i == 0 && _selectQuery.GroupBy.Items.Count == 1)
-						{
+					{
 							// we cannot remove all group items if there is at least one aggregation function
 							//
 							var lastShouldStay = _selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
@@ -470,16 +470,16 @@ namespace LinqToDB.SqlQuery
 
 						_selectQuery.GroupBy.Items.RemoveAt(i);
 					}
+					}
 				}
 			}
-		}
 		
 		private void CorrectColumns()
-		{
-			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
 			{
-				foreach (var item in _selectQuery.GroupBy.Items)
+			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
 				{
+				foreach (var item in _selectQuery.GroupBy.Items)
+					{
 					_selectQuery.Select.Add(item);
 				}
 			}
@@ -493,16 +493,16 @@ namespace LinqToDB.SqlQuery
 				{
 					var sc = search.Conditions[0];
 					return new SqlCondition(condition.IsNot != sc.IsNot, sc.Predicate, condition.IsOr);
-				}
+		}
 			}
 			else if (condition.Predicate.ElementType == QueryElementType.ExprPredicate)
 			{
 				var exprPredicate = (SqlPredicate.Expr)condition.Predicate;
 				if (exprPredicate.Expr1 is ISqlPredicate predicate)
-				{
+					{
 					return new SqlCondition(condition.IsNot, predicate, condition.IsOr);
+					}
 				}
-			}
 
 			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
 			{
@@ -690,9 +690,26 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void ResolveWeakJoins()
-		{
+			{
+			var allWeakJoins = new HashSet<IQueryElement>();
+			new QueryVisitor().VisitAll(_rootElement, e =>
+			{
+				if (e.ElementType == QueryElementType.JoinedTable &&
+				    ((SqlJoinedTable)e).IsWeak)
+				{
+					allWeakJoins.Add(e);
+				}
+			});
+
+			while (allWeakJoins.Count > 0)
+			{
+				var saveCount = allWeakJoins.Count;
 			_selectQuery.ForEachTable(table =>
 			{
+					// Optimization is done
+					if (allWeakJoins.Count == 0)
+						return;
+					
 				for (var i = table.Joins.Count - 1; i >= 0; i--)
 				{
 					var join = table.Joins[i];
@@ -700,19 +717,41 @@ namespace LinqToDB.SqlQuery
 					if (join.IsWeak)
 					{
 						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
-						var ignore  = new HashSet<IQueryElement> { join };
-						if (QueryHelper.IsDependsOn(_rootElement, sources, ignore) 
-						|| _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, ignore)))
+							
+							var hasDependencyWithoutOtherWeakJoins = QueryHelper.IsDependsOn(_rootElement, sources, allWeakJoins)
+							                          || _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, allWeakJoins));
+
+							if (hasDependencyWithoutOtherWeakJoins)
 						{
-							join.IsWeak = false;
+								allWeakJoins.Remove(join);
 						}
 						else
 						{
-							table.Joins.RemoveAt(i);
+								// test only for self
+								var ignore = new HashSet<IQueryElement>{join};
+								
+								// for dependency including other weak joins
+								var hasAnyDependency = QueryHelper.IsDependsOn(_rootElement, sources, ignore)
+								                            || _dependencies.Any(d => QueryHelper.IsDependsOn(d, sources, ignore));
+								
+								if (!hasAnyDependency)
+								{
+									// we can safely remove join
+									table.Joins.RemoveAt(i);
+									allWeakJoins.Remove(join);
+								}
+							}
 						}
 					}
-				}
-			}, new HashSet<SelectQuery>());
+				}, new HashSet<SelectQuery>());
+				
+				if (saveCount == allWeakJoins.Count)
+				{
+					// Stop iteration, no joins were harmed 
+					break;
+				}			
+			}
+
 		}
 
 
@@ -828,9 +867,9 @@ namespace LinqToDB.SqlQuery
 						if ((join.JoinType == JoinType.Full || join.JoinType == JoinType.Right)
 							&& !select.Where.IsEmpty)
 						{
-							canRemove = false;
-						}
+						canRemove = false;
 					}
+				}
 				}
 				if (canRemove)
 					return RemoveSubQuery(parentQuery, source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoin);
@@ -1253,10 +1292,10 @@ namespace LinqToDB.SqlQuery
 				if (table != _selectQuery.From.Tables[i])
 				{
 					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
-					{
+						{
 						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
 							ApplySubsequentOrder(_selectQuery, sql);
-					}
+						}
 
 					_selectQuery.From.Tables[i] = table;
 				}

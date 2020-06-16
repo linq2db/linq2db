@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class WeakJoinTests : TestBase
@@ -62,25 +62,27 @@ namespace Tests.Playground
 						J2 = j2
 					};
 
-				//var projection1 =
-				//	from q in query
-				//	select new
-				//	{
-				//		q.T,
-				//		q.J2.Value
-				//	};
+				var projection1 =
+					from q in query
+					select new
+					{
+						q.T,
+						q.J2.Value
+					};
 
-				//var result1 = projection1.ToArray();
+				var result1 = projection1.ToArray();
+				Assert.That(projection1.GetTableSource().Joins.Count, Is.EqualTo(2));
 
-				//var projection2 =
-				//	from q in query
-				//	select new
-				//	{
-				//		q.T,
-				//		q.J1.Value
-				//	};
+				var projection2 =
+					from q in query
+					select new
+					{
+						q.T,
+						q.J1.Value
+					};
 
-				//var result2 = projection2.ToArray();
+				var result2 = projection2.ToArray();
+				Assert.That(projection2.GetTableSource().Joins.Count, Is.EqualTo(1));
 
 				var projection3 =
 					from q in query
@@ -91,6 +93,7 @@ namespace Tests.Playground
 					};
 
 				var result3 = projection3.ToArray();
+				Assert.That(projection3.GetTableSource().Joins.Count, Is.EqualTo(0));
 			}
 		}
 	}
