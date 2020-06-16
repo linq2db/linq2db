@@ -173,8 +173,9 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
-				return Builder.BuildSql(_elementType, index);
+				var sql = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = sql.Index;
+				return Builder.BuildSql(_elementType, index, sql.Sql);
 			}
 
 			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

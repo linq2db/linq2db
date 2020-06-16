@@ -5,7 +5,6 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -16,7 +15,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
-	using System.Diagnostics.CodeAnalysis;
 
 	partial class ExpressionBuilder
 	{
@@ -559,8 +557,10 @@ namespace LinqToDB.Linq.Builder
 			select = select.MakeGenericMethod(call.Type, expr.Type);
 			method = method.MakeGenericMethod(expr.Type);
 
-			return Expression.Call(null, method,
+			var converted = Expression.Call(null, method,
 				Expression.Call(null, select, call.Arguments[0], Expression.Lambda(selector, param)));
+
+			return converted;
 		}
 
 		#endregion
@@ -1075,9 +1075,11 @@ namespace LinqToDB.Linq.Builder
 
 			helper.Set(sourceExpression, colSelector);
 
-			return method.Method.DeclaringType == typeof(Queryable) ?
+			var converted = method.Method.DeclaringType == typeof(Queryable) ?
 				helper.AddElementSelectorQ() :
 				helper.AddElementSelectorE();
+
+			return converted;
 		}
 
 		#endregion
@@ -1097,10 +1099,12 @@ namespace LinqToDB.Linq.Builder
 			wm = wm.MakeGenericMethod(argType);
 			cm = cm.MakeGenericMethod(argType);
 
-			return Expression.Call(null, cm,
+			var converted = Expression.Call(null, cm,
 				Expression.Call(null, wm,
 					OptimizeExpression(method.Arguments[0]),
 					OptimizeExpression(method.Arguments[1])));
+
+			return converted;
 		}
 
 		Expression ConvertPredicateAsync(MethodCallExpression method)
@@ -1116,11 +1120,13 @@ namespace LinqToDB.Linq.Builder
 			wm = wm.MakeGenericMethod(argType);
 			cm = cm.MakeGenericMethod(argType);
 
-			return Expression.Call(null, cm,
+			var converted = Expression.Call(null, cm,
 				Expression.Call(null, wm,
 					OptimizeExpression(method.Arguments[0]),
 					OptimizeExpression(method.Arguments[1])),
 				OptimizeExpression(method.Arguments[2]));
+
+			return converted;
 		}
 
 		#endregion
@@ -1162,10 +1168,12 @@ namespace LinqToDB.Linq.Builder
 			if (cm.IsGenericMethodDefinition)
 				cm = cm.MakeGenericMethod(types[1]);
 
-			return Expression.Call(null, cm,
+			var converted = Expression.Call(null, cm,
 				OptimizeExpression(Expression.Call(null, sm,
 					method.Arguments[0],
 					method.Arguments[1])));
+
+			return converted;
 		}
 
 		Expression ConvertSelectorAsync(MethodCallExpression method, bool isGeneric)
@@ -1203,11 +1211,13 @@ namespace LinqToDB.Linq.Builder
 			if (cm.IsGenericMethodDefinition)
 				cm = cm.MakeGenericMethod(types[1]);
 
-			return Expression.Call(null, cm,
+			var converted = Expression.Call(null, cm,
 				OptimizeExpression(Expression.Call(null, sm,
 					method.Arguments[0],
 					method.Arguments[1])),
 				OptimizeExpression(method.Arguments[2]));
+
+			return converted;
 		}
 
 		#endregion
@@ -1237,10 +1247,12 @@ namespace LinqToDB.Linq.Builder
 			var types1 = GetMethodGenericTypes((MethodCallExpression)sequence);
 			var types2 = GetMethodGenericTypes(method);
 
-			return Expression.Call(null,
+			var converted =  Expression.Call(null,
 				GetMethodInfo(method, "Select").MakeGenericMethod(types1[0], types2[1]),
 				((MethodCallExpression)sequence).Arguments[0],
 				Expression.Lambda(lambda.GetBody(sbody), slambda.Parameters[0]));
+
+			return converted;
 		}
 
 		#endregion
@@ -1369,7 +1381,9 @@ namespace LinqToDB.Linq.Builder
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
-			return Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+			var converted = Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+
+			return converted;
 		}
 
 		#endregion

@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 							if (Parent != null)
 								n = Parent.ConvertToParentIndex(n, this);
 
-							return Builder.BuildSql(expression.Type, n);
+							return Builder.BuildSql(expression.Type, n, idx[0].Sql);
 						}
 					}
 				}

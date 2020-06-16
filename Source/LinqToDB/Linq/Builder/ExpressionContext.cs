@@ -101,6 +101,11 @@ namespace LinqToDB.Linq.Builder
 
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
+						if (levelExpression is ContextRefExpression contextRef)
+						{
+							return contextRef.BuildContext.IsExpression(expression, level, requestFlag);
+						}
+
 						if (Lambda!.Parameters.Count > 1)
 						{
 							for (var i = 0; i < Lambda.Parameters.Count; i++)

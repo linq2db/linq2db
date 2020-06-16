@@ -165,15 +165,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public bool BinaryImporterHasComplete { get; }
 		public Func<IDbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
 
-		public Action<MappingSchema, NpgsqlBinaryImporter, ColumnDescriptor[], TEntity> CreateBinaryImportRowWriter<TEntity>(
+		public Action<NpgsqlBinaryImporter, ColumnDescriptor[], TEntity> CreateBinaryImportRowWriter<TEntity>(
 				PostgreSQLDataProvider provider,
 				BasicSqlBuilder sqlBuilder,
-				ColumnDescriptor[] columns,
-				MappingSchema mappingSchema)
+				ColumnDescriptor[] columns)
 		{
 			var generator = new ExpressionGenerator(_typeMapper);
 
-			var pMapping  = Expression.Parameter(typeof(MappingSchema));
 			var pWriterIn = Expression.Parameter(typeof(NpgsqlBinaryImporter));
 			var pColumns  = Expression.Parameter(typeof(ColumnDescriptor[]));
 			var pEntity   = Expression.Parameter(typeof(TEntity));
@@ -191,7 +189,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i]) : null;
 
 					if (columnType == null || columnType.Type.DataType == DataType.Undefined)
-						columnType = mappingSchema.GetDataType(columns[i].StorageType);
+						columnType = columns[i].MappingSchema.GetDataType(columns[i].StorageType);
 
 					var sb = new StringBuilder();
 					sqlBuilder.BuildTypeName(sb, columnType);
@@ -209,13 +207,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						"Write",
 						new[] { typeof(object) },
 						//columns[idx].GetValue(mappingSchema, entity)
-						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pMapping, pEntity),
+						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pEntity),
 						Expression.Convert(Expression.Constant(npgsqlType.Value), _dbTypeType)));
 			}
 
-			var ex = Expression.Lambda<Action<MappingSchema, NpgsqlBinaryImporter, ColumnDescriptor[], TEntity>>(
+			var ex = Expression.Lambda<Action<NpgsqlBinaryImporter, ColumnDescriptor[], TEntity>>(
 					generator.Build(),
-					pMapping, pWriterIn, pColumns, pEntity);
+					pWriterIn, pColumns, pEntity);
 
 			return ex.Compile();
 		}

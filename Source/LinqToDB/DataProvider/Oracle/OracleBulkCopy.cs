@@ -255,7 +255,7 @@ namespace LinqToDB.DataProvider.Oracle
 					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(helper.DataConnection.MappingSchema, o)).ToArray(), dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

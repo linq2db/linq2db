@@ -19,7 +19,7 @@ namespace Tests.UserTests
 			{
 				if (obj != null)
 				{
-					var value = columnDescriptor.GetValue(MappingSchema.Default, obj);
+					var value = columnDescriptor.GetValue(obj);
 					if (value is int i)
 					{
 						return i % 2 == 0;

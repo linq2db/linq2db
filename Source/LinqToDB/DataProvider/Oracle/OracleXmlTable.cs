@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Oracle
 						var conv = mappingSchema.ValueToSqlConverter;
 						return (sb,obj) =>
 						{
-							var value = c.GetValue(mappingSchema, obj);
+							var value = c.GetValue(obj);
 
 							if (value is string && c.MemberType == typeof(string))
 							{

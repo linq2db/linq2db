@@ -7,7 +7,9 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
-	using LinqToDB.Tools;
+	using Tools;
+	using Common;
+	using Mapping;
 
 	public static class QueryHelper
 	{
@@ -59,6 +61,54 @@ namespace LinqToDB.SqlQuery
 			return dependencyFound;
 		}
 
+		/// <summary>
+		/// Returns <see cref="IValueConverter"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <returns>Associated converter or <c>null</c>.</returns>
+		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
+		{
+			return GetColumnDescriptor(expr)?.ValueConverter;
+		}
+		
+		/// <summary>
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <returns>Associated column descriptor or <c>null</c>.</returns>
+		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return null;
+			
+			switch (expr.ElementType)
+			{
+				case QueryElementType.Column:
+					{
+						return GetColumnDescriptor(((SqlColumn)expr).Expression);
+					}
+				case QueryElementType.SqlField:
+					{
+						return ((SqlField)expr).ColumnDescriptor;
+					}
+				case QueryElementType.SqlExpression:
+					{
+						var sqlExpr = (SqlExpression)expr;
+						if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
+							return GetColumnDescriptor(sqlExpr.Parameters[0]);
+						break;
+					}
+				case QueryElementType.SqlQuery:
+					{
+						var query = (SelectQuery)expr;
+						if (query.Select.Columns.Count == 1)
+							return GetColumnDescriptor(query.Select.Columns[0]);
+						break;
+					}
+			}
+			return null;
+		}
+		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);

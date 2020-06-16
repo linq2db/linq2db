@@ -53,8 +53,11 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
-			return Builder.BuildSql(_elementType, index);
+			var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+			var index = info.Index;
+			if (Parent != null)
+				index = ConvertToParentIndex(index, Parent);
+			return Builder.BuildSql(_elementType, index, info.Sql);
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -62,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 			{
 				var query = SelectQuery;
-				var sql = SelectQuery.Select.Columns[0];
+				var sql   = SelectQuery.Select.Columns[0];
 
 				if (Parent != null)
 					query = Parent.SelectQuery;
@@ -105,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var valueExpr = Expression.Constant(value, column.MemberType);
-											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr);
+											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
 
 											if (expr is SqlParameter p)
 											{

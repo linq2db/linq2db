@@ -361,6 +361,16 @@ namespace LinqToDB.Mapping
 				HasComplexColumns = true;
 		}
 
+		/// <summary>
+		/// Returns column descriptor based on its MemberInfo
+		/// </summary>
+		/// <param name="memberInfo"></param>
+		/// <returns></returns>
+		public ColumnDescriptor? FindColumnDescriptor(MemberInfo memberInfo)
+		{
+			return Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+		}
+
 		#region Dynamic Columns
 		/// <summary>
 		/// Gets the dynamic columns store descriptor.

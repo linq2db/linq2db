@@ -395,7 +395,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
 					}
 				).ToList();
 
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
 						}
 					).ToList()).ToList();
 
@@ -594,7 +594,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.Length != 1)
 						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
 					var parentIndex = ConvertToParentIndex(info[0].Index, this);
-					return Builder.BuildSql(tableType, parentIndex);
+					return Builder.BuildSql(tableType, parentIndex, info[0].Sql);
 				}
 
 				if (ObjectType == tableType)
@@ -694,7 +694,7 @@ namespace LinqToDB.Linq.Builder
 
 						testExpr = ExpressionBuilder.Equal(
 							Builder.MappingSchema,
-							Builder.BuildSql(codeType, dindex),
+							Builder.BuildSql(codeType, dindex, mapping.m.Discriminator.ValueConverter),
 							Expression.Constant(mapping.m.Code));
 
 						if (mapping.m.Discriminator.CanBeNull)
@@ -796,7 +796,7 @@ namespace LinqToDB.Linq.Builder
 				var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
 				var idx  = ConvertToParentIndex(info.Index, null);
 
-				return Builder.BuildSql(expression!, idx);
+				return Builder.BuildSql(expression!, idx, info.Sql);
 			}
 
 			#endregion

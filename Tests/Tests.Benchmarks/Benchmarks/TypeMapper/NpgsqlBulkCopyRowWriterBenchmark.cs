@@ -131,7 +131,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			importer.StartRow();
 
 			for (var i = 0; i < _columns.Length; i++)
-				importer.Write(_columns[i].GetValue(MappingSchema, TestEntity.Instance), Original.NpgsqlDbType.Test);
+				importer.Write(_columns[i].GetValue(TestEntity.Instance), Original.NpgsqlDbType.Test);
 		}
 	}
 }

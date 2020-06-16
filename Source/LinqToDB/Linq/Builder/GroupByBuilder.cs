@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key);
+				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
 
 				foreach (var sql in groupSql.Where(s => s.Sql.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlParameter)))
 					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var groupingSet in groupingSets)
 				{
-					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key);
+					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
 					sequence.SelectQuery.GroupBy.Items.Add(
 						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));
 				}
