@@ -1774,7 +1774,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("AseException : There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@rand' was not used in the preceding DECLARE CURSOR or SQL command.", Configuration = TestProvName.AllSybase)]
 		public void GroupByCustomEntity1([DataSources] string context)
 		{
 			var rand = new Random().Next(5);
@@ -2091,7 +2090,14 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue(913)]
+		[ActiveIssue(913, Configurations = new[]
+		{
+			TestProvName.AllAccess,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSQLite
+		})]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{

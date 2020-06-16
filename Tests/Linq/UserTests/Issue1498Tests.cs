@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[TestFixture, Parallelizable(ParallelScope.None)]
+	[TestFixture]
 	public class Issue1498Tests : TestBase
 	{
 		public class Topic

@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 
 	public partial class MergeTests
 	{
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void ImplicitIdentityInsert([IdentityInsertMergeDataContextSource(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(
 			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
@@ -106,7 +106,7 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(
 			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
@@ -157,7 +157,7 @@ namespace Tests.xUpdate
 		// see https://github.com/linq2db/linq2db/issues/914
 		// rationale:
 		// we shouldn't ignore SkipOnInsert attribute for insert operation with implicit field list
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void ImplicitInsertIdentityWithSkipOnInsert(
 			[IdentityInsertMergeDataContextSource] string context)
 		{

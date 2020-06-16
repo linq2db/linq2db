@@ -203,7 +203,7 @@ namespace Tests.Samples
 			Assert.AreEqual(0, result);
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void InsertAndDeleteTest()
 		{
 			var db = _connection;
@@ -226,7 +226,7 @@ namespace Tests.Samples
 			Assert.AreEqual(1, db.Delete(obj1001));
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public async Task InsertAndDeleteTestAsync()
 		{
 			var db    = _connection;

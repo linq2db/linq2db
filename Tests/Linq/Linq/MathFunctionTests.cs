@@ -226,7 +226,9 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t);
 		}
 
+#if AZURE
 		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+#endif
 		[Test]
 		public void Round4([DataSources] string context)
 		{
@@ -290,7 +292,9 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t);
 		}
 
+#if AZURE
 		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+#endif
 		[Test]
 		public void Round11([DataSources] string context)
 		{

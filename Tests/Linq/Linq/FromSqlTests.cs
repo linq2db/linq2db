@@ -15,7 +15,7 @@ namespace Tests.Linq
 	using LinqToDB.Linq;
 	using Model;
 
-	[TestFixture, Parallelizable(ParallelScope.None)]
+	[TestFixture]
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]

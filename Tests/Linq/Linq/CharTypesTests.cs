@@ -133,13 +133,23 @@ namespace Tests.Linq
 					for (var i = 0; i < records.Length; i++)
 					{
 						if (!SkipChar(context))
-							Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
+						{
+							if (context.Contains("Sybase"))
+								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
+							else
+								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
+						}
 
 						if (context != ProviderName.Firebird
 							  && context != ProviderName.Firebird + ".LinqService"
 							  && context != TestProvName.Firebird3
 							  && context != TestProvName.Firebird3 + ".LinqService")
-							Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
+						{
+							if (context.Contains("Sybase"))
+								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);
+							else
+								Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
+						}
 					}
 
 				}
@@ -223,7 +233,9 @@ namespace Tests.Linq
 		};
 
 		// need to configure sybase docker image to use utf8 character set
+#if AZURE
 		[ActiveIssue(Configuration = TestProvName.AllSybase)]
+#endif
 		[Test]
 		public void CharTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -271,7 +283,12 @@ namespace Tests.Linq
 						}
 
 						if (!SkipChar(context))
-							Assert.AreEqual(testData[i].Char, records[i].Char);
+						{
+							if (context.Contains("Sybase"))
+								Assert.AreEqual(testData[i].Char == '\0' ? ' ' : testData[i].Char, records[i].Char);
+							else
+								Assert.AreEqual(testData[i].Char, records[i].Char);
+						}
 
 						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
@@ -284,7 +301,12 @@ namespace Tests.Linq
 							// for some reason mysql doesn't insert space
 							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
 						else if (!context.Contains(ProviderName.Firebird))
-							Assert.AreEqual(testData[i].NChar, records[i].NChar);
+						{
+							if (context.Contains("Sybase"))
+								Assert.AreEqual(testData[i].NChar == '\0' ? ' ' : testData[i].NChar, records[i].NChar);
+							else
+								Assert.AreEqual(testData[i].NChar, records[i].NChar);
+						}
 					}
 				}
 				finally

@@ -10,7 +10,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-	[TestFixture, Parallelizable(ParallelScope.None)]
+	[TestFixture]
 	public class EntityCreatedTests : TestBase
 	{
 		int  _entitiesCreated;

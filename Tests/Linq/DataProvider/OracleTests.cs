@@ -908,7 +908,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void BulkCopyLinqTypesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
@@ -950,7 +950,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
@@ -1165,7 +1165,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void BulkCopy21MultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
