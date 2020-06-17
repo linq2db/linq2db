@@ -24,7 +24,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildEntitity.ParentId), CanBeNull = true)]
-			public IEnumerable<ChildEntitity> SomeEntities { get; set; }
+			public IEnumerable<ChildEntitity> SomeEntities { get; set; } = null!;
 
 			public static SampleClass1[] Seed()
 			{
@@ -45,7 +45,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildEntitity.ParentId), CanBeNull = true)]
-			public IEnumerable<ChildEntitity> SomeEntities { get; set; }
+			public IEnumerable<ChildEntitity> SomeEntities { get; set; } = null!;
 
 			public static SampleClass2[] Seed()
 			{
@@ -69,7 +69,7 @@ namespace Tests.Linq
 
 
 			[Association(ThisKey = nameof(SubId), OtherKey = nameof(SubEntitity.Id), CanBeNull = true)]
-			public SubEntitity SubItem { get; set; }
+			public SubEntitity SubItem { get; set; } = null!;
 
 			public static ChildEntitity[] Seed()
 			{
