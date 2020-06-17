@@ -35,7 +35,7 @@ namespace Tests.xUpdate
 			[Column]     public string Diagnosis = null!;
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -64,7 +64,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -93,7 +93,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SourceAssociationAsInnerJoin1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SourceAssociationAsInnerJoin2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -139,7 +139,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SourceAssociationAsOuterJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -162,7 +162,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -456,7 +456,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -497,7 +497,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void OtherSourceAssociationInUpdateBySourcePredicate(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -584,7 +584,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SameSourceAssociationInDeleteBySourcePredicate(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -883,7 +883,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -925,7 +925,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SameSourceAssociationInUpdateBySourcePredicate(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

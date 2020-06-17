@@ -153,7 +153,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void InsertUpdateBySourceWithConditionDeleteBySource(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -194,7 +194,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void InsertDeleteUpdateBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))

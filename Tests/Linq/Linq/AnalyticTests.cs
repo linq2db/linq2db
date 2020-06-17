@@ -1279,18 +1279,17 @@ namespace Tests.Linq
 			};
 		}
 
-		// Tests that default LAG behavior matches RESPECT NULLS as per spec, so we don't need to generate RESPECT NULLS token
-		// TODO: needs sqllite 3.25
-		// TODO: needs mysql 8.0/mariadb 10.2
-		// also syntax should be altered (mariadb doesn't support defaults, mysql supports Sql.Nulls.Ignore in other place)
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySql })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+			// doesn't support LAG with 3 parameters
+			TestProvName.MariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1324,16 +1323,17 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: needs sqllite 3.25
-		// TODO: needs mysql 8.0/mariadb 10.2
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySql })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.MariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1365,14 +1365,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.MySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1404,14 +1405,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.MySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1443,8 +1445,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: pgsql/SAP HANA doesn't support FROM clause
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana })]
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,
@@ -1453,7 +1453,11 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
+			TestProvName.MySql55,
+			TestProvName.MariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1507,15 +1511,17 @@ namespace Tests.Linq
 			[Column] public string? ProcessName { get; set; }
 		}
 
-		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.MySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1560,15 +1566,17 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { ProviderName.SQLiteMS, TestProvName.AllMySqlServer, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllOracle })]
+		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird)] string context)
+			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.MySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())

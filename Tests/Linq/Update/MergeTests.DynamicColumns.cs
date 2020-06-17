@@ -270,7 +270,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DynamicColumns_DeleteBySourceFromPartialSourceProjection(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -402,7 +402,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))

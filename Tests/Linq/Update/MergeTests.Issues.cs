@@ -307,7 +307,7 @@ namespace Tests.xUpdate
 			public Gender Gender { get; set; }
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void Issue1007OnNewAPI([IdentityInsertMergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -25,7 +25,9 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
+#if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
+#endif
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
@@ -64,7 +66,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
+#endif
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
@@ -1077,14 +1081,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("InsertOrUpdate() == -1", Configurations = new[]
-		{
-			TestProvName.AllOracleNative
 #if NETCOREAPP2_1
-				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
-				, ProviderName.Access
+		[ActiveIssue("https://github.com/dotnet/runtime/issues/36954", Configuration = ProviderName.Access)]
 #endif
-		})]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1117,7 +1116,11 @@ namespace Tests.xUpdate
 						using (new DisableLogging())
 							patients = db.Patient.Where(p => p.PersonID == id).ToList();
 
-						Assert.AreEqual(1, records);
+						if (context.Contains("Oracle") && context.Contains("Native"))
+							Assert.AreEqual(-1, records);
+						else
+							Assert.AreEqual(1, records);
+
 						Assert.AreEqual(1, patients.Count);
 						Assert.AreEqual(id, patients[0].PersonID);
 						Assert.AreEqual("negative", patients[0].Diagnosis);
@@ -2010,7 +2013,7 @@ namespace Tests.xUpdate
 		}
 
 
-		#region issue 2243
+#region issue 2243
 		[Table("test_insert_or_replace")]
 		public partial class TestInsertOrReplaceInfo
 		{
@@ -2054,6 +2057,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(user, res.UpdatedBy);
 			}
 		}
-		#endregion
+#endregion
 	}
 }

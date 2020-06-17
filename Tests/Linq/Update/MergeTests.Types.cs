@@ -337,13 +337,9 @@ namespace Tests.xUpdate
 			}
 		};
 
-		// TODO: check how it is possible as we don't even save 4 to this column
-		//  Failed : Tests.Merge.MergeTests.TestMergeTypes("SQLiteMs")
-		// Expected: '*'
-		// But was:  '4'
-		// at Tests.Merge.MergeTests.AssertChar
-		// Sybase: need to configure sybase docker image to use utf8 character set
-		[ActiveIssue("ORA-22053: overflow error", Configurations = new [] { TestProvName.AllSybase })]
+#if AZURE
+		[ActiveIssue("need to configure sybase docker image to use utf8 character set", Configuration = TestProvName.AllSybase)]
+#endif
 		[Test]
 		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{

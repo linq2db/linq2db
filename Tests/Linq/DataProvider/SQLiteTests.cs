@@ -482,7 +482,7 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try

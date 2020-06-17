@@ -1288,7 +1288,7 @@ namespace Tests.OrmBattle
 
 		#region Join tests
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		public void GroupJoinTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: o.Customer.CustomerID - it is association that means additional JOIN. We have to decide if it is a bug.

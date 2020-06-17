@@ -520,7 +520,7 @@ namespace Tests.DataProvider
 			public int Field;
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DropTableTest(
 			[IncludeDataSources(true, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode,
