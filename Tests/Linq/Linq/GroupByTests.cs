@@ -1774,7 +1774,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("AseException : There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@rand' was not used in the preceding DECLARE CURSOR or SQL command.", Configuration = TestProvName.AllSybase)]
 		public void GroupByCustomEntity1([DataSources] string context)
 		{
 			var rand = new Random().Next(5);
@@ -1889,8 +1888,21 @@ namespace Tests.Linq
 			}
 		}
 
+		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
+		{
+			Assert.Throws<LinqToDBException>(() =>
+			{
+				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+
+			Assert.DoesNotThrow(() =>
+			{
+				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
+			});
+		}
+
 		[Test]
-		public void GroupByGuard([DataSources] string context)
+		public void GroupByGuard([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using(new AllowMultipleQuery())
 			using(new GuardGrouping(true))
@@ -1918,20 +1930,8 @@ namespace Tests.Linq
 				)
 				.ToDictionary(_ => _.Key);
 
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					// group on server
-					db.Person
-						.GroupBy(_ => _.Gender)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
-
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					db.Person
-						.GroupBy(_ => _)
-						.ToDictionary(_ => _.Key, _ => _.ToList());
-				});
+				CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
+				CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
 				Assert.Throws<LinqToDBException>(() =>
 				{
@@ -1939,6 +1939,15 @@ namespace Tests.Linq
 						.GroupBy(_ => _)
 						.ToList();
 				});
+
+				Assert.DoesNotThrow(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.DisableGuard()
+						.ToList();
+				});
+
 			}
 		}
 
@@ -2081,7 +2090,14 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue(913)]
+		[ActiveIssue(913, Configurations = new[]
+		{
+			TestProvName.AllAccess,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSQLite
+		})]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{

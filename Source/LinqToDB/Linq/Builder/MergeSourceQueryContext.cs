@@ -37,8 +37,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			if (expression.GetLevelExpression(Builder.MappingSchema, level) is ContextRefExpression refExpression && refExpression.BuildContext == this)
-				++level;
+			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
 
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
@@ -47,10 +46,7 @@ namespace LinqToDB.Linq.Builder
 					var expr  = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
 
-					return new SqlInfo(info.MemberChain)
-					{
-						Sql = field
-					};
+					return new SqlInfo(info.MemberChain, field);
 				})
 				.ToArray();
 		}

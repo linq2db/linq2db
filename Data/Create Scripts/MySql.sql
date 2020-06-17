@@ -170,10 +170,10 @@ CREATE TABLE TestIdentity (
 GO
 
 
-DROP TABLE IF EXISTS AllTypes
+DROP TABLE IF EXISTS `AllTypes`
 GO
 
-CREATE TABLE AllTypes
+CREATE TABLE `AllTypes`
 (
 	ID                  int AUTO_INCREMENT       NOT NULL,
 
@@ -223,7 +223,7 @@ CREATE TABLE AllTypes
 )
 GO
 
-INSERT INTO AllTypes
+INSERT INTO `AllTypes`
 (
 	bigintDataType,
 	smallintDataType,
@@ -322,6 +322,47 @@ SELECT
 
 GO
 
+
+DROP TABLE IF EXISTS `AllTypesNoYear`
+GO
+
+CREATE TABLE `AllTypesNoYear`
+(
+	ID                  int AUTO_INCREMENT       NOT NULL,
+
+	bigintDataType      bigint                       NULL,
+	smallintDataType    smallint                     NULL,
+	tinyintDataType     tinyint                      NULL,
+	mediumintDataType   mediumint                    NULL,
+	intDataType         int                          NULL,
+	numericDataType     numeric                      NULL,
+	decimalDataType     decimal                      NULL,
+	doubleDataType      double                       NULL,
+	floatDataType       float                        NULL,
+
+	dateDataType        date                         NULL,
+	datetimeDataType    datetime                     NULL,
+	timestampDataType   timestamp                    NULL,
+	timeDataType        time                         NULL,
+
+	charDataType        char(1)                      NULL,
+	char20DataType      char(20)                     NULL,
+	varcharDataType     varchar(20)                  NULL,
+	textDataType        text                         NULL,
+
+	binaryDataType      binary(3)                    NULL,
+	varbinaryDataType   varbinary(5)                 NULL,
+	blobDataType        blob                         NULL,
+
+	bitDataType         bit(3)                       NULL,
+	enumDataType        enum('Green', 'Red', 'Blue') NULL,
+	setDataType         set('one', 'two')            NULL,
+	intUnsignedDataType int unsigned                 NULL,
+	boolDataType        bool                         NULL,
+
+	CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED (ID)
+)
+GO
 
 DROP TABLE IF EXISTS TestSameName
 GO
@@ -441,7 +482,7 @@ DROP PROCEDURE IF EXISTS AddIssue792Record
 GO
 CREATE PROCEDURE AddIssue792Record()
 BEGIN
-	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO `AllTypes`(char20DataType) VALUES('issue792');
 END
 GO
 DROP PROCEDURE IF EXISTS `TestOutputParametersWithoutTableProcedure`

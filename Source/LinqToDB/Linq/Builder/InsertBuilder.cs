@@ -144,9 +144,7 @@ namespace LinqToDB.Linq.Builder
 									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
 
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-									var parameter = 
-										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam);
-									builder.AddCurrentSqlParameter(parameter);
+									var parameter = builder.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
@@ -434,7 +432,8 @@ namespace LinqToDB.Linq.Builder
 					UpdateBuilder.ParseSet(
 						builder,
 						extract,
-						update,
+						methodCall,
+						2,
 						sequence,
 						insertStatement.Insert.Items);
 

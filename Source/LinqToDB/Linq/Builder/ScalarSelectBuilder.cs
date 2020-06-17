@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 							var expr = Builder.ConvertToSql(this, expression);
 							var idx  = SelectQuery.Select.Add(expr);
 
-							return Builder.BuildSql(expression.Type, idx);
+							return Builder.BuildSql(expression.Type, idx, expr);
 						}
 				}
 

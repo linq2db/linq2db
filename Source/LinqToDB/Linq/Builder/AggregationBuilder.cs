@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(FieldIndex);
+				var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -124,25 +124,26 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index);
+				return BuildExpression(index, info.Sql);
 			}
 
-			Expression BuildExpression(int fieldIndex)
+			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
 			{
 				Expression expr;
 
 				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
 				{
-					expr = Builder.BuildSql(_returnType, fieldIndex);
+					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}
 				else
 				{
 					expr = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null!, null!)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex));
+						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 
 				return expr;
@@ -168,12 +169,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var result = _index ??= new[]
 							{
-								new SqlInfo
-								{
-									Query = Parent!.SelectQuery, 
-									Index = Parent.SelectQuery.Select.Add(Sql!),
-									Sql = Sql!,
-								}
+								new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
 							};
 
 							return result;

@@ -231,7 +231,7 @@ namespace LinqToDB
 				if (memberInfo == null)
 					throw new LinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
 
-				var column = ed.Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+				var column = ed.FindColumnDescriptor(memberInfo);
 
 				columns[i] = column ?? throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
 			}
@@ -245,8 +245,8 @@ namespace LinqToDB
 			if (memberInfo == null)
 				throw new LinqToDBException($"Can not extract member info from expression {fieldExpr.Body}");
 
-			var ed = mappingSchema.GetEntityDescriptor(entityType);
-			var column = ed.Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+			var ed     = mappingSchema.GetEntityDescriptor(entityType);
+			var column = ed.FindColumnDescriptor(memberInfo);
 
 			if (column == null)
 				throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");

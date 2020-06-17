@@ -254,10 +254,10 @@ namespace Tests.Data
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
 
-				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
+				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value;
 				Assert.True    (rawDtValue is MySqlDataDateTime);
 				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue!).Value);
 			}
@@ -322,8 +322,8 @@ namespace Tests.Data
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
 				// ExecuteReader
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
 
 				// TODO: doesn't work due to object use, probably we should add type to remote context data
 				//var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
@@ -423,6 +423,21 @@ namespace Tests.Data
 				// assert provider-specific parameter type name
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
 				Assert.True    (trace.Contains("DECLARE @p Byte "));
+
+				// bulk copy
+				try
+				{
+					MySqlTests.EnableNativeBulk(db, context);
+					db.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
+
+					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+				}
+				finally
+				{
+					db.GetTable<MySqlTests.AllTypeBaseProviderSpecific>().Delete(p => p.ID >= 2000);
+				}
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));

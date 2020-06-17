@@ -121,8 +121,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: ne(variables['Build.SourceBranchName'], 'release')
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: ne(variables['Build.SourceBranchName'], 'release')
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -137,10 +137,10 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.sh'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.sh'
 #        Oracle11:
 #          title: 'Oracle 11g XE'
 #          config: 'oracle11'
@@ -149,6 +149,18 @@ stages:
 #          title: 'Oracle 12c'
 #          config: 'oracle12'
 #          script: 'oracle12.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.sh'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mysql55.sh'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.sh'
     steps:
     - checkout: none
 
@@ -226,10 +238,25 @@ stages:
 #          script: 'mac.hana2.sh'
 #          docker: 'true'
 #          docker_login: 'true'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'mac.sqlserver.2017.sh'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mac.mysql.sh'
+          docker: 'true'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mac.mysql55.sh'
+          docker: 'true'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mac.mariadb.sh'
           docker: 'true'
 
     steps:
@@ -326,10 +353,14 @@ stages:
 #          title: 'Access ODBC ACE'
 #          config: 'access.odbc.ace'
 #          script: 'access.ace.x64.cmd'
-        Access_ACE:
-          title: 'Access OleDb ACE'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
+#        Access_ACE:
+#          title: 'Access OleDb ACE'
+#          config: 'access.ace'
+#          script: 'access.ace.x64.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb.win'
+          script: 'mariadb.cmd'
     steps:
     - checkout: none
 
@@ -391,18 +422,22 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Access_ODBC_MDB:
-          title: 'Access ODBC MDB'
-          config: 'access.odbc.mdb'
-        Access_ODBC_ACE:
-          title: 'Access ODBC ACE'
-          config: 'access.odbc.ace'
-          script: 'access.ace.cmd'
+#        Access_ODBC_MDB:
+#          title: 'Access ODBC MDB'
+#          config: 'access.odbc.mdb'
+#        Access_ODBC_ACE:
+#          title: 'Access ODBC ACE'
+#          config: 'access.odbc.ace'
+#          script: 'access.ace.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.cmd'
 
     steps:
     - checkout: none

@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Linq;
 	using Model;
 	using Tools;
 
@@ -23,7 +24,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
-			TestProvName.AllOracle 
+			TestProvName.AllOracle
 			// TODO: v14
 			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
@@ -1104,6 +1105,79 @@ namespace Tests.Linq
 				var sql = cte3.ToArray();
 			}
 		}
+
+		#region Issue 2029
+		[Test]
+		public void Issue2029Test([CteContextSource] string context)
+		{
+			using (new GenerateFinalAliases(true))
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<NcCode>())
+			using (db.CreateLocalTable<NcGroupMember>())
+			{
+				var wipCte = new WipCte(db);
+
+				var ncCodeBo = "NCCodeBO:8110,SETUP_OSCILLOSCO";
+
+				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
+				var sql = ((IExpressionQuery)result).SqlText;
+
+				Assert.True(sql.Replace("\"", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+			}
+		}
+
+		internal class WipCte
+		{
+			private readonly IDataContext db;
+
+			internal WipCte(IDataContext db)
+			{
+				this.db = db;
+			}
+
+			internal IQueryable<AllowedNcCodeOutput> AllowedNcCode()
+			{
+				return (from ncCode in db.GetTable<NcCode>()
+						join ncGroupMember in db.GetTable<NcGroupMember>()
+						on ncCode.Handle equals ncGroupMember.NcCodeOrGroupGbo
+						where
+							ncGroupMember.NcGroupBo == "NCGroupBO:" + ncCode.Site + ",CATAN_AUTO" ||
+							ncGroupMember.NcGroupBo == "NCGroupBO:" + ncCode.Site + ",CATAN_MAN" ||
+							ncGroupMember.NcGroupBo == "NCGroupBO:" + ncCode.Site + ",CATAN_ALL"
+						select new AllowedNcCodeOutput { NcCodeBo = ncCode.Handle, NcCode = ncCode.NcCodeColumn, NcCodeDescription = ncCode.Description }).Distinct().AsCte(nameof(AllowedNcCode));
+			}
+
+			internal class AllowedNcCodeOutput
+			{
+				internal string? NcCodeBo          { get; set; }
+				internal string? NcCode            { get; set; }
+				internal string? NcCodeDescription { get; set; }
+			}
+		}
+
+		[Table(Name = "NC_CODE")]
+		public partial class NcCode
+		{
+			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
+			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
+			[Column("SITE"), Nullable              ] public string?   Site             { get; set; } // NVARCHAR2(18)
+			[Column("NC_CODE"), Nullable           ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
+			[Column("DESCRIPTION"), Nullable       ] public string?   Description      { get; set; } // NVARCHAR2(120)
+			[Column("STATUS_BO"), Nullable         ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
+			[Column("CREATED_DATE_TIME"), Nullable ] public DateTime? CreatedDateTime  { get; set; } // DATE
+			[Column("MODIFIED_DATE_TIME"), Nullable] public DateTime? ModifiedDateTime { get; set; } // DATE
+			[Column("NC_CATEGORY"), Nullable       ] public string?   NcCategory       { get; set; } // NVARCHAR2(60)
+			[Column("DPMO_CATEGORY_BO"), Nullable  ] public string?   DpmoCategoryBo   { get; set; } // NVARCHAR2(1236)
+		}
+		[Table(Name = "NC_GROUP_MEMBER")]
+		public partial class NcGroupMember
+		{
+			[Column("HANDLE"), NotNull               ] public string   Handle           { get; set; } = null!; // NVARCHAR2(1236)
+			[Column("NC_GROUP_BO"), Nullable         ] public string?  NcGroupBo        { get; set; } // NVARCHAR2(1236)
+			[Column("NC_CODE_OR_GROUP_GBO"), Nullable] public string?  NcCodeOrGroupGbo { get; set; } // NVARCHAR2(1236)
+			[Column("SEQUENCE"), Nullable            ] public decimal? Sequence         { get; set; } // NUMBER (38,0)
+		}
+		#endregion
 
 	}
 }

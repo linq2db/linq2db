@@ -15,7 +15,7 @@ namespace Tests.Linq
 	using LinqToDB.Linq;
 	using Model;
 
-	[TestFixture, Parallelizable(ParallelScope.None)]
+	[TestFixture]
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
@@ -61,7 +61,7 @@ namespace Tests.Linq
 
 			public ISqlExpression ToSql(Expression expression)
 			{
-				return new SqlExpression(null, _table.TableName, Precedence.Primary, false);
+				return new SqlExpression(null, _table.TableName, Precedence.Primary, false, true);
 			}
 		}
 

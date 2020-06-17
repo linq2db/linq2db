@@ -33,7 +33,7 @@ namespace Tests.UserTests
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 		})]
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{

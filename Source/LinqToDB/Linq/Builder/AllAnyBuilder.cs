@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.Queries[0].Statement = sq;
 
-				var expr   = Builder.BuildSql(typeof(bool), 0);
+				var expr   = Builder.BuildSql(typeof(bool), 0, sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -102,10 +102,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(typeof(bool), index);
+				return Builder.BuildSql(typeof(bool), index, info.Sql);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -118,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 					if (Parent != null)
 						query = Parent.SelectQuery;
 
-					return new[] { new SqlInfo { Query = query, Sql = sql } };
+					return new[] { new SqlInfo(sql, query) };
 				}
 
 				throw new NotImplementedException();
@@ -129,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 				var sql = ConvertToSql(expression, level, flags);
 
 				if (sql[0].Index < 0)
-					sql[0].Index = sql[0].Query!.Select.Add(sql[0].Sql);
+					sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
 
 				return sql;
 			}

@@ -11,7 +11,7 @@
 	{
 		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
 		[Category(TestCategory.Explicit)]
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TestLinq2DbComplexQuery2([DataSources] string context)
 		{
 			using (new UseBinaryAggregateExpression(false))
@@ -45,7 +45,7 @@
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TestLinq2DbComplexQuery3([DataSources] string context)
 		{
 			using (new UseBinaryAggregateExpression(true))
@@ -79,7 +79,7 @@
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TestLinq2DbComplexQueryCache([DataSources] string context)
 		{
 			using (new UseBinaryAggregateExpression(true))
@@ -119,7 +119,7 @@
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void TestLinq2DbComplexQueryWithParameters([DataSources] string context)
 		{
 			var value = true;

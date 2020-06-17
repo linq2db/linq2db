@@ -218,7 +218,7 @@ namespace Tests.Linq
 
 		// ProviderName.SqlServer2014 disabled due to:
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void MultipleSelect11([IncludeDataSources(
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
 			string context)
@@ -716,7 +716,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullableTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -739,7 +739,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullPropagationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -760,7 +760,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullPropagationWhereTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -816,7 +816,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullProjectionTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -837,7 +837,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectReverseNullPropagationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -858,7 +858,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

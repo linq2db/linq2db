@@ -53,8 +53,11 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
-			return Builder.BuildSql(_elementType, index);
+			var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+			var index = info.Index;
+			if (Parent != null)
+				index = ConvertToParentIndex(index, Parent);
+			return Builder.BuildSql(_elementType, index, info.Sql);
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -62,12 +65,12 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 			{
 				var query = SelectQuery;
-				var sql = SelectQuery.Select.Columns[0];
+				var sql   = SelectQuery.Select.Columns[0];
 
 				if (Parent != null)
 					query = Parent.SelectQuery;
 
-				return new[] { new SqlInfo { Query = query, Sql = sql } };
+				return new[] { new SqlInfo(sql, query) };
 			}
 
 			switch (flags)
@@ -105,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var valueExpr = Expression.Constant(value, column.MemberType);
-											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr);
+											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
 
 											if (expr is SqlParameter p)
 											{
@@ -121,11 +124,7 @@ namespace LinqToDB.Linq.Builder
 									}
 									return new[]
 									{
-										new SqlInfo(column.MemberInfo)
-										{
-											Sql = newField,
-											Query = SelectQuery
-										}
+										new SqlInfo(column.MemberInfo, newField, SelectQuery)
 									};
 
 								}
@@ -144,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = ConvertToSql(expression, level, flags);
 
 			if (sql[0].Index < 0)
-				sql[0].Index = sql[0].Query!.Select.Add(sql[0].Sql);
+				sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
 
 			return sql;
 		}

@@ -23,7 +23,6 @@ namespace LinqToDB.Mapping
 	using SqlProvider;
 	using SqlQuery;
 	using Common.Internal.Cache;
-	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
 	/// Mapping schema.
@@ -563,26 +562,29 @@ namespace LinqToDB.Mapping
 			Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(ex, null, func, false));
 		}
 
-		LambdaExpression AddNullCheck(LambdaExpression expr)
+		internal LambdaExpression AddNullCheck(LambdaExpression expr)
 		{
 			var p = expr.Parameters[0];
 
 			if (p.Type.IsNullable())
-				return Expression.Lambda(
+			{
+				expr = Expression.Lambda(
 					Expression.Condition(
 						ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)),
 						expr.Body,
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
-
-			if (p.Type.IsClass)
-				return Expression.Lambda(
+			}
+			else if (p.Type.IsClass || p.Type.IsInterface)
+			{
+				expr = Expression.Lambda(
 					Expression.Condition(
 						Expression.NotEqual(p, Expression.Constant(null, p.Type)),
 						expr.Body,
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
-
+			}
+			
 			return expr;
 		}
 

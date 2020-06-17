@@ -395,7 +395,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
 					}
 				).ToList();
 
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
 						}
 					).ToList()).ToList();
 
@@ -594,7 +594,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.Length != 1)
 						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
 					var parentIndex = ConvertToParentIndex(info[0].Index, this);
-					return Builder.BuildSql(tableType, parentIndex);
+					return Builder.BuildSql(tableType, parentIndex, info[0].Sql);
 				}
 
 				if (ObjectType == tableType)
@@ -694,7 +694,7 @@ namespace LinqToDB.Linq.Builder
 
 						testExpr = ExpressionBuilder.Equal(
 							Builder.MappingSchema,
-							Builder.BuildSql(codeType, dindex),
+							Builder.BuildSql(codeType, dindex, mapping.m.Discriminator.ValueConverter),
 							Expression.Constant(mapping.m.Code));
 
 						if (mapping.m.Discriminator.CanBeNull)
@@ -796,7 +796,7 @@ namespace LinqToDB.Linq.Builder
 				var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
 				var idx  = ConvertToParentIndex(info.Index, null);
 
-				return Builder.BuildSql(expression!, idx);
+				return Builder.BuildSql(expression!, idx, info.Sql);
 			}
 
 			#endregion
@@ -830,8 +830,8 @@ namespace LinqToDB.Linq.Builder
 											.Where(field => !field.IsDynamic)
 											.Select(f =>
 												f.ColumnDescriptor != null
-													? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
-													: new SqlInfo { Sql = f })
+													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
+													: new SqlInfo(f))
 											.ToArray();
 									}
 
@@ -847,7 +847,7 @@ namespace LinqToDB.Linq.Builder
 
 									result = new[]
 									{
-										new SqlInfo(Enumerable.Empty<MemberInfo>()) { Sql = sql }
+										new SqlInfo(sql) 
 									};
 								}
 
@@ -880,9 +880,9 @@ namespace LinqToDB.Linq.Builder
 
 									if (contextInfo.AsSubquery)
 									{
-										resultSql = new SqlInfo[]
+										resultSql = new[]
 										{
-											new SqlInfo {Sql = contextInfo.Context.SelectQuery, Query = this.SelectQuery}
+											new SqlInfo(contextInfo.Context.SelectQuery, SelectQuery)
 										};
 									}
 
@@ -893,10 +893,7 @@ namespace LinqToDB.Linq.Builder
 									from field in SqlTable.Fields.Values
 									where field.IsPrimaryKey
 									orderby field.PrimaryKeyOrder
-									select new SqlInfo(field.ColumnDescriptor.MemberInfo)
-									{
-										Sql = field
-									};
+									select new SqlInfo(field.ColumnDescriptor.MemberInfo, field, SelectQuery);
 
 								var key = q.ToArray();
 
@@ -907,7 +904,7 @@ namespace LinqToDB.Linq.Builder
 								return new[]
 								{
 									// ???
-									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!) { Sql = contextInfo.Field }
+									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!, contextInfo.Field)
 								};
 							}
 						}
@@ -929,20 +926,20 @@ namespace LinqToDB.Linq.Builder
 								return new[]
 								{
 									// ???
-									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!) { Sql = contextInfo.Field, Query = SelectQuery }
+									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!, contextInfo.Field, SelectQuery)
 								};
 
 							if (contextInfo.CurrentExpression == null)
 							{
 								return new[]
-									{
-										new SqlInfo
-										{
-											Sql = IsScalarType(OriginalType)
-												? (ISqlExpression)SqlTable
-												: SqlTable.All
-										}
-									};
+								{
+									new SqlInfo
+									(
+										IsScalarType(OriginalType)
+											? (ISqlExpression)SqlTable
+											: SqlTable.All
+									)
+								};
 							}
 
 							SqlInfo[] resultSql;
@@ -965,9 +962,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (contextInfo.AsSubquery)
 								{
-									resultSql = new SqlInfo[]
+									resultSql = new[]
 									{
-										new SqlInfo {Sql = contextInfo.Context.SelectQuery, Query = this.SelectQuery}
+										new SqlInfo(contextInfo.Context.SelectQuery, SelectQuery)
 									};
 								}
 							}
@@ -999,12 +996,13 @@ namespace LinqToDB.Linq.Builder
 					index = SelectQuery.Select.Add(expr.Sql);
 				}
 
-				var newExpr = new SqlInfo(expr.MemberChain)
-				{
-					Sql   = SelectQuery.Select.Columns[index],
-					Query = SelectQuery,
-					Index = index
-				};
+				var newExpr = new SqlInfo
+				(
+					expr.MemberChain,
+					SelectQuery.Select.Columns[index],
+					SelectQuery,
+					index
+				);
 				
 				_indexes.Add(expr.Sql, newExpr);
 
@@ -1233,7 +1231,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (context != null && context != this && context.SelectQuery != SelectQuery)
 				{
-					var sqlInfo = new SqlInfo() {Index = index, Query = context.SelectQuery, Sql = context.SelectQuery.Select.Columns[index]};
+					var sqlInfo = new SqlInfo(context.SelectQuery.Select.Columns[index], context.SelectQuery, index);
 					sqlInfo = GetIndex(sqlInfo);
 					index = sqlInfo.Index;
 				}

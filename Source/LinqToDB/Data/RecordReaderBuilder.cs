@@ -135,7 +135,7 @@ namespace LinqToDB.Data
 				select new
 				{
 					Column = info.Column,
-					Expr   = new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, DataReaderLocal, DataContext)
+					Expr   = new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)
 				}
 			).ToList();
 
@@ -258,7 +258,7 @@ namespace LinqToDB.Data
 					{
 						IsComplex  = info.Column.MemberAccessor.IsComplex,
 						Name       = info.Column.MemberName,
-						Expression = new ConvertFromDataReaderExpression(info.Column.MemberType, info.ReaderIndex, DataReaderLocal, DataContext)
+						Expression = new ConvertFromDataReaderExpression(info.Column.MemberType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)
 					}
 				).ToList()).ToList();
 
@@ -301,7 +301,7 @@ namespace LinqToDB.Data
 		{
 			if (MappingSchema.IsScalarType(ObjectType))
 			{
-				return new ConvertFromDataReaderExpression(ObjectType, 0, DataReaderLocal, DataContext);
+				return new ConvertFromDataReaderExpression(ObjectType, 0, null, DataReaderLocal, DataContext);
 			}
 
 			var entityDescriptor   = MappingSchema.GetEntityDescriptor(ObjectType);
@@ -353,7 +353,7 @@ namespace LinqToDB.Data
 				if (dindex >= 0)
 				{
 					Expression testExpr;
-
+					
 					var isNullExpr = Expression.Call(
 						DataReaderLocal,
 						ReflectionHelper.DataReader.IsDBNull,
@@ -369,7 +369,7 @@ namespace LinqToDB.Data
 
 						testExpr = ExpressionBuilder.Equal(
 							MappingSchema,
-							new ConvertFromDataReaderExpression(codeType, dindex, DataReaderLocal, DataContext),
+							new ConvertFromDataReaderExpression(codeType, dindex, mapping.m.Discriminator.ValueConverter, DataReaderLocal, DataContext),
 							Expression.Constant(mapping.m.Code));
 
 						if (mapping.m.Discriminator.CanBeNull)

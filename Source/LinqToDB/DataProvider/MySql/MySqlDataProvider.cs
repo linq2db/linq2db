@@ -4,11 +4,11 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System.Collections;
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using Tools;
 
 	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
@@ -89,8 +89,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (dataType.DataType)
 			{
-				case DataType.Decimal    :
-				case DataType.VarNumeric :
+				case DataType.Decimal   :
+				case DataType.VarNumeric:
 					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
 						value = Adapter.MySqlDecimalGetter(value);
 					break;
@@ -108,6 +108,7 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.VarNumeric: parameter.DbType = DbType.Decimal;  return;
 				case DataType.Date:
 				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
+				case DataType.BitArray  : parameter.DbType = DbType.UInt64;   return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
@@ -121,7 +122,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (source == null)
 				throw new ArgumentException(nameof(source));
 
-			return new MySqlBulkCopy().BulkCopy(
+			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,

@@ -549,7 +549,8 @@ namespace LinqToDB.Linq.Builder
 
 		Expression BuildSql(IBuildContext context, Expression expression, string? alias)
 		{
-			var sqlex = ConvertToSqlExpression(context, expression);
+			//TODO: Check that we can pass column descriptor here
+			var sqlex = ConvertToSqlExpression(context, expression, null);
 			var idx   = context.SelectQuery.Select.Add(sqlex);
 
 			if (alias != null)
@@ -557,7 +558,7 @@ namespace LinqToDB.Linq.Builder
 
 			idx = context.ConvertToParentIndex(idx, context);
 
-			var field = BuildSql(expression, idx);
+			var field = BuildSql(expression, idx, sqlex);
 
 			return field;
 		}
@@ -571,12 +572,12 @@ namespace LinqToDB.Linq.Builder
 
 			idx = context.ConvertToParentIndex(idx, context);
 
-			var field = BuildSql(overrideType ?? sqlExpression.SystemType!, idx);
+			var field = BuildSql(overrideType ?? sqlExpression.SystemType!, idx, sqlExpression);
 
 			return field;
 		}
 
-		public Expression BuildSql(Expression expression, int idx)
+		public Expression BuildSql(Expression expression, int idx, ISqlExpression sqlExpression)
 		{
 			var type = expression.Type;
 
@@ -586,14 +587,19 @@ namespace LinqToDB.Linq.Builder
 					type = cex.Type;
 			}
 
-			return BuildSql(type, idx);
+			return BuildSql(type, idx, sqlExpression);
 		}
 
-		public Expression BuildSql(Type type, int idx)
+		public Expression BuildSql(Type type, int idx, IValueConverter? converter)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal);
+			return new ConvertFromDataReaderExpression(type, idx, converter, DataReaderLocal);
 		}
 
+		public Expression BuildSql(Type type, int idx, ISqlExpression? sourceExpression)
+		{
+			return BuildSql(type, idx, QueryHelper.GetValueConverter(sourceExpression));
+		}
+		
 		#endregion
 
 		#region IsNonSqlMember

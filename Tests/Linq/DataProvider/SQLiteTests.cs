@@ -482,7 +482,7 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try
@@ -563,7 +563,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.31.1";
+					expectedVersion = "3.32.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET46

@@ -176,7 +176,7 @@ namespace Tests.UserTests
 					Id = 1,
 					Field1 = null
 				});
-
+				
 				db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
 				{
 					Id = 2,

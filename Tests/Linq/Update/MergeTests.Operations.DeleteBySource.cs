@@ -11,7 +11,7 @@ namespace Tests.xUpdate
 
 	public partial class MergeTests
 	{
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SameSourceDeleteBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -38,7 +38,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void OtherSourceDeleteBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -92,7 +92,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void OtherSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -120,7 +120,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void AnonymousSourceDeleteBySourceWithPredicate(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -152,7 +152,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void AnonymousListSourceDeleteBySourceWithPredicate(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -184,7 +184,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DeleteBySourceReservedAndCaseNames([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -216,7 +216,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DeleteBySourceReservedAndCaseNamesFromList(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -249,7 +249,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void DeleteBySourceFromPartialSourceProjection(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{

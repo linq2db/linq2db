@@ -442,19 +442,22 @@ namespace Tests.ComplexTests2
 					};
 
 					var cnt = db.Insert(eye);
-					Validate();
+					Validate(false);
 
 					cnt = db.InsertOrReplace(eye);
-					Validate();
+					Validate(true);
 
 					cnt = db.Update(eye);
-					Validate();
+					Validate(false);
 
 					db.Delete(eye);
 
-					void Validate()
+					void Validate(bool insertOrReplace)
 					{
-						Assert.AreEqual(1, cnt);
+						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+							Assert.AreEqual(-1, cnt);
+						else
+							Assert.AreEqual(1, cnt);
 
 						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault();
 						Assert.IsNotNull(data);
@@ -496,19 +499,22 @@ namespace Tests.ComplexTests2
 					};
 
 					var cnt = db.Insert((Animal)dog);
-					Validate();
+					Validate(false);
 
 					cnt = db.InsertOrReplace((Animal)dog);
-					Validate();
+					Validate(true);
 
 					cnt = db.Update((Animal)dog);
-					Validate();
+					Validate(false);
 
 					db.Delete((Animal)dog);
 
-					void Validate()
+					void Validate(bool insertOrReplace)
 					{
-						Assert.AreEqual(1, cnt);
+						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+							Assert.AreEqual(-1, cnt);
+						else
+							Assert.AreEqual(1, cnt);
 
 						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault();
 						Assert.IsNotNull(data);
