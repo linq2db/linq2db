@@ -828,7 +828,7 @@ WHERE
 		}
 
 		[Test]
-		public void TestOneToOneAssociation([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestOneToOneAssociation([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new[]
@@ -862,7 +862,7 @@ WHERE
 		}
 		
 		[Test]
-		public void TestOneToOneAssociationChained([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestOneToOneAssociationChained([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new[]
@@ -934,7 +934,7 @@ WHERE
 		}
 		
 		[Test]
-		public void TestOneToOneAssociationMultipleParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestOneToOneAssociationMultipleParameters([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new[]
