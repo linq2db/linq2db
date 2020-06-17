@@ -693,7 +693,7 @@ namespace LinqToDB.Linq.Builder
 			var associationParentType = associationPath[0].MemberInfo.DeclaringType;
 			var loadWithItems         = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
 
-			if (!mainQueryElementType.IsSameOrParentOf(associationParentType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
+			if (!associationParentType.IsSameOrParentOf(mainQueryElementType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{ 
 				var parentExpr = builder.AssociationRoot;
 
@@ -788,7 +788,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (!mainQueryElementType.IsSameOrParentOf(associationParentType))
+				if (!associationParentType.IsSameOrParentOf(mainQueryElementType))
 				{ 
 					var parentExpr = builder.AssociationRoot;
 
