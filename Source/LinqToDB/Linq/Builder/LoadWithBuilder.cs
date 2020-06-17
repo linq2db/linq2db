@@ -187,7 +187,11 @@ namespace LinqToDB.Linq.Builder
 							var mexpr  = (MemberExpression)expression;
 							var member = lastMember = mexpr.Member;
 							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType, member);
-
+							if (attr == null)
+							{
+								member = mexpr.Expression.Type.GetMemberEx(member)!;
+								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
+							}	
 							if (attr == null)
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
