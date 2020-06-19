@@ -9,14 +9,15 @@
 		{
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			expr = base.ConvertExpression(expr);
+			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
 
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
+			statement = SeparateDistinctFromPagination(statement);
+			statement = ReplaceTakeSkipWithRowNumber(statement, false, true);
 
-			return expr;
+			return statement;
 		}
+
 	}
 }

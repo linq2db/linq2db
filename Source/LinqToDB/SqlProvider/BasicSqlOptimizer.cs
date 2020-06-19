@@ -1919,12 +1919,15 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
 		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
+		/// <param name="onlyWithSkip">Indicates that the transformation is needed only when skipping entries.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries, bool onlyWithSkip)
 		{
 			return QueryHelper.WrapQuery(statement,
 				query =>
 				{
+					if (onlyWithSkip && query.Select.SkipValue == null)
+						return 0;
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
 					if (onlySubqueries && query.ParentSelect == null)
