@@ -36,7 +36,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Deletes records from source query into target table asynchronously and returns newly created records.
+		/// Deletes records from source query into target table asynchronously and returns deleted records.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query, that returns data for delete operation.</param>
@@ -59,7 +59,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Deletes records from source query into target table and returns newly created records.
+		/// Deletes records from source query into target table and returns deleted records.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
@@ -87,7 +87,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Deletes records from source query into target table asynchronously and returns newly created records.
+		/// Deletes records from source query into target table asynchronously and returns deleted records.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
@@ -116,7 +116,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Deletes records from source query into target table and outputs newly created records into <paramref name="outputTable"/>.
+		/// Deletes records from source query into target table and outputs deleted records into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
