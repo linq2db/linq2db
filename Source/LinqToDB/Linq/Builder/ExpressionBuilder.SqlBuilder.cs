@@ -697,6 +697,27 @@ namespace LinqToDB.Linq.Builder
 						}
 						break;
 					}
+				case ExpressionType.NewArrayInit:
+					{
+						var expr = (NewArrayExpression)expression;
+						var sql  = expr.Expressions
+							.Select(arg => ConvertExpressions(context, arg, queryConvertFlag, columnDescriptor))
+							.SelectMany(si => si)
+							.ToArray();
+
+						return sql;
+					}
+				case ExpressionType.ListInit:
+					{
+						var expr = (ListInitExpression)expression;
+						var sql  = expr.Initializers
+							.SelectMany(init => init.Arguments)
+							.Select(arg => ConvertExpressions(context, arg, queryConvertFlag, columnDescriptor))
+							.SelectMany(si => si)
+							.ToArray();
+
+						return sql;
+					}
 			}
 
 			var ctx = GetContext(context, expression);
@@ -3259,6 +3280,11 @@ namespace LinqToDB.Linq.Builder
 						return members.Count > 0;
 					}
 
+				case ExpressionType.NewArrayInit:
+				case ExpressionType.ListInit:
+					{
+						return true;
+					}
 				// .Select(p => everything else)
 				//
 				default                        :

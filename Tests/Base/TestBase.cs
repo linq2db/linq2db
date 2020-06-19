@@ -16,6 +16,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
@@ -926,6 +927,11 @@ namespace Tests
 		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
+		}
+
+		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<MemberAccessor,bool> memberPredicate)
+		{
+			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>(memberPredicate));
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
