@@ -51,7 +51,7 @@ namespace Tests.Playground
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			{
-				var zz = source
+				var expected = source
 					.Where(s => s.Id > 3)
 					.ToArray();
 
@@ -65,7 +65,7 @@ namespace Tests.Playground
 						})
 					.ToArray();
 
-				AreEqual(zz.Select(t => new
+				AreEqual(expected.Select(t => new
 					{
 						Id       = t.Id + 1,
 						ValueStr = t.ValueStr + 1,
@@ -81,7 +81,7 @@ namespace Tests.Playground
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			{
-				var zz = source
+				var expected = source
 					.Where(s => s.Id > 3)
 					.ToArray();
 
@@ -96,7 +96,7 @@ namespace Tests.Playground
 						})
 					.ToArray();
 
-				AreEqual(zz.Select(s => new DestinationTable
+				AreEqual(expected.Select(s => new DestinationTable
 					{
 						Id       = s.Id + param,
 						Value    = s.Value + param,
@@ -113,7 +113,7 @@ namespace Tests.Playground
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			{
-				var zz = source
+				var expected = source
 					.Where(s => s.Id > 3)
 					.ToArray();
 
@@ -127,7 +127,7 @@ namespace Tests.Playground
 							ValueStr = s.ValueStr + param
 						});
 
-				AreEqual(zz.Select(s => new DestinationTable
+				AreEqual(expected.Select(s => new DestinationTable
 					{
 						Id       = s.Id       + param,
 						Value    = s.Value    + param,
@@ -145,7 +145,7 @@ namespace Tests.Playground
 			using (var source = db.CreateLocalTable(sourceData))
 			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
-				var zz = source
+				var expected = source
 					.Where(s => s.Id > 3)
 					.ToArray();
 
@@ -160,7 +160,7 @@ namespace Tests.Playground
 							ValueStr = s.ValueStr + param
 						});
 
-				AreEqual(zz.Select(s => new DestinationTable
+				AreEqual(expected.Select(s => new DestinationTable
 					{
 						Id       = s.Id + param,
 						Value    = s.Value + param,
