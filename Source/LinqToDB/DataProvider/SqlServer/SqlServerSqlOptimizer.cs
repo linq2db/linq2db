@@ -27,6 +27,24 @@ namespace LinqToDB.DataProvider.SqlServer
 				);
 		}
 
+		protected SqlStatement CorrectEmptyRoot(SqlStatement statement)
+		{
+			var selectQuery = statement.SelectQuery!;
+
+			if (selectQuery.Select.Columns.Count == 0)
+			{
+				var source = selectQuery.Select.From.Tables[0].Source;
+				var keys = source.GetKeys(true);
+
+				foreach (var key in keys)
+				{
+					selectQuery.Select.AddNew(key);
+				}
+			}
+
+			return statement;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

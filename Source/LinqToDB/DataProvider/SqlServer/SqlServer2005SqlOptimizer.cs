@@ -13,11 +13,13 @@
 		{
 			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
 
+			statement = CorrectEmptyRoot(statement);
 			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement);
 			if (statement.IsUpdate()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
 			statement = QueryHelper.OptimizeSubqueries(statement);
+
 			return statement;
 		}
 
