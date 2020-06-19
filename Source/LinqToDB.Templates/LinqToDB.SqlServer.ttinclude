@@ -70,7 +70,7 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database, version, provider));
+	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database), version, provider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password,
