@@ -31,6 +31,11 @@
 			// OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
 		}
 
+		protected override void BuildOutputSubclause(SqlDeleteStatement deleteStatement)
+		{
+			// OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
+		}
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			StringBuilder

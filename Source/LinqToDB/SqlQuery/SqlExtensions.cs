@@ -129,16 +129,13 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public static SqlOutputClause? GetOutputClause(this SqlStatement statement)
 		{
-			switch (statement)
+			return statement switch
 			{
-				case SqlInsertStatement insert:
-					return insert.Output;
-				//case SqlUpdateStatement update:
-				//	throw new NotImplementedException();
-				//case SqlDeleteStatement delete:
-				//	throw new NotImplementedException();
-			}
-			return null;
+				SqlInsertStatement insert => insert.Output,
+				// SqlUpdateStatement update => throw new NotImplementedException(),
+				SqlDeleteStatement delete => delete.Output,
+				_ => null,
+			};
 		}
 
 		/// <summary>
