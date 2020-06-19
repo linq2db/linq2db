@@ -15,6 +15,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlVersion = sqlVersion;
 		}
 
+		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
+			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null);
+
+		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(
+				statement,
+				query => query.ParentSelect == null && (query.Select.SkipValue != null || query.Select.TakeValue != null || query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
+				(query, wrappedQuery) => { }
+				);
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

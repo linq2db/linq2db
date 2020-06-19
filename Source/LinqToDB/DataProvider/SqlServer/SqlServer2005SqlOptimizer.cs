@@ -15,7 +15,8 @@
 
 			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement);
-			statement = ReplaceTakeSkipWithRowNumber(statement, false, true);
+			if (statement.IsUpdate()) statement = WrapRootTakeSkipOrderBy(statement);
+			statement = ReplaceSkipWithRowNumber(statement);
 			statement = QueryHelper.OptimizeSubqueries(statement);
 			return statement;
 		}
