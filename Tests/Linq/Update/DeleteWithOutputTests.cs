@@ -138,7 +138,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void DeleteWithOutputIntoFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputIntoFromQueryTest([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))

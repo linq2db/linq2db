@@ -1175,6 +1175,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.With);
 							Append(elem.Table);
+							Append(elem.Output);
 							Append(elem.Top);
 							Append(elem.SelectQuery);
 							Append(elem.Parameters);
@@ -1955,11 +1956,12 @@ namespace LinqToDB.ServiceModel
 						{
 							var with        = Read<SqlWithClause>();
 							var table       = Read<SqlTable>();
+							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
 							var parameters  = ReadArray<SqlParameter>();
 
-							obj = _statement = new SqlDeleteStatement { Table = table, Top = top, SelectQuery = selectQuery };
+							obj = _statement = new SqlDeleteStatement { Table = table, Output = output, Top = top, SelectQuery = selectQuery };
 							_statement.Parameters.AddRange(parameters);
 							((SqlDeleteStatement)_statement).With = with;
 
