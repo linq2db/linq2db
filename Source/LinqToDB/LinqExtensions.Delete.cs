@@ -42,9 +42,9 @@ namespace LinqToDB
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
-		public static Task<TSource[]> DeleteWithOutput<TSource>(
+		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			                this IQueryable<TSource>          source,
-							CancellationToken                  token = default)
+							CancellationToken                 token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -125,8 +125,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable
-			)
+			                ITable<TOutput>                   outputTable)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
