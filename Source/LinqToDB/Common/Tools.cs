@@ -140,7 +140,7 @@ namespace LinqToDB.Common
 			return (IQueryable)method.Invoke(null, Array<object>.Empty);
 		}
 
-		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
+		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
 		{
 			if (assemblyName != null)
 			{

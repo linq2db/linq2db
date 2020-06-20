@@ -582,7 +582,7 @@ namespace LinqToDB.Data
 		public  static TraceSwitch  TraceSwitch
 		{
 			// used by LoggingExtensions
-			internal get => _traceSwitch;
+			get => _traceSwitch;
 			set => _traceSwitch = value;
 		}
 
