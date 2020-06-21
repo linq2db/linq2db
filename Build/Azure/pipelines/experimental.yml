@@ -126,6 +126,14 @@ stages:
 
     strategy:
       matrix:
+        SqlServer2019_MS:
+          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2019.ms'
+          script: 'sqlserver.2019.sh'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.sh'
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -149,18 +157,6 @@ stages:
 #          title: 'Oracle 12c'
 #          config: 'oracle12'
 #          script: 'oracle12.sh'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mysql.sh'
-        MySQL55:
-          title: 'MySQL 5.5'
-          config: 'mysql55'
-          script: 'mysql55.sh'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.sh'
     steps:
     - checkout: none
 
@@ -226,6 +222,16 @@ stages:
 
     strategy:
       matrix:
+        SqlServer2019_MS:
+          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2019.ms'
+          script: 'mac.sqlserver.2019.sh'
+          docker: 'true'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'mac.sqlserver.2019.sh'
+          docker: 'true'
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -243,21 +249,21 @@ stages:
 #          config: 'sqlserver.2017.ms'
 #          script: 'mac.sqlserver.2017.sh'
 #          docker: 'true'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mac.mysql.sh'
-          docker: 'true'
-        MySQL55:
-          title: 'MySQL 5.5'
-          config: 'mysql55'
-          script: 'mac.mysql55.sh'
-          docker: 'true'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mac.mariadb.sh'
-          docker: 'true'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mac.mysql.sh'
+#          docker: 'true'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mac.mysql55.sh'
+#          docker: 'true'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mac.mariadb.sh'
+#          docker: 'true'
 
     steps:
     - checkout: none
@@ -340,8 +346,8 @@ stages:
 ###################################
   - job: test_win2016_netcoreapp21_job
     pool:
-#      vmImage: 'vs2017-win2016'
-      vmImage: 'windows-2019'
+      vmImage: 'vs2017-win2016'
+#      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
@@ -349,18 +355,14 @@ stages:
 
     strategy:
       matrix:
-#        Access_ODBC_ACE:
-#          title: 'Access ODBC ACE'
-#          config: 'access.odbc.ace'
-#          script: 'access.ace.x64.cmd'
-#        Access_ACE:
-#          title: 'Access OleDb ACE'
-#          config: 'access.ace'
-#          script: 'access.ace.x64.cmd'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb.win'
-          script: 'mariadb.cmd'
+        SqlServer2017_MS:
+          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2017.ms'
+          script: 'sqlserver.2017.cmd'
+        SqlServer2017:
+          title: 'SQL Server 2017 (System.Data.SqlClient)'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.cmd'
     steps:
     - checkout: none
 
@@ -427,17 +429,92 @@ stages:
 
     strategy:
       matrix:
-#        Access_ODBC_MDB:
-#          title: 'Access ODBC MDB'
-#          config: 'access.odbc.mdb'
-#        Access_ODBC_ACE:
-#          title: 'Access ODBC ACE'
-#          config: 'access.odbc.ace'
-#          script: 'access.ace.cmd'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.cmd'
+        SqlServer2017_MS:
+          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
+          config: 'sqlserver.2017.ms'
+          script: 'sqlserver.2017.cmd'
+        SqlServer2017:
+          title: 'SQL Server 2017 (System.Data.SqlClient)1'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.cmd'
+        SqlServer2016_MS:
+          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)1'
+          config: 'sqlserver.2016.ms'
+          script: 'sqlserver.2016.cmd'
+        SqlServer2016:
+          title: 'SQL Server 2016 (System.Data.SqlClient)1'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.cmd'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netfx46_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netfx46_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
+        testRunTitle: 'Windows / NET46 / $(title)'
+      displayName: '$(title)'
+
+  - job: test_win_netfx46_job_2019
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'Tests: Win / NETFX 4.6 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+
+    strategy:
+      matrix:
+        SqlServer2017_MS:
+          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2017.ms'
+          script: 'sqlserver.2017.cmd'
+        SqlServer2017:
+          title: 'SQL Server 2017 (System.Data.SqlClient)'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.cmd'
+        SqlServer2016_MS:
+          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2016.ms'
+          script: 'sqlserver.2016.cmd'
+        SqlServer2016:
+          title: 'SQL Server 2016 (System.Data.SqlClient)'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.cmd'
 
     steps:
     - checkout: none

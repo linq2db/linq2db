@@ -283,8 +283,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 		Build\Azure\net46\sqlce.json = Build\Azure\net46\sqlce.json
 		Build\Azure\net46\sqlite.json = Build\Azure\net46\sqlite.json
 		Build\Azure\net46\sqlite.ms.json = Build\Azure\net46\sqlite.ms.json
+		Build\Azure\net46\sqlserver.2012.json = Build\Azure\net46\sqlserver.2012.json
+		Build\Azure\net46\sqlserver.2012.ms.json = Build\Azure\net46\sqlserver.2012.ms.json
+		Build\Azure\net46\sqlserver.2014.json = Build\Azure\net46\sqlserver.2014.json
+		Build\Azure\net46\sqlserver.2014.ms.json = Build\Azure\net46\sqlserver.2014.ms.json
+		Build\Azure\net46\sqlserver.2016.json = Build\Azure\net46\sqlserver.2016.json
+		Build\Azure\net46\sqlserver.2016.ms.json = Build\Azure\net46\sqlserver.2016.ms.json
 		Build\Azure\net46\sqlserver.2017.json = Build\Azure\net46\sqlserver.2017.json
 		Build\Azure\net46\sqlserver.2017.ms.json = Build\Azure\net46\sqlserver.2017.ms.json
+		Build\Azure\net46\sqlserver.2019.json = Build\Azure\net46\sqlserver.2019.json
+		Build\Azure\net46\sqlserver.2019.ms.json = Build\Azure\net46\sqlserver.2019.ms.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp21", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
@@ -314,8 +322,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp21", "netcoreapp2
 		Build\Azure\netcoreapp21\sqlce.json = Build\Azure\netcoreapp21\sqlce.json
 		Build\Azure\netcoreapp21\sqlite.json = Build\Azure\netcoreapp21\sqlite.json
 		Build\Azure\netcoreapp21\sqlite.ms.json = Build\Azure\netcoreapp21\sqlite.ms.json
+		Build\Azure\netcoreapp21\sqlserver.2012.json = Build\Azure\netcoreapp21\sqlserver.2012.json
+		Build\Azure\netcoreapp21\sqlserver.2012.ms.json = Build\Azure\netcoreapp21\sqlserver.2012.ms.json
+		Build\Azure\netcoreapp21\sqlserver.2014.json = Build\Azure\netcoreapp21\sqlserver.2014.json
+		Build\Azure\netcoreapp21\sqlserver.2014.ms.json = Build\Azure\netcoreapp21\sqlserver.2014.ms.json
+		Build\Azure\netcoreapp21\sqlserver.2016.json = Build\Azure\netcoreapp21\sqlserver.2016.json
+		Build\Azure\netcoreapp21\sqlserver.2016.ms.json = Build\Azure\netcoreapp21\sqlserver.2016.ms.json
 		Build\Azure\netcoreapp21\sqlserver.2017.json = Build\Azure\netcoreapp21\sqlserver.2017.json
 		Build\Azure\netcoreapp21\sqlserver.2017.ms.json = Build\Azure\netcoreapp21\sqlserver.2017.ms.json
+		Build\Azure\netcoreapp21\sqlserver.2019.json = Build\Azure\netcoreapp21\sqlserver.2019.json
+		Build\Azure\netcoreapp21\sqlserver.2019.ms.json = Build\Azure\netcoreapp21\sqlserver.2019.ms.json
 		Build\Azure\netcoreapp21\sybase.json = Build\Azure\netcoreapp21\sybase.json
 	EndProjectSection
 EndProject
@@ -343,7 +359,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\mac.pgsql92.sh = Build\Azure\scripts\mac.pgsql92.sh
 		Build\Azure\scripts\mac.pgsql93.sh = Build\Azure\scripts\mac.pgsql93.sh
 		Build\Azure\scripts\mac.pgsql95.sh = Build\Azure\scripts\mac.pgsql95.sh
+		Build\Azure\scripts\mac.sqlserver.2012.sh = Build\Azure\scripts\mac.sqlserver.2012.sh
+		Build\Azure\scripts\mac.sqlserver.2014.sh = Build\Azure\scripts\mac.sqlserver.2014.sh
+		Build\Azure\scripts\mac.sqlserver.2016.sh = Build\Azure\scripts\mac.sqlserver.2016.sh
 		Build\Azure\scripts\mac.sqlserver.2017.sh = Build\Azure\scripts\mac.sqlserver.2017.sh
+		Build\Azure\scripts\mac.sqlserver.2019.sh = Build\Azure\scripts\mac.sqlserver.2019.sh
 		Build\Azure\scripts\mariadb.cmd = Build\Azure\scripts\mariadb.cmd
 		Build\Azure\scripts\mariadb.sh = Build\Azure\scripts\mariadb.sh
 		Build\Azure\scripts\mysql.cmd = Build\Azure\scripts\mysql.cmd
@@ -365,8 +385,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\pgsql95.cmd = Build\Azure\scripts\pgsql95.cmd
 		Build\Azure\scripts\pgsql95.sh = Build\Azure\scripts\pgsql95.sh
 		Build\Azure\scripts\sqlce.ps1 = Build\Azure\scripts\sqlce.ps1
+		Build\Azure\scripts\sqlserver.2012.cmd = Build\Azure\scripts\sqlserver.2012.cmd
+		Build\Azure\scripts\sqlserver.2012.sh = Build\Azure\scripts\sqlserver.2012.sh
+		Build\Azure\scripts\sqlserver.2014.cmd = Build\Azure\scripts\sqlserver.2014.cmd
+		Build\Azure\scripts\sqlserver.2014.sh = Build\Azure\scripts\sqlserver.2014.sh
+		Build\Azure\scripts\sqlserver.2016.cmd = Build\Azure\scripts\sqlserver.2016.cmd
+		Build\Azure\scripts\sqlserver.2016.sh = Build\Azure\scripts\sqlserver.2016.sh
 		Build\Azure\scripts\sqlserver.2017.cmd = Build\Azure\scripts\sqlserver.2017.cmd
 		Build\Azure\scripts\sqlserver.2017.sh = Build\Azure\scripts\sqlserver.2017.sh
+		Build\Azure\scripts\sqlserver.2019.cmd = Build\Azure\scripts\sqlserver.2019.cmd
+		Build\Azure\scripts\sqlserver.2019.sh = Build\Azure\scripts\sqlserver.2019.sh
 		Build\Azure\scripts\sybase.sh = Build\Azure\scripts\sybase.sh
 	EndProjectSection
 EndProject
