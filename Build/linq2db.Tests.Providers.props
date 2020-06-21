@@ -12,14 +12,14 @@
 
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.1" />
 		<PackageReference Include="MySql.Data" Version="8.0.20" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.69.2" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.69.3" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.3" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
@@ -76,7 +76,7 @@
 		<PackageReference Include="Npgsql" Version="4.1.3.1" />
 		<PackageReference Include="System.Data.Odbc" Version="4.7.0" />
 		<PackageReference Include="System.Data.OleDb" Version="4.7.1" />
-		<PackageReference Include="MiniProfiler.Shared" Version="4.1.0" />
+		<PackageReference Include="MiniProfiler.Shared" Version="4.2.1" />
 
 		<!--magic-->
 		<PackageReference Include="IBM.Data.DB2.Core" Version="1.3.0.100"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />

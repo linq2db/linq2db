@@ -582,7 +582,7 @@ namespace LinqToDB.Data
 		public  static TraceSwitch  TraceSwitch
 		{
 			// used by LoggingExtensions
-			internal get => _traceSwitch;
+			get => _traceSwitch;
 			set => _traceSwitch = value;
 		}
 
@@ -897,23 +897,24 @@ namespace LinqToDB.Data
 
 				if (dataProvider == null)
 				{
-					var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
+					IDataProvider? defaultDataProvider = null;
+					if (DefaultDataProvider != null)
+						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
 					if (providerName.IsNullOrEmpty())
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.ContainsKey(providerName))
-						dataProvider = _dataProviders[providerName];
-					else if (_dataProviders.ContainsKey(configuration))
-						dataProvider = _dataProviders[configuration];
+					else if (_dataProviders.TryGetValue(providerName, out dataProvider)
+							|| _dataProviders.TryGetValue(configuration, out dataProvider))
+					{ }
 					else
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
 						switch (providers.Count)
 						{
-							case 0  : dataProvider = defaultDataProvider;                                        break;
-							case 1  : dataProvider = providers[0].Value;                                         break;
-							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+							case 0: dataProvider = defaultDataProvider; break;
+							case 1: dataProvider = providers[0].Value; break;
+							default: dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
 						}
 					}
 				}
@@ -974,10 +975,19 @@ namespace LinqToDB.Data
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
+			if (dataProvider == null)
+			{
+				IDataProvider? defaultDataProvider = null;
+				if (DefaultDataProvider != null)
+					_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
+
+				dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+			}
+
 			var info = new ConfigurationInfo(
 				configuration,
 				connectionString,
-				dataProvider ?? FindProvider(configuration, _dataProviders, DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null));
+				dataProvider);
 
 			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
