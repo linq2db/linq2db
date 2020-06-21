@@ -24,8 +24,10 @@ namespace LinqToDB.SqlQuery
 			set => SelectQuery.IsParameterDependent = value;
 		}
 
-		public SqlTable?       Table { get; set; }
-		public ISqlExpression? Top   { get; set; }
+		public SqlTable?       Table   { get; set; }
+		public ISqlExpression? Top     { get; set; }
+
+		public SqlOutputClause? Output { get; set; }
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
