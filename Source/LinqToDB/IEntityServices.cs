@@ -14,7 +14,7 @@ namespace LinqToDB
 		/// from r in db.table select r;
 		/// <br />
 		/// <br />
-		/// // Entity constructor specificed explicitly by user (projection)
+		/// // Entity constructor specified explicitly by user (projection)
 		/// <br />
 		/// from r in db.table select new Entity() { field = r.field };
 		/// </code>
