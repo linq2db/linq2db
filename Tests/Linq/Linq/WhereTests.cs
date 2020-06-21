@@ -1299,7 +1299,9 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				AreEqual(expected.Where(notLocalPredicate.Compile()), actual.Where(notPredicate), WhereCases.Comparer);
+				var expNot = expected.Where(notLocalPredicate.Compile()).ToArray();
+				var actNot = actual.  Where(notPredicate).               ToArray();
+				AreEqual(expNot, actNot, WhereCases.Comparer);
 			}
 
 			using (var db = GetDataContext(context))

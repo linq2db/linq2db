@@ -760,7 +760,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!PreferServerSide(expression, false))
 			{
-				if (CanBeConstant(expression))
+				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 					return BuildConstant(expression);
 
 				if (CanBeCompiled(expression))
@@ -1411,6 +1411,8 @@ namespace LinqToDB.Linq.Builder
 					if (columnDescriptor != null)
 					{
 						newExpr.DataType        = columnDescriptor.GetDbDataType();
+						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
+							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType);
 
 						if (name == null)
