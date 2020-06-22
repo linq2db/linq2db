@@ -126,16 +126,8 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2019_1:
-          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.1.sh'
-        SqlServer2019_3:
-          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.3.sh'
-        SqlServer2019_5:
-          title: 'SQL Server 2019.5 (System.Data.SqlClient)'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.5.sh'
 #        SqlServer2019:
@@ -434,8 +426,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -443,10 +435,6 @@ stages:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.cmd'
-        SqlServer2019_1:
-          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.1.cmd'
 #        SqlServer2017_MS:
 #          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
 #          config: 'sqlserver.2017.ms'
@@ -526,18 +514,6 @@ stages:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.cmd'
-        SqlServer2019_1:
-          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.1.cmd'
-        SqlServer2019_2:
-          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.2.cmd'
-        SqlServer2019_3:
-          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.3.cmd'
 #        SqlServer2017_MS:
 #          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
 #          config: 'sqlserver.2017.ms'

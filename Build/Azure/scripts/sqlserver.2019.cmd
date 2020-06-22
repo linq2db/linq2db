@@ -1,4 +1,3 @@
-rem docker pull microsoft/mssql-server-windows-developer:2017-latest
 docker run -d -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Password12!" -p 1433:1433 -h mssql --name=mssql iamrjindal/sqlserverexpress:latest
 docker ps -a
 
