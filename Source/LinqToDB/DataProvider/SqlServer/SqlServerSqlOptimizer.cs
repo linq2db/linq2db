@@ -29,9 +29,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected SqlStatement CorrectEmptyRoot(SqlStatement statement)
 		{
-			var selectQuery = statement.SelectQuery!;
+			var selectQuery = statement.SelectQuery;
 
-			if (selectQuery.Select.Columns.Count == 0)
+			if (selectQuery == null) return statement;
+
+			if (selectQuery.Select.Columns.Count == 0 && selectQuery.Select.From.Tables.Count > 0)
 			{
 				var source = selectQuery.Select.From.Tables[0].Source;
 				var keys = source.GetKeys(true);
