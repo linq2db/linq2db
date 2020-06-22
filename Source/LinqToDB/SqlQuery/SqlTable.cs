@@ -377,6 +377,16 @@ namespace LinqToDB.SqlQuery
 				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
+		internal static SqlTable Deleted(Type objectType)
+			=> new SqlTable(objectType)
+			{
+				Name         = "DELETED",
+				PhysicalName = "DELETED",
+				Schema       = null,
+				Database     = null,
+				Server       = null,
+				SqlTableType = SqlTableType.SystemTable,
+			};
 		#endregion
 	}
 }

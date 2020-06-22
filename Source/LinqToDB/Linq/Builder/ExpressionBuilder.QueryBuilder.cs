@@ -495,7 +495,9 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsMultipleQuery(MethodCallExpression ce)
 		{
-			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
+			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
+			return !ce.IsQueryable(FirstSingleBuilder.MethodNames) &&
+				typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
 		}
 
 		class SubQueryContextInfo
