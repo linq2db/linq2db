@@ -377,10 +377,10 @@ stages:
 
     strategy:
       matrix:
-#        SqlServer2017_MS:
-#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-#          config: 'sqlserver.2017.ms'
-#          script: 'sqlserver.2017.cmd'
+        SqlServer2017_MS:
+          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.2017.ms'
+          script: 'sqlserver.2017.cmd'
     steps:
     - checkout: none
 
