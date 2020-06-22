@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		public class SupportsAnalyticFunctionsContextAttribute: IncludeDataSourcesAttribute
 		{
 			public SupportsAnalyticFunctionsContextAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSqlServer, TestProvName.AllOracle)
+				: base(includeLinqService, TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle)
 			{
 			}
 		}

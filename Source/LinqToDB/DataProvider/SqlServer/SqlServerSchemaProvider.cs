@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
-		bool _isAzure;
-		int _compatibilityLevel;
+		protected bool _isAzure;
+		protected int _compatibilityLevel;
 
 		protected readonly SqlServerDataProvider Provider;
 

@@ -36,7 +36,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue2008Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue2008Test([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table1>())
