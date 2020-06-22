@@ -118,7 +118,7 @@ stages:
 
   - job: test_linux_netcoreapp21_job
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-18.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: ne(variables['Build.SourceBranchName'], 'release')
@@ -126,14 +126,35 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2019_MS:
-          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2019.ms'
-          script: 'sqlserver.2019.sh'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
+        SqlServer2019_1:
+          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
-          script: 'sqlserver.2019.sh'
+          script: 'sqlserver.2019.1.sh'
+        SqlServer2019_2:
+          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.2.sh'
+        SqlServer2019_3:
+          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.3.sh'
+        SqlServer2019_4:
+          title: 'SQL Server 2019.4 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.4.sh'
+        SqlServer2019_5:
+          title: 'SQL Server 2019.5 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.5.sh'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.2019'
+#          script: 'sqlserver.2019.sh'
+#        SqlServer2019_MS:
+#          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2019.ms'
+#          script: 'sqlserver.2019.sh'
+#
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -214,7 +235,7 @@ stages:
 
   - job: test_macos_netcoreapp21_job
     pool:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
@@ -222,16 +243,17 @@ stages:
 
     strategy:
       matrix:
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.2019'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
         SqlServer2019_MS:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'mac.sqlserver.2019.sh'
           docker: 'true'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'mac.sqlserver.2019.sh'
-          docker: 'true'
+#
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -350,19 +372,15 @@ stages:
 #      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
     steps:
     - checkout: none
 
@@ -429,22 +447,38 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)1'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)1'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
-        SqlServer2016:
-          title: 'SQL Server 2016 (System.Data.SqlClient)1'
-          config: 'sqlserver.2016'
-          script: 'sqlserver.2016.cmd'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.cmd'
+        SqlServer2019_1:
+          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.1.cmd'
+        SqlServer2019_2:
+          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.2.cmd'
+        SqlServer2019_3:
+          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.3.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)1'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)1'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
+#        SqlServer2016:
+#          title: 'SQL Server 2016 (System.Data.SqlClient)1'
+#          config: 'sqlserver.2016'
+#          script: 'sqlserver.2016.cmd'
 
     steps:
     - checkout: none
@@ -489,6 +523,11 @@ stages:
         testRunTitle: 'Windows / NET46 / $(title)'
       displayName: '$(title)'
 
+###########################
+#  Tests: Windows (NETFX) #
+#  Windows 2016           #
+###########################
+
   - job: test_win_netfx46_job_2016
     pool:
       vmImage: 'vs2017-win2016'
@@ -499,22 +538,39 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
-        SqlServer2016:
-          title: 'SQL Server 2016 (System.Data.SqlClient)'
-          config: 'sqlserver.2016'
-          script: 'sqlserver.2016.cmd'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.cmd'
+        SqlServer2019_1:
+          title: 'SQL Server 2019.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.1.cmd'
+        SqlServer2019_2:
+          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.2.cmd'
+        SqlServer2019_3:
+          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
+          config: 'sqlserver.2019'
+          script: 'sqlserver.2019.3.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
+#        SqlServer2016:
+#          title: 'SQL Server 2016 (System.Data.SqlClient)'
+#          config: 'sqlserver.2016'
+#          script: 'sqlserver.2016.cmd'
+#
 
     steps:
     - checkout: none
