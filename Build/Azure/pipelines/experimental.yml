@@ -130,18 +130,10 @@ stages:
           title: 'SQL Server 2019.1 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.1.sh'
-        SqlServer2019_2:
-          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.2.sh'
         SqlServer2019_3:
           title: 'SQL Server 2019.3 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.3.sh'
-        SqlServer2019_4:
-          title: 'SQL Server 2019.4 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.4.sh'
         SqlServer2019_5:
           title: 'SQL Server 2019.5 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
@@ -238,8 +230,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -455,14 +447,6 @@ stages:
           title: 'SQL Server 2019.1 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
           script: 'sqlserver.2019.1.cmd'
-        SqlServer2019_2:
-          title: 'SQL Server 2019.2 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.2.cmd'
-        SqlServer2019_3:
-          title: 'SQL Server 2019.3 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.3.cmd'
 #        SqlServer2017_MS:
 #          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
 #          config: 'sqlserver.2017.ms'
@@ -533,8 +517,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
