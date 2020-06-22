@@ -126,10 +126,14 @@ stages:
 
     strategy:
       matrix:
+        SqlServer2017:
+          title: 'SQL Server 2017 (System.Data.SqlClient)'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.sh'
         SqlServer2019:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
-          script: 'sqlserver.2019.5.sh'
+          script: 'sqlserver.2019.sh'
 #        SqlServer2019:
 #          title: 'SQL Server 2019 (System.Data.SqlClient)'
 #          config: 'sqlserver.2019'
