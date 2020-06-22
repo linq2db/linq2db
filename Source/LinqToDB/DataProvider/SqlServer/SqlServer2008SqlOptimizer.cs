@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			statement = CorrectEmptyRoot(statement);
 			statement = SeparateDistinctFromPagination(statement);
-			if (statement.IsUpdate()) statement = WrapRootTakeSkipOrderBy(statement);
+			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
 
 			return statement;

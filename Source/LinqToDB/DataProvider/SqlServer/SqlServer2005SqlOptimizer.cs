@@ -16,9 +16,10 @@
 			statement = CorrectEmptyRoot(statement);
 			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement);
-			if (statement.IsUpdate()) statement = WrapRootTakeSkipOrderBy(statement);
+			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
-			statement = QueryHelper.OptimizeSubqueries(statement);
+			if (statement.QueryType == QueryType.Select)
+				statement = QueryHelper.OptimizeSubqueries(statement); // OptimizeSubqueries can break update queries
 
 			return statement;
 		}
