@@ -2,7 +2,7 @@
 	"NET46.Azure": {
 		"Providers": [
 			// SQL Server 2019 + generic sqlserver tests + northwind db tests
-			"SqlServer.2017",
+			"SqlServer.2019",
 			//"Northwind", FTS not awailable in default images, need to use custom one
 			"SqlServer"
 		],
@@ -11,7 +11,7 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"
 			},
-			"SqlServer.2017": {
+			"SqlServer.2019": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=localhost;Database=TestData2019;User Id=sa;Password=Password12!;"
 			}

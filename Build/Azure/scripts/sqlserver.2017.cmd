@@ -14,7 +14,3 @@ echo "create TestData"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 echo "create TestData2017"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2017;"
-echo "copy Northwind"
-docker cp scripts/northwind.sql mssql:northwind.sql
-echo "create Northwind"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -i northwind.sql
