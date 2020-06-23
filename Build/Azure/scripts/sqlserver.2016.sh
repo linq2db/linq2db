@@ -13,6 +13,7 @@ while [ $is_up -ne 0 ] ; do
 done
 echo "SQL Server is operational"
 
+docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'SELECT @@Version'
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData2017;'
 docker cp scripts/northwind.sql mssql:/northwind.sql

@@ -121,8 +121,8 @@ stages:
       vmImage: 'ubuntu-18.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: ne(variables['Build.SourceBranchName'], 'release')
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -130,10 +130,10 @@ stages:
           title: 'SQL Server 2017 (System.Data.SqlClient)'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.sh'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.sh'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.2019'
+#          script: 'sqlserver.2019.sh'
 #        SqlServer2019:
 #          title: 'SQL Server 2019 (System.Data.SqlClient)'
 #          config: 'sqlserver.2019'
@@ -430,15 +430,51 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.cmd'
+        SqlServer2005_1:
+          title: 'SQL Server 2005.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2005'
+          script: 'sqlserver.2005.1.cmd'
+        SqlServer2005_2:
+          title: 'SQL Server 2005.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2005'
+          script: 'sqlserver.2005.2.cmd'
+        SqlServer2012_1:
+          title: 'SQL Server 2012.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2012'
+          script: 'sqlserver.2012.1.cmd'
+        SqlServer2012_2:
+          title: 'SQL Server 2012.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2012'
+          script: 'sqlserver.2012.2.cmd'
+        SqlServer2014_1:
+          title: 'SQL Server 2014.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.1.cmd'
+        SqlServer2014_2:
+          title: 'SQL Server 2014.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.2.cmd'
+        SqlServer2014_3:
+          title: 'SQL Server 2014.3 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.3.cmd'
+        SqlServer2016_1:
+          title: 'SQL Server 2016.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.1.cmd'
+        SqlServer2016_2:
+          title: 'SQL Server 2016.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.2.cmd'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.2019'
+#          script: 'sqlserver.2019.cmd'
 #        SqlServer2017_MS:
 #          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)1'
 #          config: 'sqlserver.2017.ms'
@@ -509,15 +545,51 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.2019'
-          script: 'sqlserver.2019.cmd'
+        SqlServer2005_1:
+          title: 'SQL Server 2005.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2005'
+          script: 'sqlserver.2005.1.cmd'
+        SqlServer2005_2:
+          title: 'SQL Server 2005.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2005'
+          script: 'sqlserver.2005.2.cmd'
+        SqlServer2012_1:
+          title: 'SQL Server 2012.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2012'
+          script: 'sqlserver.2012.1.cmd'
+        SqlServer2012_2:
+          title: 'SQL Server 2012.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2012'
+          script: 'sqlserver.2012.2.cmd'
+        SqlServer2014_1:
+          title: 'SQL Server 2014.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.1.cmd'
+        SqlServer2014_2:
+          title: 'SQL Server 2014.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.2.cmd'
+        SqlServer2014_3:
+          title: 'SQL Server 2014.3 (System.Data.SqlClient)'
+          config: 'sqlserver.2014'
+          script: 'sqlserver.2014.3.cmd'
+        SqlServer2016_1:
+          title: 'SQL Server 2016.1 (System.Data.SqlClient)'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.1.cmd'
+        SqlServer2016_2:
+          title: 'SQL Server 2016.2 (System.Data.SqlClient)'
+          config: 'sqlserver.2016'
+          script: 'sqlserver.2016.2.cmd'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.2019'
+#          script: 'sqlserver.2019.cmd'
 #        SqlServer2017_MS:
 #          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
 #          config: 'sqlserver.2017.ms'

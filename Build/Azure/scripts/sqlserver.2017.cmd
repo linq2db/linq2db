@@ -9,6 +9,7 @@ docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
 if %errorlevel% NEQ 0 goto repeat
 echo "SQL Server is operational"
 
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 echo "create TestData"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 echo "create TestData2017"
