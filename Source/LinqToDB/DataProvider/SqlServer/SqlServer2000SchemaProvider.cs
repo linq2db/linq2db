@@ -13,6 +13,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
+		protected override void InitProvider(DataConnection dataConnection)
+		{
+			IsAzure            = false;
+			CompatibilityLevel = dataConnection.Execute<int>("SELECT cmptlevel FROM master.dbo.sysdatabases WHERE name = db_name()");
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"
@@ -99,6 +105,5 @@ namespace LinqToDB.DataProvider.SqlServer
 					Ordinal")
 				.ToList();
 		}
-
 	}
 }
