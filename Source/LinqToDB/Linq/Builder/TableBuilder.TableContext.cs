@@ -311,15 +311,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Builder.DataContext is IEntityServices)
 				{
-//					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
-//
-//					expr =
-//						Expression.Convert(
-//							Expression.Call(
-//								cex,
-//								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
-//								expr),
-//							expr.Type);
 					expr =
 						Expression.Convert(
 							Expression.Call(
