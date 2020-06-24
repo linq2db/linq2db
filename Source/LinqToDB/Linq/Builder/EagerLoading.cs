@@ -920,7 +920,7 @@ namespace LinqToDB.Linq.Builder
 					if (IsEnumerableType(ma.Type, mappingSchema))
 						return true;
 
-					var root = ma.GetRootObject(mappingSchema);
+					var root = InternalExtensions.GetRootObject(ma, mappingSchema);
 					if (root.NodeType == ExpressionType.Parameter && !ignore.Contains(root))
 					{
 						dependencies.Add(e);
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Linq.Builder
 								GetEnumerableElementType(ma.Type, mappingSchema) ==
 								GetEnumerableElementType(query.Type, mappingSchema))
 							{
-								var root = ma.GetRootObject(mappingSchema);
+								var root = InternalExtensions.GetRootObject(ma, mappingSchema);
 								if (root.NodeType == ExpressionType.Parameter &&
 									!allowed.Contains((ParameterExpression)root))
 								{
@@ -1068,7 +1068,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			//TODO: we have to create sophisticated grouping handling
-			var root = queryableDetail.GetRootObject(mappingSchema);
+			var root = builder.GetRootObject(queryableDetail);
 			if (typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 				return null;
 

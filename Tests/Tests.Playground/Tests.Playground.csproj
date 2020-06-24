@@ -9,6 +9,10 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Linq\ParameterTests.cs" Link="ParameterTests.cs" />
+		<Compile Include="..\Linq\Linq\StringFunctionsTests.cs" Link="StringFunctionsTests.cs" />
+		<Compile Include="..\Linq\Linq\ValueConversionTests.cs" Link="ValueConversionTests.cs" />
+		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 	</ItemGroup>
 
 </Project>

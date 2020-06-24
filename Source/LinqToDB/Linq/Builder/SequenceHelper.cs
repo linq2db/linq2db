@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression != null)
 			{
-				var root = expression.GetRootObject(current.Builder.MappingSchema);
+				var root = current.Builder.GetRootObject(expression);
 				if (root is ContextRefExpression refExpression)
 				{
 					if (refExpression.BuildContext == current)

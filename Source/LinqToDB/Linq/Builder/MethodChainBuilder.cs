@@ -32,6 +32,8 @@ namespace LinqToDB.Linq.Builder
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
+			root = builder.ConvertExpressionTree(root);
+
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 
 			var finalFunction = functions.First();

@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (IsSubQuery(context, ce))
 							{
-								if (!IsMultipleQuery(ce))
+								if (!IsMultipleQuery(ce, context.Builder.MappingSchema))
 								{
 									var info = GetSubQueryContext(context, ce);
 									if (alias != null)
@@ -322,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 
 						if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 						{
-							if (IsMultipleQuery(ce))
+							if (IsMultipleQuery(ce, MappingSchema))
 								return new TransformInfo(BuildMultipleQuery(context, ce, enforceServerSide));
 
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide, alias));
@@ -493,9 +493,10 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static bool IsMultipleQuery(MethodCallExpression ce)
+		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
-			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
+			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray 
+			       && !ce.IsAggregate(mappingSchema);
 		}
 
 		class SubQueryContextInfo
@@ -850,7 +851,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
-							var root = e.GetRootObject(mappingSchema);
+							var root = context.Builder.GetRootObject(e);
 
 							if (root != null &&
 								root.NodeType == ExpressionType.Parameter &&
@@ -926,7 +927,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var root = e.GetRootObject(MappingSchema);
+				var root = context.Builder.GetRootObject(e);
 
 				if (root != null &&
 					root.NodeType == ExpressionType.Parameter &&

@@ -410,7 +410,7 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items)
 		{
 			var ext        = extract.Body.Unwrap();
-			var rootObject = ext.GetRootObject(builder.MappingSchema);
+			var rootObject = builder.GetRootObject(ext);
 
 			ISqlExpression columnSql;
 			MemberInfo     member;

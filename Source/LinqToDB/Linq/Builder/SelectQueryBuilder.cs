@@ -19,6 +19,11 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return true;
+		}
+
 		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
 			ParameterExpression? param)
 		{

@@ -1841,6 +1841,15 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.IsTruePredicate:
+					{
+						var reduced = ((SqlPredicate.IsTrue)predicate).Reduce();
+						
+						BuildPredicate(GetPrecedence(predicate), GetPrecedence(reduced), reduced);
+					}
+
+					break;
+
 				case QueryElementType.IsNullPredicate:
 					{
 						BuildExpression(GetPrecedence((SqlPredicate.IsNull)predicate), ((SqlPredicate.IsNull)predicate).Expr1);

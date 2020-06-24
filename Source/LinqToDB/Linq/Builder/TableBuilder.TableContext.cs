@@ -752,7 +752,7 @@ namespace LinqToDB.Linq.Builder
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
 				if (descriptor?.IsList == true)
 				{
-					if (expression.GetRootObject(Builder.MappingSchema) is ContextRefExpression)
+					if (Builder.GetRootObject(expression) is ContextRefExpression)
 						return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
 
 					return Builder.BuildMultipleQuery(this, expression, false);
@@ -1167,7 +1167,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var tableLevel  = FindContextExpression(expression, level, true, true)!;
 							
-							if (tableLevel.Descriptor!.IsList)
+							if (tableLevel.Descriptor?.IsList == true)
 							{
 								Expression ma;
 								switch (buildInfo.Expression)
@@ -1184,7 +1184,7 @@ namespace LinqToDB.Linq.Builder
 										}
 
 									default:
-										ma = buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+										ma = Builder.GetRootObject(buildInfo.Expression);
 										break;
 
 								}

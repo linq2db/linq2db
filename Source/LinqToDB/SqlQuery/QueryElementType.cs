@@ -18,6 +18,7 @@
 		LikePredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
 		FuncLikePredicate,

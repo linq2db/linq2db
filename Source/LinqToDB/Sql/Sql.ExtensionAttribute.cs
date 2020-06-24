@@ -410,12 +410,17 @@ namespace LinqToDB
 			{
 				MemberInfo memberInfo;
 
-				if (expression is MemberExpression me)
-					memberInfo = me.Member;
-				else if (expression is MethodCallExpression mc)
-					memberInfo = mc.Method;
-				else
-					return Array<ExtensionAttribute>.Empty;
+				switch (expression.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						memberInfo = ((MemberExpression) expression).Member;
+						break;
+					case ExpressionType.Call:
+						memberInfo = ((MethodCallExpression) expression).Method;
+						break;
+					default:
+						return Array<ExtensionAttribute>.Empty;
+				}
 
 				var attributes =
 						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType, memberInfo,
@@ -440,7 +445,7 @@ namespace LinqToDB
 				{
 					var attributes = GetExtensionAttributes(current, mapping);
 
-					if (!attributes.Any())
+					if (attributes.Length == 0)
 						break;
 
 					switch (current.NodeType)
@@ -779,8 +784,15 @@ namespace LinqToDB
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequence found for expression '{expression}'");
 
-				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension!.ChainPrecedence).ToArray();
-				var main    = ordered.FirstOrDefault();
+				var ordered = chain
+					.Select((c, i) => Tuple.Create(c, i))
+					.OrderByDescending(t => t.Item1.Extension?.ChainPrecedence ?? int.MinValue)
+					.ThenByDescending(t => t.Item2)
+					.Select(t => t.Item1)
+					.ToArray();
+
+				var main    = ordered.FirstOrDefault(c => c.Extension != null);
+
 				if (main == null)
 				{
 					var replaced = chain.Where(c => c.Expression != null).ToArray();
@@ -793,30 +805,60 @@ namespace LinqToDB
 				var mainExtension = main.Extension!;
 
 				// suggesting type
-				var type = chain
-					.Where(c => c.Extension != null)
-					.Select(c => c.Extension!.SystemType)
+				var type = ordered
+					.Select(c => c.Extension?.SystemType)
 					.FirstOrDefault(t => t != null && dataContext.MappingSchema.IsScalarType(t));
 
 				if (type == null)
-					type = chain
-						.Where(c => c.Expression != null)
-						.Select(c => c.Expression!.SystemType)
+					type = ordered
+						.Select(c => c.Expression?.SystemType)
 						.FirstOrDefault(t => t != null && dataContext.MappingSchema.IsScalarType(t));
 
 				mainExtension.SystemType = type ?? expression.Type;
 
 				// calculating that extension is aggregate
-				var isAggregate = ordered.Any(c => c.Extension!.IsAggregate);
-				var isPure      = ordered.All(c => c.Extension!.IsPure);
+				var isAggregate = ordered.Any(c => c.Extension?.IsAggregate == true);
+				var isPure      = ordered.All(c => c.Extension?.IsPure != false);
 
-				// add parameters in reverse order
-				for (int i = chain.Count - 1; i >= 0; i--)
+				// calculating replacements
+				var replacementMap = ordered
+					.Where(c => c.Extension != mainExtension)
+					.Select((c, i) => Tuple.Create(c, i))
+					.GroupBy(e => e.Item1.Name ?? "")
+					.Select(g => new
+					{
+						Name = g.Key,
+						UnderName = g
+							.OrderByDescending(e => e.Item1.Extension?.ChainPrecedence ?? int.MinValue)
+							.ThenBy(e => e.Item2).Select(e => e.Item1).ToArray()
+					})
+					.ToArray();
+
+				foreach (var c in replacementMap)
 				{
-					var c = chain[i];
-					if (c.Extension == mainExtension)
-						continue;
-					mainExtension.AddParameter(c);
+					var first = c.UnderName[0];
+					if (c.Name == "" || first.Extension == null)
+					{
+						for (var i = 0; i < c.UnderName.Length; i++)
+						{
+							var e = c.UnderName[i];
+							mainExtension.AddParameter(e);
+						}
+					}	
+					else
+					{
+						var firstPrecedence = first.Extension.ChainPrecedence;
+						mainExtension.AddParameter(first);
+						// append all replaced under superior
+						for (int i = 1; i < c.UnderName.Length; i++)
+						{
+							var item = c.UnderName[i];
+							if (firstPrecedence > (item.Extension?.ChainPrecedence ?? int.MinValue))
+								first.Extension.AddParameter(item);
+							else
+								mainExtension.AddParameter(item);
+						}
+					}
 				}
 
 				//TODO: Precedence calculation

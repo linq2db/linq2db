@@ -46,7 +46,10 @@ namespace LinqToDB
 	[PublicAPI]
 	public static class AnalyticFunctions
 	{
-		const string FunctionToken  = "function";
+		/// <summary>
+		/// Token name for analytic function. Used for resolving method chain.
+		/// </summary>
+		public const string FunctionToken  = "function";
 
 		#region Call Builders
 
@@ -405,6 +408,17 @@ namespace LinqToDB
 
 		#endregion API Interfaces
 
+		#region Extensions
+
+		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsAggregate = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func, 
+			[ExprParameter] bool filter)
+		{
+			throw new LinqException($"'{nameof(Filter)}' is server-side method.");
+		}
+
+		#endregion
+
 		#region Analytic functions
 
 		#region Average
@@ -493,6 +507,22 @@ namespace LinqToDB
 		public static int CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			throw new LinqException($"'{nameof(CountExt)}' is server-side method.");
+		}
+
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", IsAggregate = true, ChainPrecedence = 0)]
+		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr),
+					currentSource.Expression, Expression.Quote(expr))
+				);
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
