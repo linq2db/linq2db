@@ -690,10 +690,6 @@ CREATE TABLE Issue1144
 	CONSTRAINT PK_Issue1144 PRIMARY KEY CLUSTERED (id ASC)
 )
 GO
--- EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
--- EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
-
--- GO
 
 DROP Procedure Issue1897
 GO
