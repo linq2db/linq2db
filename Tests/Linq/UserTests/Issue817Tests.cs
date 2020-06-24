@@ -36,7 +36,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer2008Minus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllSybase
 			},
 			SkipForNonLinqService = true,
