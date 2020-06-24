@@ -246,6 +246,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit1(((SqlDeleteStatement)element).With);
 						Visit1(((SqlDeleteStatement)element).Table);
+						Visit1(((SqlDeleteStatement)element).Output);
 						Visit1(((SqlDeleteStatement)element).Top);
 						Visit1(((SqlDeleteStatement)element).SelectQuery);
 						break;
@@ -795,6 +796,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit2(((SqlDeleteStatement)element).With);
 						Visit2(((SqlDeleteStatement)element).Table);
+						Visit2(((SqlDeleteStatement)element).Output);
 						Visit2(((SqlDeleteStatement)element).Top);
 						Visit2(((SqlDeleteStatement)element).SelectQuery);
 						break;

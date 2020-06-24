@@ -1,0 +1,20 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			// SQL Server 2008 + generic sqlserver tests + northwind db tests
+			"SqlServer.2008",
+			//"Northwind", FTS not awailable in default images, need to use custom one
+			"SqlServer"
+		],
+		"Connections": {
+			"SqlServer": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"
+			},
+			"SqlServer.2008": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost;Database=TestData2008;User Id=sa;Password=Password12!;"
+			}
+		}
+	}
+}

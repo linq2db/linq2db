@@ -537,6 +537,7 @@ namespace Tests.Data
 			}
 
 			var tvpSupported = version >= SqlServerVersion.v2008;
+			var hierarchyidSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NET46
@@ -565,11 +566,14 @@ namespace Tests.Data
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)));
 				Assert.True    (trace.Contains("DECLARE @p SmallDateTime "));
 
-				//// assert UDT type name
-				var hid = SqlHierarchyId.Parse("/1/3/");
-				Assert.AreEqual(hid, db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
-				Assert.True    (trace.Contains("DECLARE @p hierarchyid -- Udt"));
-				Assert.AreEqual(hid, db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+				if (hierarchyidSupported)
+				{
+					//// assert UDT type name
+					var hid = SqlHierarchyId.Parse("/1/3/");
+					Assert.AreEqual(hid, db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+					Assert.True(trace.Contains("DECLARE @p hierarchyid -- Udt"));
+					Assert.AreEqual(hid, db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+				}
 
 				if (tvpSupported)
 				{

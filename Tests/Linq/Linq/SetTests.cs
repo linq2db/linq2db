@@ -6,13 +6,14 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB;
 	using Model;
 
 	[TestFixture]
 	public class SetTests : TestBase
 	{
 		[Test]
-		public void Except1([DataSources] string context)
+		public void Except1([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -21,7 +22,7 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Except2([DataSources] string context)
+		public void Except2([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			var ids = new[] { 1, 2 };
 
@@ -32,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Intersect([DataSources] string context)
+		public void Intersect([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

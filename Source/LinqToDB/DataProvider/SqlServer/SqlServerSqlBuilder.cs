@@ -87,79 +87,84 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 				}
 			}
-			else 
+			else
 			{
 				var output = statement.GetOutputClause();
-				if (output != null && output.HasOutputItems)
+				BuildOutputSubclause(output);
+			}
+		}
+
+		private void BuildOutputSubclause(SqlOutputClause? output)
+		{
+			if (output != null && output.HasOutputItems)
+			{
+				AppendIndent()
+					.AppendLine("OUTPUT");
+
+				if (output.InsertedTable != null)
+					output.InsertedTable.PhysicalName = "INSERTED";
+
+				if (output.DeletedTable != null)
+					output.DeletedTable.PhysicalName = "DELETED";
+
+				++Indent;
+
+				bool first = true;
+				foreach (var oi in output.OutputItems)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+
+					BuildExpression(oi.Expression!);
+				}
+
+				if (output.OutputItems.Count > 0)
+				{
+					StringBuilder
+						.AppendLine();
+				}
+
+				--Indent;
+
+				if (output.OutputQuery != null)
+				{
+					BuildColumns(output.OutputQuery);
+				}
+
+				if (output.OutputTable != null)
 				{
 					AppendIndent()
-						.AppendLine("OUTPUT");
+						.Append("INTO ")
+						.Append(GetTablePhysicalName(output.OutputTable))
+						.AppendLine();
 
-					if (output.InsertedTable != null)
-						output.InsertedTable.PhysicalName = "INSERTED";
-
-					if (output.DeletedTable != null)
-						output.DeletedTable.PhysicalName = "DELETED";
+					AppendIndent()
+						.AppendLine("(");
 
 					++Indent;
 
-					bool first = true;
+					var firstColumn = true;
 					foreach (var oi in output.OutputItems)
 					{
-						if (!first)
+						if (!firstColumn)
 							StringBuilder.Append(',').AppendLine();
-						first = false;
+						firstColumn = false;
 
 						AppendIndent();
 
-						BuildExpression(oi.Expression!);
+						BuildExpression(oi.Column, false, true);
 					}
 
-					if (output.OutputItems.Count > 0)
-					{
-						StringBuilder
-							.AppendLine();
-					}
+					StringBuilder
+						.AppendLine();
 
 					--Indent;
 
-					if (output.OutputQuery != null)
-					{
-						BuildColumns(output.OutputQuery);
-					}
-
-					if (output.OutputTable != null)
-					{
-						AppendIndent()
-							.Append("INTO ")
-							.Append(GetTablePhysicalName(output.OutputTable))
-							.AppendLine();
-
-						AppendIndent()
-							.AppendLine("(");
-
-						++Indent;
-
-						var firstColumn = true;
-						foreach (var oi in output.OutputItems)
-						{
-							if (!firstColumn)
-								StringBuilder.Append(',').AppendLine();
-							firstColumn = false;
-
-							AppendIndent();
-
-							BuildExpression(oi.Column, false, true);
-						}
-
-						StringBuilder
-							.AppendLine();
-
-						--Indent;
-
-						AppendIndent()
-							.AppendLine(")");
-					}
+					AppendIndent()
+						.AppendLine(")");
 				}
 			}
 		}
@@ -214,6 +219,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(" ");
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
+
+			BuildOutputSubclause(deleteStatement);
+		}
+
+		protected virtual void BuildOutputSubclause(SqlDeleteStatement deleteStatement)
+		{
+			var output = deleteStatement.GetOutputClause();
+			BuildOutputSubclause(output);
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)

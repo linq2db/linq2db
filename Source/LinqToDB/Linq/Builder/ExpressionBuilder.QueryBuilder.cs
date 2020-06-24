@@ -495,8 +495,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
-			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray 
-			       && !ce.IsAggregate(mappingSchema);
+			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray && !ce.IsAggregate(mappingSchema);
 		}
 
 		class SubQueryContextInfo

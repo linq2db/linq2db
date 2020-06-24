@@ -20,6 +20,11 @@ namespace LinqToDB.SqlQuery
 			Type = dataType;
 		}
 
+		public SqlDataType(DataType dataType)
+		{
+			Type = GetDataType(dataType).Type.WithDataType(dataType);
+		}
+
 		public SqlDataType(DataType dataType, int? length)
 		{
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);

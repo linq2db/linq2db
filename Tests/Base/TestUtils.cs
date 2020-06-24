@@ -103,7 +103,6 @@ namespace Tests
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
@@ -113,6 +112,8 @@ namespace Tests
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
+				case ProviderName.SqlServer2000:
+					return db.FromSql<string>($"SELECT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = {nameof(LinqDataTypes)}").First();
 			}
 
 			return NO_SCHEMA_NAME;

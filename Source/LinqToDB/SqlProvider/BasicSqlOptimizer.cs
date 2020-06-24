@@ -1937,14 +1937,28 @@ namespace LinqToDB.SqlProvider
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
 		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
 		{
+			return ReplaceTakeSkipWithRowNumber(statement, query =>
+			{
+				if (onlySubqueries && query.ParentSelect == null)
+					return false;
+				return true;
+			});
+		}
+
+		/// <summary>
+		/// Replaces pagination by Window function ROW_NUMBER().
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="predicate">Indicates when the transformation is needed</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate)
+		{
 			return QueryHelper.WrapQuery(statement,
-				query =>
+				query => 
 				{
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
-					if (onlySubqueries && query.ParentSelect == null)
-						return 0;
-					return 1;
+					return predicate(query) ? 1 : 0;
 				}
 				, queries =>
 				{

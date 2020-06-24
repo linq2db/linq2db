@@ -8,6 +8,7 @@ using System.Windows.Forms;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1420,8 +1421,6 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12)] string context)
 		{
-			// TODO: eager loading
-			// using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var query =
@@ -1434,12 +1433,15 @@ namespace Tests.Linq
 						Child = c1,
 						Any = children.Any(),
 						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
-						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault(),
+						ChildArray = children.Where(c => c.ParentID >= p.ParentID).Select(c => new object[] {c.ChildID, c.ParentID}).FirstOrDefault(),
+						ChildDictionary1 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<int, int?>{{c.ChildID, c.ParentID}}).FirstOrDefault(),
+						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
 				query = query
-					.Distinct()
-					.OrderBy(_ => _.Parent.ParentID);
+				 	.Distinct()
+				 	.OrderBy(_ => _.Parent.ParentID);
 
 
 				var expectedQuery = 
@@ -1452,17 +1454,31 @@ namespace Tests.Linq
 						Child = c1,
 						Any = children.Any(),
 						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
-						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault(),
+						ChildArray = children.Where(c => c.ParentID >= p.ParentID).Select(c => new object[] {c.ChildID, c.ParentID}).FirstOrDefault(),
+						ChildDictionary1 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<int, int?>{{c.ChildID, c.ParentID}}).FirstOrDefault(),
+						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
 				var actual = query.ToArray();
 
-				var expected = expectedQuery
-					.Distinct()
-					.OrderBy(_ => _.Parent.ParentID)
-					.ToArray();
+				 var expected = expectedQuery
+				 	.Distinct()
+				 	.OrderBy(_ => _.Parent.ParentID)
+				 	.ToArray();
 
-				AreEqual(expected, actual);
+				AreEqualWithComparer(expected, actual, m => !typeof(Dictionary<,>).IsSameOrParentOf(m.MemberInfo.GetMemberType()));
+
+				for (int i = 0; i < actual.Length; i++)
+				{
+					var item = actual[i];
+					if (item.Child1 != null)
+					{
+						Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
+						Assert.That(item.ChildDictionary2["ChildID"],           Is.EqualTo(item.Child1.ChildID));
+						Assert.That(item.ChildDictionary2["ParentID"],          Is.EqualTo(item.Child1.ParentID));
+					}
+				}
 			}
 		}
 		
