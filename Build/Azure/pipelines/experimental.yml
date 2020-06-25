@@ -126,22 +126,16 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'sqlserver.2017.sh'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'sqlserver.2017.sh'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2019'
-          script: 'sqlserver.2019.sh'
-        SqlServer2019_MS:
-          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2019.ms'
-          script: 'sqlserver.2019.sh'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'informix14.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
+        DB2:
+          title: 'DB2 LUW 11.5'
+          config: 'db2'
+          script: 'db2.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -225,8 +219,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -368,8 +362,8 @@ stages:
 #      vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -573,8 +567,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
