@@ -652,13 +652,6 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
-		{
-			Statement     = statement;
-			StringBuilder = sb;
-			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
-		}
-
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string? insertText, bool appendTableName, bool addAlias)
 		{
 			AppendIndent().Append(insertText);
@@ -2184,11 +2177,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected void BuildPredicate(int parentPrecedence, ISqlPredicate predicate)
-		{
-			BuildPredicate(parentPrecedence, GetPrecedence(predicate), predicate);
-		}
-
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)
 		{
 			var wrap = Wrap(precedence, parentPrecedence);
@@ -2737,102 +2725,6 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql, string emptyOrderByValue)
-		{
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery != null && NeedSkip(selectQuery))
-			{
-				SkipAlias = false;
-
-				var aliases  = GetTempAliases(2, "t");
-				var rnaliase = GetTempAliases(1, "rn")[0];
-
-				AppendIndent().Append("SELECT *").AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				AppendIndent().Append("SELECT").AppendLine();
-
-				Indent++;
-				AppendIndent().AppendFormat("{0}.*,", aliases[0]).AppendLine();
-				AppendIndent().Append      ("ROW_NUMBER() OVER");
-
-				if (!selectQuery.OrderBy.IsEmpty && !implementOrderBy)
-					StringBuilder.Append("()");
-				else
-				{
-					StringBuilder.AppendLine();
-					AppendIndent().Append("(").AppendLine();
-
-					Indent++;
-
-					if (selectQuery.OrderBy.IsEmpty)
-					{
-						AppendIndent().Append("ORDER BY").AppendLine();
-
-						if (selectQuery.Select.Columns.Count > 0)
-							BuildAliases(aliases[0], selectQuery.Select.Columns.Take(1).ToList(), null);
-						else
-							AppendIndent().Append(emptyOrderByValue).AppendLine();
-					}
-					else
-						BuildAlternativeOrderBy(true);
-
-					Indent--;
-					AppendIndent().Append(")");
-				}
-
-				StringBuilder.Append(" as ").Append(rnaliase).AppendLine();
-				Indent--;
-
-				AppendIndent().Append("FROM").AppendLine();
-				AppendIndent().Append("(").   AppendLine();
-
-				Indent++;
-				buildSql();
-				Indent--;
-
-				AppendIndent().AppendFormat(") {0}", aliases[0]).AppendLine();
-
-				Indent--;
-
-				AppendIndent().AppendFormat(") {0}", aliases[1]).AppendLine();
-				AppendIndent().Append("WHERE").                  AppendLine();
-
-				Indent++;
-
-				if (NeedTake(selectQuery))
-				{
-					var expr1 = Add(selectQuery.Select.SkipValue!, 1);
-					var expr2 = Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!);
-
-					if (expr1 is SqlValue value1 && expr2 is SqlValue value2 && Equals(value1.Value, value2.Value))
-					{
-						AppendIndent().AppendFormat("{0}.{1} = ", aliases[1], rnaliase);
-						BuildExpression(expr1);
-					}
-					else
-					{
-						AppendIndent().AppendFormat("{0}.{1} BETWEEN ", aliases[1], rnaliase);
-						BuildExpression(expr1);
-						StringBuilder.Append(" AND ");
-						BuildExpression(expr2);
-					}
-				}
-				else
-				{
-					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], rnaliase);
-					BuildExpression(selectQuery.Select.SkipValue!);
-				}
-
-				StringBuilder.AppendLine();
-				Indent--;
-			}
-			else
-				buildSql();
-		}
-
 		protected void AlternativeBuildSql2(Action buildSql)
 		{
 			var selectQuery = Statement.SelectQuery;
@@ -3230,11 +3122,6 @@ namespace LinqToDB.SqlProvider
 			return Add(expr1, expr2, typeof(T));
 		}
 
-		ISqlExpression Add(ISqlExpression expr1, int value)
-		{
-			return Add<int>(expr1, new SqlValue(value));
-		}
-
 		protected virtual bool IsReserved(string word)
 		{
 			return ReservedWords.IsReserved(word);
@@ -3349,11 +3236,6 @@ namespace LinqToDB.SqlProvider
 
 			if (t1 != t2)
 				sb.Append(" -- ").Append(t2);
-		}
-
-		protected virtual void PrintParameterValue(StringBuilder sb, IDbDataParameter parameter)
-		{
-			ValueToSqlConverter.Convert(sb, parameter.Value);
 		}
 
 		public virtual StringBuilder PrintParameters(StringBuilder sb, IEnumerable<IDbDataParameter>? parameters)

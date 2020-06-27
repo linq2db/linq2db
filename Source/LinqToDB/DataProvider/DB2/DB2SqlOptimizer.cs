@@ -14,6 +14,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
+			statement = SeparateDistinctFromPagination(statement);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement);
+			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query), true);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);

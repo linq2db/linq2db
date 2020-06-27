@@ -1918,25 +1918,27 @@ namespace LinqToDB.SqlProvider
 		/// Replaces pagination by Window function ROW_NUMBER().
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool supportsEmptyOrderBy, bool onlySubqueries)
 		{
 			return ReplaceTakeSkipWithRowNumber(statement, query =>
 			{
 				if (onlySubqueries && query.ParentSelect == null)
 					return false;
 				return true;
-			});
+			}, supportsEmptyOrderBy);
 		}
 
 		/// <summary>
 		/// Replaces pagination by Window function ROW_NUMBER().
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="predicate">Indicates when the transformation is needed</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(statement,
 				query => 
@@ -1964,7 +1966,7 @@ namespace LinqToDB.SqlProvider
 					//}
 
 					if (orderByItems == null || orderByItems.Length == 0)
-						orderByItems = new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+						orderByItems = supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
 						orderByItems.Select((oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
@@ -1973,7 +1975,9 @@ namespace LinqToDB.SqlProvider
 
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
-					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
+					var rowNumberExpression = parameters.Length == 0
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, true, true)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
