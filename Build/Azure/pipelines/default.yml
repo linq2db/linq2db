@@ -601,7 +601,7 @@ stages:
 ########################################
 #  Tests: Ubuntu 20.04 (NETCOREAPP2_1) #
 ########################################
-  - job: test_linux_netcoreapp21_job
+  - job: test_ubuntu_20_netcoreapp21_job
     pool:
       vmImage: 'ubuntu-20.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
@@ -740,7 +740,7 @@ stages:
 ########################################
 #  Tests: Ubuntu 16.04 (NETCOREAPP2_1) #
 ########################################
-  - job: test_linux_netcoreapp21_job
+  - job: test_ubuntu_16_netcoreapp21_job
     pool:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
