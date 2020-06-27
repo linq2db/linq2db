@@ -100,10 +100,10 @@ CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 GO
 
 
-DROP TABLE LinqDataTypes
+DROP TABLE linqdatatypes
 GO
 
-CREATE TABLE LinqDataTypes
+CREATE TABLE linqdatatypes
 (
 	id             int,
 	moneyvalue     decimal(10,4),
