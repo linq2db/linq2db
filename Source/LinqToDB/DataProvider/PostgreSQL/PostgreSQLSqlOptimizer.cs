@@ -55,6 +55,9 @@
 								return ex;
 						}
 
+						// Another cast syntax
+						//
+						// rreturn new SqlExpression(func.SystemType, "{0}::{1}", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 
 					case "CharIndex" :

@@ -1,10 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class PostgreSQLExtensionsTests : TestBase
@@ -12,9 +13,17 @@ namespace Tests.Playground
 		[Table]
 		class SampleClass
 		{
-			[Column] public int    Id  { get; set; }
-			[Column] public string Str { get; set; } = null!;
-			[Column(DbType = "text[]")] public string[] StrArray { get; set; } = null!;
+			[Column] public int     Id           { get; set; }
+			[Column] public string  StrValue     { get; set; } = null!;
+			[Column] public int     IntValue     { get; set; }
+			[Column] public long    LongValue    { get; set; }
+			[Column] public double  DoubleValue  { get; set; }
+			[Column] public decimal DecimalValue { get; set; }
+			[Column(DbType = "text[]")]             public string[]  StrArray     { get; set; } = null!;
+			[Column(DbType = "int[]")]              public int[]     IntArray     { get; set; } = null!;
+			[Column(DbType = "bigint[]")]           public long[]    LongArray    { get; set; } = null!;
+			[Column(DbType = "double precision[]")] public double[]  DoubleArray  { get; set; } = null!;
+			[Column(DbType = "numeric[]")]          public decimal[] DecimalArray { get; set; } = null!;
 
 			public static SampleClass[] Seed()
 			{
@@ -22,8 +31,16 @@ namespace Tests.Playground
 					.Select(i => new SampleClass
 					{
 						Id = i,
-						Str = "S" + i,
-						StrArray = Enumerable.Range(i, i).Select(e => $"V{e:00}").ToArray()
+						StrValue = "S" + i,
+						IntValue = i,
+						LongValue = i,
+						DoubleValue = i,
+						DecimalValue = i,
+						StrArray = Enumerable.Range(i, i).Select(e => $"V{e:00}").ToArray(),
+						IntArray = Enumerable.Range(i, i).ToArray(),
+						LongArray = Enumerable.Range(i, i).Select(i => (long)i).ToArray(),
+						DoubleArray = Enumerable.Range(i, i).Select(i => (double)i).ToArray(),
+						DecimalArray = Enumerable.Range(i, i).Select(i => (decimal)i).ToArray(),
 					})
 					.ToArray();
 			}
@@ -209,20 +226,26 @@ namespace Tests.Playground
 						Contains = Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray),
 						ContainedBy = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
 						Overlaps = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
+
 						//TODO: Other types
-						ArrayAppendStr = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.Str),
+						ArrayAppendStr = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
+						ArrayAppendInt = Sql.Ext.PostgreSQL().ArrayAppend(t1.IntArray, t2.Id),
+						ArrayAppendLong = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, t2.LongValue),
+						ArrayAppendLong2 = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, Sql.ConvertTo<long>.From(t2.IntValue + 2)),
+						ArrayAppendDouble = Sql.Ext.PostgreSQL().ArrayAppend(t1.DoubleArray, t2.DoubleValue),
+						ArrayAppendDecimal = Sql.Ext.PostgreSQL().ArrayAppend(t1.DecimalArray, t2.DecimalValue),
+
 						ArrayCat = Sql.Ext.PostgreSQL().ArrayCat(t1.StrArray, t2.StrArray),
 						ArrayNDims = Sql.Ext.PostgreSQL().ArrayNDims(t1.StrArray),
 						ArrayDims = Sql.Ext.PostgreSQL().ArrayDims(t1.StrArray),
 						Length = Sql.Ext.PostgreSQL().ArrayLength(t1.StrArray, 1),
 						ArrayLower = Sql.Ext.PostgreSQL().ArrayLower(t1.StrArray, 1),
-						//TODO:
-						// ArrayPosition1 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.Str),
-						// ArrayPosition2 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.Str, 1),
-						// ArrayPositions = Sql.Ext.PostgreSQL().ArrayPositions(t1.StrArray, t2.Str),
-						// ArrayPrepend = Sql.Ext.PostgreSQL().ArrayPrepend(t2.Str, t1.StrArray),
-						// ArrayRemove = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.Str),
-						// ArrayReplace = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.Str, "NN"),
+						ArrayPosition1 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue),
+						ArrayPosition2 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue, 1),
+						ArrayPositions = Sql.Ext.PostgreSQL().ArrayPositions(t1.StrArray, t2.StrValue),
+						ArrayPrepend = Sql.Ext.PostgreSQL().ArrayPrepend(t2.StrValue, t1.StrArray),
+						ArrayRemove = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.StrValue),
+						ArrayReplace = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.StrValue, "NN"),
 						ArrayToString1 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ","),
 						ArrayToString2 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ",", "*"),
 						ArrayUpper = Sql.Ext.PostgreSQL().ArrayUpper(t1.StrArray, 1),
@@ -233,7 +256,64 @@ namespace Tests.Playground
 
 				var result = query.ToArray();
 			}
+		}
 
+		[Test]
+		public void GenerateSeries([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var series1 = db.GenerateSeries(1, 10).ToArray();
+				var series2 = db.GenerateSeries(1, 10, 2).ToArray();
+				
+				var dateSeries = db.GenerateSeries(DateTime.Now.AddDays(-10), DateTime.Now, TimeSpan.FromHours(5)).ToArray();
+
+				var allInQuery = from t1 in db.GenerateSeries(1, 10)
+					from t2 in db.GenerateSeries(1, 10, 2).LeftJoin(t2 => t2 == t1)
+					from d in db.GenerateSeries(Sql.CurrentTimestamp - TimeSpan.FromDays(10), Sql.CurrentTimestamp,
+						TimeSpan.FromHours(1))
+					select new
+					{
+						t1,
+						t2,
+						Date = d
+					};
+
+				var allResult = allInQuery.ToArray();
+			}
+		}
+
+		[Test]
+		public void SystemFunctions([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var allResult = db.Select(() => new
+				{
+					Version = Sql.Ext.PostgreSQL().Version(db),
+					CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
+					CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
+					CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
+					CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
+					//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
+					CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
+					SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
+				});
+
+				var separateResult = new
+				{
+					Version = Sql.Ext.PostgreSQL().Version(db),
+					CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
+					CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
+					CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
+					CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
+					//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
+					CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
+					SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
+				};
+
+				Assert.That(allResult, Is.EqualTo(separateResult));
+			}
 		}
 
 

@@ -532,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, e =>
+					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, (e, descriptor) =>
 					{
 						var ex = e.Unwrap();
 
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 							var p = Element.Parent;
 							var ctx = new ExpressionContext(Parent, Element, l);
 
-							var res = Builder.ConvertToSql(ctx, l.Body, true);
+							var res = Builder.ConvertToSql(ctx, l.Body, true, descriptor);
 
 							Builder.ReplaceParent(ctx, p);
 							return res;
@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 								.FirstOrDefault();
 						}
 
-						return Builder.ConvertToExtensionSql(Element, ex);
+						return Builder.ConvertToExtensionSql(Element, ex, descriptor);
 					});
 
 					if (expr != null)

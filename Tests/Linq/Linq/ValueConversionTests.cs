@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -111,6 +112,10 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public char BoolValue { get; set; }
 		}
+
+		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
+		static bool AnyEquality<T>([ExprParameter] T value1, [ExprParameter] T value2)
+			=> throw new NotImplementedException();
 
 		private static MappingSchema CreateMappingSchema()
 		{
@@ -234,6 +239,27 @@ namespace Tests.Linq
 						t.Value1,
 						t.Value2,
 					};
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void ExtensionTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var testedList = testData[0].Value2;
+
+				var query = from t in table
+					where AnyEquality(t.Value2, testedList)
+					select t;
 
 				var selectResult = query.ToArray();
 				

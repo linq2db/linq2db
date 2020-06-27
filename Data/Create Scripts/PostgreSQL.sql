@@ -303,7 +303,14 @@ CREATE TABLE "AllTypes"
 -- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
-	"varBitDataType"      varbit                   NULL
+	"varBitDataType"      varbit                   NULL,
+
+	StrArray             text[]                     NULL,
+	IntArray    		 int[][]                   NULL,
+	Int2dArray  		 bigint[]                  NULL,
+	LongArray   		 double precision[]        NULL,
+	DoubleArray 		 numeric[]       		   NULL,
+	DecimalArray         decimal[]				   NULL
 )
 GO
 

@@ -169,7 +169,8 @@ namespace LinqToDB
 
 			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, bool isAggregate, 
 				bool isPure,
-				bool? canBeNull, params SqlExtensionParam[] parameters)
+				bool? canBeNull, 
+				params SqlExtensionParam[] parameters)
 			{
 				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -283,9 +284,9 @@ namespace LinqToDB
 
 				public MethodInfo?  Method { get; }
 
-				public ISqlExpression ConvertExpression(Expression expr)
+				public ISqlExpression ConvertExpression(Expression expr, ColumnDescriptor? columnDescriptor)
 				{
-					return _convert.Convert(expr);
+					return _convert.Convert(expr, columnDescriptor);
 				}
 
 				#region ISqExtensionBuilder Members
@@ -331,7 +332,7 @@ namespace LinqToDB
 
 				public ISqlExpression GetExpression(int index)
 				{
-					return ConvertExpression(Arguments[index]);
+					return ConvertExpression(Arguments[index], null);
 				}
 
 				public ISqlExpression GetExpression(string argName)
@@ -363,7 +364,7 @@ namespace LinqToDB
 
 				public ISqlExpression ConvertExpressionToSql(Expression expression)
 				{
-					return ConvertExpression(expression);
+					return ConvertExpression(expression, null);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -621,6 +622,12 @@ namespace LinqToDB
 				{
 					var parameters = method.GetParameters();
 
+					var genericDefinition        = method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
+					var templateParameters       = genericDefinition.GetParameters();
+					var templateGenericArguments = genericDefinition.GetGenericArguments();
+					var descriptorMapping        = new Dictionary<Type, ColumnDescriptor?>();
+					var genericMapping           = new Dictionary<Type, Type?>();
+
 					for (var i = 0; i < parameters.Length; i++)
 					{
 						var arg   = arguments[i];
@@ -630,17 +637,67 @@ namespace LinqToDB
 							.Distinct()
 							.ToArray();
 
+						ColumnDescriptor? descriptor;
 						if (names.Length > 0)
 						{
-							var sqlExpressions = arg is NewArrayExpression arrayInit
-								? arrayInit.Expressions.Select(convertHelper.Convert).ToArray()
-								: new[] {convertHelper.Convert(arg)};
-
-							foreach (var name in names)
+							if (method.IsGenericMethod)
 							{
-								foreach (var sqlExpr in sqlExpressions)
+								var templateParam  = templateParameters[i];
+								var elementType    = templateParam.ParameterType;
+								var argElementType = param.ParameterType;
+								if (elementType.IsArray)
 								{
-									extension.AddParameter(name, sqlExpr);
+									elementType    = elementType.GetElementType();
+									argElementType = argElementType.GetElementType();
+								}
+								descriptorMapping.TryGetValue(elementType, out descriptor);
+
+								ISqlExpression[] sqlExpressions;
+								if (arg is NewArrayExpression arrayInit)
+								{
+									sqlExpressions = arrayInit.Expressions.Select(e => convertHelper.Convert(e, descriptor)).ToArray();
+								}	
+								else
+								{
+									var sqlExpression = convertHelper.Convert(arg, descriptor);
+									sqlExpressions = new[] { sqlExpression };
+								}
+
+
+								if (descriptor == null)
+								{
+									descriptor = sqlExpressions.Select(e => QueryHelper.GetColumnDescriptor(e)).FirstOrDefault(d => d != null);
+									if (descriptor != null)
+									{
+										foreach (var pair
+											in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
+										{
+											if (!descriptorMapping.ContainsKey(pair.Item1))
+												descriptorMapping.Add(pair.Item1, descriptor);
+										}
+									}								
+								}
+
+								foreach (var name in names)
+								{
+									foreach (var sqlExpr in sqlExpressions)
+									{
+										extension.AddParameter(name, sqlExpr);
+									}
+								}
+							}
+							else
+							{
+								var sqlExpressions = arg is NewArrayExpression arrayInit
+									? arrayInit.Expressions.Select(e => convertHelper.Convert(e, null)).ToArray()
+									: new[] { convertHelper.Convert(arg, null) };
+
+								foreach (var name in names)
+								{
+									foreach (var sqlExpr in sqlExpressions)
+									{
+										extension.AddParameter(name, sqlExpr);
+									}
 								}
 							}
 						}
@@ -684,16 +741,16 @@ namespace LinqToDB
 
 			protected class ConvertHelper
 			{
-				readonly Func<Expression, ISqlExpression> _converter;
+				readonly Func<Expression, ColumnDescriptor?, ISqlExpression> _converter;
 
-				public ConvertHelper(Func<Expression, ISqlExpression> converter)
+				public ConvertHelper(Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 				{
 					_converter = converter ?? throw new ArgumentNullException(nameof(converter));
 				}
 
-				public ISqlExpression Convert(Expression exp)
+				public ISqlExpression Convert(Expression exp, ColumnDescriptor? descriptor)
 				{
-					return _converter(exp);
+					return _converter(exp, descriptor);
 				}
 			}
 
@@ -774,7 +831,7 @@ namespace LinqToDB
 				return sqlExpression;
 			}
 
-			public override ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
+			public override ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var helper = new ConvertHelper(converter);
 

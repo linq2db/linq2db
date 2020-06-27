@@ -29,15 +29,16 @@ namespace LinqToDB.Linq.Builder
 			public string Path => this.GetPath();
 #endif
 
-			public ExpressionBuilder   Builder     { get; }
-			public Expression?         Expression  { get; }
+			public ExpressionBuilder      Builder     { get; }
+			public Expression?            Expression  { get; }
+									    
+			public SelectQuery            SelectQuery { get; set; }
+			public SqlStatement?          Statement   { get; set; }
 
-			public SelectQuery         SelectQuery { get; set; }
-			public SqlStatement?       Statement   { get; set; }
+			public List<LoadWithInfo[]>?  LoadWith    { get; set; }
 
-			public List<LoadWithInfo[]>? LoadWith    { get; set; }
-
-			public virtual IBuildContext? Parent   { get; set; }
+			public virtual IBuildContext? Parent      { get; set; }
+			public bool                   IsScalar    { get; set; }
 
 			public Type             OriginalType = null!;
 			public Type             ObjectType = null!;
@@ -578,8 +579,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				SqlInfo[] info;
 
-				var isScalar = IsScalarType(tableType);
-				if (isScalar)
+				if (IsScalarSet())
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
 					if (info.Length != 1)
@@ -706,9 +706,9 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			private bool IsScalarType(Type tableType)
+			private bool IsScalarSet()
 			{
-				return tableType.IsArray || Builder.MappingSchema.IsScalarType(tableType);
+				return IsScalar || Builder.MappingSchema.IsScalarType(OriginalType);
 			}
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -806,7 +806,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								SqlInfo[] result;
 
-								if (!IsScalarType(OriginalType))
+								if (!IsScalarSet())
 								{
 									// Handling case with Associations
 									//
@@ -829,16 +829,9 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									ISqlExpression sql = SqlTable;
-									if (SqlTable is SqlRawSqlTable)
-									{
-										sql                  = SqlTable.All;
-										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType) ?? new DbDataType(OriginalType);
-									}
-
 									result = new[]
 									{
-										new SqlInfo(sql) 
+										new SqlInfo(SqlTable) 
 									};
 								}
 
@@ -878,6 +871,15 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									return resultSql;
+								}
+
+								if (IsScalarSet())
+								{
+									var result = new[]
+									{
+										new SqlInfo(SqlTable) 
+									};
+									return result;
 								}
 
 								var q =
@@ -926,9 +928,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									new SqlInfo
 									(
-										IsScalarType(OriginalType)
-											? (ISqlExpression)SqlTable
-											: SqlTable.All
+										SqlTable.All
 									)
 								};
 							}
@@ -1051,8 +1051,12 @@ namespace LinqToDB.Linq.Builder
 					case RequestFor.Object      :
 						{
 							if (expression == null)
-								return new IsExpressionResult(true, this);
-
+							{
+								if (!IsScalarSet())
+									return new IsExpressionResult(true, this);
+								return IsExpressionResult.False;
+							}
+							
 							var contextInfo = FindContextExpression(expression, level, false, false);
 							if (contextInfo == null)
 								return IsExpressionResult.False;

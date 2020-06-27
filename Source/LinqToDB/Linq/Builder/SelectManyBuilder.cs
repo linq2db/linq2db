@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using Tools;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
 				{
-					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+					if (e is ISqlTableSource ts && usedTableSources.Contains(ts))
 						tableSources.Add(ts);
 					return e;
 				});
