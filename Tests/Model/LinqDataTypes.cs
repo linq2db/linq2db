@@ -73,29 +73,19 @@ namespace Tests.Model
 	[Table("LinqDataTypes")]
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
-		[Column("id", Configuration = ProviderName.Informix)]
 		[PrimaryKey]                                    public int       ID;
-		[Column("moneyvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public decimal   MoneyValue;
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
-		[Column("datetimevalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public DateTime? DateTimeValue;
-		[Column("datetimevalue2", Configuration = ProviderName.Informix)]
 		[Column]                                        public DateTime? DateTimeValue2;
-		[Column("boolvalue", Configuration = ProviderName.Informix)]
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
-		[Column("guidvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public Guid?     GuidValue;
-		[Column("smallintvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public short?    SmallIntValue;
-		[Column("intvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public int?      IntValue;
-		[Column("bigintvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public long?     BigIntValue;
-		[Column("stringvalue", Configuration = ProviderName.Informix)]
 		[Column]                                        public string?   StringValue;
 
 		public override bool Equals(object obj)
