@@ -100,22 +100,22 @@ CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 GO
 
 
-DROP TABLE linqdatatypes
+DROP TABLE LinqDataTypes
 GO
 
-CREATE TABLE linqdatatypes
+CREATE TABLE LinqDataTypes
 (
-	id             int,
-	moneyvalue     decimal(10,4),
-	datetimevalue  datetime year to fraction(3),
-	datetimevalue2 datetime year to fraction(3),
-	boolvalue      boolean,
-	guidvalue      char(36),
-	binaryvalue    byte,
-	smallintvalue  smallint,
-	intvalue       int,
-	bigIntvalue    bigint,
-	stringvalue    NVARCHAR(50)
+	ID             int,
+	MoneyValue     decimal(10,4),
+	DateTimeValue  datetime year to fraction(3),
+	DateTimeValue2 datetime year to fraction(3),
+	BoolValue      boolean,
+	GuidValue      char(36),
+	BinaryValue    byte,
+	SmallIntValue  smallint,
+	IntValue       int,
+	BigIntValue    bigint,
+	StringValue    NVARCHAR(50)
 )
 GO
 

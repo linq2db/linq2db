@@ -603,7 +603,7 @@ stages:
 #################################
   - job: test_linux_netcoreapp21_job
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
