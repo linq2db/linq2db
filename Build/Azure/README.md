@@ -41,8 +41,8 @@ Legend:
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.1`: .NETCoreApp 2.1
 - :door: - Windows (2019 or 2016 for some docker-based tests)
-- :penguin: - Linux (Ununtu 16.04)
-- :green_apple: - MacOS Mojave 10.14
+- :penguin: - Linux (Ununtu 20.04)
+- :green_apple: - MacOS Catalina 10.15
 
 | Database (version): provider \ Target framework (OS) | net46 :door: | netcoreapp2.1 :door: | netcoreapp2.1 :penguin: | netcoreapp2.1 :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
