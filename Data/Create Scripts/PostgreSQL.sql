@@ -305,12 +305,14 @@ CREATE TABLE "AllTypes"
 	"xmlDataType"         xml                      NULL,
 	"varBitDataType"      varbit                   NULL,
 
-	StrArray             text[]                    NULL,
-	IntArray    		 int[][]                   NULL,
-	Int2dArray  		 bigint[]                  NULL,
-	LongArray   		 double precision[]        NULL,
-	DoubleArray 		 numeric[]       		   NULL,
-	DecimalArray         decimal[]				   NULL
+	StrArray              text[]                   NULL,
+	IntArray              int[]                    NULL,
+	Int2dArray            int[][]                  NULL,
+	LongArray             bigint[]                 NULL,
+	IntervalArray         interval[]               NULL,
+	DoubleArray           double precision[]       NULL,
+	NumericArray          numeric[]                NULL,
+	DecimalArray          decimal[]                NULL
 )
 GO
 
