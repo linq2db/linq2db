@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
 	using SqlProvider;
@@ -14,8 +12,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = SeparateDistinctFromPagination(statement);
-			statement = ReplaceDistinctOrderByWithRowNumber(statement);
+			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
+			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
 			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query), true);
 
 			switch (statement.QueryType)

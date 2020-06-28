@@ -1897,11 +1897,12 @@ namespace LinqToDB.SqlProvider
 		/// </code>
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip and Distinct modifiers.</param>
+		/// <param name="queryFilter">Query filter predicate to determine if query needs processing.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement)
+		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => q.Select.IsDistinct && (q.Select.TakeValue != null || q.Select.SkipValue != null),
+				q => q.Select.IsDistinct && queryFilter(q),
 				(p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
@@ -2008,11 +2009,12 @@ namespace LinqToDB.SqlProvider
 		/// Alternative mechanism how to prevent loosing sorting in Distinct queries.
 		/// </summary>
 		/// <param name="statement">Statement which may contain Distinct queries.</param>
+		/// <param name="queryFilter">Query filter predicate to determine if query needs processing.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement)
+		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
 				(p, q) =>
 				{
 					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
