@@ -312,7 +312,7 @@ SELECT
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
-				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
@@ -349,7 +349,7 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType != null && columnType != null && columnType.Contains("unsigned"))
 			{
@@ -372,7 +372,7 @@ SELECT
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override StringComparison ForeignKeyColumnComparison(string column)

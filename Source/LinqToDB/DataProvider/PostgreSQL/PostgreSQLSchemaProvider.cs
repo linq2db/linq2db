@@ -193,9 +193,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						c.is_nullable = 'YES'                                                     as IsNullable,
 						c.ordinal_position                                                        as Ordinal,
 						CASE WHEN e.data_type IS NOT NULL
-							THEN e.data_type || '[]'
+							THEN e.data_type
 							ELSE c.data_type
 						END                                                                       as DataType,
+						CASE WHEN e.data_type IS NOT NULL
+							THEN pa.attndims
+							ELSE NULL
+						END                                                                       as ArrayDimensions,
 						c.character_maximum_length                                                as Length,
 						COALESCE(
 							c.numeric_precision::integer,
@@ -212,13 +216,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								JOIN pg_catalog.pg_description pgd ON pgd.objsubid = c.ordinal_position AND pgd.objoid = st.relid
 							WHERE c.table_schema = st.schemaname AND c.table_name=st.relname
 							LIMIT 1
-						)                                                                         as Description,
-						e.data_type                                                               as ElementType
+						)                                                                         as Description
 					FROM
 						information_schema.columns as c
 					LEFT JOIN information_schema.element_types e
-					     ON ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
-					       = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))";
+					     ON ((c.table_catalog, c.table_schema, c.table_name, c.dtd_identifier)
+					       = (e.object_catalog, e.object_schema, e.object_name, e.collection_type_identifier))
+							AND e.object_type in ('TABLE', 'VIEW')
+					INNER JOIN pg_catalog.pg_class pc ON pc.relkind IN ('r', 'v') AND pc.relname = c.table_name
+					INNER JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid AND pn.nspname  = c.table_schema
+					INNER JOIN pg_catalog.pg_attribute pa ON pa.attrelid = pc.oid AND pa.attname = c.column_name";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
@@ -239,6 +246,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						pg_attribute.attnotnull <> true                                           as IsNullable,
 						pg_attribute.attnum                                                       as Ordinal,
 						pg_type.typname                                                           as DataType,
+						CASE WHEN pg_type.typcategory = 'A'
+							THEN pg_attribute.attndims
+							ELSE NULL
+						END                                                                       as ArrayDimensions,
 						CASE WHEN pg_attribute.atttypmod = -1
 							THEN NULL
 							ELSE pg_attribute.atttypmod - 4
@@ -258,8 +269,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
 								WHERE pg_class.relkind = 'm' AND pgd.objsubid = pg_attribute.attnum AND pg_namespace.nspname = pg_namespace.nspname AND pg_class.relname = pg_class.relname
 								LIMIT 1
-					)                                                                             as Description,
-						NULL                                                                      as ElementType
+					)                                                                             as Description
 						FROM pg_catalog.pg_class
 							INNER JOIN pg_catalog.pg_namespace ON pg_class.relnamespace = pg_namespace.oid
 							INNER JOIN pg_catalog.pg_attribute ON pg_class.oid = pg_attribute.attrelid
@@ -270,8 +280,49 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					sql += @" AND pg_namespace.nspname NOT IN ('pg_catalog','information_schema')";
 			}
 
-			var result =  dataConnection.Query<ColumnInfo>(sql).ToList();
-			return result;
+			return dataConnection
+					.Query(rd =>
+					{
+						var dataType = rd.GetString(4);
+
+						// null - not array
+						// 0 - array with unknown dimensions (unknown for views)
+						// >0 - array with specified dimensions (known for tables)
+						var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+						if (arrayDimensions != null)
+						{
+							if (arrayDimensions == 0)
+							{
+								dataType += "[]";
+							}
+							else
+							{
+								while (arrayDimensions > 0)
+								{
+									dataType += "[]";
+									arrayDimensions--;
+								}
+
+							}
+						}
+
+						return new ColumnInfo()
+						{
+							TableID      = rd.GetString(0),
+							Name         = rd.GetString(1),
+							IsNullable   = rd.GetBoolean(2),
+							Ordinal      = rd.GetInt32(3),
+							DataType     = dataType,
+							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
+							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
+							Scale        = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
+							IsIdentity   = rd.GetBoolean(9),
+							SkipOnInsert = rd.GetBoolean(10),
+							SkipOnUpdate = rd.GetBoolean(11),
+							Description  = rd.IsDBNull(12) ? null : rd.GetString(12),
+						};
+					}, sql)
+					.ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
@@ -448,12 +499,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		static Regex _matchArray = new Regex(@"(.*)(\[\])+", RegexOptions.Compiled);
+		static Regex _matchArray = new Regex(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
-			long? length, int? precision, int? scale)
+			long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 			if (foundType != null)
 				return foundType;
 
@@ -463,16 +514,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var match = _matchArray.Match(dataType);
 				if (match.Success)
 				{
-					var elementType = GetDataType(match.Groups[1].Value, new GetSchemaOptions());
+					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, options), null, null, null, options);
 					if (elementType != null)
 					{
-						var elementSystemType = GetSystemType(elementType.DataType, null, elementType, length,
-							precision, scale);
-
-						if (elementSystemType != null)
-						{
-							foundType = elementSystemType.MakeArrayType();
-						}
+						foundType = elementType.MakeArrayType();
 					}
 						
 				}
@@ -674,7 +719,7 @@ SELECT	r.ROUTINE_CATALOG,
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")
-					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale) ?? providerType ?? typeof(object)
+					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale, options) ?? providerType ?? typeof(object)
 
 					select new ColumnSchema
 					{
