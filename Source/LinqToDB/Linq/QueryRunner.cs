@@ -594,7 +594,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NETSTANDARD2_1 || NETCOREAPP3_0
+#if !NET45 && !NET46
 				await using (dr)
 #else
 				using (dr)
@@ -920,7 +920,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NETSTANDARD2_1 || NETCOREAPP3_0
+#if !NET45 && !NET46
 				await using (dr)
 #else
 				using (dr)
