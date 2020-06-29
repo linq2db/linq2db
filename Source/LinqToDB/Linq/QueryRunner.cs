@@ -41,7 +41,7 @@ namespace LinqToDB.Linq
 			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
 		}
 
-#region Mapper
+		#region Mapper
 
 		class Mapper<T>
 		{
@@ -175,9 +175,9 @@ namespace LinqToDB.Linq
 		}
 
 
-#endregion
+		#endregion
 
-#region Helpers
+		#region Helpers
 
 		static void FinalizeQuery(Query query)
 		{
@@ -478,9 +478,9 @@ namespace LinqToDB.Linq
 			//=> obj.GetType();
 			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
 
-#endregion
+		#endregion
 
-#region SetRunQuery
+		#region SetRunQuery
 
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
@@ -819,9 +819,9 @@ namespace LinqToDB.Linq
 					dataReaderParam);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
+		#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -832,9 +832,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Select 2
+		#region SetRunQuery / Select 2
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -862,9 +862,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Aggregation, All, Any, Contains, Count
+		#region SetRunQuery / Aggregation, All, Any, Contains, Count
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -940,9 +940,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region ScalarQuery
+		#region ScalarQuery
 
 		public static void SetScalarQuery(Query query)
 		{
@@ -975,9 +975,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region NonQueryQuery
+		#region NonQueryQuery
 
 		public static void SetNonQueryQuery(Query query)
 		{
@@ -1010,9 +1010,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region NonQueryQuery2
+		#region NonQueryQuery2
 
 		public static void SetNonQueryQuery2(Query query)
 		{
@@ -1063,9 +1063,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region QueryQuery2
+		#region QueryQuery2
 
 		public static void SetQueryQuery2(Query query)
 		{
@@ -1116,9 +1116,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region GetSqlText
+		#region GetSqlText
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
@@ -1126,6 +1126,6 @@ namespace LinqToDB.Linq
 			return runner.GetSqlText();
 		}
 
-#endregion
+		#endregion
 	}
 }
