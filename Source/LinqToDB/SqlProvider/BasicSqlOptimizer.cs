@@ -27,6 +27,8 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
+			FixEmptySelect(statement);
+
 			FinalizeCte(statement);
 
 //statement.EnsureFindTables();
@@ -82,6 +84,14 @@ namespace LinqToDB.SqlProvider
 			statement = TransformStatement(statement);
 
 			return statement;
+		}
+
+		void FixEmptySelect(SqlStatement statement)
+		{
+			// avoid SELECT * top level queries, as they could create a lot of unwanted traffic
+			// and such queries are not supported by remote context
+			if (statement.QueryType == QueryType.Select && statement.SelectQuery!.Select.Columns.Count == 0)
+				statement.SelectQuery!.Select.Add(new SqlValue(1));
 		}
 
 		public virtual SqlStatement TransformStatement(SqlStatement statement)
