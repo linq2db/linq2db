@@ -595,7 +595,7 @@ namespace LinqToDB.Linq
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #if !NET45 && !NET46
-				await using (dr)
+				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)
 #endif
@@ -919,7 +919,7 @@ namespace LinqToDB.Linq
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #if !NET45 && !NET46
-				await using (dr)
+				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)
 #endif

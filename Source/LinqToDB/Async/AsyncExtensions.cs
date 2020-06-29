@@ -64,7 +64,8 @@ namespace LinqToDB.Async
 #if NET45 || NET46
 			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
-			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
 				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -133,7 +134,8 @@ namespace LinqToDB.Async
 #if NET45 || NET46
 			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
-			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -157,10 +159,11 @@ namespace LinqToDB.Async
 #if NET45 || NET46
 			using (var enumerator = source.GetAsyncEnumerator(token))
 #else
-			await using (var enumerator = source.GetAsyncEnumerator(token))
+			var enumerator = source.GetAsyncEnumerator(token);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
-				if (await enumerator.MoveNextAsync())
+				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
 			}
 
