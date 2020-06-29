@@ -798,7 +798,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-#region Execute
+		#region Execute
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
@@ -830,9 +830,9 @@ namespace LinqToDB.Data
 			return commandResult;
 		}
 
-#endregion
+		#endregion
 
-#region Execute async
+		#region Execute async
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
@@ -888,9 +888,9 @@ namespace LinqToDB.Data
 			return commandResult;
 		}
 
-#endregion
+		#endregion
 
-#region Execute scalar
+		#region Execute scalar
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
@@ -948,9 +948,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-#endregion
+		#endregion
 
-#region Execute scalar async
+		#region Execute scalar async
 
 		/// <summary>
 		/// Executes command asynchronously and returns single value.
@@ -1022,9 +1022,9 @@ namespace LinqToDB.Data
 			return default!;
 		}
 
-#endregion
+		#endregion
 
-#region ExecuteReader
+		#region ExecuteReader
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns data reader instance.
@@ -1102,9 +1102,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-#endregion
+		#endregion
 
-#region ExecuteReader async
+		#region ExecuteReader async
 
 		/// <summary>
 		/// Executes command asynchronously and returns data reader instance.
@@ -1184,9 +1184,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-#endregion
+		#endregion
 
-#region SetParameters
+		#region SetParameters
 
 		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
@@ -1409,9 +1409,9 @@ namespace LinqToDB.Data
 			return dataParameter;
 		}
 
-#endregion
+		#endregion
 
-#region GetObjectReader
+		#region GetObjectReader
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
@@ -1638,6 +1638,6 @@ namespace LinqToDB.Data
 			return lex.Compile();
 		}
 
-#endregion
+		#endregion
 	}
 }
