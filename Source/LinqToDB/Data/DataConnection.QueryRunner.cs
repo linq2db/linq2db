@@ -468,14 +468,13 @@ namespace LinqToDB.Data
 					DataReader.Dispose();
 				}
 
-#if NET45 || NET46
-#elif NETCOREAPP2_1 || NETSTANDARD2_0
+#if NETCOREAPP2_1 || NETSTANDARD2_0
 				public ValueTask DisposeAsync()
 				{
 					Dispose();
 					return new ValueTask(Task.CompletedTask);
 				}
-#else
+#elif NETCOREAPP3_1 || NETSTANDARD2_1
 				public ValueTask DisposeAsync()
 				{
 					 return _dataReader.DisposeAsync();
