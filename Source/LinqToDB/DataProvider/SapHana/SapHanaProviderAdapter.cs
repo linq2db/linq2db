@@ -15,10 +15,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NET45 || NET46
 		public const string AssemblyName        = "Sap.Data.Hana.v4.5";
-#elif NETCOREAPP2_1
+#else
 		public const string AssemblyName        = "Sap.Data.Hana.Core.v2.1";
-#elif NETCOREAPP3_0
-		public const string AssemblyName        = "Sap.Data.Hana.Core.v3.0";
 #endif
 
 		public const string ClientNamespace     = "Sap.Data.Hana";

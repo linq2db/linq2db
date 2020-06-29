@@ -114,7 +114,6 @@ namespace LinqToDB.DataProvider.SapHana
 				case "Sap.Data.Hana.v4.5"                  :
 				case "Sap.Data.Hana.Core"                  :
 				case "Sap.Data.Hana.Core.v2.1"             :
-				case "Sap.Data.Hana.Core.v3.0"             :
 				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
 #endif
 				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
