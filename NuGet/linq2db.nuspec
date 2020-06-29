@@ -15,10 +15,12 @@
 				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
 				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
+				<dependency id="Microsoft.Bcl.AsyncInterfaces"        version="1.1.1" />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
 				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
+				<dependency id="Microsoft.Bcl.AsyncInterfaces"        version="1.1.1" />
 			</group>
 			<group targetFramework=".NETStandard2.1">
 				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
