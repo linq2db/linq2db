@@ -134,7 +134,7 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<PackageReference Include="Npgsql" Version="4.1.3.1" />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />-->
@@ -304,7 +304,7 @@
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<Compile Remove="WPF\ViewModel.cs" />
 		<Compile Remove="WPF\ViewModel.generated.cs" />
 	</ItemGroup>

@@ -271,8 +271,8 @@ namespace LinqToDB.Linq
 			var targetFramework = "netcoreapp2.1";
 #elif NETSTANDARD2_0
 			var targetFramework = "netstandard2.0";
-#elif NETCOREAPP3_0
-			var targetFramework = "netcoreapp3.0";
+#elif NETCOREAPP3_1
+			var targetFramework = "netcoreapp3.1";
 #elif NETSTANDARD2_1
 			var targetFramework = "netstandard2.1";
 #endif
@@ -531,7 +531,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETCOREAPP2_1 || NETCOREAPP3_0
+#if NETCOREAPP2_1 || NETCOREAPP3_1
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
 #else

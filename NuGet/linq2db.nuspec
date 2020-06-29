@@ -26,7 +26,7 @@
 				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
 			</group>
-			<group targetFramework=".NETCoreApp3.0">
+			<group targetFramework=".NETCoreApp3.1">
 				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
 			</group>
 		</dependencies>
