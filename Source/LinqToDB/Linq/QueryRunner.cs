@@ -704,9 +704,20 @@ namespace LinqToDB.Linq
 			}
 
 #if NET45 || NET46
-			public Task DisposeAsync() => TaskEx.CompletedTask;
+			public Task DisposeAsync()
+			{
+				Dispose();
+				return TaskEx.CompletedTask;
+			}
 #else
-			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
+			public async ValueTask DisposeAsync()
+			{
+				_queryRunner?.Dispose();
+				if (_dataReader != null) 
+					await _dataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				
+				_queryRunner = null;
+			}
 #endif
 		}
 
