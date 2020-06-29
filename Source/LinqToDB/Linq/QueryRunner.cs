@@ -660,9 +660,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if NET45
-			public async Task<bool> MoveNextAsync()
-#elif NET46
+#if NET45 || NET46
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
