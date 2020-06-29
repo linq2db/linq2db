@@ -1741,7 +1741,8 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression l;
 			ISqlExpression r;
-			if (context?.IsExpression(left, 0, RequestFor.Field).Result == true)
+			var ls = GetContext(context, left);
+			if (ls?.IsExpression(left, 0, RequestFor.Field).Result == true)
 			{
 				l = ConvertToSql(context, left);
 				r = ConvertToSql(context, right, true, QueryHelper.GetColumnDescriptor(l));
