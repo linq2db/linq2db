@@ -26,7 +26,7 @@ namespace LinqToDB.Async
 		Task<bool> MoveNextAsync();
 
 		/// <summary>
-		/// Disposes the object asynchonously
+		/// Disposes the object asynchonously.
 		/// </summary>
 		Task DisposeAsync();
 	}

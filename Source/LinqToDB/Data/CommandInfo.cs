@@ -679,11 +679,11 @@ namespace LinqToDB.Data
 
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{
-				_commandInfo   = commandInfo;
-				_rd            = rd;
-				_additionalKey = commandInfo.GetCommandAdditionalKey(rd);
-				_objectReader  = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
-				_isFaulted     = false;
+				_commandInfo       = commandInfo;
+				_rd                = rd;
+				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd);
+				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
+				_isFaulted         = false;
 				_cancellationToken = cancellationToken;
 			}
 

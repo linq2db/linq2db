@@ -646,15 +646,15 @@ namespace LinqToDB.Linq
 				Func<Expression,IDataContext?,object?[]?,int>? takeAction,
 				CancellationToken                cancellationToken)
 			{
-				_query       = query;
-				_dataContext = dataContext;
-				_mapper      = mapper;
-				_expression  = expression;
-				_ps          = ps;
-				_preambles   = preambles;
-				_queryNumber = queryNumber;
-				_skipAction  = skipAction;
-				_takeAction  = takeAction;
+				_query             = query;
+				_dataContext       = dataContext;
+				_mapper            = mapper;
+				_expression        = expression;
+				_ps                = ps;
+				_preambles         = preambles;
+				_queryNumber       = queryNumber;
+				_skipAction        = skipAction;
+				_takeAction        = takeAction;
 				_cancellationToken = cancellationToken;
 			}
 

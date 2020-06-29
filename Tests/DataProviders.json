@@ -48,7 +48,7 @@
 		]
 	},
 
-	"CORE30": {
+	"CORE31": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -70,7 +70,7 @@
 		"TraceLevel": "Info"
 	},
 
-	"CORE30.Azure": {
+	"CORE31.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
