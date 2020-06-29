@@ -2,167 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using JetBrains.Annotations;
 
 using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
 	using Linq;
-	using LinqToDB.Common;
 	using SqlQuery;
-
-	public static class StringAggregateExtensions
-	{
-		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
-		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
-		[Sql.Extension("{expr}",                           TokenName = "order_item")]
-		public static Sql.IStringAggregateOrdered<T> OrderBy<T, TKey>(
-							this Sql.IStringAggregateNotOrdered<T> aggregate, 
-			[ExprParameter]      Expression<Func<T, TKey>>         expr)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(OrderBy, aggregate, expr),
-					Expression.Constant(aggregate), Expression.Quote(expr)));
-
-			return new Sql.StringAggregateNotOrderedImpl<T>(query);
-		}
-
-		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
-		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
-		[Sql.Extension("{aggregate}",                      TokenName = "order_item")]
-		public static Sql.IStringAggregate<string> OrderBy(
-			[ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(OrderBy, aggregate), Expression.Constant(aggregate)
-				));
-
-			return new Sql.StringAggregateNotOrderedImpl<string>(query);
-		}
-
-		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
-		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
-		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
-		public static Sql.IStringAggregateOrdered<T> OrderByDescending<T, TKey>(
-							this Sql.IStringAggregateNotOrdered<T> aggregate, 
-			[ExprParameter]      Expression<Func<T, TKey>>         expr)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(OrderByDescending, aggregate, expr),
-					Expression.Constant(aggregate), Expression.Quote(expr)));
-
-			return new Sql.StringAggregateNotOrderedImpl<T>(query);
-		}
-
-		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
-		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
-		[Sql.Extension("{aggregate} DESC",                 TokenName = "order_item")]
-		public static Sql.IStringAggregate<string> OrderByDescending(
-			[ExprParameter] this Sql.IStringAggregateNotOrdered<string> aggregate)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(OrderByDescending, aggregate),
-					Expression.Constant(aggregate)
-				));
-
-			return new Sql.StringAggregateNotOrderedImpl<string>(query);
-		}
-
-		[Sql.Extension("{expr}", TokenName = "order_item")]
-		public static Sql.IStringAggregateOrdered<T> ThenBy<T, TKey>(
-							this Sql.IStringAggregateOrdered<T> aggregate, 
-			[ExprParameter]      Expression<Func<T, TKey>>      expr)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(ThenBy, aggregate, expr),
-					Expression.Constant(aggregate), Expression.Quote(expr)));
-
-			return new Sql.StringAggregateNotOrderedImpl<T>(query);
-		}
-
-		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
-		public static Sql.IStringAggregateOrdered<T> ThenByDescending<T, TKey>(
-							this Sql.IStringAggregateOrdered<T> aggregate, 
-			[ExprParameter]      Expression<Func<T, TKey>>      expr)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
-
-			var query = aggregate.Query.Provider.CreateQuery<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(ThenByDescending, aggregate, expr),
-					Expression.Constant(aggregate), Expression.Quote(expr)));
-
-			return new Sql.StringAggregateNotOrderedImpl<T>(query);
-		}
-
-		// For Oracle we always define at least one ordering by rownum. If ordering defined explicitly, this definition will be replaced.
-		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
-		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
-		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
-		public static string ToValue<T>(this Sql.IStringAggregate<T> aggregate)
-		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-
-			return aggregate.Query.Provider.Execute<string>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(ToValue, aggregate), 
-					Expression.Constant(aggregate)));
-		}
-	}
 
 	public static partial class Sql
 	{
 		#region StringAggregate
-
-		public interface IStringAggregate<out T> : IQueryableContainer
-		{
-
-		}
-
-		public interface IStringAggregateNotOrdered<out T> : IStringAggregate<T>
-		{
-		}
-
-		public interface IStringAggregateOrdered<out T> : IStringAggregate<T>
-		{
-		}
-
-		internal class StringAggregateNotOrderedImpl<T> : IStringAggregateNotOrdered<T>, IStringAggregateOrdered<T>
-		{
-			public StringAggregateNotOrderedImpl(IQueryable<string> query)
-			{
-				Query = query ?? throw new ArgumentNullException(nameof(query));
-			}
-
-			public IQueryable Query { get; }
-		}
 
 		class StringAggSql2017Builder : IExtensionCallBuilder
 		{
@@ -215,7 +65,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		public static IStringAggregateNotOrdered<string> StringAggregate(
+		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
@@ -228,7 +78,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator),
 					source.Expression, Expression.Constant(separator)));
 
-			return new StringAggregateNotOrderedImpl<string>(query);
+			return new AggregateFunctionNotOrderedImpl<string?, string>(query);
 		}
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -242,7 +92,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
+		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 							this IEnumerable<T> source,
 			[ExprParameter] string separator,
 			[ExprParameter] Func<T, string?> selector)
@@ -261,7 +111,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
+		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 							this IQueryable<T> source,
 			[ExprParameter] string separator,
 			[ExprParameter] Expression<Func<T, string?>> selector)
@@ -276,7 +126,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(StringAggregate, source, separator, selector),
 					source.Expression, Expression.Constant(separator), Expression.Quote(selector)));
 
-			return new StringAggregateNotOrderedImpl<T>(query);
+			return new AggregateFunctionNotOrderedImpl<T, string>(query);
 		}
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -290,7 +140,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		public static IStringAggregateNotOrdered<string> StringAggregate(
+		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{

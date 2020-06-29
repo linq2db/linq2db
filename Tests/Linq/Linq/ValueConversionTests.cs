@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -53,7 +54,10 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			[ValueConverter(ConverterType = typeof(WithNullConverter))]
 			public EnumValue EnumWithNullDeclarative { get; set; }
-			
+
+			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
+			public bool BoolValue { get; set; }
+
 			public static MainClass[] TestData()
 			{
 				return Enumerable.Range(1, 10)
@@ -65,7 +69,8 @@ namespace Tests.Linq
 							Enum = i % 3 == 1 ? EnumValue.Value1 : i % 3 == 2 ? EnumValue.Value2 : EnumValue.Value3,
 							EnumNullable = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : (EnumValue?)null,
 							EnumWithNull = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
-							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null
+							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
+							BoolValue = i % 4 == 1
 						}
 					).ToArray();
 			}
@@ -103,7 +108,14 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
 			public string? EnumWithNullDeclarative { get; set; }
+
+			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
+			public char BoolValue { get; set; }
 		}
+
+		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
+		static bool AnyEquality<T>([ExprParameter] T value1, [ExprParameter] T value2)
+			=> throw new NotImplementedException();
 
 		private static MappingSchema CreateMappingSchema()
 		{
@@ -125,7 +137,9 @@ namespace Tests.Linq
 					v => v == EnumValue.Null ? null : v.ToString(),
 					p => p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), 
 					true
-				);
+				)
+				.Property(e => e.BoolValue)
+				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y');
 
 			return ms;
 		}
@@ -164,10 +178,14 @@ namespace Tests.Linq
 				Assert.That(result[2].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value3));
 				Assert.That(result[3].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Null));
 
-				
 				Assert.That(result[9].Value1, Is.Null);
 				Assert.That(result[9].Value2, Is.Null);
 		
+				Assert.That(result[0].BoolValue, Is.EqualTo(true));
+				Assert.That(result[1].BoolValue, Is.EqualTo(false));
+				Assert.That(result[2].BoolValue, Is.EqualTo(false));
+				Assert.That(result[3].BoolValue, Is.EqualTo(false));
+				
 
 				var query = from t in table
 					select new
@@ -225,6 +243,77 @@ namespace Tests.Linq
 				var selectResult = query.ToArray();
 				
 				Assert.That(selectResult.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void ExtensionTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var testedList = testData[0].Value2;
+
+				var query = from t in table
+					where AnyEquality(t.Value2, testedList)
+					select t;
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void BoolTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t in table
+					where t.BoolValue
+					select new
+					{
+						t.Id,
+						t.Value1,
+						t.Value2,
+						t.BoolValue
+					};
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(3));
+			}
+		}
+
+		[Test]
+		public void BoolNotTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t in table
+					where !t.BoolValue
+					select new
+					{
+						t.Id,
+						t.Value1,
+						t.Value2,
+						t.BoolValue
+					};
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(7));
 			}
 		}
 
@@ -360,6 +449,7 @@ namespace Tests.Linq
 					.Value(e => e.Value1, new JArray())
 					.Value(e => e.Enum, EnumValue.Value1)
 					.Value(e => e.Value2, inserted)
+					.Value(e => e.BoolValue, true)
 					.Insert();
 				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1);
 
@@ -368,12 +458,14 @@ namespace Tests.Linq
 				Assert.That(insert1Check.Enum,   Is.EqualTo("Value1"));
 				Assert.That(insert1Check.EnumWithNull, Is.Null);
 				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
+				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
 				
 				table
 					.Value(e => e.Id, 2)
 					.Value(e => e.Value1, (JToken?)null)
 					.Value(e => e.Value2, (List<ItemClass>?)null)
 					.Value(e => e.Enum, EnumValue.Value2)
+					.Value(e => e.BoolValue, false)
 					.Insert();
 
 				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2);
@@ -383,6 +475,7 @@ namespace Tests.Linq
 				Assert.That(insert2Check.Enum,   Is.EqualTo("Value2"));
 				Assert.That(insert2Check.EnumWithNull, Is.Null);
 				Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
+				Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
 
 
 				var toInsert = new MainClass
@@ -390,7 +483,8 @@ namespace Tests.Linq
 					Id = 3, 
 					Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
-					Enum = EnumValue.Value3
+					Enum = EnumValue.Value3,
+					BoolValue = true
 				};
 
 				db.Insert(toInsert);
@@ -403,6 +497,7 @@ namespace Tests.Linq
 				Assert.That(insert3Check.EnumNullable, Is.Null);
 				Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
 				Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
+				Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
 
 				Assert.That(table.Count(), Is.EqualTo(3));
 			}

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -57,6 +58,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
+
+				new DataTypeInfo { TypeName = "interval",                    DataType = typeof(TimeSpan).      AssemblyQualifiedName },
 
 				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
 				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
@@ -189,7 +192,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						c.column_name                                                             as Name,
 						c.is_nullable = 'YES'                                                     as IsNullable,
 						c.ordinal_position                                                        as Ordinal,
-						c.data_type                                                               as DataType,
+						CASE WHEN e.data_type IS NOT NULL
+							THEN e.data_type
+							ELSE c.data_type
+						END                                                                       as DataType,
+						CASE WHEN e.data_type IS NOT NULL
+							THEN pa.attndims
+							ELSE NULL
+						END                                                                       as ArrayDimensions,
 						c.character_maximum_length                                                as Length,
 						COALESCE(
 							c.numeric_precision::integer,
@@ -208,12 +218,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							LIMIT 1
 						)                                                                         as Description
 					FROM
-						information_schema.columns as c";
+						information_schema.columns as c
+					LEFT JOIN information_schema.element_types e
+					     ON ((c.table_catalog, c.table_schema, c.table_name, c.dtd_identifier)
+					       = (e.object_catalog, e.object_schema, e.object_name, e.collection_type_identifier))
+							AND e.object_type in ('TABLE', 'VIEW')
+					INNER JOIN pg_catalog.pg_class pc ON pc.relkind IN ('r', 'v') AND pc.relname = c.table_name
+					INNER JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid AND pn.nspname  = c.table_schema
+					INNER JOIN pg_catalog.pg_attribute pa ON pa.attrelid = pc.oid AND pa.attname = c.column_name";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
 					WHERE
-						table_schema NOT IN ('pg_catalog','information_schema')";
+						c.table_schema NOT IN ('pg_catalog','information_schema')";
 
 			// materialized views supported starting from pgsql 9.3
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
@@ -229,6 +246,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						pg_attribute.attnotnull <> true                                           as IsNullable,
 						pg_attribute.attnum                                                       as Ordinal,
 						pg_type.typname                                                           as DataType,
+						CASE WHEN pg_type.typcategory = 'A'
+							THEN pg_attribute.attndims
+							ELSE NULL
+						END                                                                       as ArrayDimensions,
 						CASE WHEN pg_attribute.atttypmod = -1
 							THEN NULL
 							ELSE pg_attribute.atttypmod - 4
@@ -259,7 +280,49 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					sql += @" AND pg_namespace.nspname NOT IN ('pg_catalog','information_schema')";
 			}
 
-			return dataConnection.Query<ColumnInfo>(sql).ToList();
+			return dataConnection
+					.Query(rd =>
+					{
+						var dataType = rd.GetString(4);
+
+						// null - not array
+						// 0 - array with unknown dimensions (unknown for views)
+						// >0 - array with specified dimensions (known for tables)
+						var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+						if (arrayDimensions != null)
+						{
+							if (arrayDimensions == 0)
+							{
+								dataType += "[]";
+							}
+							else
+							{
+								while (arrayDimensions > 0)
+								{
+									dataType += "[]";
+									arrayDimensions--;
+								}
+
+							}
+						}
+
+						return new ColumnInfo()
+						{
+							TableID      = rd.GetString(0),
+							Name         = rd.GetString(1),
+							IsNullable   = rd.GetBoolean(2),
+							Ordinal      = rd.GetInt32(3),
+							DataType     = dataType,
+							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
+							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
+							Scale        = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
+							IsIdentity   = rd.GetBoolean(9),
+							SkipOnInsert = rd.GetBoolean(10),
+							SkipOnUpdate = rd.GetBoolean(11),
+							Description  = rd.IsDBNull(12) ? null : rd.GetString(12),
+						};
+					}, sql)
+					.ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
@@ -434,6 +497,33 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return base.GetProviderSpecificType(dataType);
+		}
+
+		static Regex _matchArray = new Regex(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
+
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
+			long? length, int? precision, int? scale, GetSchemaOptions options)
+		{
+			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+			if (foundType != null)
+				return foundType;
+
+			if (dataType != null)
+			{
+				dataType = dataType.Trim();
+				var match = _matchArray.Match(dataType);
+				if (match.Success)
+				{
+					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, options), null, null, null, options);
+					if (elementType != null)
+					{
+						foundType = elementType.MakeArrayType();
+					}
+						
+				}
+			}
+
+			return foundType;
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
@@ -629,7 +719,7 @@ SELECT	r.ROUTINE_CATALOG,
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")
-					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale) ?? providerType ?? typeof(object)
+					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale, options) ?? providerType ?? typeof(object)
 
 					select new ColumnSchema
 					{

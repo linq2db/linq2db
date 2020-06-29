@@ -398,12 +398,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType?.ToLowerInvariant() == "tinyint")
 				return typeof(byte);
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
@@ -667,7 +667,7 @@ namespace LinqToDB.DataProvider.SapHana
 					Parameters      = (
 						from pr in pgroup
 						let dt         = GetDataType(pr.DataType, options)
-						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale)
+						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale, options)
 						orderby pr.Ordinal
 						select new ParameterSchema
 						{
@@ -697,7 +697,7 @@ namespace LinqToDB.DataProvider.SapHana
 			foreach (var column in columns)
 			{
 				var dataType   = column.c.DataType;
-				var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
+				var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
 				var isNullable = column.c.IsNullable;
 
 				column.v.Columns.Add(new ColumnSchema

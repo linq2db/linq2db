@@ -125,7 +125,7 @@ namespace LinqToDB.SchemaProvider
 				foreach (var column in columns)
 				{
 					var dataType   = column.c.DataType;
-					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
+					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
 					var isNullable = column.c.IsNullable;
 					var columnType = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null);
 
@@ -249,7 +249,7 @@ namespace LinqToDB.SchemaProvider
 
 								let dt         = GetDataType(pr.DataType, options)
 
-								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale)
+								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale, options)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
@@ -492,7 +492,7 @@ namespace LinqToDB.SchemaProvider
 				let length     = r.Field<int?>  ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
@@ -537,7 +537,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -611,12 +611,14 @@ namespace LinqToDB.SchemaProvider
 
 			var memberType = type.Name;
 
+			if (type.IsArray)
+				memberType = ToTypeName(type.GetElementType(), false) + "[]";
+
 			switch (memberType)
 			{
 				case "Boolean" : memberType = "bool";    break;
 				case "Byte"    : memberType = "byte";    break;
 				case "SByte"   : memberType = "sbyte";   break;
-				case "Byte[]"  : memberType = "byte[]";  break;
 				case "Int16"   : memberType = "short";   break;
 				case "Int32"   : memberType = "int";     break;
 				case "Int64"   : memberType = "long";    break;

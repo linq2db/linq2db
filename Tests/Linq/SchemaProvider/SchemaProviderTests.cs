@@ -204,23 +204,25 @@ namespace Tests.SchemaProvider
 			[PrimaryKey(2)] public int ID2;
 		}
 
+		class ArrayTest
+		{
+			[Column(DbType = "text[]")]             public string[]  StrArray     { get; set; } = null!;
+			[Column(DbType = "int[]")]              public int[]     IntArray     { get; set; } = null!;
+			[Column(DbType = "int[][]")]            public int[][]   Int2dArray   { get; set; } = null!;
+			[Column(DbType = "bigint[]")]           public long[]    LongArray    { get; set; } = null!;
+			[Column(DbType = "double precision[]")] public double[]  DoubleArray  { get; set; } = null!;
+			[Column(DbType = "numeric[]")]          public decimal[] DecimalArray { get; set; } = null!;
+		}
+
 		[Test]
 		public void PostgreSQLTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var conn = new DataConnection(context))
+			using (conn.CreateLocalTable<ArrayTest>())
 			{
-				try { conn.DropTable<PKTest>(); } catch {}
-
-				conn.CreateTable<PKTest>();
-
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
-				var table    = dbSchema.Tables.Single(t => t.TableName == "PKTest");
-
-				Assert.That(table.Columns[0].PrimaryKeyOrder, Is.EqualTo(1));
-				Assert.That(table.Columns[1].PrimaryKeyOrder, Is.EqualTo(2));
-
-				conn.DropTable<PKTest>();
+				var table    = dbSchema.Tables.Single(t => t.TableName == "ArrayTest");
 			}
 		}
 

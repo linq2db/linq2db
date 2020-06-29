@@ -598,12 +598,12 @@ stages:
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
 
-#################################
-#  Tests: Linux (NETCOREAPP2_1) #
-#################################
-  - job: test_linux_netcoreapp21_job
+########################################
+#  Tests: Ubuntu 20.04 (NETCOREAPP2_1) #
+########################################
+  - job: test_ubuntu_20_netcoreapp21_job
     pool:
-      vmImage: 'ubuntu-18.04'
+      vmImage: 'ubuntu-20.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
@@ -688,6 +688,67 @@ stages:
           title: 'Firebird 3.0'
           config: 'firebird3'
           script: 'firebird3.sh'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore21_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['script']
+      displayName: Mark script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Linux / NETCOREAPP2.1 / $(title)'
+
+########################################
+#  Tests: Ubuntu 16.04 (NETCOREAPP2_1) #
+########################################
+  - job: test_ubuntu_16_netcoreapp21_job
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'Tests: Lin / NETCOREAPP2.1 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+    strategy:
+      matrix:
         Informix14:
           title: 'Informix 14.10'
           config: 'informix'

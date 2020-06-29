@@ -332,6 +332,22 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
+					case QueryElementType.IsTruePredicate:
+						{
+							var p = (SqlPredicate.IsTrue)element;
+							var e = (ISqlExpression?)ConvertInternal(p.Expr1);
+							var t = (ISqlExpression?)ConvertInternal(p.TrueValue);
+							var f = (ISqlExpression?)ConvertInternal(p.FalseValue);
+
+							if (e != null && !ReferenceEquals(p.Expr1, e) ||
+							    t != null && !ReferenceEquals(p.TrueValue,  t) ||
+								f != null && !ReferenceEquals(p.FalseValue, f)
+							    )
+								newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot);
+
+							break;
+						}
+
 					case QueryElementType.IsNullPredicate:
 						{
 							var p = (SqlPredicate.IsNull)element;

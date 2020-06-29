@@ -333,7 +333,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		bool  ISqlExpression.CanBeNull  => true;
+		public bool CanBeNull { get; set; } = true;
+
 		int   ISqlExpression.Precedence => Precedence.Primary;
 		Type? ISqlExpression.SystemType => ObjectType;
 

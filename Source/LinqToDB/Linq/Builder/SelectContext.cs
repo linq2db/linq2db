@@ -1055,7 +1055,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var root = Body.GetRootObject(Builder.MappingSchema);
+				var root = Builder.GetRootObject(Body);
 
 				if (root.NodeType == ExpressionType.Parameter)
 				{
@@ -1181,7 +1181,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (IsScalar)
 			{
-				root = expression.GetRootObject(Builder.MappingSchema);
+				root = Builder.GetRootObject(expression);
 			}
 			else
 			{
@@ -1194,7 +1194,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var memberExpression = GetProjectedExpression(((MemberExpression)levelExpression).Member, true)!;
 
-							root =  memberExpression.GetRootObject(Builder.MappingSchema);
+							root = Builder.GetRootObject(memberExpression);
 
 							if (root is ContextRefExpression refExpression)
 							{
@@ -1209,12 +1209,12 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter :
 						{
-							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
+							root = Builder.GetRootObject(expression).Unwrap();
 							break;
 						}
 					case ExpressionType.Extension:
 						{
-							root = expression.GetRootObject(Builder.MappingSchema).Unwrap();
+							root = Builder.GetRootObject(expression).Unwrap();
 							break;
 						}
 				}

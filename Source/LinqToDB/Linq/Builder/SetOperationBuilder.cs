@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 
 										// is is parameters, we have to select
 										if (assignment1.Expression.NodeType == ExpressionType.MemberAccess
-										    && assignment1.Expression.GetRootObject(Builder.MappingSchema)?.NodeType == ExpressionType.Constant)
+										    && Builder.GetRootObject(assignment1.Expression)?.NodeType == ExpressionType.Constant)
 										{
 											needsRewrite = true;
 											break;

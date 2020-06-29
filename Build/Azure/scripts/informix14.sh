@@ -8,7 +8,7 @@ cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Dat
 echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
 echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"
 
-docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:14.10.FC1DE
+docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql

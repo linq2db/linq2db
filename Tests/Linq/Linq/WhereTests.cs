@@ -1280,18 +1280,24 @@ namespace Tests.Linq
 				var exp = expected.Where(predicate.Compile());
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
-
+				Assert.That(act.ToString(), Does.Not.Contain("<>"));
+				
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				var expNot = expected.Where(notPredicate.Compile()).ToArray();
-				var actNot = actual.  Where(notPredicate).          ToArray();
+				var expNot      = expected.Where(notPredicate.Compile()).ToArray();
+				var actNotQuery = actual.Where(notPredicate);
+				var actNot      = actNotQuery.ToArray();
 				AreEqual(expNot, actNot, WhereCases.Comparer);
+
+				Assert.That(actNotQuery.ToString(), Does.Not.Contain("<>"));
 			}
 
 			void AreEqualLocalPredicate(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate, Expression<Func<WhereCases,bool>> localPredicate)
 			{
-				AreEqual(expected.Where(localPredicate.Compile()), actual.Where(predicate), WhereCases.Comparer);
+				var actualQuery = actual.Where(predicate);
+				AreEqual(expected.Where(localPredicate.Compile()), actualQuery, WhereCases.Comparer);
+				Assert.That(actualQuery.ToString(), Does.Not.Contain("<>"));
 
 				var notLocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(localPredicate.Body), localPredicate.Parameters);
@@ -1299,7 +1305,13 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				AreEqual(expected.Where(notLocalPredicate.Compile()), actual.Where(notPredicate), WhereCases.Comparer);
+				var expNot = expected.Where(notLocalPredicate.Compile()).ToArray();
+				var actualNotQuery = actual.Where(notPredicate);
+
+				var actNot = actualNotQuery.ToArray();
+				AreEqual(expNot, actNot, WhereCases.Comparer);
+
+				Assert.That(actualNotQuery.ToString(), Does.Not.Contain("<>"));
 			}
 
 			using (var db = GetDataContext(context))

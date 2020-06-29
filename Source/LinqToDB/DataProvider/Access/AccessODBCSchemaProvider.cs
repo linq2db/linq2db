@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.Access
 				let length     = r.Field<int?>  ("COLUMN_SIZE")
 				let precision  = length
 				let scale      = Converter.ChangeTypeTo<int>(r["DECIMAL_DIGITS"])
-				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
