@@ -140,7 +140,7 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-#if NETCOREAPP2_1
+#if !NET46
 			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
 #else
 			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");

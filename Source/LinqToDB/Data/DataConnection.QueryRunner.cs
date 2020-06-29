@@ -467,6 +467,13 @@ namespace LinqToDB.Data
 					// methods for .net core 1x
 					DataReader.Dispose();
 				}
+
+#if NETSTANDARD2_1 || NETCOREAPP3_0
+				public ValueTask DisposeAsync()
+				{
+					return _dataReader.DisposeAsync();
+				}
+#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

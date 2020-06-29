@@ -610,7 +610,7 @@ namespace Tests.Linq
 			Configurations = new[]
 			{
 				ProviderName.DB2
-#if NETCOREAPP2_1
+#if !NET46
 				// to avoid crashes due to https://github.com/dotnet/runtime/issues/36954
 				, ProviderName.Access
 #endif

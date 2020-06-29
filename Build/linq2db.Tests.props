@@ -5,7 +5,7 @@
 	<PropertyGroup>
 	<!-- because VS doesn't support multi-targeting for tests (works for r# test runner): https://github.com/Microsoft/vstest/issues/298
 			 just put required test target framework to first position - VS always use first one only -->
-		<TargetFrameworks>net46;netcoreapp2.1</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 

@@ -661,9 +661,9 @@ namespace LinqToDB.Data
 				_rd          = rd;
 			}
 
-			public IAsyncEnumerator<T> GetEnumerator()
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
-				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd);
+				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd, cancellationToken);
 			}
 		}
 
@@ -675,27 +675,39 @@ namespace LinqToDB.Data
 			Func<IDataReader, T>      _objectReader;
 			bool                      _isFaulted;
 			bool                      _isFinished;
+			CancellationToken         _cancellationToken;
 
-			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd)
+			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{
 				_commandInfo   = commandInfo;
 				_rd            = rd;
 				_additionalKey = commandInfo.GetCommandAdditionalKey(rd);
 				_objectReader  = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
 				_isFaulted     = false;
+				_cancellationToken = cancellationToken;
 			}
 
 			public void Dispose()
 			{
 			}
 
+#if NET45 || NET46
+			public Task DisposeAsync() => TaskEx.CompletedTask;
+#else
+			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
+#endif
+
 			public T Current { get; set; } = default!;
 
-			public async Task<bool> MoveNext(CancellationToken cancellationToken)
+#if NET45 || NET46
+			public async Task<bool> MoveNextAsync()
+#else
+			public async ValueTask<bool> MoveNextAsync()
+#endif
 			{
 				if (_isFinished)
 					return false;
-				if (!await _rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (!await _rd.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					_isFinished = true;
 					return false;
@@ -784,9 +796,9 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		#endregion
+#endregion
 
-		#region Execute
+#region Execute
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
@@ -818,9 +830,9 @@ namespace LinqToDB.Data
 			return commandResult;
 		}
 
-		#endregion
+#endregion
 
-		#region Execute async
+#region Execute async
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
@@ -876,9 +888,9 @@ namespace LinqToDB.Data
 			return commandResult;
 		}
 
-		#endregion
+#endregion
 
-		#region Execute scalar
+#region Execute scalar
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
@@ -936,9 +948,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-		#endregion
+#endregion
 
-		#region Execute scalar async
+#region Execute scalar async
 
 		/// <summary>
 		/// Executes command asynchronously and returns single value.
@@ -1010,9 +1022,9 @@ namespace LinqToDB.Data
 			return default!;
 		}
 
-		#endregion
+#endregion
 
-		#region ExecuteReader
+#region ExecuteReader
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns data reader instance.
@@ -1090,9 +1102,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-		#endregion
+#endregion
 
-		#region ExecuteReader async
+#region ExecuteReader async
 
 		/// <summary>
 		/// Executes command asynchronously and returns data reader instance.
@@ -1172,9 +1184,9 @@ namespace LinqToDB.Data
 			return default(T)!;
 		}
 
-		#endregion
+#endregion
 
-		#region SetParameters
+#region SetParameters
 
 		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
@@ -1397,9 +1409,9 @@ namespace LinqToDB.Data
 			return dataParameter;
 		}
 
-		#endregion
+#endregion
 
-		#region GetObjectReader
+#region GetObjectReader
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
@@ -1626,6 +1638,6 @@ namespace LinqToDB.Data
 			return lex.Compile();
 		}
 
-		#endregion
+#endregion
 	}
 }

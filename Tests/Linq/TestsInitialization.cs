@@ -38,7 +38,7 @@ public class TestsInitialization
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
-#if !NETCOREAPP2_1 && !AZURE
+#if NET46 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -65,7 +65,7 @@ public class TestsInitialization
 
 	private void RegisterSapHanaFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
@@ -86,7 +86,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future

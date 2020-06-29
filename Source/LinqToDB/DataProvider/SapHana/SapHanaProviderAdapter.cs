@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0
+﻿#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 using System;
 using System.Data;
 
@@ -15,9 +15,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NET45 || NET46
 		public const string AssemblyName        = "Sap.Data.Hana.v4.5";
-#endif
-#if NETCOREAPP2_1
+#elif NETCOREAPP2_1
 		public const string AssemblyName        = "Sap.Data.Hana.Core.v2.1";
+#elif NETCOREAPP3_0
+		public const string AssemblyName        = "Sap.Data.Hana.Core.v3.0";
 #endif
 
 		public const string ClientNamespace     = "Sap.Data.Hana";

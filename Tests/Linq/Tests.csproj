@@ -15,7 +15,7 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.0' ">
 		<Compile Remove="Metadata\AttributeReaderTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
 		<Compile Remove="Metadata\XmlReaderTests.cs" />

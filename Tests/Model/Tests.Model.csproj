@@ -6,7 +6,7 @@
 		<AssemblyName>linq2db.Model</AssemblyName>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.0' ">
 		<Compile Remove="TestServiceModelDataContext.cs" />
 	</ItemGroup>
 </Project>
