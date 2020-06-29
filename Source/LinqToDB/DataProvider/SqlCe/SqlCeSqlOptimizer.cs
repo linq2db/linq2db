@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Extensions;
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlQuery;
 	using SqlProvider;
-	using SqlQuery;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -28,10 +28,13 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			statement = CorrectSkipAndColumns(statement);
 
+			// call fixer after CorrectSkipAndColumns for remaining cases
+			base.FixEmptySelect(statement);
+
 			return statement;
 		}
 
-		public static SqlStatement CorrectSkipAndColumns(SqlStatement statement)
+		public SqlStatement CorrectSkipAndColumns(SqlStatement statement)
 		{
 			new QueryVisitor().Visit(statement, e =>
 			{
@@ -75,6 +78,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			});
 
 			return statement;
+		}
+
+		protected override void FixEmptySelect(SqlStatement statement)
+		{
+			// already fixed by CorrectSkipAndColumns
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

@@ -86,7 +86,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		void FixEmptySelect(SqlStatement statement)
+		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
 			// avoid SELECT * top level queries, as they could create a lot of unwanted traffic
 			// and such queries are not supported by remote context
