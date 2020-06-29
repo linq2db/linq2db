@@ -12,6 +12,9 @@ namespace LinqToDB.Async
 	/// </summary>
 	[PublicAPI]
 	public interface IAsyncDbConnection : IDbConnection
+#if !NET45 && !NET46
+		, IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level.
@@ -41,11 +44,13 @@ namespace LinqToDB.Async
 		/// <returns>Async operation task.</returns>
 		Task OpenAsync(CancellationToken cancellationToken = default);
 
+#if NET45 || NET46
 		/// <summary>
 		/// Disposes current connection asynchonously.
 		/// </summary>
 		/// <returns>Async operation task.</returns>
 		Task DisposeAsync();
+#endif
 
 		/// <summary>
 		/// Gets underlying connection instance.

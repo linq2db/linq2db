@@ -97,12 +97,23 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
+#if NET45 || NET46
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
 
 			return TaskEx.CompletedTask;
 		}
+#else
+		public virtual ValueTask DisposeAsync()
+		{
+			if (Connection is IAsyncDisposable asyncDisposable) 
+				return asyncDisposable.DisposeAsync();
+
+			Dispose();
+			return new ValueTask(Task.CompletedTask);
+		}
+#endif
 
 		public virtual IAsyncDbConnection? TryClone()
 		{
