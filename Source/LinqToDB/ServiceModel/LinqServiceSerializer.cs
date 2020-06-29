@@ -947,6 +947,19 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.IsTruePredicate :
+						{
+							var elem = (SqlPredicate.IsTrue)e;
+
+							Append(elem.Expr1);
+							Append(elem.IsNot);
+							Append(elem.TrueValue);
+							Append(elem.FalseValue);
+							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+
+							break;
+						}
+
 					case QueryElementType.IsNullPredicate :
 						{
 							var elem = (SqlPredicate.IsNull)e;
@@ -1693,6 +1706,19 @@ namespace LinqToDB.ServiceModel
 							var expr3 = Read<ISqlExpression>()!;
 
 							obj = new SqlPredicate.Between(expr1, isNot, expr2, expr3);
+
+							break;
+						}
+
+					case QueryElementType.IsTruePredicate :
+						{
+							var expr1 = Read<ISqlExpression>()!;
+							var isNot = ReadBool();
+							var trueValue  = Read<ISqlExpression>()!;
+							var falseValue = Read<ISqlExpression>()!;
+							var withNull   = ReadInt();
+							
+							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? (bool?)null : withNull == 1, isNot);
 
 							break;
 						}

@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						{
-							var root = expression!.GetRootObject(Builder.MappingSchema);
+							var root = Builder.GetRootObject(expression)!;
 
 							if (root.NodeType == ExpressionType.Parameter)
 							{
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							for (var i = 0; i < Lambda.Parameters.Count; i++)
 							{
-								var root = expression.GetRootObject(Builder.MappingSchema);
+								var root = Builder.GetRootObject(expression);
 
 								if (ReferenceEquals(root, Lambda.Parameters[i]))
 								{
@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			var root = expression.GetRootObject(Builder.MappingSchema);
+			var root = Builder.GetRootObject(expression);
 
 			for (var i = 0; i < Lambda!.Parameters.Count; i++)
 				if (ReferenceEquals(root, Lambda.Parameters[i]))

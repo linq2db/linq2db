@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using LinqToDB.Mapping;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Common
 {
+	using Mapping;
+
 	/// <summary>
 	/// Stores database type attributes.
 	/// </summary>
@@ -109,8 +111,14 @@ namespace LinqToDB.Common
 			return obj is DbDataType type && Equals(type);
 		}
 
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
+			if (_hashCode != null)
+				return _hashCode.Value;
+
 			unchecked
 			{
 				var hashCode = (SystemType != null ? SystemType.GetHashCode() : 0);
@@ -119,8 +127,10 @@ namespace LinqToDB.Common
 				hashCode     = (hashCode * 397) ^ (Length    != null ? Length.Value.GetHashCode()    : 0);
 				hashCode     = (hashCode * 397) ^ (Precision != null ? Precision.Value.GetHashCode() : 0);
 				hashCode     = (hashCode * 397) ^ (Scale     != null ? Scale.Value.GetHashCode()     : 0);
-				return hashCode;
+				_hashCode    = hashCode;
 			}
+
+			return _hashCode.Value;
 		}
 
 		#endregion

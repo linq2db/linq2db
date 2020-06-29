@@ -830,7 +830,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition :
 				{
-					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression, true);
 					break;
 				}
 
@@ -965,6 +965,16 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
+
+				case QueryElementType.IsTruePredicate:
+					{
+						var expr = (SqlPredicate.IsTrue)predicate;
+
+						if (expr.Expr1 is SqlParameter)
+							selectQuery.IsParameterDependent = true;
+
+						break;
+					}
 			}
 
 			return predicate;
@@ -1018,6 +1028,11 @@ namespace LinqToDB.SqlProvider
 						predicate = new SqlPredicate.ExprExpr(expr.Expr1, newOperator, expr.Expr2);
 						isNot     = false;
 					}
+				}
+				else if (predicate is SqlPredicate.NotExpr notExpr)
+				{
+					notExpr.Invert();
+					isNot = false;
 				}
 			}
 

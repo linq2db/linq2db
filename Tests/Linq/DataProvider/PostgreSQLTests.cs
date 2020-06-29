@@ -810,7 +810,7 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlDateTime? timestampDataType         { get; set; }
 			[Column]                                   public DateTimeOffset? timestampTZDataType       { get; set; }
 			[Column]                                   public NpgsqlDate?     dateDataType              { get; set; }
-			[Column]                                   public TimeSpan?       timeDataType              { get; set; }
+			[Column(DbType = "time")]                  public TimeSpan?       timeDataType              { get; set; }
 			[Column  (DbType = "time with time zone")] public DateTimeOffset? timeTZDataType            { get; set; }
 			[Column]                                   public NpgsqlTimeSpan? intervalDataType          { get; set; }
 			[Column(DataType = DataType.Interval)]     public TimeSpan?       intervalDataType2         { get; set; }
@@ -1493,7 +1493,7 @@ namespace Tests.DataProvider
 						intervalDataType2 = TimeSpan.FromDays(3),
 					});
 
-					Assert.Throws<PostgresException>(
+					Assert.DoesNotThrow(
 						() => db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
 						{
 							timeDataType = TimeSpan.FromDays(3)

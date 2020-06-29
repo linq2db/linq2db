@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 			for (var i = 0; i < methodInfo.GetParameters().Length; i++)
 			{
 				var parameter = methodInfo.GetParameters()[i];
-				RegisterTypeRemapping(parameter.ParameterType, arguments[i].Type, genericArguments, typesMapping);
+				TypeHelper.RegisterTypeRemapping(parameter.ParameterType, arguments[i].Type, genericArguments, typesMapping);
 			}
 
 			var newGenericArguments = genericArguments.Select((t, i) =>
@@ -920,7 +920,7 @@ namespace LinqToDB.Linq.Builder
 					if (IsEnumerableType(ma.Type, mappingSchema))
 						return true;
 
-					var root = ma.GetRootObject(mappingSchema);
+					var root = InternalExtensions.GetRootObject(ma, mappingSchema);
 					if (root.NodeType == ExpressionType.Parameter && !ignore.Contains(root))
 					{
 						dependencies.Add(e);
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Linq.Builder
 								GetEnumerableElementType(ma.Type, mappingSchema) ==
 								GetEnumerableElementType(query.Type, mappingSchema))
 							{
-								var root = ma.GetRootObject(mappingSchema);
+								var root = InternalExtensions.GetRootObject(ma, mappingSchema);
 								if (root.NodeType == ExpressionType.Parameter &&
 									!allowed.Contains((ParameterExpression)root))
 								{
@@ -1068,7 +1068,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			//TODO: we have to create sophisticated grouping handling
-			var root = queryableDetail.GetRootObject(mappingSchema);
+			var root = builder.GetRootObject(queryableDetail);
 			if (typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 				return null;
 
@@ -1834,7 +1834,7 @@ namespace LinqToDB.Linq.Builder
 
 
 										methodNeedsUpdate = true;
-										RegisterTypeRemapping(genericParameters[i].ParameterType, newArg.Type,
+										TypeHelper.RegisterTypeRemapping(genericParameters[i].ParameterType, newArg.Type,
 											genericArguments, typesMapping);
 
 										newArguments[i] = newArg;
@@ -1949,7 +1949,7 @@ namespace LinqToDB.Linq.Builder
 												? templateLambdaType.GetGenericArguments()[0]
 												: templateLambdaType;
 
-											RegisterTypeRemapping(forRegister,
+											TypeHelper.RegisterTypeRemapping(forRegister,
 												newArgLambda.Type, genericArguments, typesMapping);
 
 											newArguments[i] = newArgLambda;
@@ -2068,34 +2068,5 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		static void RegisterTypeRemapping(Type templateType, Type replaced, Type[] templateArguments, Dictionary<Type, Type> typeMappings)
-		{
-			if (templateType.IsGenericType)
-			{
-				var currentTemplateArguments = templateType.GetGenericArguments();
-				var replacedArguments        = replaced.GetGenericArguments();
-
-				for (int i = 0; i < currentTemplateArguments.Length; i++)
-				{
-					RegisterTypeRemapping(currentTemplateArguments[i], replacedArguments[i], templateArguments, typeMappings);
-				}
-			}
-			else
-			{
-				var idx = Array.IndexOf(templateArguments, templateType);
-				if (idx >= 0)
-				{
-					if (!typeMappings.TryGetValue(templateType, out var value))
-					{
-						typeMappings.Add(templateType, replaced);
-					}
-					else
-					{
-						if (value != replaced)
-							throw new InvalidOperationException();
-					}
-				}
-			}
-		}
 	}
 }

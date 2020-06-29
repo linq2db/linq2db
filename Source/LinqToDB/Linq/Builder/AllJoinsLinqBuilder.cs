@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expression != null)
 				{
-					var root = expression.GetRootObject(Builder.MappingSchema);
+					var root = Builder.GetRootObject(expression);
 
 					if (root.NodeType == ExpressionType.Parameter && root == Lambda.Parameters[1])
 					{

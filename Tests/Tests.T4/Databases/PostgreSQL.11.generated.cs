@@ -390,13 +390,13 @@ namespace PostreSQL11DataContext
 
 		public partial class PgAvailableExtensionVersionsResult
 		{
-			public string? name        { get; set; }
-			public string? version     { get; set; }
-			public bool?   superuser   { get; set; }
-			public bool?   relocatable { get; set; }
-			public string? schema      { get; set; }
-			public Array?  requires    { get; set; }
-			public string? comment     { get; set; }
+			public string?   name        { get; set; }
+			public string?   version     { get; set; }
+			public bool?     superuser   { get; set; }
+			public bool?     relocatable { get; set; }
+			public string?   schema      { get; set; }
+			public string[]? requires    { get; set; }
+			public string?   comment     { get; set; }
 		}
 
 		#endregion
@@ -487,18 +487,18 @@ namespace PostreSQL11DataContext
 
 		public partial class PgEventTriggerDroppedObjectsResult
 		{
-			public int?    classid         { get; set; }
-			public int?    objid           { get; set; }
-			public int?    objsubid        { get; set; }
-			public bool?   original        { get; set; }
-			public bool?   normal          { get; set; }
-			public bool?   is_temporary    { get; set; }
-			public string? object_type     { get; set; }
-			public string? schema_name     { get; set; }
-			public string? object_name     { get; set; }
-			public string? object_identity { get; set; }
-			public Array?  address_names   { get; set; }
-			public Array?  address_args    { get; set; }
+			public int?      classid         { get; set; }
+			public int?      objid           { get; set; }
+			public int?      objsubid        { get; set; }
+			public bool?     original        { get; set; }
+			public bool?     normal          { get; set; }
+			public bool?     is_temporary    { get; set; }
+			public string?   object_type     { get; set; }
+			public string?   schema_name     { get; set; }
+			public string?   object_name     { get; set; }
+			public string?   object_identity { get; set; }
+			public string[]? address_names   { get; set; }
+			public string[]? address_args    { get; set; }
 		}
 
 		#endregion
@@ -606,15 +606,15 @@ namespace PostreSQL11DataContext
 
 		public partial class PgHbaFileRulesResult
 		{
-			public int?    line_number { get; set; }
-			public string? type        { get; set; }
-			public Array?  database    { get; set; }
-			public Array?  user_name   { get; set; }
-			public string? address     { get; set; }
-			public string? netmask     { get; set; }
-			public string? auth_method { get; set; }
-			public Array?  options     { get; set; }
-			public string? error       { get; set; }
+			public int?      line_number { get; set; }
+			public string?   type        { get; set; }
+			public string[]? database    { get; set; }
+			public string[]? user_name   { get; set; }
+			public string?   address     { get; set; }
+			public string?   netmask     { get; set; }
+			public string?   auth_method { get; set; }
+			public string[]? options     { get; set; }
+			public string?   error       { get; set; }
 		}
 
 		#endregion
@@ -885,23 +885,23 @@ namespace PostreSQL11DataContext
 
 		public partial class PgShowAllSettingsResult
 		{
-			public string? name            { get; set; }
-			public string? setting         { get; set; }
-			public string? unit            { get; set; }
-			public string? category        { get; set; }
-			public string? short_desc      { get; set; }
-			public string? extra_desc      { get; set; }
-			public string? context         { get; set; }
-			public string? vartype         { get; set; }
-			public string? source          { get; set; }
-			public string? min_val         { get; set; }
-			public string? max_val         { get; set; }
-			public Array?  enumvals        { get; set; }
-			public string? boot_val        { get; set; }
-			public string? reset_val       { get; set; }
-			public string? sourcefile      { get; set; }
-			public int?    sourceline      { get; set; }
-			public bool?   pending_restart { get; set; }
+			public string?   name            { get; set; }
+			public string?   setting         { get; set; }
+			public string?   unit            { get; set; }
+			public string?   category        { get; set; }
+			public string?   short_desc      { get; set; }
+			public string?   extra_desc      { get; set; }
+			public string?   context         { get; set; }
+			public string?   vartype         { get; set; }
+			public string?   source          { get; set; }
+			public string?   min_val         { get; set; }
+			public string?   max_val         { get; set; }
+			public string[]? enumvals        { get; set; }
+			public string?   boot_val        { get; set; }
+			public string?   reset_val       { get; set; }
+			public string?   sourcefile      { get; set; }
+			public int?      sourceline      { get; set; }
+			public bool?     pending_restart { get; set; }
 		}
 
 		#endregion
@@ -1114,7 +1114,7 @@ namespace PostreSQL11DataContext
 
 		public partial class RegexpMatchesResult
 		{
-			public Array? regexp_matches { get; set; }
+			public string[]? regexp_matches { get; set; }
 		}
 
 		#endregion
@@ -1220,6 +1220,12 @@ namespace PostreSQL11DataContext
 			public string?                     jsonbDataType       { get; set; }
 			public string?                     xmlDataType         { get; set; }
 			public BitArray?                   varBitDataType      { get; set; }
+			public string[]?                   strarray            { get; set; }
+			public int[]?                      intarray            { get; set; }
+			public long[]?                     int2darray          { get; set; }
+			public double[]?                   longarray           { get; set; }
+			public decimal[]?                  doublearray         { get; set; }
+			public decimal[]?                  decimalarray        { get; set; }
 		}
 
 		#endregion
@@ -1235,12 +1241,12 @@ namespace PostreSQL11DataContext
 
 		public partial class TsDebugResult
 		{
-			public string? alias        { get; set; }
-			public string? description  { get; set; }
-			public string? token        { get; set; }
-			public object? dictionaries { get; set; }
-			public object? dictionary   { get; set; }
-			public Array?  lexemes      { get; set; }
+			public string?   alias        { get; set; }
+			public string?   description  { get; set; }
+			public string?   token        { get; set; }
+			public object?   dictionaries { get; set; }
+			public object?   dictionary   { get; set; }
+			public string[]? lexemes      { get; set; }
 		}
 
 		#endregion
@@ -1327,9 +1333,9 @@ namespace PostreSQL11DataContext
 
 		public partial class UnnestResult
 		{
-			public string? lexeme    { get; set; }
-			public Array?  positions { get; set; }
-			public Array?  weights   { get; set; }
+			public string?   lexeme    { get; set; }
+			public short[]?  positions { get; set; }
+			public string[]? weights   { get; set; }
 		}
 
 		#endregion
@@ -1619,8 +1625,8 @@ namespace PostreSQL11DataContext
 		[Column("dateDataType",        DataType=DataType.Date,           Precision=0),           Nullable            ] public DateTime?                   DateDataType        { get; set; } // date
 		[Column("timeDataType",        DataType=DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?                   TimeDataType        { get; set; } // time (6) without time zone
 		[Column("timeTZDataType",      DataType=DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?             TimeTZDataType      { get; set; } // time (6) with time zone
-		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType    { get; set; } // interval(6)
-		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType2   { get; set; } // interval(6)
+		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType    { get; set; } // interval
+		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType2   { get; set; } // interval
 		[Column("charDataType",        DataType=DataType.NChar,          Length=1),              Nullable            ] public char?                       CharDataType        { get; set; } // character(1)
 		[Column("char20DataType",      DataType=DataType.NChar,          Length=20),             Nullable            ] public string?                     Char20DataType      { get; set; } // character(20)
 		[Column("varcharDataType",     DataType=DataType.NVarChar,       Length=20),             Nullable            ] public string?                     VarcharDataType     { get; set; } // character varying(20)
@@ -1645,6 +1651,12 @@ namespace PostreSQL11DataContext
 		[Column("jsonbDataType",       DataType=DataType.BinaryJson),                            Nullable            ] public string?                     JsonbDataType       { get; set; } // jsonb
 		[Column("xmlDataType",         DataType=DataType.Xml),                                   Nullable            ] public string?                     XmlDataType         { get; set; } // xml
 		[Column("varBitDataType",      DataType=DataType.BitArray),                              Nullable            ] public BitArray?                   VarBitDataType      { get; set; } // bit varying
+		[Column("strarray",            DataType=DataType.Undefined),                             Nullable            ] public string[]?                   Strarray            { get; set; } // text[]
+		[Column("intarray",            DataType=DataType.Undefined),                             Nullable            ] public int[][]?                    Intarray            { get; set; } // integer[][]
+		[Column("int2darray",          DataType=DataType.Undefined),                             Nullable            ] public long[]?                     Int2darray          { get; set; } // bigint[]
+		[Column("longarray",           DataType=DataType.Undefined),                             Nullable            ] public double[]?                   Longarray           { get; set; } // double precision[]
+		[Column("doublearray",         DataType=DataType.Undefined),                             Nullable            ] public decimal[]?                  Doublearray         { get; set; } // numeric[]
+		[Column("decimalarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?                  Decimalarray        { get; set; } // numeric[]
 	}
 
 	[Table(Schema="public", Name="Child")]

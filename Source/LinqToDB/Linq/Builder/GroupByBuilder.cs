@@ -230,7 +230,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				_sequenceExpr = sequenceExpr;
 				_key          = key;
-				_element      = element;
+				Element       = element;
 				_groupingType = groupingType;
 
 				_isGroupingGuardDisabled = isGroupingGuardDisabled;
@@ -240,9 +240,10 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Expression    _sequenceExpr;
 			readonly KeyContext    _key;
-			readonly SelectContext _element;
 			readonly Type          _groupingType;
 			readonly bool          _isGroupingGuardDisabled;
+
+			public SelectContext   Element { get; }
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
@@ -309,8 +310,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Configuration.Linq.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
-						if (context._element.Lambda.Parameters.Count == 1 &&
-							context._element.Body == context._element.Lambda.Parameters[0])
+						if (context.Element.Lambda.Parameters.Count == 1 &&
+							context.Element.Body == context.Element.Lambda.Parameters[0])
 						{
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
@@ -360,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 						null,
 						MemberHelper.MethodOf(() => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null!)),
 						expr,
-						context._element.Lambda);
+						context.Element.Lambda);
 
 // ReSharper restore AssignNullToNotNullAttribute
 
@@ -419,7 +420,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var gtype = typeof(GroupByHelper<,,>).MakeGenericType(
 					_key.Lambda.Body.Type,
-					_element.Lambda.Body.Type,
+					Element.Lambda.Body.Type,
 					_key.Lambda.Parameters[0].Type);
 
 				var isBlockDisable = Builder.IsBlockDisable;
@@ -486,8 +487,8 @@ namespace LinqToDB.Linq.Builder
 
 								if (largs.Length == 2)
 								{
-									var p   = _element.Parent;
-									var ctx = new ExpressionContext(Parent, _element, l);
+									var p   = Element.Parent;
+									var ctx = new ExpressionContext(Parent, Element, l);
 									var sql = Builder.ConvertToSql(ctx, l.Body, true);
 
 									Builder.ReplaceParent(ctx, p);
@@ -531,17 +532,17 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, e =>
+					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, (e, descriptor) =>
 					{
 						var ex = e.Unwrap();
 
 						if (ex is LambdaExpression)
 						{
 							var l = (LambdaExpression) ex;
-							var p = _element.Parent;
-							var ctx = new ExpressionContext(Parent, _element, l);
+							var p = Element.Parent;
+							var ctx = new ExpressionContext(Parent, Element, l);
 
-							var res = Builder.ConvertToSql(ctx, l.Body, true);
+							var res = Builder.ConvertToSql(ctx, l.Body, true, descriptor);
 
 							Builder.ReplaceParent(ctx, p);
 							return res;
@@ -549,19 +550,19 @@ namespace LinqToDB.Linq.Builder
 
 						if (rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
 						{
-							return _element.ConvertToSql(null, 0, ConvertFlags.Field)
+							return Element.ConvertToSql(null, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						if (typeof(IGrouping<,>).IsSameOrParentOf(ex.GetRootObject(Builder.MappingSchema).Type))
+						if (typeof(IGrouping<,>).IsSameOrParentOf(Builder.GetRootObject(ex).Type))
 						{
 							return ConvertToSql(ex, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						return Builder.ConvertToExtensionSql(_element, ex);
+						return Builder.ConvertToExtensionSql(Element, ex, descriptor);
 					});
 
 					if (expr != null)
@@ -577,8 +578,8 @@ namespace LinqToDB.Linq.Builder
 						if (ex is LambdaExpression)
 						{
 							var l   = (LambdaExpression) ex;
-							var p   = _element.Parent;
-							var ctx = new ExpressionContext(Parent, _element, l);
+							var p   = Element.Parent;
+							var ctx = new ExpressionContext(Parent, Element, l);
 
 							args[i - 1] = Builder.ConvertToSql(ctx, l.Body, true);
 
@@ -586,13 +587,13 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							args[i - 1] = Builder.ConvertToSql(_element, ex, true);
+							args[i - 1] = Builder.ConvertToSql(Element, ex, true);
 						}
 					}
 				}
 				else
 				{
-					args = _element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+					args = Element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 				}
 
 				if (attribute != null)
@@ -608,7 +609,7 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 				{
 					if (flags == ConvertFlags.Field && !_key.IsScalar)
-						return _element.ConvertToSql(null, 0, flags);
+						return Element.ConvertToSql(null, 0, flags);
 					var keys = _key.ConvertToSql(null, 0, flags);
 					for (var i = 0; i < keys.Length; i++)
 					{

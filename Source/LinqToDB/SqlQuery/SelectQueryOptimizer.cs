@@ -516,7 +516,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition)
+		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, bool withParameters = false)
 		{
 			var searchCondition = inputCondition;
 
@@ -559,7 +559,7 @@ namespace LinqToDB.SqlQuery
 						}
 
 						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, op, exprExpr.Expr2);
-						newCond  = new SqlCondition(false, exprExpr);
+						newCond  = new SqlCondition(false, exprExpr, newCond.IsOr);
 					}
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
@@ -569,7 +569,7 @@ namespace LinqToDB.SqlQuery
 					    && value1.GetType() == value2.GetType())
 					{
 						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(
-							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))));
+							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))), newCond.IsOr);
 					}
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
@@ -577,7 +577,7 @@ namespace LinqToDB.SqlQuery
 					    && exprExpr.Expr1 is SqlParameter p1 && !p1.CanBeNull
 					    && exprExpr.Expr2 is SqlParameter p2 && Equals(p1, p2))
 					{
-						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(true)));
+						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(true)), newCond.IsOr);
 					}
 				}
 
@@ -587,7 +587,33 @@ namespace LinqToDB.SqlQuery
 
 					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
 					{
-						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!b)));
+						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!b)), newCond.IsOr);
+					}
+				}
+				else if (newCond.Predicate.ElementType == QueryElementType.IsTruePredicate)
+				{
+					//TODO: This everything is weird, predicates needs full refactoring
+					var expr = (SqlPredicate.IsTrue)newCond.Predicate;
+
+					if (expr.Expr1.ElementType == QueryElementType.SqlValue || withParameters && expr.Expr1.ElementType == QueryElementType.SqlParameter)
+					{
+						var value  = expr.Expr1.EvaluateExpression();
+						var result = false;
+						if (value == null)
+						{
+							if (expr.WithNull != true)
+								result = false;
+						}
+						else
+						{
+							if (expr.IsNot)
+								result = value.Equals(expr.FalseValue.EvaluateExpression());
+							else
+								result = value.Equals(expr.TrueValue.EvaluateExpression());
+						}
+
+						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(result)), newCond.IsOr);
+
 					}
 				}
 
@@ -1276,7 +1302,9 @@ namespace LinqToDB.SqlQuery
 						}
 					});
 
-					return query.Select.Columns[0].Expression;
+					//TODO: Need to check purpose of this method
+					if (query.Select.Columns[0].Expression is ISqlTableSource ts)
+						return ts;
 				}
 
 				return expr;

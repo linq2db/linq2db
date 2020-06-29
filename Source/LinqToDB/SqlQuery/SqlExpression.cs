@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -105,8 +106,14 @@ namespace LinqToDB.SqlQuery
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
 
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
+			if (_hashCode != null)
+				return _hashCode.Value;
+
 			var hashCode = Expr.GetHashCode();
 
 			if (SystemType != null)
@@ -114,6 +121,8 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			_hashCode = hashCode;
 
 			return hashCode;
 		}

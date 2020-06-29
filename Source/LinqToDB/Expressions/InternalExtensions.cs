@@ -223,6 +223,11 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Block:
 					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
+				
+				case ChangeTypeExpression.ChangeTypeType:
+					return
+						((ChangeTypeExpression) expr1).Type == ((ChangeTypeExpression) expr2).Type &&
+						((ChangeTypeExpression) expr1).Expression.EqualsTo(((ChangeTypeExpression) expr2).Expression, info);
 			}
 
 			throw new InvalidOperationException();
@@ -977,7 +982,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("expr")]
-		public static Expression? GetRootObject(this Expression? expr, MappingSchema mapping)
+		public static Expression? GetRootObject(Expression? expr, MappingSchema mapping)
 		{
 			if (expr == null)
 				return null;

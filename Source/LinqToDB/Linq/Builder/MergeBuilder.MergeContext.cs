@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						case ConvertFlags.Field:
 							{
-								var root = expression.GetRootObject(Builder.MappingSchema);
+								var root = Builder.GetRootObject(expression);
 
 								if (root.NodeType == ExpressionType.Parameter)
 								{

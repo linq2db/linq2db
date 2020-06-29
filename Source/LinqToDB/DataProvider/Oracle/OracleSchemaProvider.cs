@@ -344,7 +344,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -357,7 +357,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)

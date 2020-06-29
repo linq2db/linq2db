@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1481,6 +1482,23 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return Expression.Equal(left, right);
+		}
+
+
+		Dictionary<Expression, Expression?> _rootExpressions = new Dictionary<Expression, Expression?>();
+
+		[return: NotNullIfNotNull("expr")]
+		internal Expression? GetRootObject(Expression? expr)
+		{
+			if (expr == null)
+				return null;
+
+			if (_rootExpressions.TryGetValue(expr, out var root))
+				return root;
+
+			root = InternalExtensions.GetRootObject(expr, MappingSchema);
+			_rootExpressions.Add(expr, root);
+			return root;
 		}
 
 		#endregion

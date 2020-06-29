@@ -734,7 +734,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr, false, columnDescriptor);
 		}
 
-		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression)
+		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
 			expression = expression.Unwrap();
 
@@ -745,18 +745,27 @@ namespace LinqToDB.Linq.Builder
 					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
 				else 
 					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()!).Query.Expression;
-				return ConvertToExtensionSql(context, preparedExpression);
+				return ConvertToExtensionSql(context, preparedExpression, columnDescriptor);
 			}
 
 			if (expression is LambdaExpression lambda)
 			{
 				var saveParent = context.Parent;
 				ExpressionContext exprCtx;
-				if (context is SelectContext sc)
-					exprCtx = new ExpressionContext(context, sc.Sequence, lambda);
-				else
-					exprCtx = new ExpressionContext(context.Parent, context, lambda);
-				var result = ConvertToSql(exprCtx, lambda.Body);
+
+				IBuildContext valueSequence = context;
+
+				if (context is SelectContext sc && sc.Sequence[0] is GroupByBuilder.GroupByContext)
+					valueSequence = sc.Sequence[0];
+
+				if (valueSequence is GroupByBuilder.GroupByContext groupByContext)
+				{
+					valueSequence = groupByContext.Element;
+				}
+
+				exprCtx = new ExpressionContext(valueSequence.Parent, valueSequence, lambda);
+
+				var result = ConvertToSql(exprCtx, lambda.Body, false, columnDescriptor);
 				ReplaceParent(context.Parent!, saveParent);
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
@@ -767,7 +776,7 @@ namespace LinqToDB.Linq.Builder
 			if (!MappingSchema.IsScalarType(expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
 				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 
-			return ConvertToSql(context, expression);
+			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
 		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null)
@@ -781,7 +790,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!PreferServerSide(expression, false))
 			{
-				if (CanBeConstant(expression))
+				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 					return BuildConstant(expression);
 
 				if (CanBeCompiled(expression))
@@ -947,7 +956,7 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 						{
 							var converted = attr.GetExpression(DataContext, context!.SelectQuery, ma,
-								e => ConvertToExtensionSql(context, e));
+								(e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
 
 							if (converted == null)
 							{
@@ -1073,51 +1082,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
-							var inlineParameters = DataContext.InlineParameters;
-
-							if (attr.InlineParameters)
-								DataContext.InlineParameters = true;
-
-							var sqlExpression = attr.GetExpression(DataContext, context!.SelectQuery, e, _ => ConvertToExtensionSql(context, _));
-							if (sqlExpression != null)
-								return Convert(sqlExpression);
-
-							var parms = new List<ISqlExpression>();
-
-							if (e.Object != null)
-								parms.Add(ConvertToSql(context, e.Object));
-
-							ParameterInfo[]? pis = null;
-
-							for (var i = 0; i < e.Arguments.Count; i++)
-							{
-								var arg = e.Arguments[i];
-
-								if (arg is NewArrayExpression nae)
-								{
-									if (pis == null)
-										pis = e.Method.GetParameters();
-
-									var p = pis[i];
-
-									if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
-									{
-										parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
-									}
-									else
-									{
-										parms.Add(ConvertToSql(context, nae));
-									}
-								}
-								else
-								{
-									parms.Add(ConvertToSql(context, arg));
-								}
-							}
-
-							DataContext.InlineParameters = inlineParameters;
-
-							return Convert(attr.GetExpression(e.Method, parms.ToArray()));
+							return ConvertExtensionToSql(context!, attr, e);
 						}
 
 						if (e.Method.IsSqlPropertyMethodEx())
@@ -1188,6 +1153,56 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		{
+			var inlineParameters = DataContext.InlineParameters;
+
+			if (attr.InlineParameters)
+				DataContext.InlineParameters = true;
+
+			var sqlExpression =
+				attr.GetExpression(DataContext, context!.SelectQuery, mc, (e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
+			if (sqlExpression != null)
+				return Convert(sqlExpression);
+
+			var parms = new List<ISqlExpression>();
+
+			if (mc.Object != null)
+				parms.Add(ConvertToSql(context, mc.Object));
+
+			ParameterInfo[]? pis = null;
+
+			for (var i = 0; i < mc.Arguments.Count; i++)
+			{
+				var arg = mc.Arguments[i];
+
+				if (arg is NewArrayExpression nae)
+				{
+					if (pis == null)
+						pis = mc.Method.GetParameters();
+
+					var p = pis[i];
+
+					if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
+					{
+						parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
+					}
+					else
+					{
+						parms.Add(ConvertToSql(context, nae));
+					}
+				}
+				else
+				{
+					parms.Add(ConvertToSql(context, arg));
+				}
+			}
+
+			DataContext.InlineParameters = inlineParameters;
+
+			return Convert(attr.GetExpression(mc.Method, parms.ToArray()));
 		}
 
 		ISqlExpression ConvertToSqlConvertible(Expression expression)
@@ -1432,6 +1447,8 @@ namespace LinqToDB.Linq.Builder
 					if (columnDescriptor != null)
 					{
 						newExpr.DataType        = columnDescriptor.GetDbDataType();
+						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
+							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType);
 
 						if (name == null)
@@ -1798,7 +1815,45 @@ namespace LinqToDB.Linq.Builder
 			if (r is SqlSearchCondition)
 				r = Convert(new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false)));
 
-			return Convert(context!, new SqlPredicate.ExprExpr(l, op, r));
+			ISqlPredicate? predicate = null;
+			if (op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
+			{
+				bool?           value      = null;
+				ISqlExpression? expression = null;
+				var             isNullable = false;
+				if ((typeof(bool) == left.Type || typeof(bool?) == left.Type) && left.Unwrap() is ConstantExpression lc)
+				{
+					value      = lc.Value as bool?;
+					isNullable = typeof(bool?) == left.Type;
+					expression = r;
+				}
+				else if ((typeof(bool) == right.Type || typeof(bool?) == right.Type) && right.Unwrap() is ConstantExpression rc)
+				{
+					value      = rc.Value as bool?;
+					isNullable = typeof(bool?) == right.Type;
+					expression = l;
+				}
+
+				if (value != null && expression != null)
+				{
+					var isNot = !value.Value;
+					var withNull = false;
+					if (op == SqlPredicate.Operator.NotEqual)
+					{
+						isNot    = !isNot;
+						withNull = true;
+					}
+					var descriptor = QueryHelper.GetColumnDescriptor(expression);
+					var trueValue  = ConvertToSql(context, Expression.Constant(true),  false, descriptor);
+					var falseValue = ConvertToSql(context, Expression.Constant(false), false, descriptor);
+
+					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, isNullable || NeedNullCheck(expression) ? withNull : (bool?)null, isNot); 
+				}
+			}
+
+			if (predicate == null)
+				predicate = new SqlPredicate.ExprExpr(l, op, r);
+			return Convert(context!, predicate);
 		}
 
 		// restores original types, lost due to C# compiler optimizations
@@ -2796,7 +2851,7 @@ namespace LinqToDB.Linq.Builder
 							var sqlCondition = notCondition.Conditions[0];
 							if (sqlCondition.Predicate is SqlPredicate.NotExpr p)
 							{
-								p.IsNot = !p.IsNot;
+								p.Invert();
 								var checkIsNullLocal = CheckIsNull(sqlCondition.Predicate, true, isNotExpression);
 								conditions.Add(checkIsNullLocal ?? sqlCondition);
 							}
@@ -2824,32 +2879,6 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
-				case ExpressionType.Equal :
-					{
-						if (expression.Type == typeof(bool))
-						{
-							var e = (BinaryExpression)expression;
-
-							Expression? ce = null, ee = null;
-
-							if      (e.Left.NodeType  == ExpressionType.Constant) { ce = e.Left;  ee = e.Right; }
-							else if (e.Right.NodeType == ExpressionType.Constant) { ce = e.Right; ee = e.Left; }
-
-							if (ce != null)
-							{
-								var value = ((ConstantExpression)ce).Value;
-
-								if (value is bool b && b == false)
-								{
-									BuildSearchCondition(context, Expression.Not(ee), conditions, isNotExpression);
-									return;
-								}
-							}
-						}
-
-						goto default;
-					}
-
 				default                    :
 					var predicate = ConvertPredicate(context, expression);
 
@@ -2873,6 +2902,14 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 			}
+		}
+
+
+		static bool NeedNullCheck(ISqlExpression expr)
+		{
+			if (null != new QueryVisitor().Find(expr, e => e.ElementType == QueryElementType.SelectClause))
+				return false;
+			return expr.CanBeNull;
 		}
 
 		static SqlCondition? CheckIsNull(ISqlPredicate predicate, bool isNot, bool isNotExpression)
@@ -3095,7 +3132,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetContext(IBuildContext? current, Expression? expression)
 		{
-			var root = expression.GetRootObject(MappingSchema);
+			var root = GetRootObject(expression);
 			root = root.Unwrap();
 
 			if (root is ContextRefExpression refExpression)

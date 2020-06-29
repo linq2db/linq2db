@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -8,9 +9,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
-			Parent     = parent;
-			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
-			RawAlias   = alias;
+			Parent      = parent;
+			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			RawAlias    = alias;
 
 #if DEBUG
 			_columnNumber = ++_columnCounter;
@@ -27,9 +28,34 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public ISqlExpression   Expression { get; set; }
+		ISqlExpression _expression;
+		
+		public ISqlExpression Expression
+		{
+			get => _expression;
+			set
+			{
+				if (_expression == value)
+					return;
+				_expression = value;
+				_hashCode   = null;
+			}
+		}
 
-		public   SelectQuery?   Parent     { get; set; }
+		SelectQuery? _parent;
+		
+		public SelectQuery? Parent
+		{
+			get => _parent;
+			set
+			{
+				if (_parent == value)
+					return;
+				_parent   = value;
+				_hashCode = null;
+			}
+		}
+
 		internal string?        RawAlias   { get; set; }
 
 		public string? Alias
@@ -99,13 +125,21 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
 			if (UnderlyingColumn != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
+
+			_hashCode = hashCode;
 
 			return hashCode;
 		}
@@ -121,29 +155,7 @@ namespace LinqToDB.SqlQuery
 			if (Expression.Equals(other.Expression))
 				return true;
 
-			//return false;
 			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
-
-			//var found =
-			//
-			//	|| new QueryVisitor().Find(other, e =>
-			//		{
-			//			switch(e.ElementType)
-			//			{
-			//				case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
-			//			}
-			//			return false;
-			//		}) != null
-			//	|| new QueryVisitor().Find(Expression, e =>
-			//		{
-			//			switch (e.ElementType)
-			//			{
-			//				case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
-			//			}
-			//			return false;
-			//		}) != null;
-
-			//return found;
 		}
 
 		public override string ToString()

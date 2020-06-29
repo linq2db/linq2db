@@ -214,6 +214,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore ; break;
 				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json   ; break;
 				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb  ; break;
+				case DataType.Interval  : type = NpgsqlProviderAdapter.NpgsqlDbType.Interval ; break;
+				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint ; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))

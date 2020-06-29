@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.DB2
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sqlBuilder.ConvertInline(columns[i].ColumnName, SqlProvider.ConvertType.NameToQueryField)));
 
 				traceAction(
 					dataConnection,
