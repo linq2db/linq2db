@@ -134,6 +134,8 @@ namespace LinqToDB.Data.RetryPolicy
 
 #if NET45 || NET46
 		public Task DisposeAsync()
+#elif NETSTANDARD2_0 || NETCOREAPP2_1
+		public ValueTask DisposeAsync()
 #else
 		public override ValueTask DisposeAsync()
 #endif
