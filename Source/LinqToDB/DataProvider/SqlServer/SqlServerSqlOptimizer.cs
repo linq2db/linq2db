@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
-			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null);
+			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null, false);
 
 		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
 		{
