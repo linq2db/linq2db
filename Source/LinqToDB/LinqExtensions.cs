@@ -192,7 +192,7 @@ namespace LinqToDB
 		/// <param name="selector">Value selection expression.</param>
 		/// <returns>Requested value.</returns>
 		[Pure]
-		public static async Task<T> SelectAsync<T>(
+		public static async ValueTask<T> SelectAsync<T>(
 			                this IDataContext   dataContext,
 			[InstantHandle] Expression<Func<T>> selector)
 		{

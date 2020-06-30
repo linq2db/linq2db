@@ -256,7 +256,7 @@ namespace LinqToDB.Linq
 
 		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
 		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,ValueTask> GetForEachAsync = null!;
 
 		#endregion
 

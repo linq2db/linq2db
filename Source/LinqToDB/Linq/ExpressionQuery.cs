@@ -156,7 +156,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		public ValueTask GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
 			return GetQuery(ref expression, true)

@@ -578,7 +578,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static async Task ExecuteQueryAsync<T>(
+		static async ValueTask ExecuteQueryAsync<T>(
 			Query                         query,
 			IDataContext                  dataContext,
 			Mapper<T>                     mapper,

@@ -111,20 +111,20 @@ namespace LinqToDB
 		/// <param name="func">Function to apply to each sequence element. Returning <c>false</c> from function will stop numeration.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public static Task ForEachUntilAsync<TSource>(
+		public static ValueTask ForEachUntilAsync<TSource>(
 			this IQueryable<TSource> source, Func<TSource,bool> func,
 			CancellationToken token = default)
 		{
 			if (source is ExpressionQuery<TSource> query)
 				return query.GetForEachUntilAsync(func, token);
 
-			return GetActionTask(() =>
+			return new ValueTask(GetActionTask(() =>
 			{
 				foreach (var item in source)
 					if (token.IsCancellationRequested || !func(item))
 						break;
 			},
-			token);
+			token));
 		}
 
 		#endregion
