@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]);
+				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments().Last());
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 

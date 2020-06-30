@@ -132,7 +132,7 @@ namespace LinqToDB.SqlQuery
 			return statement switch
 			{
 				SqlInsertStatement insert => insert.Output,
-				// SqlUpdateStatement update => throw new NotImplementedException(),
+				SqlUpdateStatement update => update.Output,
 				SqlDeleteStatement delete => delete.Output,
 				_ => null,
 			};
