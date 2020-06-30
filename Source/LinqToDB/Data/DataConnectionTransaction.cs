@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToDB.Async;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,10 +8,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Data connection transaction controller.
 	/// </summary>
-	public class DataConnectionTransaction : IDisposable
-#if !NET45 && !NET46
-		, IAsyncDisposable
-#endif
+	public class DataConnectionTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Creates new transaction controller for data connection.
@@ -76,14 +74,12 @@ namespace LinqToDB.Data
 				DataConnection.RollbackTransaction();
 		}
 
-#if !NET45 && !NET46
 		public ValueTask DisposeAsync()
 		{
 			if (_disposeTransaction)
 				return new ValueTask(DataConnection.RollbackTransactionAsync());
 
-			return new ValueTask(Task.CompletedTask);
+			return new ValueTask(TaskEx.CompletedTask);
 		}
-#endif
 	}
 }

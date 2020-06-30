@@ -61,17 +61,18 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
-#if NET45 || NET46
-			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
-#else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#endif
+			//await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			try
 			{
 				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
 					result.Add(enumerator.Current);
 				}
+			}
+			finally
+			{
+				await enumerator.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			return result;
@@ -131,16 +132,17 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NET45 || NET46
-			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
-#else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#endif
+			//await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			try
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
 				return default!;
+			}
+			finally
+			{
+				await enumerator.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -156,15 +158,16 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NET45 || NET46
-			using (var enumerator = source.GetAsyncEnumerator(token))
-#else
 			var enumerator = source.GetAsyncEnumerator(token);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#endif
+			//await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			try
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
+			}
+			finally
+			{
+				await enumerator.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			throw new InvalidOperationException("The source sequence is empty.");

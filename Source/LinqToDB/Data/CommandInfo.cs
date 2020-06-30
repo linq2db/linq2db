@@ -691,19 +691,11 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if NET45 || NET46
-			public Task DisposeAsync() => TaskEx.CompletedTask;
-#else
-			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
-#endif
+			public ValueTask DisposeAsync() => new ValueTask(TaskEx.CompletedTask);
 
 			public T Current { get; set; } = default!;
 
-#if NET45 || NET46
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_isFinished)
 					return false;

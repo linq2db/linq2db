@@ -38,16 +38,9 @@ namespace LinqToDB.Async
 			return _rollbackAsync?.Invoke(Transaction, cancellationToken) ?? base.RollbackAsync(cancellationToken);
 		}
 
-#if NET45 || NET46
-		public override Task DisposeAsync()
-		{
-			return _disposeAsync?.Invoke(Connection) ?? base.DisposeAsync();
-		}
-#else
 		public override ValueTask DisposeAsync()
 		{
 			return _disposeAsync != null ? new ValueTask(_disposeAsync.Invoke(Connection)) : base.DisposeAsync();
 		}
-#endif
 	}
 }

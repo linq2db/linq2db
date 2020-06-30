@@ -594,11 +594,8 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NET45 && !NET46
-				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (dr)
-#endif
+				//await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				try
 				{
 					var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
 
@@ -613,6 +610,10 @@ namespace LinqToDB.Linq
 						if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
 							break;
 					}
+				}
+				finally
+				{
+					await dr.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}
@@ -660,11 +661,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if NET45 || NET46
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_queryRunner == null)
 				{
@@ -703,13 +700,6 @@ namespace LinqToDB.Linq
 				_queryRunner = null;
 			}
 
-#if NET45 || NET46
-			public Task DisposeAsync()
-			{
-				Dispose();
-				return TaskEx.CompletedTask;
-			}
-#else
 			public async ValueTask DisposeAsync()
 			{
 				_queryRunner?.Dispose();
@@ -718,7 +708,6 @@ namespace LinqToDB.Linq
 				
 				_queryRunner = null;
 			}
-#endif
 		}
 
 		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
@@ -929,11 +918,8 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NET45 && !NET46
-				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (dr)
-#endif
+				//await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				try
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -945,6 +931,10 @@ namespace LinqToDB.Linq
 					}
 
 					return Array<T>.Empty.First();
+				}
+				finally
+				{
+					await dr.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}

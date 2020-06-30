@@ -468,18 +468,15 @@ namespace LinqToDB.Data
 					DataReader.Dispose();
 				}
 
-#if NETCOREAPP2_1 || NETSTANDARD2_0
 				public ValueTask DisposeAsync()
 				{
+#if NETCOREAPP3_1 || NETSTANDARD2_1
+					return _dataReader.DisposeAsync();
+#else
 					Dispose();
-					return new ValueTask(Task.CompletedTask);
-				}
-#elif NETCOREAPP3_1 || NETSTANDARD2_1
-				public ValueTask DisposeAsync()
-				{
-					 return _dataReader.DisposeAsync();
-				}
+					return new ValueTask(TaskEx.CompletedTask);
 #endif
+				}
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

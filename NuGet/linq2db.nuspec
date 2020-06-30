@@ -9,8 +9,12 @@
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<group targetFramework=".NETFramework4.5" />
-			<group targetFramework=".NETFramework4.6" />
+			<group targetFramework=".NETFramework4.5">
+				<dependency id="System.Threading.Tasks.Extensions"    version="4.5.4" />
+			</group>
+			<group targetFramework=".NETFramework4.6">
+				<dependency id="System.Threading.Tasks.Extensions"    version="4.5.4" />
+			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />

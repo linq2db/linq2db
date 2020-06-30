@@ -11,7 +11,7 @@ namespace LinqToDB.Async
 	/// </summary>
 	/// <typeparam name="T">Element type.</typeparam>
 	[PublicAPI]
-	public interface IAsyncEnumerator<out T> : IDisposable
+	public interface IAsyncEnumerator<out T> : IDisposable, IAsyncDisposable
 	{
 		/// <summary>Gets the current element in the iteration.</summary>
 		T Current { get; }
@@ -23,11 +23,6 @@ namespace LinqToDB.Async
 		/// Task containing the result of the operation: true if the enumerator was successfully advanced
 		/// to the next element; false if the enumerator has passed the end of the sequence.
 		/// </returns>
-		Task<bool> MoveNextAsync();
-
-		/// <summary>
-		/// Disposes the object asynchonously.
-		/// </summary>
-		Task DisposeAsync();
+		ValueTask<bool> MoveNextAsync();
 	}
 }

@@ -246,6 +246,12 @@ namespace LinqToDB.ServiceModel
 				{
 					DataReader.Dispose();
 				}
+
+				public ValueTask DisposeAsync()
+				{
+					DataReader.Dispose();
+					return new ValueTask(TaskEx.CompletedTask);
+				}
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

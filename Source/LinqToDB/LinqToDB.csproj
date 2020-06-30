@@ -44,6 +44,7 @@
 		</None>
 
 		<Compile Remove="Compatibility\**\*.cs" />
+
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 	</ItemGroup>
 
@@ -59,6 +60,7 @@
 		<Reference Include="System.ComponentModel.DataAnnotations" />
 
 		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
@@ -94,6 +96,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="Async\IAsyncEnumerable.cs" />
 		<Compile Remove="Async\IAsyncEnumerator.cs" />
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+		<Compile Remove="Async\IAsyncDisposable.cs" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
 	</ItemGroup>
 </Project>

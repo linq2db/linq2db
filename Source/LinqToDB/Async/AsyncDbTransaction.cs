@@ -43,23 +43,14 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
-#if NET45 || NET46
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
 				return asyncDisposable.DisposeAsync();
 
 			Dispose();
-			return new ValueTask(Task.CompletedTask);
+			return new ValueTask(TaskEx.CompletedTask);
 		}
-#endif
 
 		public virtual void Rollback()
 		{
