@@ -97,7 +97,7 @@ namespace Tests
 #if NETCOREAPP2_1
 			var configName = "CORE21";
 #elif NETCOREAPP3_1
-			var configName = "CORE30";
+			var configName = "CORE31";
 #elif NET46
 			var configName = "NET46";
 #else
