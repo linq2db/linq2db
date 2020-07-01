@@ -551,24 +551,6 @@ namespace Tests.Linq
 			public string? FirstName = null!;
 		}
 
-		[ActiveIssue(
-			Configurations = new[]
-			{
-				TestProvName.AllAccess,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllInformix,
-				TestProvName.AllMySql,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase
-			},
-			SkipForNonLinqService = true,
-			Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -1549,7 +1531,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression3([DataSources] string context)
 		{
@@ -1562,7 +1543,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression4([DataSources] string context)
 		{
@@ -1573,7 +1553,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void SelectExpression5([DataSources] string context)
 		{

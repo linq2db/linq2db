@@ -24,19 +24,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 		}
 
-		protected virtual  bool BuildAlternativeSql => false;
-
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
-		}
-
-		protected override void BuildSql()
-		{
-			if (BuildAlternativeSql)
-				AlternativeBuildSql(true, base.BuildSql, "\t(SELECT NULL)");
-			else
-				base.BuildSql();
 		}
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
@@ -190,19 +180,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					.AppendLine()
 					.AppendLine("SELECT SCOPE_IDENTITY()");
 			}
-		}
-
-		protected override void BuildOrderByClause(SelectQuery selectQuery)
-		{
-			if (!BuildAlternativeSql || !NeedSkip(selectQuery))
-				base.BuildOrderByClause(selectQuery);
-		}
-
-		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
-		{
-			if (BuildAlternativeSql && NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
-			return base.GetSelectedColumns(selectQuery);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)

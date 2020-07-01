@@ -193,7 +193,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
@@ -206,7 +205,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
