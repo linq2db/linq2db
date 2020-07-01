@@ -12,6 +12,11 @@ namespace LinqToDB
 	/// </summary>
 	public interface IExtensionsAdapter
 	{
+#if !NET45 && !NET46
+		IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
+			IQueryable<TSource> source);
+#endif
+
 		Task ForEachAsync<TSource>(
 			IQueryable<TSource> source,
 			Action<TSource>     action,
