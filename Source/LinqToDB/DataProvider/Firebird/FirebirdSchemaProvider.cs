@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(connection));
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 

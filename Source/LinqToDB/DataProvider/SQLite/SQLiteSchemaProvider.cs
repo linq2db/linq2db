@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.GetSchema(dataConnection, options);
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 			var views =  ((DbConnection)dataConnection.Connection).GetSchema("Views");

@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private string? _currentUser;
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentUser(dataConnection);
 
@@ -272,7 +272,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentUser(dataConnection);
 

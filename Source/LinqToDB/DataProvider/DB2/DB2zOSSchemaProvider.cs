@@ -193,7 +193,7 @@ namespace LinqToDB.DataProvider.DB2
 			).ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentSchema(dataConnection);
 

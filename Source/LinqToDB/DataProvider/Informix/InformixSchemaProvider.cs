@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT

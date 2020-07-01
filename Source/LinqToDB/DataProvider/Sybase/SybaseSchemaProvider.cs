@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(@"
 SELECT
@@ -154,7 +154,7 @@ WHERE
 			return dataConnection.Query<ForeignKeyInfo>(sql).ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			using (var reader = dataConnection.ExecuteReader(
 				"sp_oledb_stored_procedures",

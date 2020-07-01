@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			CompatibilityLevel = dataConnection.Execute<int>("SELECT cmptlevel FROM master.dbo.sysdatabases WHERE name = db_name()");
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT
@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureInfo>(@"
 				SELECT

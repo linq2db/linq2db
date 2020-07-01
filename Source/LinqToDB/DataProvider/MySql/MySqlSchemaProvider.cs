@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.MySql
 		// mysql provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/tables-table.html
 			// all selected columns are not nullable
@@ -228,7 +228,7 @@ SELECT
 			return DataType.Undefined;
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// GetSchema("PROCEDURES") not used, as for MySql 5.7 (but not mariadb/mysql 5.6) it returns procedures from
 			// sys database too

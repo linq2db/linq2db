@@ -13,13 +13,13 @@ namespace LinqToDB.SchemaProvider
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
-		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
+		protected abstract List<TableInfo>                     GetTables(DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
 		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
-		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
+		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection, GetSchemaOptions options) => null;
 		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
 		protected HashSet<string?>   IncludedSchemas  = null!;
@@ -83,7 +83,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				tables =
 				(
-					from t in GetTables(dataConnection)
+					from t in GetTables(dataConnection, options)
 					where
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
@@ -216,7 +216,7 @@ namespace LinqToDB.SchemaProvider
 				#region Procedures
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var procs       = GetProcedures(dataConnection);
+				var procs       = GetProcedures(dataConnection, options);
 				var n           = 0;
 
 				if (procs != null)
@@ -454,11 +454,11 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual string? GetProviderSpecificType(string? dataType) => null;
 
-		protected DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
+		protected virtual DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
 		{
 			if (typeName == null)
 				return null;
-
+			
 			return
 				options.PreferProviderSpecificTypes == true
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)

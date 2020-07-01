@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected string? CurrentSchema { get; private set; }
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentSchema(dataConnection);
 
@@ -385,7 +385,7 @@ WHERE
 			return base.GetDataSourceName(connection);
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentSchema(dataConnection);
 

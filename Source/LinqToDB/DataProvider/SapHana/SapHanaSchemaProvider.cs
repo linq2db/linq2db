@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return dt;
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var combinedQuery = dataConnection.Query(x =>
 			{
@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.SapHana
 			").ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query(rd => 
 			{

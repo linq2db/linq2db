@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSchemaProvider : SchemaProviderBase
 	{
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 

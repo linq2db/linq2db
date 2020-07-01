@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 			return Array<ForeignKeyInfo>.Empty;
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
 			// views also include SELECT procedures, including procedures with parameters(!)
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
