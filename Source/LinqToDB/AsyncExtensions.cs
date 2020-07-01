@@ -83,9 +83,6 @@ namespace LinqToDB
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;
 
-			if (source is ExpressionQuery<TSource> query)
-				return query.AsAsyncEnumerable();
-
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AsAsyncEnumerable(source);
 
