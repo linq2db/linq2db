@@ -38,7 +38,8 @@ namespace LinqToDB.DataProvider.Access
 					return action(newConnection);
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 			if (connection == null)
@@ -89,7 +90,8 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
 

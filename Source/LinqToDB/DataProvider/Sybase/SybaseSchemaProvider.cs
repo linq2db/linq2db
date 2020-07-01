@@ -73,7 +73,8 @@ WHERE
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 SELECT
@@ -118,7 +119,8 @@ WHERE
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			const string baseSql = @"
 SELECT

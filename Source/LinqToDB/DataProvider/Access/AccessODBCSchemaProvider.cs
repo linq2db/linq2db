@@ -18,7 +18,8 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
 			return Array<ForeignKeyInfo>.Empty;
@@ -61,7 +62,8 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
 			return Array<PrimaryKeyInfo>.Empty;

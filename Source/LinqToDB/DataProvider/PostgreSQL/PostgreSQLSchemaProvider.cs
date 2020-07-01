@@ -163,7 +163,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
 				dataConnection.Query<PrimaryKeyInfo>($@"
@@ -364,7 +365,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return result;
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var data = dataConnection.Query(
 				rd => new

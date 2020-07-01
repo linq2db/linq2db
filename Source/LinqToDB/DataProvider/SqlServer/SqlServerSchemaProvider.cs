@@ -87,7 +87,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
 				IsAzure
@@ -239,7 +240,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT

@@ -42,7 +42,8 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var pks = ((DbConnection)dataConnection.Connection).GetSchema("PrimaryKeys");
 
@@ -85,7 +86,8 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
