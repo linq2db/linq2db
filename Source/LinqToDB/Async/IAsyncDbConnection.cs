@@ -21,7 +21,11 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+#if !NET45 && !NET46
+		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+#else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+#endif
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with specified isolation level.
@@ -29,7 +33,11 @@ namespace LinqToDB.Async
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+#if !NET45 && !NET46
+		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
+#else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
+#endif
 
 		/// <summary>
 		/// Closes current connection asynchonously.
@@ -58,7 +66,7 @@ namespace LinqToDB.Async
 		IDbConnection Connection { get; }
 
 		/// <summary>
-		/// Returns cloned connection instance, if underlying provider support cloning or null otherwise.
+		/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
 		/// </summary>
 		IAsyncDbConnection? TryClone();
 	}

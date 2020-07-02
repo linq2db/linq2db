@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -70,6 +71,15 @@ namespace LinqToDB.Async
 			if (connection is IAsyncDbConnection asyncConnection)
 				return asyncConnection;
 
+/* this does not work when connecting to a .Net Standard 2.0 library with async methods,
+ *   since the async methods will hide (not override) the .Net Standard 2.1 async methods
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+			// wrap the asynchronous methods already available
+			if (connection is DbConnection dbConnection)
+				return new AsyncDbConnection(dbConnection);
+#endif
+*/
+
 			return _connectionFactories.GetOrAdd(connection.GetType(), ConnectionFactory)(connection);
 		}
 
@@ -87,6 +97,15 @@ namespace LinqToDB.Async
 			if (transaction is IAsyncDbTransaction asyncTransaction)
 				return asyncTransaction;
 
+/* this does not work when connecting to a .Net Standard 2.0 library with async methods,
+ *   since the async methods will hide (not override) the .Net Standard 2.1 async methods
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+			// wrap the asynchronous methods already available 
+			if (transaction is DbTransaction dbTransaction)
+				return new AsyncDbTransaction(dbTransaction);
+#endif
+*/
+
 			return _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction);
 		}
 
@@ -103,24 +122,32 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
-			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false);
+			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// Task RollbackAsync(CancellationToken)
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
-			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false);
+			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-			var disposeAsync  = CreateDelegate<Func<IDbConnection                    , Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
+#if NET45 || NET46
+			var disposeAsync  = CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+#else
+			var disposeAsync  = CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
+#endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-							 ?? CreateDelegate<Func<IDbConnection                    , Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false);
+#if NET45 || NET46
+							 ?? CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+#else
+							 ?? CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
+#endif
 
 			if (commitAsync      != null
 				|| rollbackAsync != null
@@ -139,50 +166,74 @@ namespace LinqToDB.Async
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true)
+#if NET45 || NET46
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true, false)
+#else
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true, true)
+#endif
 			// Task<IDbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false);
+#if NET45 || NET46
+									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false, false);
+#else
+									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false, true);
+#endif
 
 			// ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true)
+#if NET45 || NET46
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true, false)
+#else
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true, true)
+#endif
 			// Task<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false);
+#if NET45 || NET46
+									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false, false);
+#else
+									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false, true);
+#endif
 
 			// Task OpenAsync(CancellationToken)
 			// Availability:
 			// - (stub) DbConnection
-			var openAsync               = CreateDelegate<Func<IDbConnection, CancellationToken, Task>, IDbConnection>(type, "OpenAsync", _tokenParams, _tokenParams, _tokenParams, false);
+			var openAsync               = CreateDelegate<Func<IDbConnection, CancellationToken, Task>, IDbConnection>(type, "OpenAsync", _tokenParams, _tokenParams, _tokenParams, false, false);
 
-			// ValueTask CloseAsync()
+			// Task CloseAsync(CancellationToken)
 			// Availability:
-			var closeAsync              = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false)
+			var closeAsync              = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false, false)
 			// Task CloseAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
-									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false);
+									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
 
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true )
+#if NET45 || NET46
+			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task     >, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+#else
+			var disposeAsync            = CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true)
+#endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false);
+#if NET45 || NET46
+									   ?? CreateDelegate<Func<IDbConnection,      Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+#else
+									   ?? CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
+#endif
 
 
 			if (beginTransactionAsync      != null
@@ -210,7 +261,8 @@ namespace LinqToDB.Async
 			Type[]  delegateParameterTypes,
 			Type[]  methodParameterTypes,
 			Type?[] mappedParameterTypes,
-			bool    returnsValueTask)
+			bool    returnsValueTask,
+			bool    returnValueTask)
 			where TDelegate : Delegate
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, methodParameterTypes);
@@ -230,9 +282,19 @@ namespace LinqToDB.Async
 				else
 					callParameters.Add(Expression.Default(methodParameterTypes[i]));
 
-			var body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, callParameters);
-			if (returnsValueTask)
+			Expression body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, callParameters);
+			if (returnsValueTask && !returnValueTask)
+			{
+				//convert a ValueTask result to a Task
 				body = ToTask(body);
+			}
+#if !NET45 && !NET46
+			else if (!returnsValueTask && returnValueTask)
+			{
+				//convert a Task result to a ValueTask
+				body = ToValueTask(body);
+			}
+#endif
 
 			return Expression
 				.Lambda<TDelegate>(
@@ -241,10 +303,36 @@ namespace LinqToDB.Async
 				.Compile();
 		}
 
-		private static MethodCallExpression ToTask(MethodCallExpression body)
+		/// <summary>
+		/// Returns an expression which returns a <see cref="Task{TResult}"/> from a <see cref="ValueTask{TResult}"/>.
+		/// </summary>
+		private static MethodCallExpression ToTask(Expression body)
 		{
 			return Expression.Call(body, "AsTask", Array<Type>.Empty);
 		}
+
+#if !NET45 && !NET46
+		/// <summary>
+		/// Returns an expression which returns a <see cref="ValueTask{TResult}"/> from a <see cref="Task{TResult}"/>.
+		/// </summary>
+		private static NewExpression ToValueTask(Expression body)
+		{
+			// taskType = typeof(Task<TResult>);
+			var taskType = body.Type;
+
+			// dataType = typeof(TResult);
+			var dataType = taskType.GenericTypeArguments[0];
+
+			// valueTaskType = typeof(ValueTask<TResult>);
+			var valueTaskType = typeof(ValueTask<>).MakeGenericType(dataType);
+
+			// constructor = <<< new ValueTask<TResult>(Task<TResult> task) >>>
+			var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
+
+			// return new ValueTask<TResult>(body);
+			return Expression.New(constructor, body);
+		}
+#endif
 
 		[return: MaybeNull]
 		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
@@ -252,7 +340,8 @@ namespace LinqToDB.Async
 			string     methodName,
 			Type[]     parametersTypes,
 			MethodInfo taskConverter,
-			bool       returnsValueTask)
+			bool       returnsValueTask,
+			bool       returnValueTask)
 			where TDelegate : Delegate
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
@@ -267,9 +356,19 @@ namespace LinqToDB.Async
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
 
-			var body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
-			if (returnsValueTask)
+			Expression body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
+			if (returnsValueTask && !returnValueTask)
+			{
+				//convert a ValueTask result to a Task
 				body = ToTask(body);
+			}
+#if !NET45 && !NET46
+			else if (!returnsValueTask && returnValueTask)
+			{
+				//convert a Task result to a ValueTask
+				body = ToValueTask(body);
+			}
+#endif
 
 			return Expression
 				.Lambda<TDelegate>(
