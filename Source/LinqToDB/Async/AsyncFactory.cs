@@ -33,7 +33,10 @@ namespace LinqToDB.Async
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
 
-		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
+		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
+#if !NET45 && !NET46
+		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<IDbTransaction>(default!)).GetGenericMethodDefinition();
+#endif
 
 		/// <summary>
 		/// Register or replace custom <see cref="IAsyncDbConnection"/> for <typeparamref name="TConnection"/> type.
@@ -115,6 +118,14 @@ namespace LinqToDB.Async
 			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
+#if !NET45 && !NET46
+		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
+			where TTransaction : IDbTransaction
+		{
+			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+		}
+#endif
+
 		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
 			// Task CommitAsync(CancellationToken)
@@ -167,18 +178,18 @@ namespace LinqToDB.Async
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
 #if NET45 || NET46
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true, false)
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      true, false)
 #else
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, true, true)
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, true, true)
 #endif
 			// Task<IDbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
 #if NET45 || NET46
-									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false, false);
+									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
-									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap, false, true);
+									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, false, true);
 #endif
 
 			// ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
@@ -187,18 +198,18 @@ namespace LinqToDB.Async
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
 #if NET45 || NET46
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true, false)
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      true, false)
 #else
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, true, true)
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, true, true)
 #endif
 			// Task<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
 #if NET45 || NET46
-									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false, false);
+									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
-									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap, false, true);
+									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, false, true);
 #endif
 
 			// Task OpenAsync(CancellationToken)
@@ -304,7 +315,7 @@ namespace LinqToDB.Async
 		}
 
 		/// <summary>
-		/// Returns an expression which returns a <see cref="Task{TResult}"/> from a <see cref="ValueTask{TResult}"/>.
+		/// Returns an expression which returns a <see cref="Task{TResult}"/> from a ValueTask.
 		/// </summary>
 		private static MethodCallExpression ToTask(Expression body)
 		{
