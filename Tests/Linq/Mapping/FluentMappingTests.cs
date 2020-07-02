@@ -151,7 +151,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"].IsPrimaryKey);
+			Assert.That(ed["ID"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -164,8 +164,8 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID1"].IsPrimaryKey);
-			Assert.That(ed["ID1"].PrimaryKeyOrder, Is.EqualTo(3));
+			Assert.That(ed["ID1"]!.IsPrimaryKey);
+			Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(3));
 		}
 
 		[Test]
@@ -178,10 +178,10 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"]. IsPrimaryKey);
-			Assert.That(ed["ID"]. PrimaryKeyOrder, Is.EqualTo(3));
-			Assert.That(ed["ID1"].IsPrimaryKey);
-			Assert.That(ed["ID1"].PrimaryKeyOrder, Is.EqualTo(4));
+			Assert.That(ed["ID"]!. IsPrimaryKey);
+			Assert.That(ed["ID"]!. PrimaryKeyOrder, Is.EqualTo(3));
+			Assert.That(ed["ID1"]!.IsPrimaryKey);
+			Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(4));
 		}
 
 		[Test]
@@ -194,7 +194,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"].IsPrimaryKey);
+			Assert.That(ed["ID"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -210,8 +210,8 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"].IsPrimaryKey);
-			Assert.That(ed["ID"].IsIdentity);
+			Assert.That(ed["ID"]!.IsPrimaryKey);
+			Assert.That(ed["ID"]!.IsIdentity);
 		}
 
 		[Test]
@@ -505,9 +505,9 @@ namespace Tests.Mapping
 
 			Assert.AreEqual(nameof(IInterfaceBase), ed.TableName);
 
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]    .SkipOnUpdate);
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)] .SkipOnInsert);
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.MarkedOnType)].SkipOnInsert);
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]!    .SkipOnUpdate);
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)]! .SkipOnInsert);
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert);
 		}
 
 		/// issue 291 Tests

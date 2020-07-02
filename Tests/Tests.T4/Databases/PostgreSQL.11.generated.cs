@@ -104,7 +104,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="information_schema", Name="_pg_expandarray")]
 		public ITable<PgExpandarrayResult> PgExpandarray(object? par4)
 		{
-			return this.GetTable<PgExpandarrayResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgExpandarrayResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par4);
 		}
 
@@ -121,7 +121,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="aclexplode")]
 		public ITable<AclexplodeResult> Aclexplode(object? acl)
 		{
-			return this.GetTable<AclexplodeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<AclexplodeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				acl);
 		}
 
@@ -140,7 +140,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="generate_series")]
 		public ITable<GenerateSeriesResult> GenerateSeries(DateTimeOffset? par1917, DateTimeOffset? par1918, TimeSpan? par1919)
 		{
-			return this.GetTable<GenerateSeriesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GenerateSeriesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par1917,
 				par1918,
 				par1919);
@@ -158,7 +158,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="generate_subscripts")]
 		public ITable<GenerateSubscriptsResult> GenerateSubscripts(object? par1923, int? par1924)
 		{
-			return this.GetTable<GenerateSubscriptsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GenerateSubscriptsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par1923,
 				par1924);
 		}
@@ -175,7 +175,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id);
 		}
 
@@ -186,7 +186,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_array_elements")]
 		public ITable<JsonArrayElementsResult> JsonArrayElements(string? from_json)
 		{
-			return this.GetTable<JsonArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -202,7 +202,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_array_elements_text")]
 		public ITable<JsonArrayElementsTextResult> JsonArrayElementsText(string? from_json)
 		{
-			return this.GetTable<JsonArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -218,7 +218,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_each")]
 		public ITable<JsonEachResult> JsonEach(string? from_json)
 		{
-			return this.GetTable<JsonEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -235,7 +235,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_each_text")]
 		public ITable<JsonEachTextResult> JsonEachText(string? from_json)
 		{
-			return this.GetTable<JsonEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -252,7 +252,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_object_keys")]
 		public ITable<JsonObjectKeysResult> JsonObjectKeys(string? par3643)
 		{
-			return this.GetTable<JsonObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3643);
 		}
 
@@ -268,7 +268,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_populate_recordset")]
 		public ITable<JsonPopulateRecordsetResult> JsonPopulateRecordset(object? @base, string? from_json, bool? use_json_as_text)
 		{
-			return this.GetTable<JsonPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@base,
 				from_json,
 				use_json_as_text);
@@ -286,7 +286,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_array_elements")]
 		public ITable<JsonbArrayElementsResult> JsonbArrayElements(string? from_json)
 		{
-			return this.GetTable<JsonbArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -302,7 +302,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_array_elements_text")]
 		public ITable<JsonbArrayElementsTextResult> JsonbArrayElementsText(string? from_json)
 		{
-			return this.GetTable<JsonbArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -318,7 +318,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_each")]
 		public ITable<JsonbEachResult> JsonbEach(string? from_json)
 		{
-			return this.GetTable<JsonbEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -335,7 +335,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_each_text")]
 		public ITable<JsonbEachTextResult> JsonbEachText(string? from_json)
 		{
-			return this.GetTable<JsonbEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -352,7 +352,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_object_keys")]
 		public ITable<JsonbObjectKeysResult> JsonbObjectKeys(string? par3756)
 		{
-			return this.GetTable<JsonbObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3756);
 		}
 
@@ -368,7 +368,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_populate_recordset")]
 		public ITable<JsonbPopulateRecordsetResult> JsonbPopulateRecordset(object? par3762, string? par3763)
 		{
-			return this.GetTable<JsonbPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3762,
 				par3763);
 		}
@@ -385,7 +385,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_available_extension_versions")]
 		public ITable<PgAvailableExtensionVersionsResult> PgAvailableExtensionVersions()
 		{
-			return this.GetTable<PgAvailableExtensionVersionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgAvailableExtensionVersionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgAvailableExtensionVersionsResult
@@ -406,7 +406,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_available_extensions")]
 		public ITable<PgAvailableExtensionsResult> PgAvailableExtensions()
 		{
-			return this.GetTable<PgAvailableExtensionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgAvailableExtensionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgAvailableExtensionsResult
@@ -423,7 +423,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_config")]
 		public ITable<PgConfigResult> PgConfig()
 		{
-			return this.GetTable<PgConfigResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgConfigResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgConfigResult
@@ -439,7 +439,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_cursor")]
 		public ITable<PgCursorResult> PgCursor()
 		{
-			return this.GetTable<PgCursorResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgCursorResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgCursorResult
@@ -459,7 +459,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_event_trigger_ddl_commands")]
 		public ITable<PgEventTriggerDdlCommandsResult> PgEventTriggerDdlCommands()
 		{
-			return this.GetTable<PgEventTriggerDdlCommandsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgEventTriggerDdlCommandsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgEventTriggerDdlCommandsResult
@@ -482,7 +482,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_event_trigger_dropped_objects")]
 		public ITable<PgEventTriggerDroppedObjectsResult> PgEventTriggerDroppedObjects()
 		{
-			return this.GetTable<PgEventTriggerDroppedObjectsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgEventTriggerDroppedObjectsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgEventTriggerDroppedObjectsResult
@@ -508,7 +508,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_extension_update_paths")]
 		public ITable<PgExtensionUpdatePathsResult> PgExtensionUpdatePaths(string? name)
 		{
-			return this.GetTable<PgExtensionUpdatePathsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgExtensionUpdatePathsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				name);
 		}
 
@@ -526,7 +526,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_keywords")]
 		public ITable<PgGetKeywordsResult> PgGetKeywords()
 		{
-			return this.GetTable<PgGetKeywordsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgGetKeywordsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgGetKeywordsResult
@@ -543,7 +543,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_multixact_members")]
 		public ITable<PgGetMultixactMembersResult> PgGetMultixactMembers(int? multixid)
 		{
-			return this.GetTable<PgGetMultixactMembersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgGetMultixactMembersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				multixid);
 		}
 
@@ -560,7 +560,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_publication_tables")]
 		public ITable<PgGetPublicationTablesResult> PgGetPublicationTables(string? pubname)
 		{
-			return this.GetTable<PgGetPublicationTablesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgGetPublicationTablesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				pubname);
 		}
 
@@ -576,7 +576,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_replication_slots")]
 		public ITable<PgGetReplicationSlotsResult> PgGetReplicationSlots()
 		{
-			return this.GetTable<PgGetReplicationSlotsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgGetReplicationSlotsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgGetReplicationSlotsResult
@@ -601,7 +601,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_hba_file_rules")]
 		public ITable<PgHbaFileRulesResult> PgHbaFileRules()
 		{
-			return this.GetTable<PgHbaFileRulesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgHbaFileRulesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgHbaFileRulesResult
@@ -624,7 +624,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_listening_channels")]
 		public ITable<PgListeningChannelsResult> PgListeningChannels()
 		{
-			return this.GetTable<PgListeningChannelsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgListeningChannelsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgListeningChannelsResult
@@ -639,7 +639,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_lock_status")]
 		public ITable<PgLockStatusResult> PgLockStatus()
 		{
-			return this.GetTable<PgLockStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgLockStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgLockStatusResult
@@ -668,7 +668,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_get_binary_changes")]
 		public ITable<PgLogicalSlotGetBinaryChangesResult> PgLogicalSlotGetBinaryChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotGetBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotGetBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -689,7 +689,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_get_changes")]
 		public ITable<PgLogicalSlotGetChangesResult> PgLogicalSlotGetChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotGetChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotGetChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -710,7 +710,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_peek_binary_changes")]
 		public ITable<PgLogicalSlotPeekBinaryChangesResult> PgLogicalSlotPeekBinaryChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotPeekBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotPeekBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -731,7 +731,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_peek_changes")]
 		public ITable<PgLogicalSlotPeekChangesResult> PgLogicalSlotPeekChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotPeekChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotPeekChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -752,7 +752,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_ls_dir")]
 		public ITable<PgLsDirResult> PgLsDir(string? par5225, bool? par5226, bool? par5227)
 		{
-			return this.GetTable<PgLsDirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLsDirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par5225,
 				par5226,
 				par5227);
@@ -770,7 +770,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_ls_logdir")]
 		public ITable<PgLsLogdirResult> PgLsLogdir()
 		{
-			return this.GetTable<PgLsLogdirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgLsLogdirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgLsLogdirResult
@@ -787,7 +787,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_ls_waldir")]
 		public ITable<PgLsWaldirResult> PgLsWaldir()
 		{
-			return this.GetTable<PgLsWaldirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgLsWaldirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgLsWaldirResult
@@ -804,7 +804,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_options_to_table")]
 		public ITable<PgOptionsToTableResult> PgOptionsToTable(object? options_array)
 		{
-			return this.GetTable<PgOptionsToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgOptionsToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				options_array);
 		}
 
@@ -821,7 +821,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_prepared_statement")]
 		public ITable<PgPreparedStatementResult> PgPreparedStatement()
 		{
-			return this.GetTable<PgPreparedStatementResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgPreparedStatementResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgPreparedStatementResult
@@ -840,7 +840,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_prepared_xact")]
 		public ITable<PgPreparedXactResult> PgPreparedXact()
 		{
-			return this.GetTable<PgPreparedXactResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgPreparedXactResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgPreparedXactResult
@@ -859,7 +859,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_all_file_settings")]
 		public ITable<PgShowAllFileSettingsResult> PgShowAllFileSettings()
 		{
-			return this.GetTable<PgShowAllFileSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowAllFileSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowAllFileSettingsResult
@@ -880,7 +880,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_all_settings")]
 		public ITable<PgShowAllSettingsResult> PgShowAllSettings()
 		{
-			return this.GetTable<PgShowAllSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowAllSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowAllSettingsResult
@@ -911,7 +911,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_replication_origin_status")]
 		public ITable<PgShowReplicationOriginStatusResult> PgShowReplicationOriginStatus()
 		{
-			return this.GetTable<PgShowReplicationOriginStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowReplicationOriginStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowReplicationOriginStatusResult
@@ -929,7 +929,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_activity")]
 		public ITable<PgStatGetActivityResult> PgStatGetActivity(int? pid)
 		{
-			return this.GetTable<PgStatGetActivityResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStatGetActivityResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				pid);
 		}
 
@@ -968,7 +968,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_backend_idset")]
 		public ITable<PgStatGetBackendIdsetResult> PgStatGetBackendIdset()
 		{
-			return this.GetTable<PgStatGetBackendIdsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgStatGetBackendIdsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgStatGetBackendIdsetResult
@@ -983,7 +983,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_progress_info")]
 		public ITable<PgStatGetProgressInfoResult> PgStatGetProgressInfo(string? cmdtype)
 		{
-			return this.GetTable<PgStatGetProgressInfoResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStatGetProgressInfoResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				cmdtype);
 		}
 
@@ -1011,7 +1011,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_wal_senders")]
 		public ITable<PgStatGetWalSendersResult> PgStatGetWalSenders()
 		{
-			return this.GetTable<PgStatGetWalSendersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgStatGetWalSendersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgStatGetWalSendersResult
@@ -1036,7 +1036,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stop_backup")]
 		public ITable<PgStopBackupResult> PgStopBackup(bool? exclusive, bool? wait_for_archive)
 		{
-			return this.GetTable<PgStopBackupResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStopBackupResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				exclusive,
 				wait_for_archive);
 		}
@@ -1055,7 +1055,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_tablespace_databases")]
 		public ITable<PgTablespaceDatabasesResult> PgTablespaceDatabases(int? par5524)
 		{
-			return this.GetTable<PgTablespaceDatabasesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgTablespaceDatabasesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par5524);
 		}
 
@@ -1071,7 +1071,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_timezone_abbrevs")]
 		public ITable<PgTimezoneAbbrevsResult> PgTimezoneAbbrevs()
 		{
-			return this.GetTable<PgTimezoneAbbrevsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgTimezoneAbbrevsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgTimezoneAbbrevsResult
@@ -1088,7 +1088,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_timezone_names")]
 		public ITable<PgTimezoneNamesResult> PgTimezoneNames()
 		{
-			return this.GetTable<PgTimezoneNamesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgTimezoneNamesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgTimezoneNamesResult
@@ -1106,7 +1106,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_matches")]
 		public ITable<RegexpMatchesResult> RegexpMatches(string? par6008, string? par6009, string? par6010)
 		{
-			return this.GetTable<RegexpMatchesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<RegexpMatchesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par6008,
 				par6009,
 				par6010);
@@ -1124,7 +1124,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_split_to_table")]
 		public ITable<RegexpSplitToTableResult> RegexpSplitToTable(string? par6029, string? par6030, string? par6031)
 		{
-			return this.GetTable<RegexpSplitToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<RegexpSplitToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par6029,
 				par6030,
 				par6031);
@@ -1142,7 +1142,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1);
 		}
 
@@ -1158,7 +1158,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1,
 				param2);
 		}
@@ -1176,7 +1176,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class TestTableFunctionSchemaResult
@@ -1222,9 +1222,11 @@ namespace PostreSQL11DataContext
 			public BitArray?                   varBitDataType      { get; set; }
 			public string[]?                   strarray            { get; set; }
 			public int[]?                      intarray            { get; set; }
-			public long[]?                     int2darray          { get; set; }
-			public double[]?                   longarray           { get; set; }
-			public decimal[]?                  doublearray         { get; set; }
+			public int[]?                      int2darray          { get; set; }
+			public long[]?                     longarray           { get; set; }
+			public TimeSpan[]?                 intervalarray       { get; set; }
+			public double[]?                   doublearray         { get; set; }
+			public decimal[]?                  numericarray        { get; set; }
 			public decimal[]?                  decimalarray        { get; set; }
 		}
 
@@ -1235,7 +1237,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_debug")]
 		public ITable<TsDebugResult> TsDebug(string? document)
 		{
-			return this.GetTable<TsDebugResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsDebugResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				document);
 		}
 
@@ -1256,7 +1258,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_parse")]
 		public ITable<TsParseResult> TsParse(string? parser_name, string? txt)
 		{
-			return this.GetTable<TsParseResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsParseResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				parser_name,
 				txt);
 		}
@@ -1274,7 +1276,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_stat")]
 		public ITable<TsStatResult> TsStat(string? query, string? weights)
 		{
-			return this.GetTable<TsStatResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsStatResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				query,
 				weights);
 		}
@@ -1293,7 +1295,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_token_type")]
 		public ITable<TsTokenTypeResult> TsTokenType(string? parser_name)
 		{
-			return this.GetTable<TsTokenTypeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsTokenTypeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				parser_name);
 		}
 
@@ -1311,7 +1313,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="txid_snapshot_xip")]
 		public ITable<TxidSnapshotXipResult> TxidSnapshotXip(object? par7488)
 		{
-			return this.GetTable<TxidSnapshotXipResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TxidSnapshotXipResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par7488);
 		}
 
@@ -1327,7 +1329,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="unnest")]
 		public ITable<UnnestResult> Unnest(object? tsvector)
 		{
-			return this.GetTable<UnnestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<UnnestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				tsvector);
 		}
 
@@ -1652,10 +1654,12 @@ namespace PostreSQL11DataContext
 		[Column("xmlDataType",         DataType=DataType.Xml),                                   Nullable            ] public string?                     XmlDataType         { get; set; } // xml
 		[Column("varBitDataType",      DataType=DataType.BitArray),                              Nullable            ] public BitArray?                   VarBitDataType      { get; set; } // bit varying
 		[Column("strarray",            DataType=DataType.Undefined),                             Nullable            ] public string[]?                   Strarray            { get; set; } // text[]
-		[Column("intarray",            DataType=DataType.Undefined),                             Nullable            ] public int[][]?                    Intarray            { get; set; } // integer[][]
-		[Column("int2darray",          DataType=DataType.Undefined),                             Nullable            ] public long[]?                     Int2darray          { get; set; } // bigint[]
-		[Column("longarray",           DataType=DataType.Undefined),                             Nullable            ] public double[]?                   Longarray           { get; set; } // double precision[]
-		[Column("doublearray",         DataType=DataType.Undefined),                             Nullable            ] public decimal[]?                  Doublearray         { get; set; } // numeric[]
+		[Column("intarray",            DataType=DataType.Undefined),                             Nullable            ] public int[]?                      Intarray            { get; set; } // integer[]
+		[Column("int2darray",          DataType=DataType.Undefined),                             Nullable            ] public int[][]?                    Int2darray          { get; set; } // integer[][]
+		[Column("longarray",           DataType=DataType.Undefined),                             Nullable            ] public long[]?                     Longarray           { get; set; } // bigint[]
+		[Column("intervalarray",       DataType=DataType.Undefined),                             Nullable            ] public TimeSpan[]?                 Intervalarray       { get; set; } // interval[]
+		[Column("doublearray",         DataType=DataType.Undefined),                             Nullable            ] public double[]?                   Doublearray         { get; set; } // double precision[]
+		[Column("numericarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?                  Numericarray        { get; set; } // numeric[]
 		[Column("decimalarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?                  Decimalarray        { get; set; } // numeric[]
 	}
 

@@ -96,12 +96,12 @@ namespace LinqToDB.DataProvider.Sybase
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true);
-			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.AseParameter"  , true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.AseDataReader" , true);
-			var transactionType = assembly.GetType($"{clientNamespace}.AseTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.AseDbType"     , true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true)!;
+			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true)!;
+			var parameterType   = assembly.GetType($"{clientNamespace}.AseParameter"  , true)!;
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.AseDataReader" , true)!;
+			var transactionType = assembly.GetType($"{clientNamespace}.AseTransaction", true)!;
+			var dbType          = assembly.GetType($"{clientNamespace}.AseDbType"     , true)!;
 
 			var typeMapper = new TypeMapper();
 			typeMapper.RegisterTypeWrapper<AseConnection>(connectionType);
@@ -113,12 +113,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (supportsBulkCopy)
 			{
-				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.AseBulkCopy"                       , true);
-				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.AseBulkCopyOptions"                , true);
-				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventHandler"         , true);
-				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMapping"          , true);
-				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMappingCollection", true);
-				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventArgs"            , true);
+				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.AseBulkCopy"                       , true)!;
+				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.AseBulkCopyOptions"                , true)!;
+				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventHandler"         , true)!;
+				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMapping"          , true)!;
+				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.AseBulkCopyColumnMappingCollection", true)!;
+				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.AseRowsCopiedEventArgs"            , true)!;
 
 				typeMapper.RegisterTypeWrapper<AseBulkCopy>(bulkCopyType);
 				typeMapper.RegisterTypeWrapper<AseBulkCopyOptions>(bulkCopyOptionsType);
@@ -276,10 +276,10 @@ namespace LinqToDB.DataProvider.Sybase
 			public AseBulkCopyColumnMappingCollection ColumnMappings => ((Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
 			private      AseRowsCopiedEventHandler? _AseRowsCopied;
-			public event AseRowsCopiedEventHandler   AseRowsCopied
+			public event AseRowsCopiedEventHandler?  AseRowsCopied
 			{
-				add    => _AseRowsCopied = (AseRowsCopiedEventHandler)Delegate.Combine(_AseRowsCopied, value);
-				remove => _AseRowsCopied = (AseRowsCopiedEventHandler)Delegate.Remove (_AseRowsCopied, value);
+				add    => _AseRowsCopied = (AseRowsCopiedEventHandler?)Delegate.Combine(_AseRowsCopied, value);
+				remove => _AseRowsCopied = (AseRowsCopiedEventHandler?)Delegate.Remove (_AseRowsCopied, value);
 			}
 		}
 

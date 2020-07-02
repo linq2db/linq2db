@@ -401,11 +401,11 @@ namespace LinqToDB.Linq.Builder
 
 							if (!isList)
 								isList =
-									me.Member.DeclaringType.IsGenericType &&
+									me.Member.DeclaringType!.IsGenericType &&
 									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
 
 							if (!isList)
-								isList = me.Member.DeclaringType.GetInterfaces()
+								isList = me.Member.DeclaringType!.GetInterfaces()
 									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
@@ -468,7 +468,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
+						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
 
 						if (l != null)
 						{
@@ -944,7 +944,7 @@ namespace LinqToDB.Linq.Builder
 				//Expression.Lambda<Func<IGroupByHelper>>(
 				//	Expression.Convert(Expression.New(gtype), typeof(IGroupByHelper)))
 				//.Compile()();
-				(IGroupByHelper)Activator.CreateInstance(gtype);
+				(IGroupByHelper)Activator.CreateInstance(gtype)!;
 
 			helper.Set(needSubQuery, sourceExpression, keySelector, elementSelector, resultSelector);
 
@@ -1072,7 +1072,7 @@ namespace LinqToDB.Linq.Builder
 				//Expression.Lambda<Func<ISelectManyHelper>>(
 				//	Expression.Convert(Expression.New(gtype), typeof(ISelectManyHelper)))
 				//.Compile()();
-				(ISelectManyHelper)Activator.CreateInstance(gtype);
+				(ISelectManyHelper)Activator.CreateInstance(gtype)!;
 
 			helper.Set(sourceExpression, colSelector);
 

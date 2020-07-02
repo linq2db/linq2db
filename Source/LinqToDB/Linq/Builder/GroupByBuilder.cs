@@ -427,7 +427,7 @@ namespace LinqToDB.Linq.Builder
 
 				Builder.IsBlockDisable = true;
 
-				var helper = (IGroupByHelper)Activator.CreateInstance(gtype);
+				var helper = (IGroupByHelper)Activator.CreateInstance(gtype)!;
 				var expr   = helper.GetGrouping(this);
 
 				Builder.IsBlockDisable = isBlockDisable;
@@ -527,7 +527,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var attribute =
-					Builder.MappingSchema.GetAttribute<Sql.ExpressionAttribute>(call.Method.DeclaringType, call.Method,
+					Builder.MappingSchema.GetAttribute<Sql.ExpressionAttribute>(call.Method.DeclaringType!, call.Method,
 						c => c.Configuration);
 
 				if (attribute != null)
@@ -762,7 +762,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var sm     = (SelectManyBuilder.SelectManyContext)buildInfo.Parent;
 						var ctype  = typeof(ContextHelper<>).MakeGenericType(_key.Lambda.Parameters[0].Type);
-						var helper = (IContextHelper)Activator.CreateInstance(ctype);
+						var helper = (IContextHelper)Activator.CreateInstance(ctype)!;
 						var expr   = helper.GetContext(
 							Builder.MappingSchema,
 							Sequence.Expression,
@@ -776,7 +776,7 @@ namespace LinqToDB.Linq.Builder
 					//if (buildInfo.Parent == this)
 					{
 						var ctype  = typeof(ContextHelper<>).MakeGenericType(_key.Lambda.Parameters[0].Type);
-						var helper = (IContextHelper)Activator.CreateInstance(ctype);
+						var helper = (IContextHelper)Activator.CreateInstance(ctype)!;
 						var expr   = helper.GetContext(
 							Builder.MappingSchema,
 							_sequenceExpr,

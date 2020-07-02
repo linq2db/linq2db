@@ -21,4 +21,9 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!-- TEMP: explicitly reference specific version to avoid MSB3277 --> 
+		<PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
+	</ItemGroup>
+
 </Project>

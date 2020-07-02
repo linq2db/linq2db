@@ -26,10 +26,10 @@ namespace SapHanaDataContext
 	{
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>                                           AbstractSqlPlanEntries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>                                           AbstractSqlPlanQueries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>(); } }
-		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes                                                                                 { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
-		                                           public ITable<AllType>                                                                              AllTypes0                                                                                { get { return this.GetTable<AllType>(); } }
-		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos                                                                             { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
-		                                           public ITable<AllTypesGeo>                                                                          AllTypesGeos0                                                                            { get { return this.GetTable<AllTypesGeo>(); } }
+		                                           public ITable<AllType>                                                                              AllTypes                                                                                 { get { return this.GetTable<AllType>(); } }
+		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes0                                                                                { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
+		                                           public ITable<AllTypesGeo>                                                                          AllTypesGeos                                                                             { get { return this.GetTable<AllTypesGeo>(); } }
+		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos0                                                                            { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
 		/// <summary>
 		/// This table contains a summary of Best Record group master statistics
 		/// </summary>
@@ -72,8 +72,8 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_CdsStructure>                                                                 CdsStructures                                                                            { get { return this.GetTable<_SYS_RT_CdsStructure>(); } }
 		                                           public ITable<_SYS_RT_CdsStructureComponent>                                                        CdsStructureComponents                                                                   { get { return this.GetTable<_SYS_RT_CdsStructureComponent>(); } }
 		                                           public ITable<_SYS_RT_CdsView>                                                                      CdsViews                                                                                 { get { return this.GetTable<_SYS_RT_CdsView>(); } }
-		                                           public ITable<Child>                                                                                Children                                                                                 { get { return this.GetTable<Child>(); } }
-		                                           public ITable<TESTHANAODBC_Child>                                                                   Children0                                                                                { get { return this.GetTable<TESTHANAODBC_Child>(); } }
+		                                           public ITable<TESTHANAODBC_Child>                                                                   Children                                                                                 { get { return this.GetTable<TESTHANAODBC_Child>(); } }
+		                                           public ITable<Child>                                                                                Children0                                                                                { get { return this.GetTable<Child>(); } }
 		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo>                                                   CleanseAddressRecordInfo                                                                 { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo>(); } }
 		/// <summary>
 		/// The table tells a user how well an address assigned and the type of address
@@ -172,8 +172,8 @@ namespace SapHanaDataContext
 		/// </summary>
 		                                           public ITable<_SYS_TASK_GeocodeStatistic>                                                           GeocodeStatistics                                                                        { get { return this.GetTable<_SYS_TASK_GeocodeStatistic>(); } }
 		                                           public ITable<_SYS_TASK_GeocodeStatistics>                                                          GeocodeStatistics0                                                                       { get { return this.GetTable<_SYS_TASK_GeocodeStatistics>(); } }
-		                                           public ITable<GrandChild>                                                                           GrandChildren                                                                            { get { return this.GetTable<GrandChild>(); } }
-		                                           public ITable<TESTHANAODBC_GrandChild>                                                              GrandChildren0                                                                           { get { return this.GetTable<TESTHANAODBC_GrandChild>(); } }
+		                                           public ITable<TESTHANAODBC_GrandChild>                                                              GrandChildren                                                                            { get { return this.GetTable<TESTHANAODBC_GrandChild>(); } }
+		                                           public ITable<GrandChild>                                                                           GrandChildren0                                                                           { get { return this.GetTable<GrandChild>(); } }
 		/// <summary>
 		/// General HANA feature usage information
 		/// </summary>
@@ -194,8 +194,8 @@ namespace SapHanaDataContext
 		                                           public ITable<TESTHANAODBC_IndexTable>                                                              IndexTables0                                                                             { get { return this.GetTable<TESTHANAODBC_IndexTable>(); } }
 		                                           public ITable<IndexTable2>                                                                          IndexTable2                                                                              { get { return this.GetTable<IndexTable2>(); } }
 		                                           public ITable<TESTHANAODBC_IndexTable2>                                                             IndexTable3                                                                              { get { return this.GetTable<TESTHANAODBC_IndexTable2>(); } }
-		                                           public ITable<InheritanceChild>                                                                     InheritanceChildren                                                                      { get { return this.GetTable<InheritanceChild>(); } }
-		                                           public ITable<TESTHANAODBC_InheritanceChild>                                                        InheritanceChildren0                                                                     { get { return this.GetTable<TESTHANAODBC_InheritanceChild>(); } }
+		                                           public ITable<TESTHANAODBC_InheritanceChild>                                                        InheritanceChildren                                                                      { get { return this.GetTable<TESTHANAODBC_InheritanceChild>(); } }
+		                                           public ITable<InheritanceChild>                                                                     InheritanceChildren0                                                                     { get { return this.GetTable<InheritanceChild>(); } }
 		                                           public ITable<TESTHANAODBC_InheritanceParent>                                                       InheritanceParents                                                                       { get { return this.GetTable<TESTHANAODBC_InheritanceParent>(); } }
 		                                           public ITable<InheritanceParent>                                                                    InheritanceParents0                                                                      { get { return this.GetTable<InheritanceParent>(); } }
 		/// <summary>
@@ -275,17 +275,17 @@ namespace SapHanaDataContext
 		/// Disposition specific memory object statistics. The statistics are calculated and reading them may take a while.
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_OutOfMemoryEvent>                                                      OutOfMemoryEvents                                                                        { get { return this.GetTable<_SYS_TELEMETRY_OutOfMemoryEvent>(); } }
-		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents                                                                                  { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
-		                                           public ITable<Parent>                                                                               Parents0                                                                                 { get { return this.GetTable<Parent>(); } }
-		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews                                                                         { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
-		                                           public ITable<ParentChildView>                                                                      ParentChildViews0                                                                        { get { return this.GetTable<ParentChildView>(); } }
-		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews                                                                              { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
-		                                           public ITable<ParentView>                                                                           ParentViews0                                                                             { get { return this.GetTable<ParentView>(); } }
+		                                           public ITable<Parent>                                                                               Parents                                                                                  { get { return this.GetTable<Parent>(); } }
+		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents0                                                                                 { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
+		                                           public ITable<ParentChildView>                                                                      ParentChildViews                                                                         { get { return this.GetTable<ParentChildView>(); } }
+		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews0                                                                        { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
+		                                           public ITable<ParentView>                                                                           ParentViews                                                                              { get { return this.GetTable<ParentView>(); } }
+		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews0                                                                             { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
 		                                           public ITable<Patient>                                                                              Patients                                                                                 { get { return this.GetTable<Patient>(); } }
 		                                           public ITable<TESTHANAODBC_Patient>                                                                 Patients0                                                                                { get { return this.GetTable<TESTHANAODBC_Patient>(); } }
 		                                           public ITable<_SYS_TASK_PendingDropTasks>                                                           PendingDropTasks                                                                         { get { return this.GetTable<_SYS_TASK_PendingDropTasks>(); } }
-		                                           public ITable<Person>                                                                               People                                                                                   { get { return this.GetTable<Person>(); } }
-		                                           public ITable<TESTHANAODBC_Person>                                                                  People0                                                                                  { get { return this.GetTable<TESTHANAODBC_Person>(); } }
+		                                           public ITable<TESTHANAODBC_Person>                                                                  People                                                                                   { get { return this.GetTable<TESTHANAODBC_Person>(); } }
+		                                           public ITable<Person>                                                                               People0                                                                                  { get { return this.GetTable<Person>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityConfig>                                              PlanStabilityConfig                                                                      { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityConfig>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>                                          PlanStabilityStatistics                                                                  { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>(); } }
 		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistic>                                                      PlanStatistics                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistic>(); } }
@@ -582,7 +582,7 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_EPM_VersionPrivilege>                                                            VersionPrivileges                                                                        { get { return this.GetTable<_SYS_EPM_VersionPrivilege>(); } }
 		                                           public ITable<_SYS_EPM_VersionState>                                                                VersionStates                                                                            { get { return this.GetTable<_SYS_EPM_VersionState>(); } }
 		                                           public ITable<_SYS_XS_XsjsUsage>                                                                    XsjsUsages                                                                               { get { return this.GetTable<_SYS_XS_XsjsUsage>(); } }
-		[CalculationViewInputParametersExpression] public ITable<_SYS_BIC_SapHanaUisDbGetNavigationTargetData>                                         SapHanaUisDbGetNavigationTargetData                                     (string? IN_TAG) { return GetTable<_SYS_BIC_SapHanaUisDbGetNavigationTargetData>(this, (MethodInfo) MethodBase.GetCurrentMethod(), IN_TAG ); }
+		[CalculationViewInputParametersExpression] public ITable<_SYS_BIC_SapHanaUisDbGetNavigationTargetData>                                         SapHanaUisDbGetNavigationTargetData                                     (string? IN_TAG) { return GetTable<_SYS_BIC_SapHanaUisDbGetNavigationTargetData>(this, (MethodInfo) MethodBase.GetCurrentMethod()!, IN_TAG ); }
 
 		public HXEDB()
 		{
@@ -719,7 +719,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.db::systemDetails")]
 		public ITable<SapHanaXsAdminDbSystemDetailsResult> SapHanaXsAdminDbSystemDetails()
 		{
-			return this.GetTable<SapHanaXsAdminDbSystemDetailsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<SapHanaXsAdminDbSystemDetailsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class SapHanaXsAdminDbSystemDetailsResult
@@ -743,7 +743,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.db::databaseDetails")]
 		public ITable<SapHanaXsAdminDbDatabaseDetailsResult> SapHanaXsAdminDbDatabaseDetails()
 		{
-			return this.GetTable<SapHanaXsAdminDbDatabaseDetailsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<SapHanaXsAdminDbDatabaseDetailsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class SapHanaXsAdminDbDatabaseDetailsResult
@@ -764,10 +764,10 @@ namespace SapHanaDataContext
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Schema="TESTHANAODBC", Name="GetParentByID")]
+		[Sql.TableFunction(Schema="TESTHANA", Name="GetParentByID")]
 		public ITable<GetParentByIDResult> GetParentByID(int? ID)
 		{
-			return this.GetTable<GetParentByIDResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GetParentByIDResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				ID);
 		}
 
@@ -781,10 +781,10 @@ namespace SapHanaDataContext
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Schema="TESTHANA", Name="GetParentByID")]
+		[Sql.TableFunction(Schema="TESTHANAODBC", Name="GetParentByID")]
 		public ITable<GetParentByIDResult0> GetParentByID0(int? ID)
 		{
-			return this.GetTable<GetParentByIDResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GetParentByIDResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				ID);
 		}
 
@@ -831,38 +831,6 @@ namespace SapHanaDataContext
 		[Column("SELECTED_PLAN_ID"),     Nullable         ] public long?     SelectedPlanId  { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="AllTypes")]
-	public partial class TESTHANAODBC_AllType
-	{
-		[Column(),                       PrimaryKey, Identity] public int       ID                   { get; set; } // INTEGER
-		[Column("bigintDataType"),       Nullable            ] public long?     BigintDataType       { get; set; } // BIGINT
-		[Column("smallintDataType"),     Nullable            ] public short?    SmallintDataType     { get; set; } // SMALLINT
-		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
-		[Column("smalldecimalDataType"), Nullable            ] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
-		[Column("intDataType"),          Nullable            ] public int?      IntDataType          { get; set; } // INTEGER
-		[Column("tinyintDataType"),      Nullable            ] public byte?     TinyintDataType      { get; set; } // TINYINT
-		[Column("floatDataType"),        Nullable            ] public double?   FloatDataType        { get; set; } // DOUBLE
-		[Column("realDataType"),         Nullable            ] public float?    RealDataType         { get; set; } // REAL
-		[Column("dateDataType"),         Nullable            ] public DateTime? DateDataType         { get; set; } // DATE
-		[Column("timeDataType"),         Nullable            ] public TimeSpan? TimeDataType         { get; set; } // TIME
-		[Column("seconddateDataType"),   Nullable            ] public DateTime? SeconddateDataType   { get; set; } // SECONDDATE
-		[Column("timestampDataType"),    Nullable            ] public DateTime? TimestampDataType    { get; set; } // TIMESTAMP
-		[Column("charDataType"),         Nullable            ] public char?     CharDataType         { get; set; } // CHAR(1)
-		[Column("char20DataType"),       Nullable            ] public string?   Char20DataType       { get; set; } // CHAR(20)
-		[Column("varcharDataType"),      Nullable            ] public string?   VarcharDataType      { get; set; } // VARCHAR(20)
-		[Column("textDataType"),         Nullable            ] public string?   TextDataType         { get; set; } // TEXT
-		[Column("shorttextDataType"),    Nullable            ] public string?   ShorttextDataType    { get; set; } // SHORTTEXT
-		[Column("ncharDataType"),        Nullable            ] public char?     NcharDataType        { get; set; } // NCHAR(1)
-		[Column("nchar20DataType"),      Nullable            ] public string?   Nchar20DataType      { get; set; } // NCHAR(20)
-		[Column("nvarcharDataType"),     Nullable            ] public string?   NvarcharDataType     { get; set; } // NVARCHAR(20)
-		[Column("alphanumDataType"),     Nullable            ] public string?   AlphanumDataType     { get; set; } // ALPHANUM
-		[Column("binaryDataType"),       Nullable            ] public byte[]?   BinaryDataType       { get; set; } // BINARY(10)
-		[Column("varbinaryDataType"),    Nullable            ] public byte[]?   VarbinaryDataType    { get; set; } // VARBINARY(10)
-		[Column("blobDataType"),         Nullable            ] public byte[]?   BlobDataType         { get; set; } // BLOB
-		[Column("clobDataType"),         Nullable            ] public string?   ClobDataType         { get; set; } // CLOB
-		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
-	}
-
 	[Table(Schema="TESTHANA", Name="AllTypes")]
 	public partial class AllType
 	{
@@ -895,16 +863,48 @@ namespace SapHanaDataContext
 		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
-	public partial class TESTHANAODBC_AllTypesGeo
+	[Table(Schema="TESTHANAODBC", Name="AllTypes")]
+	public partial class TESTHANAODBC_AllType
+	{
+		[Column(),                       PrimaryKey, Identity] public int       ID                   { get; set; } // INTEGER
+		[Column("bigintDataType"),       Nullable            ] public long?     BigintDataType       { get; set; } // BIGINT
+		[Column("smallintDataType"),     Nullable            ] public short?    SmallintDataType     { get; set; } // SMALLINT
+		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
+		[Column("smalldecimalDataType"), Nullable            ] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
+		[Column("intDataType"),          Nullable            ] public int?      IntDataType          { get; set; } // INTEGER
+		[Column("tinyintDataType"),      Nullable            ] public byte?     TinyintDataType      { get; set; } // TINYINT
+		[Column("floatDataType"),        Nullable            ] public double?   FloatDataType        { get; set; } // DOUBLE
+		[Column("realDataType"),         Nullable            ] public float?    RealDataType         { get; set; } // REAL
+		[Column("dateDataType"),         Nullable            ] public DateTime? DateDataType         { get; set; } // DATE
+		[Column("timeDataType"),         Nullable            ] public TimeSpan? TimeDataType         { get; set; } // TIME
+		[Column("seconddateDataType"),   Nullable            ] public DateTime? SeconddateDataType   { get; set; } // SECONDDATE
+		[Column("timestampDataType"),    Nullable            ] public DateTime? TimestampDataType    { get; set; } // TIMESTAMP
+		[Column("charDataType"),         Nullable            ] public char?     CharDataType         { get; set; } // CHAR(1)
+		[Column("char20DataType"),       Nullable            ] public string?   Char20DataType       { get; set; } // CHAR(20)
+		[Column("varcharDataType"),      Nullable            ] public string?   VarcharDataType      { get; set; } // VARCHAR(20)
+		[Column("textDataType"),         Nullable            ] public string?   TextDataType         { get; set; } // TEXT
+		[Column("shorttextDataType"),    Nullable            ] public string?   ShorttextDataType    { get; set; } // SHORTTEXT
+		[Column("ncharDataType"),        Nullable            ] public char?     NcharDataType        { get; set; } // NCHAR(1)
+		[Column("nchar20DataType"),      Nullable            ] public string?   Nchar20DataType      { get; set; } // NCHAR(20)
+		[Column("nvarcharDataType"),     Nullable            ] public string?   NvarcharDataType     { get; set; } // NVARCHAR(20)
+		[Column("alphanumDataType"),     Nullable            ] public string?   AlphanumDataType     { get; set; } // ALPHANUM
+		[Column("binaryDataType"),       Nullable            ] public byte[]?   BinaryDataType       { get; set; } // BINARY(10)
+		[Column("varbinaryDataType"),    Nullable            ] public byte[]?   VarbinaryDataType    { get; set; } // VARBINARY(10)
+		[Column("blobDataType"),         Nullable            ] public byte[]?   BlobDataType         { get; set; } // BLOB
+		[Column("clobDataType"),         Nullable            ] public string?   ClobDataType         { get; set; } // CLOB
+		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
+	}
+
+	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
+	public partial class AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
 		[Column("stgeometryDataType"), Nullable            ] public object? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
-	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
-	public partial class AllTypesGeo
+	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
+	public partial class TESTHANAODBC_AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
@@ -1489,15 +1489,15 @@ namespace SapHanaDataContext
 		[Column("definition"),                      NotNull] public string   Definition       { get; set; } = null!; // NCLOB
 	}
 
-	[Table(Schema="TESTHANA", Name="Child")]
-	public partial class Child
+	[Table(Schema="TESTHANAODBC", Name="Child")]
+	public partial class TESTHANAODBC_Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Child")]
-	public partial class TESTHANAODBC_Child
+	[Table(Schema="TESTHANA", Name="Child")]
+	public partial class Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
@@ -2637,16 +2637,16 @@ namespace SapHanaDataContext
 		[Column("NUM_ASSIGNED"),      Nullable] public long? NumAssigned     { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANA", Name="GrandChild")]
-	public partial class GrandChild
+	[Table(Schema="TESTHANAODBC", Name="GrandChild")]
+	public partial class TESTHANAODBC_GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID      { get; set; } // INTEGER
 		[Column, Nullable] public int? GrandChildID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="GrandChild")]
-	public partial class TESTHANAODBC_GrandChild
+	[Table(Schema="TESTHANA", Name="GrandChild")]
+	public partial class GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID      { get; set; } // INTEGER
@@ -2877,8 +2877,8 @@ namespace SapHanaDataContext
 		#endregion
 	}
 
-	[Table(Schema="TESTHANA", Name="InheritanceChild")]
-	public partial class InheritanceChild
+	[Table(Schema="TESTHANAODBC", Name="InheritanceChild")]
+	public partial class TESTHANAODBC_InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
@@ -2886,8 +2886,8 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="InheritanceChild")]
-	public partial class TESTHANAODBC_InheritanceChild
+	[Table(Schema="TESTHANA", Name="InheritanceChild")]
+	public partial class InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
@@ -3912,13 +3912,6 @@ namespace SapHanaDataContext
 		[Column("MEMORY_LIMIT_SIZE"),       Nullable] public long?     MemoryLimitSize    { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Parent")]
-	public partial class TESTHANAODBC_Parent
-	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
-	}
-
 	[Table(Schema="TESTHANA", Name="Parent")]
 	public partial class Parent
 	{
@@ -3926,12 +3919,11 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="ParentChildView", IsView=true)]
-	public partial class TESTHANAODBC_ParentChildView
+	[Table(Schema="TESTHANAODBC", Name="Parent")]
+	public partial class TESTHANAODBC_Parent
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANA", Name="ParentChildView", IsView=true)]
@@ -3942,15 +3934,23 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="ParentView", IsView=true)]
-	public partial class TESTHANAODBC_ParentView
+	[Table(Schema="TESTHANAODBC", Name="ParentChildView", IsView=true)]
+	public partial class TESTHANAODBC_ParentChildView
+	{
+		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
+		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
+	public partial class ParentView
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
-	public partial class ParentView
+	[Table(Schema="TESTHANAODBC", Name="ParentView", IsView=true)]
+	public partial class TESTHANAODBC_ParentView
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
@@ -3996,32 +3996,6 @@ namespace SapHanaDataContext
 		[Column("TASK_OID"), Nullable] public long? TaskOid { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANA", Name="Person")]
-	public partial class Person
-	{
-		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
-		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
-		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
-		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
-		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Doctor_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor? Doctor { get; set; }
-
-		/// <summary>
-		/// FK_Patient_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient? Patient { get; set; }
-
-		#endregion
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="Person")]
 	public partial class TESTHANAODBC_Person
 	{
@@ -4044,6 +4018,32 @@ namespace SapHanaDataContext
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public TESTHANAODBC_Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="TESTHANA", Name="Person")]
+	public partial class Person
+	{
+		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
+		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public Doctor? Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -8762,11 +8762,25 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PersonUpdate
+
+		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
 		#region PersonDelete
 
 		public static int PersonDelete(this HXEDB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
 				new DataParameter("PERSONID", PERSONID, DataType.Int32));
 		}
 
@@ -8776,31 +8790,10 @@ namespace SapHanaDataContext
 
 		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
+			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANA\".\"Patient_SelectAll\"");
 		}
 
 		public partial class PatientSelectAllResult
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region PatientSelectByName
-
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectByNameResult
 		{
 			public int?    PersonID   { get; set; }
 			public string? FirstName  { get; set; }
@@ -8816,7 +8809,7 @@ namespace SapHanaDataContext
 
 		public static int OutRefTest(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
 				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
 				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
@@ -8834,38 +8827,25 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region OutRefEnumTest
+		#region DuplicateColumnNames
 
-		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this HXEDB dataConnection)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var ms = dataConnection.MappingSchema;
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
+			return dataConnection.QueryProc(dataReader =>
+				new DuplicateColumnNamesResult
+				{
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANA\".\"DuplicateColumnNames\"");
 		}
 
-		#endregion
-
-		#region PersonSelectByKey
-
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this HXEDB dataConnection, int? ID)
+		public partial class DuplicateColumnNamesResult
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, DataType.Int32));
-		}
-
-		public partial class PersonSelectByKeyResult
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
@@ -8928,17 +8908,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
 		#region PersonInsert
 
 		public static int PersonInsert(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
@@ -8970,50 +8939,94 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGFUNCTION
-
-		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
-		}
-
-		#endregion
-
-		#region PersonInsertOutputParameter
-
-		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region AddIssue792Record
-
-		public static int AddIssue792Record(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
-		}
-
-		#endregion
-
 		#region PersonUpdate
 
-		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonUpdate0(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Update\"",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonDelete
+
+		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
+		}
+
+		#endregion
+
+		#region PersonSelectByKey
+
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this HXEDB dataConnection, int? ID)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectByName
+
+		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANA\".\"Person_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANA\".\"Person_SelectListByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectListByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonInsert
+
+		public static int PersonInsert0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
 				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
@@ -10794,25 +10807,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region SelectImplicitColumn
-
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<SelectImplicitColumnResult>("\"TESTHANA\".\"SelectImplicitColumn\"");
-		}
-
-		public partial class SelectImplicitColumnResult
-		{
-			[Column("123")] public int? _123 { get; set; }
-		}
-
-		#endregion
-
 		#region PersonSelectByKey
 
 		public static IEnumerable<PersonSelectByKeyResult0> PersonSelectByKey0(this HXEDB dataConnection, int? ID)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANA\".\"Person_SelectByKey\"",
+			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
 				new DataParameter("ID", ID, DataType.Int32));
 		}
 
@@ -10827,108 +10826,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonSelectAll
+		#region AddIssue792Record
 
-		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
+		public static int AddIssue792Record(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANA\".\"Person_SelectAll\"");
-		}
-
-		public partial class PersonSelectAllResult0
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region PersonSelectByName
-
-		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANA\".\"Person_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectByNameResult0
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region PersonSelectListByName
-
-		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANA\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectListByNameResult0
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region PersonInsert
-
-		public static int PersonInsert0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
-		#region PersonUpdate
-
-		public static int PersonUpdate0(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
-		#region PatientSelectByName
-
-		public static IEnumerable<PatientSelectByNameResult0> PatientSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANA\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectByNameResult0
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
 		}
 
 		#endregion
@@ -10956,6 +10858,259 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region DROPEXISTINGFUNCTION
+
+		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGVIEW
+
+		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPCONSTRAINTFROMTABLE
+
+		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+		}
+
+		#endregion
+
+		#region OutRefEnumTest
+
+		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region DROPEXISTINGTABLE
+
+		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGPROCEDURE
+
+		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
+				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANA\".\"Person_SelectAll\"");
+		}
+
+		public partial class PersonSelectAllResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonInsertOutputParameter
+
+		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region PatientSelectByName
+
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region SelectImplicitColumn
+
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<SelectImplicitColumnResult>("\"TESTHANA\".\"SelectImplicitColumn\"");
+		}
+
+		public partial class SelectImplicitColumnResult
+		{
+			[Column("123")] public int? _123 { get; set; }
+		}
+
+		#endregion
+
+		#region PatientSelectAll
+
+		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
+		}
+
+		public partial class PatientSelectAllResult0
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region PatientSelectByName
+
+		public static IEnumerable<PatientSelectByNameResult0> PatientSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PatientSelectByNameResult0
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region OutRefTest
+
+		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
+				new DataParameter("ID",             ID,             DataType.Int32),
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
+				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region AflpmEraser
+
+		public static int AflpmEraser(this HXEDB dataConnection, string? PROC)
+		{
+			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
+				new DataParameter("PROC", PROC, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region AfllangWrapperProcedureDrop
+
+		public static int AfllangWrapperProcedureDrop(this HXEDB dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
+		{
+			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
+				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
+				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
+		}
+
+		#endregion
+
+		#region AflpmOnlineRegistrationCleanup
+
+		public static int AflpmOnlineRegistrationCleanup(this HXEDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
+		}
+
+		#endregion
+
+		#region OutRefEnumTest
+
+		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region SelectImplicitColumn
 
 		public static IEnumerable<SelectImplicitColumnResult0> SelectImplicitColumn0(this HXEDB dataConnection)
@@ -10972,12 +11127,12 @@ namespace SapHanaDataContext
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this HXEDB dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this HXEDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
 			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult
+				new DuplicateColumnNamesResult0
 				{
 					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
@@ -10985,7 +11140,7 @@ namespace SapHanaDataContext
 				"\"TESTHANAODBC\".\"DuplicateColumnNames\"");
 		}
 
-		public partial class DuplicateColumnNamesResult
+		public partial class DuplicateColumnNamesResult0
 		{
 			               public int?    id      { get; set; }
 			[Column("id")] public string? Column2 { get; set; }
@@ -11025,75 +11180,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGPROCEDURE
-
-		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGVIEW
-
-		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPCONSTRAINTFROMTABLE
-
-		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
-		}
-
-		#endregion
-
-		#region AflpmEraser
-
-		public static int AflpmEraser(this HXEDB dataConnection, string? PROC)
-		{
-			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
-				new DataParameter("PROC", PROC, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region AfllangWrapperProcedureDrop
-
-		public static int AfllangWrapperProcedureDrop(this HXEDB dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
-		{
-			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
-				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
-				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region AflpmOnlineRegistrationCleanup
-
-		public static int AflpmOnlineRegistrationCleanup(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
-		}
-
-		#endregion
-
 		#region DROPEXISTINGTABLE
 
 		public static int DROPEXISTINGTABLE0(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
 				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
 				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
@@ -11104,7 +11195,7 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGPROCEDURE0(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
 				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
 		}
@@ -11115,7 +11206,7 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGFUNCTION0(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
 				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
 				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
 		}
@@ -11126,7 +11217,7 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGVIEW0(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
 				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
@@ -11137,101 +11228,10 @@ namespace SapHanaDataContext
 
 		public static int DROPCONSTRAINTFROMTABLE0(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
 				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
 				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
 				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
-		}
-
-		#endregion
-
-		#region PersonDelete
-
-		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, DataType.Int32));
-		}
-
-		#endregion
-
-		#region PatientSelectAll
-
-		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANA\".\"Patient_SelectAll\"");
-		}
-
-		public partial class PatientSelectAllResult0
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region OutRefTest
-
-		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
-				new DataParameter("ID",             ID,             DataType.Int32),
-				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region OutRefEnumTest
-
-		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region DuplicateColumnNames
-
-		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this HXEDB dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult0
-				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANA\".\"DuplicateColumnNames\"");
-		}
-
-		public partial class DuplicateColumnNamesResult0
-		{
-			               public int?    id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
@@ -11264,25 +11264,25 @@ namespace SapHanaDataContext
 				t.QueryId == QueryId);
 		}
 
-		public static TESTHANAODBC_AllType Find(this ITable<TESTHANAODBC_AllType> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static AllType Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTHANAODBC_AllTypesGeo Find(this ITable<TESTHANAODBC_AllTypesGeo> table, int ID)
+		public static TESTHANAODBC_AllType Find(this ITable<TESTHANAODBC_AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
 		public static AllTypesGeo Find(this ITable<AllTypesGeo> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TESTHANAODBC_AllTypesGeo Find(this ITable<TESTHANAODBC_AllTypesGeo> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -11675,13 +11675,13 @@ namespace SapHanaDataContext
 				t.PKField2 == PKField2);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static TESTHANAODBC_InheritanceChild Find(this ITable<TESTHANAODBC_InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static TESTHANAODBC_InheritanceChild Find(this ITable<TESTHANAODBC_InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
@@ -11878,13 +11878,13 @@ namespace SapHanaDataContext
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static TESTHANAODBC_Person Find(this ITable<TESTHANAODBC_Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static TESTHANAODBC_Person Find(this ITable<TESTHANAODBC_Person> table, int PersonID)
+		public static Person Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);

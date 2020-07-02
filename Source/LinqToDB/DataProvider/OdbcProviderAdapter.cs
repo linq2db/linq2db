@@ -54,12 +54,12 @@ namespace LinqToDB.DataProvider
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.OdbcConnection" , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OdbcDataReader" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true);
-						var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.OdbcConnection" , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OdbcDataReader" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true)!;
+						var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true)!;
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<OdbcType>(dbType);

@@ -828,8 +828,8 @@ namespace Tests.Data
 				}
 			}
 
-			void OnClosing(object sender, EventArgs e) => closing++;
-			void OnClosed(object sender, EventArgs e) => closed++;
+			void OnClosing(object? sender, EventArgs e) => closing++;
+			void OnClosed(object? sender, EventArgs e) => closed++;
 		}
 
 		[Test]

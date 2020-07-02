@@ -70,7 +70,7 @@ namespace Tests.Linq
 			{
 				var typeParameters = method.GetGenericArguments();
 				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType, method, a => a.Configuration));
+					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method, a => a.Configuration));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");

@@ -1170,8 +1170,25 @@ namespace DataContextMS
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@id);
+		}
+
+		#endregion
+
+		#region Issue1294
+
+		[Sql.TableFunction(Name="Issue1294")]
+		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
+		{
+			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				@p1,
+				@p2);
+		}
+
+		public partial class Issue1294Result
+		{
+			public int? Id { get; set; }
 		}
 
 		#endregion
@@ -1181,7 +1198,7 @@ namespace DataContextMS
 		[Sql.TableFunction(Name="Issue1921")]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class Issue1921Result

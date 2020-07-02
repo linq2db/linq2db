@@ -52,7 +52,7 @@ namespace Tests.UserTests
 		{
 			public ValueHolder? Child;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var vvh = obj as ValueValueHolder;
 				if (vvh == null)
