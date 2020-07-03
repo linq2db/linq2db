@@ -28,82 +28,82 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var list = new[]
 			{
-				new DataTypeInfo { TypeName = "name",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int2",                        DataType = typeof(short).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int8",                        DataType = typeof(long).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "float4",                      DataType = typeof(float).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "name",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int2",                        DataType = typeof(short).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int8",                        DataType = typeof(long).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "float4",                      DataType = typeof(float).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).AssemblyQualifiedName},
-				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).AssemblyQualifiedName!},
+				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "varchar",                     DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "varchar",                     DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName!, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
 
-				new DataTypeInfo { TypeName = "interval",                    DataType = typeof(TimeSpan).      AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "time with time zone",         DataType = typeof(DateTimeOffset).AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "time without time zone",      DataType = typeof(TimeSpan).      AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "interval",                    DataType = typeof(TimeSpan).      AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "time with time zone",         DataType = typeof(DateTimeOffset).AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "time without time zone",      DataType = typeof(TimeSpan).      AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
 
-				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName       });
+			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName!       });
 			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
-			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time"                   , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time with time zone"    , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "interval"               , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "macaddr"                , DataType = typeof(PhysicalAddress).AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "macaddr8"               , DataType = typeof(PhysicalAddress).AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "bit"                    , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit({0})",                          CreateParameters = "size" });
-			list.Add(new DataTypeInfo { TypeName = "bit varying"            , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
-			list.Add(new DataTypeInfo { TypeName = "varbit"                 , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time"                   , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time with time zone"    , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "interval"               , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "macaddr"                , DataType = typeof(PhysicalAddress).AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "macaddr8"               , DataType = typeof(PhysicalAddress).AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "bit"                    , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit({0})",                          CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "bit varying"            , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "varbit"                 , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
 
 			return list;
 		}
@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (includeSchemas.Count > 0)
 			{
 				foreach (var toInclude in IncludedSchemas)
-				{
+		{
 					excludeSchemas.Remove(toInclude);
 				}
 			}
@@ -228,10 +228,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
 			}
-			
+
 			return schemaFilter;
-		}
-		
+			}
+
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
@@ -441,8 +441,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn),
-					OtherColumn  = Convert.ToString(col.otherColumn),
+					ThisColumn   = Convert.ToString(col.thisColumn)!,
+					OtherColumn  = Convert.ToString(col.otherColumn)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();
@@ -577,7 +577,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					}
 				}
 			}
-
+						
 			return foundType;
 		}
 
@@ -595,7 +595,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return typInfo;
-		}
+				}
 		
 		static string SimplifyDataType(string dataType)
 		{

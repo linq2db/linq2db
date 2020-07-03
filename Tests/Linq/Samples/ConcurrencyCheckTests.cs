@@ -96,7 +96,7 @@ namespace Tests.Samples
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
-					var field              = insertClause.Into![rowVersion.ColumnName];
+					var field              = insertClause.Into![rowVersion.ColumnName]!;
 
 					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField
@@ -140,7 +140,7 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-#if NETCOREAPP2_1
+#if !NET46
 			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
 #else
 			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");

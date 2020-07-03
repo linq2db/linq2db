@@ -38,7 +38,7 @@ namespace LinqToDB.Extensions
 
 			var results = new LinkedList<MemberInfo>();
 			var names = new HashSet<string>();
-			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType)
+			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
 				foreach (var m in members.Where(_ => _.DeclaringType == t))
 				{
@@ -79,7 +79,7 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		public static MethodInfo GetMethodEx(this Type type, string name)
+		public static MethodInfo? GetMethodEx(this Type type, string name)
 		{
 			return type.GetMethod(name);
 		}
@@ -130,17 +130,17 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
+		public static MethodInfo? GetMethodEx(this Type type, string name, params Type[] types)
 		{
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
 		}
 
-		public static MethodInfo GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
+		public static MethodInfo? GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
 		{
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
 		}
 
-		public static ConstructorInfo GetDefaultConstructorEx(this Type type)
+		public static ConstructorInfo? GetDefaultConstructorEx(this Type type)
 		{
 			return type.GetConstructor(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
@@ -385,7 +385,7 @@ namespace LinqToDB.Extensions
 			if (member.IsPropertyEx())
 			{
 				var prop = (PropertyInfo)member;
-				member = prop.GetGetMethod();
+				member = prop.GetGetMethod()!;
 			}
 
 			foreach (var inf in child.GetInterfaces())
@@ -401,7 +401,7 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			yield return member.DeclaringType;
+			yield return member.DeclaringType!;
 		}
 
 		/// <summary>
@@ -485,10 +485,10 @@ namespace LinqToDB.Extensions
 						return true;
 				}
 
-				type = type.BaseType;
-
-				if (type == null)
+				if (type.BaseType == null)
 					return false;
+
+				type = type.BaseType;
 
 				if (type == check)
 					return true;
@@ -499,7 +499,7 @@ namespace LinqToDB.Extensions
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
-			while (type != null && type != typeof(object))
+			while (type != typeof(object))
 			{
 				if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
 					return type;
@@ -514,6 +514,9 @@ namespace LinqToDB.Extensions
 							return gType;
 					}
 				}
+
+				if (type.BaseType == null)
+					break;
 
 				type = type.BaseType;
 			}
@@ -534,7 +537,7 @@ namespace LinqToDB.Extensions
 				return typeOfObject;
 
 			if (list is Array)
-				return list.GetType().GetElementType();
+				return list.GetType().GetElementType()!;
 
 			var type = list.GetType();
 
@@ -687,7 +690,7 @@ namespace LinqToDB.Extensions
 				return true;
 
 			while (checkArrayElementType && type.IsArray)
-				type = type.GetElementType();
+				type = type.GetElementType()!;
 
 			return type.IsValueType
 				|| type == typeof(string)
@@ -796,12 +799,12 @@ namespace LinqToDB.Extensions
 		public static object? GetDefaultValue(this Type type)
 		{
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
-			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
+			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
 
 			return helper.GetDefaultValue();
 		}
 
-		public static EventInfo GetEventEx(this Type type, string eventName)
+		public static EventInfo? GetEventEx(this Type type, string eventName)
 		{
 			return type.GetEvent(eventName);
 		}
@@ -815,7 +818,7 @@ namespace LinqToDB.Extensions
 		{
 			if (method != null)
 			{
-				var type = method.DeclaringType;
+				var type = method.DeclaringType!;
 
 				foreach (var info in type.GetPropertiesEx())
 				{
@@ -841,7 +844,7 @@ namespace LinqToDB.Extensions
 				case MemberTypes.Property    : return ((PropertyInfo)memberInfo).PropertyType;
 				case MemberTypes.Field       : return ((FieldInfo)   memberInfo).FieldType;
 				case MemberTypes.Method      : return ((MethodInfo)  memberInfo).ReturnType;
-				case MemberTypes.Constructor : return                memberInfo. DeclaringType;
+				case MemberTypes.Constructor : return                memberInfo. DeclaringType!;
 			}
 
 			throw new InvalidOperationException();
@@ -851,7 +854,7 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "Value" &&
-				member.DeclaringType.IsGenericType &&
+				member.DeclaringType!.IsGenericType &&
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
@@ -859,7 +862,7 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "HasValue" &&
-				member.DeclaringType.IsGenericType &&
+				member.DeclaringType!.IsGenericType &&
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
@@ -920,16 +923,16 @@ namespace LinqToDB.Extensions
 				if (member1 is PropertyInfo)
 				{
 					var isSubclass =
-						member1.DeclaringType.IsSameOrParentOf(member2.DeclaringType) ||
-						member2.DeclaringType.IsSameOrParentOf(member1.DeclaringType);
+						member1.DeclaringType!.IsSameOrParentOf(member2.DeclaringType!) ||
+						member2.DeclaringType!.IsSameOrParentOf(member1.DeclaringType!);
 
 					if (isSubclass)
 						return true;
 
-					if (declaringType != null && member2.DeclaringType.IsInterface)
+					if (declaringType != null && member2.DeclaringType!.IsInterface)
 					{
-						var getter1 = ((PropertyInfo)member1).GetGetMethod();
-						var getter2 = ((PropertyInfo)member2).GetGetMethod();
+						var getter1 = ((PropertyInfo)member1).GetGetMethod()!;
+						var getter2 = ((PropertyInfo)member2).GetGetMethod()!;
 
 						var map = declaringType.GetInterfaceMap(member2.DeclaringType);
 
@@ -941,7 +944,7 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			if (member2.DeclaringType.IsInterface && !member1.DeclaringType.IsInterface && member1.Name.EndsWith(member2.Name))
+			if (member2.DeclaringType!.IsInterface && !member1.DeclaringType!.IsInterface && member1.Name.EndsWith(member2.Name))
 			{
 				if (member1 is PropertyInfo)
 				{

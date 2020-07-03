@@ -27,7 +27,7 @@ using NpgsqlTypes;
 
 namespace PostreSQLDataContext
 {
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class TestdbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
@@ -58,6 +58,7 @@ namespace PostreSQLDataContext
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
+		public ITable<Transaction>                    Transactions              { get { return this.GetTable<Transaction>(); } }
 
 		protected void InitMappingSchema()
 		{
@@ -71,7 +72,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id);
 		}
 
@@ -82,7 +83,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1);
 		}
 
@@ -98,7 +99,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1,
 				param2);
 		}
@@ -116,7 +117,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class TestTableFunctionSchemaResult
@@ -489,6 +490,13 @@ namespace PostreSQLDataContext
 		[Column(DataType=DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="Transactions")]
+	public partial class Transaction
+	{
+		[Column(DataType=DataType.Int32,          Precision=32, Scale=0), PrimaryKey, NotNull] public int            TransactionId   { get; set; } // integer
+		[Column(DataType=DataType.DateTimeOffset, Precision=6),                       NotNull] public NpgsqlDateTime TransactionDate { get; set; } // timestamp (6) with time zone
+	}
+
 	public static partial class SqlFunctions
 	{
 		#region AddIfNotExists
@@ -704,6 +712,12 @@ namespace PostreSQLDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static Transaction Find(this ITable<Transaction> table, int TransactionId)
+		{
+			return table.FirstOrDefault(t =>
+				t.TransactionId == TransactionId);
 		}
 	}
 }

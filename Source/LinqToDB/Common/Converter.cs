@@ -93,7 +93,7 @@ namespace LinqToDB.Common
 		/// <param name="from">Source conversion type.</param>
 		/// <param name="to">Target conversion type.</param>
 		/// <returns>Conversion expression or null, of converter not found.</returns>
-		internal static LambdaExpression GetConverter(Type from, Type to)
+		internal static LambdaExpression? GetConverter(Type from, Type to)
 		{
 			_expressions.TryGetValue(new { from, to }, out var l);
 			return l;
@@ -217,7 +217,7 @@ namespace LinqToDB.Common
 
 			if (me != null)
 			{
-				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericType)
+				if (me.Member.Name == "Value" && me.Member.DeclaringType!.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}
 

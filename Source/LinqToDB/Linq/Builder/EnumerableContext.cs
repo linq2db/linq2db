@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 										for (var i = 0; i < _records.Count; i++)
 										{
-											object value;
+											object? value;
 											if (column.MemberInfo.IsPropertyEx())
 											{
 												value = ((PropertyInfo)column.MemberInfo).GetValue(_records[i].Value);

@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Oracle
 					for (var i = 0; i < converters.Count; i++)
 					{
 						sb.Append("<c" + i + ">");
-						converters[i](sb, item);
+						converters[i](sb, item!);
 						sb.Append("</c" + i + ">");
 					}
 

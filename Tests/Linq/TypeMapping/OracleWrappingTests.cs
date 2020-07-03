@@ -65,13 +65,13 @@ namespace Tests.TypeMapping
 		private Type GetDynamicType(string dbTypeName, Type connectionType)
 		{
 			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
-			return dbType;
+			return dbType!;
 		}
 
 		private Type GetDynamicTypesType(string dbTypeName, Type connectionType)
 		{
 			var dbType = connectionType.Assembly.GetType("Oracle.ManagedDataAccess" + ".Types." + dbTypeName, true);
-			return dbType;
+			return dbType!;
 		}
 
 		[Test]

@@ -243,29 +243,29 @@ namespace Tests
 			private      SimpleDelegate? _SimpleDelegateEvent;
 			public event SimpleDelegate?  SimpleDelegateEvent
 			{
-				add    => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Combine(_SimpleDelegateEvent, value);
-				remove => _SimpleDelegateEvent = (SimpleDelegate)Delegate.Remove (_SimpleDelegateEvent, value);
+				add    => _SimpleDelegateEvent = (SimpleDelegate?)Delegate.Combine(_SimpleDelegateEvent, value);
+				remove => _SimpleDelegateEvent = (SimpleDelegate?)Delegate.Remove (_SimpleDelegateEvent, value);
 			}
 
 			private      SimpleDelegateWithMapping? _SimpleDelegateWithMappingEvent;
 			public event SimpleDelegateWithMapping?  SimpleDelegateWithMappingEvent
 			{
-				add    => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Combine(_SimpleDelegateWithMappingEvent, value);
-				remove => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping)Delegate.Remove (_SimpleDelegateWithMappingEvent, value);
+				add    => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping?)Delegate.Combine(_SimpleDelegateWithMappingEvent, value);
+				remove => _SimpleDelegateWithMappingEvent = (SimpleDelegateWithMapping?)Delegate.Remove (_SimpleDelegateWithMappingEvent, value);
 			}
 
 			private      ReturningDelegate? _ReturningDelegateEvent;
 			public event ReturningDelegate?  ReturningDelegateEvent
 			{
-				add    => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Combine(_ReturningDelegateEvent, value);
-				remove => _ReturningDelegateEvent = (ReturningDelegate)Delegate.Remove (_ReturningDelegateEvent, value);
+				add    => _ReturningDelegateEvent = (ReturningDelegate?)Delegate.Combine(_ReturningDelegateEvent, value);
+				remove => _ReturningDelegateEvent = (ReturningDelegate?)Delegate.Remove (_ReturningDelegateEvent, value);
 			}
 
 			private      ReturningDelegateWithMapping? _ReturningDelegateWithMappingEvent;
 			public event ReturningDelegateWithMapping?  ReturningDelegateWithMappingEvent
 			{
-				add    => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Combine(_ReturningDelegateWithMappingEvent, value);
-				remove => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping)Delegate.Remove (_ReturningDelegateWithMappingEvent, value);
+				add    => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping?)Delegate.Combine(_ReturningDelegateWithMappingEvent, value);
+				remove => _ReturningDelegateWithMappingEvent = (ReturningDelegateWithMapping?)Delegate.Remove (_ReturningDelegateWithMappingEvent, value);
 			}
 
 			public SampleClass(object instance, Delegate[] delegates) : base(instance, delegates)
@@ -355,7 +355,7 @@ namespace Tests
 					var e = GetEnumerator();
 
 					while (e.MoveNext())
-						yield return wrapper(e.Current);
+						yield return wrapper(e.Current!);
 				}
 			}
 		}

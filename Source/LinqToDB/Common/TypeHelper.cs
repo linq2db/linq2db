@@ -57,10 +57,10 @@ namespace LinqToDB.Common
 					yield return Tuple.Create(templateType, replaced);
 				}
 
-				if (templateType.IsArray)
+				if (templateType.IsArray && replaced.IsArray)
 				{
-					var templateElement = templateType.GetElementType();
-					var replacedElement = replaced.GetElementType();
+					var templateElement = templateType.GetElementType()!;
+					var replacedElement = replaced.GetElementType()!;
 					foreach (var pair in EnumTypeRemapping(templateElement, replacedElement, templateArguments))
 					{
 						yield return pair;

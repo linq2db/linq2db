@@ -828,8 +828,8 @@ namespace Tests.Data
 				}
 			}
 
-			void OnClosing(object sender, EventArgs e) => closing++;
-			void OnClosed(object sender, EventArgs e) => closed++;
+			void OnClosing(object? sender, EventArgs e) => closing++;
+			void OnClosed(object? sender, EventArgs e) => closed++;
 		}
 
 		[Test]
@@ -1163,7 +1163,7 @@ namespace Tests.Data
 				context == ProviderName.SapHanaOdbc         ||
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
-#if NETCOREAPP2_1
+#if !NET46
 				(context.Contains("Oracle") && context.Contains("Managed")) ||
 				context == ProviderName.SapHanaNative       ||
 #endif

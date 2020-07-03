@@ -501,7 +501,7 @@ namespace Tests.Linq
 
 				Assert.IsNotEmpty(q);
 
-				var qry = q.ToString();
+				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
 			}
 
@@ -516,7 +516,7 @@ namespace Tests.Linq
 
 				Assert.IsNotEmpty(q);
 
-				var qry = q.ToString();
+				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
 			}
 
@@ -531,7 +531,7 @@ namespace Tests.Linq
 
 				Assert.IsNotEmpty(q);
 
-				var qry = q.ToString();
+				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
 				Assert.That(qry.Contains("WITH"));
 			}
@@ -547,7 +547,7 @@ namespace Tests.Linq
 
 				Assert.IsNotEmpty(q);
 
-				var qry = q.ToString();
+				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
 				Assert.That(qry.Contains("WITH"));
 			}
@@ -668,7 +668,7 @@ namespace Tests.Linq
 				return Value == other.Value;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;

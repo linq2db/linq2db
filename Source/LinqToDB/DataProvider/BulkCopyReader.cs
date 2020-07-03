@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider
 
 		public override object? GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_enumerator.Current);
+			var value = _columns[i].GetValue(_enumerator.Current!);
 
 			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider
 		public override int GetValues(object?[] values)
 		{
 			var count = _columns.Count;
-			var obj   = _enumerator.Current;
+			var obj   = _enumerator.Current!;
 
 			for (var it = 0; it < count; ++it)
 			{

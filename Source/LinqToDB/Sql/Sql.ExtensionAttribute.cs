@@ -424,13 +424,13 @@ namespace LinqToDB
 				}
 
 				var attributes =
-						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType, memberInfo,
+						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
 							a => a.Configuration, inherit: true, exactForConfiguration: true);
 
 				if (attributes.Length == 0)
 				{
 					// notify if there is method that has no defined attribute for specific configuration
-					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType, memberInfo);
+					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo);
 					if (attributes.Length > 0)
 						throw new LinqToDBException($"Expression {expression}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
 				}
@@ -635,7 +635,7 @@ namespace LinqToDB
 						var names = param.GetCustomAttributes(true).OfType<ExprParameterAttribute>()
 							.Select(a => a.Name ?? param.Name)
 							.Distinct()
-							.ToArray();
+							.ToArray()!;
 
 						ColumnDescriptor? descriptor;
 						if (names.Length > 0)
@@ -643,12 +643,12 @@ namespace LinqToDB
 							if (method.IsGenericMethod)
 							{
 								var templateParam  = templateParameters[i];
-								var elementType    = templateParam.ParameterType;
+								var elementType    = templateParam.ParameterType!;
 								var argElementType = param.ParameterType;
-								if (elementType.IsArray)
+								if (elementType.IsArray && argElementType.IsArray)
 								{
-									elementType    = elementType.GetElementType();
-									argElementType = argElementType.GetElementType();
+									elementType    = elementType.GetElementType()!;
+									argElementType = argElementType.GetElementType()!;
 								}
 								descriptorMapping.TryGetValue(elementType, out descriptor);
 
@@ -675,14 +675,14 @@ namespace LinqToDB
 											if (!descriptorMapping.ContainsKey(pair.Item1))
 												descriptorMapping.Add(pair.Item1, descriptor);
 										}
-									}								
+									}
 								}
 
 								foreach (var name in names)
 								{
 									foreach (var sqlExpr in sqlExpressions)
 									{
-										extension.AddParameter(name, sqlExpr);
+										extension.AddParameter(name!, sqlExpr);
 									}
 								}
 							}
@@ -696,7 +696,7 @@ namespace LinqToDB
 								{
 									foreach (var sqlExpr in sqlExpressions)
 									{
-										extension.AddParameter(name, sqlExpr);
+										extension.AddParameter(name!, sqlExpr);
 									}
 								}
 							}
@@ -708,7 +708,7 @@ namespace LinqToDB
 				{
 					var callBuilder = _builders.GetOrAdd(BuilderType, t =>
 						{
-							if (Activator.CreateInstance(BuilderType) is IExtensionCallBuilder res)
+							if (Activator.CreateInstance(BuilderType)! is IExtensionCallBuilder res)
 								return res;
 
 							throw new ArgumentException(
@@ -758,7 +758,7 @@ namespace LinqToDB
 				bool isAggregate, bool isPure, bool? canBeNull, IsNullableType isNullable)
 			{
 				var sb             = new StringBuilder();
-				var resolvedParams = new Dictionary<SqlExtensionParam, string>();
+				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
 				var resolving      = new HashSet<SqlExtensionParam>();
 				var newParams      = new List<ISqlExpression>();
 

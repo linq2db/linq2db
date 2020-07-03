@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static void ResolvePostgreSQL(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection

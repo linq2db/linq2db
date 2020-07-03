@@ -58,12 +58,12 @@ namespace LinqToDB.DataProvider.SqlCe
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.SqlCeParameter"  , true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.SqlCeCommand"    , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.SqlCeTransaction", true);
-						var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.SqlCeParameter"  , true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.SqlCeCommand"    , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.SqlCeTransaction", true)!;
+						var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true)!;
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);

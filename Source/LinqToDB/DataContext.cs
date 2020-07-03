@@ -291,8 +291,8 @@ namespace LinqToDB
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
-					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 					_dataConnection.Dispose();
 					_dataConnection = null;
@@ -400,8 +400,8 @@ namespace LinqToDB
 			{
 				OnClosing?.Invoke(this, EventArgs.Empty);
 
-				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;

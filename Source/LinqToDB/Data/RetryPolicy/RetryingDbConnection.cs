@@ -123,12 +123,22 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
+#if !NETSTANDARD2_1 && !NETCOREAPP3_1
 		public Task CloseAsync()
+#else
+		public override Task CloseAsync()
+#endif
 		{
 			return _connection.CloseAsync();
 		}
 
+#if NET45 || NET46
 		public Task DisposeAsync()
+#elif NETSTANDARD2_0 || NETCOREAPP2_1
+		public ValueTask DisposeAsync()
+#else
+		public override ValueTask DisposeAsync()
+#endif
 		{
 			return _connection.DisposeAsync();
 		}

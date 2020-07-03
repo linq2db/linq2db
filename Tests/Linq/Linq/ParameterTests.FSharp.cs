@@ -5,7 +5,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
 
-#if !NETCOREAPP2_1
+#if NET46
 using Tests.FSharp.Models;
 #else
 using Tests.Model;

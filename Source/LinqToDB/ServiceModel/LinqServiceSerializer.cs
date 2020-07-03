@@ -515,7 +515,7 @@ namespace LinqToDB.ServiceModel
 					{
 						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
 						{
-							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem));
+							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
 						}
 					}
@@ -2351,7 +2351,7 @@ namespace LinqToDB.ServiceModel
 			{
 				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType));
+					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
 				}
 			}
@@ -2367,7 +2367,7 @@ namespace LinqToDB.ServiceModel
 			{
 				if (!_arrayConverters.TryGetValue(elementType, out converter))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType));
+					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
 				}
 			}

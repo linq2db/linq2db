@@ -24,7 +24,7 @@ namespace LinqToDB.Data
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			TransactionAsync?.Dispose();
+			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			// Create new transaction object.
 			//

@@ -87,7 +87,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id);
 		}
 
@@ -98,7 +98,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1);
 		}
 
@@ -114,7 +114,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1,
 				param2);
 		}
@@ -132,7 +132,7 @@ namespace PostreSQL11DataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class TestTableFunctionSchemaResult

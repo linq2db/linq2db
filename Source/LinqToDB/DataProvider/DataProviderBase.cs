@@ -17,6 +17,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Diagnostics.CodeAnalysis;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -69,7 +70,7 @@ namespace LinqToDB.DataProvider
 
 		#region Public Members
 		public          string           Name                { get; }
-		public abstract string           ConnectionNamespace { get; }
+		public abstract string?          ConnectionNamespace { get; }
 		public abstract Type             DataReaderType      { get; }
 		public virtual  MappingSchema    MappingSchema       { get; }
 		public          SqlProviderFlags SqlProviderFlags    { get; }
@@ -245,7 +246,7 @@ namespace LinqToDB.DataProvider
 				fieldType);
 		}
 
-		protected bool FindExpression(ReaderInfo info, out Expression expr)
+		protected bool FindExpression(ReaderInfo info, [NotNullWhen(true)] out Expression? expr)
 		{
 #if DEBUG1
 				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"

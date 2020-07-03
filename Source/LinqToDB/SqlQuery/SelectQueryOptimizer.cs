@@ -194,7 +194,7 @@ namespace LinqToDB.SqlQuery
 			if (dic.Count > 0)
 				new QueryVisitor().VisitParentFirst(data.Query, e =>
 				{
-					ISqlExpression ex;
+					ISqlExpression? ex;
 
 					switch (e.ElementType)
 					{

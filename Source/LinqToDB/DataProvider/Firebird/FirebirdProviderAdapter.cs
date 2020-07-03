@@ -51,12 +51,12 @@ namespace LinqToDB.DataProvider.Firebird
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.FbConnection" , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.FbDataReader" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.FbParameter"  , true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.FbCommand"    , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.FbTransaction", true);
-						var dbType          = assembly.GetType($"{ClientNamespace}.FbDbType"     , true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.FbConnection" , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.FbDataReader" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.FbParameter"  , true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.FbCommand"    , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.FbTransaction", true)!;
+						var dbType          = assembly.GetType($"{ClientNamespace}.FbDbType"     , true)!;
 
 						var typeMapper = new TypeMapper();
 

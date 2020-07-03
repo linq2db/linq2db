@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETCOREAPP2_1
+#if NET46
 using System.Windows.Forms;
 #endif
 
@@ -459,7 +459,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETCOREAPP2_1
+#if NET46
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
@@ -605,7 +605,7 @@ namespace Tests.Linq
 					from p in db.GetTable<TestParent>()
 					select p.Value1_;
 
-				var sql = q.ToString();
+				var sql = q.ToString()!;
 
 				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
 			}
@@ -620,7 +620,7 @@ namespace Tests.Linq
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				var sql = q.ToString();
+				var sql = q.ToString()!;
 				
 				Console.WriteLine(sql);
 

@@ -77,7 +77,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return Equals(other, DefaultComparer);
 		}
@@ -127,7 +127,7 @@ namespace LinqToDB.SqlQuery
 			return hashCode;
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -141,7 +141,7 @@ namespace LinqToDB.SqlQuery
 				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
 					return false;
 
-			return comparer(this, other);
+			return comparer(this, expr);
 		}
 
 		#endregion

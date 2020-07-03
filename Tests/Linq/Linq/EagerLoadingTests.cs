@@ -825,6 +825,27 @@ namespace Tests.Linq
 			}
 		}
 
+		public static X InitData<X>(X entity) => entity; // for simplicity
+
+		[Test]
+		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var result = master.LoadWith(x => x.Details).Select(x => InitData(x))
+					.ToArray();
+				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
+					.ToArray();
+
+				Assert.That(result.Length, Is.EqualTo(result2.Length));
+			}
+		}
+
 		#region issue 1862
 		[Table]
 		public partial class Blog

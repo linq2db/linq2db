@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETCOREAPP2_1
+#if NET46
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -20,7 +20,7 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETCOREAPP2_1
+#if NET46
 using LinqToDB.ServiceModel;
 #endif
 
@@ -76,7 +76,7 @@ namespace Tests
 			//			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
-#if !NETCOREAPP2_1
+#if NET46
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -96,6 +96,8 @@ namespace Tests
 
 #if NETCOREAPP2_1
 			var configName = "CORE21";
+#elif NETCOREAPP3_1
+			var configName = "CORE31";
 #elif NET46
 			var configName = "NET46";
 #else
@@ -140,7 +142,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETCOREAPP2_1
+#if !NET46
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -176,12 +178,12 @@ namespace Tests
 			if (!DefaultProvider.IsNullOrEmpty())
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
-#if NETCOREAPP2_1
+#if !NET46
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if !NETCOREAPP2_1
+#if NET46
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -198,16 +200,17 @@ namespace Tests
 		{
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
+			string? path = basePath;
 			while (!File.Exists(fileName))
 			{
 				Console.WriteLine($"File not found: {fileName}");
 
-				basePath = Path.GetDirectoryName(basePath);
+				path = Path.GetDirectoryName(path);
 
-				if (basePath == null)
+				if (path == null)
 					return null;
 
-				fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
+				fileName = Path.GetFullPath(Path.Combine(path, findFileName));
 			}
 
 			Console.WriteLine($"Base path found: {fileName}");
@@ -215,7 +218,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETCOREAPP2_1
+#if NET46
 		const  int          IP        = 22654;
 		static bool         _isHostOpen;
 		static LinqService? _service;
@@ -224,7 +227,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema? ms)
 		{
-#if !NETCOREAPP2_1
+#if NET46
 			if (_isHostOpen)
 			{
 				_service!.MappingSchema = ms;
@@ -271,7 +274,7 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETCOREAPP2_1
+#if NET46
 			ProviderName.Sybase,
 			ProviderName.OracleNative,
 			TestProvName.Oracle11Native,
@@ -316,7 +319,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETCOREAPP2_1
+#if NET46
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

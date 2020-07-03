@@ -195,7 +195,7 @@ namespace LinqToDB.DataProvider.Access
 				dts.Add(new DataTypeInfo()
 				{
 					TypeName         = "BIGBINARY",
-					DataType         = typeof(byte[]).FullName,
+					DataType         = typeof(byte[]).FullName!,
 					ProviderDbType   = 9,
 				});
 			}

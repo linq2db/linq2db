@@ -26,10 +26,10 @@ namespace LinqToDB.SqlQuery
 			var assembly = typeof(SelectQuery).Assembly;
 			var name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt"));
 
-			using (var stream = assembly.GetManifestResourceStream(name))
+			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
 			{
-				string s;
+				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
 					if(!s.StartsWith("#"))
@@ -40,10 +40,10 @@ namespace LinqToDB.SqlQuery
 
 			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsPostgres.txt"));
 
-			using (var stream = assembly.GetManifestResourceStream(name))
+			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
 			{
-				string s;
+				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
 					if (!s.StartsWith("#"))
@@ -56,10 +56,10 @@ namespace LinqToDB.SqlQuery
 
 			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsOracle.txt"));
 
-			using (var stream = assembly.GetManifestResourceStream(name))
+			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
 			{
-				string s;
+				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
 					if(!s.StartsWith("#"))
@@ -72,10 +72,10 @@ namespace LinqToDB.SqlQuery
 
 			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsFirebird.txt"));
 
-			using (var stream = assembly.GetManifestResourceStream(name))
+			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
 			{
-				string s;
+				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
 					if(!s.StartsWith("#"))

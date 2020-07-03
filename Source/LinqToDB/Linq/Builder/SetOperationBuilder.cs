@@ -166,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Length == 0)
 						throw new InvalidOperationException();
 
-					var mi = info.MemberChain.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter!.Type));
+					var mi = info.MemberChain.First(m => m.DeclaringType!.IsSameOrParentOf(_unionParameter!.Type));
 
 					var member = new Member
 					{

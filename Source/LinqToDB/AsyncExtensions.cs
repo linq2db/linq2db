@@ -69,6 +69,50 @@ namespace LinqToDB
 		{
 		}
 
+		#region AsAsyncEnumerable
+#if !NET45 && !NET46
+		/// <summary>
+		/// Returns an <see cref="IAsyncEnumerable{T}"/> that can be enumerated asynchronously.
+		/// </summary>
+		/// <typeparam name="TSource">Source sequence element type.</typeparam>
+		/// <param name="source">Source sequence.</param>
+		/// <returns>A query that can be enumerated asynchronously.</returns>
+		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
+			this IQueryable<TSource> source)
+		{
+			if (source is IAsyncEnumerable<TSource> asyncQuery)
+				return asyncQuery;
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AsAsyncEnumerable(source);
+
+			// return an enumerator that will synchronously enumerate the source elements
+			return new AsyncEnumerableAdapter<TSource>(source);
+		}
+
+		private class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
+		{
+			private readonly IQueryable<T> _query;
+			public AsyncEnumerableAdapter(IQueryable<T> query)
+			{
+				_query = query ?? throw new ArgumentNullException(nameof(query));
+			}
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+			public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+			{
+				using var enumerator = _query.GetEnumerator();
+				while (enumerator.MoveNext())
+				{
+					yield return enumerator.Current;
+					cancellationToken.ThrowIfCancellationRequested();
+				}
+			}
+		}
+#endif
+		#endregion
+
 		#region ForEachAsync
 
 		/// <summary>
@@ -208,6 +252,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token   = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -237,6 +282,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -267,6 +313,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -299,6 +346,7 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
