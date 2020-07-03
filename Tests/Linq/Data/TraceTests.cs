@@ -43,6 +43,7 @@ namespace Tests.Data
 		}
 
 		private IDictionary<TEnum, TValue> GetEnumValues<TEnum, TValue>(Func<TEnum, TValue> factory)
+			where TEnum : notnull
 		{
 			var steps =
 				from s in Enum.GetValues(typeof(TEnum)).OfType<TEnum>()

@@ -38,12 +38,14 @@ Solutions:
 
 #### Source projects
 
-| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 |
-|-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|
-| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |
-| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |
+| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 | .NET Standard 2.1 | .NET Core 3.1 |
+|-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|:-----------------:|:-------------:|
+| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |         √         |       √       |
+| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |                   |               |
 
 Allowed target defines:
+- `NETSTANDARD2_1` - `netstandard2.1` target ifdef
+- `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef
 - `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET45` - `net45` target ifdef
@@ -58,18 +60,19 @@ Allowed debugging defines:
 
 | Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | .NET Core 3.1 | Xamarin.Forms Android v8.1 |
 |---------------------------------------------------:|:-------:|:---------:|:-------------:|:-------------:|:--------------------------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |               |                            |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |               |                            |
-| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |               |                            |
-| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |               |                            |
+| `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |       √       |                            |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |       √       |                            |
+| `.\Tests\Linq\Tests.csproj`                        |    √    |           |       √       |       √       |                            |
+| `.\Tests\Model\Tests.Model.csproj`                 |    √    |           |       √       |       √       |                            |
 | `.\Tests\Tests.Android\Tests.Android.csproj`       |         |           |               |               |              √             |
 | `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |       √       |                            |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |               |                            |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |               |                            |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |               |                            |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |       √       |                            |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |       √       |                            |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |       √       |                            |
 
 
 Allowed target defines:
+- `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET46` - `net46` target ifdef
 - `AZURE` - for Azure Pipelines CI builds

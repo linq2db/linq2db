@@ -25,8 +25,8 @@ namespace LinqToDB.DataProvider
 
 		public TProviderMappings Adapter { get; }
 
-		public override string ConnectionNamespace => Adapter.ConnectionType.Namespace;
-		public override Type   DataReaderType      => Adapter.DataReaderType;
+		public override string? ConnectionNamespace => Adapter.ConnectionType.Namespace;
+		public override Type    DataReaderType      => Adapter.DataReaderType;
 
 		Func<string, IDbConnection>? _createConnection;
 

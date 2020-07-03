@@ -55,9 +55,9 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
-			return Equals((ReaderInfo)obj);
+			return Equals(obj as ReaderInfo);
 		}
 
 		public override int GetHashCode()
@@ -65,9 +65,10 @@ namespace LinqToDB.DataProvider
 			return _hashCode;
 		}
 
-		public bool Equals(ReaderInfo other)
+		public bool Equals(ReaderInfo? other)
 		{
 			return
+				other             != null &&
 				ToType            == other.ToType &&
 				FieldType         == other.FieldType &&
 				ProviderFieldType == other.ProviderFieldType &&

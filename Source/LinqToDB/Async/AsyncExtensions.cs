@@ -61,9 +61,14 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
-			using (var enumerator = source.GetEnumerator())
+#if NET45 || NET46
+			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+#else
+			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+#endif
 			{
-				while (await enumerator.MoveNext(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
 					result.Add(enumerator.Current);
 				}
@@ -126,9 +131,14 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			using (var enumerator = source.GetEnumerator())
+#if NET45 || NET46
+			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+#else
+			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+#endif
 			{
-				if (await enumerator.MoveNext(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
 				return default!;
 			}
@@ -146,9 +156,14 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			using (var enumerator = source.GetEnumerator())
+#if NET45 || NET46
+			using (var enumerator = source.GetAsyncEnumerator(token))
+#else
+			var enumerator = source.GetAsyncEnumerator(token);
+			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+#endif
 			{
-				if (await enumerator.MoveNext(token))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
 			}
 

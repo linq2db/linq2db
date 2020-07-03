@@ -10,6 +10,7 @@ namespace LinqToDB
 {
 	using Async;
 	using Linq;
+	using System.Threading;
 
 	public partial class LinqExtensions
 	{
@@ -69,8 +70,8 @@ namespace LinqToDB
 			public IEnumerator<TEntity> GetEnumerator() => _query.GetEnumerator();
 			IEnumerator IEnumerable.GetEnumerator()     => GetEnumerator();
 
-			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetEnumerator() =>
-				((IAsyncEnumerable<TEntity>)_query).GetEnumerator();
+			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
+				((IAsyncEnumerable<TEntity>)_query).GetAsyncEnumerator(cancellationToken);
 
 			public Expression Expression   => _query.Expression;
 			public Type ElementType        => _query.ElementType;

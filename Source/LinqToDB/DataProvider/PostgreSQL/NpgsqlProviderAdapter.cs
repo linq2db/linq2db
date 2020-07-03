@@ -230,26 +230,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true);
-						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true);
-						var dataReaderType     = assembly.GetType($"{ClientNamespace}.NpgsqlDataReader"  , true);
-						var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true);
-						var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true);
-						var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true);
-						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , true);
-						var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true);
-						var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true);
-						var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true);
-						var npgsqlCircleType   = assembly.GetType($"{TypesNamespace}.NpgsqlCircle"       , true);
-						var npgsqlPathType     = assembly.GetType($"{TypesNamespace}.NpgsqlPath"         , true);
-						var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true);
-						var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true);
-						var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true);
-						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , true);
-						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , true);
-						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true);
+						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
+						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;
+						var dataReaderType     = assembly.GetType($"{ClientNamespace}.NpgsqlDataReader"  , true)!;
+						var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true)!;
+						var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true)!;
+						var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true)!;
+						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , true)!;
+						var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true)!;
+						var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true)!;
+						var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true)!;
+						var npgsqlCircleType   = assembly.GetType($"{TypesNamespace}.NpgsqlCircle"       , true)!;
+						var npgsqlPathType     = assembly.GetType($"{TypesNamespace}.NpgsqlPath"         , true)!;
+						var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true)!;
+						var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true)!;
+						var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true)!;
+						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , true)!;
+						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , true)!;
+						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true)!;
 
-						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true);
+						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<NpgsqlConnection>(connectionType);
@@ -316,7 +316,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 								var tupleToInetTypeMapper = Expression.Lambda(
 										Expression.New(
-											npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), typeof(int) }),
+											npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), typeof(int) })!,
 											ExpressionHelper.Field(p, "Item1"),
 											ExpressionHelper.Field(p, "Item2")),
 										p);

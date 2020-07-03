@@ -149,7 +149,7 @@ namespace LinqToDB.SqlProvider
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is SqlProviderFlags other
 				&& IsSybaseBuggyGroupBy                 == other.IsSybaseBuggyGroupBy

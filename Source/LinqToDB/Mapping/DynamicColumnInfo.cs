@@ -10,8 +10,8 @@ namespace LinqToDB.Mapping
 	/// <seealso cref="System.Reflection.MemberInfo" />
 	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
 	{
-		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic);
-		private static readonly MethodInfo _dummySetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic);
+		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
+		private static readonly MethodInfo _dummySetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
 		private readonly MethodInfo _typedDummyGetter;
 		private readonly MethodInfo _typedDummySetter;
 
@@ -63,7 +63,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <inheritdoc cref="object.Equals(object)"/>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			if (obj is DynamicColumnInfo dynamicColumnInfo)
 				return Equals(dynamicColumnInfo);
@@ -110,7 +110,7 @@ namespace LinqToDB.Mapping
 			=> false;
 
 		/// <inheritdoc cref="PropertyInfo.SetValue(object, object, BindingFlags, Binder, object[], CultureInfo)"/>
-		public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
+		public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
 			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
 
 		/// <inheritdoc cref="PropertyInfo.GetAccessors(bool)"/>
@@ -132,7 +132,7 @@ namespace LinqToDB.Mapping
 			=> new ParameterInfo[0];
 
 		/// <inheritdoc cref="PropertyInfo.GetValue(object, BindingFlags, Binder, object[], CultureInfo)"/>
-		public override object GetValue(object obj, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
+		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
 			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
 		
 		private T DummyGetter<T>()

@@ -150,29 +150,29 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true);
-			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true);
-			var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader"             , true);
-			var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction"            , true);
-			var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand"                , true);
-			var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder"         , true);
-			var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true);
-			var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException"              , true);
-			var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection"        , true);
-			var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError"                  , true);
+			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
+			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;
+			var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader"             , true)!;
+			var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction"            , true)!;
+			var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand"                , true)!;
+			var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder"         , true)!;
+			var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true)!;
+			var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException"              , true)!;
+			var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection"        , true)!;
+			var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError"                  , true)!;
 
 			var sqlDataRecordType = connectionType.Assembly.GetType(
 				isSystem
 					? "Microsoft.SqlServer.Server.SqlDataRecord"
 					: "Microsoft.Data.SqlClient.Server.SqlDataRecord",
-				true);
+				true)!;
 
-			var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy"                       , true);
-			var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions"                , true);
-			var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler"         , true);
-			var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping"          , true);
-			var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true);
-			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true);
+			var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy"                       , true)!;
+			var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions"                , true)!;
+			var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler"         , true)!;
+			var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping"          , true)!;
+			var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true)!;
+			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true)!;
 
 			var typeMapper = new TypeMapper();
 
@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					var e = GetEnumerator();
 
 					while (e.MoveNext())
-						yield return wrapper(e.Current);
+						yield return wrapper(e.Current!);
 				}
 			}
 		}
@@ -434,10 +434,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
 
 			private      SqlRowsCopiedEventHandler? _SqlRowsCopied;
-			public event SqlRowsCopiedEventHandler   SqlRowsCopied
+			public event SqlRowsCopiedEventHandler?  SqlRowsCopied
 			{
-				add    => _SqlRowsCopied = (SqlRowsCopiedEventHandler)Delegate.Combine(_SqlRowsCopied, value);
-				remove => _SqlRowsCopied = (SqlRowsCopiedEventHandler)Delegate.Remove (_SqlRowsCopied, value);
+				add    => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Combine(_SqlRowsCopied, value);
+				remove => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Remove (_SqlRowsCopied, value);
 			}
 		}
 

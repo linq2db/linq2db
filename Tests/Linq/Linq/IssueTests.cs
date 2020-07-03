@@ -246,7 +246,7 @@ namespace Tests.Linq
 
 				AreEqual(rr, r);
 
-				var sql = r.ToString();
+				var sql = r.ToString()!;
 				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
 			}
 		}

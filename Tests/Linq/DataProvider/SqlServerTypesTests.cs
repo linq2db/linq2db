@@ -33,7 +33,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestHierarchyId([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if NETCOREAPP2_1
+#if !NET46
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if NETCOREAPP2_1
+#if !NET46
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
@@ -97,7 +97,7 @@ namespace Tests.DataProvider
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
 						// missing API
-#if !NETCOREAPP2_1
+#if NET46
 						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
 #endif
@@ -127,9 +127,9 @@ namespace Tests.DataProvider
 					yield return item;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return obj is SqlTypes && ((SqlTypes)obj).ID == ID;
+				return obj is SqlTypes st && st.ID == ID;
 			}
 
 			public override int GetHashCode()
@@ -337,7 +337,7 @@ namespace Tests.DataProvider
 				Assert.True(records[0].HomeLocation!.IsNull);
 				Assert.AreEqual(2, records[1].Id);
 				// missing API
-#if !NETCOREAPP2_1
+#if NET46
 				Assert.True(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue);
 #endif
 			}

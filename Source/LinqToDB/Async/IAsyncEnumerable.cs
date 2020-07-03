@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Async
@@ -26,6 +26,6 @@ namespace LinqToDB.Async
 		/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
 		/// This API may change or be removed in future releases.
 		/// </summary>
-		IAsyncEnumerator<T> GetEnumerator();
+		IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken);
 	}
 }

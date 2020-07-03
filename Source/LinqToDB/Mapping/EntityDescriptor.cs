@@ -288,7 +288,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="memberName">Member name.</param>
 		/// <returns>Returns column descriptor or <c>null</c>, if descriptor not found.</returns>
-		public ColumnDescriptor this[string memberName]
+		public ColumnDescriptor? this[string memberName]
 		{
 			get
 			{
@@ -498,7 +498,7 @@ namespace LinqToDB.Mapping
 
 					if (accessorsAttribute.GetterMethod != null)
 					{
-						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.GetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.GetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
 						if (mi.IsStatic)
 							DynamicColumnGetter =
@@ -530,7 +530,7 @@ namespace LinqToDB.Mapping
 
 					if (accessorsAttribute.SetterMethod != null)
 					{
-						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.SetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.SetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
 						if (mi.IsStatic)
 							DynamicColumnSetter =

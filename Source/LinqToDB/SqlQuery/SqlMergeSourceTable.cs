@@ -147,7 +147,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other) => throw new NotImplementedException();
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
 
 		#endregion
 

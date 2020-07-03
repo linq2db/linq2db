@@ -246,7 +246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (value != null)
 				{
-					var text  = value.ToString();
+					var text  = value.ToString()!;
 					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)

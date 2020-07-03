@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;
@@ -155,10 +155,10 @@ namespace LinqToDB.SqlQuery
 			return
 				Value == null ?
 					sb.Append("NULL") :
-				Value is string ?
+				Value is string strVal ?
 					sb
 						.Append('\'')
-						.Append(Value.ToString().Replace("\'", "''"))
+						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
 					sb.Append(Value);

@@ -66,7 +66,7 @@ namespace Tests.Data
 				return Code == other.Code && string.Equals(Value1, other.Value1) && string.Equals(Value2, other.Value2);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
