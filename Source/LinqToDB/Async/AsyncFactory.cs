@@ -91,15 +91,6 @@ namespace LinqToDB.Async
 			if (transaction is IAsyncDbTransaction asyncTransaction)
 				return asyncTransaction;
 
-/* this does not work when connecting to a .Net Standard 2.0 library with async methods,
- *   since the async methods will hide (not override) the .Net Standard 2.1 async methods
-#if NETSTANDARD2_1 || NETCOREAPP3_1
-			// wrap the asynchronous methods already available 
-			if (transaction is DbTransaction dbTransaction)
-				return new AsyncDbTransaction(dbTransaction);
-#endif
-*/
-
 			return _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction);
 		}
 
