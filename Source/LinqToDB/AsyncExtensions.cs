@@ -252,6 +252,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token   = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -281,6 +282,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -311,6 +313,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
@@ -343,6 +346,7 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token = default)
+			where TKey : notnull
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{

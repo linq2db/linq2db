@@ -608,7 +608,7 @@ namespace LinqToDB
 
 			public override string ToString()
 			{
-				return Query.ToString();
+				return Query.ToString()!;
 			}
 		}
 
@@ -1107,7 +1107,7 @@ namespace LinqToDB
 
 			public override string ToString()
 			{
-				return Query.ToString();
+				return Query.ToString()!;
 			}
 		}
 
@@ -1735,7 +1735,7 @@ namespace LinqToDB
 
 			public override string ToString()
 			{
-				return Query.ToString();
+				return Query.ToString()!;
 			}
 		}
 

@@ -21,7 +21,8 @@ namespace LinqToDB.Common
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
 				[InstantHandle] IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+			where T : notnull =>
 			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -33,7 +34,8 @@ namespace LinqToDB.Common
 		[Pure]
 		public static IEnumerable<T> TopoSort<T>(
 				[InstantHandle] ICollection<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+			where T : notnull =>
 			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -47,7 +49,8 @@ namespace LinqToDB.Common
 		public static IEnumerable<T> TopoSort<T>(
 				this IEnumerable<T> source,
 				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				IEqualityComparer<T> equalityComparer) =>
+				IEqualityComparer<T> equalityComparer)
+			where T : notnull =>
 			GroupTopoSort(source, dependsOnGetter, equalityComparer)
 				.Select(g => g.AsEnumerable())
 				.SelectMany(e => e);
@@ -63,7 +66,8 @@ namespace LinqToDB.Common
 		public static IEnumerable<T> TopoSort<T>(
 				this ICollection<T> source,
 				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				IEqualityComparer<T> equalityComparer) =>
+				IEqualityComparer<T> equalityComparer)
+			where T: notnull =>
 			GroupTopoSort(source, dependsOnGetter, equalityComparer)
 				.Select(g => g.AsEnumerable())
 				.SelectMany(e => e);
@@ -79,7 +83,8 @@ namespace LinqToDB.Common
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
 				[InstantHandle] this IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+			where T : notnull =>
 			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -91,7 +96,8 @@ namespace LinqToDB.Common
 		[Pure]
 		public static IEnumerable<T[]> GroupTopoSort<T>(
 				[InstantHandle] this ICollection<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter) =>
+				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+			where T : notnull =>
 			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
@@ -105,7 +111,8 @@ namespace LinqToDB.Common
 		public static IEnumerable<T[]> GroupTopoSort<T>(
 				[InstantHandle] this IEnumerable<T> source,
 				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
-				IEqualityComparer<T> equalityComparer) =>
+				IEqualityComparer<T> equalityComparer)
+			where T : notnull =>
 			GroupTopoSort(source.ToArray(), dependsOnGetter, equalityComparer);
 
 		/// <summary>
@@ -122,6 +129,7 @@ namespace LinqToDB.Common
 			[InstantHandle] this ICollection<T> source,
 			[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
 			IEqualityComparer<T> equalityComparer)
+			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (dependsOnGetter == null) throw new ArgumentNullException(nameof(dependsOnGetter));

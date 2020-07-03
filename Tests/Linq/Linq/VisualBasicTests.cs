@@ -28,7 +28,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var str = CompilerServices.CompareString(db).ToString();
+				var str = CompilerServices.CompareString(db).ToString()!;
 				Assert.That(str.IndexOf("CASE"), Is.EqualTo(-1));
 			}
 		}

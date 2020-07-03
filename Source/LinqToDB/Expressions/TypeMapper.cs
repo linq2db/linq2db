@@ -123,8 +123,8 @@ namespace LinqToDB.Expressions
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor(new Type[0]).Invoke(Array<object>.Empty);
-				var originalToWrapper = o2wType.GetConstructor(new Type[0]).Invoke(Array<object>.Empty);
+				var wrapperToOriginal = w2oType.GetConstructor(new Type[0])!.Invoke(Array<object>.Empty);
+				var originalToWrapper = o2wType.GetConstructor(new Type[0])!.Invoke(Array<object>.Empty);
 
 				var w2o = (IDictionary)wrapperToOriginal;
 				var o2w = (IDictionary)originalToWrapper;
@@ -244,15 +244,15 @@ namespace LinqToDB.Expressions
 				var subscribeGenerator = new ExpressionGenerator(this);
 				var pWrapper           = Expression.Parameter(wrapperType);
 
-				foreach (var eventName in (string[])events.GetValue(null))
+				foreach (var eventName in (string[])events.GetValue(null)!)
 				{
-					var   wrapperEvent = wrapperType.GetEvent(eventName);
+					var   wrapperEvent = wrapperType.GetEvent(eventName)!;
 					Type? delegateType = wrapperEvent.EventHandlerType;
-					var   invokeMethod = delegateType.GetMethod("Invoke");
+					var   invokeMethod = delegateType!.GetMethod("Invoke")!;
 					var   returnType   = invokeMethod.ReturnType;
 
 					if (TryMapType(delegateType, out delegateType))
-						invokeMethod = delegateType.GetMethod("Invoke");
+						invokeMethod = delegateType.GetMethod("Invoke")!;
 					else
 						delegateType = wrapperEvent.EventHandlerType;
 
@@ -278,7 +278,7 @@ namespace LinqToDB.Expressions
 					}
 
 					var handlerGenerator = new ExpressionGenerator(this);
-					var delegateVariable = handlerGenerator.DeclareVariable(wrapperEvent.EventHandlerType, "handler");
+					var delegateVariable = handlerGenerator.DeclareVariable(wrapperEvent.EventHandlerType!, "handler");
 
 					handlerGenerator.Assign(delegateVariable, ExpressionHelper.Field(pWrapper, "_" + eventName));
 
@@ -286,14 +286,14 @@ namespace LinqToDB.Expressions
 					if (returnType != typeof(void))
 						handlerGenerator.Condition(
 							MapExpression((Delegate? handler) => handler != null, delegateVariable),
-							Expression.Convert(MapInvoke(wrapperEvent.EventHandlerType, delegateVariable, returnType, parameterValues, parameterTypes), lambdaReturnType),
+							Expression.Convert(MapInvoke(wrapperEvent.EventHandlerType!, delegateVariable, returnType, parameterValues, parameterTypes), lambdaReturnType),
 							Expression.Default(lambdaReturnType));
 					else
 						handlerGenerator.IfThen(
 							MapExpression((Delegate? handler) => handler != null, delegateVariable),
-							MapInvoke(wrapperEvent.EventHandlerType, delegateVariable, null, parameterValues, parameterTypes));
+							MapInvoke(wrapperEvent.EventHandlerType!, delegateVariable, null, parameterValues, parameterTypes));
 
-					var ei = targetType.GetEvent(eventName);
+					var ei = targetType.GetEvent(eventName)!;
 
 					subscribeGenerator.AddExpression(
 						Expression.Call(
@@ -340,7 +340,7 @@ namespace LinqToDB.Expressions
 			var wrappers = wrapperType.GetProperty("Wrappers", BindingFlags.Static | BindingFlags.NonPublic);
 
 			if (wrappers != null)
-				return ((IEnumerable<object>)wrappers.GetValue(null))
+				return ((IEnumerable<object>)wrappers.GetValue(null)!)
 					.Select(e => e is Tuple<LambdaExpression, bool> tuple
 						? new { expr = tuple.Item1, optional = tuple.Item2 }
 						: new { expr = (LambdaExpression)e, optional = false })
@@ -358,7 +358,7 @@ namespace LinqToDB.Expressions
 				var typeArguments = type.GetGenericArguments().Select(t => TryMapType(t, out var r) ? r : null).ToArray();
 				if (typeArguments.All(t => t != null))
 				{
-					replacement = type.GetGenericTypeDefinition().MakeGenericType(typeArguments);
+					replacement = type.GetGenericTypeDefinition().MakeGenericType(typeArguments!);
 					_typeMappingCache.Add(type, replacement);
 					return true;
 				}
@@ -442,7 +442,7 @@ namespace LinqToDB.Expressions
 
 								if (ue.Method != null)
 								{
-									if (TryMapType(ue.Method.DeclaringType, out var replacement))
+									if (TryMapType(ue.Method.DeclaringType!, out var replacement))
 									{
 										var types = ue.Method.GetParameters()
 											.Select(p => MakeReplacement(p.ParameterType))
@@ -622,7 +622,7 @@ namespace LinqToDB.Expressions
 							{
 								var mc = (MethodCallExpression)e;
 
-								if (TryMapType(mc.Method.DeclaringType, out var replacement))
+								if (TryMapType(mc.Method.DeclaringType!, out var replacement))
 								{
 									var types = mc.Method.GetParameters()
 										.Select(p => MakeReplacement(p.ParameterType))

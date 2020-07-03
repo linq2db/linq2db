@@ -1698,7 +1698,7 @@ namespace LinqToDB.SqlProvider
 			if (NeedTake(selectQuery) && FirstFormat(selectQuery) != null)
 			{
 				StringBuilder.Append(' ').AppendFormat(
-					FirstFormat(selectQuery), WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue!)));
+					FirstFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue!)));
 
 				BuildTakeHints(selectQuery);
 			}
@@ -1732,7 +1732,7 @@ namespace LinqToDB.SqlProvider
 				if (doSkip && OffsetFirst)
 				{
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery), WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue!)));
+						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue!)));
 
 					if (doTake)
 						StringBuilder.Append(' ');
@@ -1741,7 +1741,7 @@ namespace LinqToDB.SqlProvider
 				if (doTake)
 				{
 					StringBuilder.AppendFormat(
-						LimitFormat(selectQuery), WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue!)));
+						LimitFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue!)));
 
 					if (doSkip)
 						StringBuilder.Append(' ');
@@ -1749,7 +1749,7 @@ namespace LinqToDB.SqlProvider
 
 				if (doSkip && !OffsetFirst)
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery), WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue!)));
+						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue!)));
 
 				StringBuilder.AppendLine();
 			}
@@ -2018,7 +2018,7 @@ namespace LinqToDB.SqlProvider
 									}
 
 									var field = GetUnderlayingField(keys[0]);
-									var value = field.ColumnDescriptor.MemberAccessor.GetValue(item);
+									var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
 
 									if (value is ISqlExpression expression)
 										BuildExpression(expression);
@@ -2044,7 +2044,7 @@ namespace LinqToDB.SqlProvider
 									foreach (var key in keys)
 									{
 										var field = GetUnderlayingField(key);
-										var value = field.ColumnDescriptor.MemberAccessor.GetValue(item);
+										var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
 
 										BuildExpression(GetPrecedence(p), key);
 
@@ -3178,7 +3178,7 @@ namespace LinqToDB.SqlProvider
 							}
 
 							sb.Length = 0;
-							sb.AppendFormat(tbl.Name, values);
+							sb.AppendFormat(tbl.Name!, values);
 						}
 
 						if (tbl.SqlTableType == SqlTableType.Function)

@@ -200,16 +200,17 @@ namespace Tests
 		{
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
+			string? path = basePath;
 			while (!File.Exists(fileName))
 			{
 				Console.WriteLine($"File not found: {fileName}");
 
-				basePath = Path.GetDirectoryName(basePath);
+				path = Path.GetDirectoryName(path);
 
-				if (basePath == null)
+				if (path == null)
 					return null;
 
-				fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
+				fileName = Path.GetFullPath(Path.Combine(path, findFileName));
 			}
 
 			Console.WriteLine($"Base path found: {fileName}");

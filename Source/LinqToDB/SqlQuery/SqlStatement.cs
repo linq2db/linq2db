@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 
 							foreach (var item in items)
 							{
-								var value = cd.MemberAccessor.GetValue(item);
+								var value = cd.MemberAccessor.GetValue(item!);
 								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
 							}
 
@@ -183,7 +183,7 @@ namespace LinqToDB.SqlQuery
 								{
 									var field = GetUnderlyingField(key);
 									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item);
+									var value = cd.MemberAccessor.GetValue(item!);
 									var cond  = value == null ?
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
 										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, mappingSchema.GetSqlValue(value)));
@@ -214,7 +214,7 @@ namespace LinqToDB.SqlQuery
 
 							foreach (var item in items)
 							{
-								var value = expr.GetValue(item, 0);
+								var value = expr.GetValue(item!, 0);
 								values.Add(new SqlValue(value));
 							}
 
@@ -233,7 +233,7 @@ namespace LinqToDB.SqlQuery
 							for (var i = 0; i < expr.Parameters.Length; i++)
 							{
 								var sql   = expr.Parameters[i];
-								var value = expr.GetValue(item, i);
+								var value = expr.GetValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
 									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, new SqlValue(value)));

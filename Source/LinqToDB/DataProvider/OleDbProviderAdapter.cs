@@ -59,12 +59,12 @@ namespace LinqToDB.DataProvider
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OleDbDataReader" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.OleDbParameter"  , true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.OleDbCommand"    , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true);
-						var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OleDbDataReader" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.OleDbParameter"  , true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.OleDbCommand"    , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true)!;
+						var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true)!;
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<OleDbConnection>(connectionType);

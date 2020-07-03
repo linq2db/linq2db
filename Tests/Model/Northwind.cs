@@ -12,8 +12,11 @@ namespace Tests.Model
 			[System.Diagnostics.CodeAnalysis.NotNull]
 			protected abstract T Key { get; }
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
+				if (obj == null)
+					return false;
+
 				return GetType() == obj.GetType() && Key.Equals(((EntityBase<T>)obj).Key);
 			}
 

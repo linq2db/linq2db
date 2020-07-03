@@ -131,7 +131,7 @@ namespace Tests.Linq
 				.Property(e => e.Enum)
 				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumNullable)
-				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
+				.HasConversion(v => v.ToString()!, p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumWithNull)
 				.HasConversion(
 					v => v == EnumValue.Null ? null : v.ToString(),

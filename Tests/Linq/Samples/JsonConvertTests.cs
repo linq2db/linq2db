@@ -28,9 +28,9 @@ namespace Tests.Playground
 
 		static MappingHelper()
 		{
-			_deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
-			_serializeMethod = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
-			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) });
+			_deserializeMethod   = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
+			_serializeMethod     = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
+			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
 		}
 
 		public static void GenerateConvertorsForTables(Type dataConnectionType, MappingSchema ms)

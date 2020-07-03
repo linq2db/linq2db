@@ -67,7 +67,7 @@ namespace Tests.Model
 		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)]
 		public Patient? Patient;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as Person);
 		}

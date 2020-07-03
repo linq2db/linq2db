@@ -125,7 +125,7 @@ namespace LinqToDB.SqlQuery
 
 			if (identityField != null)
 			{
-				var cd = ed[identityField.Name];
+				var cd = ed[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
 		}
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		public SqlField this[string fieldName]
+		public SqlField? this[string fieldName]
 		{
 			get
 			{
@@ -347,7 +347,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return this == other;
 		}

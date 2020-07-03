@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static void ResolveSapHana(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)

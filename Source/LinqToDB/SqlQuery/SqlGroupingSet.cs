@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public bool Equals(ISqlExpression other)
+		public bool Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;

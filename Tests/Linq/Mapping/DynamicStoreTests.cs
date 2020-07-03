@@ -60,7 +60,7 @@ namespace Tests.Mapping
 		{
 			private object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -175,7 +175,7 @@ namespace Tests.Mapping
 		{
 			public object GetSQLiteProperty(string name, object defaultValue)
 			{
-				if (!SQLiteValues.TryGetValue(name, out object value))
+				if (!SQLiteValues.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -188,7 +188,7 @@ namespace Tests.Mapping
 
 			public object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -214,7 +214,7 @@ namespace Tests.Mapping
 
 			public object GetSQLiteProperty(string name, object defaultValue)
 			{
-				if (!SQLiteValues.TryGetValue(name, out object value))
+				if (!SQLiteValues.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -241,7 +241,7 @@ namespace Tests.Mapping
 
 			public object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -265,7 +265,7 @@ namespace Tests.Mapping
 
 			public object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -291,7 +291,7 @@ namespace Tests.Mapping
 
 			public object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -324,7 +324,7 @@ namespace Tests.Mapping
 
 			public object GetProperty(string name, object defaultValue)
 			{
-				if (!Values.TryGetValue(name, out object value))
+				if (!Values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;

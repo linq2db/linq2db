@@ -51,11 +51,11 @@ namespace LinqToDB.DataProvider.SQLite
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.{prefix}Connection" , true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.{prefix}DataReader" , true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.{prefix}Parameter"  , true);
-			var commandType     = assembly.GetType($"{clientNamespace}.{prefix}Command"    , true);
-			var transactionType = assembly.GetType($"{clientNamespace}.{prefix}Transaction", true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.{prefix}Connection" , true)!;
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.{prefix}DataReader" , true)!;
+			var parameterType   = assembly.GetType($"{clientNamespace}.{prefix}Parameter"  , true)!;
+			var commandType     = assembly.GetType($"{clientNamespace}.{prefix}Command"    , true)!;
+			var transactionType = assembly.GetType($"{clientNamespace}.{prefix}Transaction", true)!;
 
 			var disposeCommandOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
 

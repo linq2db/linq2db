@@ -260,7 +260,7 @@ namespace Tests.Linq
 			public GroupByInfo? Prev;
 			public object?      Field;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				return Equals(obj as GroupByInfo);
 			}

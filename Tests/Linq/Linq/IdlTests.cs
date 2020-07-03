@@ -59,7 +59,7 @@ namespace Tests.Linq
 
 			public string Name => FirstName + " " + LastName;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				return Equals(obj as PersonWithId);
 			}
@@ -620,7 +620,7 @@ namespace Tests.Linq
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
+				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
 
 				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
@@ -777,7 +777,7 @@ namespace Tests.Linq
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					typeof(Queryable).GetMethodEx("Concat").MakeGenericMethod(typeof(TSource)),
+					typeof(Queryable).GetMethodEx("Concat")!.MakeGenericMethod(typeof(TSource)),
 					new[] { source1.Expression, Expression.Constant(source2, typeof (IEnumerable<TSource>)) }));
 		}
 

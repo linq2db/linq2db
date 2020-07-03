@@ -248,12 +248,12 @@ namespace LinqToDB.DataProvider.Oracle
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
-			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection" , true);
-			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter"  , true);
-			var dataReaderType  = assembly.GetType($"{clientNamespace}.OracleDataReader" , true);
-			var transactionType = assembly.GetType($"{clientNamespace}.OracleTransaction", true);
-			var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType"     , true);
-			var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand"    , true);
+			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection" , true)!;
+			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter"  , true)!;
+			var dataReaderType  = assembly.GetType($"{clientNamespace}.OracleDataReader" , true)!;
+			var transactionType = assembly.GetType($"{clientNamespace}.OracleTransaction", true)!;
+			var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType"     , true)!;
+			var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand"    , true)!;
 
 			var mappingSchema = new MappingSchema();
 
@@ -289,12 +289,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (isNative)
 			{
-				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.OracleBulkCopy", true);
-				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.OracleBulkCopyOptions", true);
-				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.OracleRowsCopiedEventHandler", true);
-				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.OracleBulkCopyColumnMapping", true);
-				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.OracleBulkCopyColumnMappingCollection", true);
-				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.OracleRowsCopiedEventArgs", true);
+				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.OracleBulkCopy", true)!;
+				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.OracleBulkCopyOptions", true)!;
+				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.OracleRowsCopiedEventHandler", true)!;
+				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.OracleBulkCopyColumnMapping", true)!;
+				var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.OracleBulkCopyColumnMappingCollection", true)!;
+				var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.OracleRowsCopiedEventArgs", true)!;
 
 				// bulk copy types
 				typeMapper.RegisterTypeWrapper<OracleBulkCopy>(bulkCopyType);
@@ -697,10 +697,10 @@ namespace LinqToDB.DataProvider.Oracle
 			public OracleBulkCopyColumnMappingCollection ColumnMappings => ((Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
 
 			private      OracleRowsCopiedEventHandler? _OracleRowsCopied;
-			public event OracleRowsCopiedEventHandler   OracleRowsCopied
+			public event OracleRowsCopiedEventHandler?  OracleRowsCopied
 			{
-				add    => _OracleRowsCopied = (OracleRowsCopiedEventHandler)Delegate.Combine(_OracleRowsCopied, value);
-				remove => _OracleRowsCopied = (OracleRowsCopiedEventHandler)Delegate.Remove (_OracleRowsCopied, value);
+				add    => _OracleRowsCopied = (OracleRowsCopiedEventHandler?)Delegate.Combine(_OracleRowsCopied, value);
+				remove => _OracleRowsCopied = (OracleRowsCopiedEventHandler?)Delegate.Remove (_OracleRowsCopied, value);
 			}
 		}
 

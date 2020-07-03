@@ -224,9 +224,9 @@ namespace Tests.Linq
 		{
 			public int ID;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return ((MyClass)obj).ID == ID;
+				return obj is MyClass mc && mc.ID == ID;
 			}
 
 			public override int GetHashCode()
