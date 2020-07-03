@@ -29,6 +29,12 @@ namespace LinqToDB.SchemaProvider
 		/// Should linq2db use <see cref="string"/> for char(1) type or <see cref="char"/>. Default type: <see cref="char"/> (<c>false</c>).
 		/// </summary>
 		public bool     GenerateChar1AsString   = false;
+
+		/// <summary>
+		/// Default Schema name.
+		/// </summary>
+		public string? DefaultSchema;
+		
 		/// <summary>
 		/// List of allowed schemas/owners.
 		/// </summary>
