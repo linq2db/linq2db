@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Informix
 	using System;
 	using System.Data;
 	using System.Linq;
+	using System.Threading.Tasks;
 	using Data;
 	using LinqToDB.SqlProvider;
 
@@ -50,6 +51,83 @@ namespace LinqToDB.DataProvider.Informix
 
 			return MultipleRowsCopy(table, options, source);
 		}
+
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table,
+			BulkCopyOptions options,
+			IEnumerable<T> source)
+		{
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+
+				if (connection != null)
+				{
+					// call the synchronous provider-specific implementation
+					if (_provider.Adapter.InformixBulkCopy != null)
+						return Task.FromResult(IDSProviderSpecificCopy(
+							table,
+							options,
+							source,
+							dataConnection,
+							connection,
+							_provider.Adapter.InformixBulkCopy));
+					else
+						return Task.FromResult(DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+							table,
+							options,
+							source,
+							dataConnection,
+							connection,
+							_provider.Adapter.DB2BulkCopy!,
+							TraceAction));
+				}
+			}
+
+			return MultipleRowsCopyAsync(table, options, source);
+		}
+
+#if !NET45 && !NET46
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table,
+			BulkCopyOptions options,
+			IAsyncEnumerable<T> source)
+		{
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+
+				if (connection != null)
+				{
+					var enumerator = source.GetAsyncEnumerator();
+					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						// call the synchronous provider-specific implementation
+						var syncSource = AsyncToSync(enumerator);
+						if (_provider.Adapter.InformixBulkCopy != null)
+							return IDSProviderSpecificCopy(
+								table,
+								options,
+								syncSource,
+								dataConnection,
+								connection,
+								_provider.Adapter.InformixBulkCopy);
+						else
+							return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+								table,
+								options,
+								syncSource,
+								dataConnection,
+								connection,
+								_provider.Adapter.DB2BulkCopy!,
+								TraceAction);
+					}
+				}
+			}
+
+			return await MultipleRowsCopyAsync(table, options, source).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#endif
 
 		protected BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
 			ITable<T>                               table,

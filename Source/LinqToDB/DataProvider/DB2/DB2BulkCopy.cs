@@ -6,6 +6,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
+	using System.Threading.Tasks;
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
@@ -38,6 +39,54 @@ namespace LinqToDB.DataProvider.DB2
 
 			return MultipleRowsCopy(table, options, source);
 		}
+
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			if (table.DataContext is DataConnection dataConnection)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				if (connection != null)
+					// call the synchronous provider-specific implementation
+					return Task.FromResult(ProviderSpecificCopyImpl(
+						table,
+						options,
+						source,
+						dataConnection,
+						connection,
+						_provider.Adapter.BulkCopy,
+						TraceAction));
+			}
+
+			return MultipleRowsCopyAsync(table, options, source);
+		}
+
+#if !NET45 && !NET46
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			if (table.DataContext is DataConnection dataConnection)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				if (connection != null)
+				{
+					var enumerator = source.GetAsyncEnumerator();
+					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						// call the synchronous provider-specific implementation
+						return ProviderSpecificCopyImpl(
+							table,
+							options,
+							AsyncToSync(enumerator),
+							dataConnection,
+							connection,
+							_provider.Adapter.BulkCopy,
+							TraceAction);
+					}
+				}
+			}
+
+			return await MultipleRowsCopyAsync(table, options, source).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#endif
 
 		internal static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
 			ITable<T>                                       table,
@@ -112,5 +161,27 @@ namespace LinqToDB.DataProvider.DB2
 
 			return MultipleRowsCopy1(table, options, source);
 		}
+
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			var dataConnection = (DataConnection)table.DataContext;
+
+			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
+				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1");
+
+			return MultipleRowsCopy1Async(table, options, source);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			var dataConnection = (DataConnection)table.DataContext;
+
+			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
+				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1");
+
+			return MultipleRowsCopy1Async(table, options, source);
+		}
+#endif
 	}
 }
