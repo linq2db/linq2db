@@ -37,9 +37,9 @@ namespace LinqToDB.DataProvider
 		{
 			switch (bulkCopyType)
 			{
-				case BulkCopyType.MultipleRows: return MultipleRowsCopyAsync(table, options, source);
-				case BulkCopyType.RowByRow: return RowByRowCopyAsync(table, options, source);
-				default: return ProviderSpecificCopyAsync(table, options, source);
+				case BulkCopyType.MultipleRows : return MultipleRowsCopyAsync(table, options, source);
+				case BulkCopyType.RowByRow     : return RowByRowCopyAsync(table, options, source);
+				default                        : return ProviderSpecificCopyAsync(table, options, source);
 			}
 		}
 #endif
@@ -186,15 +186,15 @@ namespace LinqToDB.DataProvider
 		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
 		{
 			var now = DateTime.UtcNow;
-			var sw = Stopwatch.StartNew();
+			var sw  = Stopwatch.StartNew();
 
 			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
 				{
-					TraceLevel = TraceLevel.Info,
-					CommandText = commandText(),
-					StartTime = now,
+					TraceLevel     = TraceLevel.Info,
+					CommandText    = commandText(),
+					StartTime      = now,
 				});
 			}
 
@@ -206,10 +206,10 @@ namespace LinqToDB.DataProvider
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
 					{
-						TraceLevel = TraceLevel.Info,
-						CommandText = commandText(),
-						StartTime = now,
-						ExecutionTime = sw.Elapsed,
+						TraceLevel      = TraceLevel.Info,
+						CommandText     = commandText(),
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = count,
 					});
 				}
@@ -220,11 +220,11 @@ namespace LinqToDB.DataProvider
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
 					{
-						TraceLevel = TraceLevel.Error,
-						CommandText = commandText(),
-						StartTime = now,
+						TraceLevel    = TraceLevel.Error,
+						CommandText   = commandText(),
+						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
-						Exception = ex,
+						Exception     = ex,
 					});
 				}
 

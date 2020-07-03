@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider
 			public int                Size          { get; set; }
 		}
 
-#region Implementation of IDataRecord
+		#region Implementation of IDataRecord
 
 		public override string GetName(int i)
 		{
@@ -133,9 +133,9 @@ namespace LinqToDB.DataProvider
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
 
-#endregion
+		#endregion
 
-#region Implementation of IDataReader
+		#region Implementation of IDataReader
 
 		public override void Close()
 		{

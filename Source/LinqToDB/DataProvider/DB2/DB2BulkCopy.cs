@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var rd         = new BulkCopyReader(dataConnection, columns, source);
+			var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
 			var rc         = new BulkCopyRowsCopied();
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var tableName  = GetTableName(sqlBuilder, options, table);
