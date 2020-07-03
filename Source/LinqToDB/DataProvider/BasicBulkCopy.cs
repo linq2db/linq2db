@@ -220,11 +220,11 @@ namespace LinqToDB.DataProvider
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
 					{
-						TraceLevel    = TraceLevel.Error,
-						CommandText   = commandText(),
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
+						TraceLevel     = TraceLevel.Error,
+						CommandText    = commandText(),
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
+						Exception      = ex,
 					});
 				}
 
