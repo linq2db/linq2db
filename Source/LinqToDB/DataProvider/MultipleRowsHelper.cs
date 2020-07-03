@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using System.Threading.Tasks;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 	{
@@ -108,6 +109,27 @@ namespace LinqToDB.DataProvider
 			Parameters.Clear();
 			ParameterIndex       = 0;
 			CurrentCount         = 0;
+			StringBuilder.Length = HeaderSize;
+
+			return true;
+		}
+
+		public async Task<bool> ExecuteAsync()
+		{
+			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), Parameters.ToArray())
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (Options.RowsCopiedCallback != null)
+			{
+				Options.RowsCopiedCallback(RowsCopied);
+
+				if (RowsCopied.Abort)
+					return false;
+			}
+
+			Parameters.Clear();
+			ParameterIndex = 0;
+			CurrentCount = 0;
 			StringBuilder.Length = HeaderSize;
 
 			return true;

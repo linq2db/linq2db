@@ -11,10 +11,12 @@ namespace LinqToDB.DataProvider
 	using Common;
 	using LinqToDB.Data;
 	using Mapping;
+	using System.Threading;
+	using System.Threading.Tasks;
 
-	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	public class BulkCopyReader<T> : DbDataReader, IDataReader, IDataRecord
 	{
-		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable collection)
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable<T> collection)
 		{
 			_dataConnection      = dataConnection;
 			_columns             = columns;
@@ -23,14 +25,31 @@ namespace LinqToDB.DataProvider
 			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
+#if !NET45 && !NET46
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection)
+		{
+			_dataConnection      = dataConnection;
+			_columns             = columns;
+			_asyncEnumerator     = collection.GetAsyncEnumerator();
+			_columnTypes         = _columns.Select(c => c.GetDbDataType()).ToArray();
+			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+		}
+#endif
+
 		public int Count;
 
 		readonly DataConnection                   _dataConnection;
 		readonly DbDataType[]                     _columnTypes;
 		readonly List<ColumnDescriptor>           _columns;
-		readonly IEnumerator                      _enumerator;
 		readonly Parameter                        _valueConverter = new Parameter();
 		readonly IReadOnlyDictionary<string, int> _ordinals;
+		readonly IEnumerator<T>?                  _enumerator;
+#if NET45 || NET46
+		T                                         _current => (_enumerator!.Current)!;
+#else
+		readonly IAsyncEnumerator<T>?             _asyncEnumerator;
+		T                                         _current => (_asyncEnumerator != null ? _asyncEnumerator.Current : _enumerator!.Current)!;
+#endif
 
 		public class Parameter : IDbDataParameter
 		{
@@ -46,7 +65,7 @@ namespace LinqToDB.DataProvider
 			public int                Size          { get; set; }
 		}
 
-		#region Implementation of IDataRecord
+#region Implementation of IDataRecord
 
 		public override string GetName(int i)
 		{
@@ -60,7 +79,7 @@ namespace LinqToDB.DataProvider
 
 		public override object? GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_enumerator.Current!);
+			var value = _columns[i].GetValue(_current);
 
 			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
@@ -70,7 +89,7 @@ namespace LinqToDB.DataProvider
 		public override int GetValues(object?[] values)
 		{
 			var count = _columns.Count;
-			var obj   = _enumerator.Current!;
+			var obj   = _current;
 
 			for (var it = 0; it < count; ++it)
 			{
@@ -114,9 +133,9 @@ namespace LinqToDB.DataProvider
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
-		#region Implementation of IDataReader
+#region Implementation of IDataReader
 
 		public override void Close()
 		{
@@ -183,7 +202,29 @@ namespace LinqToDB.DataProvider
 
 		public override bool Read()
 		{
-			var b = _enumerator.MoveNext();
+			bool b;
+#if !NET45 && !NET46
+			if (_asyncEnumerator != null)
+				b = _asyncEnumerator.MoveNextAsync().Result;
+			else
+#endif
+			b = _enumerator!.MoveNext();
+
+			if (b)
+				Count++;
+
+			return b;
+		}
+
+		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
+		{
+			bool b;
+#if !NET45 && !NET46
+			if (_asyncEnumerator != null)
+				b = await _asyncEnumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			else
+#endif
+				b = _enumerator!.MoveNext();
 
 			if (b)
 				Count++;
@@ -201,9 +242,22 @@ namespace LinqToDB.DataProvider
 
 		#region Implementation of IDisposable
 
-		//public void Dispose()
-		//{
-		//}
+#if !NET45 && !NET46
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_asyncEnumerator?.DisposeAsync().AsTask().Wait();
+			}
+		}
+#endif
+
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+		public override ValueTask DisposeAsync()
+		{
+			return _asyncEnumerator?.DisposeAsync() ?? new ValueTask(Task.CompletedTask);
+		}
+#endif
 
 		#endregion
 

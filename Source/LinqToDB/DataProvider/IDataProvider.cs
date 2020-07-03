@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider
 	using Common;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading.Tasks;
 
 	public interface IDataProvider
 	{
@@ -50,6 +51,12 @@ namespace LinqToDB.DataProvider
 
 		ISchemaProvider    GetSchemaProvider     ();
 
-		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
+		BulkCopyRowsCopied       BulkCopy<T>     (ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
+		
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
+
+#if !NET45 && !NET46
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source);
+#endif
 	}
 }

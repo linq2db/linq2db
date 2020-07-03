@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider
 	using SchemaProvider;
 	using SqlProvider;
 	using System.Diagnostics.CodeAnalysis;
+	using System.Threading.Tasks;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -408,6 +409,18 @@ namespace LinqToDB.DataProvider
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
+
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source);
+		}
+
+#if !NET45 && !NET46
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source);
+		}
+#endif
 
 		#endregion
 	}
