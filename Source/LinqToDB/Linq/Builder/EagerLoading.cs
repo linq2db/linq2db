@@ -649,19 +649,33 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		static Expression RemoveProjection(Expression expression)
+		{
+			while (expression is MethodCallExpression mc)
+			{
+				if (mc.IsQueryable("Select"))
+					expression = mc.Arguments[0];
+				else
+					break;
+			}
+
+			return expression;
+		}
+
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
+			var mainQuery        = RemoveProjection(initialMainQuery);
 			var mappingSchema    = builder.MappingSchema;
 
 			// that means we processing association from TableContext. First parameter is master
 			//
 			Expression? detailQuery;
 
-			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
+			var mainQueryElementType  = GetEnumerableElementType(mainQuery.Type, builder.MappingSchema);
 			var alias = "lw_" + (association.MemberInfo.DeclaringType?.Name ?? "master");
 			
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
@@ -719,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 			// recursive processing
 			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
-				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+				if (!IsQueryableMethod(mainQuery, "SelectMany", out var mainSelectManyMethod))
 					throw new InvalidOperationException("Unexpected Main Query");
 
 				var detailProp   = ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
@@ -784,7 +798,7 @@ namespace LinqToDB.Linq.Builder
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, mainQuery, builder);
 			}
 			else
 			{
@@ -822,7 +836,7 @@ namespace LinqToDB.Linq.Builder
 
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, mainQuery, builder);
 			}
 
 			if (replaceParam != null)
