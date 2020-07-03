@@ -42,6 +42,14 @@ namespace LinqToDB.DataProvider
 				default                        : return ProviderSpecificCopyAsync(table, options, source);
 			}
 		}
+
+		protected static IEnumerable<T> AsyncToSync<T>(IAsyncEnumerator<T> enumerator)
+		{
+			while (enumerator.MoveNextAsync().Result)
+			{
+				yield return enumerator.Current;
+			}
+		}
 #endif
 
 		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
@@ -236,20 +244,25 @@ namespace LinqToDB.DataProvider
 
 		#region MultipleRows Support
 
-		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
-			=> MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
-
-		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
+		protected static BulkCopyRowsCopied MultipleRowsCopyHelper(
+			MultipleRowsHelper helper, 
+			IEnumerable source,
+			string? from,
+			Action<MultipleRowsHelper> prepFunction,
+			Action<MultipleRowsHelper, object, string?> addFunction,
+			Action<MultipleRowsHelper> finishFunction,
+			int maxParameters = 10000,
+			int maxSqlLength = 100000)
 		{
-			MultipleRowsCopy1Prep(helper);
+			prepFunction(helper);
 
 			foreach (var item in source)
 			{
-				MultipleRowsCopy1Add(helper, item!);
+				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
 				{
-					MultipleRowsCopy1Finish(helper);
+					finishFunction(helper);
 					if (!helper.Execute())
 						return helper.RowsCopied;
 				}
@@ -257,27 +270,32 @@ namespace LinqToDB.DataProvider
 
 			if (helper.CurrentCount > 0)
 			{
-				MultipleRowsCopy1Finish(helper);
+				finishFunction(helper);
 				helper.Execute();
 			}
 
 			return helper.RowsCopied;
 		}
 
-		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
-			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source);
-
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source)
+		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync(
+			MultipleRowsHelper helper,
+			IEnumerable source,
+			string? from,
+			Action<MultipleRowsHelper> prepFunction,
+			Action<MultipleRowsHelper, object, string?> addFunction,
+			Action<MultipleRowsHelper> finishFunction,
+			int maxParameters = 10000,
+			int maxSqlLength = 100000)
 		{
-			MultipleRowsCopy1Prep(helper);
+			prepFunction(helper);
 
 			foreach (var item in source)
 			{
-				MultipleRowsCopy1Add(helper, item!);
+				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
 				{
-					MultipleRowsCopy1Finish(helper);
+					finishFunction(helper);
 					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
 				}
@@ -285,7 +303,7 @@ namespace LinqToDB.DataProvider
 
 			if (helper.CurrentCount > 0)
 			{
-				MultipleRowsCopy1Finish(helper);
+				finishFunction(helper);
 				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
@@ -293,20 +311,25 @@ namespace LinqToDB.DataProvider
 		}
 
 #if !NET45 && !NET46
-		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
-			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source);
-
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source)
+		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
+			MultipleRowsHelper helper,
+			IAsyncEnumerable<T> source,
+			string? from,
+			Action<MultipleRowsHelper> prepFunction,
+			Action<MultipleRowsHelper, object, string?> addFunction,
+			Action<MultipleRowsHelper> finishFunction,
+			int maxParameters = 10000,
+			int maxSqlLength = 100000)
 		{
-			MultipleRowsCopy1Prep(helper);
+			prepFunction(helper);
 
-			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await foreach (var item in source)
 			{
-				MultipleRowsCopy1Add(helper, item!);
+				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
 				{
-					MultipleRowsCopy1Finish(helper);
+					finishFunction(helper);
 					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
 				}
@@ -314,12 +337,32 @@ namespace LinqToDB.DataProvider
 
 			if (helper.CurrentCount > 0)
 			{
-				MultipleRowsCopy1Finish(helper);
+				finishFunction(helper);
 				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			return helper.RowsCopied;
 		}
+#endif
+
+		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			=> MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+
+		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
+			=> MultipleRowsCopyHelper(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish);
+
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source);
+
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish);
+
+#if !NET45 && !NET46
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source);
+
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish);
 #endif
 
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
@@ -349,7 +392,7 @@ namespace LinqToDB.DataProvider
 			helper.SetHeader();
 		}
 
-		private void MultipleRowsCopy1Add(MultipleRowsHelper helper, object item)
+		private void MultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
 			helper.StringBuilder
 				.AppendLine()
@@ -369,90 +412,21 @@ namespace LinqToDB.DataProvider
 		protected BulkCopyRowsCopied MultipleRowsCopy2<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from)
 			=> MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
 
-		protected BulkCopyRowsCopied MultipleRowsCopy2(
-			MultipleRowsHelper helper, IEnumerable source, string from)
-		{
-			MultipleRowsCopy2Prep(helper);
-
-			foreach (var item in source)
-			{
-				MultipleRowsCopy2Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy2Finish(helper);
-					if (!helper.Execute())
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy2Finish(helper);
-				helper.Execute();
-			}
-
-			return helper.RowsCopied;
-		}
+		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
+			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from)
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from);
 
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(
-			MultipleRowsHelper helper, IEnumerable source, string from)
-		{
-			MultipleRowsCopy2Prep(helper);
-
-			foreach (var item in source)
-			{
-				MultipleRowsCopy2Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy2Finish(helper);
-					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy2Finish(helper);
-				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			return helper.RowsCopied;
-		}
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from)
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish);
 
 #if !NET45 && !NET46
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, string from)
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from);
 
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(
-			MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from)
-		{
-			MultipleRowsCopy2Prep(helper);
-
-			await foreach (var item in source)
-			{
-				MultipleRowsCopy2Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy2Finish(helper);
-					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy2Finish(helper);
-				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			return helper.RowsCopied;
-		}
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from)
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish);
 #endif
 
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
@@ -478,7 +452,7 @@ namespace LinqToDB.DataProvider
 			helper.SetHeader();
 		}
 
-		private void MultipleRowsCopy2Add(MultipleRowsHelper helper, object item, string from)
+		private void MultipleRowsCopy2Add(MultipleRowsHelper helper, object item, string? from)
 		{
 			helper.StringBuilder
 				.AppendLine()
@@ -496,84 +470,15 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder.Length -= " UNION ALL".Length;
 		}
 
-		protected BulkCopyRowsCopied MultipleRowsCopy3(
-			MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
-		{
-			MultipleRowsCopy3Prep(helper);
+		protected BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
+			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish);
 
-			foreach (var item in source)
-			{
-				MultipleRowsCopy3Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy3Finish(helper);
-					if (!helper.Execute())
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy3Finish(helper);
-				helper.Execute();
-			}
-
-			return helper.RowsCopied;
-		}
-
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(
-			MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
-		{
-			MultipleRowsCopy3Prep(helper);
-
-			foreach (var item in source)
-			{
-				MultipleRowsCopy3Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy3Finish(helper);
-					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy3Finish(helper);
-				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			return helper.RowsCopied;
-		}
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish);
 
 #if !NET45 && !NET46
-		protected async Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(
-			MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from)
-		{
-			MultipleRowsCopy3Prep(helper);
-
-			await foreach (var item in source)
-			{
-				MultipleRowsCopy3Add(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
-				{
-					MultipleRowsCopy3Finish(helper);
-					if (!await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return helper.RowsCopied;
-				}
-			}
-
-			if (helper.CurrentCount > 0)
-			{
-				MultipleRowsCopy3Finish(helper);
-				await helper.ExecuteAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			return helper.RowsCopied;
-		}
+		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from)
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish);
 #endif
 
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
@@ -601,7 +506,7 @@ namespace LinqToDB.DataProvider
 			helper.SetHeader();
 		}
 
-		private void MultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string from)
+		private void MultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string? from)
 		{
 			helper.StringBuilder
 				.AppendLine()
