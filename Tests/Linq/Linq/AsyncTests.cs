@@ -11,6 +11,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+	using System.Threading;
 	using UserTests;
 
 	[TestFixture]
@@ -73,7 +74,7 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("-- Access")));
 
@@ -90,7 +91,7 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("-- Access")));
 
@@ -112,7 +113,7 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString();
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("-- Access")));
 
@@ -180,5 +181,81 @@ namespace Tests.Linq
 					await resultQuery.ToArrayAsync());
 			}
 		}
+
+#if !NET46
+		[Test]
+		public async Task AsAsyncEnumerable1Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var resultQuery = db.Parent.AsAsyncEnumerable();
+			var list = new List<Parent>();
+			await foreach (var row in resultQuery)
+				list.Add(row);
+
+			AreEqual(Parent, list);
+		}
+
+		[Test]
+		public async Task AsAsyncEnumerable2Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var resultQuery = db.Parent.Where(x => x.ParentID > 1).AsAsyncEnumerable();
+			var list = new List<Parent>();
+			await foreach (var row in resultQuery)
+				list.Add(row);
+
+			AreEqual(Parent.Where(x => x.ParentID > 1), list);
+		}
+
+		[Test]
+		public async Task AsyncEnumerableCast1Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var resultQuery = (IAsyncEnumerable<Parent>)db.Parent;
+			var list = new List<Parent>();
+			await foreach (var row in resultQuery)
+				list.Add(row);
+
+			AreEqual(Parent, list);
+		}
+
+		[Test]
+		public async Task AsyncEnumerableCast2Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var resultQuery = (IAsyncEnumerable<Parent>)db.Parent.Where(x => x.ParentID > 1);
+			var list = new List<Parent>();
+			await foreach (var row in resultQuery)
+				list.Add(row);
+
+			AreEqual(Parent.Where(x => x.ParentID > 1), list);
+		}
+
+		[Test]
+		public void CancelableAsyncEnumerableTest([DataSources] string context)
+		{
+			using var cts = new CancellationTokenSource();
+			var cancellationToken = cts.Token;
+			cts.Cancel();
+			using var db = GetDataContext(context);
+			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
+			var list = new List<Parent>();
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			{
+				try
+				{
+					await foreach (var row in resultQuery)
+						list.Add(row);
+				}
+				catch (OperationCanceledException)
+				{
+					// this casts any exception that inherits from OperationCanceledException
+					//   to a OperationCanceledException to pass the assert check above
+					//   (needed for TaskCanceledException)
+					throw new OperationCanceledException();
+				}
+			});
+		}
+#endif
 	}
 }

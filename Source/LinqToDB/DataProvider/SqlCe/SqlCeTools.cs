@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void ResolveSqlCe(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection

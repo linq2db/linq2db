@@ -789,6 +789,7 @@ void GenerateTypesFromMetadata()
 				p.BodyBuilders.Add(() => new[]
 				{
 					string.Format("return " + thisDataContext + ".GetTable<{0}>(this, (MethodInfo)MethodBase.GetCurrentMethod()", p.ResultTable.TypeName)
+					+ (EnableNullableReferenceTypes ? "!" : "")
 					+ (p.ProcParameters.Count == 0 ? ");" : ",")
 				});
 

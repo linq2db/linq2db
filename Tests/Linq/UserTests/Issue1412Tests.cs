@@ -87,7 +87,7 @@ namespace Tests.UserTests
 				return Id.Equals(other.Id) && TypeID.Equals(other.TypeID);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
@@ -128,7 +128,7 @@ namespace Tests.UserTests
 				return Id.Equals(other.Id) && string.Equals(Name, other.Name) && string.Equals(ShortName, other.ShortName) && Height == other.Height && Depth == other.Depth && Width == other.Width;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;

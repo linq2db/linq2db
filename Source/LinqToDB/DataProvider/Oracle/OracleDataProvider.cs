@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override void DisposeCommand(DataConnection dataConnection)
 		{
-			foreach (DbParameter param in dataConnection.Command.Parameters)
+			foreach (DbParameter? param in dataConnection.Command.Parameters)
 			{
 				if (param is IDisposable disposable)
 					disposable.Dispose();

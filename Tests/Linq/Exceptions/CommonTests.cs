@@ -62,7 +62,7 @@ namespace Tests.Exceptions
 									}
 								}
 
-								IQueryElement ex;
+								IQueryElement? ex;
 								return dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}

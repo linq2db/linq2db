@@ -168,7 +168,7 @@ namespace LinqToDB.DataProvider.Access
 
 				if (value != null)
 				{
-					var text  = value.ToString();
+					var text  = value.ToString()!;
 		
 					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.Access
 
 					if (value != null)
 					{
-						var text = value.ToString();
+						var text = value.ToString()!;
 						var val  = new SqlValue(ReescapeLikeText(text, (char)escapeValue.Value!));
 
 						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);

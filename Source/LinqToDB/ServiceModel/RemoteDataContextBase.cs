@@ -49,7 +49,7 @@ namespace LinqToDB.ServiceModel
 					var info = client.GetInfo(Configuration);
 
 					var type = Type.GetType(info.MappingSchemaType);
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
 
 					_configurationInfo = new ConfigurationInfo
 					{

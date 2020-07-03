@@ -87,7 +87,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="information_schema", Name="_pg_expandarray")]
 		public ITable<PgExpandarrayResult> PgExpandarray(object? par4)
 		{
-			return this.GetTable<PgExpandarrayResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgExpandarrayResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par4);
 		}
 
@@ -104,7 +104,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="aclexplode")]
 		public ITable<AclexplodeResult> Aclexplode(object? acl)
 		{
-			return this.GetTable<AclexplodeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<AclexplodeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				acl);
 		}
 
@@ -123,7 +123,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="generate_series")]
 		public ITable<GenerateSeriesResult> GenerateSeries(NpgsqlDateTime? par1896, NpgsqlDateTime? par1897, NpgsqlTimeSpan? par1898)
 		{
-			return this.GetTable<GenerateSeriesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GenerateSeriesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par1896,
 				par1897,
 				par1898);
@@ -141,7 +141,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="generate_subscripts")]
 		public ITable<GenerateSubscriptsResult> GenerateSubscripts(object? par1902, int? par1903)
 		{
-			return this.GetTable<GenerateSubscriptsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<GenerateSubscriptsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par1902,
 				par1903);
 		}
@@ -158,7 +158,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_array_elements")]
 		public ITable<JsonArrayElementsResult> JsonArrayElements(string? from_json)
 		{
-			return this.GetTable<JsonArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -174,7 +174,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_array_elements_text")]
 		public ITable<JsonArrayElementsTextResult> JsonArrayElementsText(string? from_json)
 		{
-			return this.GetTable<JsonArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -190,7 +190,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_each")]
 		public ITable<JsonEachResult> JsonEach(string? from_json)
 		{
-			return this.GetTable<JsonEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -207,7 +207,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_each_text")]
 		public ITable<JsonEachTextResult> JsonEachText(string? from_json)
 		{
-			return this.GetTable<JsonEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -224,7 +224,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_object_keys")]
 		public ITable<JsonObjectKeysResult> JsonObjectKeys(string? par3453)
 		{
-			return this.GetTable<JsonObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3453);
 		}
 
@@ -240,7 +240,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_populate_recordset")]
 		public ITable<JsonPopulateRecordsetResult> JsonPopulateRecordset(object? @base, string? from_json, bool? use_json_as_text)
 		{
-			return this.GetTable<JsonPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@base,
 				from_json,
 				use_json_as_text);
@@ -258,7 +258,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_array_elements")]
 		public ITable<JsonbArrayElementsResult> JsonbArrayElements(string? from_json)
 		{
-			return this.GetTable<JsonbArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbArrayElementsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -274,7 +274,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_array_elements_text")]
 		public ITable<JsonbArrayElementsTextResult> JsonbArrayElementsText(string? from_json)
 		{
-			return this.GetTable<JsonbArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbArrayElementsTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -290,7 +290,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_each")]
 		public ITable<JsonbEachResult> JsonbEach(string? from_json)
 		{
-			return this.GetTable<JsonbEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbEachResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -307,7 +307,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_each_text")]
 		public ITable<JsonbEachTextResult> JsonbEachText(string? from_json)
 		{
-			return this.GetTable<JsonbEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbEachTextResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				from_json);
 		}
 
@@ -324,7 +324,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_object_keys")]
 		public ITable<JsonbObjectKeysResult> JsonbObjectKeys(string? par3555)
 		{
-			return this.GetTable<JsonbObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3555);
 		}
 
@@ -340,7 +340,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_populate_recordset")]
 		public ITable<JsonbPopulateRecordsetResult> JsonbPopulateRecordset(object? par3561, string? par3562)
 		{
-			return this.GetTable<JsonbPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<JsonbPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par3561,
 				par3562);
 		}
@@ -357,7 +357,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_available_extension_versions")]
 		public ITable<PgAvailableExtensionVersionsResult> PgAvailableExtensionVersions()
 		{
-			return this.GetTable<PgAvailableExtensionVersionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgAvailableExtensionVersionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgAvailableExtensionVersionsResult
@@ -378,7 +378,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_available_extensions")]
 		public ITable<PgAvailableExtensionsResult> PgAvailableExtensions()
 		{
-			return this.GetTable<PgAvailableExtensionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgAvailableExtensionsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgAvailableExtensionsResult
@@ -395,7 +395,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_config")]
 		public ITable<PgConfigResult> PgConfig()
 		{
-			return this.GetTable<PgConfigResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgConfigResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgConfigResult
@@ -411,7 +411,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_cursor")]
 		public ITable<PgCursorResult> PgCursor()
 		{
-			return this.GetTable<PgCursorResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgCursorResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgCursorResult
@@ -431,7 +431,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_event_trigger_ddl_commands")]
 		public ITable<PgEventTriggerDdlCommandsResult> PgEventTriggerDdlCommands()
 		{
-			return this.GetTable<PgEventTriggerDdlCommandsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgEventTriggerDdlCommandsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgEventTriggerDdlCommandsResult
@@ -454,7 +454,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_event_trigger_dropped_objects")]
 		public ITable<PgEventTriggerDroppedObjectsResult> PgEventTriggerDroppedObjects()
 		{
-			return this.GetTable<PgEventTriggerDroppedObjectsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgEventTriggerDroppedObjectsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgEventTriggerDroppedObjectsResult
@@ -480,7 +480,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_extension_update_paths")]
 		public ITable<PgExtensionUpdatePathsResult> PgExtensionUpdatePaths(string? name)
 		{
-			return this.GetTable<PgExtensionUpdatePathsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgExtensionUpdatePathsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				name);
 		}
 
@@ -498,7 +498,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_keywords")]
 		public ITable<PgGetKeywordsResult> PgGetKeywords()
 		{
-			return this.GetTable<PgGetKeywordsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgGetKeywordsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgGetKeywordsResult
@@ -515,7 +515,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_multixact_members")]
 		public ITable<PgGetMultixactMembersResult> PgGetMultixactMembers(int? multixid)
 		{
-			return this.GetTable<PgGetMultixactMembersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgGetMultixactMembersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				multixid);
 		}
 
@@ -532,7 +532,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_get_replication_slots")]
 		public ITable<PgGetReplicationSlotsResult> PgGetReplicationSlots()
 		{
-			return this.GetTable<PgGetReplicationSlotsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgGetReplicationSlotsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgGetReplicationSlotsResult
@@ -556,7 +556,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_listening_channels")]
 		public ITable<PgListeningChannelsResult> PgListeningChannels()
 		{
-			return this.GetTable<PgListeningChannelsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgListeningChannelsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgListeningChannelsResult
@@ -571,7 +571,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_lock_status")]
 		public ITable<PgLockStatusResult> PgLockStatus()
 		{
-			return this.GetTable<PgLockStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgLockStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgLockStatusResult
@@ -600,7 +600,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_get_binary_changes")]
 		public ITable<PgLogicalSlotGetBinaryChangesResult> PgLogicalSlotGetBinaryChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotGetBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotGetBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -621,7 +621,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_get_changes")]
 		public ITable<PgLogicalSlotGetChangesResult> PgLogicalSlotGetChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotGetChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotGetChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -642,7 +642,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_peek_binary_changes")]
 		public ITable<PgLogicalSlotPeekBinaryChangesResult> PgLogicalSlotPeekBinaryChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotPeekBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotPeekBinaryChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -663,7 +663,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_logical_slot_peek_changes")]
 		public ITable<PgLogicalSlotPeekChangesResult> PgLogicalSlotPeekChanges(string? slot_name, object? upto_lsn, int? upto_nchanges, object? options)
 		{
-			return this.GetTable<PgLogicalSlotPeekChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLogicalSlotPeekChangesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				slot_name,
 				upto_lsn,
 				upto_nchanges,
@@ -684,7 +684,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_ls_dir")]
 		public ITable<PgLsDirResult> PgLsDir(string? par4944, bool? par4945, bool? par4946)
 		{
-			return this.GetTable<PgLsDirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgLsDirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par4944,
 				par4945,
 				par4946);
@@ -702,7 +702,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_options_to_table")]
 		public ITable<PgOptionsToTableResult> PgOptionsToTable(object? options_array)
 		{
-			return this.GetTable<PgOptionsToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgOptionsToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				options_array);
 		}
 
@@ -719,7 +719,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_prepared_statement")]
 		public ITable<PgPreparedStatementResult> PgPreparedStatement()
 		{
-			return this.GetTable<PgPreparedStatementResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgPreparedStatementResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgPreparedStatementResult
@@ -738,7 +738,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_prepared_xact")]
 		public ITable<PgPreparedXactResult> PgPreparedXact()
 		{
-			return this.GetTable<PgPreparedXactResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgPreparedXactResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgPreparedXactResult
@@ -757,7 +757,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_all_file_settings")]
 		public ITable<PgShowAllFileSettingsResult> PgShowAllFileSettings()
 		{
-			return this.GetTable<PgShowAllFileSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowAllFileSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowAllFileSettingsResult
@@ -778,7 +778,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_all_settings")]
 		public ITable<PgShowAllSettingsResult> PgShowAllSettings()
 		{
-			return this.GetTable<PgShowAllSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowAllSettingsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowAllSettingsResult
@@ -809,7 +809,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_show_replication_origin_status")]
 		public ITable<PgShowReplicationOriginStatusResult> PgShowReplicationOriginStatus()
 		{
-			return this.GetTable<PgShowReplicationOriginStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgShowReplicationOriginStatusResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgShowReplicationOriginStatusResult
@@ -827,7 +827,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_activity")]
 		public ITable<PgStatGetActivityResult> PgStatGetActivity(int? pid)
 		{
-			return this.GetTable<PgStatGetActivityResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStatGetActivityResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				pid);
 		}
 
@@ -865,7 +865,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_backend_idset")]
 		public ITable<PgStatGetBackendIdsetResult> PgStatGetBackendIdset()
 		{
-			return this.GetTable<PgStatGetBackendIdsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgStatGetBackendIdsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgStatGetBackendIdsetResult
@@ -880,7 +880,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_progress_info")]
 		public ITable<PgStatGetProgressInfoResult> PgStatGetProgressInfo(string? cmdtype)
 		{
-			return this.GetTable<PgStatGetProgressInfoResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStatGetProgressInfoResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				cmdtype);
 		}
 
@@ -908,7 +908,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stat_get_wal_senders")]
 		public ITable<PgStatGetWalSendersResult> PgStatGetWalSenders()
 		{
-			return this.GetTable<PgStatGetWalSendersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgStatGetWalSendersResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgStatGetWalSendersResult
@@ -930,7 +930,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_stop_backup")]
 		public ITable<PgStopBackupResult> PgStopBackup(bool? exclusive)
 		{
-			return this.GetTable<PgStopBackupResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgStopBackupResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				exclusive);
 		}
 
@@ -948,7 +948,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_tablespace_databases")]
 		public ITable<PgTablespaceDatabasesResult> PgTablespaceDatabases(int? par5219)
 		{
-			return this.GetTable<PgTablespaceDatabasesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<PgTablespaceDatabasesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par5219);
 		}
 
@@ -964,7 +964,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_timezone_abbrevs")]
 		public ITable<PgTimezoneAbbrevsResult> PgTimezoneAbbrevs()
 		{
-			return this.GetTable<PgTimezoneAbbrevsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgTimezoneAbbrevsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgTimezoneAbbrevsResult
@@ -981,7 +981,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_timezone_names")]
 		public ITable<PgTimezoneNamesResult> PgTimezoneNames()
 		{
-			return this.GetTable<PgTimezoneNamesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<PgTimezoneNamesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class PgTimezoneNamesResult
@@ -999,7 +999,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_matches")]
 		public ITable<RegexpMatchesResult> RegexpMatches(string? par5691, string? par5692, string? par5693)
 		{
-			return this.GetTable<RegexpMatchesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<RegexpMatchesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par5691,
 				par5692,
 				par5693);
@@ -1017,7 +1017,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_split_to_table")]
 		public ITable<RegexpSplitToTableResult> RegexpSplitToTable(string? par5712, string? par5713, string? par5714)
 		{
-			return this.GetTable<RegexpSplitToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<RegexpSplitToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par5712,
 				par5713,
 				par5714);
@@ -1035,7 +1035,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_debug")]
 		public ITable<TsDebugResult> TsDebug(string? document)
 		{
-			return this.GetTable<TsDebugResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsDebugResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				document);
 		}
 
@@ -1056,7 +1056,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_parse")]
 		public ITable<TsParseResult> TsParse(string? parser_name, string? txt)
 		{
-			return this.GetTable<TsParseResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsParseResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				parser_name,
 				txt);
 		}
@@ -1074,7 +1074,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_stat")]
 		public ITable<TsStatResult> TsStat(string? query, string? weights)
 		{
-			return this.GetTable<TsStatResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsStatResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				query,
 				weights);
 		}
@@ -1093,7 +1093,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="ts_token_type")]
 		public ITable<TsTokenTypeResult> TsTokenType(string? parser_name)
 		{
-			return this.GetTable<TsTokenTypeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TsTokenTypeResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				parser_name);
 		}
 
@@ -1111,7 +1111,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="txid_snapshot_xip")]
 		public ITable<TxidSnapshotXipResult> TxidSnapshotXip(object? par7070)
 		{
-			return this.GetTable<TxidSnapshotXipResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TxidSnapshotXipResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				par7070);
 		}
 
@@ -1127,7 +1127,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="pg_catalog", Name="unnest")]
 		public ITable<UnnestResult> Unnest(object? tsvector)
 		{
-			return this.GetTable<UnnestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<UnnestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				tsvector);
 		}
 
@@ -1145,7 +1145,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id);
 		}
 
@@ -1156,7 +1156,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1);
 		}
 
@@ -1172,7 +1172,7 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				param1,
 				param2);
 		}
@@ -1190,55 +1190,57 @@ namespace PostreSQLDataContext
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
+			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
 		}
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			public int?             ID                  { get; set; }
-			public long?            bigintDataType      { get; set; }
-			public decimal?         numericDataType     { get; set; }
-			public short?           smallintDataType    { get; set; }
-			public int?             intDataType         { get; set; }
-			public decimal?         moneyDataType       { get; set; }
-			public double?          doubleDataType      { get; set; }
-			public float?           realDataType        { get; set; }
-			public NpgsqlDateTime?  timestampDataType   { get; set; }
-			public NpgsqlDateTime?  timestampTZDataType { get; set; }
-			public NpgsqlDate?      dateDataType        { get; set; }
-			public TimeSpan?        timeDataType        { get; set; }
-			public DateTimeOffset?  timeTZDataType      { get; set; }
-			public NpgsqlTimeSpan?  intervalDataType    { get; set; }
-			public NpgsqlTimeSpan?  intervalDataType2   { get; set; }
-			public char?            charDataType        { get; set; }
-			public string?          char20DataType      { get; set; }
-			public string?          varcharDataType     { get; set; }
-			public string?          textDataType        { get; set; }
-			public byte[]?          binaryDataType      { get; set; }
-			public Guid?            uuidDataType        { get; set; }
-			public BitArray?        bitDataType         { get; set; }
-			public bool?            booleanDataType     { get; set; }
-			public string?          colorDataType       { get; set; }
-			public NpgsqlPoint?     pointDataType       { get; set; }
-			public NpgsqlLSeg?      lsegDataType        { get; set; }
-			public NpgsqlBox?       boxDataType         { get; set; }
-			public NpgsqlPath?      pathDataType        { get; set; }
-			public NpgsqlPolygon?   polygonDataType     { get; set; }
-			public NpgsqlCircle?    circleDataType      { get; set; }
-			public NpgsqlLine?      lineDataType        { get; set; }
-			public NpgsqlInet?      inetDataType        { get; set; }
-			public NpgsqlInet?      cidrDataType        { get; set; }
-			public PhysicalAddress? macaddrDataType     { get; set; }
-			public string?          jsonDataType        { get; set; }
-			public string?          jsonbDataType       { get; set; }
-			public string?          xmlDataType         { get; set; }
-			public BitArray?        varBitDataType      { get; set; }
-			public string[]?        strarray            { get; set; }
-			public int[]?           intarray            { get; set; }
-			public long[]?          int2darray          { get; set; }
-			public double[]?        longarray           { get; set; }
-			public decimal[]?       doublearray         { get; set; }
-			public decimal[]?       decimalarray        { get; set; }
+			public int?              ID                  { get; set; }
+			public long?             bigintDataType      { get; set; }
+			public decimal?          numericDataType     { get; set; }
+			public short?            smallintDataType    { get; set; }
+			public int?              intDataType         { get; set; }
+			public decimal?          moneyDataType       { get; set; }
+			public double?           doubleDataType      { get; set; }
+			public float?            realDataType        { get; set; }
+			public NpgsqlDateTime?   timestampDataType   { get; set; }
+			public NpgsqlDateTime?   timestampTZDataType { get; set; }
+			public NpgsqlDate?       dateDataType        { get; set; }
+			public TimeSpan?         timeDataType        { get; set; }
+			public DateTimeOffset?   timeTZDataType      { get; set; }
+			public NpgsqlTimeSpan?   intervalDataType    { get; set; }
+			public NpgsqlTimeSpan?   intervalDataType2   { get; set; }
+			public char?             charDataType        { get; set; }
+			public string?           char20DataType      { get; set; }
+			public string?           varcharDataType     { get; set; }
+			public string?           textDataType        { get; set; }
+			public byte[]?           binaryDataType      { get; set; }
+			public Guid?             uuidDataType        { get; set; }
+			public BitArray?         bitDataType         { get; set; }
+			public bool?             booleanDataType     { get; set; }
+			public string?           colorDataType       { get; set; }
+			public NpgsqlPoint?      pointDataType       { get; set; }
+			public NpgsqlLSeg?       lsegDataType        { get; set; }
+			public NpgsqlBox?        boxDataType         { get; set; }
+			public NpgsqlPath?       pathDataType        { get; set; }
+			public NpgsqlPolygon?    polygonDataType     { get; set; }
+			public NpgsqlCircle?     circleDataType      { get; set; }
+			public NpgsqlLine?       lineDataType        { get; set; }
+			public NpgsqlInet?       inetDataType        { get; set; }
+			public NpgsqlInet?       cidrDataType        { get; set; }
+			public PhysicalAddress?  macaddrDataType     { get; set; }
+			public string?           jsonDataType        { get; set; }
+			public string?           jsonbDataType       { get; set; }
+			public string?           xmlDataType         { get; set; }
+			public BitArray?         varBitDataType      { get; set; }
+			public string[]?         strarray            { get; set; }
+			public int[]?            intarray            { get; set; }
+			public int[]?            int2darray          { get; set; }
+			public long[]?           longarray           { get; set; }
+			public NpgsqlTimeSpan[]? intervalarray       { get; set; }
+			public double[]?         doublearray         { get; set; }
+			public decimal[]?        numericarray        { get; set; }
+			public decimal[]?        decimalarray        { get; set; }
 		}
 
 		#endregion
@@ -1485,50 +1487,52 @@ namespace PostreSQLDataContext
 	[Table(Schema="public", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(                       DataType=DataType.Int32,          Precision=32, Scale=0), PrimaryKey, Identity] public int              ID                  { get; set; } // integer
-		[Column("bigintDataType",      DataType=DataType.Int64,          Precision=64, Scale=0), Nullable            ] public long?            BigintDataType      { get; set; } // bigint
-		[Column("numericDataType",     DataType=DataType.Decimal),                               Nullable            ] public decimal?         NumericDataType     { get; set; } // numeric
-		[Column("smallintDataType",    DataType=DataType.Int16,          Precision=16, Scale=0), Nullable            ] public short?           SmallintDataType    { get; set; } // smallint
-		[Column("intDataType",         DataType=DataType.Int32,          Precision=32, Scale=0), Nullable            ] public int?             IntDataType         { get; set; } // integer
-		[Column("moneyDataType",       DataType=DataType.Money),                                 Nullable            ] public decimal?         MoneyDataType       { get; set; } // money
-		[Column("doubleDataType",      DataType=DataType.Double,         Precision=53),          Nullable            ] public double?          DoubleDataType      { get; set; } // double precision
-		[Column("realDataType",        DataType=DataType.Single,         Precision=24),          Nullable            ] public float?           RealDataType        { get; set; } // real
-		[Column("timestampDataType",   DataType=DataType.DateTime2,      Precision=6),           Nullable            ] public NpgsqlDateTime?  TimestampDataType   { get; set; } // timestamp (6) without time zone
-		[Column("timestampTZDataType", DataType=DataType.DateTimeOffset, Precision=6),           Nullable            ] public NpgsqlDateTime?  TimestampTZDataType { get; set; } // timestamp (6) with time zone
-		[Column("dateDataType",        DataType=DataType.Date,           Precision=0),           Nullable            ] public NpgsqlDate?      DateDataType        { get; set; } // date
-		[Column("timeDataType",        DataType=DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?        TimeDataType        { get; set; } // time (6) without time zone
-		[Column("timeTZDataType",      DataType=DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?  TimeTZDataType      { get; set; } // time (6) with time zone
-		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public NpgsqlTimeSpan?  IntervalDataType    { get; set; } // interval(6)
-		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public NpgsqlTimeSpan?  IntervalDataType2   { get; set; } // interval(6)
-		[Column("charDataType",        DataType=DataType.NChar,          Length=1),              Nullable            ] public char?            CharDataType        { get; set; } // character(1)
-		[Column("char20DataType",      DataType=DataType.NChar,          Length=20),             Nullable            ] public string?          Char20DataType      { get; set; } // character(20)
-		[Column("varcharDataType",     DataType=DataType.NVarChar,       Length=20),             Nullable            ] public string?          VarcharDataType     { get; set; } // character varying(20)
-		[Column("textDataType",        DataType=DataType.Text),                                  Nullable            ] public string?          TextDataType        { get; set; } // text
-		[Column("binaryDataType",      DataType=DataType.Binary),                                Nullable            ] public byte[]?          BinaryDataType      { get; set; } // bytea
-		[Column("uuidDataType",        DataType=DataType.Guid),                                  Nullable            ] public Guid?            UuidDataType        { get; set; } // uuid
-		[Column("bitDataType",         DataType=DataType.BitArray,       Length=3),              Nullable            ] public BitArray?        BitDataType         { get; set; } // bit(3)
-		[Column("booleanDataType",     DataType=DataType.Boolean),                               Nullable            ] public bool?            BooleanDataType     { get; set; } // boolean
-		[Column("colorDataType",       DataType=DataType.Udt),                                   Nullable            ] public object?          ColorDataType       { get; set; } // USER-DEFINED
-		[Column("pointDataType",       DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPoint?     PointDataType       { get; set; } // point
-		[Column("lsegDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?      LsegDataType        { get; set; } // lseg
-		[Column("boxDataType",         DataType=DataType.Udt),                                   Nullable            ] public NpgsqlBox?       BoxDataType         { get; set; } // box
-		[Column("pathDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPath?      PathDataType        { get; set; } // path
-		[Column("polygonDataType",     DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPolygon?   PolygonDataType     { get; set; } // polygon
-		[Column("circleDataType",      DataType=DataType.Udt),                                   Nullable            ] public NpgsqlCircle?    CircleDataType      { get; set; } // circle
-		[Column("lineDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLine?      LineDataType        { get; set; } // line
-		[Column("inetDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlInet?      InetDataType        { get; set; } // inet
-		[Column("cidrDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlInet?      CidrDataType        { get; set; } // cidr
-		[Column("macaddrDataType",     DataType=DataType.Udt),                                   Nullable            ] public PhysicalAddress? MacaddrDataType     { get; set; } // macaddr
-		[Column("jsonDataType",        DataType=DataType.Json),                                  Nullable            ] public string?          JsonDataType        { get; set; } // json
-		[Column("jsonbDataType",       DataType=DataType.BinaryJson),                            Nullable            ] public string?          JsonbDataType       { get; set; } // jsonb
-		[Column("xmlDataType",         DataType=DataType.Xml),                                   Nullable            ] public string?          XmlDataType         { get; set; } // xml
-		[Column("varBitDataType",      DataType=DataType.BitArray),                              Nullable            ] public BitArray?        VarBitDataType      { get; set; } // bit varying
-		[Column("strarray",            DataType=DataType.Undefined),                             Nullable            ] public string[]?        Strarray            { get; set; } // text[]
-		[Column("intarray",            DataType=DataType.Undefined),                             Nullable            ] public int[][]?         Intarray            { get; set; } // integer[][]
-		[Column("int2darray",          DataType=DataType.Undefined),                             Nullable            ] public long[]?          Int2darray          { get; set; } // bigint[]
-		[Column("longarray",           DataType=DataType.Undefined),                             Nullable            ] public double[]?        Longarray           { get; set; } // double precision[]
-		[Column("doublearray",         DataType=DataType.Undefined),                             Nullable            ] public decimal[]?       Doublearray         { get; set; } // numeric[]
-		[Column("decimalarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?       Decimalarray        { get; set; } // numeric[]
+		[Column(                       DataType=DataType.Int32,          Precision=32, Scale=0), PrimaryKey, Identity] public int               ID                  { get; set; } // integer
+		[Column("bigintDataType",      DataType=DataType.Int64,          Precision=64, Scale=0), Nullable            ] public long?             BigintDataType      { get; set; } // bigint
+		[Column("numericDataType",     DataType=DataType.Decimal),                               Nullable            ] public decimal?          NumericDataType     { get; set; } // numeric
+		[Column("smallintDataType",    DataType=DataType.Int16,          Precision=16, Scale=0), Nullable            ] public short?            SmallintDataType    { get; set; } // smallint
+		[Column("intDataType",         DataType=DataType.Int32,          Precision=32, Scale=0), Nullable            ] public int?              IntDataType         { get; set; } // integer
+		[Column("moneyDataType",       DataType=DataType.Money),                                 Nullable            ] public decimal?          MoneyDataType       { get; set; } // money
+		[Column("doubleDataType",      DataType=DataType.Double,         Precision=53),          Nullable            ] public double?           DoubleDataType      { get; set; } // double precision
+		[Column("realDataType",        DataType=DataType.Single,         Precision=24),          Nullable            ] public float?            RealDataType        { get; set; } // real
+		[Column("timestampDataType",   DataType=DataType.DateTime2,      Precision=6),           Nullable            ] public NpgsqlDateTime?   TimestampDataType   { get; set; } // timestamp (6) without time zone
+		[Column("timestampTZDataType", DataType=DataType.DateTimeOffset, Precision=6),           Nullable            ] public NpgsqlDateTime?   TimestampTZDataType { get; set; } // timestamp (6) with time zone
+		[Column("dateDataType",        DataType=DataType.Date,           Precision=0),           Nullable            ] public NpgsqlDate?       DateDataType        { get; set; } // date
+		[Column("timeDataType",        DataType=DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?         TimeDataType        { get; set; } // time (6) without time zone
+		[Column("timeTZDataType",      DataType=DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?   TimeTZDataType      { get; set; } // time (6) with time zone
+		[Column("intervalDataType",    DataType=DataType.Interval,       Precision=6),           Nullable            ] public NpgsqlTimeSpan?   IntervalDataType    { get; set; } // interval(6)
+		[Column("intervalDataType2",   DataType=DataType.Interval,       Precision=6),           Nullable            ] public NpgsqlTimeSpan?   IntervalDataType2   { get; set; } // interval(6)
+		[Column("charDataType",        DataType=DataType.NChar,          Length=1),              Nullable            ] public char?             CharDataType        { get; set; } // character(1)
+		[Column("char20DataType",      DataType=DataType.NChar,          Length=20),             Nullable            ] public string?           Char20DataType      { get; set; } // character(20)
+		[Column("varcharDataType",     DataType=DataType.NVarChar,       Length=20),             Nullable            ] public string?           VarcharDataType     { get; set; } // character varying(20)
+		[Column("textDataType",        DataType=DataType.Text),                                  Nullable            ] public string?           TextDataType        { get; set; } // text
+		[Column("binaryDataType",      DataType=DataType.Binary),                                Nullable            ] public byte[]?           BinaryDataType      { get; set; } // bytea
+		[Column("uuidDataType",        DataType=DataType.Guid),                                  Nullable            ] public Guid?             UuidDataType        { get; set; } // uuid
+		[Column("bitDataType",         DataType=DataType.BitArray,       Length=3),              Nullable            ] public BitArray?         BitDataType         { get; set; } // bit(3)
+		[Column("booleanDataType",     DataType=DataType.Boolean),                               Nullable            ] public bool?             BooleanDataType     { get; set; } // boolean
+		[Column("colorDataType",       DataType=DataType.Udt),                                   Nullable            ] public object?           ColorDataType       { get; set; } // USER-DEFINED
+		[Column("pointDataType",       DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPoint?      PointDataType       { get; set; } // point
+		[Column("lsegDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?       LsegDataType        { get; set; } // lseg
+		[Column("boxDataType",         DataType=DataType.Udt),                                   Nullable            ] public NpgsqlBox?        BoxDataType         { get; set; } // box
+		[Column("pathDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPath?       PathDataType        { get; set; } // path
+		[Column("polygonDataType",     DataType=DataType.Udt),                                   Nullable            ] public NpgsqlPolygon?    PolygonDataType     { get; set; } // polygon
+		[Column("circleDataType",      DataType=DataType.Udt),                                   Nullable            ] public NpgsqlCircle?     CircleDataType      { get; set; } // circle
+		[Column("lineDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlLine?       LineDataType        { get; set; } // line
+		[Column("inetDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlInet?       InetDataType        { get; set; } // inet
+		[Column("cidrDataType",        DataType=DataType.Udt),                                   Nullable            ] public NpgsqlInet?       CidrDataType        { get; set; } // cidr
+		[Column("macaddrDataType",     DataType=DataType.Udt),                                   Nullable            ] public PhysicalAddress?  MacaddrDataType     { get; set; } // macaddr
+		[Column("jsonDataType",        DataType=DataType.Json),                                  Nullable            ] public string?           JsonDataType        { get; set; } // json
+		[Column("jsonbDataType",       DataType=DataType.BinaryJson),                            Nullable            ] public string?           JsonbDataType       { get; set; } // jsonb
+		[Column("xmlDataType",         DataType=DataType.Xml),                                   Nullable            ] public string?           XmlDataType         { get; set; } // xml
+		[Column("varBitDataType",      DataType=DataType.BitArray),                              Nullable            ] public BitArray?         VarBitDataType      { get; set; } // bit varying
+		[Column("strarray",            DataType=DataType.Undefined),                             Nullable            ] public string[]?         Strarray            { get; set; } // text[]
+		[Column("intarray",            DataType=DataType.Undefined),                             Nullable            ] public int[]?            Intarray            { get; set; } // integer[]
+		[Column("int2darray",          DataType=DataType.Undefined),                             Nullable            ] public int[][]?          Int2darray          { get; set; } // integer[][]
+		[Column("longarray",           DataType=DataType.Undefined),                             Nullable            ] public long[]?           Longarray           { get; set; } // bigint[]
+		[Column("intervalarray",       DataType=DataType.Undefined),                             Nullable            ] public NpgsqlTimeSpan[]? Intervalarray       { get; set; } // interval[]
+		[Column("doublearray",         DataType=DataType.Undefined),                             Nullable            ] public double[]?         Doublearray         { get; set; } // double precision[]
+		[Column("numericarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?        Numericarray        { get; set; } // numeric[]
+		[Column("decimalarray",        DataType=DataType.Undefined),                             Nullable            ] public decimal[]?        Decimalarray        { get; set; } // numeric[]
 	}
 
 	[Table(Schema="public", Name="Child")]

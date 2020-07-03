@@ -1293,7 +1293,7 @@ namespace LinqToDB.SqlProvider
 				return Equals(Expression, other.Expression);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 

@@ -88,9 +88,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<AllType> equalityComparer = ComparerBuilder.GetEqualityComparer<AllType>(c => c.ID);
 
-		public bool Equals(AllType other)
+		public bool Equals(AllType? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -137,9 +137,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<Doctor> equalityComparer = ComparerBuilder.GetEqualityComparer<Doctor>(c => c.PersonID);
 
-		public bool Equals(Doctor other)
+		public bool Equals(Doctor? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -177,9 +177,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<FKTestPosition> equalityComparer = ComparerBuilder.GetEqualityComparer<FKTestPosition>(c => c.Department, c => c.PositionID);
 
-		public bool Equals(FKTestPosition other)
+		public bool Equals(FKTestPosition? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -284,9 +284,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<Patient> equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonID);
 
-		public bool Equals(Patient other)
+		public bool Equals(Patient? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -335,9 +335,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<Person> equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonID);
 
-		public bool Equals(Person other)
+		public bool Equals(Person? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -377,9 +377,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<PrimaryKeyTable> equalityComparer = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>(c => c.ID);
 
-		public bool Equals(PrimaryKeyTable other)
+		public bool Equals(PrimaryKeyTable? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()
@@ -408,9 +408,9 @@ namespace EquatableDataContext
 
 		private static readonly IEqualityComparer<TestIdentity> equalityComparer = ComparerBuilder.GetEqualityComparer<TestIdentity>(c => c.ID);
 
-		public bool Equals(TestIdentity other)
+		public bool Equals(TestIdentity? other)
 		{
-			return equalityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other!);
 		}
 
 		public override int GetHashCode()

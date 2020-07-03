@@ -53,6 +53,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		class EagerLoadingContext<T, TKey>
+			where TKey : notnull
 		{
 			private Dictionary<TKey, List<T>>? _items;
 			private TKey                       _prevKey = default!;
@@ -60,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void Add(TKey key, T item)
 			{
-				List<T> list;
+				List<T>? list;
 
 				if (_prevList != null && _prevKey!.Equals(key))
 				{
@@ -159,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 			if (!IsEnumerableType(type, mappingSchema))
 				return type;
 			if (type.IsArray)
-				return type.GetElementType();
+				return type.GetElementType()!;
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
 				return type.GetGenericArguments()[1];
 			return type.GetGenericArguments()[0];
@@ -208,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 			Expression result = ob;
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType.IsSameOrParentOf(result.Type))
+				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
@@ -690,7 +691,7 @@ namespace LinqToDB.Linq.Builder
 
 
 			var extractContext        = reversedAssociationPath[0].Item2;
-			var associationParentType = associationPath[0].MemberInfo.DeclaringType;
+			var associationParentType = associationPath[0].MemberInfo.DeclaringType!;
 			var loadWithItems         = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
 
 			if (!associationParentType.IsSameOrParentOf(mainQueryElementType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
@@ -1139,7 +1140,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)enlistMethod.Invoke(null,
 					new object[]
-						{ builder, unchangedDetailQuery });
+						{ builder, unchangedDetailQuery })!;
 			}
 			else
 			{
@@ -1246,7 +1247,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)enlistMethodFinal.Invoke(null,
 					new object[]
-						{ builder, mainQueryWithCollectedKey, queryableDetailLambda, generateKeyExpression, keySelectLambda });
+						{ builder, mainQueryWithCollectedKey, queryableDetailLambda, generateKeyExpression, keySelectLambda })!;
 			}
 
 			if (replaceParam != null)
@@ -1274,7 +1275,7 @@ namespace LinqToDB.Linq.Builder
 
 			var resultExpression = (Expression)enlistMethod.Invoke(null,
 				new object[]
-					{ builder, masterQuery, detailsQueryLambda, keyCompiledExpression, keySelectLambda });
+					{ builder, masterQuery, detailsQueryLambda, keyCompiledExpression, keySelectLambda })!;
 			return resultExpression;
 		}
 
@@ -1308,6 +1309,7 @@ namespace LinqToDB.Linq.Builder
 			Expression<Func<T, IEnumerable<TD>>> detailQueryLambda,
 			Expression compiledKeyExpression,
 			Expression<Func<T, TKey>> selectKeyExpression)
+			where TKey : notnull
 		{
 			var mainQuery   = Internals.CreateExpressionQueryInstance<T>(builder.DataContext, mainQueryExpr);
 			var detailQuery = mainQuery
@@ -1394,6 +1396,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static int RegisterPreambles<TD, TKey>(ExpressionBuilder builder, IQueryable<KeyDetailEnvelope<TKey, TD>> detailQuery)
+			where TKey : notnull
 		{
 			// Finalize keys for recursive processing
 			var expression = detailQuery.Expression;

@@ -276,10 +276,10 @@ namespace LinqToDB.SqlProvider
 									break;
 							}
 
-							if (!ReferenceEquals(e, ne))
+							if (ne != null && !ReferenceEquals(e, ne))
 								replaced.Add(e, ne);
 
-							return ne;
+							return ne ?? e;
 						});
 
 						if (nc != null && !ReferenceEquals(nc, cond))
@@ -428,7 +428,7 @@ namespace LinqToDB.SqlProvider
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)]!;
 										}
 
 										break;
@@ -441,16 +441,16 @@ namespace LinqToDB.SqlProvider
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlColumn)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)];
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)]!;
 										}
 
 										break;
 								}
 
-								if (!ReferenceEquals(e, ne))
+								if (ne != null && !ReferenceEquals(e, ne))
 									replaced.Add(e, ne);
 
-								return ne;
+								return ne ?? e;
 							});
 
 							if (nc != null && !ReferenceEquals(nc, cond))

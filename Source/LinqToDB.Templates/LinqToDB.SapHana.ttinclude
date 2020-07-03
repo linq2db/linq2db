@@ -12,7 +12,7 @@
 			t.Parameters.Select(p => (Func<string>)(() => p.Type.ToTypeName() + " " + p.ParameterName)),
 			() => new []
 			{
-				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
+				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod()", EnableNullableReferenceTypes ? "!" : "" ,","),
 				String.Join(",", t.Parameters.Select(p => p.ParameterName)),
 				");"
 			});

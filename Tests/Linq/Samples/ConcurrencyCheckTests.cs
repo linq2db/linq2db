@@ -96,7 +96,7 @@ namespace Tests.Samples
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
-					var field              = insertClause.Into![rowVersion.ColumnName];
+					var field              = insertClause.Into![rowVersion.ColumnName]!;
 
 					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField

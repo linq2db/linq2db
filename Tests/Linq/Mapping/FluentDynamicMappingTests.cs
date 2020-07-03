@@ -45,7 +45,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -58,7 +58,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID2"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -72,7 +72,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -86,7 +86,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID2"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -132,7 +132,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -146,7 +146,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID2"].IsPrimaryKey);
+			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
 
 		[Test]
@@ -160,7 +160,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID"].IsIdentity);
+			Assert.IsTrue(ed["ID"]!.IsIdentity);
 		}
 
 		[Test]
@@ -174,7 +174,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.IsTrue(ed["ID2"].IsIdentity);
+			Assert.IsTrue(ed["ID2"]!.IsIdentity);
 		}
 
 		[Test]

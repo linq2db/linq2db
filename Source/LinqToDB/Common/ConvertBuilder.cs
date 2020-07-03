@@ -160,8 +160,8 @@ namespace LinqToDB.Common
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					var val = values.GetValue(i);
-					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture);
+					var val = values.GetValue(i)!;
+					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
 
 					dic[lv.ToString()] = val;
 
@@ -170,10 +170,10 @@ namespace LinqToDB.Common
 				}
 
 				for (var i = 0; i < values.Length; i++)
-					dic[names[i].ToLowerInvariant()] = values.GetValue(i);
+					dic[names[i].ToLowerInvariant()] = values.GetValue(i)!;
 
 				for (var i = 0; i < values.Length; i++)
-					dic[names[i]] = values.GetValue(i);
+					dic[names[i]] = values.GetValue(i)!;
 
 				var cases =
 					from v in dic

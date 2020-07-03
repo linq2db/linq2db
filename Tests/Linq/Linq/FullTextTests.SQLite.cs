@@ -60,7 +60,7 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString();
+					var sql = query.ToString()!;
 					Assert.That(sql.Contains("[r].[FTS5_TABLE] MATCH 'something'"));
 				}
 			}
@@ -112,7 +112,7 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString();
+					var sql = query.ToString()!;
 					Assert.That(sql.Contains("[r].[text1] MATCH 'found'"));
 				}
 			}
@@ -125,7 +125,7 @@ namespace Tests.Linq
 			{
 				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("p1 = 'found'"));
 				Assert.That(sql.Contains("[FTS5_TABLE](@p1)"));
 			}
@@ -147,7 +147,7 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString();
+					var sql = query.ToString()!;
 					Assert.That(sql.Contains("[r].[rowid] = 3"));
 				}
 			}
@@ -160,7 +160,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().OrderBy(r => Sql.Ext.SQLite().Rank(r));
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("ORDER BY"));
 				Assert.That(sql.Contains("[t1].[rank]"));
 			}
@@ -314,7 +314,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r));
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("bm25([r].[FTS5_TABLE])"));
 			}
 		}
@@ -326,7 +326,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r, 1.4, 5.6));
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("bm25([r].[FTS5_TABLE], 1.3999999999999999, 5.5999999999999996)"));
 			}
 		}
@@ -338,7 +338,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Highlight(r, 2, "start", "end"));
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("highlight([r].[FTS5_TABLE], 2, 'start', 'end')"));
 			}
 		}
@@ -350,7 +350,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Snippet(r, 1, "->", "<-", "zzz", 4));
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.That(sql.Contains("snippet([r].[FTS5_TABLE], 1, '->', '<-', 'zzz', 4)"));
 			}
 		}
@@ -500,8 +500,8 @@ namespace Tests.Linq
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)", db.LastQuery);
 					
 					Assert.AreEqual(2, db.Command.Parameters.Count);
-					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]).Value);
-					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]).Value);
+					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]!).Value);
+					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]!).Value);
 				}
 			}
 		}
@@ -636,7 +636,7 @@ namespace Tests.Linq
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('rank', @rank)", db.LastQuery);
 
 					Assert.AreEqual(1, db.Command.Parameters.Count);
-					Assert.AreEqual("strange('function\")", ((DbParameter)db.Command.Parameters[0]).Value);
+					Assert.AreEqual("strange('function\")", ((DbParameter)db.Command.Parameters[0]!).Value);
 				}
 			}
 		}
