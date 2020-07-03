@@ -238,7 +238,7 @@ namespace LinqToDB.DataProvider.Access
 				dts.Add(new DataTypeInfo()
 				{
 					TypeName         = "BINARY",
-					DataType         = typeof(byte[]).FullName,
+					DataType         = typeof(byte[]).FullName!,
 					CreateParameters = "max length",
 					ProviderDbType   = 128,
 				});
@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider.Access
 				dts.Add(new DataTypeInfo()
 				{
 					TypeName         = "CHAR",
-					DataType         = typeof(string).FullName,
+					DataType         = typeof(string).FullName!,
 					CreateParameters = "max length",
 					ProviderDbType   = 130
 				});
@@ -259,7 +259,7 @@ namespace LinqToDB.DataProvider.Access
 			dts.Add(new DataTypeInfo()
 			{
 				TypeName         = "VARBINARY",
-				DataType         = typeof(byte[]).FullName,
+				DataType         = typeof(byte[]).FullName!,
 				CreateParameters = "max length",
 				ProviderDbType   = 204
 			});

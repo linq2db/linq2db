@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 			if (resultExpr.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)resultExpr;
-				var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Method.ReflectedType, mc.Method);
+				var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Method.ReflectedType!, mc.Method);
 
 				if (attr != null
 					&& attr.IsNullable == Sql.IsNullableType.IfAnyParameterNullable
@@ -532,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string alias)
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
 			if (info.Expression == null)
@@ -957,7 +957,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			var sqtype = typeof(MultipleQueryHelper<>).MakeGenericType(expression.Type);
-			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype);
+			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype)!;
 
 			return helper.GetSubquery(this, expression, paramex, parms);
 		}

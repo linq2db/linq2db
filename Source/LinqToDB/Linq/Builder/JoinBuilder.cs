@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var call   = (MethodCallExpression)expression;
 						var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(InnerKeyLambda.Parameters[0].Type);
-						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
+						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype)!;
 						var expr   = helper.GetGroupJoinCall(this);
 
 						expr = call.Transform(e => e == replaceExpression ? expr : e);

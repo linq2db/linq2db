@@ -465,7 +465,7 @@ namespace Tests.Linq
 				return ChildID == other.ChildID && ParentID == other.ParentID;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
@@ -519,7 +519,7 @@ namespace Tests.Linq
 				var cte = db.GetTable<Child>().AsCte();
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
-				var str = query.ToString();
+				var str = query.ToString()!;
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
 		}
@@ -840,7 +840,7 @@ namespace Tests.Linq
 				return Equals(Child, other.Child);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
@@ -865,7 +865,7 @@ namespace Tests.Linq
 				return Equals(Child, other.Child) && Equals(Parent, other.Parent);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;

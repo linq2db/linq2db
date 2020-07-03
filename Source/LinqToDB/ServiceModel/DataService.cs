@@ -413,7 +413,7 @@ namespace LinqToDB.ServiceModel
 			public object? GetValue(object targetResource, string propertyName)
 			{
 				var m = _data.TypeDic[targetResource.GetType()].Mapper;
-				return m[propertyName].MemberAccessor.GetValue(targetResource);
+				return m[propertyName]!.MemberAccessor.GetValue(targetResource);
 			}
 
 			public void RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)
@@ -446,7 +446,7 @@ namespace LinqToDB.ServiceModel
 			{
 				var m = _data.TypeDic[targetResource.GetType()].Mapper;
 
-				m[propertyName].MemberAccessor.SetValue(targetResource, propertyValue);
+				m[propertyName]!.MemberAccessor.SetValue(targetResource, propertyValue);
 
 				_actions.Add(new ResourceAction.Update { Resource = targetResource, Property = propertyName, Value = propertyValue });
 			}

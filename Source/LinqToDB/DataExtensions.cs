@@ -68,7 +68,7 @@ namespace LinqToDB
 			if (!typeof(ITable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqException(
 					"Method '{0}.{1}' must return type 'ITable<{2}>'",
-					methodInfo.Name, methodInfo.DeclaringType.FullName, typeof(T).FullName);
+					methodInfo.Name, methodInfo.DeclaringType!.FullName, typeof(T).FullName);
 
 			Expression expr;
 

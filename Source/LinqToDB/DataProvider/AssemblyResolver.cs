@@ -40,16 +40,16 @@ namespace LinqToDB.DataProvider
 			// System.MethodAccessException : Attempt by security transparent method 'LinqToDB.DataProvider.AssemblyResolver.SetResolver()' to access security critical method 'System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler)'
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
-				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),
+				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod(),
 				Expression.Constant(resolver)));
 
 			l.Compile()();
 		}
 
-		public Assembly? Resolver(object sender, ResolveEventArgs args)
+		public Assembly? Resolver(object? sender, ResolveEventArgs args)
 		{
 			if (args.Name == _resolveName)
-				return _assembly ?? (_assembly = Assembly.LoadFile(File.Exists(_path) ? _path : Path.Combine(_path, args.Name, ".dll")));
+				return _assembly ?? (_assembly = Assembly.LoadFile(File.Exists(_path!) ? _path! : Path.Combine(_path!, args.Name, ".dll")));
 			return null;
 		}
 	}

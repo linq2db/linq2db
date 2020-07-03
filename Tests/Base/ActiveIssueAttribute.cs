@@ -72,7 +72,7 @@ namespace Tests
 		/// </summary>
 		public string Configuration
 		{
-			get => string.Join(",", _configurations);
+			get => _configurations != null ? string.Join(",", _configurations) : string.Empty;
 			set
 			{
 				_configurations = value.Split(',').Select(_ => _.Trim()).ToArray();

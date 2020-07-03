@@ -70,7 +70,7 @@ public class TestsInitialization
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
 			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcPath));
+			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
 			if (File.Exists(srcPath))
 			{
 				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider

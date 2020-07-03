@@ -75,8 +75,8 @@ namespace Tests.DataProvider
 
 			if (convertToString)
 			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
+				actualValue   = actualValue.  ToString()!;
+				expectedValue = expectedValue.ToString()!;
 			}
 
 			if (throwException)
@@ -797,7 +797,7 @@ namespace Tests.DataProvider
 
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
 				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
 			}
 		}
@@ -817,7 +817,7 @@ namespace Tests.DataProvider
 
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
 				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
 			}
 		}
@@ -1715,11 +1715,10 @@ namespace Tests.DataProvider
 				return Id;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				var e = (UseAlternativeBulkCopy) obj;
-
-				return e.Id == Id && e.Value == Value;
+				return obj is UseAlternativeBulkCopy e
+					&& e.Id == Id && e.Value == Value;
 			}
 		}
 
@@ -1801,10 +1800,10 @@ namespace Tests.DataProvider
 				return Id;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				var clob = (ClobEntity) obj;
-				return    clob.Id         == Id
+				return obj is ClobEntity clob
+					   && clob.Id         == Id
 					   && clob.ClobValue  == ClobValue
 					   && clob.NClobValue == NClobValue;
 			}
@@ -2220,7 +2219,7 @@ namespace Tests.DataProvider
 		{
 			private sealed class EqualityComparer : IEqualityComparer<BooleanMapping>
 			{
-				public bool Equals(BooleanMapping x, BooleanMapping y)
+				public bool Equals(BooleanMapping? x, BooleanMapping? y)
 				{
 					if (ReferenceEquals(x, y)) return true;
 					if (ReferenceEquals(x, null)) return false;

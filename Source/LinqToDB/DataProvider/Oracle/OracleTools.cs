@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 			);
 
-		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName);
+		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
 
 #region CreateDataConnection
 

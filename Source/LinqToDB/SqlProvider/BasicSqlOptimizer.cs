@@ -27,6 +27,8 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
 		{
+			FixEmptySelect(statement);
+
 			FinalizeCte(statement);
 
 //statement.EnsureFindTables();
@@ -82,6 +84,14 @@ namespace LinqToDB.SqlProvider
 			statement = TransformStatement(statement);
 
 			return statement;
+		}
+
+		protected virtual void FixEmptySelect(SqlStatement statement)
+		{
+			// avoid SELECT * top level queries, as they could create a lot of unwanted traffic
+			// and such queries are not supported by remote context
+			if (statement.QueryType == QueryType.Select && statement.SelectQuery!.Select.Columns.Count == 0)
+				statement.SelectQuery!.Select.Add(new SqlValue(1));
 		}
 
 		public virtual SqlStatement TransformStatement(SqlStatement statement)
@@ -276,10 +286,10 @@ namespace LinqToDB.SqlProvider
 									break;
 							}
 
-							if (!ReferenceEquals(e, ne))
+							if (ne != null && !ReferenceEquals(e, ne))
 								replaced.Add(e, ne);
 
-							return ne;
+							return ne ?? e;
 						});
 
 						if (nc != null && !ReferenceEquals(nc, cond))
@@ -428,7 +438,7 @@ namespace LinqToDB.SqlProvider
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)]!;
 										}
 
 										break;
@@ -441,16 +451,16 @@ namespace LinqToDB.SqlProvider
 										{
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlColumn)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)];
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)]!;
 										}
 
 										break;
 								}
 
-								if (!ReferenceEquals(e, ne))
+								if (ne != null && !ReferenceEquals(e, ne))
 									replaced.Add(e, ne);
 
-								return ne;
+								return ne ?? e;
 							});
 
 							if (nc != null && !ReferenceEquals(nc, cond))
@@ -1912,11 +1922,12 @@ namespace LinqToDB.SqlProvider
 		/// </code>
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip and Distinct modifiers.</param>
+		/// <param name="queryFilter">Query filter predicate to determine if query needs processing.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement)
+		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => q.Select.IsDistinct && (q.Select.TakeValue != null || q.Select.SkipValue != null),
+				q => q.Select.IsDistinct && queryFilter(q),
 				(p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
@@ -1933,25 +1944,27 @@ namespace LinqToDB.SqlProvider
 		/// Replaces pagination by Window function ROW_NUMBER().
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool supportsEmptyOrderBy, bool onlySubqueries)
 		{
 			return ReplaceTakeSkipWithRowNumber(statement, query =>
 			{
 				if (onlySubqueries && query.ParentSelect == null)
 					return false;
 				return true;
-			});
+			}, supportsEmptyOrderBy);
 		}
 
 		/// <summary>
 		/// Replaces pagination by Window function ROW_NUMBER().
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="predicate">Indicates when the transformation is needed</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(statement,
 				query => 
@@ -1979,7 +1992,7 @@ namespace LinqToDB.SqlProvider
 					//}
 
 					if (orderByItems == null || orderByItems.Length == 0)
-						orderByItems = new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+						orderByItems = supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
 						orderByItems.Select((oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
@@ -1988,7 +2001,9 @@ namespace LinqToDB.SqlProvider
 
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
-					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
+					var rowNumberExpression = parameters.Length == 0
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, true, true)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -2019,11 +2034,12 @@ namespace LinqToDB.SqlProvider
 		/// Alternative mechanism how to prevent loosing sorting in Distinct queries.
 		/// </summary>
 		/// <param name="statement">Statement which may contain Distinct queries.</param>
+		/// <param name="queryFilter">Query filter predicate to determine if query needs processing.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement)
+		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
 				(p, q) =>
 				{
 					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();

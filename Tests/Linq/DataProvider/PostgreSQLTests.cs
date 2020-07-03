@@ -1643,7 +1643,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0]);
+			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0])!;
 
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
@@ -1657,7 +1657,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunction\"")]
 		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) })!;
 
 			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
@@ -1665,7 +1665,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunction1\"")]
 		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) })!;
 
 			return _ctx.GetTable<TestRecordTableFunctionResult>(this, methodInfo, param1, param2);
 		}
@@ -1692,7 +1692,7 @@ namespace Tests.DataProvider
 		public LinqToDB.ITable<TRecord> DynamicTableFunction<TRecord>(string json)
 			where TRecord : class
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) })!;
 
 			return _ctx.GetTable<TRecord>(this, methodInfo, json);
 		}

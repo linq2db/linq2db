@@ -29,7 +29,7 @@ namespace Tests.UserTests
 				return string.Format("{0} {1} {2}", Name, BoolValue, GuidValue);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var e = obj as TypeConvertTable;
 

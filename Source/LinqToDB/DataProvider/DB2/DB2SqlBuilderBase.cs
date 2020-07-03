@@ -108,11 +108,6 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override void BuildSql()
-		{
-			AlternativeBuildSql(false, base.BuildSql, "\t0");
-		}
-
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)

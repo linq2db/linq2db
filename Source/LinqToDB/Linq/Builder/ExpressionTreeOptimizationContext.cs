@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType, member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
 		}
 
 		public Expression ExpandQueryableMethods(Expression expression)
@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							
-							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
 							{
 								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 								{
@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mc = (MethodCallExpression)invocation.Expression;
 								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
 								{
 									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 									{
@@ -448,7 +448,7 @@ namespace LinqToDB.Linq.Builder
 							if (l != null)
 								return l.Body.Unwrap().Find(CanBeConstant) == null;
 
-							if (ma.Member.DeclaringType.IsConstantable(false) || ma.Member.IsNullableValueMember())
+							if (ma.Member.DeclaringType!.IsConstantable(false) || ma.Member.IsNullableValueMember())
 								return false;
 
 							break;
@@ -458,7 +458,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mc = (MethodCallExpression)ex;
 
-							if (mc.Method.DeclaringType.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
+							if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
 								return false;
 
 							var attr = GetExpressionAttribute(mc.Method);
@@ -499,7 +499,7 @@ namespace LinqToDB.Linq.Builder
 								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
 							}
 
-							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType, me.Member, out var alias);
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
 
 							if (l != null)
 							{
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 							var ex = (UnaryExpression)expr;
 							if (ex.Method != null)
 							{
-								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method, out var alias);
+								var l = ConvertMethodExpression(ex.Method.DeclaringType!, ex.Method, out var alias);
 								if (l != null)
 								{
 									var exposed = l.GetBody(ex.Operand);
@@ -584,7 +584,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mc = (MethodCallExpression)invocation.Expression;
 								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
 								{
 									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
 									{
@@ -682,7 +682,7 @@ namespace LinqToDB.Linq.Builder
 				RegisterAlias(newExpression, alias);
 		}
 
-		public string GetExpressionAlias(Expression expression)
+		public string? GetExpressionAlias(Expression expression)
 		{
 			_expressionAliases.TryGetValue(expression, out var value);
 			return value;

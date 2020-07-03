@@ -531,7 +531,7 @@ namespace Tests.DataProvider
 			{
 				return GetTable<FIT_CA_PARAM_TEST>(
 					this,
-					(MethodInfo) MethodBase.GetCurrentMethod(),
+					(MethodInfo) MethodBase.GetCurrentMethod()!,
 					ipIntMandatory, ipDoubleMandatory,
 					ipStringMandatory, ipIntOptional,
 					ipDoubleOptional, ipStringOptional);

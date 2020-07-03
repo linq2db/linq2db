@@ -127,9 +127,9 @@ namespace Tests.DataProvider
 					yield return item;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return obj is SqlTypes && ((SqlTypes)obj).ID == ID;
+				return obj is SqlTypes st && st.ID == ID;
 			}
 
 			public override int GetHashCode()

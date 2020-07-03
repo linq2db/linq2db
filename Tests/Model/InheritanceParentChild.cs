@@ -16,7 +16,7 @@ namespace Tests.Model
 		[PrimaryKey]                     public int  InheritanceParentId { get; set; }
 		[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceParentBase;
 			if (other == null)
@@ -59,7 +59,7 @@ namespace Tests.Model
 		[Association(ThisKey = "InheritanceParentId", OtherKey = "InheritanceParentId")]
 		public InheritanceParentBase Parent { get; set; } = null!;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceChildBase;
 			if (other == null)

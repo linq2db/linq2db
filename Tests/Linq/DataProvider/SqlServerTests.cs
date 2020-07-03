@@ -1588,7 +1588,7 @@ AS
 		[ActiveIssue(1294)]
 		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) });
+			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
 
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable<Issue1294Table>())

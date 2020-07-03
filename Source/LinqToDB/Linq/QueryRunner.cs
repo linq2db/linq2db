@@ -407,7 +407,7 @@ namespace LinqToDB.Linq
 						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
 						etype.GetGenericArguments()[0].IsEnum)
 					{
-						var values = new List<object>();
+						var values = new List<object?>();
 
 						foreach (var v in vs)
 						{
@@ -418,7 +418,7 @@ namespace LinqToDB.Linq
 								var valueType = v.GetType();
 
 								if (valueType.ToNullableUnderlying().IsEnum)
-									value = query.GetConvertedEnum(valueType, value);
+									value = query.GetConvertedEnum(valueType, v);
 							}
 
 							values.Add(value);

@@ -1714,7 +1714,7 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property").GetGenericMethodDefinition();
+		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property")!.GetGenericMethodDefinition();
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
 		{

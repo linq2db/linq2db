@@ -207,11 +207,11 @@ namespace LinqToDB.Linq
 			{
 				return (IQueryable)Activator.CreateInstance(
 					typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
-					DataContext, expression);
+					DataContext, expression)!;
 			}
 			catch (TargetInvocationException ex)
 			{
-				throw ex.InnerException;
+				throw ex.InnerException ?? ex;
 			}
 		}
 

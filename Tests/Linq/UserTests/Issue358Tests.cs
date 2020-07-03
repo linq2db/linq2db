@@ -32,7 +32,7 @@ namespace Tests.UserTests
 					where p.MyEnum != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
 			}
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
 			}
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
 			}
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 					where p.MyEnum2 != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
 			}
@@ -103,7 +103,7 @@ namespace Tests.UserTests
 					where !filter.Contains(p.MyEnum2)
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
 			}

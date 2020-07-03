@@ -29,7 +29,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override bool   OffsetFirst         { get { return true;              } }
-		protected override bool   BuildAlternativeSql { get { return false;             } }
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{

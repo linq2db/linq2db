@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 			//
 			builder.AddQueryableMemberAccessors(new AccessorMember(memberInfo), builder.DataContext, (mi, dc) =>
 			{
-				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, dc);
+				var filtered      = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, dc)!;
 
 				// here we use light version of optimization, only for comparing trees
 				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 				return optimizedExpr;
 			});
 
-			var filtered = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext);
+			var filtered = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
 			var optimized = filtered.Expression;
 
 			optimized = builder.ConvertExpressionTree(optimized);

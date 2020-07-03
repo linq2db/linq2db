@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							if (typeof(Array).IsSameOrParentOf(type))
-								return action(2, type.GetElementType());
+								return action(2, type.GetElementType()!);
 
 							break;
 						}

@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 			var table = GetTableContext(sequence);
 			if (table == null)
 				throw new LinqToDBException(
-					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType.Name}>() method.");
+					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType!.Name}>() method.");
 
 			if (methodCall.Method.Name == "ThenLoad")
 			{
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mexpr  = (MemberExpression)expression;
 							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType, member);
+							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
 							if (attr == null)
 							{
 								member = mexpr.Expression.Type.GetMemberEx(member)!;

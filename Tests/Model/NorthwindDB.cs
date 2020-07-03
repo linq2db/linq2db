@@ -40,7 +40,7 @@ namespace Tests.Model
 		public ITable<T> WithUpdateLock<T>()
 			where T : class
 		{
-			var methodInfo = typeof(NorthwindDB).GetMethod("WithUpdateLock")
+			var methodInfo = typeof(NorthwindDB).GetMethod("WithUpdateLock")!
 				.MakeGenericMethod(typeof(T));
 
 			return GetTable<T>(this, methodInfo);

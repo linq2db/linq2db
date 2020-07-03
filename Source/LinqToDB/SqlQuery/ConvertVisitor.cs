@@ -13,6 +13,7 @@ namespace LinqToDB.SqlQuery
 		private readonly Func<ConvertVisitor, IQueryElement, IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
+			where TK : notnull
 		{
 			var es = new TE[dic.Count];
 			var i  = 0;

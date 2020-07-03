@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public static void ResolveSybase(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
