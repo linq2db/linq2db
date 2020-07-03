@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case "smallmoney"        : return DataType.SmallMoney;
 				case "bit"               : return DataType.Boolean;
 				case "tinyint"           : return DataType.SByte;
+				case "unsigned tinyint"  : return DataType.Byte;
 				case "bigint"            : return DataType.Int64;
 				case "unsigned bigint"   : return DataType.UInt64;
 				case "timestamp"         : return DataType.Timestamp;

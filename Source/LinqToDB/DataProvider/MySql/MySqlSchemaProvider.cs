@@ -217,7 +217,7 @@ SELECT
 				case "longtext"   : return DataType.Text;
 				case "double"     : return DataType.Double;
 				case "float"      : return DataType.Single;
-				case "tinyint"    : return columnType == "tinyint(1)" ? DataType.Boolean : DataType.SByte;
+				case "tinyint"    : return columnType == "tinyint(1)" ? DataType.Boolean : columnType != null && columnType.Contains("unsigned") ? DataType.Byte : DataType.SByte;
 				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
 				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
 				case "year"       : return DataType.Int32;
