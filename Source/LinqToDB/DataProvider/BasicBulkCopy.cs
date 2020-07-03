@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
-			_ = TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action()));
+			TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action())).Wait();
 		}
 
 		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
