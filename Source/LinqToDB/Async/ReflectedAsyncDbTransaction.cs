@@ -14,13 +14,21 @@ namespace LinqToDB.Async
 	{
 		private readonly Func<IDbTransaction, CancellationToken, Task>? _commitAsync;
 		private readonly Func<IDbTransaction, CancellationToken, Task>? _rollbackAsync;
+#if !NET45 && !NET46
+		private readonly Func<IDbConnection, ValueTask>?                _disposeAsync;
+#else
 		private readonly Func<IDbConnection, Task>?                     _disposeAsync;
+#endif
 
 		public ReflectedAsyncDbTransaction(
 			IDbTransaction                                 transaction,
 			Func<IDbTransaction, CancellationToken, Task>? commitAsync,
 			Func<IDbTransaction, CancellationToken, Task>? rollbackAsync,
+#if !NET45 && !NET46
+			Func<IDbConnection, ValueTask>?                disposeAsync)
+#else
 			Func<IDbConnection, Task>?                     disposeAsync)
+#endif
 			: base(transaction)
 		{
 			_commitAsync   = commitAsync;
@@ -46,7 +54,7 @@ namespace LinqToDB.Async
 #else
 		public override ValueTask DisposeAsync()
 		{
-			return _disposeAsync != null ? new ValueTask(_disposeAsync.Invoke(Connection)) : base.DisposeAsync();
+			return _disposeAsync != null ? _disposeAsync.Invoke(Connection) : base.DisposeAsync();
 		}
 #endif
 	}

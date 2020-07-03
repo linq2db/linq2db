@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,6 +34,11 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken = default)
 		{
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+			if (Transaction is DbTransaction dbTransaction)
+				return dbTransaction.CommitAsync(cancellationToken);
+#endif
+
 			Commit();
 
 			return TaskEx.CompletedTask;
@@ -68,6 +74,11 @@ namespace LinqToDB.Async
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken = default)
 		{
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+			if (Transaction is DbTransaction dbTransaction)
+				return dbTransaction.RollbackAsync(cancellationToken);
+#endif
+
 			Rollback();
 
 			return TaskEx.CompletedTask;
